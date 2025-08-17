@@ -17,6 +17,7 @@ Runtime Phase (always): /research command → Search → Analyze → Report
 kb_data/
 ├── index.faiss          # Semantic search index (150MB)
 ├── metadata.json        # Paper metadata for all articles
+├── .pdf_text_cache.json # PDF extraction cache (metadata-based, JSON format)
 └── papers/              
     ├── paper_001.md     # Full text in markdown
     ├── paper_002.md     # One file per paper
@@ -32,14 +33,20 @@ kb_data/
 **Process**:
 
 1. Extract papers from Zotero (local API)
-2. Convert PDFs to markdown files
+2. Convert PDFs to markdown files (with caching)
 3. Build FAISS index from abstracts
 4. Save metadata as JSON
+
+**Features**:
+- PyMuPDF for fast PDF text extraction (~13 papers/second)
+- Metadata-based caching (file size + modification time)
+- `--clear-cache` flag for fresh extraction
 
 **Usage**:
 
 ```bash
-python build_kb.py  # Creates kb_data/ folder
+python build_kb.py              # Creates kb_data/ folder
+python build_kb.py --clear-cache # Force fresh extraction
 ```
 
 ### 2. CLI Tool (`cli.py`)
@@ -193,15 +200,20 @@ The system should format citations as:
 
 - `faiss-cpu`: Semantic search
 - `sentence-transformers`: Embeddings (model: all-MiniLM-L6-v2)
-- `pypdf` or `pdfplumber`: PDF extraction
-- `markdown`: MD file generation
+- `PyMuPDF`: Fast PDF text extraction (37x faster than pdfplumber)
+- `click`: CLI framework
+- `tqdm`: Progress bars
+- `requests`: Zotero API access
 
 ### Performance Targets
 
-- KB build: 10-30 minutes for 2000 papers
-- Search: <10 seconds
+- KB build: 
+  - First build: ~5 minutes for 2000 papers
+  - Cached rebuild: <1 minute
+- Search: <1 second
 - Full analysis: 1-6 minutes
 - Storage: ~2GB total
+- Cache: ~2-3MB per 100 papers
 
 ### Embedding Model
 

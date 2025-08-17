@@ -41,6 +41,7 @@ Remove the temporary search results file:
 ## Step 6: Analyze and Synthesize
 
 After retrieving the papers, I'll:
+
 1. Analyze their content for key findings
 2. Assess the quality and strength of evidence
 3. Identify patterns and themes across papers
@@ -51,7 +52,9 @@ After retrieving the papers, I'll:
 Now I'll compile the findings into a comprehensive research report. The report will be saved in the reports/ folder with a filename that includes the search topic and timestamp for easy identification.
 
 ### Report Filename Convention
+
 The report will be saved as: `reports/research_[sanitized_arguments]_[YYYYMMDD_HHMMSS].md`
+
 - Sanitized arguments: Replace spaces with underscores, remove special characters
 - Example: For query "unidirectional vs bidirectional sms" on 2025-01-17 at 14:30:45
 - Filename: `reports/research_unidirectional_vs_bidirectional_sms_20250117_143045.md`
@@ -62,36 +65,43 @@ First, ensure the reports directory exists:
 ## Research Report Structure
 
 ### 1. Executive Summary (2-3 paragraphs)
+
 - Brief overview of the research question
 - Main findings and conclusions
 - Practical implications
 
 ### 2. Key Findings (bulleted list)
+
 - Each finding supported by citations [1], [2], etc.
 - Group related findings together
 - Highlight consensus vs. conflicting evidence
 
 ### 3. Evidence Quality Assessment
+
 - **High confidence**: Strong, consistent evidence across multiple studies
 - **Medium confidence**: Moderate evidence with some limitations
 - **Low confidence**: Limited evidence, needs more research
 
 ### 4. Detailed Analysis
+
 - Synthesize information across papers
 - Identify patterns and themes
 - Note methodological strengths and limitations
 
 ### 5. Knowledge Gaps
+
 - Areas lacking sufficient research
 - Contradictory findings requiring clarification
 - Future research directions
 
 ### 6. References (IEEE format)
+
 Format: [#] Author(s), "Title," Journal, vol. X, no. Y, pp. ZZZ-ZZZ, Month Year.
 
 ## Quality Criteria
 
 When analyzing papers, consider:
+
 - Study design and methodology
 - Sample size and population
 - Statistical significance and effect sizes

@@ -4,55 +4,180 @@ Knowledge Base Builder for Research Assistant
 Converts Zotero library to portable format with semantic search
 """
 
+import contextlib
 import json
 import os
+import sqlite3
 import sys
-from datetime import datetime
+from datetime import UTC, datetime
 from pathlib import Path
+from typing import Any
 
 import click
 import faiss
-import pdfplumber
-import pypdf
+import fitz  # PyMuPDF
 import requests
 from sentence_transformers import SentenceTransformer
 from tqdm import tqdm
 
 
 class KnowledgeBaseBuilder:
-    def __init__(self, knowledge_base_path: str = "kb_data"):
+    def __init__(self, knowledge_base_path: str = "kb_data", zotero_data_dir: str | None = None):
         self.knowledge_base_path = Path(knowledge_base_path)
         self.papers_path = self.knowledge_base_path / "papers"
         self.index_file_path = self.knowledge_base_path / "index.faiss"
         self.metadata_file_path = self.knowledge_base_path / "metadata.json"
+        self.cache_file_path = self.knowledge_base_path / ".pdf_text_cache.json"
 
         self.knowledge_base_path.mkdir(exist_ok=True)
         self.papers_path.mkdir(exist_ok=True)
 
+        # Set Zotero data directory (default to ~/Zotero)
+        if zotero_data_dir:
+            self.zotero_data_dir = Path(zotero_data_dir)
+        else:
+            self.zotero_data_dir = Path.home() / "Zotero"
+
+        self.zotero_db_path = self.zotero_data_dir / "zotero.sqlite"
+        self.zotero_storage_path = self.zotero_data_dir / "storage"
+
         self.embedding_model = SentenceTransformer("all-MiniLM-L6-v2")
 
-    def extract_pdf_text(self, pdf_path: str) -> str | None:
-        """Extract text from PDF using multiple methods."""
-        text = ""
+        # Load cache if it exists
+        self.cache = self.load_cache()
+
+    def load_cache(self) -> dict[str, dict[str, Any]]:
+        """Load the PDF text cache from disk."""
+        if self.cache_file_path.exists():
+            try:
+                with open(self.cache_file_path, 'r', encoding='utf-8') as f:
+                    cache: dict[str, dict[str, Any]] = json.load(f)
+                    print(f"Loaded cache with {len(cache)} entries")
+                    return cache
+            except (json.JSONDecodeError, IOError) as e:
+                print(f"Warning: Could not load cache: {e}")
+        return {}
+
+    def save_cache(self):
+        """Save the PDF text cache to disk."""
+        try:
+            with open(self.cache_file_path, 'w', encoding='utf-8') as f:
+                json.dump(self.cache, f, indent=2, ensure_ascii=False)
+                print(f"Saved cache with {len(self.cache)} entries")
+        except (IOError, TypeError) as e:
+            print(f"Warning: Could not save cache: {e}")
+
+    def clear_cache(self):
+        """Clear the PDF text cache."""
+        self.cache = {}
+        if self.cache_file_path.exists():
+            self.cache_file_path.unlink()
+            print("Cleared PDF text cache")
+
+    def clean_knowledge_base(self):
+        """Clean up existing knowledge base files before rebuilding."""
+        # Remove old paper files
+        if self.papers_path.exists():
+            paper_files = list(self.papers_path.glob("paper_*.md"))
+            if paper_files:
+                for paper_file in paper_files:
+                    paper_file.unlink()
+                print(f"Cleaned {len(paper_files)} old paper files")
+
+        # Remove old index and metadata
+        if self.index_file_path.exists():
+            self.index_file_path.unlink()
+            print("Removed old FAISS index")
+
+        if self.metadata_file_path.exists():
+            self.metadata_file_path.unlink()
+            print("Removed old metadata file")
+
+    def get_pdf_paths_from_sqlite(self) -> dict[str, Path]:
+        """Get mapping of paper keys to PDF file paths from Zotero SQLite database."""
+        if not self.zotero_db_path.exists():
+            print(f"Warning: Zotero database not found at {self.zotero_db_path}")
+            return {}
+
+        pdf_map = {}
 
         try:
-            with pdfplumber.open(pdf_path) as pdf:
-                for page in pdf.pages:
-                    page_text = page.extract_text()
-                    if page_text:
-                        text += page_text + "\n"
-        except Exception:
-            try:
-                with open(pdf_path, "rb") as file:
-                    reader = pypdf.PdfReader(file)
-                    for page_num in range(len(reader.pages)):
-                        page_obj = reader.pages[page_num]
-                        text += page_obj.extract_text() + "\n"
-            except Exception as e:
-                print(f"Error extracting PDF {pdf_path}: {e}")
-                return None
+            # Connect to SQLite database in read-only mode
+            conn = sqlite3.connect(f"file:{self.zotero_db_path}?mode=ro", uri=True)
+            cursor = conn.cursor()
 
-        return text.strip() if text else None
+            # Query to get parent item keys and their PDF attachment keys
+            query = """
+            SELECT
+                parent.key as paper_key,
+                child.key as attachment_key
+            FROM itemAttachments ia
+            JOIN items parent ON ia.parentItemID = parent.itemID
+            JOIN items child ON ia.itemID = child.itemID
+            WHERE ia.contentType = 'application/pdf'
+            """
+
+            cursor.execute(query)
+
+            for paper_key, attachment_key in cursor.fetchall():
+                # Build path to PDF in storage folder
+                pdf_dir = self.zotero_storage_path / attachment_key
+
+                if pdf_dir.exists():
+                    # Find PDF file in the directory
+                    pdf_files = list(pdf_dir.glob("*.pdf"))
+                    if pdf_files:
+                        pdf_map[paper_key] = pdf_files[0]
+
+            conn.close()
+            print(f"Found {len(pdf_map)} PDF attachments in Zotero storage")
+
+        except sqlite3.Error as e:
+            print(f"Warning: Could not read Zotero database: {e}")
+        except Exception as e:
+            print(f"Warning: Error accessing PDF paths: {e}")
+
+        return pdf_map
+
+    def extract_pdf_text(self, pdf_path: str | Path, paper_key: str | None = None, use_cache: bool = True) -> str | None:
+        """Extract text from PDF using PyMuPDF with caching support."""
+        pdf_path = Path(pdf_path)
+
+        # Check cache if enabled and key provided
+        if use_cache and paper_key and paper_key in self.cache:
+            cache_entry = self.cache[paper_key]
+            try:
+                # Check if file metadata matches
+                stat = os.stat(pdf_path)
+                if (cache_entry.get('file_size') == stat.st_size and
+                    cache_entry.get('file_mtime') == stat.st_mtime):
+                    return cache_entry.get('text')
+            except Exception:
+                pass  # If stat fails, just extract fresh
+
+        # Extract text from PDF
+        try:
+            pdf = fitz.open(str(pdf_path))
+            text = ""
+            for page in pdf:
+                text += page.get_text() + "\n"
+            pdf.close()
+            stripped_text = text.strip() if text else None
+
+            # Update cache if enabled and key provided
+            if use_cache and paper_key and stripped_text:
+                stat = os.stat(pdf_path)
+                self.cache[paper_key] = {
+                    'text': stripped_text,
+                    'file_size': stat.st_size,
+                    'file_mtime': stat.st_mtime,
+                    'cached_at': datetime.now(UTC).isoformat()
+                }
+
+            return stripped_text
+        except Exception as e:
+            print(f"Error extracting PDF {pdf_path}: {e}")
+            return None
 
     def format_paper_as_markdown(self, paper_data: dict) -> str:
         """Format paper data as markdown."""
@@ -85,12 +210,9 @@ class KnowledgeBaseBuilder:
         return str(markdown_content)
 
     def process_zotero_local_library(self, api_url: str | None = None) -> list[dict]:
-        """Extract papers from Zotero local library using HTTP API."""
-        if api_url:
-            base_url = api_url
-        else:
-            base_url = "http://localhost:23119/api"
-        
+        """Extract papers from Zotero local library using HTTP API with proper pagination."""
+        base_url = api_url or "http://localhost:23119/api"
+
         # Test connection to local Zotero
         try:
             response = requests.get(f"{base_url}/", timeout=5)
@@ -98,23 +220,46 @@ class KnowledgeBaseBuilder:
                 raise ConnectionError("Zotero local API not accessible. Ensure Zotero is running and 'Allow other applications' is enabled in Advanced settings.")
         except requests.exceptions.RequestException as e:
             raise ConnectionError(f"Cannot connect to Zotero local API: {e}")
-        
-        # Get all items from library
-        try:
-            response = requests.get(f"{base_url}/users/0/items", timeout=30)
-            response.raise_for_status()
-            items = response.json()
-        except requests.exceptions.RequestException as e:
-            raise RuntimeError(f"Failed to fetch items from Zotero: {e}")
-        
+
+        # Get all items from library with pagination
+        all_items = []
+        start = 0
+        limit = 100
+
+        print("Fetching items from Zotero API...")
+        while True:
+            try:
+                response = requests.get(
+                    f"{base_url}/users/0/items",
+                    params={"start": start, "limit": limit},
+                    timeout=30
+                )
+                response.raise_for_status()
+                batch = response.json()
+
+                if not batch:
+                    break
+
+                all_items.extend(batch)
+                start += len(batch)
+                print(f"  Fetched {len(all_items)} items...", end="\r")
+
+            except requests.exceptions.RequestException as e:
+                raise RuntimeError(f"Failed to fetch items from Zotero: {e}")
+
+        print(f"  Fetched {len(all_items)} total items from Zotero")
+
         papers = []
-        
-        for item in tqdm(items, desc="Processing Zotero items"):
+
+        # Process items to extract paper metadata
+        for item in tqdm(all_items, desc="Processing Zotero items"):
             if item.get("data", {}).get("itemType") not in [
                 "journalArticle",
                 "conferencePaper",
                 "preprint",
                 "book",
+                "thesis",
+                "report",
             ]:
                 continue
 
@@ -139,42 +284,76 @@ class KnowledgeBaseBuilder:
                     paper_data["authors"].append(name)
 
             if item["data"].get("date"):
-                try:
+                with contextlib.suppress(ValueError, IndexError, KeyError):
                     paper_data["year"] = int(item["data"]["date"][:4])
-                except (ValueError, IndexError, KeyError):
-                    pass
-
-            # Get attachments for this item
-            if "key" in item:
-                try:
-                    attachments_response = requests.get(
-                        f"{base_url}/users/0/items/{item['key']}/children",
-                        timeout=10
-                    )
-                    if attachments_response.status_code == 200:
-                        attachments = attachments_response.json()
-                        for attachment in attachments:
-                            if attachment.get("data", {}).get("contentType") == "application/pdf":
-                                # Try to get file path
-                                if "path" in attachment.get("data", {}):
-                                    pdf_path = attachment["data"]["path"]
-                                    # Handle different path formats
-                                    if pdf_path.startswith("attachments:"):
-                                        # This is a linked file path
-                                        pdf_path = pdf_path.replace("attachments:", "")
-                                    paper_data["full_text"] = self.extract_pdf_text(pdf_path)
-                                    break
-                except Exception:
-                    pass
 
             papers.append(paper_data)
 
         return papers
 
-    def build_from_zotero_local(self, api_url: str | None = None):
+    def augment_papers_with_pdfs(self, papers: list[dict], use_cache: bool = True) -> None:
+        """Add full text from PDFs using SQLite database paths with caching."""
+        pdf_map = self.get_pdf_paths_from_sqlite()
+
+        if not pdf_map:
+            print("No PDF paths found in SQLite database")
+            return
+
+        print(f"Extracting full text from {len(pdf_map)} PDFs...")
+        papers_with_pdfs = 0
+        cache_hits = 0
+
+        for paper in tqdm(papers, desc="Extracting PDF text"):
+            if paper['zotero_key'] in pdf_map:
+                pdf_path = pdf_map[paper['zotero_key']]
+
+                # Check if we're using cache and if this is a valid cache hit
+                was_cached = False
+                if use_cache and paper['zotero_key'] in self.cache:
+                    cache_entry = self.cache[paper['zotero_key']]
+                    try:
+                        stat = os.stat(pdf_path)
+                        if (cache_entry.get('file_size') == stat.st_size and
+                            cache_entry.get('file_mtime') == stat.st_mtime):
+                            was_cached = True
+                    except Exception:
+                        pass
+
+                full_text = self.extract_pdf_text(pdf_path, paper['zotero_key'], use_cache)
+                if full_text:
+                    paper['full_text'] = full_text
+                    papers_with_pdfs += 1
+                    if was_cached:
+                        cache_hits += 1
+
+        print(f"Successfully extracted full text from {papers_with_pdfs} papers")
+        if use_cache and cache_hits > 0:
+            print(f"  Cache hits: {cache_hits}/{papers_with_pdfs} ({cache_hits*100//papers_with_pdfs}%)")
+
+        # Save cache after extraction
+        if use_cache:
+            self.save_cache()
+
+    def build_from_zotero_local(self, api_url: str | None = None, use_cache: bool = True):
         """Build knowledge base from local Zotero library."""
-        print("Extracting papers from local Zotero library...")
+        print("Building knowledge base from local Zotero library...")
+
+        # Step 0: Check if old knowledge base exists and ask user
+        if self.index_file_path.exists() or self.metadata_file_path.exists():
+            print("\nExisting knowledge base found. Cleaning is recommended to ensure consistency with your current Zotero library.")
+            response = input("Delete old knowledge base before building? (Y/n): ").strip().lower()
+            if response != 'n':
+                self.clean_knowledge_base()
+            else:
+                print("Keeping existing files. This may cause inconsistencies.\n")
+
+        # Step 1: Get metadata from API
         papers = self.process_zotero_local_library(api_url)
+
+        # Step 2: Add full text from PDFs via SQLite
+        self.augment_papers_with_pdfs(papers, use_cache)
+
+        # Step 3: Build the knowledge base
         self.build_from_papers(papers)
 
     def build_from_papers(self, papers: list[dict]):
@@ -184,7 +363,7 @@ class KnowledgeBaseBuilder:
         metadata = {
             "papers": [],
             "total_papers": len(papers),
-            "last_updated": datetime.now().isoformat(),
+            "last_updated": datetime.now(UTC).isoformat(),
         }
 
         abstracts = []
@@ -241,6 +420,9 @@ class KnowledgeBaseBuilder:
 
     def build_demo_kb(self):
         """Build a demo knowledge base with sample papers."""
+        # Clean up old knowledge base first (no prompt for demo)
+        self.clean_knowledge_base()
+
         demo_papers = [
             {
                 "title": "Digital Health Interventions for Depression, Anxiety, and Enhancement of Psychological Well-Being",
@@ -317,15 +499,25 @@ class KnowledgeBaseBuilder:
 @click.option(
     "--knowledge-base-path", default="kb_data", help="Path to knowledge base directory"
 )
-def main(demo, api_url, knowledge_base_path):
+@click.option(
+    "--zotero-data-dir", help="Path to Zotero data directory (default: ~/Zotero)"
+)
+@click.option(
+    "--clear-cache", is_flag=True, help="Clear PDF text cache before building"
+)
+def main(demo, api_url, knowledge_base_path, zotero_data_dir, clear_cache):
     """Build knowledge base for research assistant.
-    
+
     By default, connects to local Zotero library via HTTP API.
     Requires Zotero to be running with 'Allow other applications' enabled.
-    
+
     For WSL users with Zotero on Windows host, the API URL will be auto-detected.
     """
-    builder = KnowledgeBaseBuilder(knowledge_base_path)
+    builder = KnowledgeBaseBuilder(knowledge_base_path, zotero_data_dir)
+
+    # Clear cache if requested
+    if clear_cache:
+        builder.clear_cache()
 
     if demo:
         print("Building demo knowledge base...")
@@ -340,8 +532,8 @@ def main(demo, api_url, knowledge_base_path):
                         # We're in WSL, get Windows host IP
                         import subprocess
                         result = subprocess.run(
-                            ["cat", "/etc/resolv.conf"], 
-                            capture_output=True, 
+                            ["cat", "/etc/resolv.conf"],
+                            capture_output=True,
                             text=True
                         )
                         for line in result.stdout.split('\n'):
@@ -350,17 +542,17 @@ def main(demo, api_url, knowledge_base_path):
                                 api_url = f"http://{host_ip}:23119/api"
                                 print(f"Detected WSL environment. Using Windows host at {host_ip}")
                                 break
-            except Exception:
-                pass
-        
+            except (FileNotFoundError, PermissionError, IOError):
+                pass  # Not in WSL or can't read file
+
         print("Connecting to Zotero library...")
         if api_url:
             print(f"Using API URL: {api_url}")
         else:
             print("Using default: http://localhost:23119/api")
-        
+
         print("Ensure Zotero is running and 'Allow other applications' is enabled in Advanced settings")
-        
+
         try:
             builder.build_from_zotero_local(api_url)
         except ConnectionError as e:
@@ -370,7 +562,15 @@ def main(demo, api_url, knowledge_base_path):
             print("2. Go to Edit > Settings > Advanced")
             print("3. Check 'Allow other applications on this computer to communicate with Zotero'")
             print("4. Restart Zotero if needed")
-            if "WSL" in str(e) or "microsoft" in open("/proc/version").read().lower():
+            # Safely check if running in WSL
+            is_wsl = False
+            try:
+                with open("/proc/version", "r") as f:
+                    is_wsl = "microsoft" in f.read().lower()
+            except (FileNotFoundError, PermissionError, IOError):
+                pass
+            
+            if "WSL" in str(e) or is_wsl:
                 print("\nFor WSL users:")
                 print("- Ensure Windows Firewall allows connections on port 23119")
                 print("- You may need to manually specify the API URL:")

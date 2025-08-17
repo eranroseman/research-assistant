@@ -1,9 +1,0 @@
-# Offline Contextual Multi-armed Bandits for Mobile Health Interventions: A Case Study on Emotion Regulation
-
-**Authors:** Mawulolo K. Ameko, Miranda L. Beltzer, Lihua Cai, Mehdi Boukhechba, Bethany A. Teachman, Laura E. Barnes  
-**Year:** 2020  
-**DOI:** 10.48550/ARXIV.2008.09472  
-
-## Abstract
-Delivering treatment recommendations via pervasive electronic devices such as mobile phones has the potential to be a viable and scalable treatment medium for long-term health behavior management. But active experimentation of treatment options can be time-consuming, expensive and altogether unethical in some cases. There is a growing interest in methodological approaches that allow an experimenter to learn and evaluate the usefulness of a new treatment strategy before deployment. We present the first development of a treatment recommender system for emotion regulation using real-world historical mobile digital data from n = 114 high socially anxious participants to test the usefulness of new emotion regulation strategies. We explore a number of offline contextual bandits estimators for learning and propose a general framework for learning algorithms. Our experimentation shows that the proposed doubly robust offline learning algorithms performed significantly better than baseline approaches, suggesting that this type of recommender algorithm could improve emotion regulation. Given that emotion regulation is impaired across many mental illnesses and such a recommender algorithm could be scaled up easily, this approach holds potential to increase access to treatment for many people. We also share some insights that allow us to translate contextual bandit models to this complex real-world data, including which contextual features appear to be most important for predicting emotion regulation strategy effectiveness.
-

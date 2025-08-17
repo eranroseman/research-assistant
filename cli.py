@@ -37,7 +37,7 @@ class ResearchCLI:
         # Limit top_k to the number of available papers
         available_papers = len(self.metadata["papers"])
         actual_k = min(top_k, available_papers)
-        
+
         distances, indices = self.search_index.search(
             query_embedding.astype("float32"), actual_k
         )

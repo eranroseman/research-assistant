@@ -1,8 +1,0 @@
-# This App is not for Me: Using Mobile and Wearable Technologies to Improve Adolescents’ Smartphone Addiction through the Sharing of Personal Data with Parents
-
-**Year:** 2022  
-**DOI:** 10.1145/3491102.3517478  
-
-## Abstract
-Smartphone addiction refers to the problematic use of smartphones, which can negatively impact one’s quality of life and even health. We conducted a two-week technology probe study to explore the use of technologies aimed at improving smartphone addiction among seven dyads of adolescents and their parents. Interviews conducted during and after the probe study revealed that manually reporting lifestyle and well-being data could provide motivation to improve one’s lifestyle and well-being by moderating phone use. Sharing smartphone use data with parents was also shown to head off negative communication loops and foster opportunities to overcome the smartphone addiction.
-

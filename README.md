@@ -5,6 +5,8 @@ A powerful literature research tool that integrates with Claude Code through sla
 ## Features
 
 - **Semantic Search**: Uses FAISS and sentence transformers for intelligent paper discovery
+- **Full-Text Extraction**: Extracts complete paper content from PDFs using PyMuPDF
+- **Smart Caching**: Metadata-based cache for instant rebuilds
 - **Local Knowledge Base**: Portable, version-controlled collection of papers
 - **Claude Integration**: Custom `/research` slash command for seamless workflow
 - **IEEE Citations**: Automatic generation of properly formatted references
@@ -43,30 +45,35 @@ python demo.py
 ### Setup Steps
 
 1. **Clone the repository**
+
    ```bash
    git clone https://github.com/eranroseman/research-assistant.git
    cd research-assistant
    ```
 
 2. **Install Python packages**
+
    ```bash
    pip install -r requirements.txt
    ```
 
 3. **Build knowledge base** (choose one):
-   
+
    a. Demo database (5 sample papers):
+
    ```bash
    python build_kb.py --demo
    ```
-   
+
    b. From local Zotero library:
+
    ```bash
    # Ensure Zotero is running with local API enabled
    python build_kb.py
    ```
 
 4. **Test the CLI**
+
    ```bash
    python cli.py info
    python cli.py search "your topic"
@@ -79,6 +86,7 @@ python demo.py
 ### CLI Commands
 
 #### Search for papers
+
 ```bash
 # Basic search
 python cli.py search "digital health barriers"
@@ -91,6 +99,7 @@ python cli.py search "AI diagnosis" --json
 ```
 
 #### Retrieve full paper
+
 ```bash
 # Display paper
 python cli.py get 0001
@@ -100,11 +109,13 @@ python cli.py get 0001 -o paper.md
 ```
 
 #### Generate citations
+
 ```bash
 python cli.py cite "wearable devices" -k 5
 ```
 
 #### Check knowledge base
+
 ```bash
 python cli.py info
 ```
@@ -118,6 +129,7 @@ In any Claude Code conversation:
 ```
 
 Claude will:
+
 1. Search the knowledge base for relevant papers
 2. Analyze the top 10-20 matches
 3. Extract key findings and evidence
@@ -127,6 +139,7 @@ Claude will:
 ### Research Report Format
 
 Reports include:
+
 - **Executive Summary**: Overview of findings
 - **Key Findings**: Bulleted insights with citations
 - **Evidence Quality**: Confidence levels for different findings
@@ -143,12 +156,18 @@ Reports include:
    - Restart Zotero if needed
 
 2. **Run builder**:
+
    ```bash
    # With Zotero running
    python build_kb.py
+   
+   # Clear cache for fresh extraction
+   python build_kb.py --clear-cache
    ```
 
-3. **Processing time**: 10-30 minutes for 2000 papers
+3. **Processing time**: 
+   - First build: ~5 minutes for 2000 papers
+   - Subsequent builds: <1 minute (with cache)
 
 Note: The local API connects to `http://localhost:23119/api/` and doesn't require API keys.
 
@@ -181,6 +200,7 @@ research-assistant/
 ├── kb_data/                 # Knowledge base (git-ignored)
 │   ├── index.faiss          # Semantic search index
 │   ├── metadata.json        # Paper metadata
+│   ├── .pdf_text_cache.json # PDF extraction cache (JSON format)
 │   └── papers/              # Full text markdown files
 ├── build_kb.py              # Knowledge base builder
 ├── cli.py                   # Command-line interface
@@ -200,6 +220,7 @@ self.model = SentenceTransformer('your-model-name')
 ```
 
 Popular alternatives:
+
 - `all-mpnet-base-v2`: Higher quality, slower
 - `all-MiniLM-L12-v2`: Good balance
 - `multi-qa-mpnet-base-dot-v1`: Optimized for Q&A
@@ -229,25 +250,30 @@ done
 ## Troubleshooting
 
 ### "Knowledge base not found"
+
 Run `python build_kb.py --demo` to create the database.
 
 ### Slow searches
+
 - Reduce search scope with more specific queries
 - Use fewer results: `-k 5` instead of `-k 20`
 - Check if antivirus is scanning the FAISS index
 
 ### Memory errors
+
 - Use `faiss-cpu` instead of `faiss-gpu`
 - Process papers in batches in `build_kb.py`
 - Reduce embedding model size
 
 ### Zotero connection issues
+
 - Ensure Zotero is running
 - Check "Allow other applications" is enabled in Settings → Advanced
-- Verify Zotero is accessible at http://localhost:23119/api/
+- Verify Zotero is accessible at <http://localhost:23119/api/>
 - Try restarting Zotero after enabling the API
 
 ### WSL-specific setup (Zotero on Windows host)
+
 When running in WSL with Zotero on the Windows host:
 
 1. **Enable Zotero API**: In Zotero → Edit → Settings → Advanced → Check "Allow other applications"
@@ -258,11 +284,13 @@ When running in WSL with Zotero on the Windows host:
    - Allow connections from WSL subnet (usually 172.x.x.x)
 
 3. **Run with auto-detection**:
+
    ```bash
    python build_kb.py  # Auto-detects WSL and Windows host IP
    ```
 
 4. **Or specify manually**:
+
    ```bash
    # Find Windows host IP in WSL
    cat /etc/resolv.conf | grep nameserver
@@ -273,10 +301,22 @@ When running in WSL with Zotero on the Windows host:
 
 ## Performance
 
-- **Build time**: 10-30 min for 2000 papers
+- **Build time**: 
+  - First build: ~5 minutes for 2000 papers
+  - Cached rebuild: <1 minute
+  - PDF extraction: ~13 papers/second with PyMuPDF (37x faster than pdfplumber)
 - **Search time**: <1 second for 2000 papers
-- **Storage**: ~1MB per paper (including full text)
+- **Storage**: 
+  - ~1MB per paper (including full text)
+  - Cache file: ~2-3MB per 100 papers (JSON format)
 - **Memory**: ~500MB during search operations
+
+## Security & Reliability
+
+- **JSON cache format**: Secure serialization (no code execution risk)
+- **Safe WSL detection**: Handles missing system files gracefully
+- **Type-safe code**: Full mypy type checking support
+- **Error handling**: Specific exceptions for better debugging
 
 ## Contributing
 
@@ -292,6 +332,10 @@ Contributions welcome! Areas for improvement:
 
 MIT License - See LICENSE file for details
 
+**Important Note**: This project uses PyMuPDF for PDF text extraction, which is licensed under GNU AGPL v3.0. If you redistribute this software, you must comply with PyMuPDF's AGPL license requirements. For commercial use or if you need a different license, consider:
+- Purchasing a commercial PyMuPDF license from Artifex
+- Switching to an alternative PDF library (e.g., pypdf, pdfplumber)
+
 ## Acknowledgments
 
 - FAISS by Facebook Research
@@ -301,6 +345,7 @@ MIT License - See LICENSE file for details
 ## Support
 
 For issues or questions:
+
 1. Check troubleshooting section
 2. Review demo.py for examples
 3. Open an issue with error messages and steps to reproduce
