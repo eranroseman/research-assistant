@@ -14,10 +14,7 @@ from pathlib import Path
 from typing import Any
 
 import click
-import faiss
-import fitz  # PyMuPDF
 import requests
-from sentence_transformers import SentenceTransformer
 from tqdm import tqdm
 
 
@@ -41,22 +38,34 @@ class KnowledgeBaseBuilder:
         self.zotero_db_path = self.zotero_data_dir / "zotero.sqlite"
         self.zotero_storage_path = self.zotero_data_dir / "storage"
 
-        self.embedding_model = SentenceTransformer("all-MiniLM-L6-v2")
+        self._embedding_model = None
+        self.cache = None  # Lazy load when needed
 
-        # Load cache if it exists
-        self.cache = self.load_cache()
+    @property
+    def embedding_model(self):
+        """Lazy load the embedding model when first needed."""
+        if self._embedding_model is None:
+            from sentence_transformers import SentenceTransformer
+            print("Loading embedding model...")
+            self._embedding_model = SentenceTransformer("all-MiniLM-L6-v2")
+        return self._embedding_model
 
     def load_cache(self) -> dict[str, dict[str, Any]]:
         """Load the PDF text cache from disk."""
+        if self.cache is not None:
+            return self.cache
+            
         if self.cache_file_path.exists():
             try:
                 with open(self.cache_file_path, 'r', encoding='utf-8') as f:
-                    cache: dict[str, dict[str, Any]] = json.load(f)
-                    print(f"Loaded cache with {len(cache)} entries")
-                    return cache
+                    self.cache = json.load(f)
+                    print(f"Loaded cache with {len(self.cache)} entries")
+                    return self.cache
             except (json.JSONDecodeError, IOError) as e:
                 print(f"Warning: Could not load cache: {e}")
-        return {}
+        
+        self.cache = {}
+        return self.cache
 
     def save_cache(self):
         """Save the PDF text cache to disk."""
@@ -102,8 +111,8 @@ class KnowledgeBaseBuilder:
         pdf_map = {}
 
         try:
-            # Connect to SQLite database in read-only mode
-            conn = sqlite3.connect(f"file:{self.zotero_db_path}?mode=ro", uri=True)
+            # Connect to SQLite database with immutable mode to work while Zotero is running
+            conn = sqlite3.connect(f"file:{self.zotero_db_path}?immutable=1", uri=True)
             cursor = conn.cursor()
 
             # Query to get parent item keys and their PDF attachment keys
@@ -130,7 +139,7 @@ class KnowledgeBaseBuilder:
                         pdf_map[paper_key] = pdf_files[0]
 
             conn.close()
-            print(f"Found {len(pdf_map)} PDF attachments in Zotero storage")
+            print(f"Found {len(pdf_map)} PDF attachments mapped to papers")
 
         except sqlite3.Error as e:
             print(f"Warning: Could not read Zotero database: {e}")
@@ -141,6 +150,8 @@ class KnowledgeBaseBuilder:
 
     def extract_pdf_text(self, pdf_path: str | Path, paper_key: str | None = None, use_cache: bool = True) -> str | None:
         """Extract text from PDF using PyMuPDF with caching support."""
+        import fitz
+        
         pdf_path = Path(pdf_path)
 
         # Check cache if enabled and key provided
@@ -252,7 +263,7 @@ class KnowledgeBaseBuilder:
         papers = []
 
         # Process items to extract paper metadata
-        for item in tqdm(all_items, desc="Processing Zotero items"):
+        for item in tqdm(all_items, desc="Filtering for research papers"):
             if item.get("data", {}).get("itemType") not in [
                 "journalArticle",
                 "conferencePaper",
@@ -289,17 +300,23 @@ class KnowledgeBaseBuilder:
 
             papers.append(paper_data)
 
+        print(f"  Found {len(papers)} research papers (from {len(all_items)} total items)")
         return papers
 
     def augment_papers_with_pdfs(self, papers: list[dict], use_cache: bool = True) -> None:
         """Add full text from PDFs using SQLite database paths with caching."""
+        # Ensure cache is loaded
+        if use_cache and self.cache is None:
+            self.load_cache()
+            
         pdf_map = self.get_pdf_paths_from_sqlite()
 
         if not pdf_map:
             print("No PDF paths found in SQLite database")
             return
 
-        print(f"Extracting full text from {len(pdf_map)} PDFs...")
+        papers_with_pdfs_available = sum(1 for p in papers if p['zotero_key'] in pdf_map)
+        print(f"Extracting text from PDFs ({papers_with_pdfs_available} papers have PDFs)...")
         papers_with_pdfs = 0
         cache_hits = 0
 
@@ -326,26 +343,85 @@ class KnowledgeBaseBuilder:
                     if was_cached:
                         cache_hits += 1
 
-        print(f"Successfully extracted full text from {papers_with_pdfs} papers")
+        print(f"Successfully extracted text from {papers_with_pdfs}/{len(papers)} papers")
         if use_cache and cache_hits > 0:
-            print(f"  Cache hits: {cache_hits}/{papers_with_pdfs} ({cache_hits*100//papers_with_pdfs}%)")
+            print(f"  Using cache: {cache_hits}/{papers_with_pdfs} PDFs ({cache_hits*100//papers_with_pdfs}%)")
 
         # Save cache after extraction
         if use_cache:
             self.save_cache()
 
-    def build_from_zotero_local(self, api_url: str | None = None, use_cache: bool = True):
+    def build_from_zotero_local(self, api_url: str | None = None, use_cache: bool = True, skip_prompt: bool = False):
         """Build knowledge base from local Zotero library."""
         print("Building knowledge base from local Zotero library...")
 
-        # Step 0: Check if old knowledge base exists and ask user
-        if self.index_file_path.exists() or self.metadata_file_path.exists():
-            print("\nExisting knowledge base found. Cleaning is recommended to ensure consistency with your current Zotero library.")
-            response = input("Delete old knowledge base before building? (Y/n): ").strip().lower()
-            if response != 'n':
+        # Step 0: Ask user what to do (unless --clear-cache was used)
+        if not skip_prompt:
+            kb_exists = self.index_file_path.exists() or self.metadata_file_path.exists()
+            
+            if kb_exists:
+                # Show cache info without loading it
+                cache_info = ""
+                if self.cache_file_path.exists():
+                    try:
+                        stat = self.cache_file_path.stat()
+                        cache_info = f" (cache: {stat.st_size / 1024 / 1024:.1f}MB)"
+                    except:
+                        pass
+                print(f"\n📚 Existing knowledge base found{cache_info}")
+                print("\nOptions:")
+                print("  Enter/Y - Quick update (recommended for adding new papers to existing knowledge base)")
+                print("  C       - Full rebuild (deletes existing knowledge base and rebuilds from Zotero library)")
+                print("  N       - Exit")
+                response = input("\nChoice [Y/c/n]: ").strip().lower()
+            else:
+                # No existing knowledge base
+                cache_info = ""
+                has_cache = self.cache_file_path.exists()
+                if has_cache:
+                    try:
+                        stat = self.cache_file_path.stat()
+                        cache_info = f" (cache found: {stat.st_size / 1024 / 1024:.1f}MB)"
+                    except:
+                        pass
+                
+                print(f"\n📚 No existing knowledge base found{cache_info}")
+                
+                if has_cache:
+                    print("\nOptions:")
+                    print("  Enter/Y - Build using cache (fast, ~90 seconds)")
+                    print("  C       - Full rebuild (clear cache and rebuild from scratch, ~5 minutes)")
+                    print("  N       - Exit")
+                    response = input("\nChoice [Y/c/n]: ").strip().lower()
+                else:
+                    print("\nBuild a new knowledge base from your Zotero library?")
+                    response = input("Continue? [Y/n]: ").strip().lower()
+                
+                if response == 'n':
+                    print("Build cancelled.")
+                    return
+                elif response != 'c':
+                    response = 'y'  # Treat as normal build
+            
+            if response == 'n':
+                print("Build cancelled.")
+                return
+            elif response == 'c':
+                print("Performing full rebuild (clearing cache)...")
+                self.clear_cache()
                 self.clean_knowledge_base()
             else:
-                print("Keeping existing files. This may cause inconsistencies.\n")
+                # Default to quick update or new build
+                if kb_exists:
+                    print("Performing quick update...")
+                    self.clean_knowledge_base()
+                else:
+                    print("Building new knowledge base...")
+        else:
+            # When using --clear-cache flag
+            if self.index_file_path.exists() or self.metadata_file_path.exists():
+                print("Performing full clean rebuild (cache cleared)...")
+                self.clean_knowledge_base()
 
         # Step 1: Get metadata from API
         papers = self.process_zotero_local_library(api_url)
@@ -355,6 +431,85 @@ class KnowledgeBaseBuilder:
 
         # Step 3: Build the knowledge base
         self.build_from_papers(papers)
+
+    def generate_missing_pdfs_report(self, papers: list[dict]) -> Path:
+        """Generate markdown report of papers missing or with incomplete PDFs."""
+        report_lines = []
+        report_lines.append("# Missing/Incomplete PDFs Report\n")
+        report_lines.append(f"**Generated:** {datetime.now(UTC).strftime('%Y-%m-%d %H:%M:%S UTC')}\n")
+        
+        # Categorize papers
+        missing_pdfs = []
+        small_pdfs = []  # Likely supplementary materials
+        no_abstract = []
+        
+        for paper in papers:
+            if 'full_text' not in paper or not paper.get('full_text'):
+                missing_pdfs.append(paper)
+                if not paper.get('abstract'):
+                    no_abstract.append(paper)
+            elif len(paper.get('full_text', '')) < 5000:  # Less than 5KB of text
+                small_pdfs.append(paper)
+        
+        # Summary statistics
+        report_lines.append("## Summary Statistics\n")
+        report_lines.append(f"- **Total papers:** {len(papers)}")
+        report_lines.append(f"- **Papers with full text:** {len(papers) - len(missing_pdfs)} ({(len(papers) - len(missing_pdfs))*100/len(papers):.1f}%)")
+        report_lines.append(f"- **Missing PDFs:** {len(missing_pdfs)} ({len(missing_pdfs)*100/len(papers):.1f}%)")
+        report_lines.append(f"- **Small PDFs (<5KB text):** {len(small_pdfs)}")
+        report_lines.append(f"- **No abstract or full text:** {len(no_abstract)}\n")
+        
+        # List papers without PDFs
+        if missing_pdfs:
+            report_lines.append("## Papers Without Full Text\n")
+            report_lines.append("These papers have no PDF attachments in Zotero or PDF extraction failed:\n")
+            
+            # Limit to first 100 to avoid huge reports
+            for i, paper in enumerate(missing_pdfs[:100], 1):
+                year = paper.get('year', 'n.d.')
+                authors = paper.get('authors', [])
+                first_author = authors[0].split()[-1] if authors else "Unknown"
+                journal = paper.get('journal', 'Unknown journal')[:40]
+                
+                report_lines.append(f"{i}. **[{year}]** {first_author} et al." if authors else f"{i}. **[{year}]**")
+                report_lines.append(f"   - *{paper.get('title', 'Untitled')[:100]}*")
+                report_lines.append(f"   - {journal}")
+                if paper.get('doi'):
+                    report_lines.append(f"   - DOI: {paper['doi']}")
+                report_lines.append("")
+            
+            if len(missing_pdfs) > 100:
+                report_lines.append(f"\n*... and {len(missing_pdfs) - 100} more papers without full text*\n")
+        
+        # List papers with small PDFs (likely supplementary)
+        if small_pdfs:
+            report_lines.append("## Papers with Minimal Text (<5KB)\n")
+            report_lines.append("These PDFs likely contain only supplementary materials, not the full paper:\n")
+            
+            for i, paper in enumerate(small_pdfs[:20], 1):
+                text_len = len(paper.get('full_text', ''))
+                year = paper.get('year', 'n.d.')
+                report_lines.append(f"{i}. [{year}] {paper.get('title', 'Untitled')[:80]}")
+                report_lines.append(f"   - Text extracted: {text_len} characters")
+                report_lines.append("")
+            
+            if len(small_pdfs) > 20:
+                report_lines.append(f"\n*... and {len(small_pdfs) - 20} more papers with minimal text*\n")
+        
+        # Recommendations
+        report_lines.append("## Recommendations\n")
+        report_lines.append("To improve full-text coverage:\n")
+        report_lines.append("1. **Add PDFs in Zotero**: Use Zotero's 'Find Available PDF' feature")
+        report_lines.append("2. **Check PDF quality**: Ensure PDFs contain full paper text, not just supplementary materials")
+        report_lines.append("3. **Verify attachments**: Some papers may have PDFs attached to child items instead of the main entry")
+        report_lines.append("4. **Re-run build**: After adding PDFs, run `python build_kb.py` (cache will speed up rebuild)")
+        
+        # Save report
+        report_path = self.knowledge_base_path / "missing_pdfs_report.md"
+        with open(report_path, 'w', encoding='utf-8') as f:
+            f.write('\n'.join(report_lines))
+        
+        return report_path
 
     def build_from_papers(self, papers: list[dict]):
         """Build knowledge base from a list of paper dictionaries."""
@@ -396,6 +551,8 @@ class KnowledgeBaseBuilder:
             abstracts.append(paper.get("abstract", paper.get("title", "")))
 
         print("Building FAISS index...")
+        import faiss
+        
         if abstracts:
             embeddings = self.embedding_model.encode(abstracts, show_progress_bar=True)
 
@@ -417,6 +574,16 @@ class KnowledgeBaseBuilder:
         print(f"  - Index: {self.index_file_path}")
         print(f"  - Metadata: {self.metadata_file_path}")
         print(f"  - Papers directory: {self.papers_path}")
+        
+        # Check for missing PDFs and offer to generate report
+        missing_count = sum(1 for p in papers if 'full_text' not in p or not p.get('full_text'))
+        if missing_count > 0:
+            print(f"\n📊 Note: {missing_count} papers lack full text PDFs ({missing_count*100/len(papers):.1f}%)")
+            response = input("Generate detailed missing PDFs report? (y/N): ").strip().lower()
+            if response == 'y':
+                print("Generating report...")
+                report_path = self.generate_missing_pdfs_report(papers)
+                print(f"✅ Report saved to: {report_path}")
 
     def build_demo_kb(self):
         """Build a demo knowledge base with sample papers."""
@@ -513,6 +680,7 @@ def main(demo, api_url, knowledge_base_path, zotero_data_dir, clear_cache):
 
     For WSL users with Zotero on Windows host, the API URL will be auto-detected.
     """
+    # Delay instantiation until after help flag is handled
     builder = KnowledgeBaseBuilder(knowledge_base_path, zotero_data_dir)
 
     # Clear cache if requested
@@ -554,7 +722,8 @@ def main(demo, api_url, knowledge_base_path, zotero_data_dir, clear_cache):
         print("Ensure Zotero is running and 'Allow other applications' is enabled in Advanced settings")
 
         try:
-            builder.build_from_zotero_local(api_url)
+            # Pass skip_prompt=True when using --clear-cache flag
+            builder.build_from_zotero_local(api_url, use_cache=True, skip_prompt=clear_cache)
         except ConnectionError as e:
             print(f"Error: {e}")
             print("\nTo enable local API access:")

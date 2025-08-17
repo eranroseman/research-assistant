@@ -161,13 +161,19 @@ Reports include:
    # With Zotero running
    python build_kb.py
    
-   # Clear cache for fresh extraction
+   # The builder will prompt you with options:
+   # - Quick update: Add new papers (keeps cache, ~90 seconds)
+   # - Full rebuild: Re-extract all PDFs (clears cache, ~5 minutes)
+   # - Exit: Cancel without changes
+   
+   # Or force a full rebuild with:
    python build_kb.py --clear-cache
    ```
 
 3. **Processing time**: 
-   - First build: ~5 minutes for 2000 papers
-   - Subsequent builds: <1 minute (with cache)
+   - Quick update: ~90 seconds for 2000 papers (uses cache)
+   - Full rebuild: ~5 minutes for 2000 papers (re-extracts all PDFs)
+   - PDF extraction: ~13 papers/second with cache
 
 Note: The local API connects to `http://localhost:23119/api/` and doesn't require API keys.
 
@@ -302,9 +308,10 @@ When running in WSL with Zotero on the Windows host:
 ## Performance
 
 - **Build time**: 
-  - First build: ~5 minutes for 2000 papers
-  - Cached rebuild: <1 minute
-  - PDF extraction: ~13 papers/second with PyMuPDF (37x faster than pdfplumber)
+  - Quick update: ~90 seconds for 2000 papers (with cache)
+  - Full rebuild: ~5 minutes for 2000 papers (clears cache)
+  - PDF extraction: ~13 papers/second with PyMuPDF cache
+  - Startup: <0.5 seconds (lazy loading of models)
 - **Search time**: <1 second for 2000 papers
 - **Storage**: 
   - ~1MB per paper (including full text)

@@ -1,7 +1,11 @@
 #!/usr/bin/env python3
 """Test the caching system with a small subset of papers."""
 
+import sys
 import time
+from pathlib import Path
+
+sys.path.append(str(Path(__file__).parent.parent))
 
 from build_kb import KnowledgeBaseBuilder
 

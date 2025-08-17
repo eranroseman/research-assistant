@@ -8,6 +8,8 @@ import sys
 import time
 from pathlib import Path
 
+sys.path.append(str(Path(__file__).parent.parent))
+
 
 def get_test_pdfs(limit=10):
     """Get first N PDFs from Zotero library"""
