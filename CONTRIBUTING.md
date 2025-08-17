@@ -100,13 +100,21 @@ By participating in this project, you agree to maintain a respectful and inclusi
 
 ```
 research-assistant/
-├── src/                     # Source code
-│   └── research_assistant/  # Main package
-├── tests/                   # Test files
+├── .claude/                 # Claude Code integration
+│   └── commands/           # Slash commands
 ├── kb_data/                # Knowledge base data
-├── reports/                # Generated reports
-├── docs/                   # Documentation
-└── scripts/                # Utility scripts
+│   ├── index.faiss        # Vector search index
+│   ├── metadata.json      # Paper metadata
+│   └── papers/            # Full text papers
+├── reports/                # Generated research reports
+├── build_kb.py            # Knowledge base builder
+├── cli.py                 # Command-line interface
+├── demo.py                # Demo and test script
+├── requirements.txt       # Python dependencies
+├── requirements-dev.txt   # Development dependencies
+├── README.md             # Project documentation
+├── LICENSE               # MIT license
+└── CONTRIBUTING.md       # This file
 ```
 
 ## Areas for Contribution
