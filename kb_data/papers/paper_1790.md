@@ -1,0 +1,13 @@
+# How do foodservice dietitians and dietetic students learn about environmental sustainability? A scoping review protocol
+
+**Authors:** Joanna McCormack, Christy Noble, Lynda Ross, Denise Cruickshank, Andrea Bialocerkowski  
+**Year:** None  
+**Journal:** BMJ Open  
+**Volume:** 9  
+**Issue:** 11  
+**Pages:** e032355  
+**DOI:** 10.1136/bmjopen-2019-032355  
+
+## Abstract
+IntroductionHealthcare services are responsible for 7% of Australia’s carbon emissions, or 35 772 kt per annum, with 44% of these attributed to hospitals and an unknown proportion originating from the kitchen. Carbon emissions contribute to climate change that is predicted to adversely impact health outcomes. Healthcare professionals and institutions have an opportunity to reduce their impact on the climate. Australian dietitians, however, are not required to learn about environmental sustainability during their tertiary education. This scoping review will identify pedagogical frameworks employed by educational institutions and providers of professional development, to describe how foodservice dietitians and dietetic students develop environmental sustainability capabilities.Methods and analysisThe scoping review methodology established by Arksey and O’Malley will be used for this review. Papers will be included if they focus on dietitians or dietetic students learning about environmental sustainability in the foodservice domain. Nine databases, Business Source Complete, CINAHL, Cochrane, Edge (via informit), EMBASE, MEDLINE, Proquest, Scopus and Web of Science, will be searched from their inception. Grey literature will also be identified by searching theses databases, professional bodies databases and Google Scholar. Eligible articles will be identified by screening papers by their title and abstract, followed by a full-text review. The study selection process will be completed independently by the primary investigator and the research team. Any discrepancies will be resolved through discussion. The extracted data including citation information, information on the intervention and outcomes will be summarised using descriptive statistics. Themes describing the pedagogical underpinnings of the interventions, the measurement tools and the impact of the learning activities will be synthesised narratively.Ethics and disseminationThe results will inform the development of evidence-based pedagogical frameworks to enhance the capabilities of foodservice dietitians and dietetic students in environmental sustainability. Dissemination will occur through conference presentations, peer-reviewed journals and distribution through national accrediting bodies.
+

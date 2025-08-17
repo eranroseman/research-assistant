@@ -1,0 +1,12 @@
+# Recommendation systems to promote behavior change in patients with diabetes mellitus type 2: A systematic review
+
+**Authors:** Andreia Pinto, Diogo Martinho, João Matos, David Greer, Ana Vieira, André Ramalho, Goreti Marreiros, Alberto Freitas  
+**Year:** None  
+**Journal:** Expert Systems with Applications  
+**Volume:** 231  
+**Pages:** 120726  
+**DOI:** 10.1016/j.eswa.2023.120726  
+
+## Abstract
+Type 2 diabetic patients benefit significantly if the disease is well controlled through behavioral changes, namely adopting a healthy lifestyle. Currently, there is some evidence that technological strategies can help patient selfmanagement. However, few studies have specifically targeted individuals who solely engage in automatic and personalized self-management practices. This study aims to synthesize the literature regarding personalized feedback recommendation systems to promote behavior change without health professionals’ direct intervention for the management of type 2 diabetes and to verify if the use of these systems improves health-related outcomes. A systematic review was performed from inception to April 13, 2021, based on a search conducted in six databases. According to the defined search expression, studies addressing type 2 diabetic patients and recommendation systems were included. In total, 2186 papers were initially identified, but only 22 met the specific inclusion criteria after screening. Discrepancies in the selection of studies were discussed in consensus meetings. To assess the quality of the articles, two tools were employed according to the types of articles retrieved. Selected papers were summarized regarding specific characteristics such as clinical and technological outcomes. Studies incorporating a recommendation system into their technological solution showed a positive effect on the evaluated outcomes, except for those with longer duration, where the effect was not statistically significant. Although most studies did not report the type of system used, expert systems (rule-based) were found to be the most prevalent among those that did. As behaviors are often difficult to change quickly, it is recommended that future studies extend their follow-up timeframe. Nevertheless, the data obtained suggest that technological solutions incorporating a recommendation system show potential to improve health-related outcomes and demonstrated good usability.
+

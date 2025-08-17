@@ -1,0 +1,12 @@
+# Randomized controlled trial of a 12-week digital care program in improving low back pain
+
+**Authors:** Raad Shebib, Jeannie F. Bailey, Peter Smittenaar, Daniel F Perez, Daniel A Perez, Gabriel Mecklenburg, Simon Hunter  
+**Year:** 2019  
+**Volume:** 2  
+**Issue:** 1  
+**Pages:** 1-8  
+**DOI:** 10.1038/s41746-018-0076-7  
+
+## Abstract
+Low back pain (LBP) is the leading cause of disability throughout the world and is economically burdensome. The recommended first line treatment for non-specific LBP is non-invasive care. A digital care program (DCP) delivering evidence-based non-invasive treatment for LBP can aid self-management by engaging patients and scales personalized therapy for patient-specific needs. We assessed the efficacy of a 12-week DCP for LBP in a two-armed, pre-registered, randomized, controlled trial (RCT). Participants were included based on self-reported duration of LBP, but those with surgery or injury to the lower back in the previous three months were excluded. The treatment group (DCP) received the 12-week DCP, consisting of sensor-guided exercise therapy, education, cognitive behavioral therapy, team and individual behavioral coaching, activity tracking, and symptom tracking – all administered remotely via an app. The control group received three digital education articles only. All participants maintained access to treatment-as-usual. At 12 weeks, an intention-to-treat analysis showed each primary outcome—Oswestry Disability Index (p<0.001), Korff Pain (p<0.001) and Korff Disability (p<0.001)—as well as each secondary outcome improved more for participants in the DCP group compared to control group. For participants who completed the DCP (per protocol), average improvement in pain outcomes ranged 52-64% (Korff: 48.8–23.4, VAS: 43.6–16.5, VAS impact on daily life: 37.3–13.4; p<0.01 for all) and average improvement in disability outcomes ranged 31–55% (Korff: 33.1–15, ODI: 19.7–13.5; p<0.01 for both). Surgical interest significantly reduced in the DCP group. Participants that completed the DCP had an average engagement, each week, of 90%. Future studies will further explore the effectiveness of the DCP for long-term outcomes beyond 12 weeks and for a LBP patient population with possibly greater baseline pain and disability. In conclusion, the DCP resulted in improved LBP outcomes compared to treatment-as-usual and has potential to scale personalized evidence-based non-invasive treatment for LBP patients.
+

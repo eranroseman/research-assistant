@@ -1,0 +1,13 @@
+# A Coaching Program to Improve Dietary Intake of Patients with CKD: ENTICE-CKD
+
+**Authors:** Jaimon T. Kelly, Marguerite Conley, Tammy Hoffmann, Jonathan C. Craig, Allison Tong, Dianne P. Reidlinger, Marina M. Reeves, Kirsten Howard, Rathika Krishnasamy, Jagadeesh Kurtkoti, Suetonia C. Palmer, David W. Johnson, Katrina L. Campbell  
+**Year:** None  
+**Journal:** Clinical Journal of the American Society of Nephrology  
+**Volume:** 15  
+**Issue:** 3  
+**Pages:** 330-340  
+**DOI:** 10.2215/cjn.12341019  
+
+## Abstract
+Background and objectives            The dietary self-management of CKD is challenging. Telehealth interventions may provide an effective delivery method to facilitate sustained dietary change.                                Design, setting, participants, & measurements            This pilot, randomized, controlled trial evaluated secondary and exploratory outcomes after a dietitian-led telehealth coaching intervention to improve diet quality in people with stage 3–4 CKD. The intervention group received phone calls every 2 weeks for 3 months (with concurrent, tailored text messages for 3 months), followed by 3 months of tailored text messages without telephone coaching, to encourage a diet consistent with CKD guidelines. The control group received usual care for 3 months, followed by nontailored, educational text messages for 3 months.                                Results            Eighty participants (64% male), aged 62±12 years, were randomized to the intervention or control group. Telehealth coaching was safe, with no adverse events or changes to serum biochemistry at any time point. At 3 months, the telehealth intervention, compared with the control, had no detectable effect on overall diet quality on the Alternative Health Eating Index (3.2 points, 95% confidence interval, −1.3 to 7.7), nor at 6 months (0.5 points, 95% confidence interval, −4.6 to 5.5). There was no change in clinic BP at any time point in any group. There were significant improvements in several exploratory diet and clinical outcomes, including core food group consumption, vegetable servings, fiber intake, and body weight.                                Conclusions            Telehealth coaching was safe, but appeared to have no effect on the Alternative Healthy Eating Index or clinic BP. There were clinically significant changes in several exploratory diet and clinical outcomes, which require further investigation.                                Clinical Trial registry name and registration number:             Evaluation of Individualized Telehealth Intensive Coaching to Promote Healthy Eating and Lifestyle in CKD (ENTICE-CKD), ACTRN12616001212448.
+

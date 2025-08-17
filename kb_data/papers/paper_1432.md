@@ -1,0 +1,10 @@
+# The Application of Cognitive Load Theory to the Design of Health and Behavior Change Programs: Principles and Recommendations
+
+**Authors:** Kimberley A. Baxter, Nidhi Sachdeva, Sabine Baker  
+**Year:** 2025  
+**Journal:** Health Education & Behavior  
+**DOI:** 10.1177/10901981251327185  
+
+## Abstract
+Health and behavior change programs play a crucial role in improving health behaviors at individual and family levels. However, these programs face challenges with engagement and retention and typically show modest efficacy. Cognitive load theory is an established and highly used educational theory that proposes individuals have a finite capacity to process new information (“working memory”). Learning, engagement, and performance are negatively impacted when working memory is exceeded. Cognitive load theory is grounded in an understanding of human cognition and conceptualizes different types of cognitive loads imposed on individuals by a learning experience. Cognitive load theory aims to guide the design of learning experiences, considering how the human mind works, leading to more meaningful and effective learning. Cognitive load theory is increasingly applied to domains outside the classroom, such as designing patient and clinical education. Applying cognitive load theory to the design of health programs, their materials, and interfaces can provide insights. By considering the cognitive demands placed on individuals when interacting with health programs, design can be optimized to reduce cognitive load and better facilitate learning and behavior adoption. This may enhance engagement, retention, and effectiveness of programs. Cognitive load theory may be particularly valuable for individuals with diminished working memory due to high levels of mental load and stress. Design principles are presented to consolidate knowledge from cognitive load theory and existing approaches to guide researchers, policymakers, and health programmers. Further research and interdisciplinary collaboration are needed to realize the potential of cognitive load theory in health.
+

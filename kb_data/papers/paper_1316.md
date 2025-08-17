@@ -1,0 +1,12 @@
+# A digital health intervention for cardiovascular disease management in primary care (CONNECT) randomized controlled trial
+
+**Authors:** Julie Redfern, Genevieve Coorey, John Mulley, Anish Scaria, Lis Neubeck, Nashid Hafiz, Chris Pitt, Kristie Weir, Joanna Forbes, Sharon Parker, Fiona Bampi, Alison Coenen, Gemma Enright, Annette Wong, Theresa Nguyen, Mark Harris, Nick Zwar, Clara K. Chow, Anthony Rodgers, Emma Heeley, Katie Panaretto, Annie Lau, Noel Hayman, Tim Usherwood, David Peiris  
+**Year:** 2020  
+**Journal:** npj Digital Medicine  
+**Volume:** 3  
+**Issue:** 1  
+**DOI:** 10.1038/s41746-020-00325-z  
+
+## Abstract
+AbstractDigital health applications (apps) have the potential to improve health behaviors and outcomes. We aimed to examine the effectiveness of a consumer web-based app linked to primary care electronic health records (EHRs). CONNECT was a multicenter randomized controlled trial involving patients with or at risk of cardiovascular disease (CVD) recruited from primary care (Clinical Trial registration ACTRN12613000715774). Intervention participants received an interactive app which was pre-populated and refreshed with EHR risk factor data, diagnoses and, medications. Interactive risk calculators, motivational messages and lifestyle goal tracking were also included. Control group received usual health care. Primary outcome was adherence to guideline-recommended medications (≥80% of days covered for blood pressure (BP) and statin medications). Secondary outcomes included attainment of risk factor targets and eHealth literacy. In total, 934 patients were recruited; mean age 67.6 (±8.1) years. At 12 months, the proportion with >80% days covered with recommended medicines was low overall and there was no difference between the groups (32.8% vs. 29.9%; relative risk [RR] 1.07 [95% CI, 0.88–1.20] p = 0.49). There was borderline improvement in the proportion meeting BP and LDL targets in intervention vs. control (17.1% vs. 12.1% RR 1.40 [95% CI, 0.97–2.03] p = 0.07). The intervention was associated with increased attainment of physical activity targets (87.0% intervention vs. 79.7% control, p = 0.02) and e-health literacy scores (72.6% intervention vs. 64.0% control, p = 0.02). In conclusion, a consumer app integrated with primary health care EHRs was not effective in increasing medication adherence. Borderline improvements in risk factors and modest behavior changes were observed.
+

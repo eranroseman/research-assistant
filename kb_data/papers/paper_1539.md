@@ -1,0 +1,11 @@
+# Comprehensive framework for developing mHealth-based behavior change interventions
+
+**Authors:** Taoufik Rachad, Abderrahim El Hafidy, Meriem Aabbad, Ali Idri  
+**Year:** None  
+**Journal:** DIGITAL HEALTH  
+**Volume:** 10  
+**DOI:** 10.1177/20552076241289979  
+
+## Abstract
+Background Understanding human behaviors has been the subject of several studies. Their main goal was to inform behavior change interventions aimed at promoting positive behaviors and improving negative ones. However, as a non-expert in behavioral science, it is extremely difficult for researchers from other disciplines to design and develop evidence-based behavior change interventions. Moreover, all existing frameworks stop at the conceptual stage and do not provide instructions for developing digital-based behavior change interventions. Objective We present an end-to-end framework for the design and development of mHealth-based behavior change interventions by drawing on the synergy of theory, practices, and evidence from previous research. Methods We reconcile the frameworks most used in the literature for the design of behavior change interventions. Therefore, the authors examined the steps of each framework, and the mapping between these steps was carried out through several iterations to obtain five common steps. Results The proposed framework includes five steps: (1) Definition of the scope of the intervention. (2) Understanding and explanation of behavior. (3) Definition of the intervention content and strategies. (4) Implementation of the intervention. (5) Evaluation of the intervention. Each step is explained in detail, while providing researchers with examples and the necessary materials that will boost the success of their interventions. Conclusion This work provides a framework that will guide researchers in the design and implementation of mHealth-based behavior change interventions. It differs from its predecessors in that it goes beyond the conceptual level of intervention design by providing details about the technical implementation of mHealth solutions. Also, explanations and examples for different steps are provided to help researchers and practitioners and design, implement, and evaluate their mHealth-based behavior change interventions.
+

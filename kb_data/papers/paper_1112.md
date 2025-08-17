@@ -1,0 +1,15 @@
+# Remote Monitoring and Behavioral Economics in Managing Heart Failure in Patients Discharged From the Hospital: A Randomized Clinical Trial
+
+**Authors:** David A. Asch, Andrea B. Troxel, Lee R. Goldberg, Monique S. Tanna, Shivan J. Mehta, Laurie A. Norton, Jingsan Zhu, Lauren G. Iannotte, Tamar Klaiman, Yuqing Lin, Louise B. Russell, Kevin G. Volpp  
+**Year:** 2022  
+**Journal:** JAMA Internal Medicine  
+**Volume:** 182  
+**Issue:** 6  
+**Pages:** 643  
+**DOI:** 10.1001/jamainternmed.2022.1383  
+
+## Abstract
+OBJECTIVE To determine whether remote monitoring of diuretic adherence and weight changes with financial incentives reduces hospital readmissions or death following discharge with HF. DESIGN, SETTING, AND PARTICIPANTS The Electronic Monitoring of Patients Offers Ways to Enhance Recovery (EMPOWER) study, a 3-hospital pragmatic trial, randomized 552 adults recently discharged with HF to usual care (n = 280) or a compound intervention (n = 272) designed to inform clinicians of diuretic adherence and changes in patient weight. Patients were recruited from May 25, 2016, to April 8, 2019, and followed up for 12 months. Investigators were blinded to assignment but patients were not. Analysis was by intent to treat. INTERVENTIONS Participants randomized to the intervention arm received digital scales, electronic pill bottles for diuretic medication, and regret lottery incentives conditional on the previous day’s adherence to both medication and weight measurement, with $1.40 expected daily value. Participants’ physicians were alerted if participants’ weights increased 1.4 kg in 24 hours or 2.3 kg in 72 hours or if diuretic medications were missed for 5 days. Alerts and weights were integrated into the electronic health record. Participants randomized to the control arm received usual care and no further study contact. MAIN OUTCOMES AND MEASURES Time to death or readmission for any cause within 12 months.
+RESULTS Of the 552 participants, 290 were men (52.5%); 291 patients (52.7%) were Black, 231 were White (41.8%), and 16 were Hispanic (2.9%); mean (SD) age was 64.5 (11.8) years. The mean (SD) ejection fraction was 43% (18.1%). Each month, approximately 75% of participants were 80% adherent to both medication and weight measurement. There were 423 readmissions and 26 deaths in the control group and 377 readmissions and 23 deaths in the intervention group. There was no significant difference between the 2 groups for the combined outcome of all-cause inpatient readmission or death (unadjusted hazard ratio, 0.91; 95% CI, 0.74-1.13; P = .40) and no significant differences in all-cause inpatient readmission or observation stay or death, all-cause cardiovascular readmission or death, time to first event, and total all-cause deaths. Participants in the intervention group were slightly more likely to spend fewer days in the hospital.
+CONCLUSIONS AND RELEVANCE In this randomized clinical trial, there was no reduction in the combined outcome of readmission or mortality in a year-long intensive remote monitoring program with incentives for patients previously hospitalized for HF.
+

@@ -1,0 +1,12 @@
+# A more practical guide to incorporating health equity domains in implementation determinant frameworks
+
+**Authors:** Eva N. Woodward, Rajinder Sonia Singh, Phiwinhlanhla Ndebele-Ngwenya, Andrea Melgar Castillo, Kelsey S. Dickson, JoAnn E. Kirchner  
+**Year:** None  
+**Journal:** Implementation Science Communications  
+**Volume:** 2  
+**Issue:** 1  
+**DOI:** 10.1186/s43058-021-00146-5  
+
+## Abstract
+AbstractBackgroundDue to striking disparities in the implementation of healthcare innovations, it is imperative that researchers and practitioners can meaningfully use implementation determinant frameworks to understand why disparities exist in access, receipt, use, quality, or outcomes of healthcare. Our prior work documented and piloted the first published adaptation of an existing implementation determinant framework with health equity domains to create the Health Equity Implementation Framework. We recommended integrating these three health equity domains to existing implementation determinant frameworks: (1) culturally relevant factors of recipients, (2) clinical encounter or patient-provider interaction, and (3) societal context (including but not limited to social determinants of health). This framework was developed for healthcare and clinical practice settings. Some implementation teams have begun using the Health Equity Implementation Framework in their evaluations and asked for more guidance.MethodsWe completed a consensus process with our authorship team to clarify steps to incorporate a health equity lens into an implementation determinant framework.ResultsWe describe steps to integrate health equity domains into implementation determinant frameworks for implementation research and practice. For each step, we compiled examples or practical tools to assist implementation researchers and practitioners in applying those steps. For each domain, we compiled definitions with supporting literature, showcased an illustrative example, and suggested sample quantitative and qualitative measures.ConclusionIncorporating health equity domains within implementation determinant frameworks may optimize the scientific yield and equity of implementation efforts by assessing and ideally addressing implementation and equity barriers simultaneously. These practical guidance and tools provided can assist implementation researchers and practitioners to concretely capture and understand barriers and facilitators to implementation disparities.
+

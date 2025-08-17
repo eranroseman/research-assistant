@@ -1,0 +1,10 @@
+# A supportive text message intervention for individuals living with endometriosis (EndoSMS): Randomized controlled pilot and feasibility trial
+
+**Year:** 2023  
+**Volume:** 32  
+**Pages:** 101093-101093  
+**DOI:** 10.1016/j.conctc.2023.101093  
+
+## Abstract
+As a high symptom burden chronic condition, endometriosis is associated with diminished quality of life (QoL) and psychological distress. The EndoSMS text message intervention was developed to inform and support individuals living with endometriosis. The primary aim of this study is to assess the acceptability, feasibility and preliminary efficacy of EndoSMS, to improve endometriosis-specific QoL and reduce psychological distress in a randomised controlled trial, compared with care as usual. We will additionally assess the impact of EndoSMS on self-efficacy for managing endometriosis. A two-arm parallel pilot randomised controlled trial with waitlist control was conducted. Baseline assessments included QoL, psychological distress, self-efficacy, demographic and medical variables. Following baseline survey completion, participants were randomised to either the Intervention (EndoSMS: 3-months of text messaging) or Control condition. At 3-month follow-up, all participants completed an online survey reassessing outcomes, and Intervention participants provided quantitative and qualitative user feedback on EndoSMS. Data collection commenced on 18 November 2021 and was completed on 30 March 2022. Descriptive statistics will be used to analyse feasibility and acceptability of the intervention. Preliminary efficacy analyses will be conducted using linear mixed models for QoL, psychological distress and self-efficacy outcomes. Subgroup analyses will also be conducted for typically underserved populations (e.g., rural/regional). This pilot will provide acceptability, feasibility and preliminary efficacy evidence for the impact of a supportive text messaging program for endometriosis. It will contribute to understanding how to optimally support individuals in living with and managing their endometriosis. Australian New Zealand Clinical Trials Registry.
+

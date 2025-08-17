@@ -1,0 +1,13 @@
+# Mobile Phone Text Messages to Support Treatment Adherence in Adults With High Blood Pressure (SMS-Text Adherence Support [StAR]): A Single-Blind, Randomized Trial
+
+**Authors:** Kirsten Bobrow, Andrew J. Farmer, David Springer, Milensu Shanyinde, Ly-Mee Yu, Thomas Brennan, Brian Rayner, Mosedi Namane, Krisela Steyn, Lionel Tarassenko, Naomi Levitt  
+**Year:** 2016  
+**Journal:** Circulation  
+**Volume:** 133  
+**Issue:** 6  
+**Pages:** 592-600  
+**DOI:** 10.1161/circulationaha.115.017530  
+
+## Abstract
+Background—            We assessed the effect of automated treatment adherence support delivered via mobile phone short message system (SMS) text messages on blood pressure.                                Methods and Results—            In this pragmatic, single-blind, 3-arm, randomized trial (SMS-Text Adherence Support [StAR]) undertaken in South Africa, patients treated for high blood pressure were randomly allocated in a 1:1:1 ratio to information only, interactive SMS text messaging, or usual care. The primary outcome was change in systolic blood pressure at 12 months from baseline measured with a validated oscillometric device. All trial staff were masked to treatment allocation. Analyses were intention to treat. Between June 26, 2012, and November 23, 2012, 1372 participants were randomized to receive information-only SMS text messages (n=457), interactive SMS text messages (n=458), or usual care (n=457). Primary outcome data were available for 1256 participants (92%). At 12 months, the mean adjusted change in systolic blood pressure compared with usual care was −2.2 mm Hg (95% confidence interval, −4.4 to −0.04) with information-only SMS and −1.6 mm Hg (95% confidence interval, −3.7 to 0.6) with interactive SMS. Odds ratios for the proportion of participants with a blood pressure <140/90 mm Hg were 1.42 (95% confidence interval, 1.03–1.95) for information-only messaging and 1.41 (95% confidence interval, 1.02–1.95) for interactive messaging compared with usual care.                                Conclusions—            In this randomized trial of an automated adherence support program delivered by SMS text message in a general outpatient population of adults with high blood pressure, we found a small reduction in systolic blood pressure control compared with usual care at 12 months. There was no evidence that an interactive intervention increased this effect.                                Clinical Trial Registration—                          URL:              http://www.clinicaltrials.gov              . Unique identifier: NCT02019823. South African National Clinical Trials Register, number SANCTR DOH-27-1212-386; Pan Africa Trial Register, number PACTR201411000724141.
+

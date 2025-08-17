@@ -1,0 +1,12 @@
+# MCMTC: A Pragmatic Framework for Selecting an Experimental Design to Inform the Development of Digital Interventions
+
+**Authors:** Inbal Nahum-Shani, John J. Dziak, David W. Wetter  
+**Year:** 2022  
+**Journal:** Frontiers in Digital Health  
+**Volume:** 4  
+**Pages:** 798025  
+**DOI:** 10.3389/fdgth.2022.798025  
+
+## Abstract
+Advances in digital technologies have created unprecedented opportunities to deliver effective and scalable behavior change interventions. Many digital interventions include multiple components, namely several aspects of the intervention that can be differentiated for systematic investigation. Various types of experimental approaches have been developed in recent years to enable researchers to obtain the empirical evidence necessary for the development of effective multiple-component interventions. These include factorial designs, Sequential Multiple Assignment Randomized Trials (SMARTs), and Micro-Randomized Trials (MRTs). An important challenge facing researchers concerns selecting the right type of design to match their scientific questions. Here, we propose MCMTC – a pragmatic framework that can be used to guide investigators interested in developing digital interventions in deciding which experimental approach to select. This framework includes five questions that investigators are encouraged to answer in the process of selecting the most suitable design: (1) Multiple-component intervention: Is the goal to develop an intervention that includes multiple components; (2) Component selection: Are there open scientific questions about the selection of specific components for inclusion in the intervention; (3) More than a single component: Are there open scientific questions about the inclusion of more than a single component in the intervention; (4) Timing: Are there open scientific questions about the timing of component delivery, that is when to deliver specific components; and (5) Change: Are the components in question designed to address conditions that change relatively slowly (e.g., over months or weeks) or rapidly (e.g., every day, hours, minutes). Throughout we use examples of tobacco cessation digital interventions to illustrate the process of selecting a design by answering these questions. For simplicity we focus exclusively on four experimental approaches—standard two- or multi-arm randomized trials, classic factorial designs, SMARTs, and MRTs—acknowledging that the array of possible experimental approaches for developing digital interventions is not limited to these designs.
+

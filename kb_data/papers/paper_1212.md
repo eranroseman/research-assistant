@@ -1,0 +1,13 @@
+# Provider perspectives on the integration of patient-reported outcomes in an electronic health record
+
+**Authors:** Renwen Zhang, Eleanor R Burgess, Madhu C Reddy, Nan E Rothrock, Surabhi Bhatt, Luke V Rasmussen, Zeeshan Butt, Justin B Starren  
+**Year:** 2019  
+**Journal:** JAMIA Open  
+**Volume:** 2  
+**Issue:** 1  
+**Pages:** 73-80  
+**DOI:** 10.1093/jamiaopen/ooz001  
+
+## Abstract
+Abstract                                 Objective                  Integrating patient-reported outcomes (PROs) into electronic health records (EHRs) can improve patient-provider communication and delivery of care. However, new system implementation in health-care institutions is often accompanied by a change in clinical workflow and organizational culture. This study examines how well an EHR-integrated PRO system fits clinical workflows and individual needs of different provider groups within 2 clinics.                                                Materials and Methods                  Northwestern Medicine developed and implemented an EHR-integrated PRO system within the orthopedics and oncology departments. We conducted interviews with 11 providers who had interacted with the system. Through thematic analysis, we synthesized themes regarding provider perspectives on clinical workflow, individual needs, and system features.                                                Results                  Our findings show that EHR-integrated PROs facilitate targeted conversation with patients and automated triage for psychosocial care. However, physicians, psychosocial providers, and medical assistants faced different challenges in their use of the PRO system. Barriers mainly stemmed from a lack of actionable data, workflow disruption, technical issues, and a lack of incentives.                                                Discussion                  This study sheds light on the ecosystem around EHR-integrated PRO systems (such as user needs and organizational factors). We present recommendations to address challenges facing PRO implementation, such as optimizing data collection and auto-referral processes, improving data visualizations, designing effective educational materials, and prioritizing the primary user group.                                                Conclusion                  PRO integration into routine care can be beneficial but also require effective technology design and workflow configuration to reach full potential use. This study provides insights into how patient-generated health data can be better integrated into clinical practice and care delivery processes.
+

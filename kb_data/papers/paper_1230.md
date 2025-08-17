@@ -1,0 +1,13 @@
+# Mobile Health Coaching on Nutrition and Lifestyle Behaviors for Subfertile Couples Using the Smarter Pregnancy Program: Model-Based Cost-Effectiveness Analysis
+
+**Authors:** Elsje C Oostingh, Robbin H Ophuis, Maria Ph Koster, Suzanne Polinder, Hester F Lingsma, Joop Se Laven, Régine Pm Steegers-Theunissen  
+**Year:** 2019  
+**Journal:** JMIR mHealth and uHealth  
+**Volume:** 7  
+**Issue:** 10  
+**Pages:** e13935  
+**DOI:** 10.2196/13935  
+
+## Abstract
+Background            The health care costs for reproductive care have substantially increased with the use of in vitro fertilization (IVF) treatment. The mobile health (mHealth) coaching program Smarter Pregnancy is an effective intervention to improve nutrition and lifestyle behaviors and pregnancy rates in (sub)fertile couples, including those who undergo IVF treatment. Therefore, we hypothesize that this mHealth program can also reduce health care costs associated with IVF treatment.                                Objective            This study aimed to evaluate the cost-effectiveness of the mHealth coaching program Smarter Pregnancy and compare it to usual care in women of subfertile couples who start their first IVF cycle.                                Methods            This model-based cost-effectiveness analysis was performed on data from couples undergoing IVF treatment at the Erasmus MC, University Medical Center Rotterdam. A decision tree model was used to assess the incremental cost-effectiveness ratio (ICER) of ongoing pregnancies and costs of use of the mHealth program as compared to usual care. A probabilistic sensitivity analysis was performed to consider the uncertainty surrounding the point estimates of the input parameters.                                Results            Based on our model including 793 subfertile women undergoing IVF treatment, use of the mHealth program resulted in 86 additional pregnancies and saved €270,000 compared to usual care after two IVF cycles, with an ICER of –€3050 (95% CI –3960 to –540) per additional pregnancy. The largest cost saving was caused by the avoided IVF treatment costs. Sensitivity analyses showed that the mHealth program needs to increase the ongoing pregnancy rate by at least 51% after two IVF cycles for cost saving.                                Conclusions            The mHealth coaching program Smarter Pregnancy is potentially cost saving for subfertile couples preceding their first IVF treatment. Implementation of this mHealth program in routine preconception care for subfertile couples should be seriously considered, given the relatively low costs and promising cost-effectiveness estimates.
+

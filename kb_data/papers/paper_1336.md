@@ -1,0 +1,12 @@
+# TEXT4myBACK: A Text Message Intervention to Improve Function in People With Low Back Pain—Protocol of a Randomized Controlled Trial
+
+**Authors:** Carolina G Fritsch, Paulo H Ferreira, Joanna L Prior, Ornella Clavisi, Clara K Chow, Julie Redfern, Aravinda Thiagalingam, Thomas Lung, Andrew J McLachlan, Manuela Loureiro Ferreira  
+**Year:** 2021  
+**Journal:** Physical Therapy  
+**Volume:** 101  
+**Issue:** 7  
+**DOI:** 10.1093/ptj/pzab100  
+
+## Abstract
+Abstract                                 Objective                  The authors sought to describe the protocol of a randomized controlled trial that will investigate the effects of the TEXT4myBACK self-management text message intervention compared with control in people with low back pain (LBP).                                                Methods                  A single-blind (assessor and statistician), randomized controlled trial with economic analysis and process evaluation will be conducted. A total of 304 people with non-specific LBP of less than 12 weeks will be enrolled and randomly allocated either to TEXT4myBACK intervention or control groups. The TEXT4myBACK intervention group will receive 4 semi-personalized text messages per week providing advice, motivation, and information about LBP, physical activity, sleep, mood, use of care, and medication during 12 weeks. The control group will receive 1 text message with a link to a LBP and diet online information package. Outcomes will be assessed at baseline and 3, 6, and 12 months. The primary outcome will be function assessed with the Patient-Specific Functional Scale. Secondary outcomes will include pain intensity, physical activity participation, sedentary behavior, global impression of change, health-related quality of life, and eHealth literacy. Data on demographic characteristics, smallest worthwhile change (ie, smallest function scored needed to be achieved at the end of the intervention to consider it to be worthwhile), health care utilization, and adverse events (ie, any new health issue that occurs during participation in the study) will be collected. An economic and process evaluation will also be conducted.                                                Impact                  This study will assess if a self-management text message intervention is effective and cost-effective in improving function of people with LBP. This study can inform clinical practice of a simple, scalable, and affordable intervention for managing LBP.
+

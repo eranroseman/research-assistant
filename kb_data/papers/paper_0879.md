@@ -1,0 +1,14 @@
+# IoT-based wearable health monitoring device and its validation for potential critical and emergency applications
+
+**Authors:** Ju-Yu Wu, Yuhling Wang, Congo Tak Shing Ching, Hui-Min David Wang, Lun-De Liao  
+**Year:** 2023  
+**Journal:** Frontiers in Public Health  
+**Volume:** 11  
+**Pages:** 1188304  
+**DOI:** 10.3389/fpubh.2023.1188304  
+
+## Abstract
+The COVID-19 pandemic brought the world to a standstill, posing unprecedented challenges for healthcare systems worldwide. The overwhelming number of patients infected with the virus placed an enormous burden on healthcare providers, who struggled to cope with the sheer volume of cases. Furthermore, the lack of effective treatments or vaccines means that quarantining has become a necessary measure to slow the spread of the virus. However, quarantining places a significant burden on healthcare providers, who often lack the resources to monitor patients with mild symptoms or asymptomatic patients. In this study, we propose an Internet of Things (IoT)-based wearable health monitoring system that can remotely monitor the exact locations and physiological parameters of quarantined individuals in real time. The system utilizes a combination of highly miniaturized optoelectronic and electronic technologies, an anti-epidemic watch, a mini-computer, and a monitor terminal to provide real-time updates on physiological parameters. Body temperature, peripheral oxygen saturation (SpO
+              2
+              ), and heart rate are recorded as the most important measurements for critical care. If these three physiological parameters are aberrant, then it could represent a life-endangering situation and/or a short period over which irreversible damage may occur. Therefore, these parameters are automatically uploaded to a cloud database for remote monitoring by healthcare providers. The monitor terminal can display real-time health data for multiple patients and provide early warning functions for medical staff. The system significantly reduces the burden on healthcare providers, as it eliminates the need for manual monitoring of patients in quarantine. Moreover, it can help healthcare providers manage the COVID-19 pandemic more effectively by identifying patients who require medical attention in real time. We have validated the system and demonstrated that it is well suited to practical application, making it a promising solution for managing future pandemics. In summary, our IoT-based wearable health monitoring system has the potential to revolutionize healthcare by providing a cost-effective, remote monitoring solution for patients in quarantine. By allowing healthcare providers to monitor patients remotely in real time, the burden on medical resources is reduced, and more efficient use of limited resources is achieved. Furthermore, the system can be easily scaled to manage future pandemics, making it an ideal solution for managing the health challenges of the future.
+

@@ -1,0 +1,13 @@
+# Impact of mHealth Chronic Disease Management on Treatment Adherence and Patient Outcomes: A Systematic Review
+
+**Authors:** Saee Hamine, Emily Gerth-Guyette, Dunia Faulx, Beverly B Green, Amy Sarah Ginsburg  
+**Year:** 2015  
+**Journal:** Journal of Medical Internet Research  
+**Volume:** 17  
+**Issue:** 2  
+**Pages:** e52  
+**DOI:** 10.2196/jmir.3951  
+
+## Abstract
+Background Adherence to chronic disease management is critical to achieving improved health outcomes, quality of life, and cost-effective health care. As the burden of chronic diseases continues to grow globally, so does the impact of non-adherence. Mobile technologies are increasingly being used in health care and public health practice (mHealth) for patient communication, monitoring, and education, and to facilitate adherence to chronic diseases management. Objective We conducted a systematic review of the literature to evaluate the effectiveness of mHealth in supporting the adherence of patients to chronic diseases management (“mAdherence”), and the usability, feasibility, and acceptability of mAdherence tools and platforms in chronic disease management among patients and health care providers. Methods We searched PubMed, Embase, and EBSCO databases for studies that assessed the role of mAdherence in chronic disease management of diabetes mellitus, cardiovascular disease, and chronic lung diseases from 1980 through May 2014. Outcomes of interest included effect of mHealth on patient adherence to chronic diseases management, disease-specific clinical outcomes after intervention, and the usability, feasibility, and acceptability of mAdherence tools and platforms in chronic disease management among target end-users. Results In all, 107 articles met all inclusion criteria. Short message service was the most commonly used mAdherence tool in 40.2% (43/107) of studies. Usability, feasibility, and acceptability or patient preferences for mAdherence interventions were assessed in 57.9% (62/107) of studies and found to be generally high. A total of 27 studies employed randomized controlled trial (RCT) methods to assess impact on adherence behaviors, and significant improvements were observed in 15 of those studies (56%). Of the 41 RCTs that measured effects on disease-specific clinical outcomes, significant improvements between groups were reported in 16 studies (39%). Conclusions There is potential for mHealth tools to better facilitate adherence to chronic disease management, but the evidence supporting its current effectiveness is mixed. Further research should focus on understanding and improving how mHealth tools can overcome specific barriers to adherence.
+

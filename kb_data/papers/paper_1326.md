@@ -1,0 +1,13 @@
+# Evaluating acceptability and feasibility of a mobile health intervention to improve self-efficacy in prescription opioid tapering in patients with chronic pain: protocol for a pilot randomised, single-blind, controlled trial
+
+**Authors:** Michael Magee, Ali Gholamrezaei, Amy Gray McNeilage, Leah Dwyer, Alison Sim, Manuela Ferreira, Beth Darnall, Paul Glare, Claire Ashton-James  
+**Year:** None  
+**Journal:** BMJ Open  
+**Volume:** 12  
+**Issue:** 4  
+**Pages:** e057174  
+**DOI:** 10.1136/bmjopen-2021-057174  
+
+## Abstract
+IntroductionOpioid medications are no longer recommended as long-term therapy for chronic non-cancer pain, and many patients are advised to reduce or discontinue opioid medications. Many patients report difficulties in tapering opioid medications, necessitating supporting interventions. This protocol describes a pilot randomised controlled trial (RCT) to investigate the acceptability, feasibility and potential efficacy of a mobile health intervention to improve the opioid tapering self-efficacy of patients with chronic non-cancer pain.Methods and analysisThe trial will be a single-blind (clinician, data collector and statistician-blinded) pilot RCT with two parallel arms. Forty adult patients with chronic non-cancer pain who are voluntarily reducing their prescribed opioid medications under medical guidance will be recruited from two tertiary pain clinics (Start date 25 August 2021). Participants will be randomly assigned to an intervention or control group. Both groups will receive usual care, including multidisciplinary pain management. In addition to usual care, the intervention group will receive a short informational and testimonial video about opioid tapering and will receive two specifically text messages per day for 28 days. The intervention is codesigned with patients and clinicians to provide evidence-based informational, motivational and emotional support to patients with chronic pain to taper opioid medications. Feasibility of the intervention and a future definitive RCT will be evaluated by measuring patient acceptability, delivery of the intervention, rates and reasons of exclusions and drop-outs, completion rates and missing data in the study questionnaires, and obtaining estimates for sample size determination. Potential efficacy will be evaluated by comparing changes in opioid tapering self-efficacy between the two groups.Ethics and disseminationThe study protocol was reviewed and approved by the Northern Sydney Local Health District (Australia). Study results will be published in peer-reviewed journals and presented at scientific and professional meetings.Trial registration numberACTRN12621000795897.
+

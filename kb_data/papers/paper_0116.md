@@ -1,0 +1,16 @@
+# Wearable Devices for Supporting Chronic Disease Self-Management: Scoping Review
+
+**Authors:** Marie-Pierre Gagnon, Steven Ouellet, Eugène Attisso, Wilfried Supper, Samira Amil, Caroline Rhéaume, Jean-Sébastien Paquette, Christian Chabot, Marie-Claude Laferrière, Maxime Sasseville  
+**Year:** 2024  
+**Journal:** Interactive Journal of Medical Research  
+**Volume:** 13  
+**Pages:** e55925  
+**DOI:** 10.2196/55925  
+
+## Abstract
+Background: People with chronic diseases can benefit from wearable devices in managing their health and encouraging healthy lifestyle habits. Wearables such as activity trackers or blood glucose monitoring devices can lead to positive health impacts, including improved physical activity adherence or better management of type 2 diabetes. Few literature reviews have focused on the intersection of various chronic diseases, the wearable devices used, and the outcomes evaluated in intervention studies, particularly in the context of primary health care.
+Objective: This study aims to identify and describe (1) the chronic diseases represented in intervention studies, (2) the types or combinations of wearables used, and (3) the health or health care outcomes assessed and measured.
+Methods: We conducted a scoping review following the Joanna Briggs Institute guidelines, searching the MEDLINE and Web of Science databases for studies published between 2012 and 2022. Pairs of reviewers independently screened titles and abstracts, applied the selection criteria, and performed full-text screening. We included interventions using wearables that automatically collected and transmitted data to adult populations with at least one chronic disease. We excluded studies with participants with only a predisposition to develop a chronic disease, hospitalized patients, patients with acute diseases, patients with active cancer, and cancer survivors. We included randomized controlled trials and cohort, pretest-posttest, observational, mixed methods, and qualitative studies.
+Results: After the removal of 1987 duplicates, we screened 4540 titles and abstracts. Of the remaining 304 articles after exclusions, we excluded 215 (70.7%) full texts and included 89 (29.3%). Of these 89 texts, 10 (11%) were related to the same interventions as those in the included studies, resulting in 79 studies being included. We structured the results according to chronic disease clusters: (1) diabetes, (2) heart failure, (3) other cardiovascular conditions, (4) hypertension, (5) multimorbidity and other combinations of chronic conditions, (6) chronic obstructive pulmonary disease, (7) chronic pain, (8) musculoskeletal conditions, and (9) asthma. Diabetes was the most frequent health condition (18/79, 23% of the studies), and wearable activity trackers were the most used (42/79, 53% of the studies). In the 79 included studies, 74 clinical, 73 behavioral, 36 patient technology experience, 28 health care system, and 25 holistic or biopsychosocial outcomes were reported.
+Conclusions: This scoping review provides an overview of the wearable devices used in chronic disease self-management intervention studies, revealing disparities in both the range of chronic diseases studied and the variety of wearable devices used.
+

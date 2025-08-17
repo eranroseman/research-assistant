@@ -1,0 +1,13 @@
+# Effectiveness of a Multifaceted Informational-Based and Text Message Reminders on Pneumococcal and Influenza Vaccinations in Hospital Emergency Departments: A Cluster-Randomized Controlled Trial
+
+**Authors:** Sarah Tubiana, José Labarere, Jacques Levraut, Pierre Michelet, Fleur Jourda De Vaux, Benoit Doumenc, Pierre Hausfater, Christophe Choquet, Patrick Plaisance, Jeannot Schmidt, Véronique Mattei, Olivier Gacia, Didier Storme, Patrick Ray, Guillaume Der Sahakian, Marie-Clément Kouka, Laure Jainsky, Jocelyn Raude, Xavier Duval, Yann-Erick Claessens  
+**Year:** 2021  
+**Journal:** Vaccines  
+**Volume:** 9  
+**Issue:** 9  
+**Pages:** 962  
+**DOI:** 10.3390/vaccines9090962  
+
+## Abstract
+Objectives. We aimed to evaluate the effectiveness of a multifaceted procedure in improving pneumococcal and influenza vaccinations 6 months after an emergency department (ED) visit among patients aged 65 years and older. Methods. We conducted a cluster-randomized, controlled, parallel-group, open-label implementation trial in 18 EDs in France and Monaco. Participants were recruited from November 2015 to September 2016. EDs were randomly assigned with a 1:1 ratio to provide either a multifaceted procedure that combined structured information about pneumococcal and influenza vaccines and three text message reminders sent to patients every two weeks (intervention arm) or nonstructured information only (control arm). The outcomes were self-reported pneumococcal vaccination and influenza vaccination rates within 6 months of enrollment. Results. A total of 9 EDs were randomized to the intervention arm (n = 780 patients) and 9 to the control arm (n = 695 patients). The median age for all enrolled patients was 74 years (25–75th percentiles, 69 to 82): 50.1% were male, 34.9% had at least one underlying condition, and 30.7% were at risk for invasive pneumococcal infection. In the intention-to-treat analysis, the multifaceted intervention did not alter the pneumococcal vaccination rate (6.4% versus 4.6%, absolute difference: 1.8; 95% CI: [−0.9 to 4.4]; p = 0.19), whereas it improved the influenza vaccination rate (52.1% versus 40.0%, absolute difference: 12.1; 95% CI: [2.4 to 21.8]; p = 0.01). At 12 months, mortality did not differ between the intervention (9.7%) and control (11.2%) arms (p = 0.35). Conclusions. A multifaceted intervention based on text message reminders provides an opportunity to increase anti-influenza vaccination among elderly patients visiting the ED. Efforts are warranted to provide better information on pneumococcal diseases and the benefits of pneumococcal vaccines, especially in the elderly.
+

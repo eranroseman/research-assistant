@@ -1,0 +1,13 @@
+# Outcomes of Best-Practice Guided Digital Mental Health Interventions for Youth and Young Adults with Emerging Symptoms: Part I. A Systematic Review of Socioemotional Outcomes and Recommendations
+
+**Authors:** Jessica E. Opie, An Vuong, Ellen T. Welsh, Richard Gray, Natalie Pearce, Sonia Marchionda, Rachel Mutch, Hanan Khalil  
+**Year:** None  
+**Journal:** Clinical Child and Family Psychology Review  
+**Volume:** 27  
+**Issue:** 2  
+**Pages:** 424-475  
+**DOI:** 10.1007/s10567-024-00469-4  
+
+## Abstract
+AbstractYouth-specific digital mental health interventions (DMHI) represent an emerging field of study, and aim to increase access, improve socioemotional outcomes, and, where required, support triage to targeted interventions. However, prior reviews have reported inconsistent findings on the clinical effectiveness of such interventions in young adults (12–25 years). Further, shortfalls remain for the impact of guided interventions based on the mode of delivery and the type of human support personnel (e.g., professional or peer) guiding the intervention. In response, this systematic review, co-designed with Australia’s leading mental health organization, aims to assess the effectiveness of guided digital programs in improving youth socioemotional outcomes. Included studies involve young people experiencing mental ill-health, receiving brief (i.e., 1–12 sessions), digitally delivered (at least partially) psychological interventions that were guided or partially guided, tested in a type of experimental study, with a socioemotional outcome. Specific socioemotional outcomes examined were depression, anxiety, stress, wellbeing, mindfulness, and quality of life. A systematic search of the contemporary published and grey literature identified 22,482 records with 32 relevant records published between 2018 and 2023. A narrative synthesis guided integration of findings. Results demonstrated strong evidence for the effectiveness of guided interventions on socioemotional outcomes (i.e., depression, anxiety, stress) yet these effects were short-lived. When factoring in the use of different control groups (i.e., active vs. inactive), inconsistent effects were observed for the socioemotional outcomes of depression, anxiety, and stress. The mode of delivery (i.e., asynchronous, synchronous, combined) and the type of human support personnel did not appear to impact socioemotional outcomes. Results indicate efficacious brief digital interventions for depression and anxiety include refresher/follow-up content, goal setting content, and relapse prevention content. In contrast, poor efficacy is associated with interventions that include homework tasks, self-monitoring, and log-keeping content.PROSPERO, ID CRD42023405812.
+

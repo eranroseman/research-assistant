@@ -1,0 +1,13 @@
+# Effect of text messaging on depression in patients with coronary heart disease: a substudy analysis from the TEXT ME randomised controlled trial
+
+**Authors:** Sheikh Mohammed Shariful Islam, Clara K Chow, Julie Redfern, Cindy Kok, Karin Rådholm, Sandrine Stepien, Anthony Rodgers, Maree L Hackett  
+**Year:** None  
+**Journal:** BMJ Open  
+**Volume:** 9  
+**Issue:** 2  
+**Pages:** e022637  
+**DOI:** 10.1136/bmjopen-2018-022637  
+
+## Abstract
+ObjectiveWe aimed to evaluate the effects on depression scores of a lifestyle-focused cardiac support programme delivered via mobile phone text messaging among patients with coronary heart disease (CHD).DesignSubstudy and secondary analysis of a parallel-group, single-blind randomised controlled trial of patients with CHD.SettingA tertiary hospital in Sydney, Australia.InterventionThe Tobacco, Exercise and dieT MEssages programme comprised four text messages per week for 6 months that provided education, motivation and support on diet, physical activity, general cardiac education and smoking, if relevant. The programme did not have any specific mental health component.OutcomesDepression scores at 6 months measured using the Patient Health Questionnaire-9 (PHQ-9). Treatment effect across subgroups was measured using log-binomial regression model for the binary outcome (depressed/not depressed, where depressed is any score of PHQ-9 ≥5) with treatment, subgroup and treatment by subgroup interaction as fixed effects.ResultsDepression scores at 6 months were lower in the intervention group compared with the control group, mean difference 1.9 (95% CI 1.5 to 2.4, p<0.0001). The frequency of mild or greater depressive symptoms (PHQ-9 scores≥5) at 6 months was 21/333 (6.3%) in the intervention group and 86/350 (24.6%) in the control group (relative risk (RR) 0.26, 95% CI 0.16 to 0.40, p<0.001). This proportional reduction in depressive symptoms was similar across groups defined by age, sex, education, body mass index, physical activity, current smoking, current drinking and history of depression, diabetes and hypertension. In particular, the rates of PHQ-9 ≥5 among people with a history of depression were 4/44 (9.1%) vs 29/62 (46.8%) in intervention vs control (RR 0.19, 95% CI 0.07 to 0.51, p<0.001), and were 17/289 (5.9%) vs 57/288 (19.8%) among others (RR 0.30, 95% CI 0.18 to 0.50, p<0.001).ConclusionsAmong people with CHD, a cardiac support programme delivered via mobile phone text messaging was associated with fewer symptoms of mild-to-moderate depression at 6 months in the treatment group compared with controls.Trial registration numberACTRN12611000161921.
+

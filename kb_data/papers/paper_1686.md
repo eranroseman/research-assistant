@@ -1,0 +1,13 @@
+# Which older adults are at highest risk of prescribing cascades? A national study of the gabapentinoid–loop diuretic cascade
+
+**Authors:** Matthew E. Growdon, Bocheng Jing, Earl J. Morris, W. James Deardorff, W. John Boscardin, Amy L. Byers, Kenneth S. Boockvar, Michael A. Steinman  
+**Year:** None  
+**Journal:** Journal of the American Geriatrics Society  
+**Volume:** 72  
+**Issue:** 6  
+**Pages:** 1728-1740  
+**DOI:** 10.1111/jgs.18892  
+
+## Abstract
+AbstractBackgroundPrescribing cascades are important contributors to polypharmacy. Little is known about which older adults are at highest risk of experiencing prescribing cascades. We explored which older veterans are at highest risk of the gabapentinoid (including gabapentin and pregabalin)–loop diuretic (LD) cascade, given the dramatic increase in gabapentinoid prescribing in recent years.MethodsUsing Veterans Affairs and Medicare claims data (2010–2019), we performed a prescription sequence symmetry analysis (PSSA) to assess loop diuretic initiation before and after gabapentinoid initiation among older veterans (≥66 years). To identify the cascade, we calculated the adjusted sequence ratio (aSR), which assesses the temporality of LD relative to gabapentinoid initiation. To explore high‐risk groups, we used multivariable logistic regression with prescribing order modeled as a binary dependent variable. We calculated adjusted odds ratios (aORs), measuring the extent to which factors are associated with one prescribing order versus another.ResultsOf 151,442 veterans who initiated a gabapentinoid, there were 1,981 patients who initiated a LD within 6 months after initiating a gabapentinoid compared to 1,599 patients who initiated a LD within 6 months before initiating a gabapentinoid. In the gabapentinoid–LD group, the mean age was 73 years, 98% were male, 13% were Black, 5% were Hispanic, and 80% were White. Patients in each group were similar across patient and health utilization factors (standardized mean difference <0.10 for all comparisons). The aSR was 1.23 (95% CI: 1.13, 1.34), strongly suggesting the cascade's presence. People age ≥85 years were less likely to have the cascade (compared to 66–74 years; aOR 0.74, 95% CI: 0.56–0.96), and people taking ≥10 medications were more likely to have the cascade (compared to 0–4 drugs; aOR 1.39, 95% CI: 1.07–1.82).ConclusionsAmong older adults, those who are younger and taking many medications may be at higher risk of the gabapentinoid–LD cascade, contributing to worsening polypharmacy and potential drug‐related harms. We did not identify strong predictors of this cascade, suggesting that prescribing cascade prevention efforts should be widespread rather than focused on specific subgroups.
+

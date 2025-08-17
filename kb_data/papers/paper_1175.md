@@ -1,0 +1,16 @@
+# Behavioral Economic Strategies to Improve Enrollment Rates in Clinical Research: Embedded Recruitment Pilot Trial
+
+**Authors:** Brittney Greene, Leah Bernardo, Morgan Thompson, James Loughead, Rebecca Ashare  
+**Year:** 2023  
+**Journal:** JMIR Formative Research  
+**Volume:** 7  
+**Pages:** e47121  
+**DOI:** 10.2196/47121  
+
+## Abstract
+Background: Nearly 1 in 3 clinical trials end prematurely due to underenrollment. Strategies to enhance recruitment are often implemented without scientific rigor to evaluate efficacy. Evidence-based, cost-effective behavioral economic strategies designed to influence decision-making may be useful to promote clinical trial enrollment.
+Objective: This study evaluated 2 behavioral economic strategies to improve enrollment and retention rates across 4 clinical trials: information provision (IP) and contingency management (CM; ie, lottery). IP targets descriptive and injunctive norms about participating in research and CM provides participants incentives to reinforce a target behavior.
+Methods: A sample of 212 participants was enrolled across 4 clinical trials focused on tobacco use: 2 focused on HIV and 2 focused on neuroimaging. The CM condition included a lottery: for each study visit completed, participants received 5 “draws” from a bowl containing 500 “chips” valued at US $0, US $1, US $5, or US $100. In the IP condition, text messages that targeted injunctive norms about research (eg, “Many find it a rewarding way to advance science and be part of a community”) were sent through the Way to Health platform before all study visits. Participants were randomized to 1 of 4 conditions: IP, CM, IP+CM, or standard recruitment (SR). We performed logistic regression, controlling for sex and study, with condition as a between-subject predictor. Outcomes were the percentage of participants who attended a final eligibility visit (primary), met intent-to-treat (ITT) criteria (secondary), and completed the study (secondary). Recruitment was evaluated by the percentage of participants who attended a final eligibility visit, enrollment by ITT status, and retention by the percentage of participants who completed the study.
+Results: Rates of attending the eligibility visit and meeting ITT status were 58.9% (33/56) and 33.9% (19/56) for IP+CM; 45.5% (25/55) and 18.2% (10/55) for IP only; 41.5% (22/53) and 18.9% (10/53) for CM only; and 37.5% (18/48) and 12.5% (6/48) for SR, respectively. In the logistic regression, females were more likely to meet ITT status than males (odds ratio [OR] 2.7, 95% CI 1.2-5.7; P=.01). The IP+CM group was twice as likely to attend the final eligibility visit than the SR group (OR 2.4, 95% CI 1.1-5.2; P=.04). The IP+CM group was also significantly more likely to reach ITT status than the SR condition (OR 3.9, 95% CI 1.3-11.1; P=.01). Those who received any active intervention (IP, CM, or IP+CM) had a higher study completion rate (33/53, 63.5%) compared to those who received SR (5/12, 41.7%), but this difference was not significant (P=.26).
+Conclusions: Combining IP and CM strategies may motivate participants to participate in research and improve recruitment and retention rates. Evidence from this study provides preliminary support for the utility of behavioral economics strategies to improve enrollment and reduce attrition in clinical trials.
+
