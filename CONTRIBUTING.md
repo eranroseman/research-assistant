@@ -55,13 +55,13 @@ By participating in this project, you agree to maintain a respectful and inclusi
    ```bash
    # Run tests
    python -m pytest
-   
+
    # Type checking
    mypy src/
-   
+
    # Code formatting
    ruff format .
-   
+
    # Linting
    ruff check .
    ```

@@ -1,0 +1,36 @@
+# Minimal pre-commit configuration
+# Focus on fast, essential checks only
+
+repos:
+  # Pre-commit hooks
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.6.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+      - id: check-added-large-files
+        args: ['--maxkb=1000']
+      - id: check-merge-conflict
+      - id: check-toml
+      - id: debug-statements  # Check for leftover debug prints
+
+  # Ruff - fast Python linter and formatter
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.7.4
+    hooks:
+      - id: ruff
+        args: [--config, pyproject.toml, --fix, --exit-non-zero-on-fix]
+      - id: ruff-format
+        args: [--config, pyproject.toml]
+
+# Configuration
+default_language_version:
+  python: python3.11
+
+# Exclude directories but not files
+exclude: '^(\.git/|\.venv/|__pycache__/|\.mypy_cache/|\.pytest_cache/|kb_data/|docs/.*\.html)$'
+
+# Settings
+fail_fast: false  # Run all hooks even if one fails
+minimum_pre_commit_version: '3.0.0'
