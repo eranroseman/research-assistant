@@ -1,6 +1,26 @@
 # API Reference
 
-> **📚 Back to main docs**: [README.md](../README.md) | [Technical Specs](technical-specs.md) | [Advanced Usage](advanced-usage.md)
+> **Navigation**: [Home](../README.md) | [Technical Specs](technical-specs.md) | [Advanced Usage](advanced-usage.md)
+
+## Table of Contents
+
+### Search & Analysis
+- [`search`](#clipy-search) - Search papers with SPECTER embeddings
+- [`smart-get`](#clipy-smart-get-new-in-v31) - Intelligently retrieve paper sections
+- [`get`](#clipy-get) - Retrieve full papers or sections
+- [`cite`](#clipy-cite) - Generate IEEE citations
+
+### Knowledge Base
+- [`info`](#clipy-info) - Display KB information
+- [`build_kb.py`](#build_kbpy) - Build/update knowledge base
+
+### Advanced
+- [Python API](#python-api) - Programmatic usage
+- [Slash Commands](#slash-command-integration) - Claude Code integration
+- [Data Formats](#data-formats) - File structures
+- [Error Codes](#error-codes) - Troubleshooting
+
+---
 
 ## CLI Commands
 
@@ -79,11 +99,12 @@ python src/cli.py search "diabetes" --type systematic_review --type rct --qualit
 
 # JSON output with quality scores
 python src/cli.py search "wearables" --json --show-quality > results.json
+
 ```
 
 ### `cli.py get`
 
-Retrieve the full text of a specific paper.
+Retrieve the full text of a specific paper or specific sections.
 
 ```bash
 python src/cli.py get [OPTIONS] PAPER_ID
@@ -94,30 +115,59 @@ python src/cli.py get [OPTIONS] PAPER_ID
 | Option | Short | Type | Default | Description |
 |--------|-------|------|---------|-------------|
 | `--output` | `-o` | PATH | None | Save output to file |
+| **`--sections`** | | LIST | None | **NEW v3.1**: Specific sections to retrieve |
 
 #### Paper ID Format
 
-**v3.0 Security**: Paper IDs must be exactly 4 digits (e.g., 0001, 0234, 1999)
+**v3.1 Security**: Paper IDs must be exactly 4 digits (e.g., 0001, 0234, 1999)
 - Path traversal attempts are blocked
 - Invalid formats raise clear error messages
 
 #### Examples
 
 ```bash
-# Display paper in terminal
+# Display full paper in terminal
 python src/cli.py get 0001
+
+# Get specific sections only (NEW in v3.1)
+python src/cli.py get 0001 --sections abstract methods results
+python src/cli.py get 0001 --sections introduction discussion
 
 # Save to file
 python src/cli.py get 0001 -o paper.md
 
-# View specific paper
-python src/cli.py get 1234
-
-# Invalid formats (blocked in v3.0)
+# Invalid formats (blocked in v3.1)
 python src/cli.py get 1        # Error: Must be 4 digits
 python src/cli.py get abc      # Error: Must be 4 digits
 python src/cli.py get ../etc   # Error: Invalid format
 ```
+
+### `cli.py smart-get` (NEW in v3.1)
+
+Intelligently retrieve relevant sections of a paper based on query context, reducing text by up to 70%.
+
+```bash
+python src/cli.py smart-get [OPTIONS] PAPER_ID QUERY
+```
+
+#### Options
+
+| Option | Short | Type | Default | Description |
+|--------|-------|------|---------|-------------|
+| `--output` | `-o` | PATH | None | Save output to file |
+
+#### Examples
+
+```bash
+# Smart retrieval based on query context (70% less text)
+python src/cli.py smart-get 0001 "what were the methods"  # Gets methods section
+python src/cli.py smart-get 0001 "what were the findings"  # Gets results/discussion
+python src/cli.py smart-get 0001 "how did they measure"   # Gets methodology
+
+# Save to file
+python src/cli.py smart-get 0001 "results" -o results.md
+```
+
 
 ### `cli.py cite`
 
@@ -194,9 +244,9 @@ python src/build_kb.py [OPTIONS]
 | `--knowledge-base-path` | PATH | kb_data | Path to knowledge base directory |
 | `--zotero-data-dir` | PATH | ~/Zotero | Path to Zotero data directory |
 | `--clear-cache` | FLAG | False | Clear both PDF and embedding caches |
-| `--update` | FLAG | False | Incremental update - only add new papers (10x faster) |
-| `--export` | PATH | None | Export knowledge base to portable tar.gz archive |
-| `--import` | PATH | None | Import knowledge base from tar.gz archive |
+| **`--rebuild`** | FLAG | False | **v4.0**: Force complete rebuild (default is smart incremental) |
+| **`--export`** | PATH | None | **NEW v3.1**: Export knowledge base to portable tar.gz archive |
+| **`--import`** | PATH | None | **NEW v3.1**: Import knowledge base from tar.gz archive |
 
 #### Examples
 
@@ -216,8 +266,11 @@ python src/build_kb.py --api-url http://172.20.1.1:23119/api
 # Custom paths
 python src/build_kb.py --knowledge-base-path /data/kb --zotero-data-dir /mnt/c/Users/name/Zotero
 
-# Incremental update (10x faster)
-python src/build_kb.py --update
+# Smart incremental update (default)
+python src/build_kb.py
+
+# Force complete rebuild
+python src/build_kb.py --rebuild
 
 # Export knowledge base
 python src/build_kb.py --export kb_backup.tar.gz
@@ -230,9 +283,7 @@ python src/build_kb.py --import kb_backup.tar.gz
 
 When running without flags, the script presents options:
 
-1. **Quick Update** (Y/Enter): Add only new papers, uses caches (1-2 minutes)
-2. **Full Rebuild** (C): Clear everything and rebuild from scratch (30 minutes)
-3. **Exit** (N): Cancel without changes
+The script automatically detects changes and performs smart incremental updates. Use `--rebuild` to force a complete rebuild.
 
 ## Python API
 

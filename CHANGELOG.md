@@ -70,7 +70,7 @@
 - **Efficient cache format**: Split into JSON metadata + NPY data for better performance
 
 ### 🔒 Security Enhancements
-- **Command injection prevention**: Whitelist-based command execution in demo.py
+- **Command injection prevention**: Whitelist-based command execution
 - **Path traversal protection**: Strict 4-digit paper ID validation in cli.py
 - **Safe serialization**: Replaced pickle with JSON/NPY format (CVE prevention)
 - **Input validation**: All user inputs now properly validated and sanitized

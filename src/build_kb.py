@@ -12,15 +12,87 @@ import sqlite3
 import sys
 from datetime import UTC, datetime
 from pathlib import Path
-from typing import Any, cast
+from typing import Any
 
 import click
 import requests
 from tqdm import tqdm
 
+# ============================================================================
+# CONFIGURATION CONSTANTS
+# ============================================================================
+
+# Paths
+DEFAULT_KB_PATH = "kb_data"
+DEFAULT_ZOTERO_PATH = "~/Zotero"
+DEFAULT_API_URL = "http://127.0.0.1:23119/api"
+
+# Batch Sizes (based on available memory)
+BATCH_SIZE_GPU_HIGH = 256  # GPU > 8GB
+BATCH_SIZE_GPU_MEDIUM = 128  # GPU 4-8GB
+BATCH_SIZE_GPU_LOW = 64  # GPU < 4GB
+BATCH_SIZE_CPU_HIGH = 256  # RAM > 16GB
+BATCH_SIZE_CPU_MEDIUM = 128  # RAM 8-16GB
+BATCH_SIZE_CPU_LOW = 64  # RAM < 8GB
+BATCH_SIZE_FALLBACK = 128  # When detection fails
+
+# Text Processing Limits
+MAX_SECTION_LENGTH = 5000  # Max characters per section
+ABSTRACT_PREVIEW_LENGTH = 1000  # Fallback abstract length
+CONCLUSION_PREVIEW_LENGTH = 1000  # Fallback conclusion length
+MIN_FULL_TEXT_LENGTH = 5000  # Threshold for "small PDF"
+MIN_TEXT_FOR_CONCLUSION = 2000  # Min text needed to extract conclusion
+
+# Sample Size Validation
+MIN_SAMPLE_SIZE = 10
+MAX_SAMPLE_SIZE = 100000
+
+# Display Limits
+MAX_MISSING_FILES_DISPLAY = 10
+MAX_SMALL_PDFS_DISPLAY = 20
+MAX_ORPHANED_FILES_WARNING = 5  # Show warning if more than this
+MAX_MISSING_PDFS_IN_REPORT = 100  # Truncate report after this many
+
+# Model Configuration
+SPECTER_EMBEDDING_DIM = 768
+EMBEDDING_MODEL = "sentence-transformers/allenai-specter"
+
+# API Configuration
+API_TIMEOUT_SHORT = 10  # For quick requests (seconds)
+API_TIMEOUT_LONG = 30  # For data fetches (seconds)
+API_BATCH_SIZE = 100  # Items per API request
+
+# Paper ID Format
+PAPER_ID_DIGITS = 4  # Format: 0001, 0002, etc.
+
+# Processing Time Estimates (seconds per item)
+TIME_PER_PAPER_GPU_MIN = 0.05
+TIME_PER_PAPER_GPU_MAX = 0.15
+TIME_PER_PAPER_CPU_MIN = 0.5
+TIME_PER_PAPER_CPU_MAX = 1.0
+LONG_OPERATION_THRESHOLD = 300  # 5 minutes in seconds
+
+# Version
+KB_VERSION = "4.0"
+
 
 def detect_study_type(text: str) -> str:
-    """Detect study type from abstract and title text."""
+    """Detect study type from abstract and title text.
+
+    Identifies research study types based on keywords:
+    - Systematic reviews and meta-analyses
+    - Randomized controlled trials (RCTs)
+    - Cohort and longitudinal studies
+    - Case-control studies
+    - Cross-sectional studies
+    - Case reports
+
+    Args:
+        text: Combined title and abstract text
+
+    Returns:
+        Study type identifier (e.g., 'systematic_review', 'rct', 'cohort')
+    """
     text_lower = text.lower()
 
     # Check in order of evidence hierarchy
@@ -49,7 +121,20 @@ def detect_study_type(text: str) -> str:
 
 
 def extract_rct_sample_size(text: str, study_type: str) -> int | None:
-    """Extract sample size for RCTs from abstract text."""
+    """Extract sample size for RCTs from abstract text.
+
+    Uses regex patterns to find sample size mentions like:
+    - "enrolled N patients"
+    - "N participants were randomized"
+    - "total of N subjects"
+
+    Args:
+        text: Paper abstract text
+        study_type: Study type (only processes if 'rct')
+
+    Returns:
+        Sample size as integer, or None if not found or not RCT
+    """
     if study_type != "rct":
         return None
 
@@ -78,15 +163,166 @@ def extract_rct_sample_size(text: str, study_type: str) -> int | None:
         match = re.search(pattern, text_lower)
         if match:
             n = int(match.group(1))
-            # Sanity check for reasonable sample sizes
-            if 10 <= n <= 100000:
+            # Validate reasonable sample size range
+            if MIN_SAMPLE_SIZE <= n <= MAX_SAMPLE_SIZE:
                 return n
 
     return None
 
 
+# ============================================================================
+# UTILITY FUNCTIONS
+# ============================================================================
+
+
+def estimate_processing_time(num_items: int, device: str = "cpu") -> tuple[float, float, str]:
+    """Calculate min/max time estimates and format message.
+
+    Args:
+        num_items: Number of items to process
+        device: Processing device ('cpu' or 'cuda')
+
+    Returns:
+        Tuple of (min_seconds, max_seconds, formatted_message)
+    """
+    if device == "cuda":
+        seconds_per_item_min = TIME_PER_PAPER_GPU_MIN
+        seconds_per_item_max = TIME_PER_PAPER_GPU_MAX
+    else:
+        seconds_per_item_min = TIME_PER_PAPER_CPU_MIN
+        seconds_per_item_max = TIME_PER_PAPER_CPU_MAX
+
+    time_min = num_items * seconds_per_item_min
+    time_max = num_items * seconds_per_item_max
+
+    if time_min > 60:
+        minutes_min = int(time_min / 60)
+        minutes_max = int(time_max / 60)
+        message = f"{minutes_min}-{minutes_max} minutes"
+    else:
+        message = f"{int(time_min)}-{int(time_max)} seconds"
+
+    return time_min, time_max, message
+
+
+def confirm_long_operation(estimated_seconds: float, operation_name: str = "Processing") -> bool:
+    """Ask user confirmation for long operations.
+
+    Args:
+        estimated_seconds: Estimated time in seconds
+        operation_name: Name of the operation for context
+
+    Returns:
+        True to continue, False to abort
+    """
+    if estimated_seconds > LONG_OPERATION_THRESHOLD:
+        response = input("Continue? (Y/n): ").strip().lower()
+        if response == "n":
+            print("Aborted by user")
+            return False
+    return True
+
+
+def display_operation_summary(
+    operation: str,
+    item_count: int,
+    time_estimate: str | None = None,
+    device: str | None = None,
+    storage_estimate_mb: float | None = None,
+) -> None:
+    """Display consistent operation summary.
+
+    Args:
+        operation: Name of the operation
+        item_count: Number of items to process
+        time_estimate: Formatted time estimate
+        device: Processing device
+        storage_estimate_mb: Estimated storage in MB
+    """
+    print(f"\n{operation}:")
+    print(f"  Items to process: {item_count:,}")
+    if time_estimate:
+        print(f"  Estimated time: {time_estimate}")
+    if device:
+        print(f"  Device: {device.upper()}")
+    if storage_estimate_mb:
+        print(f"  Storage needed: ~{storage_estimate_mb:.0f} MB")
+
+
+def format_truncated_list(
+    items: list, max_display: int = 10, item_formatter: Any = str, continuation_message: str | None = None
+) -> list[str]:
+    """Format a list with truncation for display.
+
+    Args:
+        items: List of items to format
+        max_display: Maximum number of items to show
+        item_formatter: Function to format each item
+        continuation_message: Custom message for remaining items
+
+    Returns:
+        List of formatted strings
+    """
+    lines = []
+    for item in items[:max_display]:
+        lines.append(item_formatter(item))
+
+    if len(items) > max_display:
+        remaining = len(items) - max_display
+        if continuation_message:
+            lines.append(continuation_message.format(count=remaining))
+        else:
+            lines.append(f"... and {remaining} more")
+
+    return lines
+
+
+def format_error_message(
+    error_type: str, details: str, suggestion: str | None = None, context: dict | None = None
+) -> str:
+    """Format consistent, helpful error messages.
+
+    Args:
+        error_type: Type of error
+        details: Error details
+        suggestion: How to fix the error
+        context: Additional context information
+
+    Returns:
+        Formatted error message
+    """
+    lines = [f"\nERROR: {error_type}"]
+    lines.append(f"  Details: {details}")
+
+    if context:
+        for key, value in context.items():
+            lines.append(f"  {key}: {value}")
+
+    if suggestion:
+        lines.append(f"\n  How to fix: {suggestion}")
+
+    return "\n".join(lines)
+
+
 class KnowledgeBaseBuilder:
+    """Build and maintain a searchable knowledge base from Zotero library.
+
+    This class handles:
+    - Extracting papers from Zotero's local SQLite database
+    - Processing PDF attachments to extract full text
+    - Generating SPECTER embeddings for semantic search
+    - Building FAISS index for similarity search
+    - Smart incremental updates to minimize processing time
+    - Caching at multiple levels (PDF text, embeddings)
+    """
+
     def __init__(self, knowledge_base_path: str = "kb_data", zotero_data_dir: str | None = None):
+        """Initialize the knowledge base builder.
+
+        Args:
+            knowledge_base_path: Directory to store the knowledge base (default: "kb_data")
+            zotero_data_dir: Path to Zotero data directory (default: ~/Zotero)
+        """
         self.knowledge_base_path = Path(knowledge_base_path)
         self.papers_path = self.knowledge_base_path / "papers"
         self.index_file_path = self.knowledge_base_path / "index.faiss"
@@ -106,25 +342,38 @@ class KnowledgeBaseBuilder:
         self.zotero_storage_path = self.zotero_data_dir / "storage"
 
         self._embedding_model: Any = None
-        self.cache: dict[str, dict[str, Any]] | None = None  # Lazy load when needed
-        self.embedding_cache: dict[str, Any] | None = None  # Lazy load when needed
+        self.cache: dict[str, dict[str, Any]] | None = None  # PDF text cache, loaded on demand
+        self.embedding_cache: dict[str, Any] | None = None  # Embedding vectors cache, loaded on demand
+
+        # Detect device early for time estimates
+        try:
+            import torch
+
+            self.device = "cuda" if torch.cuda.is_available() else "cpu"
+        except ImportError:
+            self.device = "cpu"
 
     @property
     def embedding_model(self) -> Any:
-        """Lazy load the SPECTER embedding model."""
+        """Lazy load the SPECTER embedding model.
+
+        SPECTER is specifically designed for scientific papers and provides
+        better semantic understanding than general-purpose models.
+        Automatically uses GPU if available for faster processing.
+
+        Returns:
+            SentenceTransformer model configured for SPECTER embeddings
+        """
         if self._embedding_model is None:
-            import torch
             from sentence_transformers import SentenceTransformer
 
-            # Detect and use GPU if available for faster encoding
-            self.device = "cuda" if torch.cuda.is_available() else "cpu"
+            # Device already detected in __init__, just report it
             if self.device == "cuda":
                 print("GPU detected! Using CUDA for faster embeddings")
             else:
                 print("No GPU detected, using CPU")
 
-            # Load SPECTER model - proven and stable for scientific papers
-            # Using the sentence-transformers version which works reliably
+            # Load SPECTER model optimized for scientific paper embeddings
             print("Loading SPECTER embedding model for scientific papers...")
             self._embedding_model = SentenceTransformer(
                 "sentence-transformers/allenai-specter", device=self.device
@@ -143,10 +392,13 @@ class KnowledgeBaseBuilder:
             try:
                 with open(self.cache_file_path, encoding="utf-8") as f:
                     self.cache = json.load(f)
-                    print(f"Loaded cache with {len(self.cache)} entries")
+                    # Silent - cache loading is an implementation detail
                     return self.cache
-            except (OSError, json.JSONDecodeError) as e:
-                print(f"Warning: Could not load cache: {e}")
+            except (json.JSONDecodeError, ValueError):
+                # Handle corrupted cache by starting fresh
+                print("Warning: Cache file corrupted, starting fresh")
+                self.cache = {}
+                return self.cache
 
         self.cache = {}
         return self.cache
@@ -155,12 +407,9 @@ class KnowledgeBaseBuilder:
         """Save the PDF text cache to disk."""
         if self.cache is None:
             return
-        try:
-            with open(self.cache_file_path, "w", encoding="utf-8") as f:
-                json.dump(self.cache, f, indent=2, ensure_ascii=False)
-                print(f"Saved cache with {len(self.cache)} entries")
-        except (OSError, TypeError) as e:
-            print(f"Warning: Could not save cache: {e}")
+        with open(self.cache_file_path, "w", encoding="utf-8") as f:
+            json.dump(self.cache, f, indent=2, ensure_ascii=False)
+            # Silent - cache saving is an implementation detail
 
     def clear_cache(self) -> None:
         """Clear the PDF text cache."""
@@ -170,82 +419,55 @@ class KnowledgeBaseBuilder:
             print("Cleared PDF text cache")
 
     def load_embedding_cache(self) -> dict[str, Any]:
-        """Load the embedding cache from disk using JSON format."""
+        """Load the embedding cache from disk."""
         if self.embedding_cache is not None:
             return self.embedding_cache
 
-        # Use JSON-based cache format only
+        # Simple JSON cache only
         json_cache_path = self.knowledge_base_path / ".embedding_cache.json"
         npy_cache_path = self.knowledge_base_path / ".embedding_data.npy"
 
         if json_cache_path.exists() and npy_cache_path.exists():
-            try:
-                import numpy as np
+            import numpy as np
 
-                # Load metadata from JSON
-                with open(json_cache_path) as f:
-                    cache_meta = json.load(f)
+            with open(json_cache_path) as f:
+                cache_meta = json.load(f)
+            embeddings = np.load(npy_cache_path, allow_pickle=False)
+            self.embedding_cache = {
+                "embeddings": embeddings,
+                "hashes": cache_meta["hashes"],
+                "model_name": cache_meta["model_name"],
+            }
+            # Silent - just return the cache
+            return self.embedding_cache
 
-                # Load embeddings from NPY (safe, no pickle)
-                embeddings = np.load(npy_cache_path, allow_pickle=False)
-
-                # Build hash index for O(1) lookups
-                hash_to_idx = {h: i for i, h in enumerate(cache_meta["hashes"])}
-
-                self.embedding_cache = {
-                    "embeddings": embeddings,
-                    "hashes": cache_meta["hashes"],
-                    "hash_index": hash_to_idx,  # O(1) lookup dict
-                    "model_name": cache_meta["model_name"],
-                }
-                print(f"Loaded embedding cache with {len(cache_meta['hashes'])} entries")
-                return self.embedding_cache
-            except (OSError, ValueError, json.JSONDecodeError) as e:
-                print(f"Warning: Could not load embedding cache (won't affect results, just speed): {e}")
-
-        self.embedding_cache = {
-            "embeddings": None,
-            "hashes": [],
-            "hash_index": {},
-            "model_name": "allenai/specter2",
-        }
+        self.embedding_cache = {"embeddings": None, "hashes": []}
         return self.embedding_cache
 
     def save_embedding_cache(self, embeddings: Any, hashes: list[str]) -> None:
-        """Save embeddings to cache using safe formats."""
-        try:
-            from datetime import UTC, datetime
+        """Save embeddings to cache."""
+        import numpy as np
 
-            import numpy as np
+        # Save metadata to JSON
+        json_cache_path = self.knowledge_base_path / ".embedding_cache.json"
+        cache_meta = {
+            "hashes": hashes,
+            "model_name": "SPECTER",
+            "created_at": datetime.now(UTC).isoformat(),
+        }
+        with open(json_cache_path, "w") as f:
+            json.dump(cache_meta, f, indent=2)
 
-            model_name = getattr(self, "model_version", "SPECTER")
-
-            # Save metadata to JSON
-            json_cache_path = self.knowledge_base_path / ".embedding_cache.json"
-            cache_meta = {
-                "hashes": hashes,
-                "model_name": model_name,
-                "created_at": datetime.now(UTC).isoformat(),
-            }
-            with open(json_cache_path, "w") as f:
-                json.dump(cache_meta, f, indent=2)
-
-            # Save embeddings to NPY (without pickle)
-            npy_cache_path = self.knowledge_base_path / ".embedding_data.npy"
-            np.save(npy_cache_path, embeddings, allow_pickle=False)
-
-            print(f"Saved {model_name} embedding cache with {len(hashes)} entries")
-        except (OSError, TypeError) as e:
-            print(f"Warning: Could not save embedding cache (won't affect results, just speed): {e}")
+        # Save embeddings to NPY
+        npy_cache_path = self.knowledge_base_path / ".embedding_data.npy"
+        np.save(npy_cache_path, embeddings, allow_pickle=False)
+        # Silent - cache saved
 
     def clear_embedding_cache(self) -> None:
         """Clear the embedding cache."""
         self.embedding_cache = None
-
-        # Clear JSON/NPY cache files
         json_cache_path = self.knowledge_base_path / ".embedding_cache.json"
         npy_cache_path = self.knowledge_base_path / ".embedding_data.npy"
-
         if json_cache_path.exists():
             json_cache_path.unlink()
         if npy_cache_path.exists():
@@ -258,42 +480,16 @@ class KnowledgeBaseBuilder:
 
         return hashlib.sha256(text.encode("utf-8")).hexdigest()
 
-    def get_paper_fingerprint(self, paper: dict) -> str:
-        """Create content-based fingerprint for paper to detect changes."""
-        import hashlib
-
-        # Include all content that affects embeddings
-        content_parts = [
-            paper.get("title", ""),
-            paper.get("abstract", ""),
-            paper.get("full_text", "")[:1000] if paper.get("full_text") else "",  # First 1000 chars
-            str(paper.get("year", "")),
-            ",".join(paper.get("authors", [])),
-        ]
-
-        content = "|".join(content_parts)
-        return hashlib.sha256(content.encode("utf-8")).hexdigest()
-
-    def should_recompute_embedding(self, paper: dict, cached_fingerprints: dict) -> bool:
-        """Check if paper content has changed and needs new embedding."""
-        paper_key = paper.get("zotero_key", "") or paper.get("doi", "") or paper.get("title", "")
-
-        if not paper_key:
-            return True  # No key to check, recompute
-
-        current_fingerprint = self.get_paper_fingerprint(paper)
-        cached_fingerprint = cached_fingerprints.get(paper_key)
-
-        return current_fingerprint != cached_fingerprint
-
     def get_optimal_batch_size(self) -> int:
         """Determine optimal batch size based on available memory."""
         try:
             import psutil
 
-            available_gb = psutil.virtual_memory().available / (1024**3)
+            mem = psutil.virtual_memory()
+            available_gb = mem.available / (1024**3)
+            total_gb = mem.total / (1024**3)
 
-            # Check if using GPU
+            # Adjust batch size for GPU if available
             if hasattr(self, "device") and self.device == "cuda":
                 try:
                     import torch
@@ -320,7 +516,12 @@ class KnowledgeBaseBuilder:
             else:
                 batch_size = 64
 
-            print(f"Using batch size {batch_size} based on {available_gb:.1f}GB available RAM")
+            print(
+                f"Using batch size {batch_size} based on {available_gb:.1f}GB available (of {total_gb:.1f}GB total)"
+            )
+
+            # Note: On CPU, batch size has minimal impact on speed since the bottleneck
+            # is model computation, not memory bandwidth. Larger batches may even be slower.
             return batch_size
 
         except ImportError:
@@ -328,7 +529,17 @@ class KnowledgeBaseBuilder:
             return 128  # Better than original 64
 
     def clean_knowledge_base(self) -> None:
-        """Clean up existing knowledge base files before rebuilding."""
+        """Clean up existing knowledge base files before rebuilding.
+
+        Removes:
+        - Old paper markdown files in papers/ directory
+        - Previous FAISS index
+        - Previous metadata.json
+
+        Preserves:
+        - PDF text cache (.pdf_text_cache.json) - expensive to rebuild
+        - Embedding cache (.embedding_cache.json) - can be reused
+        """
         # Remove old paper files
         if self.papers_path.exists():
             paper_files = list(self.papers_path.glob("paper_*.md"))
@@ -346,10 +557,313 @@ class KnowledgeBaseBuilder:
             self.metadata_file_path.unlink()
             print("Removed old metadata file")
 
+    def check_for_changes(self, api_url: str | None = None) -> dict:
+        """Detect changes in Zotero library since last build.
+
+        Performs integrity checks and identifies:
+        - New papers added to Zotero
+        - Papers with updated PDFs (checks file size/modification time)
+        - Papers deleted from Zotero
+
+        Args:
+            api_url: Optional custom Zotero API URL
+
+        Returns:
+            Dictionary with counts of new, updated, and deleted papers
+
+        Raises:
+            ValueError: If knowledge base is corrupted or incompatible version
+        """
+        with open(self.metadata_file_path) as f:
+            metadata = json.load(f)
+
+        # Check version compatibility
+        if metadata.get("version") != "4.0":
+            raise ValueError(
+                f"KB version incompatible (v{metadata.get('version', '3.x')} found, v4.0 required)"
+            )
+
+        # Integrity check: Check for duplicate IDs
+        paper_ids = [p["id"] for p in metadata["papers"]]
+        unique_ids = set(paper_ids)
+        if len(unique_ids) != len(paper_ids):
+            duplicates = [id for id in unique_ids if paper_ids.count(id) > 1]
+            print(f"\nINTEGRITY ERROR: Found duplicate paper IDs: {duplicates}")
+            print(f"  {len(paper_ids)} papers but only {len(unique_ids)} unique IDs")
+            print("  Knowledge base is corrupted! Please rebuild with build_kb.py --rebuild")
+            raise ValueError("Knowledge base integrity check failed: duplicate IDs detected")
+
+        # Integrity check: Verify paper files exist
+        papers_dir = self.knowledge_base_path / "papers"
+        if papers_dir.exists():
+            expected_files = {p["filename"] for p in metadata["papers"]}
+            actual_files = {f.name for f in papers_dir.glob("paper_*.md")}
+            missing_files = expected_files - actual_files
+            extra_files = actual_files - expected_files
+
+            if missing_files:
+                print(f"\nWARNING: {len(missing_files)} paper files missing from disk")
+                if len(missing_files) <= 10:
+                    print(f"   Missing: {missing_files}")
+
+            if extra_files and len(extra_files) > 5:  # Allow a few extra files
+                print(f"\nWARNING: {len(extra_files)} orphaned paper files on disk")
+
+        # Integrity check: Sequential IDs
+        expected_ids = [f"{i:04d}" for i in range(1, len(metadata["papers"]) + 1)]
+        actual_ids = sorted(paper_ids)
+        if actual_ids != expected_ids:
+            print("\nWARNING: Paper IDs are not sequential")
+            print(f"  Expected: {expected_ids[:5]}...{expected_ids[-5:]}")
+            print(f"  Actual: {actual_ids[:5]}...{actual_ids[-5:]}")
+
+        existing_keys = {p["zotero_key"] for p in metadata["papers"]}
+
+        # Get current items from Zotero (minimal fetch)
+        current_items = self.get_zotero_items_minimal(api_url)
+        current_keys = {item["key"] for item in current_items}
+
+        new = current_keys - existing_keys
+        deleted = existing_keys - current_keys
+
+        # Quick PDF check (just size/mtime)
+        updated = []
+        pdf_map = self.get_pdf_paths_from_sqlite()
+
+        for paper in metadata["papers"]:
+            key = paper["zotero_key"]
+            if key in current_keys and key in pdf_map:
+                old_info = paper.get("pdf_info", {})
+                new_info = self.get_pdf_info(pdf_map[key])
+                if old_info != new_info:
+                    updated.append(key)
+
+        return {
+            "new": len(new),
+            "updated": len(updated),
+            "deleted": len(deleted),
+            "total": len(new) + len(updated) + len(deleted),
+            "new_keys": new,
+            "updated_keys": updated,
+            "deleted_keys": deleted,
+        }
+
+    def get_zotero_items_minimal(self, api_url: str | None = None) -> list:
+        """Get just keys and basic info from Zotero for change detection."""
+        base_url = api_url or "http://localhost:23119/api"
+
+        # Test connection
+        response = requests.get(f"{base_url}/", timeout=5)
+        if response.status_code != 200:
+            raise ConnectionError("Cannot connect to Zotero API")
+
+        all_items = []
+        start = 0
+        limit = 100
+
+        while True:
+            response = requests.get(
+                f"{base_url}/users/0/items",
+                params={"start": str(start), "limit": str(limit), "fields": "key,itemType"},
+                timeout=10,
+            )
+            response.raise_for_status()
+            batch = response.json()
+
+            if not batch:
+                break
+
+            # Filter for papers only
+            for item in batch:
+                if item.get("data", {}).get("itemType") in [
+                    "journalArticle",
+                    "conferencePaper",
+                    "preprint",
+                    "book",
+                    "bookSection",
+                    "thesis",
+                    "report",
+                ]:
+                    all_items.append({"key": item.get("key")})
+
+            start += len(batch)
+
+        return all_items
+
+    def get_pdf_info(self, pdf_path: Path) -> dict:
+        """Get PDF file info for change detection."""
+        if pdf_path and pdf_path.exists():
+            stat = pdf_path.stat()
+            return {"size": stat.st_size, "mtime": stat.st_mtime}
+        return {}
+
+    def apply_incremental_update(self, changes: dict, api_url: str | None = None) -> None:
+        """Apply incremental updates to existing knowledge base.
+
+        Processes only changed papers to minimize computation time.
+        Preserves existing paper IDs and ensures new papers get sequential IDs.
+
+        Args:
+            changes: Dictionary with 'new_keys', 'updated_keys', 'deleted_keys' sets
+            api_url: Optional custom Zotero API URL
+        """
+        # Load existing
+        with open(self.metadata_file_path) as f:
+            metadata = json.load(f)
+        papers_dict = {p["zotero_key"]: p for p in metadata["papers"]}
+
+        # Process new and updated papers
+        to_process = changes["new_keys"] | set(changes["updated_keys"])
+
+        if to_process:
+            print(f"Processing {len(to_process)} paper changes...")
+
+            # Get full data for papers to process
+            all_papers = self.process_zotero_local_library(api_url)
+            papers_to_process = [p for p in all_papers if p.get("zotero_key") in to_process]
+
+            # Add PDFs
+            self.augment_papers_with_pdfs(papers_to_process, use_cache=True)
+
+            # Get PDF map once for all papers
+            pdf_map = self.get_pdf_paths_from_sqlite()
+
+            # Find the highest existing ID to continue from
+            existing_ids = [int(p["id"]) for p in metadata["papers"] if p.get("id", "").isdigit()]
+            next_id = max(existing_ids) + 1 if existing_ids else 1
+
+            # Process each paper
+            for paper in papers_to_process:
+                key = paper["zotero_key"]
+
+                # Generate paper ID
+                if key in papers_dict:
+                    # Update existing paper
+                    paper_id = papers_dict[key]["id"]
+                else:
+                    # New paper - use next available ID
+                    paper_id = f"{next_id:04d}"
+                    next_id += 1
+
+                # Extract metadata
+                text_for_classification = f"{paper.get('title', '')} {paper.get('abstract', '')}"
+                study_type = detect_study_type(text_for_classification)
+                sample_size = extract_rct_sample_size(text_for_classification, study_type)
+
+                # Get PDF info
+                pdf_info = self.get_pdf_info(pdf_map.get(key, Path())) if key in pdf_map else {}
+
+                # Create paper metadata
+                paper_metadata = {
+                    "id": paper_id,
+                    "doi": paper.get("doi", ""),
+                    "title": paper.get("title", ""),
+                    "authors": paper.get("authors", []),
+                    "year": paper.get("year"),
+                    "journal": paper.get("journal", ""),
+                    "volume": paper.get("volume", ""),
+                    "issue": paper.get("issue", ""),
+                    "pages": paper.get("pages", ""),
+                    "abstract": paper.get("abstract", ""),
+                    "study_type": study_type,
+                    "sample_size": sample_size,
+                    "has_full_text": bool(paper.get("full_text")),
+                    "filename": f"paper_{paper_id}.md",
+                    "zotero_key": key,
+                    "pdf_info": pdf_info,
+                }
+
+                papers_dict[key] = paper_metadata
+
+                # Save paper file
+                md_content = self.format_paper_as_markdown(paper)
+                paper_file = self.papers_path / f"paper_{paper_id}.md"
+                with open(paper_file, "w", encoding="utf-8") as f:
+                    f.write(md_content)
+
+        # Remove deleted papers
+        for key in changes["deleted_keys"]:
+            papers_dict.pop(key, None)
+
+        # Rebuild metadata
+        metadata["papers"] = list(papers_dict.values())
+        metadata["total_papers"] = len(metadata["papers"])
+        metadata["last_updated"] = datetime.now(UTC).isoformat()
+        metadata["version"] = "4.0"
+
+        # Save metadata
+        with open(self.metadata_file_path, "w") as f:
+            json.dump(metadata, f, indent=2, ensure_ascii=False)
+
+        # Rebuild index
+        self.rebuild_simple_index(metadata["papers"])
+
+    def rebuild_simple_index(self, papers: list) -> None:
+        """Rebuild FAISS index from scratch (simple and fast)."""
+        import faiss
+
+        print("Rebuilding search index...")
+
+        # Generate embeddings for all papers
+        abstracts = []
+        for paper in papers:
+            title = paper.get("title", "").strip()
+            abstract = paper.get("abstract", "").strip()
+            embedding_text = f"{title} [SEP] {abstract}" if abstract else title
+            abstracts.append(embedding_text)
+
+        if abstracts:
+            # Estimate time for embeddings
+            num_papers = len(abstracts)
+            batch_size = self.get_optimal_batch_size()
+
+            # Estimate and display processing time
+            time_min, time_max, time_message = estimate_processing_time(num_papers, self.device)
+
+            display_operation_summary(
+                "Embedding Generation",
+                item_count=num_papers,
+                time_estimate=time_message,
+                device=self.device,
+                storage_estimate_mb=num_papers * 0.15,
+            )
+
+            if not confirm_long_operation(time_min, "Embedding generation"):
+                sys.exit(0)
+
+            print(f"Generating embeddings for {num_papers} papers...")
+
+            # Generate embeddings
+            embeddings = self.embedding_model.encode(abstracts, show_progress_bar=True, batch_size=batch_size)
+
+            # Create new index
+            dimension = embeddings.shape[1]
+            index = faiss.IndexFlatL2(dimension)
+            index.add(embeddings.astype("float32"))
+
+            # Save index
+            faiss.write_index(index, str(self.index_file_path))
+            print(f"Index rebuilt with {len(embeddings)} papers")
+        else:
+            # Empty index
+            index = faiss.IndexFlatL2(768)
+            faiss.write_index(index, str(self.index_file_path))
+            print("Created empty index")
+
     def get_pdf_paths_from_sqlite(self) -> dict[str, Path]:
-        """Get mapping of paper keys to PDF file paths from Zotero SQLite database."""
+        """Get mapping of paper keys to PDF file paths from Zotero SQLite database.
+
+        Queries Zotero's SQLite database to find PDF attachments for each paper.
+        This avoids having to traverse the file system and ensures we get the
+        correct PDF for each paper.
+
+        Returns:
+            Dictionary mapping Zotero paper keys to PDF file paths
+        """
         if not self.zotero_db_path.exists():
-            print(f"Warning: Zotero database not found at {self.zotero_db_path}")
+            print(
+                f"WARNING: Zotero database not found\n  Expected location: {self.zotero_db_path}\n  PDF paths will not be available"
+            )
             return {}
 
         pdf_map = {}
@@ -383,12 +897,12 @@ class KnowledgeBaseBuilder:
                         pdf_map[paper_key] = pdf_files[0]
 
             conn.close()
-            print(f"Found {len(pdf_map)} PDF attachments mapped to papers")
+            # Don't print this - it will be shown when extracting PDFs
 
         except sqlite3.Error as e:
-            print(f"Warning: Could not read Zotero database: {e}")
+            print(f"WARNING: Could not read Zotero database\n  Error: {e}")
         except Exception as e:
-            print(f"Warning: Error accessing PDF paths: {e}")
+            print(f"WARNING: Error accessing PDF paths\n  Error: {e}")
 
         return pdf_map
 
@@ -404,20 +918,15 @@ class KnowledgeBaseBuilder:
         if use_cache and paper_key:
             if self.cache is None:
                 self.load_cache()
-            if self.cache is None:
-                raise RuntimeError("Failed to load cache")
-            if paper_key in self.cache:
+            if self.cache and paper_key in self.cache:
                 cache_entry = self.cache[paper_key]
-                try:
-                    # Check if file metadata matches
-                    stat = os.stat(pdf_path)
-                    if (
-                        cache_entry.get("file_size") == stat.st_size
-                        and cache_entry.get("file_mtime") == stat.st_mtime
-                    ):
-                        return cache_entry.get("text")
-                except (OSError, AttributeError):
-                    pass  # If stat fails, just extract fresh
+                # Check if file metadata matches
+                stat = os.stat(pdf_path)
+                if (
+                    cache_entry.get("file_size") == stat.st_size
+                    and cache_entry.get("file_mtime") == stat.st_mtime
+                ):
+                    return cache_entry.get("text")
 
         # Extract text from PDF
         try:
@@ -433,14 +942,13 @@ class KnowledgeBaseBuilder:
                 if self.cache is None:
                     self.load_cache()
                 stat = os.stat(pdf_path)
-                if self.cache is None:
-                    raise RuntimeError("Failed to load cache")
-                self.cache[paper_key] = {
-                    "text": stripped_text,
-                    "file_size": stat.st_size,
-                    "file_mtime": stat.st_mtime,
-                    "cached_at": datetime.now(UTC).isoformat(),
-                }
+                if self.cache is not None:
+                    self.cache[paper_key] = {
+                        "text": stripped_text,
+                        "file_size": stat.st_size,
+                        "file_mtime": stat.st_mtime,
+                        "cached_at": datetime.now(UTC).isoformat(),
+                    }
 
             return stripped_text
         except Exception as e:
@@ -448,7 +956,18 @@ class KnowledgeBaseBuilder:
             return None
 
     def extract_sections(self, text: str) -> dict:
-        """Extract common academic paper sections from full text."""
+        """Extract common academic paper sections from full text.
+
+        Identifies and extracts standard sections like abstract, introduction,
+        methods, results, discussion, and conclusion. Handles both markdown-formatted
+        papers and raw text with section headers.
+
+        Args:
+            text: Full text of the paper
+
+        Returns:
+            Dictionary mapping section names to their content (max 5000 chars per section)
+        """
         import re
 
         sections = {
@@ -477,7 +996,7 @@ class KnowledgeBaseBuilder:
                 if line.startswith("## "):
                     # Save previous section
                     if current_section and section_content:
-                        sections[current_section] = "\n".join(section_content).strip()[:5000]
+                        sections[current_section] = "\n".join(section_content).strip()[:MAX_SECTION_LENGTH]
 
                     # Identify new section
                     header = line[3:].strip().lower()
@@ -508,7 +1027,7 @@ class KnowledgeBaseBuilder:
 
             # Save last section
             if current_section and section_content:
-                sections[current_section] = "\n".join(section_content).strip()[:5000]
+                sections[current_section] = "\n".join(section_content).strip()[:MAX_SECTION_LENGTH]
 
         # Look for inline section headers (Introduction\n, Methods\n, etc.)
         if has_markdown_headers and "## Full Text" in text:
@@ -543,7 +1062,9 @@ class KnowledgeBaseBuilder:
                         if (
                             current_section and section_content and not sections[current_section]
                         ):  # Don't overwrite
-                            sections[current_section] = "\n".join(section_content).strip()[:5000]
+                            sections[current_section] = "\n".join(section_content).strip()[
+                                :MAX_SECTION_LENGTH
+                            ]
                         current_section = found_section
                         section_content = []
                     elif current_section:
@@ -551,7 +1072,7 @@ class KnowledgeBaseBuilder:
 
                 # Save last section
                 if current_section and section_content and not sections[current_section]:
-                    sections[current_section] = "\n".join(section_content).strip()[:5000]
+                    sections[current_section] = "\n".join(section_content).strip()[:MAX_SECTION_LENGTH]
 
         # Fallback: use regex patterns for general text
         if not any(sections.values()):
@@ -577,15 +1098,15 @@ class KnowledgeBaseBuilder:
                             next_match = next_m.start()
 
                     if next_match:
-                        sections[section_name] = text[start : start + next_match].strip()[:5000]
+                        sections[section_name] = text[start : start + next_match].strip()[:MAX_SECTION_LENGTH]
                     else:
-                        sections[section_name] = text[start : start + 5000].strip()
+                        sections[section_name] = text[start : start + MAX_SECTION_LENGTH].strip()
 
         # If still no sections found, use heuristics
         if not any(sections.values()) and text:
-            sections["abstract"] = text[:1000].strip()
-            if len(text) > 2000:
-                sections["conclusion"] = text[-1000:].strip()
+            sections["abstract"] = text[:ABSTRACT_PREVIEW_LENGTH].strip()
+            if len(text) > MIN_TEXT_FOR_CONCLUSION:
+                sections["conclusion"] = text[-CONCLUSION_PREVIEW_LENGTH:].strip()
 
         return sections
 
@@ -617,152 +1138,6 @@ class KnowledgeBaseBuilder:
 
         return str(markdown_content)
 
-    def fetch_zotero_metadata(self, api_url: str | None = None) -> dict[str, Any]:
-        """Quickly fetch metadata about Zotero library for analysis."""
-        base_url = api_url or "http://localhost:23119/api"
-
-        # Test connection to local Zotero
-        try:
-            response = requests.get(f"{base_url}/", timeout=5)
-            if response.status_code != 200:
-                raise ConnectionError(
-                    "Zotero local API not accessible. Ensure Zotero is running and 'Allow other applications' is enabled in Advanced settings."
-                )
-        except requests.exceptions.RequestException as e:
-            raise ConnectionError(f"Cannot connect to Zotero local API: {e}") from e
-
-        # Get just keys and basic info for analysis
-        all_items = []
-        start = 0
-        limit = 100
-
-        while True:
-            try:
-                # Fetch only essential fields for speed
-                response = requests.get(
-                    f"{base_url}/users/0/items",
-                    params={
-                        "start": str(start),
-                        "limit": str(limit),
-                        "fields": "key,itemType,dateModified,title",
-                    },
-                    timeout=10,
-                )
-                response.raise_for_status()
-                batch = response.json()
-
-                if not batch:
-                    break
-
-                all_items.extend(batch)
-                start += len(batch)
-
-            except requests.exceptions.RequestException as e:
-                raise RuntimeError(f"Cannot connect to Zotero. Please start Zotero and try again: {e}") from e
-
-        # Extract paper keys and count
-        paper_keys = set()
-        paper_count = 0
-
-        for item in all_items:
-            if item.get("data", {}).get("itemType") in [
-                "journalArticle",
-                "conferencePaper",
-                "preprint",
-                "book",
-                "bookSection",
-                "thesis",
-                "report",
-            ]:
-                paper_keys.add(item.get("key", ""))
-                paper_count += 1
-
-        return {
-            "total_items": len(all_items),
-            "paper_count": paper_count,
-            "paper_keys": paper_keys,
-            "api_url": base_url,
-        }
-
-    def analyze_knowledge_base_state(self, zotero_metadata: dict[str, Any]) -> dict[str, Any]:
-        """Analyze current knowledge base and compare with Zotero library."""
-        analysis = {
-            "kb_exists": False,
-            "kb_paper_count": 0,
-            "new_papers": 0,
-            "deleted_papers": 0,
-            "cache_exists": self.cache_file_path.exists(),
-            "cache_size_mb": 0,
-            "embedding_cache_exists": (self.knowledge_base_path / ".embedding_cache.json").exists(),
-            "estimated_time_seconds": 0,
-            "estimated_time_str": "",
-        }
-
-        # Check existing knowledge base
-        if self.metadata_file_path.exists():
-            try:
-                with open(self.metadata_file_path, encoding="utf-8") as f:
-                    kb_metadata = json.load(f)
-                    analysis["kb_exists"] = True
-                    analysis["kb_paper_count"] = kb_metadata.get("total_papers", 0)
-
-                    # Get existing paper keys
-                    existing_keys = set()
-                    for paper in kb_metadata.get("papers", []):
-                        # Extract original zotero key from paper id or metadata
-                        # We'll need to store this in metadata going forward
-                        existing_keys.add(paper.get("zotero_key", ""))
-
-                    # Calculate differences
-                    zotero_keys = zotero_metadata["paper_keys"]
-                    analysis["new_papers"] = len(zotero_keys - existing_keys)
-                    analysis["deleted_papers"] = len(existing_keys - zotero_keys)
-            except (json.JSONDecodeError, KeyError):
-                pass
-
-        # Check cache sizes
-        if analysis["cache_exists"]:
-            try:
-                stat = self.cache_file_path.stat()
-                analysis["cache_size_mb"] = stat.st_size / (1024 * 1024)
-            except (OSError, AttributeError):
-                pass
-
-        # Estimate processing time
-        paper_count = int(zotero_metadata["paper_count"])
-        new_papers_val = analysis.get("new_papers", 0) if analysis["kb_exists"] else paper_count
-        new_papers = int(cast(int, new_papers_val)) if new_papers_val is not None else 0
-
-        if analysis["cache_exists"] and analysis["embedding_cache_exists"]:
-            # With caches: ~0.5 sec per new paper, 0.1 sec per cached paper
-            cached_papers = paper_count - new_papers
-            time_estimate = float((new_papers * 0.5) + (cached_papers * 0.1) + 10)  # +10 for overhead
-        else:
-            # Without caches, based on real-world performance:
-            # PDF extraction: ~0.05 sec/paper, Embeddings: ~0.4 sec/paper on GPU, ~0.75 on CPU
-            # Model loading: ~60 seconds overhead
-            try:
-                import torch
-
-                if torch.cuda.is_available():
-                    time_estimate = (paper_count * 0.45) + 60  # GPU: ~0.4s embeddings + 0.05s PDF
-                else:
-                    time_estimate = (paper_count * 0.8) + 120  # CPU: ~0.75s embeddings + 0.05s PDF + overhead
-            except ImportError:
-                time_estimate = (paper_count * 0.8) + 120  # Assume CPU if can't check
-
-        analysis["estimated_time_seconds"] = int(time_estimate)
-
-        # Format time string
-        if time_estimate < 60:
-            analysis["estimated_time_str"] = f"{int(time_estimate)} seconds"
-        elif time_estimate < 300:
-            analysis["estimated_time_str"] = f"{int(time_estimate / 60)} minutes"
-        else:
-            analysis["estimated_time_str"] = f"{time_estimate / 60:.1f} minutes"
-
-        return analysis
-
     def process_zotero_local_library(self, api_url: str | None = None) -> list[dict]:
         """Extract papers from Zotero local library using HTTP API with proper pagination."""
         base_url = api_url or "http://localhost:23119/api"
@@ -787,7 +1162,7 @@ class KnowledgeBaseBuilder:
             try:
                 response = requests.get(
                     f"{base_url}/users/0/items",
-                    params={"start": start, "limit": limit},
+                    params={"start": str(start), "limit": str(limit)},
                     timeout=30,
                 )
                 response.raise_for_status()
@@ -801,14 +1176,23 @@ class KnowledgeBaseBuilder:
                 print(f"  Fetched {len(all_items)} items...", end="\r")
 
             except requests.exceptions.RequestException as e:
-                raise RuntimeError(f"Cannot connect to Zotero. Please start Zotero and try again: {e}") from e
+                print(
+                    format_error_message(
+                        "Cannot fetch Zotero items",
+                        str(e),
+                        suggestion="Check that Zotero is running and accessible",
+                        context={"API URL": api_url},
+                    )
+                )
+                raise RuntimeError("Cannot fetch Zotero items") from e
 
         print(f"  Fetched {len(all_items)} total items from Zotero")
 
         papers = []
 
         # Process items to extract paper metadata
-        for item in tqdm(all_items, desc="Filtering for research papers"):
+        pbar = tqdm(all_items, desc="Filtering for research papers", unit="item")
+        for item in pbar:
             if item.get("data", {}).get("itemType") not in [
                 "journalArticle",
                 "conferencePaper",
@@ -848,10 +1232,17 @@ class KnowledgeBaseBuilder:
         return papers
 
     def augment_papers_with_pdfs(self, papers: list[dict], use_cache: bool = True) -> tuple[int, int]:
-        """Add full text from PDFs using SQLite database paths with caching.
+        """Add full text from PDFs to paper dictionaries.
+
+        Extracts text from PDF attachments found in Zotero's storage directory.
+        Uses aggressive caching to avoid re-processing PDFs that haven't changed.
+
+        Args:
+            papers: List of paper dictionaries to augment with full text
+            use_cache: Whether to use cached PDF text (speeds up rebuilds)
 
         Returns:
-            tuple: (papers_with_pdfs, cache_hits)
+            Tuple of (papers_with_pdfs_count, cache_hits_count)
         """
         # Ensure cache is loaded
         if use_cache and self.cache is None:
@@ -861,18 +1252,19 @@ class KnowledgeBaseBuilder:
 
         if not pdf_map:
             print("No PDF paths found in SQLite database")
-            return
+            return 0, 0
 
         papers_with_pdfs_available = sum(1 for p in papers if p["zotero_key"] in pdf_map)
-        print(f"Extracting text from PDFs ({papers_with_pdfs_available} papers have PDFs)...")
+        print(f"Extracting text from {papers_with_pdfs_available:,} PDFs...")
         papers_with_pdfs = 0
         cache_hits = 0
 
-        for paper in tqdm(papers, desc="Extracting PDF text"):
+        pbar = tqdm(papers, desc="Extracting PDF text", unit="paper")
+        for paper in pbar:
             if paper["zotero_key"] in pdf_map:
                 pdf_path = pdf_map[paper["zotero_key"]]
 
-                # Check if we're using cache and if this is a valid cache hit
+                # Check if this PDF was already processed and cached
                 was_cached = False
                 if use_cache:
                     if self.cache is None:
@@ -898,11 +1290,12 @@ class KnowledgeBaseBuilder:
                     if was_cached:
                         cache_hits += 1
 
-        print(f"Successfully extracted text from {papers_with_pdfs}/{len(papers)} papers")
         if use_cache and cache_hits > 0:
             print(
-                f"  Using cache: {cache_hits}/{papers_with_pdfs} PDFs ({cache_hits * 100 // papers_with_pdfs}%)"
+                f"Extracted text from {papers_with_pdfs:,}/{len(papers):,} papers ({cache_hits:,} from cache)"
             )
+        else:
+            print(f"Extracted text from {papers_with_pdfs:,}/{len(papers):,} papers")
 
         # Save cache after extraction
         if use_cache:
@@ -910,234 +1303,25 @@ class KnowledgeBaseBuilder:
 
         return papers_with_pdfs, cache_hits
 
-    def update_incremental(self, api_url: str | None = None) -> int:
-        """Add only new papers since last build - much faster than full rebuild."""
-        if not self.metadata_file_path.exists():
-            print("❌ No existing knowledge base found. Run full build first.")
-            return 0
-
-        # Load existing metadata
-        with open(self.metadata_file_path) as f:
-            existing_metadata = json.load(f)
-
-        last_updated = existing_metadata.get("last_updated", "")
-        existing_keys = {p.get("zotero_key") for p in existing_metadata.get("papers", [])}
-
-        print(f"🔍 Checking for new papers since {last_updated[:19]}...")
-
-        # Fetch current papers from Zotero
-        all_papers = self.process_zotero_local_library(api_url)
-
-        # Find new papers
-        new_papers = []
-        for paper in all_papers:
-            if paper.get("zotero_key") not in existing_keys:
-                new_papers.append(paper)
-
-        if not new_papers:
-            print("✅ No new papers found. Knowledge base is up to date!")
-            return 0
-
-        print(f"📚 Found {len(new_papers)} new papers to add")
-
-        # Add PDFs to new papers
-        _, _ = self.augment_papers_with_pdfs(new_papers, use_cache=True)  # Stats not needed for incremental
-
-        # Load existing FAISS index
-        import faiss
-        import numpy as np
-
-        index = faiss.read_index(str(self.index_file_path))
-
-        # Generate embeddings for new papers only
-        print(f"Generating embeddings for {len(new_papers)} new papers...")
-        new_abstracts = []
-        for paper in new_papers:
-            title = paper.get("title", "").strip()
-            abstract = paper.get("abstract", "").strip()
-
-            embedding_text = f"{title} [SEP] {abstract}" if abstract else title
-
-            new_abstracts.append(embedding_text)
-
-        # Compute embeddings
-        batch_size = self.get_optimal_batch_size()
-        new_embeddings = self.embedding_model.encode(
-            new_abstracts, show_progress_bar=True, batch_size=batch_size
-        )
-
-        # Add to FAISS index
-        index.add(new_embeddings.astype("float32"))
-
-        # Update metadata
-        start_id = len(existing_metadata["papers"]) + 1
-        for i, paper in enumerate(new_papers):
-            paper_id = f"{start_id + i:04d}"
-
-            # Detect study type and sample size
-            text_for_classification = f"{paper.get('title', '')} {paper.get('abstract', '')}"
-            study_type = detect_study_type(text_for_classification)
-            sample_size = extract_rct_sample_size(text_for_classification, study_type)
-
-            paper_metadata = {
-                "id": paper_id,
-                "doi": paper.get("doi", ""),
-                "title": paper.get("title", ""),
-                "authors": paper.get("authors", []),
-                "year": paper.get("year", None),
-                "journal": paper.get("journal", ""),
-                "volume": paper.get("volume", ""),
-                "issue": paper.get("issue", ""),
-                "pages": paper.get("pages", ""),
-                "abstract": paper.get("abstract", ""),
-                "study_type": study_type,
-                "sample_size": sample_size,
-                "has_full_text": bool(paper.get("full_text")),
-                "filename": f"paper_{paper_id}.md",
-                "embedding_index": len(existing_metadata["papers"]) + i,
-                "zotero_key": paper.get("zotero_key", ""),
-            }
-
-            existing_metadata["papers"].append(paper_metadata)
-
-            # Save paper markdown file
-            md_content = self.format_paper_as_markdown(paper)
-            markdown_file_path = self.papers_path / f"paper_{paper_id}.md"
-            with open(markdown_file_path, "w", encoding="utf-8") as f:
-                f.write(md_content)
-
-        # Update metadata counts and timestamp
-        existing_metadata["total_papers"] = len(existing_metadata["papers"])
-        existing_metadata["last_updated"] = datetime.now(UTC).isoformat()
-
-        # Save updated index and metadata
-        faiss.write_index(index, str(self.index_file_path))
-        with open(self.metadata_file_path, "w", encoding="utf-8") as f:
-            json.dump(existing_metadata, f, indent=2, ensure_ascii=False)
-
-        # Update embedding cache with new embeddings
-        if new_embeddings.shape[0] > 0:
-            cache = self.load_embedding_cache()
-            if cache["embeddings"] is not None:
-                # Append new embeddings to existing ones
-                combined = np.vstack([cache["embeddings"], new_embeddings])
-
-                # Add new hashes
-                new_hashes = []
-                for abstract in new_abstracts:
-                    new_hashes.append(self.get_embedding_hash(abstract))
-
-                all_hashes = cache["hashes"] + new_hashes
-                self.save_embedding_cache(combined, all_hashes)
-
-        print(f"✅ Successfully added {len(new_papers)} new papers!")
-        print(f"   Total papers: {existing_metadata['total_papers']}")
-        print(f"   Index: {self.index_file_path}")
-
-        return len(new_papers)
-
     def build_from_zotero_local(
         self,
         api_url: str | None = None,
         use_cache: bool = True,
-        skip_prompt: bool = False,
-        incremental: bool = False,
     ) -> None:
         """Build knowledge base from local Zotero library."""
-        # Try incremental update first if requested
-        if incremental and self.metadata_file_path.exists():
-            try:
-                new_count = self.update_incremental(api_url)
-                if new_count > 0:
-                    return  # Success!
-                elif new_count == 0:
-                    return  # Already up to date
-            except Exception as e:
-                print(f"⚠️  Incremental update failed: {e}")
-                print("   Falling back to full rebuild...")
+        print("Connecting to local Zotero library...")
 
-        print("Connecting to Zotero library...")
+        # Clean up old files
+        self.clean_knowledge_base()
 
-        # Step 0: Fetch metadata first for analysis
-        try:
-            print("Analyzing library...", end="", flush=True)
-            zotero_metadata = self.fetch_zotero_metadata(api_url)
-            kb_analysis = self.analyze_knowledge_base_state(zotero_metadata)
-            print(" Done!")
-
-        except (ConnectionError, RuntimeError) as e:
-            print(f"\nError: {e}")
-            print("\nCannot proceed without Zotero connection.")
-            raise
-
-        # Step 1: Show status and confirm action
-        if not skip_prompt:
-            if kb_analysis["kb_exists"]:
-                # Existing knowledge base
-                print(
-                    f"📚 Zotero: {zotero_metadata['paper_count']} papers | Knowledge base: {kb_analysis['kb_paper_count']} papers"
-                )
-
-                if kb_analysis["new_papers"] > 0 or kb_analysis["deleted_papers"] > 0:
-                    # Changes detected - show more concise summary
-                    changes = []
-                    if kb_analysis["new_papers"] > 0:
-                        changes.append(f"+{kb_analysis['new_papers']} new")
-                    if kb_analysis["deleted_papers"] > 0:
-                        changes.append(f"-{kb_analysis['deleted_papers']} removed")
-
-                    print(f"📝 Changes: {', '.join(changes)}")
-                    print(f"⏱️  Time: ~{kb_analysis['estimated_time_str']}", end="")
-                    if kb_analysis["cache_exists"]:
-                        print(" (using cache)", end="")
-                    print()
-
-                    response = input("\nUpdate knowledge base? [Y/n]: ").strip().lower()
-                    if response == "n":
-                        print("Update cancelled.")
-                        return
-
-                    print("\nUpdating knowledge base...")
-                    self.clean_knowledge_base()
-                else:
-                    # No changes
-                    print("✅ Knowledge base is up to date!")
-                    print("\nNo changes detected. Rebuild anyway?")
-                    response = input("[y/N]: ").strip().lower()
-                    if response != "y":
-                        print("Build cancelled.")
-                        return
-
-                    print("\nRebuilding knowledge base...")
-                    self.clean_knowledge_base()
-            else:
-                # New knowledge base
-                print(f"📚 New knowledge base: {zotero_metadata['paper_count']} papers found")
-                print(f"⏱️  Time: ~{kb_analysis['estimated_time_str']}", end="")
-                if kb_analysis["cache_exists"]:
-                    print(f" (cache: {kb_analysis['cache_size_mb']:.1f} MB)", end="")
-                print()
-
-                response = input("\nBuild knowledge base? [Y/n]: ").strip().lower()
-                if response == "n":
-                    print("Build cancelled.")
-                    return
-
-                print("\nBuilding new knowledge base...")
-        else:
-            # When using --clear-cache flag, skip all prompts
-            print(f"\n📚 Full rebuild: {zotero_metadata['paper_count']} papers (--clear-cache)")
-            print(f"⏱️  Time: ~{(zotero_metadata['paper_count'] * 2 + 30) // 60} minutes (no cache)")
-            print("\nClearing caches and rebuilding...")
-            self.clean_knowledge_base()
-
-        # Step 1: Get metadata from API
+        # Get papers from Zotero
         papers = self.process_zotero_local_library(api_url)
+        # Don't print this - it's redundant with the "Found X research papers" message above
 
-        # Step 2: Add full text from PDFs via SQLite
+        # Add full text from PDFs
         pdf_stats = self.augment_papers_with_pdfs(papers, use_cache)
 
-        # Step 3: Build the knowledge base (pass PDF stats)
+        # Build the knowledge base
         self.build_from_papers(papers, pdf_stats)
 
     def generate_missing_pdfs_report(self, papers: list[dict]) -> Path:
@@ -1156,7 +1340,7 @@ class KnowledgeBaseBuilder:
                 missing_pdfs.append(paper)
                 if not paper.get("abstract"):
                     no_abstract.append(paper)
-            elif len(paper.get("full_text", "")) < 5000:  # Less than 5KB of text
+            elif len(paper.get("full_text", "")) < MIN_FULL_TEXT_LENGTH:  # Less than 5KB of text
                 small_pdfs.append(paper)
 
         # Summary statistics
@@ -1192,8 +1376,10 @@ class KnowledgeBaseBuilder:
                     report_lines.append(f"   - DOI: {paper['doi']}")
                 report_lines.append("")
 
-            if len(missing_pdfs) > 100:
-                report_lines.append(f"\n*... and {len(missing_pdfs) - 100} more papers without full text*\n")
+            if len(missing_pdfs) > MAX_MISSING_PDFS_IN_REPORT:
+                report_lines.append(
+                    f"\n*... and {len(missing_pdfs) - MAX_MISSING_PDFS_IN_REPORT} more papers without full text*\n"
+                )
 
         # List papers with small PDFs (likely supplementary)
         if small_pdfs:
@@ -1209,8 +1395,10 @@ class KnowledgeBaseBuilder:
                 report_lines.append(f"   - Text extracted: {text_len} characters")
                 report_lines.append("")
 
-            if len(small_pdfs) > 20:
-                report_lines.append(f"\n*... and {len(small_pdfs) - 20} more papers with minimal text*\n")
+            if len(small_pdfs) > MAX_SMALL_PDFS_DISPLAY:
+                report_lines.append(
+                    f"\n*... and {len(small_pdfs) - MAX_SMALL_PDFS_DISPLAY} more papers with minimal text*\n"
+                )
 
         # Recommendations
         report_lines.append("## Recommendations\n")
@@ -1234,7 +1422,20 @@ class KnowledgeBaseBuilder:
         return report_path
 
     def build_from_papers(self, papers: list[dict], pdf_stats: tuple[int, int] | None = None) -> None:
-        """Build knowledge base from a list of paper dictionaries."""
+        """Build complete knowledge base from list of papers.
+
+        This is the main pipeline that:
+        1. Removes duplicate papers
+        2. Assigns unique IDs to each paper
+        3. Extracts sections from full text
+        4. Generates embeddings for semantic search
+        5. Builds FAISS index for similarity search
+        6. Saves all metadata and index files
+
+        Args:
+            papers: List of paper dictionaries with metadata and full_text
+            pdf_stats: Optional tuple of (papers_with_pdfs, cache_hits) for reporting
+        """
         import time
 
         build_start_time = time.time()
@@ -1242,8 +1443,6 @@ class KnowledgeBaseBuilder:
         # Extract PDF stats if provided
         papers_with_pdfs = pdf_stats[0] if pdf_stats else 0
         pdf_cache_hits = pdf_stats[1] if pdf_stats else 0
-
-        # No backups - clean rebuild only
 
         # Detect and remove duplicates
         print("Checking for duplicate papers...")
@@ -1278,10 +1477,9 @@ class KnowledgeBaseBuilder:
 
         if duplicates_removed > 0:
             print(f"  Removed {duplicates_removed} duplicate papers")
-            print(f"  Processing {len(unique_papers)} unique papers...")
+            print(f"  Processing {len(unique_papers):,} unique papers")
         else:
             print("  No duplicates found")
-            print(f"Processing {len(unique_papers)} papers...")
 
         papers = unique_papers  # Use deduplicated list
 
@@ -1292,12 +1490,14 @@ class KnowledgeBaseBuilder:
             "embedding_model": "sentence-transformers/allenai-specter",
             "embedding_dimensions": 768,
             "model_version": "SPECTER",
+            "version": "4.0",
         }
 
         abstracts = []
         sections_index = {}  # Store extracted sections for each paper
 
-        for i, paper in enumerate(tqdm(papers, desc="Building knowledge base")):
+        pbar = tqdm(papers, desc="Processing papers", unit="paper")
+        for i, paper in enumerate(pbar):
             paper_id = f"{i + 1:04d}"
 
             # Combine title and abstract for classification
@@ -1358,7 +1558,7 @@ class KnowledgeBaseBuilder:
 
             abstracts.append(embedding_text)
 
-        print(f"Building FAISS index for {len(abstracts)} papers...")
+        print(f"\nBuilding search index for {len(abstracts):,} papers...")
         import faiss
         import numpy as np
 
@@ -1370,39 +1570,21 @@ class KnowledgeBaseBuilder:
             new_indices = []
             all_hashes = []
 
-            # Load fingerprint cache for smart invalidation
-            fingerprint_cache_path = self.knowledge_base_path / ".fingerprint_cache.json"
-            if fingerprint_cache_path.exists():
-                with open(fingerprint_cache_path) as f:
-                    fingerprint_cache = json.load(f)
-            else:
-                fingerprint_cache = {}
-
-            # Track new fingerprints
-            new_fingerprints = {}
-
-            # Check cache for each abstract with smart invalidation
-            for i, (abstract_text, paper) in enumerate(zip(abstracts, papers, strict=False)):
+            # Check cache for each abstract
+            for i, abstract_text in enumerate(abstracts):
                 text_hash = self.get_embedding_hash(abstract_text)
                 all_hashes.append(text_hash)
 
-                # Check if content has changed using fingerprint
-                paper_key = paper.get("zotero_key", "") or paper.get("doi", "") or paper.get("title", "")
-                if paper_key:
-                    new_fingerprints[paper_key] = self.get_paper_fingerprint(paper)
+                # Try to find in cache
+                cache_found = False
+                if cache["embeddings"] is not None:
+                    for idx, h in enumerate(cache["hashes"]):
+                        if h == text_hash:
+                            cached_embeddings.append(cache["embeddings"][idx])
+                            cache_found = True
+                            break
 
-                # Smart cache check: valid if hash exists AND content unchanged
-                content_changed = self.should_recompute_embedding(paper, fingerprint_cache)
-
-                # Try to find in cache using O(1) dictionary lookup
-                if (
-                    not content_changed
-                    and cache["embeddings"] is not None
-                    and text_hash in cache.get("hash_index", {})
-                ):
-                    cache_idx = cache["hash_index"][text_hash]  # O(1) lookup!
-                    cached_embeddings.append(cache["embeddings"][cache_idx])
-                else:
+                if not cache_found:
                     new_abstracts.append(abstract_text)
                     new_indices.append(i)
 
@@ -1410,16 +1592,43 @@ class KnowledgeBaseBuilder:
             cache_hits = len(cached_embeddings)
             if cache_hits > 0:
                 print(
-                    f"Using cached embeddings for {cache_hits}/{len(abstracts)} papers ({cache_hits * 100 // len(abstracts)}%)"
+                    f"  Using cached embeddings: {cache_hits:,}/{len(abstracts):,} papers ({cache_hits * 100 // len(abstracts)}%)"
                 )
 
             # Compute new embeddings if needed
             if new_abstracts:
-                print(f"Computing embeddings for {len(new_abstracts)} new/modified papers...")
+                print(f"Computing embeddings for {len(new_abstracts):,} papers...")
                 # Use dynamic batch size based on available memory
                 batch_size = self.get_optimal_batch_size()
 
-                # Enhanced progress tracking for embedding generation
+                # Estimate time for embeddings
+                num_papers = len(new_abstracts)
+
+                # Rough estimates based on device (with ranges)
+                if self.device == "cuda":
+                    seconds_per_paper_min = 0.05  # Best case
+                    seconds_per_paper_max = 0.15  # Worst case
+                else:
+                    seconds_per_paper_min = 0.5  # Best case on CPU
+                    seconds_per_paper_max = 1.0  # Worst case on CPU
+
+                estimated_time_min = num_papers * seconds_per_paper_min
+                estimated_time_max = num_papers * seconds_per_paper_max
+
+                if estimated_time_min > 60:
+                    minutes_min = int(estimated_time_min / 60)
+                    minutes_max = int(estimated_time_max / 60)
+                    print(
+                        f"Embedding generation will take approximately {minutes_min}-{minutes_max} minutes ({num_papers:,} papers on {self.device.upper()})"
+                    )
+
+                    if estimated_time_min > 300:  # More than 5 minutes
+                        response = input("Continue? (Y/n): ").strip().lower()
+                        if response == "n":
+                            print("Aborted by user")
+                            sys.exit(0)
+
+                # Show batch processing details
                 print(f"  Processing in batches of {batch_size}...")
                 total_batches = (len(new_abstracts) + batch_size - 1) // batch_size
                 print(f"  Total batches to process: {total_batches}")
@@ -1448,10 +1657,6 @@ class KnowledgeBaseBuilder:
             print("Saving embedding cache...")
             self.save_embedding_cache(all_embeddings, all_hashes)
 
-            # Save fingerprint cache for smart invalidation
-            with open(fingerprint_cache_path, "w") as f:
-                json.dump(new_fingerprints, f)
-
             # Build FAISS index
             print("Creating searchable index...")
             dimension = all_embeddings.shape[1]
@@ -1477,19 +1682,19 @@ class KnowledgeBaseBuilder:
         # Calculate build time
         build_time = (time.time() - build_start_time) / 60  # Convert to minutes
 
-        # Count papers with actual content (removed unused variable)
-        embeddings_created = len(papers)  # All papers get embeddings (abstract or full text)
+        # Count statistics
+        embeddings_created = len(papers)  # All papers get embeddings (from abstract or full text)
 
         # Build verification and summary
-        print("\n✅ Knowledge base built successfully!")
+        print("\nKnowledge base built successfully!")
         print(f"  - Papers indexed: {len(papers)}")
         print(
-            f"  - PDFs extracted: {papers_with_pdfs}/{len(papers)} ({papers_with_pdfs/len(papers)*100:.1f}%)"
+            f"  - PDFs extracted: {papers_with_pdfs}/{len(papers)} ({papers_with_pdfs / len(papers) * 100:.1f}%)"
         )
         print(f"  - Embeddings created: {embeddings_created}")
         if pdf_cache_hits > 0:
             print(
-                f"  - Cache hits: {pdf_cache_hits}/{papers_with_pdfs} ({pdf_cache_hits/papers_with_pdfs*100:.1f}%)"
+                f"  - Cache hits: {pdf_cache_hits}/{papers_with_pdfs} ({pdf_cache_hits / papers_with_pdfs * 100:.1f}%)"
             )
         print(f"  - Build time: {build_time:.1f} minutes")
         print(f"  - Index: {self.index_file_path}")
@@ -1598,6 +1803,7 @@ class KnowledgeBaseBuilder:
 
 @click.command()
 @click.option("--demo", is_flag=True, help="Build demo knowledge base with sample papers")
+@click.option("--rebuild", is_flag=True, help="Force complete rebuild (ignore existing KB)")
 @click.option(
     "--api-url",
     help="Custom Zotero API URL (e.g., http://host.docker.internal:23119/api for WSL)",
@@ -1605,31 +1811,40 @@ class KnowledgeBaseBuilder:
 @click.option("--knowledge-base-path", default="kb_data", help="Path to knowledge base directory")
 @click.option("--zotero-data-dir", help="Path to Zotero data directory (default: ~/Zotero)")
 @click.option(
-    "--clear-cache",
-    is_flag=True,
-    help="Force full rebuild - clear all caches and rebuild from scratch",
-)
-@click.option(
     "--export", "export_path", help="Export knowledge base to portable archive (e.g., kb_export.tar.gz)"
 )
 @click.option("--import", "import_path", help="Import knowledge base from portable archive")
-@click.option("--update", is_flag=True, help="Incremental update - only add new papers (10x faster)")
 def main(
     demo: bool,
+    rebuild: bool,
     api_url: str | None,
     knowledge_base_path: str,
     zotero_data_dir: str | None,
-    clear_cache: bool,
     export_path: str | None,
     import_path: str | None,
-    update: bool,
 ) -> None:
     """Build knowledge base for research assistant.
 
-    By default, connects to local Zotero library via HTTP API.
-    Requires Zotero to be running with 'Allow other applications' enabled.
+    \b
+    Default behavior:
+      • If no KB exists: builds from scratch
+      • If KB exists: smart incremental update (only processes changes)
+      • Use --rebuild to force complete rebuild
+      • Use --demo for a quick 5-paper demo
 
-    For WSL users with Zotero on Windows host, the API URL will be auto-detected.
+    \b
+    The knowledge base includes:
+      • Paper metadata (title, authors, year, journal)
+      • Full text extracted from PDFs
+      • SPECTER embeddings for semantic search
+      • FAISS index for fast similarity search
+
+    \b
+    Examples:
+      python src/build_kb.py              # Smart incremental update
+      python src/build_kb.py --demo       # Quick demo with 5 papers
+      python src/build_kb.py --rebuild    # Force complete rebuild
+      python src/build_kb.py --export backup.tar.gz  # Export KB
     """
     import tarfile
 
@@ -1705,93 +1920,61 @@ def main(
 
         return
 
-    # Regular build process
-    # Delay instantiation until after help flag is handled
+    # Initialize builder
     builder = KnowledgeBaseBuilder(knowledge_base_path, zotero_data_dir)
-
-    # Clear caches if requested
-    if clear_cache:
-        builder.clear_cache()
-        builder.clear_embedding_cache()
 
     if demo:
         print("Building demo knowledge base...")
         builder.build_demo_kb()
-    else:
-        # Auto-detect WSL environment and Windows host IP if no API URL provided
-        if not api_url:
-            # Check if we're in WSL
-            try:
-                with open("/proc/version") as f:
-                    if "microsoft" in f.read().lower():
-                        # We're in WSL, try localhost first (WSL2 with localhost forwarding)
-                        try:
-                            test_url = "http://localhost:23119/api"
-                            response = requests.get(test_url, timeout=1)
-                            if response.status_code == 200:
-                                api_url = test_url
-                                print("Detected WSL environment. Using localhost forwarding")
-                        except (requests.RequestException, requests.ConnectionError):
-                            # Fallback to Windows host IP from resolv.conf
-                            import subprocess
+        return
 
-                            result = subprocess.run(  # noqa: S603
-                                ["/bin/cat", "/etc/resolv.conf"],
-                                capture_output=True,
-                                text=True,
-                                check=False,
-                            )
-                            for line in result.stdout.split("\n"):
-                                if "nameserver" in line:
-                                    host_ip = line.split()[1]
-                                    api_url = f"http://{host_ip}:23119/api"
-                                    print(f"Detected WSL environment. Using Windows host at {host_ip}")
-                                    break
-            except (OSError, FileNotFoundError, PermissionError):
-                pass  # Not in WSL or can't read file
+    # Check if KB exists
+    kb_exists = builder.metadata_file_path.exists()
 
-        print("Connecting to Zotero library...")
-        if api_url:
-            print(f"Using API URL: {api_url}")
-        else:
-            print("Using default: http://localhost:23119/api")
-
-        print("Ensure Zotero is running and 'Allow other applications' is enabled in Advanced settings")
-
+    if not kb_exists:
+        # No KB exists, do full build
+        print("No existing knowledge base found. Building from scratch...")
         try:
-            # Pass skip_prompt=True when using --clear-cache flag
-            # Pass incremental=True when using --update flag
-            builder.build_from_zotero_local(
-                api_url, use_cache=True, skip_prompt=clear_cache, incremental=update
-            )
-        except ConnectionError as e:
-            print(f"Error building knowledge base: {e}")
-            print("\nTip: For a quick demo, run: python src/build_kb.py --demo")
-            print("For local Zotero library, ensure Zotero is running and try again.")
-            print("\nTo enable local API access:")
-            print("1. Open Zotero on your Windows host")
-            print("2. Go to Edit > Settings > Advanced")
-            print("3. Check 'Allow other applications on this computer to communicate with Zotero'")
-            print("4. Restart Zotero if needed")
-            # Safely check if running in WSL
-            is_wsl = False
-            try:
-                with open("/proc/version") as f:
-                    is_wsl = "microsoft" in f.read().lower()
-            except (OSError, FileNotFoundError, PermissionError):
-                pass
-
-            if "WSL" in str(e) or is_wsl:
-                print("\nFor WSL users:")
-                print("- Ensure Windows Firewall allows connections on port 23119")
-                print("- You may need to manually specify the API URL:")
-                print("  python build_kb.py --api-url http://<windows-host-ip>:23119/api")
-            sys.exit(1)
+            builder.build_from_zotero_local(api_url, use_cache=True)
         except Exception as e:
             print(f"Error building knowledge base: {e}")
             print("\nTip: For a quick demo, run: python src/build_kb.py --demo")
-            print("For local Zotero library, ensure Zotero is running and try again.")
             sys.exit(1)
+    elif rebuild:
+        # Force complete rebuild
+        print("Complete rebuild requested...")
+        try:
+            builder.build_from_zotero_local(api_url, use_cache=True)
+        except Exception as e:
+            print(f"Error building knowledge base: {e}")
+            sys.exit(1)
+    else:
+        # Try smart incremental update (default)
+        try:
+            changes = builder.check_for_changes(api_url)
+            if changes["total"] == 0:
+                print("Knowledge base is up to date! No changes detected.")
+                return
+
+            print("Found changes in Zotero library:")
+            if changes["new"] > 0:
+                print(f"  - {changes['new']} new papers to add")
+            if changes["updated"] > 0:
+                print(f"  - {changes['updated']} papers with updated PDFs")
+            if changes["deleted"] > 0:
+                print(f"  - {changes['deleted']} papers to remove")
+
+            builder.apply_incremental_update(changes, api_url)
+            print("Update complete!")
+
+        except Exception as e:
+            print(f"Incremental update failed: {e}")
+            print("Falling back to full rebuild...")
+            try:
+                builder.build_from_zotero_local(api_url, use_cache=True)
+            except Exception as e2:
+                print(f"Full rebuild also failed: {e2}")
+                sys.exit(1)
 
 
 if __name__ == "__main__":

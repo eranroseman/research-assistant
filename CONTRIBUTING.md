@@ -109,7 +109,6 @@ research-assistant/
 ├── reports/                # Generated research reports
 ├── build_kb.py            # Knowledge base builder
 ├── cli.py                 # Command-line interface
-├── demo.py                # Demo and test script
 ├── requirements.txt       # Python dependencies
 ├── requirements-dev.txt   # Development dependencies
 ├── README.md             # Project documentation

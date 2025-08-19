@@ -1,39 +1,51 @@
 # Technical Specifications
 
-> **📦 User Documentation**: For installation and usage instructions, see [README.md](../README.md)
+> **Navigation**: [Home](../README.md) | [API Reference](api-reference.md) | [Advanced Usage](advanced-usage.md)
+
+## Table of Contents
+
+- [Overview](#overview)
+- [Architecture](#architecture)
+- [v4.0 Features](#new-features-in-v40)
+- [Implementation Details](#implementation)
+- [Data Formats](#data-formats)
+- [Performance](#technical-specifications-1)
+- [Dependencies](#dependencies)
+
+---
 
 ## Overview
 
-A Claude Code slash command that performs evidence-based literature research using a pre-built, portable knowledge base of 2000+ academic papers with SPECTER embeddings, automatic study type classification, and quality scoring.
+A streamlined academic literature search tool with 70% less code than v3. Features smart incremental updates, integrity checking, and Claude Code integration for evidence-based research using SPECTER embeddings.
 
-## New Features in v3.1
+## New Features in v4.0
 
-### 🚀 Performance & Security
+### Performance & Security
 - **40-50% Faster Searches**: O(1) cache lookups and dynamic batch sizing
 - **Enhanced Security**: Command injection prevention, path traversal protection, safe JSON/NPY serialization
 - **Optimized Batch Processing**: Dynamic sizing based on available memory (64-256 batch size)
 - **Instant Cache Lookups**: Hash-based dictionary for O(1) embedding retrieval
 
-### 🔍 SPECTER Intelligence
+### SPECTER Intelligence
 - **Smart Search Modes**: Auto-detects query intent (question, similar, explore)
 - **Query Preprocessing**: Optimizes embeddings based on search type
 - **Scientific Paper Optimization**: SPECTER model specifically trained on academic literature
 
-### 📊 Quality Assessment
+### Quality Assessment
 - **Paper Quality Scores**: 0-100 scoring based on study type, recency, sample size
 - **Quality Filtering**: `--quality-min` parameter to filter low-quality papers
 - **Visual Quality Indicators**: ⭐ (80-100), ● (60-79), ○ (40-59), · (<40)
 
-### 🎯 Enhanced Features
+### Enhanced Features
 - **Study Type Classification**: Automatically identifies systematic reviews, RCTs, cohort studies, etc.
 - **RCT Sample Size Extraction**: Shows participant counts (n=487) for randomized controlled trials
 - **Advanced Filtering**: Filter by publication year and study type
 - **Evidence Hierarchy**: Visual markers showing study quality
-- **Incremental Updates**: `--update` flag for 10x faster knowledge base updates (only new papers)
+- **Smart Incremental Updates**: Automatic change detection, 10x faster than full rebuild
 - **Smart Section Retrieval**: 70% context reduction with intelligent section chunking
 - **Sections Index**: O(1) section retrieval for instant access to paper sections
-- **Duplicate Detection**: `duplicates` command identifies and manages similar papers
-- **Export/Import**: Portable knowledge base with tar.gz export/import (planned feature)
+- **Integrity Checking**: Automatic detection of corrupted or duplicate paper IDs
+- **Export/Import**: Portable knowledge base with tar.gz export/import
 
 ## Architecture
 
@@ -85,12 +97,12 @@ kb_data/
 **Usage**:
 
 ```bash
-python build_kb.py              # Creates kb_data/ folder
-python build_kb.py --update     # Incremental update (10x faster, only new papers)
-python build_kb.py --clear-cache # Force fresh extraction
+python build_kb.py              # Smart incremental update (default)
+python build_kb.py --rebuild    # Force complete rebuild
+python build_kb.py --clear-cache # Clear caches and rebuild
 python build_kb.py --demo       # Quick demo with 5 papers
-python build_kb.py --export kb_backup.tar.gz  # Export knowledge base (planned)
-python build_kb.py --import kb_backup.tar.gz  # Import knowledge base (planned)
+python build_kb.py --export kb_backup.tar.gz  # Export knowledge base
+python build_kb.py --import kb_backup.tar.gz  # Import knowledge base
 ```
 
 ### 2. CLI Tool (`cli.py`)
@@ -103,13 +115,9 @@ python cli.py search "query" --after 2020  # Filter by year
 python cli.py search "query" --type rct --type systematic_review  # Filter by study type
 python cli.py search "query" --show-quality --quality-min 70  # Quality filtering
 python cli.py search "query" --mode question  # Optimize for research questions
-python cli.py search "query" --analyze-gaps   # Evidence gap analysis
 python cli.py get <paper_id>              # Returns full paper text
 python cli.py smart-get <paper_id> "question"  # Smart section retrieval (70% less text)
 python cli.py get <paper_id> --sections abstract methods results  # Specific sections
-python cli.py duplicates                  # Find duplicate papers
-python cli.py duplicates --fix            # Remove duplicates
-python cli.py shortcut diabetes           # Use predefined search shortcuts
 python cli.py info                        # Check knowledge base status
 python cli.py cite "query"                # Generate IEEE citations
 ```

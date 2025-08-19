@@ -1,6 +1,20 @@
 # Advanced Usage Guide
 
-> **📚 Back to main docs**: [README.md](../README.md) | [Technical Specs](technical-specs.md) | [API Reference](api-reference.md)
+> **🆙 Navigation**: [Home](../README.md) | [API Reference](api-reference.md) | [Technical Specs](technical-specs.md)
+
+## 📑 Table of Contents
+
+- [GPU Acceleration](#gpu-acceleration)
+- [Embedding Models](#embedding-models)
+- [Search Parameters](#adjusting-search-parameters)
+- [Batch Processing](#batch-processing)
+- [Custom Sources](#building-from-custom-sources)
+- [WSL Setup](#wsl-specific-setup-zotero-on-windows-host)
+- [Performance Optimization](#performance-optimization)
+- [Extending the System](#extending-the-system)
+- [Troubleshooting Performance](#troubleshooting-performance)
+
+---
 
 ## GPU Acceleration
 

@@ -1,212 +1,83 @@
 #!/usr/bin/env python3
 """
 CLI tool for searching and retrieving papers from the knowledge base
-Enhanced with SPECTER query preprocessing and quality scoring
+Simplified version 4.0 - removed complex features for maintainability
 """
 
 import json
+import re
 import sys
-from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
 import click
 import faiss
 
-# SPECTER enhancement functions integrated directly
+# ============================================================================
+# CONFIGURATION CONSTANTS
+# ============================================================================
 
-# Medical and research term expansions for better recall
-TERM_EXPANSIONS = {
-    # Medical conditions
-    "diabetes": ["diabetes", "diabetic", "glucose intolerance", "hyperglycemia", "T2DM", "T1DM"],
-    "heart": ["heart", "cardiac", "cardiovascular", "coronary", "myocardial"],
-    "cancer": ["cancer", "tumor", "tumour", "neoplasm", "malignancy", "carcinoma", "oncology"],
-    "stroke": ["stroke", "cerebrovascular", "CVA", "cerebral infarction"],
-    "hypertension": ["hypertension", "high blood pressure", "HTN", "elevated blood pressure"],
-    "dementia": ["dementia", "Alzheimer", "cognitive decline", "cognitive impairment", "AD"],
-    "depression": ["depression", "depressive", "MDD", "major depressive disorder"],
-    "anxiety": ["anxiety", "anxious", "GAD", "generalized anxiety disorder"],
-    # Research methodology
-    "RCT": ["RCT", "randomized controlled trial", "randomised controlled trial", "randomized trial"],
-    "systematic review": [
-        "systematic review",
-        "meta-analysis",
-        "meta analysis",
-        "systematic literature review",
-    ],
-    "cohort": ["cohort", "longitudinal", "prospective", "retrospective"],
-    # Technology/digital health
-    "AI": ["AI", "artificial intelligence", "machine learning", "ML", "deep learning", "neural network"],
-    "telemedicine": ["telemedicine", "telehealth", "remote care", "virtual care", "digital health"],
-    "mHealth": ["mHealth", "mobile health", "smartphone", "mobile app", "mobile application"],
-    "EHR": ["EHR", "electronic health record", "EMR", "electronic medical record"],
-    "wearable": ["wearable", "fitness tracker", "smartwatch", "activity monitor"],
-}
+# Paths
+DEFAULT_KB_PATH = "kb_data"
 
+# Search Defaults
+DEFAULT_SEARCH_RESULTS = 10
+DEFAULT_CITATION_COUNT = 5
+DEFAULT_SMART_SEARCH_RESULTS = 20
+DEFAULT_MAX_TOKENS = 10000  # ~40k characters
 
-def expand_query(query_text: str) -> tuple[str, bool]:
-    """Expand query with synonyms and related terms for better recall."""
-    query_lower = query_text.lower()
-    expanded_terms = []
+# Quality Scoring Constants
+QUALITY_BASE_SCORE = 50
 
-    # Check each term expansion
-    for key, expansions in TERM_EXPANSIONS.items():
-        if key.lower() in query_lower:
-            # Add expansions that aren't already in the query
-            for expansion in expansions:
-                if expansion.lower() not in query_lower:
-                    expanded_terms.append(expansion)
+# Study Type Scores
+SCORE_SYSTEMATIC_REVIEW = 35
+SCORE_META_ANALYSIS = 35
+SCORE_RCT = 25
+SCORE_COHORT = 15
+SCORE_CASE_CONTROL = 10
+SCORE_CROSS_SECTIONAL = 5
+SCORE_CASE_REPORT = 0
 
-    # If we found expansions, add them to the query
-    if expanded_terms:
-        # Limit to top 3 expansions to avoid query dilution
-        top_expansions = expanded_terms[:3]
-        expanded_query = f"{query_text} {' '.join(top_expansions)}"
-        return expanded_query, True
+# Sample Size Thresholds and Bonuses
+SAMPLE_SIZE_LARGE_THRESHOLD = 1000
+SAMPLE_SIZE_MEDIUM_THRESHOLD = 500
+SAMPLE_SIZE_SMALL_THRESHOLD = 100
+BONUS_LARGE_SAMPLE = 10
+BONUS_MEDIUM_SAMPLE = 5
 
-    return query_text, False
+# Recency Bonuses
+YEAR_VERY_RECENT = 2022
+YEAR_RECENT = 2020
+BONUS_VERY_RECENT = 10
+BONUS_RECENT = 5
 
+# Other Bonuses
+BONUS_FULL_TEXT = 5
 
-def detect_search_mode(query_text: str) -> str:
-    """Detect search intent from query text."""
-    query_lower = query_text.lower()
+# Display Configuration
+MAX_QUALITY_SCORE = 100
+PAPER_ID_FORMAT = r"^\d{4}$"  # Regex for validation
+PAPER_ID_DIGITS = 4
 
-    # Question patterns
-    if any(marker in query_lower for marker in ["?", "what ", "how ", "why ", "when ", "which "]):
-        return "question"
-
-    # Similarity patterns
-    if any(phrase in query_lower for phrase in ["similar to", "papers like", "related to"]):
-        return "similar"
-
-    # Exploration patterns
-    if any(word in query_lower for word in ["overview", "landscape", "trends", "review of"]):
-        return "explore"
-
-    # Default to standard search
-    return "standard"
-
-
-def analyze_evidence_gaps(search_results: list[dict]) -> tuple[list[str], list[str]]:
-    """Analyze search results to identify missing evidence types."""
-    from collections import Counter
-
-    gaps = []
-    recommendations = []
-
-    if not search_results:
-        return ["No search results to analyze"], []
-
-    # Extract paper metadata
-    papers = [paper for _, _, paper in search_results]
-
-    # Count study types
-    study_types = [p.get("study_type", "Unknown") for p in papers]
-    type_counts = Counter(study_types)
-
-    # Check for missing high-quality evidence
-    if not type_counts.get("SYSTEMATIC REVIEW") and not type_counts.get("systematic_review"):
-        gaps.append("No systematic reviews found - may lack comprehensive evidence synthesis")
-        recommendations.append("Search for: systematic review OR meta-analysis")
-
-    if not type_counts.get("RCT") and not type_counts.get("rct"):
-        gaps.append("No RCTs found - limited experimental evidence")
-        recommendations.append("Search for: randomized controlled trial OR RCT")
-
-    # Check temporal coverage
-    years = [p.get("year") for p in papers if p.get("year")]
-    if years:
-        latest_year = max(years)
-        oldest_year = min(years)
-        current_year = datetime.now(UTC).year
-
-        if latest_year < current_year - 2:
-            gaps.append(f"No recent studies (latest: {latest_year}) - may miss current developments")
-            recommendations.append(f"Add filter: --after {current_year - 2}")
-
-        if latest_year - oldest_year < 5 and len(papers) > 5:
-            gaps.append(f"Narrow time range ({oldest_year}-{latest_year}) - may miss historical context")
-            recommendations.append("Consider broader time range for comprehensive review")
-
-    # Check sample sizes for RCTs
-    rct_papers = [p for p in papers if p.get("study_type") == "RCT"]
-    if rct_papers:
-        sample_sizes = [p.get("sample_size") for p in rct_papers if p.get("sample_size")]
-        if sample_sizes and max(sample_sizes) < 100:
-            gaps.append("Only small RCTs found (n<100) - limited statistical power")
-            recommendations.append("Search for: large RCT OR multicenter trial")
-
-    # Check quality distribution
-    qualities = []
-    for _, _, paper in search_results:
-        if "quality_score" in paper:
-            qualities.append(paper["quality_score"])
-        else:
-            quality, _ = estimate_paper_quality(paper)
-            qualities.append(quality)
-
-    if qualities:
-        avg_quality = sum(qualities) / len(qualities)
-        high_quality = sum(1 for q in qualities if q >= 80)
-
-        if avg_quality < 60:
-            gaps.append(f"Low average quality ({avg_quality:.0f}/100) - consider stricter filters")
-            recommendations.append("Add filter: --quality-min 70")
-
-        if high_quality == 0:
-            gaps.append("No high-quality papers (80+) found")
-            recommendations.append("Expand search or check different databases")
-
-    # Check for diversity of evidence
-    if len(type_counts) < 3 and len(papers) > 5:
-        gaps.append("Limited diversity of study types - may have narrow perspective")
-        recommendations.append("Remove study type filters for broader evidence")
-
-    return gaps, recommendations
-
-
-def preprocess_query(query_text: str, mode: str = "auto") -> tuple[str, str]:
-    """Preprocess query based on search mode for better SPECTER results."""
-
-    # Auto-detect mode if needed
-    if mode == "auto":
-        mode = detect_search_mode(query_text)
-
-    # Apply mode-specific preprocessing
-    if mode == "question":
-        # Frame as Q&A for better embeddings
-        enhanced_query = f"Question: {query_text} Research findings:"
-
-    elif mode == "similar":
-        # Repetition emphasizes key terms in SPECTER
-        enhanced_query = f"{query_text} {query_text}"
-
-    elif mode == "explore":
-        # Broader context for exploration
-        enhanced_query = f"research overview: {query_text} studies analysis"
-
-    else:
-        # Standard search - no preprocessing
-        enhanced_query = query_text
-
-    return enhanced_query, mode
+# Version
+KB_VERSION = "4.0"
 
 
 def estimate_paper_quality(paper: dict) -> tuple[int, str]:
     """Estimate paper quality based on metadata (0-100 score)."""
-    score = 50  # Base score
+    score = QUALITY_BASE_SCORE  # Base score
     factors = []
 
     # Study type hierarchy (most important factor)
     study_type = paper.get("study_type", "unknown")
     study_scores = {
-        "systematic_review": 35,
-        "meta_analysis": 35,
-        "rct": 25,
-        "cohort": 15,
-        "case_control": 10,
-        "cross_sectional": 5,
-        "case_report": 0,
+        "systematic_review": SCORE_SYSTEMATIC_REVIEW,
+        "meta_analysis": SCORE_META_ANALYSIS,
+        "rct": SCORE_RCT,
+        "cohort": SCORE_COHORT,
+        "case_control": SCORE_CASE_CONTROL,
+        "cross_sectional": SCORE_CROSS_SECTIONAL,
+        "case_report": SCORE_CASE_REPORT,
     }
 
     if study_type in study_scores:
@@ -216,13 +87,13 @@ def estimate_paper_quality(paper: dict) -> tuple[int, str]:
     # Sample size bonus (for applicable studies)
     sample_size = paper.get("sample_size")
     if sample_size and sample_size > 0:
-        if sample_size > 1000 and study_type in ["rct", "cohort"]:
-            score += 10
+        if sample_size > SAMPLE_SIZE_LARGE_THRESHOLD and study_type in ["rct", "cohort"]:
+            score += BONUS_LARGE_SAMPLE
             factors.append(f"n={sample_size}")
-        elif sample_size > 500:
-            score += 5
+        elif sample_size > SAMPLE_SIZE_MEDIUM_THRESHOLD:
+            score += BONUS_MEDIUM_SAMPLE
             factors.append(f"n={sample_size}")
-        elif sample_size > 100:
+        elif sample_size > SAMPLE_SIZE_SMALL_THRESHOLD:
             factors.append(f"n={sample_size}")
 
     # Recency bonus
@@ -262,6 +133,17 @@ class ResearchCLI:
 
         with open(self.metadata_file_path, encoding="utf-8") as f:
             self.metadata = json.load(f)
+
+        # Check version compatibility
+        if self.metadata.get("version") != KB_VERSION:
+            print(
+                f"\nERROR: Knowledge base version incompatible\n"
+                f"  Current version: v{self.metadata.get('version', '3.x')}\n"
+                f"  Required version: v{KB_VERSION}\n"
+                f"\n  How to fix:\n"
+                f"  Run: python src/build_kb.py --rebuild\n"
+            )
+            sys.exit(1)
 
         # Load SPECTER model for search
         self.embedding_model = self._load_embedding_model()
@@ -305,10 +187,9 @@ class ResearchCLI:
 
     def get_paper(self, paper_id: str) -> str:
         """Retrieve full text of a paper by ID with validation."""
-        import re
 
         # Validate paper_id format (4 digits only)
-        if not re.match(r"^[0-9]{4}$", paper_id):
+        if not re.match(PAPER_ID_FORMAT, paper_id):
             raise ValueError(f"Invalid paper ID format: {paper_id}. Must be 4 digits (e.g., 0001, 0234)")
 
         # Construct safe path
@@ -430,35 +311,37 @@ class ResearchCLI:
 
 @click.group()
 def cli() -> None:
-    """Research Assistant CLI v3.0 - Enhanced with SPECTER embeddings and smart search.
+    """Research Assistant CLI v4.0 - Search and analyze academic papers.
 
+    \b
+    Common commands:
+      search      Search papers by topic with quality scores
+      get         Retrieve full text of a specific paper
+      info        Show knowledge base status
+      cite        Generate IEEE citations
+
+    \b
     Features:
-    - SPECTER embeddings (optimized for scientific papers)
-    - Smart search modes with query expansion
-    - Paper quality scoring (0-100 based on study type, recency, sample size)
-    - Study type classification (systematic reviews, RCTs, cohort studies, etc.)
-    - RCT sample size extraction (shown as n=XXX)
-    - Year-based filtering for recent literature
-    - Visual evidence hierarchy markers (⭐ high quality, ● good, ○ moderate)
-    - Automatic synonym expansion for medical/research terms
+      • SPECTER embeddings for semantic search
+      • Quality scoring (0-100) based on study type and recency
+      • Study type detection (RCTs, systematic reviews, etc.)
+      • Smart incremental updates from Zotero
 
-    Knowledge base supports papers from your Zotero library.
+    \b
+    Quick start:
+      python src/cli.py info                    # Check KB status
+      python src/cli.py search "diabetes"       # Search papers
+      python src/cli.py get 0001                # Get full paper
     """
 
 
 @cli.command()
 @click.argument("query_text")
 @click.option(
-    "--mode",
-    type=click.Choice(["auto", "question", "similar", "explore"]),
-    default="auto",
-    help="Search mode: auto-detect, question, similar papers, or explore topic",
-)
-@click.option(
     "--top-k",
     "-k",
     default=10,
-    help="Number of results to return (default: 10, use 30-50 for comprehensive reviews)",
+    help="Number of results to return (default: 10)",
 )
 @click.option("--verbose", "-v", is_flag=True, help="Show abstracts in results")
 @click.option("--show-quality", is_flag=True, help="Show quality scores in results")
@@ -468,11 +351,6 @@ def cli() -> None:
     "--after",
     type=int,
     help="Only papers published after this year (e.g., --after 2020)",
-)
-@click.option(
-    "--analyze-gaps",
-    is_flag=True,
-    help="Analyze evidence gaps and provide research recommendations",
 )
 @click.option(
     "--type",
@@ -493,56 +371,37 @@ def cli() -> None:
 )
 def search(
     query_text: str,
-    mode: str,
     top_k: int,
     verbose: bool,
     show_quality: bool,
     quality_min: int | None,
     output_json: bool,
     after: int | None,
-    analyze_gaps: bool,
     study_type: tuple[str, ...],
 ) -> None:
-    """Enhanced search with SPECTER embeddings and query expansion.
+    """Search for relevant papers using SPECTER embeddings.
 
-    Search modes optimize results for different intents:
-    - auto: Automatically detect intent from query
-    - question: Optimize for answering specific questions
-    - similar: Find papers similar to a topic/paper
-    - explore: Broad exploration of a research area
+    \b
+    Quality markers:
+      ⭐ Excellent (80-100): Systematic reviews, meta-analyses
+      ● Good (60-79): RCTs, recent high-quality studies
+      ○ Moderate (40-59): Cohort studies, older papers
+      · Lower (<40): Case reports, generic studies
 
-    Query expansion automatically adds synonyms for medical/research terms.
-
-    Results show evidence quality with visual markers:
-    ⭐ = systematic review / high quality (80+), ● = RCT / good quality (60-79),
-    ○ = moderate quality (40-59), · = lower quality (<40)
-
+    \b
     Examples:
-        cli.py search "diabetes" --show-quality  # Auto-expands to diabetic, T2DM, etc.
-        cli.py search "What causes diabetes?" --mode question
-        cli.py search "papers similar to telemedicine" --mode similar
-        cli.py search "AI in healthcare" --show-quality --quality-min 70
+      python src/cli.py search "diabetes"                    # Basic search
+      python src/cli.py search "diabetes" --show-quality     # With scores
+      python src/cli.py search "AI" --quality-min 70        # High quality only
+      python src/cli.py search "COVID" --after 2020 --type rct  # Recent RCTs
     """
     try:
         research_cli = ResearchCLI()
 
-        # Expand query with synonyms for better recall
-        expanded_query, was_expanded = expand_query(query_text)
-
-        # Preprocess query for better SPECTER results
-        enhanced_query, detected_mode = preprocess_query(expanded_query, mode)
-
-        if verbose:
-            print(f"Search mode: {detected_mode}")
-            if was_expanded:
-                print(f"Query expanded: {expanded_query}")
-
-        # Perform search with enhanced query (get extra results for quality filtering)
+        # Perform search
         study_types = list(study_type) if study_type else None
         search_k = top_k * 2 if quality_min else top_k
-        search_results = research_cli.search(
-            enhanced_query, search_k, min_year=after, study_types=study_types
-        )
+        search_results = research_cli.search(query_text, search_k, min_year=after, study_types=study_types)
 
         # Apply quality filtering if requested
         if quality_min or show_quality:
@@ -562,26 +421,6 @@ def search(
             search_results = enhanced_results[:top_k]
         else:
             search_results = search_results[:top_k]
-
-        # Analyze evidence gaps if requested
-        if analyze_gaps and not output_json:
-            # Extract just the paper dicts from search results
-            papers_only = [paper for _, _, paper in search_results]
-            gaps, recommendations = analyze_evidence_gaps(papers_only)
-
-            if gaps:
-                print("\n📊 Evidence Gap Analysis:")
-                print("=" * 50)
-                print("\n⚠️  Gaps Identified:")
-                for gap in gaps:
-                    print(f"  • {gap}")
-
-                if recommendations:
-                    print("\n💡 Recommendations:")
-                    for rec in recommendations:
-                        print(f"  → {rec}")
-            else:
-                print("\n✅ Evidence coverage appears comprehensive!")
 
         if output_json:
             output = []
@@ -604,7 +443,6 @@ def search(
             print(json.dumps(output, indent=2))
         else:
             print(f"\nSearch results for: '{query_text}'")
-            print(f"Mode: {detected_mode}")
             print("=" * 50)
 
             # Custom formatting with quality scores
@@ -654,7 +492,7 @@ def search(
             "   Possible fixes:\n"
             "   1. Rebuild knowledge base: python src/build_kb.py\n"
             "   2. Check if model matches index: python src/cli.py info\n"
-            "   3. Clear cache and rebuild: python src/build_kb.py --clear-cache",
+            "   3. Clear cache and rebuild: python src/build_kb.py --full",
             file=sys.stderr,
         )
         sys.exit(1)
@@ -676,11 +514,6 @@ def get(paper_id: str, output: str | None, sections: tuple[str, ...]) -> None:
     """Get full text of a paper by ID.
 
     Paper IDs are 4-digit numbers (e.g., 0001, 0234) shown in search results.
-    Full text includes title, authors, abstract, and complete paper content.
-
-    Use --sections to retrieve only specific sections for faster reading:
-        cli.py get 0001 --sections abstract conclusion
-        cli.py get 0001 -s methods -s results
     """
     try:
         research_cli = ResearchCLI()
@@ -772,13 +605,14 @@ def get(paper_id: str, output: str | None, sections: tuple[str, ...]) -> None:
 
 @cli.command()
 @click.argument("query_text")
-@click.option("--top-k", "-k", default=5, help="Number of papers to cite (default: 5)")
+@click.option(
+    "--top-k",
+    "-k",
+    default=DEFAULT_CITATION_COUNT,
+    help=f"Number of citations to generate (default: {DEFAULT_CITATION_COUNT})",
+)
 def cite(query_text: str, top_k: int) -> None:
-    """Generate IEEE-style citations for papers matching query.
-
-    Creates properly formatted references for academic writing.
-    Format: [#] Author(s), "Title," Journal, vol. X, no. Y, pp. ZZZ-ZZZ, Year.
-    """
+    """Generate IEEE-style citations for papers matching query."""
     try:
         research_cli = ResearchCLI()
         search_results = research_cli.search(query_text, top_k)
@@ -805,452 +639,8 @@ def cite(query_text: str, top_k: int) -> None:
 
 
 @cli.command()
-@click.argument("shortcut_name", required=False)
-@click.option("--list", "list_shortcuts", is_flag=True, help="List all available shortcuts")
-@click.option("--edit", is_flag=True, help="Open shortcuts file for editing")
-def shortcut(shortcut_name: str | None, list_shortcuts: bool, edit: bool) -> None:
-    """Run predefined search shortcuts for common research queries.
-
-    Examples:
-        cli.py shortcut diabetes  # Run diabetes research shortcut
-        cli.py shortcut --list     # Show all shortcuts
-        cli.py shortcut --edit     # Edit shortcuts file
-    """
-    import os
-    from pathlib import Path
-
-    import yaml
-
-    # Load shortcuts configuration
-    shortcuts_file = Path.home() / ".research_shortcuts.yaml"
-    if not shortcuts_file.exists():
-        # Copy default shortcuts file
-        default_shortcuts = Path(__file__).parent.parent / ".research_shortcuts.yaml"
-        if default_shortcuts.exists():
-            shortcuts_file.write_text(default_shortcuts.read_text())
-        else:
-            print("No shortcuts configured. Create ~/.research_shortcuts.yaml")
-            sys.exit(1)
-
-    if edit:
-        # Open shortcuts file in default editor
-        editor = os.environ.get("EDITOR", "nano")
-        # Use subprocess for safer execution
-        import subprocess
-
-        subprocess.run([editor, str(shortcuts_file)], check=False)  # noqa: S603
-        return
-
-    try:
-        with open(shortcuts_file) as f:
-            config = yaml.safe_load(f)
-    except Exception as e:
-        print(f"Error loading shortcuts: {e}", file=sys.stderr)
-        sys.exit(1)
-
-    if list_shortcuts or not shortcut_name:
-        # List all available shortcuts
-        print("\nAvailable Research Shortcuts:")
-        print("=" * 50)
-
-        if "favorite_searches" in config:
-            print("\n📚 Favorite Searches:")
-            for name, settings in config["favorite_searches"].items():
-                desc = settings.get("description", "No description")
-                print(f"  {name:15} - {desc}")
-
-        if "research_topics" in config:
-            print("\n🔬 Research Topics:")
-            for name, settings in config["research_topics"].items():
-                num_searches = len(settings.get("searches", []))
-                print(f"  {name:15} - {num_searches} related searches")
-
-        print("\nUsage: python src/cli.py shortcut <name>")
-        return
-
-    # Execute the shortcut
-    if shortcut_name in config.get("favorite_searches", {}):
-        settings = config["favorite_searches"][shortcut_name]
-
-        # Build command
-        query = settings.get("query", shortcut_name)
-
-        # Import and run search directly
-        try:
-            research_cli = ResearchCLI()
-
-            # Apply query expansion if enabled
-            expanded_query, was_expanded = expand_query(query)
-
-            # Apply mode preprocessing
-            mode = settings.get("mode", "auto")
-            enhanced_query, detected_mode = preprocess_query(expanded_query, mode)
-
-            # Perform search with settings
-            top_k = settings.get("top_k", 10)
-            min_year = settings.get("after")
-            study_types = settings.get("type")
-            quality_min = settings.get("quality_min")
-            show_quality = settings.get("show_quality", False)
-            verbose = settings.get("verbose", False)
-
-            # Get extra results if quality filtering
-            search_k = top_k * 2 if quality_min else top_k
-            search_results = research_cli.search(
-                enhanced_query, search_k, min_year=min_year, study_types=study_types
-            )
-
-            # Apply quality filtering if requested
-            if quality_min or show_quality:
-                enhanced_results = []
-                for idx, dist, paper in search_results:
-                    quality, explanation = estimate_paper_quality(paper)
-
-                    if quality_min and quality < quality_min:
-                        continue
-
-                    paper["quality_score"] = quality
-                    paper["quality_explanation"] = explanation
-                    enhanced_results.append((idx, dist, paper))
-
-                search_results = enhanced_results[:top_k]
-            else:
-                search_results = search_results[:top_k]
-
-            # Display results
-            print(f"\n🔍 Shortcut: '{shortcut_name}'")
-            if settings.get("description"):
-                print(f"📝 {settings['description']}")
-            print(f"\nSearch results for: '{query}'")
-            print(f"Mode: {detected_mode}")
-            if was_expanded:
-                print(f"Query expanded: {expanded_query}")
-            print("=" * 50)
-
-            # Format and display results
-            if show_quality:
-                for i, (_idx, dist, paper) in enumerate(search_results, 1):
-                    quality = paper.get("quality_score", 0)
-                    explanation = paper.get("quality_explanation", "")
-
-                    marker = "⭐" if quality >= 80 else "●" if quality >= 60 else "○"
-
-                    print(f"\n{i}. {marker} [{paper.get('year', '????')}] {paper['title']}")
-                    print(f"   Quality: {quality}/100 ({explanation})")
-
-                    relevance = 1 / (1 + dist)
-                    print(f"   Relevance: {relevance:.2f}")
-
-                    if verbose and paper.get("abstract"):
-                        abstract = (
-                            paper["abstract"][:200] + "..."
-                            if len(paper["abstract"]) > 200
-                            else paper["abstract"]
-                        )
-                        print(f"   {abstract}")
-            else:
-                print(research_cli.format_search_results(search_results, verbose))
-
-        except Exception as e:
-            print(f"Error executing shortcut: {e}", file=sys.stderr)
-            sys.exit(1)
-
-    elif shortcut_name in config.get("research_topics", {}):
-        # Execute research topic (multiple searches)
-        topic = config["research_topics"][shortcut_name]
-        searches = topic.get("searches", [])
-        topic.get("filters", {})
-
-        print(f"\n🔬 Research Topic: '{shortcut_name}'")
-        print(f"Running {len(searches)} related searches...")
-        print("=" * 50)
-
-        for search_query in searches:
-            print(f"\n➤ Searching: {search_query}")
-            # NOTE: Multi-search execution not implemented yet
-            # Currently just displays what would be searched
-
-    else:
-        print(f"Shortcut '{shortcut_name}' not found. Use --list to see available shortcuts.")
-        sys.exit(1)
-
-
-@cli.command()
-@click.option("--fix", is_flag=True, help="Remove duplicates (creates backup first)")
-@click.option("--threshold", default=0.9, help="Similarity threshold for title matching (0-1)")
-def duplicates(fix: bool, threshold: float) -> None:
-    """Find and optionally remove duplicate papers in the knowledge base.
-
-    Detects duplicates using:
-    - Exact DOI matches
-    - Fuzzy title matching (>90% similarity)
-    - Same first author + year + journal
-    """
-    import difflib
-    from collections import defaultdict
-
-    try:
-        # Load metadata
-        kb_path = Path("kb_data")
-        metadata_file = kb_path / "metadata.json"
-
-        if not metadata_file.exists():
-            print("❌ Knowledge base not found. Run build_kb.py first.")
-            sys.exit(1)
-
-        with open(metadata_file) as f:
-            metadata = json.load(f)
-
-        papers = metadata.get("papers", [])
-        print(f"🔍 Checking {len(papers)} papers for duplicates...")
-
-        # Show progress for large collections
-        if len(papers) > 500:
-            print("  ⏳ This may take a moment for large collections...")
-
-        # Strategy 1: Find exact DOI matches
-        doi_groups = defaultdict(list)
-        for i, paper in enumerate(papers):
-            doi = paper.get("doi", "").strip().lower()
-            if doi:
-                doi_groups[doi].append(i)
-
-        # Strategy 2: Find similar titles (highly optimized)
-        title_duplicates = []
-
-        # For very large collections, use a faster approximate method
-        if len(papers) > 1000:
-            print("  📋 Using fast duplicate detection for large collection...")
-
-            # Group by normalized title start (first 30 chars)
-            title_groups = defaultdict(list)
-            for i, paper in enumerate(papers):
-                title = paper.get("title", "").lower().strip()
-                if title:
-                    # Normalize: remove punctuation, take first 30 chars
-                    normalized = "".join(c for c in title[:30] if c.isalnum() or c.isspace())
-                    key = " ".join(normalized.split()[:4])  # First 4 words
-                    if key:
-                        title_groups[key].append((i, title))
-
-            # Only compare within groups with exact prefix match
-            for _key, group in title_groups.items():
-                if len(group) > 1:
-                    # Compare within small groups only
-                    for i in range(len(group)):
-                        for j in range(i + 1, len(group)):
-                            idx1, title1 = group[i]
-                            idx2, title2 = group[j]
-
-                            # Very quick similarity check using set overlap
-                            words1 = set(title1.split())
-                            words2 = set(title2.split())
-                            if len(words1) > 0 and len(words2) > 0:
-                                overlap = len(words1 & words2) / min(len(words1), len(words2))
-                                if overlap >= threshold:
-                                    # Do precise check only for high overlap
-                                    similarity = difflib.SequenceMatcher(None, title1, title2).ratio()
-                                    if similarity >= threshold:
-                                        title_duplicates.append((idx1, idx2, similarity))
-        else:
-            # For smaller collections, use more thorough comparison
-            for i in range(len(papers)):
-                for j in range(i + 1, len(papers)):
-                    title1 = papers[i].get("title", "").lower().strip()
-                    title2 = papers[j].get("title", "").lower().strip()
-
-                    if title1 and title2:
-                        # Quick length check
-                        if abs(len(title1) - len(title2)) / max(len(title1), len(title2)) > 0.3:
-                            continue
-
-                        # Calculate similarity
-                        similarity = difflib.SequenceMatcher(None, title1, title2).ratio()
-                        if similarity >= threshold:
-                            title_duplicates.append((i, j, similarity))
-
-        # Strategy 3: Same first author + year + journal
-        author_year_groups = defaultdict(list)
-        for i, paper in enumerate(papers):
-            authors = paper.get("authors", [])
-            if authors:
-                first_author = authors[0].split()[-1].lower()  # Last name
-                year = paper.get("year", "")
-                journal = paper.get("journal", "").lower()[:20]  # First 20 chars
-
-                if first_author and year:
-                    key = f"{first_author}_{year}_{journal}"
-                    author_year_groups[key].append(i)
-
-        # Collect all duplicate groups
-        duplicate_groups = []
-
-        # Add DOI duplicates
-        for doi, indices in doi_groups.items():
-            if len(indices) > 1:
-                duplicate_groups.append({"type": "DOI match", "indices": indices, "key": doi})
-
-        # Add title duplicates
-        for i, j, sim in title_duplicates:
-            # Check if not already in a DOI group
-            in_doi_group = False
-            for group in duplicate_groups:
-                if group["type"] == "DOI match" and i in group["indices"] and j in group["indices"]:
-                    in_doi_group = True
-                    break
-
-            if not in_doi_group:
-                duplicate_groups.append(
-                    {
-                        "type": f"Title similarity ({sim:.0%})",
-                        "indices": [i, j],
-                        "key": papers[i]["title"][:50],
-                    }
-                )
-
-        # Add author/year duplicates
-        for key, indices in author_year_groups.items():
-            if len(indices) > 1:
-                # Check if not already detected
-                new_group = True
-                for group in duplicate_groups:
-                    if set(indices).issubset(set(group["indices"])):
-                        new_group = False
-                        break
-
-                if new_group:
-                    duplicate_groups.append({"type": "Author+Year+Journal", "indices": indices, "key": key})
-
-        # Display results
-        if not duplicate_groups:
-            print("✅ No duplicates found!")
-            return
-
-        print(f"\n📊 Found {len(duplicate_groups)} duplicate groups:")
-        print("=" * 70)
-
-        papers_to_remove = set()
-
-        for i, group in enumerate(duplicate_groups, 1):
-            print(f"\n{i}. {group['type']}: {group['key'][:50]}...")
-
-            # Show papers in this group
-            for idx in group["indices"]:
-                paper = papers[idx]
-                mark = "  ❌" if idx in papers_to_remove else "  →"
-                print(f"{mark} [{paper['id']}] {paper.get('title', 'Unknown')[:60]}...")
-                print(f"      {paper.get('authors', ['Unknown'])[0]}, {paper.get('year', '?')}")
-
-            # Keep the first paper, mark others for removal
-            for idx in group["indices"][1:]:
-                papers_to_remove.add(idx)
-
-        print("\n📈 Summary:")
-        print(f"   Total papers: {len(papers)}")
-        print(f"   Duplicates found: {len(papers_to_remove)}")
-        print(f"   Papers after cleanup: {len(papers) - len(papers_to_remove)}")
-
-        if fix:
-            print("\n⚠️  Removing duplicates...")
-
-            # Backup first
-            import shutil
-
-            backup_dir = kb_path.parent / f"kb_data_backup_{datetime.now(UTC).strftime('%Y%m%d_%H%M%S')}"
-            shutil.copytree(kb_path, backup_dir)
-            print(f"📁 Created backup at {backup_dir}")
-
-            # Remove duplicate papers from metadata
-            cleaned_papers = [p for i, p in enumerate(papers) if i not in papers_to_remove]
-
-            # Reindex papers
-            for i, paper in enumerate(cleaned_papers):
-                paper["id"] = f"{i + 1:04d}"
-                paper["embedding_index"] = i
-                paper["filename"] = f"paper_{paper['id']}.md"
-
-            # Update metadata
-            metadata["papers"] = cleaned_papers
-            metadata["total_papers"] = len(cleaned_papers)
-            metadata["last_updated"] = datetime.now(UTC).isoformat()
-
-            # Save updated metadata
-            with open(metadata_file, "w") as f:
-                json.dump(metadata, f, indent=2, ensure_ascii=False)
-
-            # Note: We should also rebuild the FAISS index, but that requires embeddings
-            print(f"✅ Removed {len(papers_to_remove)} duplicate papers")
-            print("⚠️  Note: You should rebuild the index for optimal performance:")
-            print("   python src/build_kb.py")
-        else:
-            print("\n💡 To remove duplicates, run:")
-            print("   python src/cli.py duplicates --fix")
-
-    except Exception as e:
-        print(f"❌ Error checking duplicates: {e}", file=sys.stderr)
-        sys.exit(1)
-
-
-@cli.command()
-@click.argument("paper_id")
-@click.argument("query", required=False)
-def smart_get(paper_id: str, query: str) -> None:
-    """Intelligently retrieve relevant sections based on query context.
-
-    Automatically selects which sections to retrieve based on your query:
-    - Methods queries → methods section
-    - Results queries → results + conclusion
-    - General queries → abstract + conclusion
-
-    Examples:
-        cli.py smart-get 0001 "how did they measure"
-        cli.py smart-get 0001 "what were the findings"
-        cli.py smart-get 0001  # Returns abstract + conclusion
-    """
-    # Determine which sections to retrieve based on query
-    if query:
-        query_lower = query.lower()
-        sections = []
-
-        # Always include abstract for context
-        sections.append("abstract")
-
-        # Add sections based on query content
-        if any(word in query_lower for word in ["method", "how", "approach", "technique", "design"]):
-            sections.append("methods")
-
-        if any(word in query_lower for word in ["result", "finding", "outcome", "effect", "impact"]):
-            sections.append("results")
-
-        if any(word in query_lower for word in ["discuss", "limitation", "implication", "interpret"]):
-            sections.append("discussion")
-
-        if any(word in query_lower for word in ["introduc", "background", "literature", "review"]):
-            sections.append("introduction")
-
-        # Always add conclusion for summary
-        if "conclusion" not in sections:
-            sections.append("conclusion")
-
-        print(f"🎯 Smart retrieval for query: '{query}'")
-        print(f"   Retrieving sections: {', '.join(sections)}\n")
-    else:
-        # Default to abstract and conclusion
-        sections = ["abstract", "conclusion"]
-        print("📖 Default retrieval: abstract + conclusion\n")
-
-    # Use the get command with selected sections
-    ctx = click.get_current_context()
-    ctx.invoke(get, paper_id=paper_id, output=None, sections=sections)
-
-
-@cli.command()
 def info() -> None:
-    """Show information about the knowledge base.
-
-    Displays total papers, last update time, index size, and storage details.
-    Also shows which embedding model was used (SPECTER for scientific papers).
-    """
+    """Show information about the knowledge base."""
     try:
         knowledge_base_path = Path("kb_data")
         metadata_file_path = knowledge_base_path / "metadata.json"
@@ -1266,6 +656,7 @@ def info() -> None:
         print("=" * 50)
         print(f"Total papers: {metadata['total_papers']}")
         print(f"Last updated: {metadata.get('last_updated', 'Unknown')}")
+        print(f"Version: {metadata.get('version', 'Unknown')}")
         print(f"Location: {knowledge_base_path.absolute()}")
 
         index_file_path = knowledge_base_path / "index.faiss"
@@ -1291,6 +682,219 @@ def info() -> None:
             file=sys.stderr,
         )
         sys.exit(1)
+
+
+@cli.command()
+@click.argument("query_text")
+@click.option(
+    "--top-k",
+    "-k",
+    default=DEFAULT_SMART_SEARCH_RESULTS,
+    help=f"Number of papers to retrieve (default: {DEFAULT_SMART_SEARCH_RESULTS})",
+)
+@click.option(
+    "--max-tokens",
+    default=DEFAULT_MAX_TOKENS,
+    help=f"Max tokens to load (default: {DEFAULT_MAX_TOKENS}, ~40k chars)",
+)
+@click.option(
+    "--sections",
+    "-s",
+    multiple=True,
+    type=click.Choice(["abstract", "introduction", "methods", "results", "discussion", "conclusion"]),
+    help="Sections to prioritize (default: abstract, introduction, conclusion)",
+)
+def smart_search(query_text: str, top_k: int, max_tokens: int, sections: tuple[str, ...]) -> None:
+    """Smart search with automatic section chunking to handle 20+ papers.
+
+    Automatically selects relevant sections based on query to maximize
+    the number of papers that can be analyzed without context overflow.
+
+    Examples:
+        cli.py smart-search "diabetes treatment methods" -k 30
+        cli.py smart-search "clinical outcomes" --sections results conclusion
+    """
+    try:
+        research_cli = ResearchCLI()
+
+        # Search for papers
+        search_results = research_cli.search(query_text, top_k)
+
+        if not search_results:
+            print("No papers found matching query")
+            return
+
+        # Determine section priorities based on query
+        query_lower = query_text.lower()
+        if not sections:
+            if any(word in query_lower for word in ["method", "how", "approach", "technique"]):
+                sections = ("methods", "abstract")
+            elif any(word in query_lower for word in ["result", "outcome", "finding", "effect"]):
+                sections = ("results", "conclusion", "abstract")
+            elif any(word in query_lower for word in ["review", "systematic", "meta"]):
+                sections = ("abstract", "conclusion", "discussion")
+            else:
+                sections = ("abstract", "introduction", "conclusion")
+
+        print(f"\n🔍 Smart search for: '{query_text}'")
+        print(f"📚 Found {len(search_results)} papers")
+        print(f"📄 Prioritizing sections: {', '.join(sections)}")
+        print("=" * 50)
+
+        # Load sections with smart chunking
+        max_chars = max_tokens * 4  # Rough token to char conversion
+        loaded_papers = []
+        total_chars = 0
+        sections_index_path = Path("kb_data") / "sections_index.json"
+
+        if sections_index_path.exists():
+            with open(sections_index_path) as f:
+                sections_index = json.load(f)
+        else:
+            sections_index = {}
+
+        for _idx, dist, paper in search_results:
+            paper_id = paper["id"]
+            paper_loaded = False
+
+            # Try to load prioritized sections
+            if paper_id in sections_index:
+                paper_sections = sections_index[paper_id]
+                for section in sections:
+                    if section in paper_sections:
+                        section_text = paper_sections[section]
+                        if section_text and total_chars + len(section_text) < max_chars:
+                            loaded_papers.append(
+                                {
+                                    "id": paper_id,
+                                    "title": paper["title"],
+                                    "year": paper.get("year", ""),
+                                    "section": section,
+                                    "text": section_text[:5000],  # Cap section length
+                                    "relevance": 1 / (1 + dist),
+                                }
+                            )
+                            total_chars += len(section_text)
+                            paper_loaded = True
+                            break
+
+            # Fallback to abstract from metadata if no sections loaded
+            if not paper_loaded and paper.get("abstract"):
+                abstract = paper["abstract"]
+                if total_chars + len(abstract) < max_chars:
+                    loaded_papers.append(
+                        {
+                            "id": paper_id,
+                            "title": paper["title"],
+                            "year": paper.get("year", ""),
+                            "section": "abstract",
+                            "text": abstract,
+                            "relevance": 1 / (1 + dist),
+                        }
+                    )
+                    total_chars += len(abstract)
+                    paper_loaded = True
+
+            # Stop if we've hit the limit
+            if total_chars >= max_chars * 0.9:
+                break
+
+        # Display results
+        print(f"\n✅ Loaded {len(loaded_papers)} papers ({total_chars:,} chars, ~{total_chars//4:,} tokens)")
+        print("\nPapers loaded:")
+
+        for i, paper_data in enumerate(loaded_papers, 1):
+            print(f"\n{i}. [{paper_data['id']}] {paper_data['title'][:60]}...")
+            print(
+                f"   Year: {paper_data['year']} | Section: {paper_data['section']} | Relevance: {paper_data['relevance']:.2f}"
+            )
+
+            # Show preview of text
+            preview = (
+                paper_data["text"][:200] + "..." if len(paper_data["text"]) > 200 else paper_data["text"]
+            )
+            print(f"   Preview: {preview}")
+
+        # Save to file for further processing
+        output_file = Path("smart_search_results.json")
+        with open(output_file, "w") as f:
+            json.dump(
+                {
+                    "query": query_text,
+                    "sections_priority": list(sections),
+                    "papers_found": len(search_results),
+                    "papers_loaded": len(loaded_papers),
+                    "total_chars": total_chars,
+                    "papers": loaded_papers,
+                },
+                f,
+                indent=2,
+            )
+
+        print(f"\n💾 Results saved to {output_file}")
+        print("   Use this file for further analysis without context overflow")
+
+    except FileNotFoundError:
+        print(
+            "\n❌ Knowledge base not found.\n"
+            "   Quick fix: python src/build_kb.py --demo\n"
+            "   Full setup: python src/build_kb.py (requires Zotero)",
+            file=sys.stderr,
+        )
+        sys.exit(1)
+    except Exception as e:
+        print(f"\n❌ Smart search failed: {e}", file=sys.stderr)
+        sys.exit(1)
+
+
+@cli.command()
+def diagnose() -> None:
+    """Check knowledge base health and integrity.
+
+    \b
+    Performs comprehensive diagnostics:
+      • Verifies KB exists and is complete
+      • Checks version compatibility (v4.0)
+      • Validates metadata and index files
+      • Reports total paper count
+      • Identifies any missing components
+
+    \b
+    Example:
+      python src/cli.py diagnose
+
+    \b
+    Use this command if you encounter errors or want to verify
+    your knowledge base is properly configured.
+    """
+    kb_path = Path("kb_data")
+
+    checks = [
+        ("KB exists", kb_path.exists()),
+        ("Metadata present", (kb_path / "metadata.json").exists()),
+        ("Index present", (kb_path / "index.faiss").exists()),
+        ("Papers directory", (kb_path / "papers").exists()),
+    ]
+
+    if (kb_path / "metadata.json").exists():
+        with open(kb_path / "metadata.json") as f:
+            meta = json.load(f)
+            checks.append(("Version 4.0", meta.get("version") == "4.0"))
+            checks.append((f"Papers: {meta['total_papers']}", True))
+
+    print("\nKnowledge Base Diagnostics")
+    print("=" * 50)
+    for label, passed in checks:
+        print(f"{'✓' if passed else '✗'} {label}")
+
+    if not all(check[1] for check in checks[:4]):
+        print("\n⚠️  Knowledge base not found or incomplete")
+        print("   Run: python src/build_kb.py")
+    elif checks[4][1] if len(checks) > 4 else False:
+        print("\n✅ Knowledge base is healthy")
+    else:
+        print("\n⚠️  Knowledge base version mismatch")
+        print("   Run: python src/build_kb.py --full")
 
 
 if __name__ == "__main__":

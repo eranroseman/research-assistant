@@ -36,7 +36,12 @@ class TestCriticalFunctionality:
 
         # If it failed, should have a helpful error message
         if result.returncode == 1:
-            assert "Knowledge base not found" in result.stderr or "not found" in result.stdout.lower()
+            # v4.0 can fail with version incompatibility OR not found
+            assert (
+                "Knowledge base not found" in result.stderr
+                or "not found" in result.stdout.lower()
+                or "version incompatible" in result.stdout.lower()
+            )
 
     def test_cache_corruption_recovery(self, temp_kb_dir, corrupt_cache_file):
         """Test 2: Ensure corrupted cache doesn't break the system."""
@@ -61,6 +66,7 @@ class TestCriticalFunctionality:
             "last_updated": "2025-01-01T00:00:00Z",
             "embedding_model": "allenai-specter",
             "embedding_dimensions": 768,
+            "version": "4.0",  # Add v4.0 version
         }
 
         metadata_path = temp_kb_dir / "metadata.json"
