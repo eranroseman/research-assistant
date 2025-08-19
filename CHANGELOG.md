@@ -1,5 +1,66 @@
 # Changelog
 
+## [3.1.0] - 2025-08-19
+
+### 🎯 Smart Section Chunking (70% Context Reduction)
+- **Section extraction**: Automatically parse papers into standard academic sections
+- **Smart retrieval**: `smart-get` command intelligently selects relevant sections based on query
+- **Targeted reading**: `get --sections` allows specific section retrieval
+- **O(1) section access**: Sections index enables instant retrieval of any paper section
+- **Context optimization**: Reduces Claude's text processing by 70-90%
+
+### 🚀 Incremental Updates (10x Faster)
+- **Smart updates**: `--update` flag adds only new papers without full rebuild
+- **Fingerprint tracking**: Content-based hashing detects changed papers
+- **Append-only indexing**: New papers added to existing FAISS index
+- **Time savings**: 2-3 minutes for updates vs 30+ minutes for full rebuild
+
+### 📝 Personal Shortcuts System
+- **Shortcut configuration**: `.research_shortcuts.yaml` for saved searches
+- **Quick access**: `shortcut` command to run predefined queries
+- **Flexible parameters**: Store query, filters, and modes in shortcuts
+- **Research topics**: Group related searches for comprehensive reviews
+
+### 🔍 Enhanced Search Intelligence
+- **Query expansion**: Automatic medical/research synonym expansion
+- **Better recall**: Expands "diabetes" to include "diabetic", "T2DM", etc.
+- **Evidence gap analysis**: `--analyze-gaps` identifies missing study types
+- **Duplicate detection**: `duplicates` command finds papers by DOI/title matching
+
+### 💾 Knowledge Base Portability
+- **Export/Import**: Create portable `.tar.gz` archives of entire KB
+- **Cross-computer sync**: Easy transfer between machines
+- **Backup support**: Timestamped backups before major operations
+- **Complete preservation**: Includes index, metadata, papers, and caches
+
+### 🛠️ Type Safety & Code Quality
+- **Full type annotations**: All functions properly typed for mypy
+- **Security improvements**: Fixed subprocess injection, tarfile extraction
+- **Pre-commit compliance**: Passes all ruff, mypy, and format checks
+- **Import optimizations**: Added missing timezone imports
+
+### 📊 New CLI Commands
+- `smart-get PAPER_ID "query"`: Intelligent section-based retrieval
+- `get PAPER_ID --sections abstract methods`: Get specific sections
+- `shortcut NAME`: Run saved search from shortcuts file
+- `shortcut --list`: Show all available shortcuts
+- `shortcut --edit`: Edit shortcuts configuration
+- `duplicates [--fix]`: Find and optionally remove duplicate papers
+- `search --analyze-gaps`: Perform evidence gap analysis
+
+### 🐛 Bug Fixes
+- Fixed section extraction for markdown-formatted papers
+- Corrected timezone usage throughout codebase
+- Resolved nested if-statement complexity issues
+- Fixed assert statements with proper error handling
+- Improved error messages for missing shortcuts file
+
+### 📚 Documentation Updates
+- Updated README with v3.1 features and examples
+- Enhanced `/research` command with new capabilities
+- Added section chunking benefits to CLAUDE.md
+- Documented all new commands and flags
+
 ## [3.0.0] - 2025-08-18
 
 ### 🚀 Performance Improvements

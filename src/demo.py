@@ -9,7 +9,7 @@ import sys
 from pathlib import Path
 
 
-def run_command(command_type, args=None, capture_output=True):
+def run_command(command_type: str, args: list[str] | None = None, capture_output: bool = True) -> str | None:
     """Run a whitelisted command safely."""
 
     # Whitelist of allowed commands
@@ -46,7 +46,7 @@ def run_command(command_type, args=None, capture_output=True):
     return None
 
 
-def setup_demo():
+def setup_demo() -> None:
     """Set up the demo knowledge base and test functionality."""
     print("=" * 60)
     print("Research Assistant Demo Setup")
@@ -54,10 +54,7 @@ def setup_demo():
 
     # Check if knowledge base already exists
     knowledge_base_path = Path("kb_data")
-    if (
-        knowledge_base_path.exists()
-        and (knowledge_base_path / "metadata.json").exists()
-    ):
+    if knowledge_base_path.exists() and (knowledge_base_path / "metadata.json").exists():
         print("\nKnowledge base already exists. Using existing database.")
         print("To rebuild, delete kb_data/ directory and run again.")
     else:
@@ -118,7 +115,7 @@ def setup_demo():
     print("\nFor more information, see README.md")
 
 
-def test_research_workflow():
+def test_research_workflow() -> None:
     """Demonstrate a complete research workflow."""
     print("\n" + "=" * 60)
     print("Research Workflow Example")

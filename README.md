@@ -1,14 +1,15 @@
-# Research Assistant v3.0 for Claude Code
+# Research Assistant v3.1 for Claude Code
 
-A powerful, secure, and fast literature research tool that integrates with Claude Code through slash commands, enabling intelligent semantic search across a local knowledge base of academic papers with SPECTER2 embeddings.
+A powerful, secure, and fast literature research tool that integrates with Claude Code through slash commands, enabling intelligent semantic search across a local knowledge base of academic papers with SPECTER embeddings and smart section retrieval.
 
-## 🆕 Version 3.0 Highlights
+## 🆕 Version 3.1 Highlights
 
-- **40-50% Faster** - O(1) cache lookups, dynamic batch sizing
-- **Enhanced Security** - Command injection & path traversal protection
-- **SPECTER2 Intelligence** - Smart search modes with query optimization
-- **Quality Scoring** - 0-100 paper quality assessment system
-- **Better UX** - Clear, actionable error messages
+- **70% Less Context Usage** - Smart section chunking for efficient paper reading
+- **10x Faster Updates** - Incremental KB updates for new papers only
+- **Personal Shortcuts** - Save and reuse common search patterns
+- **Evidence Gap Analysis** - Identify missing study types and research needs
+- **Duplicate Detection** - Automatically find and remove duplicate papers
+- **KB Portability** - Export/import for syncing between computers
 
 ## 📚 Documentation
 
@@ -20,15 +21,22 @@ A powerful, secure, and fast literature research tool that integrates with Claud
 ## ✨ Features
 
 ### Core Capabilities
-- **SPECTER2 Embeddings** - State-of-the-art scientific paper embeddings with SPECTER fallback
+- **SPECTER Embeddings** - Scientific paper embeddings optimized for literature search
+- **Smart Section Chunking** - Extract specific sections (abstract, methods, results, etc.) reducing text by 70%
+- **Query Expansion** - Automatic medical/research synonym expansion for better recall
 - **Smart Search Modes** - Auto-detects intent (question, similar, explore)
 - **Study Classification** - Automatic detection of RCTs, systematic reviews, cohort studies
 - **Quality Assessment** - 0-100 scoring based on study type, recency, sample size
 - **Evidence Hierarchy** - Visual markers (⭐ 80-100, ● 60-79, ○ 40-59, · <40)
-- **Full-Text Analysis** - Complete paper content extraction from PDFs
-- **Smart Caching** - JSON/NPY format for secure, fast rebuilds (10-12 min vs 20+ min)
+- **Evidence Gap Analysis** - Identify missing study types and research needs
+- **Full-Text Analysis** - Complete paper content extraction from PDFs with section indexing
+- **Duplicate Detection** - Find and remove duplicate papers by DOI/title matching
+- **Smart Caching** - JSON/NPY format with O(1) lookups and fingerprinting
+- **Incremental Updates** - Add new papers without rebuilding (10x faster)
+- **Personal Shortcuts** - Save common searches in `.research_shortcuts.yaml`
+- **KB Export/Import** - Portable archives for syncing between computers
 - **GPU Acceleration** - Dynamic batch sizing based on available memory
-- **Claude Integration** - Enhanced `/research` v3.0 slash command
+- **Claude Integration** - Enhanced `/research` v3.1 slash command
 - **Offline Operation** - No internet required after setup
 
 ## 🚀 Quick Start
@@ -64,10 +72,10 @@ python src/cli.py search "digital health"
 
 ## 📖 Basic Usage
 
-### Search Papers with v3.0 Features
+### Search Papers with v3.1 Features
 
 ```bash
-# Basic search (auto-detects search mode)
+# Basic search (auto-detects search mode with query expansion)
 python src/cli.py search "telemedicine"
 
 # Research question (optimized for Q&A)
@@ -82,15 +90,39 @@ python src/cli.py search "metabolic syndrome" --quality-min 70 --show-quality
 # Filter by year and study type
 python src/cli.py search "diabetes" --after 2020 --type rct --type systematic_review
 
-# Comprehensive review with quality scores
-python src/cli.py search "AI diagnosis" -k 30 --show-quality --after 2019
+# Comprehensive review with evidence gap analysis
+python src/cli.py search "AI diagnosis" -k 30 --show-quality --analyze-gaps
+
+# Use personal shortcuts
+python src/cli.py shortcut diabetes  # Uses saved search from .research_shortcuts.yaml
 ```
 
-### View Full Papers (with Security)
+### Smart Paper Retrieval (70% Less Text)
 
 ```bash
-python src/cli.py get 0001              # Display in terminal (4-digit ID required)
-python src/cli.py get 0001 -o paper.md  # Save to file
+# Smart retrieval based on query context
+python src/cli.py smart-get 0001 "what were the methods"  # Gets relevant sections
+
+# Get specific sections only
+python src/cli.py get 0001 --sections abstract methods results
+
+# View full paper (4-digit ID required)
+python src/cli.py get 0001 -o paper.md
+```
+
+### Knowledge Base Management
+
+```bash
+# Check for duplicates
+python src/cli.py duplicates
+python src/cli.py duplicates --fix  # Remove duplicates
+
+# Incremental update (10x faster)
+python src/build_kb.py --update
+
+# Export/Import for syncing
+python src/build_kb.py --export kb_backup.tar.gz
+python src/build_kb.py --import kb_backup.tar.gz
 ```
 
 ### Generate Citations

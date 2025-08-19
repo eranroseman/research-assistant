@@ -36,10 +36,7 @@ class TestCriticalFunctionality:
 
         # If it failed, should have a helpful error message
         if result.returncode == 1:
-            assert (
-                "Knowledge base not found" in result.stderr
-                or "not found" in result.stdout.lower()
-            )
+            assert "Knowledge base not found" in result.stderr or "not found" in result.stdout.lower()
 
     def test_cache_corruption_recovery(self, temp_kb_dir, corrupt_cache_file):
         """Test 2: Ensure corrupted cache doesn't break the system."""
@@ -127,9 +124,10 @@ class TestCriticalFunctionality:
             )
 
             # Should not crash (exit code 0 or 1 is OK)
-            assert (
-                result.returncode in [0, 1]
-            ), f"Command {' '.join(cmd)} failed with code {result.returncode}\nError: {result.stderr}"
+            assert result.returncode in [
+                0,
+                1,
+            ], f"Command {' '.join(cmd)} failed with code {result.returncode}\nError: {result.stderr}"
 
     def test_build_kb_idempotency(self, temp_kb_dir, sample_metadata):
         """Test 6 (Bonus): Ensure rebuilding doesn't corrupt existing data."""

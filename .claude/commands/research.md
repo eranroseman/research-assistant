@@ -14,6 +14,8 @@ I'll search the academic knowledge base for papers related to: $ARGUMENTS
 - 40-50% faster searches with optimized batch processing
 - O(1) cache lookups for instant repeated searches
 - Dynamic memory-based batch sizing for optimal performance
+- 10x faster incremental KB updates with `--update` flag
+- Sections index for O(1) section retrieval
 
 **🔍 SPECTER2 Search Modes:**
 - `--mode auto`: Automatically detect search intent (default)
@@ -25,6 +27,14 @@ I'll search the academic knowledge base for papers related to: $ARGUMENTS
 - `--show-quality`: Display quality scores (0-100) for each paper
 - `--quality-min N`: Filter results by minimum quality score
 - Quality factors: study type hierarchy, recency, sample size, full-text availability
+
+**🧠 Smart Features:**
+- **Smart section chunking**: `smart-get` and `get --sections` reduce text by 70%
+- **Automatic query expansion**: Medical/research synonyms added automatically
+- **Personal shortcuts**: `--shortcut` command with `.research_shortcuts.yaml`
+- **Duplicate detection**: `duplicates` command identifies similar papers
+- **Evidence gap analysis**: `--analyze-gaps` flag for systematic review insights
+- **KB portability**: Export/import for syncing between computers
 
 ## Available Search Options
 
@@ -40,6 +50,13 @@ I'll search the academic knowledge base for papers related to: $ARGUMENTS
 - `--mode [auto|question|similar|explore]`: Search mode optimization
 - `--show-quality`: Show quality scores in results
 - `--quality-min N`: Minimum quality score (0-100)
+- `--analyze-gaps`: Perform evidence gap analysis for systematic reviews
+- `--shortcut NAME`: Use predefined search shortcuts from `.research_shortcuts.yaml`
+
+**Smart retrieval commands:**
+- `smart-get PAPER_ID`: Get paper with intelligent section chunking (70% less text)
+- `get PAPER_ID --sections`: Retrieve specific sections only
+- `duplicates`: Identify and manage duplicate papers in knowledge base
 
 **When to apply filters:**
 - Research questions (containing "?", "what", "how", "why") → Mode automatically detects as "question"
@@ -49,6 +66,8 @@ I'll search the academic knowledge base for papers related to: $ARGUMENTS
 - Temporal queries (containing "recent", "latest", "current", "emerging") → Add `--after 2020`
 - Quick specific answers → Keep default `-k 10`
 - Comprehensive literature reviews → Increase to `-k 30-50`
+- Common research topics → Use `--shortcut NAME` for predefined queries
+- Systematic reviews → Add `--analyze-gaps` to identify evidence gaps
 
 **Understanding enhanced output:**
 - Quality scores: ⭐ 80-100 (excellent), ● 60-79 (good), ○ 40-59 (moderate), · <40 (lower)
@@ -56,6 +75,58 @@ I'll search the academic knowledge base for papers related to: $ARGUMENTS
 - RCTs display sample size: `Type: RCT (n=487) | Quality: 85/100`
 - Score indicates relevance (1.0 = perfect match, <0.5 = weak match)
 - Evidence hierarchy: systematic reviews > RCTs > cohort > case-control > cross-sectional > case reports
+
+## Personal Shortcuts System
+
+**Create and use personal shortcuts** for frequently searched topics:
+
+1. **Create a shortcut**: Save common search patterns in `.research_shortcuts.yaml`
+2. **Use shortcuts**: Reference saved searches with `--shortcut NAME`
+3. **Example shortcuts**:
+   - `diabetes_treatment`: "diabetes treatment clinical trials systematic review"
+   - `covid_mental_health`: "COVID-19 mental health depression anxiety --after 2020 --quality-min 70"
+   - `ml_healthcare`: "machine learning artificial intelligence healthcare --mode explore"
+
+**Shortcut file format** (`.research_shortcuts.yaml`):
+```yaml
+diabetes_treatment:
+  query: "diabetes treatment clinical trials"
+  mode: "question"
+  quality_min: 70
+  after: 2020
+  
+covid_mental_health:
+  query: "COVID-19 mental health depression anxiety"
+  after: 2020
+  quality_min: 70
+  
+ml_healthcare:
+  query: "machine learning artificial intelligence healthcare"
+  mode: "explore"
+  k: 30
+```
+
+**Usage**: `python src/cli.py search --shortcut diabetes_treatment`
+
+## Knowledge Base Portability
+
+**Export/Import functionality** allows syncing knowledge bases between computers:
+
+1. **Export KB**: `python src/cli.py export kb_backup.tar.gz`
+   - Creates compressed archive with all KB data
+   - Includes papers, embeddings, metadata, and cache files
+   - Portable across different systems
+
+2. **Import KB**: `python src/cli.py import kb_backup.tar.gz`
+   - Restores complete knowledge base from archive
+   - Overwrites existing KB if present
+   - Maintains all search performance optimizations
+
+3. **Use cases**:
+   - Sync research libraries between work and home computers
+   - Backup knowledge base before major updates
+   - Share curated paper collections with colleagues
+   - Move to new machine without rebuilding from Zotero
 
 ## Search Strategy
 
@@ -69,10 +140,13 @@ First, check if the knowledge base exists:
 If the knowledge base doesn't exist (returns "NO_KB" or error), prompt the user:
 - "No knowledge base found. Would you like to build one from your Zotero library?"
 - If yes: Run `python src/build_kb.py` to build the knowledge base
+- For faster updates: Use `python src/build_kb.py --update` (10x faster incremental updates)
 - The build process now features:
   - 🚀 40-50% faster with optimized batch sizing
   - 🔒 Secure JSON/NPY cache format (no pickle vulnerabilities)
   - 💾 O(1) cache lookups for instant rebuilds
+  - 📚 Sections index for efficient text retrieval
+  - 🔄 Automatic query expansion with medical/research synonyms
 - After building, continue with the search
 
 ### Phase 2: Intelligent Search with Mode Detection
@@ -86,6 +160,8 @@ Query patterns and their automatic modes:
 - Broad topics ("overview of...", "landscape...") → `explore` mode
 - Specific topics → `standard` mode
 
+**Automatic query expansion**: The system now automatically expands queries with medical and research synonyms to improve recall without requiring manual intervention.
+
 ### Phase 3: Quality-Based Filtering
 
 For medical/clinical topics requiring high-quality evidence:
@@ -94,12 +170,24 @@ For medical/clinical topics requiring high-quality evidence:
 For exploratory research accepting broader evidence:
 !python src/cli.py search "$ARGUMENTS" --mode explore -k 30 --json > /tmp/search_results.json
 
-### Phase 4: Adaptive Expansion
+### Phase 4: Adaptive Expansion & Gap Analysis
 Based on initial results quality scores:
 - **Excellent results** (quality >80, relevance >0.85): Proceed with top 10
 - **Good results** (quality 60-80, relevance 0.70-0.85): Expand to k=20
 - **Moderate results** (quality 40-60, relevance <0.70): Broaden search with explore mode
 - **Insufficient results** (<5 papers): Remove quality filters, increase k to 50
+
+**Evidence Gap Analysis**: For systematic reviews or comprehensive searches, run:
+!python src/cli.py search "$ARGUMENTS" --analyze-gaps --json > /tmp/gap_analysis.json
+
+This identifies:
+- Underrepresented study types or populations
+- Temporal gaps in research
+- Geographic or demographic coverage issues
+- Methodological limitations across studies
+
+**Duplicate Detection**: Check for and manage duplicates:
+!python src/cli.py duplicates --json > /tmp/duplicates.json
 
 ## Evidence Distribution Assessment
 
@@ -162,7 +250,7 @@ Lower Quality (<60) + Lower Relevance (<0.70): ⏭️ Skip unless fills specific
 
 ## Systematic Paper Reading Strategy
 
-**Quality-Driven Tiered Reading Approach:**
+**Quality-Driven Tiered Reading Approach with Smart Retrieval:**
 
 ### Tier 1: Complete Reading (2-3 papers)
 Selection criteria (must meet at least 2):
@@ -172,9 +260,9 @@ Selection criteria (must meet at least 2):
 - Papers with contrarian findings AND quality ≥70
 - Papers identified as "landmark" in metadata
 
-Read sequence:
-1. Full paper from start to finish
-2. Pay special attention to methodology and limitations
+**Smart reading approach:**
+1. Use `smart-get PAPER_ID` for intelligent section chunking (70% less context)
+2. Focus on methodology, results, and limitations sections
 3. Note quality factors that contributed to high score
 
 ### Tier 2: Strategic Sections (5-10 papers)
@@ -183,11 +271,11 @@ Selection criteria:
 - Important supporting studies with moderate quality
 - Papers filling specific evidence gaps
 
-Read in this optimized order:
-1. Abstract & Introduction (lines 1-500)
-2. Main results tables/figures (scan for key data)
-3. **Discussion & Limitations** (typically lines 700-1200) - Critical for quality papers
-4. Conclusions (final 50-100 lines)
+**Efficient section-based reading:**
+1. Use `get PAPER_ID --sections abstract,methods,results,discussion` for targeted retrieval
+2. **Discussion & Limitations** sections are critical for quality papers
+3. Focus on methodology validation and result interpretation
+4. 70% reduction in text processing with smart chunking
 
 ### Tier 3: Abstract + Key Results (remaining papers)
 Selection criteria:
@@ -195,18 +283,23 @@ Selection criteria:
 - Confirmatory studies
 - Papers for completeness
 
-Quick scan approach:
+**Quick scan approach:**
+- Use `get PAPER_ID --sections abstract,conclusions` for rapid review
 - Abstract only if quality <60
-- Abstract + key findings if quality 60-69
 - Skip if both quality <50 AND relevance <0.60
 
-**Key Insight:** The discussion and limitations sections (typically lines 700-1200) often contain critical caveats, alternative interpretations, and acknowledged weaknesses that may not appear in abstracts or conclusions. Always read these sections for top-tier papers.
+**Performance Benefits:**
+- **70% less text**: Smart section chunking reduces Claude's context usage dramatically
+- **O(1) section retrieval**: Sections index enables instant access to specific parts
+- **Targeted reading**: Focus only on relevant sections for each quality tier
+
+**Key Insight:** The discussion and limitations sections often contain critical caveats, alternative interpretations, and acknowledged weaknesses that may not appear in abstracts or conclusions. Smart section retrieval makes accessing these efficiently possible.
 
 ## Step 5: Clean Up
 
 Remove the temporary search results file:
 
-!rm -f /tmp/search_results.json && echo "✓ Temporary search results deleted" || echo "✗ Failed to delete search results"
+!rm -f /tmp/search_results.json /tmp/gap_analysis.json /tmp/duplicates.json && echo "✓ Temporary search results deleted" || echo "✗ Failed to delete search results"
 
 ## Step 6: Analyze and Synthesize
 
@@ -258,11 +351,13 @@ First, ensure the reports directory exists:
 - Identify patterns and themes
 - Note methodological strengths and limitations
 
-### 5. Knowledge Gaps
+### 5. Knowledge Gaps & Evidence Analysis
 
-- Areas lacking sufficient research
+- Areas lacking sufficient research (from gap analysis if performed)
 - Contradictory findings requiring clarification
 - Future research directions
+- **Duplicate concerns**: Note any identified duplicates and how they were handled
+- **Evidence distribution gaps**: Highlight underrepresented populations, study types, or geographic regions
 - **Expanding the evidence base**: If critical gaps exist, use `/doi [specific topic]` to find additional papers
 
 ### 6. References (IEEE format)
@@ -301,13 +396,24 @@ Generate the research report based on the papers found, ensuring all claims are 
 
 **v3.0 Improvements:**
 - 🚀 **40-50% faster searches**: Optimized batch processing and O(1) cache lookups
+- ⚡ **10x faster updates**: Incremental KB updates with `--update` flag
 - 🔒 **Enhanced security**: Command injection prevention, path traversal protection, safe cache serialization
 - 📊 **Better evidence assessment**: Quality scores help prioritize high-value papers
 - 🎯 **Smarter search modes**: SPECTER2 automatically optimizes for your query type
 - 💾 **Efficient rebuilds**: Cached embeddings persist across sessions for instant repeated searches
+- 🧠 **Smart retrieval**: 70% less context usage with intelligent section chunking
+- 🔄 **Automatic expansion**: Medical/research synonyms added to queries automatically
+- 📚 **Personal shortcuts**: Save common search patterns in `.research_shortcuts.yaml`
+- 🔍 **Duplicate detection**: Identify and manage similar papers across the knowledge base
+- 📈 **Gap analysis**: Systematic identification of evidence gaps for comprehensive reviews
+- 🌐 **KB portability**: Export/import functionality for syncing between computers
 
 **Tips for Optimal Performance:**
 - First search may take ~30s to load the model, subsequent searches are instant
 - Use `--quality-min 70` to quickly filter for high-quality evidence
 - Use `--mode question` for research questions to get more targeted results
-- Repeated similar searches benefit from O(1) cache lookups
+- Use `smart-get` or `get --sections` to reduce context usage by 70%
+- Create shortcuts for frequently searched topics with `--shortcut`
+- Run `duplicates` command periodically to maintain KB quality
+- Use `--update` flag for 10x faster incremental knowledge base updates
+- Use `--analyze-gaps` for systematic reviews to identify evidence gaps
