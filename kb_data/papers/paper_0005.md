@@ -1,12 +1,12 @@
 # Wearable Devices for Continuous Health Monitoring: Clinical Validation and Real-World Evidence
 
-**Authors:** Kevin Park, Jennifer White, Christopher Davis
-**Year:** 2024
-**Journal:** npj Digital Medicine
-**Volume:** 7
-**Issue:** 1
-**Pages:** 45
-**DOI:** 10.1038/s41746-024-01012-z
+**Authors:** Kevin Park, Jennifer White, Christopher Davis  
+**Year:** 2024  
+**Journal:** npj Digital Medicine  
+**Volume:** 7  
+**Issue:** 1  
+**Pages:** 45  
+**DOI:** 10.1038/s41746-024-01012-z  
 
 ## Abstract
 Consumer wearable devices increasingly claim health monitoring capabilities, but clinical validation remains inconsistent. This study evaluated 25 popular wearables against medical-grade equipment for heart rate, blood oxygen, and activity tracking. While heart rate monitoring showed excellent accuracy (r=0.96), SpO2 measurements varied significantly (r=0.72-0.89). Real-world data from 10,000 users revealed high engagement initially (82%) declining to 34% at 6 months, highlighting adherence challenges.

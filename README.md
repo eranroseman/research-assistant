@@ -7,7 +7,7 @@ A powerful, secure, and fast literature research tool that integrates with Claud
 - **70% Less Context Usage** - Smart section chunking for efficient paper reading
 - **10x Faster Updates** - Incremental KB updates for new papers only
 - **Personal Shortcuts** - Save and reuse common search patterns
-- **Evidence Gap Analysis** - Identify missing study types and research needs
+- **Evidence Gap Analysis** - Identify missing study types and research needs (experimental feature)
 - **Duplicate Detection** - Automatically find and remove duplicate papers
 - **KB Portability** - Export/import for syncing between computers
 
@@ -16,26 +16,26 @@ A powerful, secure, and fast literature research tool that integrates with Claud
 - **[API Reference](docs/api-reference.md)** - Complete CLI command reference
 - **[Technical Specs](docs/technical-specs.md)** - Architecture and implementation details
 - **[Advanced Usage](docs/advanced-usage.md)** - GPU, custom models, performance tuning
-- **[Changelog](docs/CHANGELOG.md)** - Version history and updates
+- **[Changelog](CHANGELOG.md)** - Version history and updates
 
 ## ✨ Features
 
 ### Core Capabilities
-- **SPECTER Embeddings** - Scientific paper embeddings optimized for literature search
+- **SPECTER Embeddings** - Scientific paper embeddings optimized for literature search (allenai-specter model)
 - **Smart Section Chunking** - Extract specific sections (abstract, methods, results, etc.) reducing text by 70%
 - **Query Expansion** - Automatic medical/research synonym expansion for better recall
 - **Smart Search Modes** - Auto-detects intent (question, similar, explore)
 - **Study Classification** - Automatic detection of RCTs, systematic reviews, cohort studies
 - **Quality Assessment** - 0-100 scoring based on study type, recency, sample size
 - **Evidence Hierarchy** - Visual markers (⭐ 80-100, ● 60-79, ○ 40-59, · <40)
-- **Evidence Gap Analysis** - Identify missing study types and research needs
+- **Evidence Gap Analysis** - Identify missing study types and research needs (experimental feature)
 - **Full-Text Analysis** - Complete paper content extraction from PDFs with section indexing
 - **Duplicate Detection** - Find and remove duplicate papers by DOI/title matching
 - **Smart Caching** - JSON/NPY format with O(1) lookups and fingerprinting
 - **Incremental Updates** - Add new papers without rebuilding (10x faster)
 - **Personal Shortcuts** - Save common searches in `.research_shortcuts.yaml`
 - **KB Export/Import** - Portable archives for syncing between computers
-- **GPU Acceleration** - Dynamic batch sizing based on available memory
+- **GPU Acceleration** - Dynamic batch sizing based on available memory (~2x speedup)
 - **Claude Integration** - Enhanced `/research` v3.1 slash command
 - **Offline Operation** - No internet required after setup
 
@@ -90,8 +90,8 @@ python src/cli.py search "metabolic syndrome" --quality-min 70 --show-quality
 # Filter by year and study type
 python src/cli.py search "diabetes" --after 2020 --type rct --type systematic_review
 
-# Comprehensive review with evidence gap analysis
-python src/cli.py search "AI diagnosis" -k 30 --show-quality --analyze-gaps
+# Comprehensive review with quality scores
+python src/cli.py search "AI diagnosis" -k 30 --show-quality
 
 # Use personal shortcuts
 python src/cli.py shortcut diabetes  # Uses saved search from .research_shortcuts.yaml
@@ -170,10 +170,10 @@ research-assistant/
 │   ├── .pdf_text_cache.json   # PDF extraction cache
 │   └── papers/             # Full text markdown files
 ├── docs/                   # Documentation
-│   ├── api-reference.md   # CLI commands with v3.0 features
+│   ├── api-reference.md   # CLI commands with v3.1 features
 │   ├── technical-specs.md # Architecture details
 │   ├── advanced-usage.md  # GPU, models, performance
-│   └── CHANGELOG.md       # Version history
+│   └── CHANGELOG.md       # Version history (also in root)
 ├── src/                    # Source code
 │   ├── build_kb.py        # Knowledge base builder
 │   ├── cli.py             # CLI with quality scoring
@@ -188,17 +188,18 @@ research-assistant/
 
 ## ⚡ Performance Benchmarks
 
-### v3.0 Improvements
-- **Embedding Generation**: 10-12 min (vs 20+ min in v2.0) for 2000 papers
+### v3.1 Improvements
+- **Embedding Generation**: ~10 min with GPU, ~20 min with CPU for 2000 papers
 - **Cache Lookups**: O(1) instant (vs O(n) linear search)
 - **Batch Processing**: Dynamic 64-256 batch size (vs fixed 64)
 - **Search Speed**: <1s for most queries after model loading
+- **Section Extraction**: 70% text reduction with smart chunking
 - **Rebuild Time**: 2-3 min with full cache (vs 20+ min without)
 
 ### System Requirements
 - **RAM**: 8GB minimum, 16GB recommended
 - **Storage**: 1GB for code + knowledge base size
-- **GPU**: Optional but provides 10x speedup for embeddings
+- **GPU**: Optional but provides ~2x speedup for embeddings
 - **Python**: 3.11+ required
 
 ## 🐛 Troubleshooting
@@ -221,9 +222,9 @@ python src/build_kb.py --demo  # Quick fix: Create demo database
 - Check API is enabled in Settings → Advanced
 - For WSL users, see [Advanced Usage](docs/advanced-usage.md#wsl-specific-setup-zotero-on-windows-host)
 
-**SPECTER2 loading issues**
-- System automatically falls back to SPECTER
-- Install peft for full SPECTER2 support: `pip install peft`
+**SPECTER model issues**
+- Ensure sentence-transformers is properly installed
+- Model will be downloaded on first use
 
 **Performance optimization**
 - v3.0 automatically detects GPU and adjusts batch size

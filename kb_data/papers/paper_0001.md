@@ -1,12 +1,12 @@
 # Digital Health Interventions for Depression, Anxiety, and Enhancement of Psychological Well-Being
 
-**Authors:** John Smith, Jane Doe, Alice Johnson
-**Year:** 2023
-**Journal:** Nature Digital Medicine
-**Volume:** 6
-**Issue:** 3
-**Pages:** 123-145
-**DOI:** 10.1038/s41746-023-00789-9
+**Authors:** John Smith, Jane Doe, Alice Johnson  
+**Year:** 2023  
+**Journal:** Nature Digital Medicine  
+**Volume:** 6  
+**Issue:** 3  
+**Pages:** 123-145  
+**DOI:** 10.1038/s41746-023-00789-9  
 
 ## Abstract
 Digital health interventions have shown promise in addressing mental health challenges. This systematic review examines the effectiveness of mobile apps, web-based platforms, and digital therapeutics for treating depression and anxiety disorders. We analyzed 127 randomized controlled trials involving over 50,000 participants. Results indicate moderate to large effect sizes for guided digital interventions compared to waitlist controls.

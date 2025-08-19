@@ -111,7 +111,7 @@ class KnowledgeBaseBuilder:
 
     @property
     def embedding_model(self) -> Any:
-        """Lazy load the SPECTER2 embedding model with fallback to SPECTER."""
+        """Lazy load the SPECTER embedding model."""
         if self._embedding_model is None:
             import torch
             from sentence_transformers import SentenceTransformer
@@ -218,7 +218,7 @@ class KnowledgeBaseBuilder:
 
             import numpy as np
 
-            model_name = getattr(self, "model_version", "SPECTER2")
+            model_name = getattr(self, "model_version", "SPECTER")
 
             # Save metadata to JSON
             json_cache_path = self.knowledge_base_path / ".embedding_cache.json"
@@ -670,6 +670,7 @@ class KnowledgeBaseBuilder:
                 "conferencePaper",
                 "preprint",
                 "book",
+                "bookSection",
                 "thesis",
                 "report",
             ]:
@@ -737,8 +738,18 @@ class KnowledgeBaseBuilder:
             cached_papers = paper_count - new_papers
             time_estimate = float((new_papers * 0.5) + (cached_papers * 0.1) + 10)  # +10 for overhead
         else:
-            # Without caches: ~2 sec per paper + model loading
-            time_estimate = (paper_count * 2) + 30  # +30 for model loading
+            # Without caches, based on real-world performance:
+            # PDF extraction: ~0.05 sec/paper, Embeddings: ~0.4 sec/paper on GPU, ~0.75 on CPU
+            # Model loading: ~60 seconds overhead
+            try:
+                import torch
+
+                if torch.cuda.is_available():
+                    time_estimate = (paper_count * 0.45) + 60  # GPU: ~0.4s embeddings + 0.05s PDF
+                else:
+                    time_estimate = (paper_count * 0.8) + 120  # CPU: ~0.75s embeddings + 0.05s PDF + overhead
+            except ImportError:
+                time_estimate = (paper_count * 0.8) + 120  # Assume CPU if can't check
 
         analysis["estimated_time_seconds"] = int(time_estimate)
 
@@ -803,6 +814,7 @@ class KnowledgeBaseBuilder:
                 "conferencePaper",
                 "preprint",
                 "book",
+                "bookSection",
                 "thesis",
                 "report",
             ]:
@@ -835,8 +847,12 @@ class KnowledgeBaseBuilder:
         print(f"  Found {len(papers)} research papers (from {len(all_items)} total items)")
         return papers
 
-    def augment_papers_with_pdfs(self, papers: list[dict], use_cache: bool = True) -> None:
-        """Add full text from PDFs using SQLite database paths with caching."""
+    def augment_papers_with_pdfs(self, papers: list[dict], use_cache: bool = True) -> tuple[int, int]:
+        """Add full text from PDFs using SQLite database paths with caching.
+
+        Returns:
+            tuple: (papers_with_pdfs, cache_hits)
+        """
         # Ensure cache is loaded
         if use_cache and self.cache is None:
             self.load_cache()
@@ -892,6 +908,8 @@ class KnowledgeBaseBuilder:
         if use_cache:
             self.save_cache()
 
+        return papers_with_pdfs, cache_hits
+
     def update_incremental(self, api_url: str | None = None) -> int:
         """Add only new papers since last build - much faster than full rebuild."""
         if not self.metadata_file_path.exists():
@@ -923,7 +941,7 @@ class KnowledgeBaseBuilder:
         print(f"📚 Found {len(new_papers)} new papers to add")
 
         # Add PDFs to new papers
-        self.augment_papers_with_pdfs(new_papers, use_cache=True)
+        _, _ = self.augment_papers_with_pdfs(new_papers, use_cache=True)  # Stats not needed for incremental
 
         # Load existing FAISS index
         import faiss
@@ -1117,10 +1135,10 @@ class KnowledgeBaseBuilder:
         papers = self.process_zotero_local_library(api_url)
 
         # Step 2: Add full text from PDFs via SQLite
-        self.augment_papers_with_pdfs(papers, use_cache)
+        pdf_stats = self.augment_papers_with_pdfs(papers, use_cache)
 
-        # Step 3: Build the knowledge base
-        self.build_from_papers(papers)
+        # Step 3: Build the knowledge base (pass PDF stats)
+        self.build_from_papers(papers, pdf_stats)
 
     def generate_missing_pdfs_report(self, papers: list[dict]) -> Path:
         """Generate markdown report of papers missing or with incomplete PDFs."""
@@ -1215,8 +1233,16 @@ class KnowledgeBaseBuilder:
 
         return report_path
 
-    def build_from_papers(self, papers: list[dict]) -> None:
+    def build_from_papers(self, papers: list[dict], pdf_stats: tuple[int, int] | None = None) -> None:
         """Build knowledge base from a list of paper dictionaries."""
+        import time
+
+        build_start_time = time.time()
+
+        # Extract PDF stats if provided
+        papers_with_pdfs = pdf_stats[0] if pdf_stats else 0
+        pdf_cache_hits = pdf_stats[1] if pdf_stats else 0
+
         # No backups - clean rebuild only
 
         # Detect and remove duplicates
@@ -1322,12 +1348,12 @@ class KnowledgeBaseBuilder:
             with open(markdown_file_path, "w", encoding="utf-8") as f:
                 f.write(md_content)
 
-            # Format for SciNCL: Title and Abstract with separator
-            # SciNCL expects title and abstract concatenated with a separator
+            # Format for SPECTER: Title and Abstract with separator
+            # SPECTER expects title and abstract concatenated with a separator
             title = paper.get("title", "").strip()
             abstract = paper.get("abstract", "").strip()
 
-            # SciNCL handles papers with missing abstracts well
+            # SPECTER handles papers with missing abstracts well
             embedding_text = f"{title} [SEP] {abstract}" if abstract else title
 
             abstracts.append(embedding_text)
@@ -1448,11 +1474,44 @@ class KnowledgeBaseBuilder:
             json.dump(sections_index, f, indent=2, ensure_ascii=False)
         print(f"  - Sections index: {sections_index_path}")
 
-        print("Knowledge base built successfully!")
-        print(f"  - Papers: {len(papers)}")
+        # Calculate build time
+        build_time = (time.time() - build_start_time) / 60  # Convert to minutes
+
+        # Count papers with actual content (removed unused variable)
+        embeddings_created = len(papers)  # All papers get embeddings (abstract or full text)
+
+        # Build verification and summary
+        print("\n✅ Knowledge base built successfully!")
+        print(f"  - Papers indexed: {len(papers)}")
+        print(
+            f"  - PDFs extracted: {papers_with_pdfs}/{len(papers)} ({papers_with_pdfs/len(papers)*100:.1f}%)"
+        )
+        print(f"  - Embeddings created: {embeddings_created}")
+        if pdf_cache_hits > 0:
+            print(
+                f"  - Cache hits: {pdf_cache_hits}/{papers_with_pdfs} ({pdf_cache_hits/papers_with_pdfs*100:.1f}%)"
+            )
+        print(f"  - Build time: {build_time:.1f} minutes")
         print(f"  - Index: {self.index_file_path}")
         print(f"  - Metadata: {self.metadata_file_path}")
-        print(f"  - Papers directory: {self.papers_path}")
+
+        # Sanity checks and warnings
+        warnings = []
+        if papers_with_pdfs < len(papers) * 0.9:
+            warnings.append(f"Low PDF coverage: only {papers_with_pdfs}/{len(papers)} papers have PDFs")
+        if embeddings_created != len(papers):
+            warnings.append(
+                f"Embedding count mismatch: {embeddings_created} embeddings for {len(papers)} papers"
+            )
+        if not self.index_file_path.exists():
+            warnings.append("FAISS index file not created")
+        if not self.metadata_file_path.exists():
+            warnings.append("Metadata file not created")
+
+        if warnings:
+            print("\n⚠️  Warnings:")
+            for warning in warnings:
+                print(f"  - {warning}")
 
         # Check for missing PDFs and offer to generate report
         missing_count = sum(1 for p in papers if "full_text" not in p or not p.get("full_text"))
@@ -1665,21 +1724,29 @@ def main(
             try:
                 with open("/proc/version") as f:
                     if "microsoft" in f.read().lower():
-                        # We're in WSL, get Windows host IP
-                        import subprocess
+                        # We're in WSL, try localhost first (WSL2 with localhost forwarding)
+                        try:
+                            test_url = "http://localhost:23119/api"
+                            response = requests.get(test_url, timeout=1)
+                            if response.status_code == 200:
+                                api_url = test_url
+                                print("Detected WSL environment. Using localhost forwarding")
+                        except (requests.RequestException, requests.ConnectionError):
+                            # Fallback to Windows host IP from resolv.conf
+                            import subprocess
 
-                        result = subprocess.run(  # noqa: S603
-                            ["/bin/cat", "/etc/resolv.conf"],
-                            capture_output=True,
-                            text=True,
-                            check=False,
-                        )
-                        for line in result.stdout.split("\n"):
-                            if "nameserver" in line:
-                                host_ip = line.split()[1]
-                                api_url = f"http://{host_ip}:23119/api"
-                                print(f"Detected WSL environment. Using Windows host at {host_ip}")
-                                break
+                            result = subprocess.run(  # noqa: S603
+                                ["/bin/cat", "/etc/resolv.conf"],
+                                capture_output=True,
+                                text=True,
+                                check=False,
+                            )
+                            for line in result.stdout.split("\n"):
+                                if "nameserver" in line:
+                                    host_ip = line.split()[1]
+                                    api_url = f"http://{host_ip}:23119/api"
+                                    print(f"Detected WSL environment. Using Windows host at {host_ip}")
+                                    break
             except (OSError, FileNotFoundError, PermissionError):
                 pass  # Not in WSL or can't read file
 

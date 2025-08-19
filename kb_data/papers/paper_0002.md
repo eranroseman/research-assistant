@@ -1,12 +1,12 @@
 # Barriers to Digital Health Adoption in Elderly Populations: A Mixed-Methods Study
 
-**Authors:** Michael Chen, Sarah Williams, Robert Brown
-**Year:** 2024
-**Journal:** Journal of Medical Internet Research
-**Volume:** 26
-**Issue:** 2
-**Pages:** e45678
-**DOI:** 10.2196/45678
+**Authors:** Michael Chen, Sarah Williams, Robert Brown  
+**Year:** 2024  
+**Journal:** Journal of Medical Internet Research  
+**Volume:** 26  
+**Issue:** 2  
+**Pages:** e45678  
+**DOI:** 10.2196/45678  
 
 ## Abstract
 Understanding barriers to digital health adoption among elderly populations is crucial for equitable healthcare delivery. This mixed-methods study combines survey data from 2,500 adults aged 65+ with qualitative interviews from 150 participants. Key barriers identified include technological literacy (67%), privacy concerns (54%), lack of perceived benefit (43%), and physical/cognitive limitations (38%). Facilitators included family support, simplified interfaces, and integration with existing care.

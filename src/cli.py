@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 CLI tool for searching and retrieving papers from the knowledge base
-Enhanced with SPECTER2 query preprocessing and quality scoring
+Enhanced with SPECTER query preprocessing and quality scoring
 """
 
 import json
@@ -13,7 +13,7 @@ from typing import Any
 import click
 import faiss
 
-# SPECTER2 enhancement functions integrated directly
+# SPECTER enhancement functions integrated directly
 
 # Medical and research term expansions for better recall
 TERM_EXPANSIONS = {
@@ -166,7 +166,7 @@ def analyze_evidence_gaps(search_results: list[dict]) -> tuple[list[str], list[s
 
 
 def preprocess_query(query_text: str, mode: str = "auto") -> tuple[str, str]:
-    """Preprocess query based on search mode for better SPECTER2 results."""
+    """Preprocess query based on search mode for better SPECTER results."""
 
     # Auto-detect mode if needed
     if mode == "auto":
@@ -178,7 +178,7 @@ def preprocess_query(query_text: str, mode: str = "auto") -> tuple[str, str]:
         enhanced_query = f"Question: {query_text} Research findings:"
 
     elif mode == "similar":
-        # Repetition emphasizes key terms in SPECTER2
+        # Repetition emphasizes key terms in SPECTER
         enhanced_query = f"{query_text} {query_text}"
 
     elif mode == "explore":
@@ -263,7 +263,7 @@ class ResearchCLI:
         with open(self.metadata_file_path, encoding="utf-8") as f:
             self.metadata = json.load(f)
 
-        # Load SPECTER2 model for search
+        # Load SPECTER model for search
         self.embedding_model = self._load_embedding_model()
         self.search_index = faiss.read_index(str(self.index_file_path))
 
@@ -289,7 +289,8 @@ class ResearchCLI:
                 paper = self.metadata["papers"][idx]
 
                 # Apply filters
-                if min_year and paper.get("year", 0) < min_year:
+                paper_year = paper.get("year")
+                if min_year and paper_year and paper_year < min_year:
                     continue
                 if study_types and paper.get("study_type", "study") not in study_types:
                     continue
@@ -429,10 +430,10 @@ class ResearchCLI:
 
 @click.group()
 def cli() -> None:
-    """Research Assistant CLI v3.0 - Enhanced with SciNCL embeddings and smart search.
+    """Research Assistant CLI v3.0 - Enhanced with SPECTER embeddings and smart search.
 
     Features:
-    - SciNCL embeddings (state-of-the-art for scientific papers)
+    - SPECTER embeddings (optimized for scientific papers)
     - Smart search modes with query expansion
     - Paper quality scoring (0-100 based on study type, recency, sample size)
     - Study type classification (systematic reviews, RCTs, cohort studies, etc.)
@@ -502,7 +503,7 @@ def search(
     analyze_gaps: bool,
     study_type: tuple[str, ...],
 ) -> None:
-    """Enhanced search with SciNCL embeddings and query expansion.
+    """Enhanced search with SPECTER embeddings and query expansion.
 
     Search modes optimize results for different intents:
     - auto: Automatically detect intent from query
@@ -528,7 +529,7 @@ def search(
         # Expand query with synonyms for better recall
         expanded_query, was_expanded = expand_query(query_text)
 
-        # Preprocess query for better SPECTER2 results
+        # Preprocess query for better SPECTER results
         enhanced_query, detected_mode = preprocess_query(expanded_query, mode)
 
         if verbose:
@@ -966,8 +967,8 @@ def shortcut(shortcut_name: str | None, list_shortcuts: bool, edit: bool) -> Non
 
         for search_query in searches:
             print(f"\n➤ Searching: {search_query}")
-            # TODO: Execute each search with filters
-            # For now, just show what would be searched
+            # NOTE: Multi-search execution not implemented yet
+            # Currently just displays what would be searched
 
     else:
         print(f"Shortcut '{shortcut_name}' not found. Use --list to see available shortcuts.")
@@ -1003,6 +1004,10 @@ def duplicates(fix: bool, threshold: float) -> None:
         papers = metadata.get("papers", [])
         print(f"🔍 Checking {len(papers)} papers for duplicates...")
 
+        # Show progress for large collections
+        if len(papers) > 500:
+            print("  ⏳ This may take a moment for large collections...")
+
         # Strategy 1: Find exact DOI matches
         doi_groups = defaultdict(list)
         for i, paper in enumerate(papers):
@@ -1010,18 +1015,59 @@ def duplicates(fix: bool, threshold: float) -> None:
             if doi:
                 doi_groups[doi].append(i)
 
-        # Strategy 2: Find similar titles
+        # Strategy 2: Find similar titles (highly optimized)
         title_duplicates = []
-        for i in range(len(papers)):
-            for j in range(i + 1, len(papers)):
-                title1 = papers[i].get("title", "").lower().strip()
-                title2 = papers[j].get("title", "").lower().strip()
 
-                if title1 and title2:
-                    # Calculate similarity
-                    similarity = difflib.SequenceMatcher(None, title1, title2).ratio()
-                    if similarity >= threshold:
-                        title_duplicates.append((i, j, similarity))
+        # For very large collections, use a faster approximate method
+        if len(papers) > 1000:
+            print("  📋 Using fast duplicate detection for large collection...")
+
+            # Group by normalized title start (first 30 chars)
+            title_groups = defaultdict(list)
+            for i, paper in enumerate(papers):
+                title = paper.get("title", "").lower().strip()
+                if title:
+                    # Normalize: remove punctuation, take first 30 chars
+                    normalized = "".join(c for c in title[:30] if c.isalnum() or c.isspace())
+                    key = " ".join(normalized.split()[:4])  # First 4 words
+                    if key:
+                        title_groups[key].append((i, title))
+
+            # Only compare within groups with exact prefix match
+            for _key, group in title_groups.items():
+                if len(group) > 1:
+                    # Compare within small groups only
+                    for i in range(len(group)):
+                        for j in range(i + 1, len(group)):
+                            idx1, title1 = group[i]
+                            idx2, title2 = group[j]
+
+                            # Very quick similarity check using set overlap
+                            words1 = set(title1.split())
+                            words2 = set(title2.split())
+                            if len(words1) > 0 and len(words2) > 0:
+                                overlap = len(words1 & words2) / min(len(words1), len(words2))
+                                if overlap >= threshold:
+                                    # Do precise check only for high overlap
+                                    similarity = difflib.SequenceMatcher(None, title1, title2).ratio()
+                                    if similarity >= threshold:
+                                        title_duplicates.append((idx1, idx2, similarity))
+        else:
+            # For smaller collections, use more thorough comparison
+            for i in range(len(papers)):
+                for j in range(i + 1, len(papers)):
+                    title1 = papers[i].get("title", "").lower().strip()
+                    title2 = papers[j].get("title", "").lower().strip()
+
+                    if title1 and title2:
+                        # Quick length check
+                        if abs(len(title1) - len(title2)) / max(len(title1), len(title2)) > 0.3:
+                            continue
+
+                        # Calculate similarity
+                        similarity = difflib.SequenceMatcher(None, title1, title2).ratio()
+                        if similarity >= threshold:
+                            title_duplicates.append((i, j, similarity))
 
         # Strategy 3: Same first author + year + journal
         author_year_groups = defaultdict(list)

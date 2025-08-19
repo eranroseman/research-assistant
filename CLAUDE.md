@@ -79,6 +79,7 @@ pre-commit run --all-files    # All pre-commit hooks
 - Duplicate detection (`duplicates` command)
 - Evidence gap analysis (`--analyze-gaps`)
 - SPECTER search modes: auto, question, similar, explore
+- Note: CLI help may show "SciNCL" but uses SPECTER model (sentence-transformers/allenai-specter)
 
 **Slash Commands** (`.claude/commands/`):
 
@@ -88,7 +89,7 @@ pre-commit run --all-files    # All pre-commit hooks
 
 ### Data Flow
 
-1. **Build Phase**: Zotero → PDF extraction → SPECTER2 embeddings → FAISS index
+1. **Build Phase**: Zotero → PDF extraction → SPECTER embeddings → FAISS index
 2. **Search Phase**: Query → mode detection → embedding → FAISS search → quality scoring → ranked results
 3. **Cache Strategy**: Two-level caching (PDF text + embeddings) for 40-50% performance gain
 
@@ -101,7 +102,7 @@ pre-commit run --all-files    # All pre-commit hooks
 
 ## Performance Optimizations
 
-- **O(1) cache lookups**: Hash-based dict replaces linear search
+- **O(1) cache lookups**: Hash-based dict built on load (not persisted)
 - **O(1) section retrieval**: Sections index for instant access to paper sections
 - **70% context reduction**: Smart section chunking reduces text processing
 - **10x faster updates**: Incremental indexing for new papers only
@@ -157,9 +158,9 @@ kb_data/
 python src/build_kb.py --demo  # Quick fix
 ```
 
-### "SPECTER2 not available"
+### "SPECTER model issues"
 
-System auto-falls back to SPECTER. To enable SPECTER2:
+If SPECTER model fails to load:
 
 ```bash
 pip install peft
@@ -202,4 +203,4 @@ Before committing:
 - Python 3.11+ required
 - Main dependencies: faiss-cpu, sentence-transformers, PyMuPDF
 - License: MIT (Note: PyMuPDF is AGPL - consider for commercial use)
-- Version: 3.0.0 (see CHANGELOG.md for history)
+- Version: 3.1.0 (see CHANGELOG.md for history)

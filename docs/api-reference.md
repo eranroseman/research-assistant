@@ -6,7 +6,7 @@
 
 ### `cli.py search`
 
-Search the knowledge base for relevant papers with SPECTER2 enhancements.
+Search the knowledge base for relevant papers with SPECTER embeddings (note: CLI help may show "SciNCL" but uses SPECTER model).
 
 ```bash
 python src/cli.py search [OPTIONS] QUERY
@@ -171,8 +171,8 @@ Knowledge Base Information:
 - Index: kb_data/index.faiss (150MB)
 - PDF Cache: kb_data/.pdf_text_cache.json (148MB)
 - Embedding Cache: kb_data/.embedding_cache.json + .embedding_data.npy (500MB)
-- Model: allenai/specter2 (with SPECTER fallback)
-- Performance: 40-50% faster with v3.0 optimizations
+- Model: sentence-transformers/allenai-specter
+- Performance: 40-50% faster with v3.0 optimizations (cache built at runtime)
 ```
 
 ## Build Script
@@ -194,6 +194,9 @@ python src/build_kb.py [OPTIONS]
 | `--knowledge-base-path` | PATH | kb_data | Path to knowledge base directory |
 | `--zotero-data-dir` | PATH | ~/Zotero | Path to Zotero data directory |
 | `--clear-cache` | FLAG | False | Clear both PDF and embedding caches |
+| `--update` | FLAG | False | Incremental update - only add new papers (10x faster) |
+| `--export` | PATH | None | Export knowledge base to portable tar.gz archive |
+| `--import` | PATH | None | Import knowledge base from tar.gz archive |
 
 #### Examples
 
@@ -212,6 +215,15 @@ python src/build_kb.py --api-url http://172.20.1.1:23119/api
 
 # Custom paths
 python src/build_kb.py --knowledge-base-path /data/kb --zotero-data-dir /mnt/c/Users/name/Zotero
+
+# Incremental update (10x faster)
+python src/build_kb.py --update
+
+# Export knowledge base
+python src/build_kb.py --export kb_backup.tar.gz
+
+# Import knowledge base
+python src/build_kb.py --import kb_backup.tar.gz
 ```
 
 #### Interactive Options
@@ -239,29 +251,31 @@ class KnowledgeBase:
         self.index = faiss.read_index(str(self.kb_path / "index.faiss"))
         with open(self.kb_path / "metadata.json") as f:
             self.metadata = json.load(f)
-        self.model = SentenceTransformer('allenai-specter')
+        self.model = SentenceTransformer('sentence-transformers/allenai-specter')
 
     def search(self, query, k=10, after_year=None, study_types=None):
         # Encode query
         query_embedding = self.model.encode([query])
 
-        # Search index
-        distances, indices = self.index.search(query_embedding, k * 2)
+        # Search index (search more to account for filtering)
+        search_k = min(k * 3, len(self.metadata['papers']))
+        distances, indices = self.index.search(query_embedding.astype('float32'), search_k)
 
         # Filter results
         results = []
-        for idx in indices[0]:
-            paper = self.metadata['papers'][idx]
+        for idx, dist in zip(indices[0], distances[0]):
+            if idx < len(self.metadata['papers']) and idx != -1:
+                paper = self.metadata['papers'][idx]
 
-            # Apply filters
-            if after_year and paper.get('year', 0) <= after_year:
-                continue
-            if study_types and paper.get('study_type') not in study_types:
-                continue
+                # Apply filters
+                if after_year and paper.get('year', 0) < after_year:
+                    continue
+                if study_types and paper.get('study_type') not in study_types:
+                    continue
 
-            results.append(paper)
-            if len(results) >= k:
-                break
+                results.append((idx, float(dist), paper))
+                if len(results) >= k:
+                    break
 
         return results
 

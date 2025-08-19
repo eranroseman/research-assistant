@@ -1,14 +1,14 @@
 ---
-description: Research literature using local knowledge base (v3.0 with SPECTER2 enhancements)
+description: Research literature using local knowledge base (v3.1 with smart section chunking)
 argument-hint: <topic or research question>
 allowed-tools: Bash, Read, Grep, Task
 ---
 
-# Research Assistant v3.0 - Enhanced with SPECTER2
+# Research Assistant v3.1 - Smart Section Chunking & Incremental Updates
 
 I'll search the academic knowledge base for papers related to: $ARGUMENTS
 
-## New Features in v3.0
+## New Features in v3.1
 
 **🚀 Performance Improvements:**
 - 40-50% faster searches with optimized batch processing
@@ -17,7 +17,7 @@ I'll search the academic knowledge base for papers related to: $ARGUMENTS
 - 10x faster incremental KB updates with `--update` flag
 - Sections index for O(1) section retrieval
 
-**🔍 SPECTER2 Search Modes:**
+**🔍 SPECTER Search Modes:**
 - `--mode auto`: Automatically detect search intent (default)
 - `--mode question`: Optimized for answering specific research questions
 - `--mode similar`: Find papers similar to a topic or concept
@@ -46,7 +46,7 @@ I'll search the academic knowledge base for papers related to: $ARGUMENTS
 - `--verbose`: Include abstracts in output
 - `--json`: Output as JSON for processing
 
-**Enhanced SPECTER2 parameters:**
+**Enhanced SPECTER parameters:**
 - `--mode [auto|question|similar|explore]`: Search mode optimization
 - `--show-quality`: Show quality scores in results
 - `--quality-min N`: Minimum quality score (0-100)
@@ -94,12 +94,12 @@ diabetes_treatment:
   mode: "question"
   quality_min: 70
   after: 2020
-  
+
 covid_mental_health:
   query: "COVID-19 mental health depression anxiety"
   after: 2020
   quality_min: 70
-  
+
 ml_healthcare:
   query: "machine learning artificial intelligence healthcare"
   mode: "explore"

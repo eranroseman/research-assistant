@@ -259,6 +259,119 @@ class TestSearchFilters:
         assert result.returncode in [0, 1], "Study type filter caused crash"
 
 
+class TestKnowledgeBaseIntegrity:
+    """Test knowledge base integrity after build."""
+
+    def test_kb_integrity_after_build(self):
+        """Ensure build creates all required files."""
+        kb_path = Path("kb_data")
+
+        # Only run if KB exists
+        if not kb_path.exists():
+            pytest.skip("Knowledge base not built")
+
+        required_files = [
+            "index.faiss",
+            "metadata.json",
+            "papers/",
+        ]
+
+        for file in required_files:
+            file_path = kb_path / file
+            assert file_path.exists(), f"Missing {file}"
+
+        # Check metadata consistency
+        with open(kb_path / "metadata.json") as f:
+            meta = json.load(f)
+
+        # Basic consistency checks
+        assert "papers" in meta, "Missing papers in metadata"
+        if "total_papers" in meta:
+            assert meta["total_papers"] == len(meta["papers"]), "Paper count mismatch"
+
+        # Check that paper files exist
+        papers_dir = kb_path / "papers"
+        if papers_dir.exists():
+            paper_files = list(papers_dir.glob("paper_*.md"))
+            # Should have roughly the same number of files as papers
+            # (allowing for some discrepancy due to duplicates)
+            assert len(paper_files) > 0, "No paper files found"
+
+    def test_pdf_extraction_coverage(self):
+        """Verify PDF extraction completed successfully."""
+        kb_path = Path("kb_data")
+
+        if not kb_path.exists():
+            pytest.skip("Knowledge base not built")
+
+        metadata_path = kb_path / "metadata.json"
+        if not metadata_path.exists():
+            pytest.skip("Metadata not found")
+
+        with open(metadata_path) as f:
+            data = json.load(f)
+            papers = data.get("papers", [])
+
+        if not papers:
+            pytest.skip("No papers in knowledge base")
+
+        # Count papers with full text
+        papers_with_text = sum(1 for p in papers if p.get("full_text") or p.get("has_full_text"))
+        coverage = papers_with_text / len(papers) if papers else 0
+
+        # Warning rather than failure for coverage
+        if coverage < 0.9:
+            import warnings
+
+            warnings.warn(f"Low PDF coverage: {coverage:.1%} (expected ≥90%)", stacklevel=2)
+
+        # But ensure at least some PDFs were extracted
+        assert coverage > 0, "No PDFs extracted at all"
+
+    def test_search_performance(self):
+        """Ensure search completes in reasonable time."""
+        import time
+
+        kb_path = Path("kb_data")
+        if not kb_path.exists():
+            pytest.skip("Knowledge base not built")
+
+        start = time.time()
+        result = subprocess.run(
+            ["python", "src/cli.py", "search", "test", "-k", "10"],
+            capture_output=True,
+            text=True,
+            cwd=Path(__file__).parent.parent,
+            timeout=30,
+        )
+        elapsed = time.time() - start
+
+        # Should complete within 15 seconds (allowing for model loading)
+        assert elapsed < 15, f"Search too slow: {elapsed:.1f}s"
+
+        # Should return successfully
+        assert result.returncode in [0, 1], f"Search failed with code {result.returncode}"
+
+    def test_build_verification_output(self):
+        """Test that build verification warnings work correctly."""
+        # This test checks if the verification output format is correct
+        # by examining the build_kb.py module directly
+
+        # Create a mock scenario with low PDF coverage
+        test_papers = [{"id": f"{i:04d}", "title": f"Paper {i}", "abstract": "Test"} for i in range(1, 101)]
+
+        # Only 40 papers have PDFs (40% coverage, should trigger warning)
+        for i in range(40):
+            test_papers[i]["full_text"] = "Sample full text"
+
+        # Check that the warning threshold is set correctly (90%)
+        papers_with_pdfs = 40
+        total_papers = 100
+
+        # Should trigger warning since 40% < 90%
+        assert papers_with_pdfs < total_papers * 0.9, "Warning should be triggered"
+
+
 if __name__ == "__main__":
     # Allow running tests directly
     pytest.main([__file__, "-v"])

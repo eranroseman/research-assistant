@@ -4,9 +4,9 @@
 
 ## Overview
 
-A Claude Code slash command that performs evidence-based literature research using a pre-built, portable knowledge base of 2000+ academic papers with SPECTER2 embeddings, automatic study type classification, and quality scoring.
+A Claude Code slash command that performs evidence-based literature research using a pre-built, portable knowledge base of 2000+ academic papers with SPECTER embeddings, automatic study type classification, and quality scoring.
 
-## New Features in v3.0
+## New Features in v3.1
 
 ### 🚀 Performance & Security
 - **40-50% Faster Searches**: O(1) cache lookups and dynamic batch sizing
@@ -14,23 +14,26 @@ A Claude Code slash command that performs evidence-based literature research usi
 - **Optimized Batch Processing**: Dynamic sizing based on available memory (64-256 batch size)
 - **Instant Cache Lookups**: Hash-based dictionary for O(1) embedding retrieval
 
-### 🔍 SPECTER2 Intelligence
+### 🔍 SPECTER Intelligence
 - **Smart Search Modes**: Auto-detects query intent (question, similar, explore)
 - **Query Preprocessing**: Optimizes embeddings based on search type
-- **Fallback Support**: Gracefully falls back to SPECTER if SPECTER2 unavailable
+- **Scientific Paper Optimization**: SPECTER model specifically trained on academic literature
 
 ### 📊 Quality Assessment
 - **Paper Quality Scores**: 0-100 scoring based on study type, recency, sample size
 - **Quality Filtering**: `--quality-min` parameter to filter low-quality papers
 - **Visual Quality Indicators**: ⭐ (80-100), ● (60-79), ○ (40-59), · (<40)
 
-### 🎯 Enhanced Features (from v2.0)
+### 🎯 Enhanced Features
 - **Study Type Classification**: Automatically identifies systematic reviews, RCTs, cohort studies, etc.
 - **RCT Sample Size Extraction**: Shows participant counts (n=487) for randomized controlled trials
 - **Advanced Filtering**: Filter by publication year and study type
 - **Evidence Hierarchy**: Visual markers showing study quality
-- **Title Emphasis**: Titles included twice in embeddings for better keyword matching
-- **Automatic Backups**: Creates `.backup` files before rebuilding indices
+- **Incremental Updates**: `--update` flag for 10x faster knowledge base updates (only new papers)
+- **Smart Section Retrieval**: 70% context reduction with intelligent section chunking
+- **Sections Index**: O(1) section retrieval for instant access to paper sections
+- **Duplicate Detection**: `duplicates` command identifies and manages similar papers
+- **Export/Import**: Portable knowledge base with tar.gz export/import (planned feature)
 
 ## Architecture
 
@@ -43,18 +46,20 @@ Runtime Phase (always): /research command → Search → Analyze → Report
 
 ```
 kb_data/
-├── index.faiss              # Semantic search index (150MB)
-├── metadata.json            # Paper metadata with model version
-├── .pdf_text_cache.json     # PDF extraction cache (metadata-based, JSON format)
-├── .embedding_cache.json    # Embedding metadata (hashes, model info) - NEW in v3.0
-├── .embedding_data.npy      # Embedding vectors (safe NPY format) - NEW in v3.0
+├── index.faiss              # Semantic search index (~6.5MB for 2000 papers)
+├── metadata.json            # Paper metadata with model version (~4MB)
+├── sections_index.json      # Section locations for smart retrieval (~36MB)
+├── .pdf_text_cache.json     # PDF extraction cache (metadata-based, ~156MB)
+├── .embedding_cache.json    # Embedding metadata (hashes, model info) - NEW in v3.1
+├── .embedding_data.npy      # Embedding vectors (safe NPY format) - NEW in v3.1
+├── .fingerprint_cache.json  # Content fingerprints for change detection
 └── papers/
     ├── paper_0001.md        # Full text in markdown (4-digit IDs)
     ├── paper_0002.md        # One file per paper
     └── ...                  # 2000+ files
 ```
 
-**Security Note**: v3.0 replaces pickle serialization with safe JSON/NPY format
+**Security Note**: v3.1 uses safe JSON/NPY format instead of pickle serialization
 
 ## Implementation
 
@@ -70,10 +75,10 @@ kb_data/
 4. Save metadata as JSON
 
 **Features**:
-- SPECTER embeddings for superior scientific paper retrieval (allenai-specter model)
+- SPECTER embeddings for superior scientific paper retrieval (sentence-transformers/allenai-specter)
 - Automatic study type classification (RCTs, systematic reviews, cohort studies, etc.)
 - RCT sample size extraction (n=487)
-- PyMuPDF for fast PDF text extraction (~13 papers/second)
+- PyMuPDF for fast PDF text extraction (estimated ~13 papers/second with cache)
 - Metadata-based caching with automatic backups
 - `--clear-cache` flag for fresh extraction
 
@@ -81,7 +86,11 @@ kb_data/
 
 ```bash
 python build_kb.py              # Creates kb_data/ folder
+python build_kb.py --update     # Incremental update (10x faster, only new papers)
 python build_kb.py --clear-cache # Force fresh extraction
+python build_kb.py --demo       # Quick demo with 5 papers
+python build_kb.py --export kb_backup.tar.gz  # Export knowledge base (planned)
+python build_kb.py --import kb_backup.tar.gz  # Import knowledge base (planned)
 ```
 
 ### 2. CLI Tool (`cli.py`)
@@ -89,10 +98,20 @@ python build_kb.py --clear-cache # Force fresh extraction
 **Commands**:
 
 ```bash
-python cli.py search "query"              # Basic search
+python cli.py search "query"              # Basic search with SPECTER embeddings
 python cli.py search "query" --after 2020  # Filter by year
 python cli.py search "query" --type rct --type systematic_review  # Filter by study type
+python cli.py search "query" --show-quality --quality-min 70  # Quality filtering
+python cli.py search "query" --mode question  # Optimize for research questions
+python cli.py search "query" --analyze-gaps   # Evidence gap analysis
 python cli.py get <paper_id>              # Returns full paper text
+python cli.py smart-get <paper_id> "question"  # Smart section retrieval (70% less text)
+python cli.py get <paper_id> --sections abstract methods results  # Specific sections
+python cli.py duplicates                  # Find duplicate papers
+python cli.py duplicates --fix            # Remove duplicates
+python cli.py shortcut diabetes           # Use predefined search shortcuts
+python cli.py info                        # Check knowledge base status
+python cli.py cite "query"                # Generate IEEE citations
 ```
 
 **Study Type Categories:**
@@ -149,7 +168,7 @@ Use the CLI to search papers, analyze the most relevant ones, and generate a com
 {
   "papers": [
     {
-      "id": "0001",                    // 4-digit format (v3.0)
+      "id": "0001",                    // 4-digit format (v3.1)
       "doi": "10.1234/example",
       "title": "Paper Title",
       "authors": ["Smith J", "Doe A"],
@@ -165,8 +184,8 @@ Use the CLI to search papers, analyze the most relevant ones, and generate a com
       "filename": "paper_0001.md",      // 4-digit format
       "embedding_index": 0,
       "zotero_key": "ABC123",           // For cache tracking
-      "quality_score": 85,              // NEW in v3.0 (0-100)
-      "quality_factors": {              // NEW in v3.0
+      "quality_score": 85,              // NEW in v3.1 (0-100)
+      "quality_factors": {              // NEW in v3.1
         "study_type_score": 25,
         "recency_score": 10,
         "sample_size_score": 5,
@@ -176,8 +195,8 @@ Use the CLI to search papers, analyze the most relevant ones, and generate a com
   ],
   "total_papers": 2000,
   "last_updated": "2024-01-15T10:30:00Z",
-  "embedding_model": "allenai/specter2",    // Updated in v3.0
-  "model_version": "SPECTER2",              // NEW in v3.0
+  "embedding_model": "sentence-transformers/allenai-specter", // Scientific paper embeddings
+  "model_version": "SPECTER",               // Optimized for academic literature
   "embedding_dimensions": 768
 }
 ```
@@ -262,17 +281,17 @@ The system should format citations as:
 - `sentence-transformers`: SPECTER embeddings for scientific papers
 - `transformers`: Required by sentence-transformers
 - `torch`: Deep learning framework for SPECTER (GPU support if available)
-- `PyMuPDF`: Fast PDF text extraction (37x faster than pdfplumber)
+- `PyMuPDF`: Fast PDF text extraction (significantly faster than pdfplumber)
 - `click`: CLI framework
 - `tqdm`: Progress bars
 - `requests`: Zotero API access
 
-### Performance Targets
+### Performance Targets (Estimated)
 
 - KB build:
-  - With SPECTER: ~30 minutes on CPU, ~10 minutes on GPU for 2000 papers
+  - With SPECTER: Approximately 30 minutes on CPU, 10 minutes on GPU for 2000 papers (varies by hardware)
   - Rebuild with caches: 1-2 minutes (both PDF and embedding caches)
-  - PDF extraction: ~13 papers/second with cache
+  - PDF extraction: Estimated ~13 papers/second with cache
   - Embedding generation: ~1 paper/sec (CPU) or ~8 papers/sec (GPU)
 - Search: <100ms for filtered searches
 - Full analysis: 1-6 minutes
@@ -281,11 +300,12 @@ The system should format citations as:
 
 ### Embedding Model
 
-- **Model**: allenai-specter (current) / allenai/specter2 (available upgrade)
+- **Model**: sentence-transformers/allenai-specter (current implementation)
 - **Dimensions**: 768
 - **Context**: 512 tokens (processes title + abstract)
 - **Advantages**: Specifically trained on scientific papers, outperforms general models
 - **GPU Support**: Automatic detection, 10x speedup when available
+- **Note**: CLI help may show "SciNCL" but the implementation uses SPECTER model
 
 ## Advantages of This Approach
 

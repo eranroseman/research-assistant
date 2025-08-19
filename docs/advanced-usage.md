@@ -16,27 +16,23 @@ python -c "import torch; print('GPU available' if torch.cuda.is_available() else
 - 4-8GB GPU: batch_size=128
 - <4GB GPU: batch_size=64
 
-GPU provides ~10x speedup for embedding generation (2 min vs 20 min for 2000 papers).
+GPU provides ~2x speedup for embedding generation (~10 min vs ~20 min for 2000 papers).
 
 ## Embedding Models
 
-**v3.0 Default**: The system now uses SPECTER2 by default with automatic SPECTER fallback:
+**v3.0+ Default**: The system uses SPECTER embeddings optimized for scientific literature:
 
 ```python
-# Automatic in v3.0 - no code changes needed
-# Tries SPECTER2 first, falls back to SPECTER if unavailable
+# SPECTER model is loaded automatically
+# Provides superior performance for academic paper search
 ```
 
-### Model Hierarchy
+### Model Configuration
 
-1. **allenai/specter2** (Default in v3.0)
-   - Best for scientific papers
-   - Task-specific adapters
-   - Query preprocessing optimization
-
-2. **allenai-specter** (Fallback)
-   - Reliable baseline
-   - Works without additional dependencies
+**allenai-specter** (Default)
+   - Optimized for scientific papers
+   - Proven reliability for academic literature
+   - 768-dimensional embeddings
 
 ### Custom Models
 
@@ -49,13 +45,10 @@ self._embedding_model = SentenceTransformer('your-model-name', device=self.devic
 
 ## Adjusting Search Parameters
 
-In `src/cli.py`, modify the FAISS index type:
+The system uses `faiss.IndexFlatL2` for exact similarity search. To modify the index type, edit `src/build_kb.py` where the index is created:
 
 ```python
-# For larger databases (>100k papers)
-index = faiss.IndexIVFFlat(nlist=100)
-
-# For similarity threshold filtering
+# Current implementation uses:
 index = faiss.IndexFlatL2(dimension)
 ```
 
@@ -71,7 +64,7 @@ done
 
 ## Building from Custom Sources
 
-Modify `src/build_kb.py` to implement a custom `process_papers()` function that returns a list of dictionaries with:
+To use custom sources, modify the paper processing logic in `src/build_kb.py` to return a list of dictionaries with:
 
 ```python
 {
@@ -148,16 +141,16 @@ For large libraries (>5000 papers):
 - Use study type filters to narrow scope
 - Enable verbose mode only when needed
 
-### Benchmarking Tools
+### Performance Monitoring
 
-Test performance with built-in diagnostic scripts:
+Monitor performance using system tools:
 
 ```bash
-# Test cache performance (50 papers)
-python scripts/benchmark_cache.py
+# Monitor GPU usage
+nvidia-smi -l 1
 
-# Compare PDF extraction libraries
-python scripts/benchmark_pdf_extractors.py
+# Monitor CPU and memory
+htop
 ```
 
 ## Extending the System
@@ -177,10 +170,10 @@ def format_citation_apa(paper):
 The knowledge base can be accessed programmatically:
 
 ```python
-from src.cli import KnowledgeBase
+from src.cli import ResearchCLI
 
-kb = KnowledgeBase()
-results = kb.search("your query", k=10)
+kb = ResearchCLI()
+results = kb.search("your query", top_k=10)
 ```
 
 ### Web API
@@ -189,14 +182,14 @@ To create a REST API, wrap the CLI functions:
 
 ```python
 from flask import Flask, jsonify
-from src.cli import KnowledgeBase
+from src.cli import ResearchCLI
 
 app = Flask(__name__)
-kb = KnowledgeBase()
+kb = ResearchCLI()
 
 @app.route('/search/<query>')
 def search(query):
-    results = kb.search(query)
+    results = kb.search(query, top_k=10)
     return jsonify(results)
 ```
 

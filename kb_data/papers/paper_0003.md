@@ -1,12 +1,12 @@
 # Artificial Intelligence in Clinical Decision Support: A Systematic Review of Diagnostic Accuracy
 
-**Authors:** Emily Zhang, David Martinez, Lisa Anderson
-**Year:** 2023
-**Journal:** The Lancet Digital Health
-**Volume:** 5
-**Issue:** 8
-**Pages:** e523-e535
-**DOI:** 10.1016/S2589-7500(23)00089-0
+**Authors:** Emily Zhang, David Martinez, Lisa Anderson  
+**Year:** 2023  
+**Journal:** The Lancet Digital Health  
+**Volume:** 5  
+**Issue:** 8  
+**Pages:** e523-e535  
+**DOI:** 10.1016/S2589-7500(23)00089-0  
 
 ## Abstract
 AI-based clinical decision support systems (CDSS) show promising diagnostic accuracy across multiple medical specialties. This systematic review analyzed 89 studies comparing AI diagnostic performance to clinical experts. In radiology, AI achieved 94.5% sensitivity and 95.3% specificity for detecting malignancies. Dermatology applications showed 91.2% accuracy for skin cancer detection. However, real-world implementation faces challenges including algorithm bias, interpretability, and integration with clinical workflows.
