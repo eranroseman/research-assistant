@@ -53,9 +53,24 @@ This is **10-20x faster** than individual commands because the model loads only 
 
 ### For Paper Retrieval
 
-- When getting multiple papers, include them in a batch command
-- Use the `auto-get-top` meta-command to automatically fetch top papers from search results
-- Consider using `--sections` flag to retrieve only needed sections
+**IMPORTANT: Use the correct command for paper retrieval:**
+
+- **Single paper**: `python src/cli.py get 0001` or `python src/cli.py get 0001 --sections abstract methods`
+- **Multiple papers**: `python src/cli.py get-batch 0001 0002 0003` (NO --sections flag)
+- **With sections for multiple papers**: Use batch command:
+  ```bash
+  echo '[
+    {"cmd": "get", "id": "0001", "sections": ["abstract", "methods"]},
+    {"cmd": "get", "id": "0002", "sections": ["abstract", "methods"]},
+    {"cmd": "get", "id": "0003", "sections": ["abstract", "methods"]}
+  ]' | python src/cli.py batch -
+  ```
+
+**Common mistakes to avoid:**
+- ❌ WRONG: `python src/cli.py get 0001 0002 0003` (get only accepts ONE paper ID)
+- ❌ WRONG: `python src/cli.py get-batch 0001 0002 --sections abstract` (get-batch doesn't support --sections)
+- ✅ RIGHT: `python src/cli.py get-batch 0001 0002 0003` (for multiple papers without sections)
+- ✅ RIGHT: Use batch command for multiple papers with sections
 
 ### Output Guidelines
 

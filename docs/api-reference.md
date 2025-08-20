@@ -197,6 +197,8 @@ python src/cli.py get-batch [OPTIONS] PAPER_IDS...
 |--------|------|---------|-------------|
 | `--format` | CHOICE | text | Output format (text or json) |
 
+**Note**: `get-batch` retrieves complete papers and does NOT support the `--sections` flag. To get specific sections from multiple papers, use the batch command with individual get commands.
+
 #### Examples
 
 ```bash
