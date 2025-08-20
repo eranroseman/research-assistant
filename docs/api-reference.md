@@ -5,19 +5,25 @@
 ## Table of Contents
 
 ### Search & Analysis
-- [`search`](#clipy-search) - Search papers with SPECTER embeddings
-- [`smart-get`](#clipy-smart-get-new-in-v31) - Intelligently retrieve paper sections
+
+- [`search`](#clipy-search) - Semantic search with SPECTER embeddings
+- [`smart-search`](#clipy-smart-search) - Smart search with automatic section chunking
 - [`get`](#clipy-get) - Retrieve full papers or sections
+- [`get-batch`](#clipy-get-batch) - Retrieve multiple papers efficiently
 - [`cite`](#clipy-cite) - Generate IEEE citations
+- [`author`](#clipy-author) - Search papers by author name
 
 ### Knowledge Base
+
 - [`info`](#clipy-info) - Display KB information
+- [`diagnose`](#clipy-diagnose) - Check KB health and integrity
 - [`build_kb.py`](#build_kbpy) - Build/update knowledge base
 
-### Advanced
-- [Python API](#python-api) - Programmatic usage
-- [Slash Commands](#slash-command-integration) - Claude Code integration
-- [Data Formats](#data-formats) - File structures
+### Data Structure
+
+- [KB Data Directory](#kb-data-directory-structure) - Complete folder structure
+- [Data Formats](#data-formats) - File specifications
+- [Cache Files](#cache-files) - Performance optimization files
 - [Error Codes](#error-codes) - Troubleshooting
 
 ---
@@ -26,7 +32,7 @@
 
 ### `cli.py search`
 
-Search the knowledge base for relevant papers with SPECTER embeddings (note: CLI help may show "SciNCL" but uses SPECTER model).
+Search the knowledge base for relevant papers with SPECTER embeddings.
 
 ```bash
 python src/cli.py search [OPTIONS] QUERY
@@ -36,21 +42,21 @@ python src/cli.py search [OPTIONS] QUERY
 
 | Option | Short | Type | Default | Description |
 |--------|-------|------|---------|-------------|
-| `--k` | `-k` | INT | 10 | Number of results to return |
+| `--top-k` | `-k` | INT | 10 | Number of results to return |
 | `--verbose` | `-v` | FLAG | False | Show abstracts in results |
+| `--show-quality` | | FLAG | False | Display quality scores (0-100) |
+| `--quality-min` | | INT | None | Minimum quality score filter (deprecated, use --min-quality) |
 | `--json` | | FLAG | False | Output results as JSON |
 | `--after` | | INT | None | Filter papers published after this year |
 | `--type` | | MULTI | None | Filter by study type (can specify multiple) |
-| **`--mode`** | | CHOICE | auto | **NEW v3.0**: Search mode (auto/question/similar/explore) |
-| **`--show-quality`** | | FLAG | False | **NEW v3.0**: Display quality scores (0-100) |
-| **`--quality-min`** | | INT | None | **NEW v3.0**: Minimum quality score filter |
-
-#### Search Modes (NEW in v3.0)
-
-- `auto` - Automatically detect search intent (default)
-- `question` - Optimized for answering research questions
-- `similar` - Find papers similar to a topic/concept
-- `explore` - Broad exploration of research areas
+| `--group-by` | | CHOICE | None | Group results by year/journal/study_type |
+| `--years` | | STRING | None | Filter by year range (e.g., 2020-2024 or 2023) |
+| `--contains` | | STRING | None | Filter by term in title/abstract |
+| `--exclude` | | STRING | None | Exclude papers with this term |
+| `--full-text` | | FLAG | False | Search in full text (slower but comprehensive) |
+| `--queries` | | MULTI | None | Additional search queries for comprehensive results |
+| `--min-quality` | | INT | None | Minimum quality score (0-100) |
+| `--export` | | PATH | None | Export results to CSV file |
 
 #### Study Type Filters
 
@@ -62,15 +68,18 @@ python src/cli.py search [OPTIONS] QUERY
 - `case_report` - Case reports and series (·)
 - `study` - Generic/unclassified studies (·)
 
-#### Quality Scores (NEW in v3.0)
+#### Quality Scores
 
 Papers are scored 0-100 based on:
-- Study type hierarchy (35 points max)
-- Recency (10 points for 2022+)
-- Sample size (10 points for n>1000)
-- Full text availability (5 points)
+
+- Base score: 50 points
+- Study type hierarchy: Up to 35 points
+- Recency: Up to 10 points (papers from 2022+)
+- Sample size: Up to 10 points (RCTs with n>1000)
+- Full text availability: 5 points
 
 Visual indicators:
+
 - ⭐ Excellent (80-100)
 - ● Good (60-79)
 - ○ Moderate (40-59)
@@ -79,27 +88,41 @@ Visual indicators:
 #### Examples
 
 ```bash
-# Basic search (auto-detects mode)
+# Basic search
 python src/cli.py search "digital health"
 
-# Research question (auto-detects question mode)
-python src/cli.py search "What causes diabetes complications?"
-
-# Find similar papers
-python src/cli.py search "papers similar to telemedicine interventions" --mode similar
+# With quality scores
+python src/cli.py search "diabetes" --show-quality
 
 # High-quality evidence only
-python src/cli.py search "metabolic syndrome" --quality-min 70 --show-quality
+python src/cli.py search "metabolic syndrome" --min-quality 70 --show-quality
 
 # Comprehensive review with quality scores
 python src/cli.py search "AI diagnosis" -k 30 --show-quality --after 2020
 
 # Filter by study type and quality
-python src/cli.py search "diabetes" --type systematic_review --type rct --quality-min 60
+python src/cli.py search "diabetes" --type systematic_review --type rct --min-quality 60
+
+# Year range filtering
+python src/cli.py search "telemedicine" --years 2020-2024
+
+# Term filtering
+python src/cli.py search "cancer" --contains "immunotherapy" --exclude "pediatric"
+
+# Full text search
+python src/cli.py search "methods" --full-text --contains "LSTM"
+
+# Multi-query comprehensive search
+python src/cli.py search "diabetes" --queries "glucose monitoring" --queries "insulin therapy"
+
+# Group results by year
+python src/cli.py search "AI healthcare" --group-by year
+
+# Export to CSV
+python src/cli.py search "hypertension" --export results.csv
 
 # JSON output with quality scores
 python src/cli.py search "wearables" --json --show-quality > results.json
-
 ```
 
 ### `cli.py get`
@@ -114,14 +137,27 @@ python src/cli.py get [OPTIONS] PAPER_ID
 
 | Option | Short | Type | Default | Description |
 |--------|-------|------|---------|-------------|
-| `--output` | `-o` | PATH | None | Save output to file |
-| **`--sections`** | | LIST | None | **NEW v3.1**: Specific sections to retrieve |
+| `--output` | `-o` | PATH | None | Save output to file (saves to reports/ directory) |
+| `--sections` | `-s` | MULTI | all | Specific sections to retrieve |
+
+#### Available Sections
+
+- `abstract` - Paper abstract
+- `introduction` - Introduction/background
+- `methods` - Methods/methodology
+- `results` - Results/findings
+- `discussion` - Discussion section
+- `conclusion` - Conclusions
+- `references` - Bibliography
+- `all` - Complete paper (default)
 
 #### Paper ID Format
 
-**v3.1 Security**: Paper IDs must be exactly 4 digits (e.g., 0001, 0234, 1999)
+**Security Note**: Paper IDs must be exactly 4 digits (e.g., 0001, 0234, 1999)
+
 - Path traversal attempts are blocked
 - Invalid formats raise clear error messages
+- IDs are zero-padded (1 becomes 0001)
 
 #### Examples
 
@@ -129,45 +165,127 @@ python src/cli.py get [OPTIONS] PAPER_ID
 # Display full paper in terminal
 python src/cli.py get 0001
 
-# Get specific sections only (NEW in v3.1)
+# Get specific sections only
 python src/cli.py get 0001 --sections abstract methods results
 python src/cli.py get 0001 --sections introduction discussion
 
 # Save to file
 python src/cli.py get 0001 -o paper.md
+python src/cli.py get 0001 --output my_paper.md
 
-# Invalid formats (blocked in v3.1)
+# Multiple sections
+python src/cli.py get 0042 -s abstract -s methods -s conclusion
+
+# Invalid formats (blocked)
 python src/cli.py get 1        # Error: Must be 4 digits
 python src/cli.py get abc      # Error: Must be 4 digits
 python src/cli.py get ../etc   # Error: Invalid format
 ```
 
-### `cli.py smart-get` (NEW in v3.1)
+### `cli.py get-batch`
 
-Intelligently retrieve relevant sections of a paper based on query context, reducing text by up to 70%.
+Retrieve multiple papers by their IDs in a single batch operation.
 
 ```bash
-python src/cli.py smart-get [OPTIONS] PAPER_ID QUERY
+python src/cli.py get-batch [OPTIONS] PAPER_IDS...
+```
+
+#### Options
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `--format` | CHOICE | text | Output format (text or json) |
+
+#### Examples
+
+```bash
+# Get multiple papers
+python src/cli.py get-batch 0001 0002 0003
+
+# Get specific papers
+python src/cli.py get-batch 0234 1426 0888
+
+# JSON output for processing
+python src/cli.py get-batch 0001 0002 --format json
+
+# Many papers at once
+python src/cli.py get-batch 0010 0020 0030 0040 0050
+```
+
+### `cli.py author`
+
+Find all papers by a specific author.
+
+```bash
+python src/cli.py author [OPTIONS] AUTHOR_NAME
+```
+
+#### Options
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `--exact` | FLAG | False | Exact match only (case-sensitive) |
+
+#### Examples
+
+```bash
+# Find all papers by Smith (partial match)
+python src/cli.py author "Smith"
+
+# Find specific author
+python src/cli.py author "John Smith"
+
+# Exact match only
+python src/cli.py author "Zhang" --exact
+
+# Partial match (default)
+python src/cli.py author "Lee"
+```
+
+### `cli.py smart-search`
+
+Smart search with automatic section chunking to handle 20+ papers without context overflow.
+
+```bash
+python src/cli.py smart-search [OPTIONS] QUERY_TEXT
 ```
 
 #### Options
 
 | Option | Short | Type | Default | Description |
 |--------|-------|------|---------|-------------|
-| `--output` | `-o` | PATH | None | Save output to file |
+| `--top-k` | `-k` | INT | 20 | Number of papers to retrieve |
+| `--max-tokens` | | INT | 10000 | Max tokens to load (~40k chars) |
+| `--sections` | `-s` | MULTI | auto | Sections to prioritize |
+
+#### Section Prioritization
+
+The system automatically prioritizes sections based on query:
+
+- Methods queries: Prioritizes methods, abstract
+- Results queries: Prioritizes results, conclusion, abstract
+- Review queries: Prioritizes abstract, conclusion, discussion
+- Default: Abstract, introduction, conclusion
 
 #### Examples
 
 ```bash
-# Smart retrieval based on query context (70% less text)
-python src/cli.py smart-get 0001 "what were the methods"  # Gets methods section
-python src/cli.py smart-get 0001 "what were the findings"  # Gets results/discussion
-python src/cli.py smart-get 0001 "how did they measure"   # Gets methodology
+# Smart search with chunking (handles 20+ papers)
+python src/cli.py smart-search "diabetes treatment methods" -k 30
 
-# Save to file
-python src/cli.py smart-get 0001 "results" -o results.md
+# Prioritize specific sections
+python src/cli.py smart-search "clinical outcomes" --sections results conclusion
+python src/cli.py smart-search "methodology" -s methods -s abstract
+
+# High token limit for comprehensive analysis
+python src/cli.py smart-search "AI healthcare" --max-tokens 20000
+
+# Automatic section detection
+python src/cli.py smart-search "how to implement LSTM"  # Prioritizes methods
+python src/cli.py smart-search "treatment outcomes"      # Prioritizes results
 ```
 
+Output is saved to `reports/smart_search_results.json` for further processing.
 
 ### `cli.py cite`
 
@@ -181,48 +299,104 @@ python src/cli.py cite [OPTIONS] QUERY
 
 | Option | Short | Type | Default | Description |
 |--------|-------|------|---------|-------------|
-| `--k` | `-k` | INT | 5 | Number of citations to generate |
+| `--top-k` | `-k` | INT | 5 | Number of citations to generate |
 
 #### Examples
 
 ```bash
-# Generate 5 citations
+# Generate 5 citations (default)
 python src/cli.py cite "machine learning healthcare"
 
 # Generate 10 citations
 python src/cli.py cite "digital therapeutics" -k 10
+
+# Generate citations for specific topic
+python src/cli.py cite "diabetes management" -k 15
 ```
 
 ### `cli.py info`
 
-Display information about the knowledge base.
+Display comprehensive information about the knowledge base.
 
 ```bash
 python src/cli.py info
 ```
 
-#### Output includes:
+#### Output includes
+
 - Total number of papers
-- Last update date
-- Storage location
-- Index status
-- Cache sizes
-- Embedding model used
+- Last update timestamp
+- KB version (should be 4.0)
+- Storage location (absolute path)
+- Index file size
+- Papers directory size
+- Sample paper listings
 
 #### Example
 
 ```bash
 $ python src/cli.py info
 
-Knowledge Base Information:
-- Papers: 2147
-- Last updated: 2024-08-18
-- Location: kb_data/
-- Index: kb_data/index.faiss (150MB)
-- PDF Cache: kb_data/.pdf_text_cache.json (148MB)
-- Embedding Cache: kb_data/.embedding_cache.json + .embedding_data.npy (500MB)
-- Model: sentence-transformers/allenai-specter
-- Performance: 40-50% faster with v3.0 optimizations (cache built at runtime)
+Knowledge Base Information
+==================================================
+Total papers: 2146
+Last updated: 2025-08-19T19:42:19.834831+00:00
+Version: 4.0
+Location: /home/user/research-assistant/kb_data
+Index size: 15.2 MB
+Papers: 2146 files, 147.9 MB
+
+Sample papers:
+  - [0001] Digital Health Interventions for Depression...
+  - [0002] Barriers to Digital Health Adoption...
+  - [0003] Artificial Intelligence in Clinical Decision...
+  - [0004] Telemedicine Effectiveness During COVID-19...
+  - [0005] Wearable Devices for Continuous Health...
+```
+
+### `cli.py diagnose`
+
+Run comprehensive health checks on the knowledge base.
+
+```bash
+python src/cli.py diagnose
+```
+
+#### Checks performed
+
+- KB directory exists
+- Metadata file present and valid
+- FAISS index file exists
+- Papers directory exists
+- Version compatibility (v4.0)
+- Total paper count
+- Sequential ID validation (warns about gaps)
+- File consistency checks
+
+#### Example
+
+```bash
+$ python src/cli.py diagnose
+
+Knowledge Base Diagnostics
+==================================================
+✓ KB exists
+✓ Metadata present
+✓ Index present
+✓ Papers directory
+✓ Version 4.0
+✓ Papers: 2146
+✓ Sequential IDs
+
+✅ Knowledge base is healthy
+```
+
+If there are issues:
+
+```bash
+✗ Version 4.0
+⚠️  Knowledge base version mismatch
+   Run: python src/build_kb.py --rebuild
 ```
 
 ## Build Script
@@ -240,25 +414,30 @@ python src/build_kb.py [OPTIONS]
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
 | `--demo` | FLAG | False | Build demo database with 5 sample papers |
-| `--api-url` | STRING | Auto | Custom Zotero API URL |
+| `--rebuild` | FLAG | False | Force complete rebuild (ignore existing KB) |
+| `--api-url` | STRING | <http://127.0.0.1:23119/api> | Custom Zotero API URL |
 | `--knowledge-base-path` | PATH | kb_data | Path to knowledge base directory |
 | `--zotero-data-dir` | PATH | ~/Zotero | Path to Zotero data directory |
-| `--clear-cache` | FLAG | False | Clear both PDF and embedding caches |
-| **`--rebuild`** | FLAG | False | **v4.0**: Force complete rebuild (default is smart incremental) |
-| **`--export`** | PATH | None | **NEW v3.1**: Export knowledge base to portable tar.gz archive |
-| **`--import`** | PATH | None | **NEW v3.1**: Import knowledge base from tar.gz archive |
+| `--export` | PATH | None | Export knowledge base to portable tar.gz archive |
+| `--import` | PATH | None | Import knowledge base from tar.gz archive |
+
+#### Build Modes
+
+1. **Default (Smart Incremental)**: Detects changes and only processes new/updated papers
+2. **Rebuild**: Forces complete reconstruction of the knowledge base
+3. **Demo**: Creates a 5-paper demo KB for testing
 
 #### Examples
 
 ```bash
-# Build from Zotero (interactive)
+# Smart incremental update (default)
 python src/build_kb.py
 
-# Build demo database
+# Build demo database for testing
 python src/build_kb.py --demo
 
-# Force full rebuild
-python src/build_kb.py --clear-cache
+# Force complete rebuild
+python src/build_kb.py --rebuild
 
 # WSL with Windows Zotero
 python src/build_kb.py --api-url http://172.20.1.1:23119/api
@@ -266,129 +445,124 @@ python src/build_kb.py --api-url http://172.20.1.1:23119/api
 # Custom paths
 python src/build_kb.py --knowledge-base-path /data/kb --zotero-data-dir /mnt/c/Users/name/Zotero
 
-# Smart incremental update (default)
-python src/build_kb.py
+# Export knowledge base for backup/sharing
+python src/build_kb.py --export kb_backup_$(date +%Y%m%d).tar.gz
 
-# Force complete rebuild
-python src/build_kb.py --rebuild
-
-# Export knowledge base
-python src/build_kb.py --export kb_backup.tar.gz
-
-# Import knowledge base
+# Import knowledge base on another machine
 python src/build_kb.py --import kb_backup.tar.gz
 ```
 
-#### Interactive Options
+#### Process Flow
 
-When running without flags, the script presents options:
+1. **Connection**: Connects to Zotero via local API (port 23119)
+2. **Detection**: Identifies new, updated, and deleted papers
+3. **Extraction**: Extracts text from PDFs using PyMuPDF
+4. **Caching**: Uses persistent caches for PDF text and embeddings
+5. **Embedding**: Generates SPECTER embeddings (768-dimensional)
+6. **Indexing**: Builds FAISS index for similarity search
+7. **Validation**: Verifies integrity and reports statistics
 
-The script automatically detects changes and performs smart incremental updates. Use `--rebuild` to force a complete rebuild.
+## KB Data Directory Structure
 
-## Python API
+The `kb_data/` directory contains all knowledge base files:
 
-### Using the Knowledge Base Programmatically
-
-```python
-from pathlib import Path
-import json
-import faiss
-import numpy as np
-from sentence_transformers import SentenceTransformer
-
-class KnowledgeBase:
-    def __init__(self, kb_path="kb_data"):
-        self.kb_path = Path(kb_path)
-        self.index = faiss.read_index(str(self.kb_path / "index.faiss"))
-        with open(self.kb_path / "metadata.json") as f:
-            self.metadata = json.load(f)
-        self.model = SentenceTransformer('sentence-transformers/allenai-specter')
-
-    def search(self, query, k=10, after_year=None, study_types=None):
-        # Encode query
-        query_embedding = self.model.encode([query])
-
-        # Search index (search more to account for filtering)
-        search_k = min(k * 3, len(self.metadata['papers']))
-        distances, indices = self.index.search(query_embedding.astype('float32'), search_k)
-
-        # Filter results
-        results = []
-        for idx, dist in zip(indices[0], distances[0]):
-            if idx < len(self.metadata['papers']) and idx != -1:
-                paper = self.metadata['papers'][idx]
-
-                # Apply filters
-                if after_year and paper.get('year', 0) < after_year:
-                    continue
-                if study_types and paper.get('study_type') not in study_types:
-                    continue
-
-                results.append((idx, float(dist), paper))
-                if len(results) >= k:
-                    break
-
-        return results
-
-    def get_paper(self, paper_id):
-        paper_file = self.kb_path / "papers" / f"paper_{paper_id}.md"
-        if paper_file.exists():
-            return paper_file.read_text()
-        return None
+```
+kb_data/                          # Main knowledge base directory (~305MB for 2,146 papers)
+│
+├── papers/                       # Individual paper files (~148MB)
+│   ├── paper_0001.md            # Paper in markdown format
+│   ├── paper_0002.md            # Each file contains full text + metadata
+│   └── ...                      # Files named with 4-digit IDs
+│
+├── index.faiss                  # FAISS vector search index (~15MB)
+│                                # Contains 768-dimensional SPECTER embeddings
+│
+├── metadata.json                # Paper metadata and mappings (~4MB)
+│                                # Maps paper IDs to metadata and FAISS indices
+│
+├── sections_index.json          # Extracted sections mapping (~7KB)
+│                                # Maps paper IDs to their sections
+│
+├── .pdf_text_cache.json         # Cached PDF text (~156MB)
+│                                # Avoids re-extracting unchanged PDFs
+│
+├── .embedding_cache.json        # Embedding metadata (~500B)
+│                                # Tracks cached embeddings for reuse
+│
+├── .embedding_data.npy          # Cached embedding vectors (~15MB)
+│                                # NumPy array of embedding vectors
+│
+├── .search_cache.json           # Search results cache (optional)
+│                                # LRU cache of recent search results
+│
+└── missing_pdfs_report.md       # Report of papers without PDFs (optional)
+                                 # Generated when PDFs are missing
 ```
 
-### Example Usage
+### File Descriptions
 
-```python
-# Initialize
-kb = KnowledgeBase()
+#### Core Files
 
-# Search
-results = kb.search("diabetes interventions", k=5, after_year=2020)
-for paper in results:
-    print(f"[{paper['year']}] {paper['title']}")
+**`papers/paper_XXXX.md`**
 
-# Get full text
-full_text = kb.get_paper("0001")
-print(full_text)
+- Individual paper files in markdown format
+- Contains title, authors, abstract, and full text (if available)
+- Named with 4-digit zero-padded IDs (0001-9999)
+- Average size: ~70KB per paper with full text
 
-# Advanced filtering
-rct_results = kb.search(
-    "telemedicine",
-    k=10,
-    study_types=['rct', 'systematic_review']
-)
-```
+**`index.faiss`**
 
-## Slash Command Integration
+- Facebook AI Similarity Search (FAISS) index
+- Contains 768-dimensional SPECTER embeddings for each paper
+- Enables fast k-nearest neighbor search
+- Size scales with number of papers (~7KB per 1000 papers)
 
-The `/research` command is defined in `.claude/commands/research.md`:
+**`metadata.json`**
 
-```markdown
----
-description: Research literature using local knowledge base
-argument-hint: <topic>
----
+- Central metadata file containing:
+  - Paper list with all metadata fields
+  - Total paper count
+  - Last update timestamp
+  - Embedding model information
+  - KB version (4.0)
 
-Research the topic: $ARGUMENTS
+**`sections_index.json`**
 
-Use the CLI to search papers, analyze the most relevant ones, and generate a comprehensive report with IEEE-style citations.
-```
+- Maps paper IDs to extracted sections
+- Enables section-specific retrieval
+- Sections: abstract, introduction, methods, results, discussion, conclusion
 
-### Variables Available
+#### Cache Files
 
-- `$ARGUMENTS`: Everything typed after the command
-- `$USER`: Current username
-- `$PWD`: Current working directory
+**`.pdf_text_cache.json`**
 
-### Customizing the Command
+- Caches extracted PDF text to avoid re-processing
+- Includes file size and modification time for validation
+- Significantly speeds up incremental updates
+- Largest cache file due to full text storage
 
-Edit `.claude/commands/research.md` to modify behavior:
+**`.embedding_cache.json` + `.embedding_data.npy`**
 
-```markdown
-Research "$ARGUMENTS" focusing on papers from the last 5 years.
-Include a section on methodology quality.
-```
+- Two-file cache system for embeddings
+- JSON file contains metadata and hashes
+- NPY file contains actual embedding vectors
+- Enables reuse of embeddings for unchanged papers
+
+**`.search_cache.json`**
+
+- Optional LRU cache for search results
+- Expires after 7 days
+- Maximum 100 cached queries
+- Improves performance for repeated searches
+
+#### Optional Files
+
+**`missing_pdfs_report.md`**
+
+- Generated when papers lack PDF attachments
+- Lists papers without full text
+- Includes recommendations for adding PDFs
+- Only created if user requests during build
 
 ## Data Formats
 
@@ -398,27 +572,34 @@ Include a section on methodology quality.
 {
   "papers": [
     {
-      "id": "0001",
-      "doi": "10.1234/example",
-      "title": "Paper Title",
-      "authors": ["Smith J", "Doe A"],
-      "year": 2023,
-      "journal": "Nature",
-      "volume": "500",
-      "issue": "7461",
-      "pages": "190-195",
-      "abstract": "Abstract text...",
-      "study_type": "rct",
-      "sample_size": 487,
-      "has_full_text": true,
-      "filename": "paper_0001.md",
-      "embedding_index": 0
+      "id": "0001",                    // 4-digit zero-padded ID
+      "doi": "10.1234/example",        // DOI if available
+      "title": "Paper Title",          // Full paper title
+      "authors": ["Smith J", "Doe A"], // Author list
+      "year": 2023,                    // Publication year
+      "journal": "Nature",             // Journal name
+      "volume": "500",                 // Volume number
+      "issue": "7461",                 // Issue number
+      "pages": "190-195",              // Page range
+      "abstract": "Abstract text...",  // Paper abstract
+      "study_type": "rct",             // Detected study type
+      "sample_size": 487,              // For RCTs, extracted n
+      "has_full_text": true,           // Whether PDF was extracted
+      "filename": "paper_0001.md",     // Markdown file name
+      "embedding_index": 0,            // Index in FAISS
+      "zotero_key": "ABC123",          // Zotero reference key
+      "pdf_info": {                    // PDF metadata for change detection
+        "size": 2451234,
+        "mtime": 1693344000.0
+      }
     }
   ],
-  "total_papers": 2147,
-  "last_updated": "2024-08-18T10:30:00Z",
-  "embedding_model": "allenai-specter",
-  "embedding_dimensions": 768
+  "total_papers": 2146,
+  "last_updated": "2025-08-19T19:42:19.834831+00:00",
+  "embedding_model": "sentence-transformers/allenai-specter",
+  "embedding_dimensions": 768,
+  "model_version": "SPECTER",
+  "version": "4.0"                     // KB format version
 }
 ```
 
@@ -438,20 +619,103 @@ Each paper in `papers/` follows this structure:
 **DOI:** 10.1234/example
 
 ## Abstract
-[Abstract text]
+[Abstract text from paper]
 
 ## Full Text
-[Complete paper content converted from PDF]
+[Complete paper content extracted from PDF, if available]
+```
+
+### sections_index.json Structure
+
+```json
+{
+  "0001": {
+    "abstract": "Abstract text...",
+    "introduction": "Introduction text...",
+    "methods": "Methods section...",
+    "results": "Results section...",
+    "discussion": "Discussion section...",
+    "conclusion": "Conclusion text...",
+    "references": "Bibliography...",
+    "supplementary": "Supplementary materials..."
+  },
+  "0002": {
+    ...
+  }
+}
+```
+
+## Cache Files
+
+### PDF Text Cache
+
+`.pdf_text_cache.json` structure:
+
+```json
+{
+  "ZOTERO_KEY_123": {
+    "text": "Extracted PDF text content...",
+    "file_size": 2451234,
+    "file_mtime": 1693344000.0,
+    "cached_at": "2025-08-19T10:30:00Z"
+  }
+}
+```
+
+### Embedding Cache
+
+`.embedding_cache.json` structure:
+
+```json
+{
+  "hashes": ["hash1", "hash2", ...],
+  "model_name": "SPECTER",
+  "created_at": "2025-08-19T10:30:00Z"
+}
+```
+
+`.embedding_data.npy`: Binary NumPy array of shape (n_papers, 768)
+
+### Search Cache
+
+`.search_cache.json` structure:
+
+```json
+{
+  "version": "4.0",
+  "kb_hash": "abc123def456",
+  "queries": {
+    "query_hash_123": {
+      "timestamp": "2025-08-19T10:30:00Z",
+      "results": [...]
+    }
+  }
+}
 ```
 
 ## Error Codes
 
 | Code | Message | Solution |
 |------|---------|----------|
-| KB001 | Knowledge base not found | Run `src/build_kb.py` first |
-| KB002 | Index file corrupted | Rebuild with `--clear-cache` |
-| KB003 | Metadata mismatch | Rebuild knowledge base |
-| API001 | Zotero not accessible | Check Zotero is running |
-| API002 | API not enabled | Enable in Zotero settings |
-| PDF001 | PDF extraction failed | Check PDF file integrity |
-| EMB001 | Model loading failed | Reinstall sentence-transformers |
+| KB001 | Knowledge base not found | Run `python src/build_kb.py` first |
+| KB002 | Index file corrupted | Rebuild with `python src/build_kb.py --rebuild` |
+| KB003 | Metadata mismatch | Version incompatible, rebuild required |
+| KB004 | Papers directory missing | Check KB integrity with `diagnose` |
+| API001 | Zotero not accessible | Ensure Zotero is running |
+| API002 | API not enabled | Enable in Zotero Settings → Advanced |
+| API003 | Connection timeout | Check firewall/network settings |
+| PDF001 | PDF extraction failed | Check PDF file integrity in Zotero |
+| PDF002 | No PDFs found | Add PDFs to Zotero library |
+| EMB001 | Model loading failed | Run `pip install sentence-transformers` |
+| EMB002 | CUDA out of memory | Reduce batch size or use CPU |
+| ID001 | Invalid paper ID format | Use 4-digit format (e.g., 0001) |
+| ID002 | Paper ID not found | Check available IDs with `info` command |
+
+## Performance Tips
+
+1. **Use incremental updates**: Default mode only processes changes
+2. **Enable caching**: PDF and embedding caches speed up rebuilds by 10x
+3. **Batch operations**: Use `get-batch` for multiple papers
+4. **Smart search**: Use for 20+ papers to avoid context overflow
+5. **GPU acceleration**: CUDA speeds up embedding generation by 5-10x
+6. **Export/Import**: Use for quick KB transfer between machines

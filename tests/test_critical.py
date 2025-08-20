@@ -23,6 +23,7 @@ class TestCriticalFunctionality:
         # Test that CLI search command runs without crashing
         result = subprocess.run(
             ["python", "src/cli.py", "search", "diabetes", "-k", "1"],
+            check=False,
             capture_output=True,
             text=True,
             cwd=Path(__file__).parent.parent,
@@ -85,6 +86,7 @@ class TestCriticalFunctionality:
         # Test that search works with empty KB
         result = subprocess.run(
             ["python", "src/cli.py", "search", "test", "--json"],
+            check=False,
             capture_output=True,
             text=True,
             cwd=Path(__file__).parent.parent,
@@ -123,6 +125,7 @@ class TestCriticalFunctionality:
         for cmd in cli_commands:
             result = subprocess.run(
                 cmd,
+                check=False,
                 capture_output=True,
                 text=True,
                 cwd=Path(__file__).parent.parent,
@@ -232,6 +235,7 @@ class TestSearchFilters:
             cmd = ["python", "src/cli.py", "search", "test", "-k", "1", *args]
             result = subprocess.run(
                 cmd,
+                check=False,
                 capture_output=True,
                 text=True,
                 cwd=Path(__file__).parent.parent,
@@ -256,6 +260,7 @@ class TestSearchFilters:
         ]
         result = subprocess.run(
             cmd,
+            check=False,
             capture_output=True,
             text=True,
             cwd=Path(__file__).parent.parent,
@@ -345,6 +350,7 @@ class TestKnowledgeBaseIntegrity:
         start = time.time()
         result = subprocess.run(
             ["python", "src/cli.py", "search", "test", "-k", "10"],
+            check=False,
             capture_output=True,
             text=True,
             cwd=Path(__file__).parent.parent,

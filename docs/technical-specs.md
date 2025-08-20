@@ -7,36 +7,42 @@
 - [Overview](#overview)
 - [Architecture](#architecture)
 - [v4.0 Features](#new-features-in-v40)
+- [Core Modules](#core-modules)
 - [Implementation Details](#implementation)
 - [Data Formats](#data-formats)
 - [Performance](#technical-specifications-1)
+- [Testing](#testing)
 - [Dependencies](#dependencies)
 
 ---
 
 ## Overview
 
-A streamlined academic literature search tool with 70% less code than v3. Features smart incremental updates, integrity checking, and Claude Code integration for evidence-based research using SPECTER embeddings.
+A streamlined academic literature search tool featuring smart incremental updates, integrity checking, and Claude Code integration for evidence-based research using SPECTER embeddings.
 
 ## New Features in v4.0
 
 ### Performance & Security
-- **40-50% Faster Searches**: O(1) cache lookups and dynamic batch sizing
+
+- **Optimized Searches**: O(1) cache lookups and dynamic batch sizing
 - **Enhanced Security**: Command injection prevention, path traversal protection, safe JSON/NPY serialization
 - **Optimized Batch Processing**: Dynamic sizing based on available memory (64-256 batch size)
 - **Instant Cache Lookups**: Hash-based dictionary for O(1) embedding retrieval
 
 ### SPECTER Intelligence
+
 - **Smart Search Modes**: Auto-detects query intent (question, similar, explore)
 - **Query Preprocessing**: Optimizes embeddings based on search type
 - **Scientific Paper Optimization**: SPECTER model specifically trained on academic literature
 
 ### Quality Assessment
+
 - **Paper Quality Scores**: 0-100 scoring based on study type, recency, sample size
 - **Quality Filtering**: `--quality-min` parameter to filter low-quality papers
 - **Visual Quality Indicators**: ⭐ (80-100), ● (60-79), ○ (40-59), · (<40)
 
 ### Enhanced Features
+
 - **Study Type Classification**: Automatically identifies systematic reviews, RCTs, cohort studies, etc.
 - **RCT Sample Size Extraction**: Shows participant counts (n=487) for randomized controlled trials
 - **Advanced Filtering**: Filter by publication year and study type
@@ -54,24 +60,61 @@ Setup Phase (once):     Zotero → Build Script → Portable KB
 Runtime Phase (always): /research command → Search → Analyze → Report
 ```
 
+### Module Structure
+
+```
+src/
+├── build_kb.py          # Knowledge base builder from Zotero
+├── cli.py               # Command-line interface for search and retrieval
+├── cli_kb_index.py      # O(1) paper lookups and index operations
+└── config.py            # Configuration constants and settings
+```
+
 ## Data Structure
 
 ```
 kb_data/
-├── index.faiss              # Semantic search index (~6.5MB for 2000 papers)
+├── index.faiss              # Semantic search index (~15KB for 2146 papers)
 ├── metadata.json            # Paper metadata with model version (~4MB)
-├── sections_index.json      # Section locations for smart retrieval (~36MB)
+├── sections_index.json      # Section locations for smart retrieval (~7KB)
 ├── .pdf_text_cache.json     # PDF extraction cache (metadata-based, ~156MB)
-├── .embedding_cache.json    # Embedding metadata (hashes, model info) - NEW in v3.1
-├── .embedding_data.npy      # Embedding vectors (safe NPY format) - NEW in v3.1
+├── .embedding_cache.json    # Embedding metadata (hashes, model info)
+├── .embedding_data.npy      # Embedding vectors (safe NPY format)
 ├── .fingerprint_cache.json  # Content fingerprints for change detection
-└── papers/
-    ├── paper_0001.md        # Full text in markdown (4-digit IDs)
-    ├── paper_0002.md        # One file per paper
-    └── ...                  # 2000+ files
+├── papers/                  # Individual paper markdown files
+│   ├── paper_0001.md        # Full text in markdown (4-digit IDs)
+│   ├── paper_0002.md        # One file per paper
+│   └── ...                  # 2146 files
+└── reports/                 # Generated reports directory
+    ├── small_pdfs_report.md # Papers with small PDFs (<5KB text)
+    ├── missing_pdfs_report.md # Papers without PDF text
+    └── smart_search_results.json # Smart search results
 ```
 
-**Security Note**: v3.1 uses safe JSON/NPY format instead of pickle serialization
+**Security Note**: v4.0 uses safe JSON/NPY format instead of pickle serialization
+
+## Core Modules
+
+### O(1) Paper Index (`cli_kb_index.py`)
+
+**Purpose**: Provides constant-time paper lookups to avoid O(n) searches
+
+**Features**:
+- Dictionary-based ID to index mapping
+- Paper lookup by ID or FAISS index
+- Author search with partial matching
+- Year range filtering
+- Consistency validation
+
+**Usage**:
+```python
+from cli_kb_index import KnowledgeBaseIndex
+
+kb_index = KnowledgeBaseIndex()
+paper = kb_index.get_paper_by_id("0042")  # O(1) lookup
+papers = kb_index.search_by_author("Smith")  # Author search
+papers = kb_index.search_by_year_range(2020, 2024)  # Year filter
+```
 
 ## Implementation
 
@@ -87,6 +130,7 @@ kb_data/
 4. Save metadata as JSON
 
 **Features**:
+
 - SPECTER embeddings for superior scientific paper retrieval (sentence-transformers/allenai-specter)
 - Automatic study type classification (RCTs, systematic reviews, cohort studies, etc.)
 - RCT sample size extraction (n=487)
@@ -116,13 +160,14 @@ python cli.py search "query" --type rct --type systematic_review  # Filter by st
 python cli.py search "query" --show-quality --quality-min 70  # Quality filtering
 python cli.py search "query" --mode question  # Optimize for research questions
 python cli.py get <paper_id>              # Returns full paper text
-python cli.py smart-get <paper_id> "question"  # Smart section retrieval (70% less text)
+python cli.py smart-search "query" -k 30        # Smart search with automatic chunking
 python cli.py get <paper_id> --sections abstract methods results  # Specific sections
 python cli.py info                        # Check knowledge base status
 python cli.py cite "query"                # Generate IEEE citations
 ```
 
 **Study Type Categories:**
+
 - `systematic_review` - Systematic reviews and meta-analyses (⭐)
 - `rct` - Randomized controlled trials (●)
 - `cohort` - Cohort studies (◐)
@@ -176,7 +221,7 @@ Use the CLI to search papers, analyze the most relevant ones, and generate a com
 {
   "papers": [
     {
-      "id": "0001",                    // 4-digit format (v3.1)
+      "id": "0001",                    // 4-digit format (v4.0)
       "doi": "10.1234/example",
       "title": "Paper Title",
       "authors": ["Smith J", "Doe A"],
@@ -190,22 +235,19 @@ Use the CLI to search papers, analyze the most relevant ones, and generate a com
       "sample_size": 487,
       "has_full_text": true,
       "filename": "paper_0001.md",      // 4-digit format
-      "embedding_index": 0,
       "zotero_key": "ABC123",           // For cache tracking
-      "quality_score": 85,              // NEW in v3.1 (0-100)
-      "quality_factors": {              // NEW in v3.1
-        "study_type_score": 25,
-        "recency_score": 10,
-        "sample_size_score": 5,
-        "full_text_bonus": 5
+      "pdf_info": {                     // PDF metadata for caching
+        "size": 1234567,
+        "mtime": 1642256400.0
       }
     }
   ],
-  "total_papers": 2000,
-  "last_updated": "2024-01-15T10:30:00Z",
+  "total_papers": 2146,
+  "last_updated": "2025-08-19T14:42:00Z",
   "embedding_model": "sentence-transformers/allenai-specter", // Scientific paper embeddings
   "model_version": "SPECTER",               // Optimized for academic literature
-  "embedding_dimensions": 768
+  "embedding_dimensions": 768,
+  "version": "4.0"
 }
 ```
 
@@ -272,7 +314,7 @@ Date: [YYYY-MM-DD]
 
 ### IEEE Citation Format
 
-The system should format citations as:
+The system formats citations as:
 
 ```
 [#] Author(s), "Title," Journal, vol. X, no. Y, pp. ZZZ-ZZZ, Month Year.
@@ -280,6 +322,50 @@ The system should format citations as:
 
 **In-text citations**: Use bracketed numbers [1], [2], [3]
 **Multiple citations**: Use ranges [1]-[3] or lists [1], [4], [7]
+
+## Testing
+
+### Test Organization
+
+The project includes comprehensive test coverage organized by functionality:
+
+```
+tests/
+├── conftest.py              # Shared fixtures and test configuration
+├── test_critical.py         # Core functionality tests (14 tests)
+├── test_incremental_updates.py # Smart update tests (4 tests)
+├── test_kb_index.py         # O(1) lookup tests (8 tests)
+├── test_reports.py          # Report generation tests (5 tests)
+└── test_v4_features.py      # v4.0 specific tests (19 tests)
+```
+
+**Total**: 50 tests covering all major functionality
+
+### Running Tests
+
+```bash
+# Run all tests
+pytest tests/ -v
+
+# Run specific test file
+pytest tests/test_critical.py -v
+
+# Run with coverage
+pytest tests/ --cov=src --cov-report=html
+```
+
+### Quality Checks
+
+```bash
+# Type checking
+mypy src/
+
+# Linting
+ruff check src/ tests/
+
+# Auto-fix issues
+ruff check src/ tests/ --fix
+```
 
 ## Technical Specifications
 
@@ -294,17 +380,24 @@ The system should format citations as:
 - `tqdm`: Progress bars
 - `requests`: Zotero API access
 
-### Performance Targets (Estimated)
+### Performance Characteristics
 
-- KB build:
-  - With SPECTER: Approximately 30 minutes on CPU, 10 minutes on GPU for 2000 papers (varies by hardware)
-  - Rebuild with caches: 1-2 minutes (both PDF and embedding caches)
-  - PDF extraction: Estimated ~13 papers/second with cache
-  - Embedding generation: ~1 paper/sec (CPU) or ~8 papers/sec (GPU)
-- Search: <100ms for filtered searches
-- Full analysis: 1-6 minutes
-- Storage: ~2GB total
-- Cache: ~2-3MB per 100 papers
+- **KB build**: Time varies significantly by hardware and library size
+  - Smart incremental updates: ~10x faster than full rebuild
+  - Cache utilization: Dramatically reduces rebuild time
+  - O(1) embedding cache lookups via hash-based dictionary
+- **Search**: Sub-second response times for most queries
+  - O(1) paper lookups by ID using dictionary index
+  - FAISS provides log(n) similarity search
+- **Storage**: Current KB (2146 papers): ~305MB total
+  - Papers: ~145MB markdown files
+  - PDF cache: ~156MB cached text
+  - Metadata: ~4MB JSON
+  - Index: ~15KB FAISS vectors
+- **Cache efficiency**: Persistent across sessions
+  - PDF text cache avoids re-extraction
+  - Embedding cache preserves computed vectors
+  - Fingerprint cache enables change detection
 
 ### Embedding Model
 
@@ -313,21 +406,26 @@ The system should format citations as:
 - **Context**: 512 tokens (processes title + abstract)
 - **Advantages**: Specifically trained on scientific papers, outperforms general models
 - **GPU Support**: Automatic detection, 10x speedup when available
-- **Note**: CLI help may show "SciNCL" but the implementation uses SPECTER model
+- **Current implementation**: Uses SPECTER model consistently
 
 ## Advantages of This Approach
 
 1. **Portable**: Copy kb_data/ folder anywhere
 2. **Evidence-Based**: Automatic study type classification and quality indicators
 3. **No Runtime Dependencies**: Doesn't need Zotero after setup
-4. **Fast**: Direct file access with advanced filtering
+4. **Fast**: O(1) lookups, direct file access with advanced filtering
 5. **Offline**: Works without internet
 6. **Version Control**: Text files can be tracked in git
 7. **Visual Hierarchy**: Clear markers showing evidence quality (⭐ for reviews, ● for RCTs)
 8. **Debuggable**: Can manually read/edit papers
+9. **Maintainable**: Clean module separation with focused responsibilities
+10. **Well-Tested**: 50+ tests covering all major functionality
 
 ## Error Handling
 
 - **Missing KB**: "Knowledge base not found. Run build_kb.py first."
+- **Version Mismatch**: "Knowledge base version 3.x detected. Please rebuild with: rm -rf kb_data && python src/build_kb.py"
 - **No results**: "No relevant papers found. Try broader search terms."
 - **File errors**: Gracefully skip corrupted files, log issues
+- **Invalid Paper ID**: Validates 4-digit format, prevents path traversal
+- **Cache Corruption**: Automatic detection and recovery

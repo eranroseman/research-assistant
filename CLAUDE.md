@@ -1,76 +1,89 @@
-# Research Assistant v4.0 - Claude Code Guide
+# Research Assistant v4.0
 
-**BREAKING CHANGE: v4.0 requires complete KB rebuild (rm -rf kb_data/ && python src/build_kb.py)**
+**v4.0 requires KB rebuild**: `rm -rf kb_data/ && python src/build_kb.py`
 
-Streamlined academic literature search with 70% less code. Features smart incremental updates, integrity checking, and Claude Code integration.
+Literature search with SPECTER embeddings. KB: 2,146 papers, ~305MB.
 
-## Quick Reference
+## Commands
 
 ```bash
-# Build KB
-python src/build_kb.py --demo        # 5-paper demo
-python src/build_kb.py               # Smart incremental (default)
-python src/build_kb.py --rebuild     # Force complete rebuild
-python src/build_kb.py --export/--import kb.tar.gz
+# KB Management
+python src/build_kb.py [--demo|--rebuild|--export file|--import file]
 
-# Search & Retrieve
-python src/cli.py search "topic" [--show-quality]
-python src/cli.py smart-search "topic" -k 30  # Handle 20+ papers
+# Search
+python src/cli.py search "topic" [--show-quality] [--quality-min N]
+python src/cli.py smart-search "topic" -k 30
 python src/cli.py get 0001 [--sections abstract methods]
-python src/cli.py info
+python src/cli.py cite "topic"
+python src/cli.py [info|diagnose]
 
-# Claude Code Commands
-/research <topic>     # Smart search with chunking
-/doi <topic>         # Find papers via web
+# Claude Code
+/research <topic>  # Full search workflow
+/doi <topic>       # Web discovery
+```
 
-# Quality Checks (ALWAYS before commits)
-mypy src/ && ruff check src/ tests/ && pytest tests/test_critical.py -v
+## Pre-commit Checks
+
+```bash
+mypy src/
+ruff check src/ tests/ [--fix]
+pytest tests/test_critical.py -v  # 14 core tests
+pytest tests/ -v                   # 50 total tests
 ```
 
 ## Architecture
 
-**Components:**
-- `build_kb.py`: Zotero→PDF→SPECTER→FAISS, smart incremental updates, integrity checking
-- `cli.py`: 4-digit IDs, quality scoring (0-100), smart chunking
-- `.claude/commands/`: `/research` (smart search), `/doi` (web search)
-
-**Security:** Path validation, JSON/NPY only (no pickle), 4-digit IDs (0001 format)
-
-**Performance:** O(1) lookups, 70% context reduction, 10x faster updates, GPU auto-detect
-
-**v4.0 Changes:** 70% code reduction, integrity checking, improved UX, smart incremental by default
-
-
-## Key Patterns
-
-- **Paper IDs:** Always 4-digit (`0001`, not `1` or `001`)
-- **Model:** SPECTER (sentence-transformers/allenai-specter)
-- **Caching:** `.embedding_cache.json` + `.embedding_data.npy`
-- **Quality Score:** study_type(35) + recency(10) + sample_size(10) + full_text(5), scaled 0-100
-- **Incremental:** Smart change detection by default, `--rebuild` for full rebuild
-
-## Files
+- **build_kb.py**: Zotero→PDF→SPECTER embeddings→FAISS index
+- **cli.py**: Search, quality scoring, smart chunking
+- **cli_kb_index.py**: O(1) lookups, author search
+- **.claude/commands/**: Slash commands
 
 ```
 kb_data/
-├── index.faiss            # Vector index
-├── metadata.json          # Paper info + scores
-├── .embedding_cache.json  # Cache index
-├── .embedding_data.npy    # Cache vectors
-├── .pdf_text_cache.json   # PDF text
-└── papers/*.md            # Full papers
+├── index.faiss, metadata.json, sections_index.json
+├── .pdf_text_cache.json, .embedding_cache.json, .embedding_data.npy
+├── papers/paper_XXXX.md  # 4-digit IDs
+└── reports/*.md/*.json
+```
+
+## Key Details
+
+- **Paper IDs**: 4-digit (0001-2146), path-validated
+- **Quality Score** (0-100): Study type (35), recency (10), sample size (10), full text (5)
+  - Systematic/meta: 35, RCT: 25, Cohort: 15, Case-control: 10, Cross-sectional: 5
+- **SPECTER**: 768-dim embeddings, GPU auto-detect (10x faster)
+- **Caching**: PDF text, embeddings, incremental updates
+
+## Workflows
+
+```bash
+# Setup
+pip install -r requirements.txt
+python src/build_kb.py --demo  # 5-paper test
+
+# Search Examples
+python src/cli.py search "diabetes" --quality-min 70 --show-quality
+python src/cli.py smart-search "digital health" -k 30
+python src/cli.py author "Smith J" --exact
+python src/cli.py cite "telemedicine" -k 10
 ```
 
 ## Troubleshooting
 
-- **KB not found:** `python src/build_kb.py --demo`
-- **Corruption detected:** `python src/build_kb.py --rebuild`
-- **SPECTER fails:** `pip install peft`
-- **Type errors:** `mypy src/ --no-incremental`
-- **Zotero:** Enable API in Settings→Advanced→"Allow other applications"
+- **KB not found**: `python src/build_kb.py --demo`
+- **Invalid ID**: Use 4-digit format (0001)
+- **Zotero error**: Start Zotero, enable API
+- **Corruption**: `python src/build_kb.py --rebuild`
+- **GPU check**: `python -c "import torch; print(torch.cuda.is_available())"`
 
+## Development
 
+- Python 3.11+, type hints required
+- `ruff format src/` for formatting
+- Test modules: critical (14), incremental (4), kb_index (8), reports (5), v4 (19)
 
-## Requirements
+## Notes
 
-Python 3.11+, faiss-cpu, sentence-transformers, PyMuPDF (AGPL license)
+- **Performance**: O(1) lookups, 10x faster incremental updates, GPU 10x speedup
+- **Security**: No pickle, path validation, input sanitization
+- **Priorities**: Data integrity > Performance > Features

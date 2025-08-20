@@ -2,11 +2,12 @@
 
 **⚠️ BREAKING CHANGES IN v4.0 - Complete rebuild required**
 
-A streamlined academic literature search tool with 70% less code. Features SPECTER embeddings for semantic search, smart incremental updates, and Claude Code integration.
+A streamlined academic literature search tool featuring SPECTER embeddings for semantic search, smart incremental updates, and Claude Code integration.
 
 ## Table of Contents
 
 - [Quick Start](#quick-start) - Get up and running in 5 minutes
+- [Quick Reference](#quick-reference) - Essential commands at a glance
 - [Key Features](#key-features) - Core capabilities
 - [Usage Guide](#usage-guide) - Common tasks and commands
 - [Building Knowledge Base](#building-your-knowledge-base) - Setup with Zotero
@@ -26,10 +27,12 @@ python src/build_kb.py
 ### What Changed
 | Change | Impact |
 |--------|--------|
-| **70% code reduction** | Simplified architecture, faster performance |
+| **Simplified architecture** | Only 4 core modules (was 7+) with improved maintainability |
+| **O(1) paper lookups** | Instant access via optimized `cli_kb_index.py` |
 | **Smart incremental by default** | Automatic change detection and updates |
 | **Integrity checking** | Detects and prevents corruption |
 | **Improved UX** | Cleaner prompts, better defaults |
+| **Better testing** | 50 comprehensive tests covering all functionality |
 
 
 ## Quick Start
@@ -66,7 +69,53 @@ python src/cli.py search "digital health"
 /research barriers to digital health adoption in elderly populations
 ```
 
-**That's it!** You're ready to search academic literature. Continue to the [Usage Guide](#-usage-guide) for more examples.
+**That's it!** You're ready to search academic literature. Continue to the [Usage Guide](#usage-guide) for more examples.
+
+## Quick Reference
+
+### Essential Commands
+
+```bash
+# Build/Update KB
+python src/build_kb.py --demo        # 5-paper demo
+python src/build_kb.py               # Smart incremental update
+python src/build_kb.py --rebuild     # Force complete rebuild
+
+# Search Papers
+python src/cli.py search "topic"                      # Basic search
+python src/cli.py search "topic" --show-quality       # With quality scores
+python src/cli.py search "topic" --quality-min 70     # High-quality only
+python src/cli.py search "topic" --years 2020-2024    # Filter by year range
+python src/cli.py search "topic" --group-by year      # Group by year/journal/study_type
+python src/cli.py search "topic" --contains "SGLT2"   # Must contain term
+python src/cli.py search "topic" --exclude "mice"     # Exclude term
+python src/cli.py search "topic" --export results.csv # Export to CSV
+python src/cli.py smart-search "topic" -k 30          # Handle many papers
+
+# Multi-query Search
+python src/cli.py search "diabetes" --queries "glucose" --queries "insulin"
+
+# Get Papers
+python src/cli.py get 0001                            # Full paper
+python src/cli.py get 0001 --sections abstract methods # Specific sections
+python src/cli.py get-batch 0001 0002 0003            # Multiple papers at once
+python src/cli.py get-batch 0001 0234 --format json   # JSON output
+
+# Author Search
+python src/cli.py author "Smith J"                    # Find by author
+python src/cli.py author "Chen" --exact               # Exact match only
+
+# Utilities
+python src/cli.py info                                # KB status
+python src/cli.py diagnose                            # Health check
+python src/cli.py cite "topic"                        # Generate citations
+```
+
+### Claude Code Command
+
+```
+/research <your research question or topic>
+```
 
 ## Usage Guide
 
@@ -78,6 +127,60 @@ python src/cli.py search "digital health"
 python src/cli.py search "telemedicine"
 python src/cli.py search "diabetes complications"
 python src/cli.py search "digital therapeutics" -k 20
+```
+
+#### Advanced Search Options
+
+##### Year Filtering
+```bash
+# Papers from specific year range
+python src/cli.py search "COVID-19" --years 2020-2024
+python src/cli.py search "AI in medicine" --years 2023
+
+# Combine with --after for minimum year
+python src/cli.py search "telemedicine" --after 2020
+```
+
+##### Term Filtering
+```bash
+# Must contain specific term (in title/abstract)
+python src/cli.py search "diabetes" --contains "SGLT2"
+python src/cli.py search "cancer" --contains "immunotherapy"
+
+# Exclude papers with specific term
+python src/cli.py search "treatment" --exclude "mice"
+python src/cli.py search "therapy" --exclude "animal model"
+
+# Full-text search (slower but comprehensive)
+python src/cli.py search "insulin pump" --contains "closed-loop" --full-text
+```
+
+##### Multi-Query Search
+```bash
+# Search multiple topics and combine results
+python src/cli.py search "diabetes" --queries "glucose monitoring" --queries "insulin therapy"
+python src/cli.py search "COVID" --queries "long COVID" --queries "post-acute sequelae"
+```
+
+##### Grouping Results
+```bash
+# Group by year, journal, or study type
+python src/cli.py search "digital health" --group-by year
+python src/cli.py search "clinical trials" --group-by journal
+python src/cli.py search "treatment" --group-by study_type
+```
+
+##### Export to CSV
+```bash
+# Export results for Excel analysis (saved to reports/ directory)
+python src/cli.py search "hypertension" --export results.csv
+python src/cli.py search "obesity" -k 50 --export obesity_papers.csv
+
+# Combine with quality filtering
+python src/cli.py search "diabetes" --quality-min 70 --export high_quality.csv
+
+# Files are saved in reports/ directory for organization
+# Example: reports/results.csv
 ```
 
 #### Quality Filters
@@ -109,6 +212,47 @@ python src/cli.py get 0001 --sections abstract methods results
 
 # Full paper
 python src/cli.py get 0001 -o paper.md
+```
+
+### Retrieving Papers
+
+#### Single Paper
+```bash
+# Get full paper by ID
+python src/cli.py get 0001
+python src/cli.py get 0234
+
+# Get specific sections only
+python src/cli.py get 0001 --sections abstract methods
+python src/cli.py get 0234 --sections introduction conclusion
+
+# Save to file
+python src/cli.py get 0001 --output paper.md
+```
+
+#### Batch Retrieval
+```bash
+# Get multiple papers at once
+python src/cli.py get-batch 0001 0002 0003
+python src/cli.py get-batch 0001 0234 1426
+
+# JSON format for processing
+python src/cli.py get-batch 0001 0002 --format json
+
+# Combine with redirection
+python src/cli.py get-batch 0001 0002 0003 > papers.txt
+```
+
+### Author Search
+
+```bash
+# Find papers by author (partial match)
+python src/cli.py author "Smith"
+python src/cli.py author "Chen M"
+
+# Exact author name match
+python src/cli.py author "John Smith" --exact
+python src/cli.py author "Michael Chen" --exact
 ```
 
 ### Managing Your Knowledge Base
@@ -148,10 +292,10 @@ python src/cli.py cite "wearable devices" -k 5
    - **Full Rebuild** (C) - Rebuild everything (30 minutes)
    - **Exit** (N) - Cancel
 
-3. **Performance** (v3.0 optimized)
-   - Initial build: ~20 min (CPU) or ~10 min (GPU)
-   - Updates: 2-3 minutes with O(1) cache
-   - Storage: ~300MB per 1000 papers
+3. **Performance** (v4.0 optimized)
+   - Initial build: Time varies by hardware and library size
+   - Smart incremental updates: ~10x faster than full rebuild
+   - Storage: ~305MB for 2146 papers (~150MB per 1000 papers)
 
 ## Key Features
 
@@ -162,29 +306,47 @@ python src/cli.py cite "wearable devices" -k 5
 - **Quality Scoring** - 0-100 based on study type, recency, sample size
 
 ### Performance
-- **Smart Section Chunking** - 70% less text to process
-- **O(1) Cache Lookups** - Instant repeated searches
-- **Incremental Updates** - 10x faster for new papers
-- **GPU Acceleration** - 2x speedup when available
+- **O(1) Paper Lookups** - Instant access via optimized index
+- **Smart Section Chunking** - Significantly reduces text to process
+- **Smart Incremental Updates** - 10x faster than full rebuild
+- **GPU Acceleration** - Faster embedding generation when available
 
 ### Productivity
 - **KB Export/Import** - Sync between computers
 - **Claude Integration** - `/research` slash command
 - **Offline Operation** - No internet needed after setup
+- **Report Generation** - Automatic reports for missing/small PDFs
 
 ## Documentation
 
 - **[API Reference](docs/api-reference.md)** - Complete CLI command reference
-- **[Technical Specs](docs/technical-specs.md)** - Architecture and implementation details
+- **[Technical Specs](docs/technical-specs.md)** - Architecture, modules, and implementation
 - **[Advanced Usage](docs/advanced-usage.md)** - GPU setup, custom models, performance tuning
 - **[Changelog](CHANGELOG.md)** - Version history and updates
+
+### Project Structure
+
+```
+src/
+├── build_kb.py         # Knowledge base builder from Zotero
+├── cli.py              # Command-line interface for search
+├── cli_kb_index.py     # O(1) paper lookups and index operations
+└── config.py           # Configuration constants
+
+tests/
+├── test_critical.py    # Core functionality tests (14 tests)
+├── test_incremental_updates.py # Smart update tests (4 tests)
+├── test_kb_index.py    # O(1) lookup tests (8 tests)
+├── test_reports.py     # Report generation tests (5 tests)
+└── test_v4_features.py # v4.0 specific tests (19 tests)
+```
 
 ## System Requirements
 
 - **Python**: 3.11+ required
 - **RAM**: 8GB minimum, 16GB recommended
-- **Storage**: 1GB + ~300MB per 1000 papers
-- **GPU**: Optional (2x speedup for embeddings)
+- **Storage**: 1GB + ~150MB per 1000 papers
+- **GPU**: Optional (10x speedup for embeddings)
 
 ## Troubleshooting
 
@@ -216,16 +378,18 @@ python src/cli.py cite "wearable devices" -k 5
    - Run ruff linting and formatting
    - Catch debug statements
 
-3. **Run tests**
+3. **Run tests** (50 tests covering all functionality)
    ```bash
-   pytest tests/
+   pytest tests/ -v              # All tests
+   pytest tests/test_critical.py # Core functionality only
+   pytest tests/ --cov=src       # With coverage report
    ```
 
-4. **Manual linting**
+4. **Quality checks**
    ```bash
-   ruff check src/ tests/  # Linting
-   ruff format src/ tests/ # Formatting
-   mypy src/               # Type checking (optional)
+   ruff check src/ tests/        # Linting
+   ruff check src/ tests/ --fix  # Auto-fix issues
+   mypy src/                     # Type checking
    ```
 
 Contributions welcome! Priority areas:
@@ -233,6 +397,7 @@ Contributions welcome! Priority areas:
 - Web UI for knowledge base management
 - Integration with other reference managers
 - Multi-language support
+- Performance optimizations for large libraries (10k+ papers)
 
 ## License
 

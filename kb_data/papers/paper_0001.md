@@ -1,29 +1,11 @@
-# Digital Health Interventions for Depression, Anxiety, and Enhancement of Psychological Well-Being
+# Second international consensus report on gaps and opportunities for the clinical translation of precision diabetes medicine
 
-**Authors:** John Smith, Jane Doe, Alice Johnson
+**Authors:** Deirdre K. Tobias, Jordi Merino, Abrar Ahmad, Catherine Aiken, Jamie L. Benham, Dhanasekaran Bodhini, Amy L. Clark, Kevin Colclough, Rosa Corcoy, Sara J. Cromer, Daisy Duan, Jamie L. Felton, Ellen C. Francis, Pieter Gillard, Véronique Gingras, Romy Gaillard, Eram Haider, Alice Hughes, Jennifer M. Ikle, Laura M. Jacobsen, Anna R. Kahkoska, Jarno L. T. Kettunen, Raymond J. Kreienkamp, Lee-Ling Lim, Jonna M. E. Männistö, Robert Massey, Niamh-Maire Mclennan, Rachel G. Miller, Mario Luca Morieri, Jasper Most, Rochelle N. Naylor, Bige Ozkan, Kashyap Amratlal Patel, Scott J. Pilla, Katsiaryna Prystupa, Sridharan Raghavan, Mary R. Rooney, Martin Schön, Zhila Semnani-Azad, Magdalena Sevilla-Gonzalez, Pernille Svalastoga, Wubet Worku Takele, Claudia Ha-ting Tam, Anne Cathrine B. Thuesen, Mustafa Tosur, Amelia S. Wallace, Caroline C. Wang, Jessie J. Wong, Jennifer M. Yamamoto, Katherine Young, Chloé Amouyal, Mette K. Andersen, Maxine P. Bonham, Mingling Chen, Feifei Cheng, Tinashe Chikowore, Sian C. Chivers, Christoffer Clemmensen, Dana Dabelea, Adem Y. Dawed, Aaron J. Deutsch, Laura T. Dickens, Linda A. DiMeglio, Monika Dudenhöffer-Pfeifer, Carmella Evans-Molina, María Mercè Fernández-Balsells, Hugo Fitipaldi, Stephanie L. Fitzpatrick, Stephen E. Gitelman, Mark O. Goodarzi, Jessica A. Grieger, Marta Guasch-Ferré, Nahal Habibi, Torben Hansen, Chuiguo Huang, Arianna Harris-Kawano, Heba M. Ismail, Benjamin Hoag, Randi K. Johnson, Angus G. Jones, Robert W. Koivula, Aaron Leong, Gloria K. W. Leung, Ingrid M. Libman, Kai Liu, S. Alice Long, William L. Lowe, Robert W. Morton, Ayesha A. Motala, Suna Onengut-Gumuscu, James S. Pankow, Maleesa Pathirana, Sofia Pazmino, Dianna Perez, John R. Petrie, Camille E. Powe, Alejandra Quinteros, Rashmi Jain, Debashree Ray, Mathias Ried-Larsen, Zeb Saeed, Vanessa Santhakumar, Sarah Kanbour, Sudipa Sarkar, Gabriela S. F. Monaco, Denise M. Scholtens, Elizabeth Selvin, Wayne Huey-Herng Sheu, Cate Speake, Maggie A. Stanislawski, Nele Steenackers, Andrea K. Steck, Norbert Stefan, Julie Støy, Rachael Taylor, Sok Cin Tye, Gebresilasea Gendisha Ukke, Marzhan Urazbayeva, Bart Van Der Schueren, Camille Vatier, John M. Wentworth, Wesley Hannah, Sara L. White, Gechang Yu, Yingchai Zhang, Shao J. Zhou, Jacques Beltrand, Michel Polak, Ingvild Aukrust, Elisa De Franco, Sarah E. Flanagan, Kristin A. Maloney, Andrew McGovern, Janne Molnes, Mariam Nakabuye, Pål Rasmus Njølstad, Hugo Pomares-Millan, Michele Provenzano, Cécile Saint-Martin, Cuilin Zhang, Yeyi Zhu, Sungyoung Auh, Russell De Souza, Andrea J. Fawcett, Chandra Gruber, Eskedar Getie Mekonnen, Emily Mixter, Diana Sherifali, Robert H. Eckel, John J. Nolan, Louis H. Philipson, Rebecca J. Brown, Liana K. Billings, Kristen Boyle, Tina Costacou, John M. Dennis, Jose C. Florez, Anna L. Gloyn, Maria F. Gomez, Peter A. Gottlieb, Siri Atma W. Greeley, Kurt Griffin, Andrew T. Hattersley, Irl B. Hirsch, Marie-France Hivert, Korey K. Hood, Jami L. Josefson, Soo Heon Kwak, Lori M. Laffel, Siew S. Lim, Ruth J. F. Loos, Ronald C. W. Ma, Chantal Mathieu, Nestoras Mathioudakis, James B. Meigs, Shivani Misra, Viswanathan Mohan, Rinki Murphy, Richard Oram, Katharine R. Owen, Susan E. Ozanne, Ewan R. Pearson, Wei Perng, Toni I. Pollin, Rodica Pop-Busui, Richard E. Pratley, Leanne M. Redman, Maria J. Redondo, Rebecca M. Reynolds, Robert K. Semple, Jennifer L. Sherr, Emily K. Sims, Arianne Sweeting, Tiinamaija Tuomi, Miriam S. Udler, Kimberly K. Vesco, Tina Vilsbøll, Robert Wagner, Stephen S. Rich, Paul W. Franks
 **Year:** 2023
-**Journal:** Nature Digital Medicine
-**Volume:** 6
-**Issue:** 3
-**Pages:** 123-145
-**DOI:** 10.1038/s41746-023-00789-9
+**Journal:** Nature Medicine
+**Volume:** 29
+**Issue:** 10
+**Pages:** 2438-2457
+**DOI:** 10.1038/s41591-023-02502-5
 
 ## Abstract
-Digital health interventions have shown promise in addressing mental health challenges. This systematic review examines the effectiveness of mobile apps, web-based platforms, and digital therapeutics for treating depression and anxiety disorders. We analyzed 127 randomized controlled trials involving over 50,000 participants. Results indicate moderate to large effect sizes for guided digital interventions compared to waitlist controls.
-
-## Full Text
-Introduction
-
-The proliferation of digital technologies has created new opportunities for mental health interventions. Mobile health (mHealth) applications, web-based cognitive behavioral therapy (CBT), and digital therapeutics represent a rapidly growing field...
-
-Methods
-
-We conducted a systematic search of PubMed, PsycINFO, and Cochrane databases for randomized controlled trials published between 2010 and 2023. Inclusion criteria required studies to evaluate digital interventions for depression or anxiety...
-
-Results
-
-Of 3,421 articles screened, 127 met inclusion criteria. Digital CBT showed the strongest evidence base with an average effect size of d=0.73 for depression and d=0.67 for anxiety. Smartphone-based interventions demonstrated moderate effects (d=0.45-0.52) with higher engagement rates than web-based platforms...
-
-Discussion
-
-Digital health interventions offer scalable solutions for mental health treatment gaps. However, challenges remain regarding engagement, personalization, and integration with traditional care models...

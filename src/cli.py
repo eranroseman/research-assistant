@@ -1,7 +1,29 @@
 #!/usr/bin/env python3
 """
-CLI tool for searching and retrieving papers from the knowledge base
-Simplified version 4.0 - removed complex features for maintainability
+Command-line interface for Research Assistant v4.0.
+
+Provides comprehensive literature search and retrieval capabilities with:
+- Semantic search using Multi-QA MPNet embeddings and FAISS
+- Quality scoring (0-100) based on study type and metadata
+- Smart chunking for processing large result sets
+- Multiple output formats (IEEE citations, CSV export)
+- Author-based and year-based filtering
+- Batch operations for efficient retrieval
+
+Commands:
+    search: Semantic similarity search with quality filtering
+    get: Retrieve specific papers by ID
+    get-batch: Retrieve multiple papers efficiently
+    author: Search papers by author name
+    cite: Generate IEEE-format citations
+    info: Display knowledge base statistics
+    smart-search: Intelligent chunking for large queries
+    diagnose: Health check and integrity validation
+
+Usage:
+    python src/cli.py search "machine learning healthcare"
+    python src/cli.py get 0042 --sections methods results
+    python src/cli.py cite "telemedicine" -k 10
 """
 
 import json
@@ -14,74 +36,132 @@ import click
 import faiss
 
 # ============================================================================
-# CONFIGURATION CONSTANTS
+# CONFIGURATION - Import from centralized config.py
 # ============================================================================
 
-# Paths
-DEFAULT_KB_PATH = "kb_data"
+try:
+    # For module imports (from tests)
+    from .config import (
+        # Paths
+        KB_DATA_PATH,
+        # Model
+        EMBEDDING_MODEL,
+        # Search
+        DEFAULT_K as DEFAULT_SEARCH_RESULTS,
+        DEFAULT_CITATION_COUNT,
+        DEFAULT_SMART_SEARCH_RESULTS,
+        DEFAULT_MAX_TOKENS,
+        # Quality scoring
+        QUALITY_BASE_SCORE,
+        QUALITY_STUDY_TYPE_WEIGHTS,
+        # Sample size
+        SAMPLE_SIZE_LARGE_THRESHOLD,
+        SAMPLE_SIZE_MEDIUM_THRESHOLD,
+        SAMPLE_SIZE_SMALL_THRESHOLD,
+        BONUS_LARGE_SAMPLE,
+        BONUS_MEDIUM_SAMPLE,
+        # Recency
+        YEAR_VERY_RECENT,
+        YEAR_RECENT,
+        BONUS_VERY_RECENT,
+        BONUS_RECENT,
+        # Other bonuses
+        BONUS_FULL_TEXT,
+        # Display
+        STUDY_TYPE_MARKERS,
+        QUALITY_EXCELLENT,
+        QUALITY_GOOD,
+        QUALITY_MODERATE,
+        QUALITY_LOW,
+    )
+except ImportError:
+    # For direct script execution
+    from config import (
+        # Paths
+        KB_DATA_PATH,
+        # Model
+        EMBEDDING_MODEL,
+        # Search
+        DEFAULT_K as DEFAULT_SEARCH_RESULTS,
+        DEFAULT_CITATION_COUNT,
+        DEFAULT_SMART_SEARCH_RESULTS,
+        DEFAULT_MAX_TOKENS,
+        # Quality scoring
+        QUALITY_BASE_SCORE,
+        QUALITY_STUDY_TYPE_WEIGHTS,
+        # Sample size
+        SAMPLE_SIZE_LARGE_THRESHOLD,
+        SAMPLE_SIZE_MEDIUM_THRESHOLD,
+        SAMPLE_SIZE_SMALL_THRESHOLD,
+        BONUS_LARGE_SAMPLE,
+        BONUS_MEDIUM_SAMPLE,
+        # Recency
+        YEAR_VERY_RECENT,
+        YEAR_RECENT,
+        BONUS_VERY_RECENT,
+        BONUS_RECENT,
+        # Other bonuses
+        BONUS_FULL_TEXT,
+        # Display
+        STUDY_TYPE_MARKERS,
+        QUALITY_EXCELLENT,
+        QUALITY_GOOD,
+        QUALITY_MODERATE,
+        QUALITY_LOW,
+    )
 
-# Search Defaults
-DEFAULT_SEARCH_RESULTS = 10
-DEFAULT_CITATION_COUNT = 5
-DEFAULT_SMART_SEARCH_RESULTS = 20
-DEFAULT_MAX_TOKENS = 10000  # ~40k characters
 
-# Quality Scoring Constants
-QUALITY_BASE_SCORE = 50
-
-# Study Type Scores
-SCORE_SYSTEMATIC_REVIEW = 35
-SCORE_META_ANALYSIS = 35
-SCORE_RCT = 25
-SCORE_COHORT = 15
-SCORE_CASE_CONTROL = 10
-SCORE_CROSS_SECTIONAL = 5
-SCORE_CASE_REPORT = 0
-
-# Sample Size Thresholds and Bonuses
-SAMPLE_SIZE_LARGE_THRESHOLD = 1000
-SAMPLE_SIZE_MEDIUM_THRESHOLD = 500
-SAMPLE_SIZE_SMALL_THRESHOLD = 100
-BONUS_LARGE_SAMPLE = 10
-BONUS_MEDIUM_SAMPLE = 5
-
-# Recency Bonuses
-YEAR_VERY_RECENT = 2022
-YEAR_RECENT = 2020
-BONUS_VERY_RECENT = 10
-BONUS_RECENT = 5
-
-# Other Bonuses
-BONUS_FULL_TEXT = 5
+# Import additional constants from config
+try:
+    # For module imports (from tests)
+    from .config import (
+        KB_VERSION,
+        PAPER_ID_DIGITS,
+        VALID_PAPER_ID_PATTERN,
+    )
+except ImportError:
+    # For direct script execution
+    from config import (
+        KB_VERSION,
+        PAPER_ID_DIGITS,
+        VALID_PAPER_ID_PATTERN,
+    )
 
 # Display Configuration
 MAX_QUALITY_SCORE = 100
-PAPER_ID_FORMAT = r"^\d{4}$"  # Regex for validation
-PAPER_ID_DIGITS = 4
-
-# Version
-KB_VERSION = "4.0"
+PAPER_ID_FORMAT = VALID_PAPER_ID_PATTERN.pattern
 
 
 def estimate_paper_quality(paper: dict) -> tuple[int, str]:
-    """Estimate paper quality based on metadata (0-100 score)."""
+    """Calculate quality score (0-100) for a paper.
+
+    Scoring components:
+    - Base score: 50 points
+    - Study type: Up to 35 points (systematic reviews highest)
+    - Sample size: Up to 10 points (for RCTs with n>1000)
+    - Recency: Up to 10 points (papers from 2022+)
+    - Full text: 5 points (if PDF available)
+
+    Args:
+        paper: Paper metadata dictionary with fields:
+            - study_type: Classification from detect_study_type()
+            - sample_size: For RCTs, extracted sample size
+            - year: Publication year
+            - has_full_text: Whether PDF was extracted
+
+    Returns:
+        Tuple containing:
+        - quality_score: Integer 0-100
+        - explanation: Human-readable scoring factors
+    """
     score = QUALITY_BASE_SCORE  # Base score
     factors = []
 
     # Study type hierarchy (most important factor)
     study_type = paper.get("study_type", "unknown")
-    study_scores = {
-        "systematic_review": SCORE_SYSTEMATIC_REVIEW,
-        "meta_analysis": SCORE_META_ANALYSIS,
-        "rct": SCORE_RCT,
-        "cohort": SCORE_COHORT,
-        "case_control": SCORE_CASE_CONTROL,
-        "cross_sectional": SCORE_CROSS_SECTIONAL,
-        "case_report": SCORE_CASE_REPORT,
-    }
 
-    if study_type in study_scores:
-        score += study_scores[study_type]
+    if study_type in QUALITY_STUDY_TYPE_WEIGHTS:
+        score += QUALITY_STUDY_TYPE_WEIGHTS[study_type]
         factors.append(study_type.replace("_", " "))
 
     # Sample size bonus (for applicable studies)
@@ -120,7 +200,22 @@ def estimate_paper_quality(paper: dict) -> tuple[int, str]:
 
 
 class ResearchCLI:
+    """Main class for CLI operations on the knowledge base.
+
+    Handles search queries, paper retrieval, and result formatting.
+    Uses FAISS for similarity search and Multi-QA MPNet for embeddings.
+    """
+
     def __init__(self, knowledge_base_path: str = "kb_data"):
+        """Initialize CLI with knowledge base.
+
+        Args:
+            knowledge_base_path: Path to KB directory (default: kb_data)
+
+        Raises:
+            FileNotFoundError: If knowledge base doesn't exist
+            ValueError: If KB version is incompatible
+        """
         self.knowledge_base_path = Path(knowledge_base_path)
         self.papers_path = self.knowledge_base_path / "papers"
         self.index_file_path = self.knowledge_base_path / "index.faiss"
@@ -131,21 +226,21 @@ class ResearchCLI:
                 f"Knowledge base not found at {knowledge_base_path}. Run build_kb.py first."
             )
 
-        with open(self.metadata_file_path, encoding="utf-8") as f:
-            self.metadata = json.load(f)
+        # Use cli_kb_index for O(1) lookups
+        try:
+            from .cli_kb_index import KnowledgeBaseIndex
+        except ImportError:
+            from cli_kb_index import KnowledgeBaseIndex
+        self.kb_index = KnowledgeBaseIndex(str(self.knowledge_base_path))
+        self.metadata = self.kb_index.metadata
 
-        # Check version compatibility
+        # Version must be 4.0
         if self.metadata.get("version") != KB_VERSION:
-            print(
-                f"\nERROR: Knowledge base version incompatible\n"
-                f"  Current version: v{self.metadata.get('version', '3.x')}\n"
-                f"  Required version: v{KB_VERSION}\n"
-                f"\n  How to fix:\n"
-                f"  Run: python src/build_kb.py --rebuild\n"
-            )
+            print("\nERROR: Knowledge base must be rebuilt")
+            print("  Delete kb_data/ and run: python src/build_kb.py")
             sys.exit(1)
 
-        # Load SPECTER model for search
+        # Load Multi-QA MPNet model for search
         self.embedding_model = self._load_embedding_model()
         self.search_index = faiss.read_index(str(self.index_file_path))
 
@@ -156,7 +251,20 @@ class ResearchCLI:
         min_year: int | None = None,
         study_types: list | None = None,
     ) -> list[tuple[int, float, dict]]:
-        """Search for relevant papers using semantic similarity with optional filters."""
+        """Search for relevant papers using semantic similarity.
+
+        Uses Multi-QA MPNet embeddings to find semantically similar papers,
+        with optional filtering by year and study type.
+
+        Args:
+            query_text: Natural language search query
+            top_k: Number of results to return
+            min_year: Filter papers published after this year
+            study_types: List of study types to include
+
+        Returns:
+            List of tuples (index, distance, paper_dict) sorted by relevance
+        """
         query_embedding = self.embedding_model.encode([query_text])
 
         # Search more than needed to account for filtering
@@ -167,8 +275,11 @@ class ResearchCLI:
 
         results = []
         for idx, dist in zip(indices[0], distances[0], strict=False):
-            if idx < len(self.metadata["papers"]) and idx != -1:  # -1 is returned for invalid indices
-                paper = self.metadata["papers"][idx]
+            if idx != -1:  # -1 is returned for invalid indices
+                # Use kb_index for O(1) paper lookup
+                paper = self.kb_index.get_paper_by_index(idx)
+                if not paper:
+                    continue
 
                 # Apply filters
                 paper_year = paper.get("year")
@@ -186,11 +297,22 @@ class ResearchCLI:
         return results
 
     def get_paper(self, paper_id: str) -> str:
-        """Retrieve full text of a paper by ID with validation."""
+        """Retrieve full text of a paper by ID.
 
-        # Validate paper_id format (4 digits only)
-        if not re.match(PAPER_ID_FORMAT, paper_id):
-            raise ValueError(f"Invalid paper ID format: {paper_id}. Must be 4 digits (e.g., 0001, 0234)")
+        Args:
+            paper_id: 4-digit paper ID (e.g., '0001')
+
+        Returns:
+            Paper content as markdown string
+
+        Raises:
+            ValueError: If paper ID format is invalid
+        """
+
+        # Use kb_index for O(1) validation and lookup
+        paper = self.kb_index.get_paper_by_id(paper_id)
+        if not paper:
+            raise ValueError(f"Paper {paper_id} not found in knowledge base")
 
         # Construct safe path
         paper_file_path = self.papers_path / f"paper_{paper_id}.md"
@@ -213,7 +335,7 @@ class ResearchCLI:
                     break
 
         if paper_file_path.exists():
-            with open(paper_file_path, encoding="utf-8") as f:
+            with paper_file_path.open(encoding="utf-8") as f:
                 return f.read()
         else:
             return f"Paper {paper_id} not found. Valid format: 4 digits (e.g., 0001)"
@@ -223,7 +345,15 @@ class ResearchCLI:
         search_results: list[tuple[int, float, dict]],
         show_abstracts: bool = False,
     ) -> str:
-        """Format search results for display with study type and sample size."""
+        """Format search results for display.
+
+        Args:
+            search_results: List of (index, distance, paper) tuples
+            show_abstracts: Whether to include abstract previews
+
+        Returns:
+            Formatted string for display
+        """
         output = []
 
         # Define study type markers for visual hierarchy
@@ -271,15 +401,30 @@ class ResearchCLI:
         return "\n".join(output)
 
     def _load_embedding_model(self) -> Any:
-        """Load the SPECTER embedding model for scientific paper search."""
-        print("Loading SPECTER model for search...")
+        """Load the Multi-QA MPNet embedding model.
+
+        Multi-QA MPNet is optimized for diverse question-answering including
+        healthcare and scientific papers. Produces 768-dimensional vectors.
+
+        Returns:
+            SentenceTransformer model configured for Multi-QA MPNet
+        """
+        print("Loading Multi-QA MPNet model for search...")
 
         from sentence_transformers import SentenceTransformer
 
-        return SentenceTransformer("sentence-transformers/allenai-specter")
+        return SentenceTransformer(EMBEDDING_MODEL)
 
     def format_ieee_citation(self, paper_metadata: dict, citation_number: int) -> str:
-        """Format paper metadata as IEEE citation."""
+        """Format paper metadata as IEEE citation.
+
+        Args:
+            paper_metadata: Paper metadata dictionary
+            citation_number: Citation number for reference
+
+        Returns:
+            Formatted IEEE citation string
+        """
         citation_text = f"[{citation_number}] "
 
         if paper_metadata.get("authors"):
@@ -311,27 +456,49 @@ class ResearchCLI:
 
 @click.group()
 def cli() -> None:
-    """Research Assistant CLI v4.0 - Search and analyze academic papers.
+    """Research Assistant v4.0 - Semantic literature search and analysis.
+
+    Advanced semantic search using Multi-QA MPNet embeddings with quality scoring,
+    smart chunking, and comprehensive filtering options.
 
     \b
-    Common commands:
-      search      Search papers by topic with quality scores
-      get         Retrieve full text of a specific paper
-      info        Show knowledge base status
-      cite        Generate IEEE citations
+    SEARCH & DISCOVERY:
+      search        Find papers by semantic similarity with filtering
+      smart-search  Handle 20+ papers with automatic chunking
+      author        Find all papers by specific author
+      cite          Generate IEEE-style citations
 
     \b
-    Features:
-      • SPECTER embeddings for semantic search
-      • Quality scoring (0-100) based on study type and recency
-      • Study type detection (RCTs, systematic reviews, etc.)
-      • Smart incremental updates from Zotero
+    RETRIEVAL:
+      get           Get specific paper by ID (with section options)
+      get-batch     Retrieve multiple papers at once
 
     \b
-    Quick start:
-      python src/cli.py info                    # Check KB status
-      python src/cli.py search "diabetes"       # Search papers
-      python src/cli.py get 0001                # Get full paper
+    SYSTEM:
+      info          Show KB statistics and metadata
+      diagnose      Run health checks on knowledge base
+
+    \b
+    KEY FEATURES:
+      • Multi-QA MPNet embeddings optimized for healthcare & scientific papers
+      • Quality scoring (0-100) based on study type & recency
+      • Advanced filters: year ranges, term inclusion/exclusion
+      • Multi-query search for comprehensive results
+      • Group results by year, journal, or study type
+      • Export to CSV for analysis
+      • Smart section extraction from PDFs
+
+    \b
+    QUICK START:
+      python src/cli.py search "diabetes treatment" --show-quality
+      python src/cli.py get 0001 --sections abstract methods
+      python src/cli.py cite "machine learning" -k 10
+      python src/cli.py smart-search "digital health" -k 30
+
+    \b
+    BUILD/UPDATE KB:
+      python src/build_kb.py --demo     # Quick 5-paper demo
+      python src/build_kb.py            # From Zotero library
     """
 
 
@@ -369,6 +536,16 @@ def cli() -> None:
     ),
     help="Filter by study type (can specify multiple, e.g., --type rct --type systematic_review)",
 )
+@click.option(
+    "--group-by", type=click.Choice(["year", "journal", "study_type"]), help="Group results by field"
+)
+@click.option("--years", help="Filter by year range (e.g., 2020-2024 or 2023)")
+@click.option("--contains", help="Filter by term in title/abstract")
+@click.option("--exclude", help="Exclude papers with this term")
+@click.option("--full-text", is_flag=True, help="Search in full text (slower)")
+@click.option("--queries", multiple=True, help="Additional search queries")
+@click.option("--min-quality", type=int, help="Minimum quality score (0-100)")
+@click.option("--export", help="Export results to CSV file")
 def search(
     query_text: str,
     top_k: int,
@@ -378,39 +555,152 @@ def search(
     output_json: bool,
     after: int | None,
     study_type: tuple[str, ...],
+    group_by: str | None,
+    years: str | None,
+    contains: str | None,
+    exclude: str | None,
+    full_text: bool,
+    queries: tuple[str, ...],
+    min_quality: int | None,
+    export: str | None,
 ) -> None:
-    """Search for relevant papers using SPECTER embeddings.
+    """Search papers using Multi-QA MPNet semantic embeddings with advanced filtering.
 
     \b
-    Quality markers:
-      ⭐ Excellent (80-100): Systematic reviews, meta-analyses
-      ● Good (60-79): RCTs, recent high-quality studies
-      ○ Moderate (40-59): Cohort studies, older papers
-      · Lower (<40): Case reports, generic studies
+    QUALITY SCORING (0-100):
+      ⭐ 80-100: Systematic reviews, meta-analyses (highest evidence)
+      ● 60-79: RCTs, recent high-quality studies
+      ○ 40-59: Cohort studies, older papers
+      · 0-39: Case reports, generic studies
 
     \b
-    Examples:
-      python src/cli.py search "diabetes"                    # Basic search
-      python src/cli.py search "diabetes" --show-quality     # With scores
-      python src/cli.py search "AI" --quality-min 70        # High quality only
-      python src/cli.py search "COVID" --after 2020 --type rct  # Recent RCTs
+    FILTERING OPTIONS:
+      --years        Year range (2020-2024) or single year (2023)
+      --after        Papers after year (e.g., --after 2020)
+      --type         Study type filter (can use multiple)
+      --contains     Must contain term in title/abstract
+      --exclude      Exclude papers with term
+      --full-text    Search full text (slower but comprehensive)
+      --min-quality  Minimum quality score threshold
+
+    \b
+    ADVANCED FEATURES:
+      --queries      Add multiple search queries for comprehensive results
+      --group-by     Group by year/journal/study_type for organized view
+      --export       Save results to CSV in reports/ directory
+
+    \b
+    EXAMPLES:
+      # Basic semantic search
+      python src/cli.py search "diabetes treatment"
+
+      # High-quality papers only
+      python src/cli.py search "AI diagnosis" --min-quality 70
+
+      # Recent RCTs
+      python src/cli.py search "telemedicine" --after 2020 --type rct
+
+      # Year range with term filtering
+      python src/cli.py search "cancer" --years 2020-2024 --contains "immunotherapy"
+
+      # Multi-query comprehensive search
+      python src/cli.py search "diabetes" --queries "glucose monitoring" --queries "insulin"
+
+      # Export results for Excel
+      python src/cli.py search "hypertension" --export results.csv
     """
     try:
         research_cli = ResearchCLI()
 
-        # Perform search
-        study_types = list(study_type) if study_type else None
-        search_k = top_k * 2 if quality_min else top_k
-        search_results = research_cli.search(query_text, search_k, min_year=after, study_types=study_types)
+        # Handle multi-query search
+        all_queries = [query_text]
+        if queries:
+            all_queries.extend(queries)
+
+        # Collect results from all queries
+        seen_ids = set()
+        combined_results = []
+
+        for q in all_queries:
+            # Perform search
+            study_types = list(study_type) if study_type else None
+            # Get more results to allow for filtering
+            search_k = top_k * 3 if (quality_min or min_quality or years or contains or exclude) else top_k
+            query_results = research_cli.search(q, search_k, min_year=after, study_types=study_types)
+
+            # Add unique results
+            for idx, dist, paper in query_results:
+                if paper["id"] not in seen_ids:
+                    seen_ids.add(paper["id"])
+                    combined_results.append((idx, dist, paper))
+
+        search_results = combined_results
+
+        # Apply year filtering if specified
+        if years:
+            # Parse year range
+            if "-" in years:
+                start_year, end_year = map(int, years.split("-"))
+            else:
+                # Single year
+                start_year = end_year = int(years)
+
+            filtered = []
+            for idx, dist, paper in search_results:
+                year = paper.get("year")
+                if year and start_year <= year <= end_year:
+                    filtered.append((idx, dist, paper))
+            search_results = filtered
+
+        # Apply term filtering if specified
+        if contains or exclude:
+            import subprocess
+
+            filtered = []
+            for idx, dist, paper in search_results:
+                if full_text:
+                    # Search in full text using grep
+                    paper_file = f"kb_data/papers/paper_{paper['id']}.md"
+
+                    # Check contains
+                    if contains:
+                        ret = subprocess.run(
+                            ["grep", "-qi", contains, paper_file], check=False, capture_output=True
+                        )
+                        if ret.returncode != 0:  # Not found
+                            continue
+
+                    # Check exclude
+                    if exclude:
+                        ret = subprocess.run(
+                            ["grep", "-qi", exclude, paper_file], check=False, capture_output=True
+                        )
+                        if ret.returncode == 0:  # Found (exclude it)
+                            continue
+                else:
+                    # Just check title + abstract (fast)
+                    text = (paper.get("title", "") + " " + paper.get("abstract", "")).lower()
+
+                    if contains and contains.lower() not in text:
+                        continue
+                    if exclude and exclude.lower() in text:
+                        continue
+
+                filtered.append((idx, dist, paper))
+            search_results = filtered
 
         # Apply quality filtering if requested
-        if quality_min or show_quality:
+        if quality_min or min_quality or show_quality:
             enhanced_results = []
+            effective_min = (
+                max(filter(None, [quality_min, min_quality])) if (quality_min or min_quality) else 0
+            )
+
             for idx, dist, paper in search_results:
                 quality, explanation = estimate_paper_quality(paper)
 
                 # Filter by minimum quality
-                if quality_min and quality < quality_min:
+                if effective_min and quality < effective_min:
                     continue
 
                 # Add quality info to paper
@@ -421,6 +711,81 @@ def search(
             search_results = enhanced_results[:top_k]
         else:
             search_results = search_results[:top_k]
+
+        # Export to CSV if requested
+        if export:
+            import csv
+
+            # Ensure reports directory exists
+            reports_dir = Path("reports")
+            reports_dir.mkdir(exist_ok=True)
+
+            # Save to reports directory
+            export_path = reports_dir / export
+            with export_path.open("w", newline="", encoding="utf-8") as f:
+                fieldnames = [
+                    "id",
+                    "title",
+                    "authors",
+                    "year",
+                    "journal",
+                    "study_type",
+                    "quality_score",
+                    "doi",
+                ]
+                writer = csv.DictWriter(f, fieldnames=fieldnames)
+
+                writer.writeheader()
+                for _idx, dist, paper in search_results:
+                    writer.writerow(
+                        {
+                            "id": paper["id"],
+                            "title": paper.get("title", ""),
+                            "authors": "; ".join(paper.get("authors", [])),
+                            "year": paper.get("year", ""),
+                            "journal": paper.get("journal", ""),
+                            "study_type": paper.get("study_type", ""),
+                            "quality_score": paper.get("quality_score", 0),
+                            "doi": paper.get("doi", ""),
+                        }
+                    )
+
+            print(f"✓ Exported {len(search_results)} results to {export_path}")
+
+        # Handle grouping if requested
+        if group_by:
+            grouped: dict[str, list] = {}
+            for idx, dist, paper in search_results:
+                key = paper.get(group_by, "Unknown")
+                if key not in grouped:
+                    grouped[key] = []
+                grouped[key].append((idx, dist, paper))
+
+            # Display grouped results
+            print(f"\nSearch results for: '{query_text}'")
+            if queries:
+                print(f"Additional queries: {', '.join(queries)}")
+            print("=" * 50)
+
+            # Sort keys, handling None values
+            keys = list(grouped.keys())
+            if group_by == "year":
+                # Sort years in descending order, putting None at the end
+                keys.sort(key=lambda x: (x is None, -x if x is not None else 0), reverse=False)
+            else:
+                # Sort other fields alphabetically, putting None/Unknown at the end
+                keys.sort(key=lambda x: (x == "Unknown", x))
+
+            for key in keys:
+                print(f"\n{group_by.replace('_', ' ').title()}: {key} ({len(grouped[key])} papers)")
+                for idx, dist, paper in grouped[key]:
+                    relevance = 1 / (1 + dist)
+                    quality_str = ""
+                    if show_quality or quality_min or min_quality:
+                        quality = paper.get("quality_score", 0)
+                        quality_str = f" [Q:{quality}]"
+                    print(f"  [{paper['id']}] {paper['title'][:80]}...{quality_str} (R:{relevance:.2f})")
+            return  # Skip normal display
 
         if output_json:
             output = []
@@ -451,7 +816,6 @@ def search(
                     quality = paper.get("quality_score", 0)
                     explanation = paper.get("quality_explanation", "")
 
-                    # Quality-based marker
                     marker = "⭐" if quality >= 80 else "●" if quality >= 60 else "○"
 
                     print(f"\n{i}. {marker} [{paper.get('year', '????')}] {paper['title']}")
@@ -469,7 +833,6 @@ def search(
                         )
                         print(f"   {abstract}")
             else:
-                # Use existing formatting
                 print(research_cli.format_search_results(search_results, verbose))
 
     except FileNotFoundError:
@@ -480,15 +843,15 @@ def search(
             file=sys.stderr,
         )
         sys.exit(1)
-    except ImportError as e:
+    except ImportError as error:
         print(
-            f"\n❌ Missing dependency: {e}\n" "   Fix: pip install -r requirements.txt",
+            f"\n❌ Missing dependency: {error}\n   Fix: pip install -r requirements.txt",
             file=sys.stderr,
         )
         sys.exit(1)
-    except Exception as e:
+    except Exception as error:
         print(
-            f"\n❌ Search failed: {e}\n"
+            f"\n❌ Search failed: {error}\n"
             "   Possible fixes:\n"
             "   1. Rebuild knowledge base: python src/build_kb.py\n"
             "   2. Check if model matches index: python src/cli.py info\n"
@@ -511,9 +874,21 @@ def search(
     help="Retrieve only specific sections (default: all)",
 )
 def get(paper_id: str, output: str | None, sections: tuple[str, ...]) -> None:
-    """Get full text of a paper by ID.
+    """Get a specific paper by its 4-digit ID.
 
-    Paper IDs are 4-digit numbers (e.g., 0001, 0234) shown in search results.
+    Retrieve the full content of a paper or specific sections only.
+    Paper IDs are always 4-digit zero-padded (e.g., 0001, 0234, 1426).
+
+    \b
+    Examples:
+      python src/cli.py get 0001                        # Full paper
+      python src/cli.py get 0234 --sections abstract    # Abstract only
+      python src/cli.py get 1426 --sections methods results  # Multiple sections
+      python src/cli.py get 0005 --output paper.md      # Save to file
+
+    \b
+    Available sections: abstract, introduction, methods, results, discussion,
+                       conclusion, references, all
     """
     try:
         research_cli = ResearchCLI()
@@ -523,7 +898,7 @@ def get(paper_id: str, output: str | None, sections: tuple[str, ...]) -> None:
             # Load sections index
             sections_index_path = Path("kb_data") / "sections_index.json"
             if sections_index_path.exists():
-                with open(sections_index_path) as f:
+                with sections_index_path.open() as f:
                     sections_index = json.load(f)
 
                 if paper_id in sections_index:
@@ -571,9 +946,12 @@ def get(paper_id: str, output: str | None, sections: tuple[str, ...]) -> None:
             content = research_cli.get_paper(paper_id)
 
         if output:
-            with open(output, "w", encoding="utf-8") as f:
+            reports_dir = Path("reports")
+            reports_dir.mkdir(exist_ok=True)
+            output_path = reports_dir / output
+            with output_path.open("w", encoding="utf-8") as f:
                 f.write(content)
-            print(f"Paper saved to {output}")
+            print(f"Paper saved to {output_path}")
         else:
             print(content)
 
@@ -585,19 +963,106 @@ def get(paper_id: str, output: str | None, sections: tuple[str, ...]) -> None:
             file=sys.stderr,
         )
         sys.exit(1)
-    except ValueError as e:
+    except ValueError as error:
         print(
-            f"\n❌ Invalid paper ID: {e}\n"
+            f"\n❌ Invalid paper ID: {error}\n"
             "   Paper IDs must be exactly 4 digits (e.g., 0001, 0234, 1234)\n"
             "   Use 'python src/cli.py search <query>' to find paper IDs",
             file=sys.stderr,
         )
         sys.exit(1)
-    except Exception as e:
+    except Exception as error:
         print(
-            f"\n❌ Failed to retrieve paper: {e}\n"
+            f"\n❌ Failed to retrieve paper: {error}\n"
             "   Make sure the paper ID is correct (4 digits, e.g., 0001)\n"
             "   Check available papers: python src/cli.py info",
+            file=sys.stderr,
+        )
+        sys.exit(1)
+
+
+@cli.command(name="get-batch")
+@click.argument("paper_ids", nargs=-1, required=True)
+@click.option("--format", type=click.Choice(["text", "json"]), default="text", help="Output format")
+def get_batch(paper_ids: tuple[str, ...], format: str) -> None:
+    """Get multiple papers by their IDs in a single batch.
+
+    Efficiently retrieve multiple papers at once. Useful for reviewing
+    search results or specific paper collections.
+
+    \b
+    Examples:
+      python src/cli.py get-batch 0001 0002 0003        # Get three papers
+      python src/cli.py get-batch 0234 1426             # Get specific papers
+      python src/cli.py get-batch 0001 0002 --format json  # JSON output
+
+    Paper IDs are always 4-digit zero-padded.
+    Output formats: text (default) or json.
+    """
+    results = []
+    errors = []
+
+    try:
+        research_cli = ResearchCLI()
+
+        for paper_id in paper_ids:
+            try:
+                # Normalize ID to 4 digits
+                if paper_id.isdigit():
+                    paper_id = paper_id.zfill(4)
+
+                # Validate paper ID format
+                if not re.match(PAPER_ID_FORMAT, paper_id):
+                    errors.append(f"Invalid paper ID format: {paper_id}")
+                    continue
+
+                # Get paper content
+                content = research_cli.get_paper(paper_id)
+
+                # Check if paper was found
+                if "not found" in content.lower():
+                    errors.append(f"Paper {paper_id} not found")
+                    continue
+
+                results.append({"id": paper_id, "content": content})
+
+            except Exception as error:
+                errors.append(f"Error reading {paper_id}: {error}")
+
+        # Display results
+        if format == "json":
+            output = {"papers": results, "errors": errors, "count": len(results)}
+            print(json.dumps(output, indent=2))
+        else:
+            # Text format
+            for paper in results:
+                print(f"\n{'=' * 50}")
+                print(f"Paper {paper['id']}")
+                print("=" * 50)
+                print(paper["content"])
+
+            if errors:
+                print("\n⚠️ Errors encountered:", file=sys.stderr)
+                for err_msg in errors:
+                    print(f"  - {err_msg}", file=sys.stderr)
+
+            # Summary
+            print(f"\n✓ Retrieved {len(results)} papers successfully")
+            if errors:
+                print(f"✗ Failed to retrieve {len(errors)} papers")
+
+    except FileNotFoundError:
+        print(
+            "\n❌ Knowledge base not found.\n"
+            "   Quick fix: python src/build_kb.py --demo\n"
+            "   Full setup: python src/build_kb.py (requires Zotero)",
+            file=sys.stderr,
+        )
+        sys.exit(1)
+    except Exception as error:
+        print(
+            f"\n❌ Failed to retrieve papers: {error}\n"
+            "   Check that paper IDs are correct (4 digits, e.g., 0001)",
             file=sys.stderr,
         )
         sys.exit(1)
@@ -612,7 +1077,19 @@ def get(paper_id: str, output: str | None, sections: tuple[str, ...]) -> None:
     help=f"Number of citations to generate (default: {DEFAULT_CITATION_COUNT})",
 )
 def cite(query_text: str, top_k: int) -> None:
-    """Generate IEEE-style citations for papers matching query."""
+    """Generate IEEE-style citations for papers matching a query.
+
+    Search for relevant papers and format them as ready-to-use citations.
+    Perfect for literature reviews and reference lists.
+
+    \b
+    Examples:
+      python src/cli.py cite "machine learning"         # Top 5 citations
+      python src/cli.py cite "diabetes" -k 10           # Get 10 citations
+      python src/cli.py cite "AI ethics"                # Default citations
+
+    Citations are formatted in IEEE style with DOI links.
+    """
     try:
         research_cli = ResearchCLI()
         search_results = research_cli.search(query_text, top_k)
@@ -630,9 +1107,95 @@ def cite(query_text: str, top_k: int) -> None:
             file=sys.stderr,
         )
         sys.exit(1)
-    except Exception as e:
+    except Exception as error:
         print(
-            f"Citation generation failed: {e}. Try rebuilding with 'python src/build_kb.py'",
+            f"Citation generation failed: {error}. Try rebuilding with 'python src/build_kb.py'",
+            file=sys.stderr,
+        )
+        sys.exit(1)
+
+
+@cli.command(name="author")
+@click.argument("author_name")
+@click.option("--exact", is_flag=True, help="Exact match only")
+def author_search(author_name: str, exact: bool) -> None:
+    """Find all papers by a specific author.
+
+    Search for papers authored by a specific person. Supports partial
+    name matching by default, or exact matching with --exact flag.
+
+    \b
+    Examples:
+      python src/cli.py author "Smith"                  # All papers by Smith
+      python src/cli.py author "John Smith"             # Specific author
+      python src/cli.py author "Zhang" --exact          # Exact match only
+      python src/cli.py author "Lee"                    # Partial match
+
+    Note: Author search is case-insensitive for partial matches.
+    Results are sorted by year (most recent first).
+    """
+    try:
+        metadata_path = Path("kb_data/metadata.json")
+        with metadata_path.open(encoding="utf-8") as f:
+            metadata = json.load(f)
+            papers = metadata["papers"]
+
+        matches = []
+        author_lower = author_name.lower()
+
+        for paper in papers:
+            authors = paper.get("authors", [])
+
+            if exact:
+                # Exact match
+                if author_name in authors:
+                    matches.append(paper)
+            # Partial match (case-insensitive)
+            elif any(author_lower in auth.lower() for auth in authors):
+                matches.append(paper)
+
+        # Display results
+        print(f"\nFound {len(matches)} papers by '{author_name}':")
+        print("=" * 50)
+
+        # Sort by year (most recent first)
+        for paper in sorted(matches, key=lambda p: p.get("year", 0), reverse=True):
+            year = paper.get("year", "N/A")
+            journal = paper.get("journal", "Unknown journal")
+
+            # Study type marker
+            study_type = paper.get("study_type", "study")
+            marker = {
+                "systematic_review": "⭐",
+                "meta_analysis": "⭐",
+                "rct": "●",
+                "cohort": "◐",
+                "case_control": "○",
+                "cross_sectional": "◔",
+                "case_report": "·",
+                "study": "·",
+            }.get(study_type, "·")
+
+            print(f"\n{marker} [{paper['id']}] {paper['title']}")
+            print(f"   Year: {year} | Journal: {journal[:50]}")
+
+            # Show all authors for context
+            authors_str = ", ".join(paper.get("authors", []))
+            if len(authors_str) > 100:
+                authors_str = authors_str[:97] + "..."
+            print(f"   Authors: {authors_str}")
+
+    except FileNotFoundError:
+        print(
+            "\n❌ Knowledge base not found.\n"
+            "   Quick fix: python src/build_kb.py --demo\n"
+            "   Full setup: python src/build_kb.py (requires Zotero)",
+            file=sys.stderr,
+        )
+        sys.exit(1)
+    except Exception as error:
+        print(
+            f"\n❌ Failed to search by author: {error}",
             file=sys.stderr,
         )
         sys.exit(1)
@@ -640,7 +1203,20 @@ def cite(query_text: str, top_k: int) -> None:
 
 @cli.command()
 def info() -> None:
-    """Show information about the knowledge base."""
+    """Show comprehensive knowledge base statistics and metadata.
+
+    Display detailed information about the current knowledge base including:
+    - Total number of papers and size on disk
+    - Last update time and version
+    - Index and paper file statistics
+    - Sample of available papers
+
+    \b
+    Example:
+      python src/cli.py info
+
+    Use this to verify KB health and understand your paper collection.
+    """
     try:
         knowledge_base_path = Path("kb_data")
         metadata_file_path = knowledge_base_path / "metadata.json"
@@ -649,7 +1225,7 @@ def info() -> None:
             print("Knowledge base not found. Run build_kb.py first.")
             sys.exit(1)
 
-        with open(metadata_file_path, encoding="utf-8") as file:
+        with metadata_file_path.open(encoding="utf-8") as file:
             metadata = json.load(file)
 
         print("\nKnowledge Base Information")
@@ -676,9 +1252,9 @@ def info() -> None:
         for paper in metadata["papers"][:5]:
             print(f"  - [{paper['id']}] {paper['title'][:60]}...")
 
-    except Exception as e:
+    except Exception as error:
         print(
-            f"Failed to get knowledge base info: {e}. Run 'python src/build_kb.py --demo' to create one.",
+            f"Failed to get knowledge base info: {error}. Run 'python src/build_kb.py --demo' to create one.",
             file=sys.stderr,
         )
         sys.exit(1)
@@ -705,14 +1281,25 @@ def info() -> None:
     help="Sections to prioritize (default: abstract, introduction, conclusion)",
 )
 def smart_search(query_text: str, top_k: int, max_tokens: int, sections: tuple[str, ...]) -> None:
-    """Smart search with automatic section chunking to handle 20+ papers.
+    """Smart search with automatic section chunking for large result sets.
 
-    Automatically selects relevant sections based on query to maximize
-    the number of papers that can be analyzed without context overflow.
+    Intelligently handles large numbers of papers by chunking them into
+    sections (Introduction, Methods, Results) for better readability.
+    Ideal for comprehensive literature reviews.
 
+    \b
     Examples:
-        cli.py smart-search "diabetes treatment methods" -k 30
-        cli.py smart-search "clinical outcomes" --sections results conclusion
+      python src/cli.py smart-search "digital health" -k 30  # Auto-chunks
+      python src/cli.py smart-search "AI" -k 50 --max-tokens 20000
+      python src/cli.py smart-search "cancer" --sections results conclusion
+      python src/cli.py smart-search "methods" -k 40  # Prioritizes methods
+
+    \b
+    Features:
+      - Automatically chunks results >20 papers into logical sections
+      - Groups papers by relevance and topic similarity
+      - Saves results to reports/smart_search_results.json
+      - Intelligently selects sections based on query terms
     """
     try:
         research_cli = ResearchCLI()
@@ -800,7 +1387,9 @@ def smart_search(query_text: str, top_k: int, max_tokens: int, sections: tuple[s
                 break
 
         # Display results
-        print(f"\n✅ Loaded {len(loaded_papers)} papers ({total_chars:,} chars, ~{total_chars//4:,} tokens)")
+        print(
+            f"\n✅ Loaded {len(loaded_papers)} papers ({total_chars:,} chars, ~{total_chars // 4:,} tokens)"
+        )
         print("\nPapers loaded:")
 
         for i, paper_data in enumerate(loaded_papers, 1):
@@ -816,7 +1405,9 @@ def smart_search(query_text: str, top_k: int, max_tokens: int, sections: tuple[s
             print(f"   Preview: {preview}")
 
         # Save to file for further processing
-        output_file = Path("smart_search_results.json")
+        reports_dir = Path("reports")
+        reports_dir.mkdir(exist_ok=True)
+        output_file = reports_dir / "smart_search_results.json"
         with open(output_file, "w") as f:
             json.dump(
                 {
@@ -842,30 +1433,29 @@ def smart_search(query_text: str, top_k: int, max_tokens: int, sections: tuple[s
             file=sys.stderr,
         )
         sys.exit(1)
-    except Exception as e:
-        print(f"\n❌ Smart search failed: {e}", file=sys.stderr)
+    except Exception as error:
+        print(f"\n❌ Smart search failed: {error}", file=sys.stderr)
         sys.exit(1)
 
 
 @cli.command()
 def diagnose() -> None:
-    """Check knowledge base health and integrity.
+    """Run comprehensive health checks on the knowledge base.
 
-    \b
-    Performs comprehensive diagnostics:
-      • Verifies KB exists and is complete
-      • Checks version compatibility (v4.0)
-      • Validates metadata and index files
-      • Reports total paper count
-      • Identifies any missing components
+    Performs diagnostic tests to verify KB integrity:
+    - Checks all required files exist
+    - Validates metadata structure
+    - Verifies FAISS index consistency
+    - Tests version compatibility (v4.0)
+    - Checks for sequential paper IDs
+    - Reports total paper count
 
     \b
     Example:
       python src/cli.py diagnose
 
-    \b
-    Use this command if you encounter errors or want to verify
-    your knowledge base is properly configured.
+    Run this if you experience search errors or unexpected behavior.
+    Returns detailed report with any issues found and recommendations.
     """
     kb_path = Path("kb_data")
 
@@ -882,6 +1472,20 @@ def diagnose() -> None:
             checks.append(("Version 4.0", meta.get("version") == "4.0"))
             checks.append((f"Papers: {meta['total_papers']}", True))
 
+            # Check for sequential IDs
+            paper_ids = sorted([p["id"] for p in meta["papers"]])
+            expected_ids = [f"{i:04d}" for i in range(1, len(meta["papers"]) + 1)]
+            sequential = paper_ids == expected_ids
+            if not sequential:
+                # Count gaps
+                gaps = []
+                for i in range(1, len(meta["papers"]) + 1):
+                    if f"{i:04d}" not in paper_ids:
+                        gaps.append(f"{i:04d}")
+                checks.append((f"Sequential IDs (gaps: {len(gaps)})", False))
+            else:
+                checks.append(("Sequential IDs", True))
+
     print("\nKnowledge Base Diagnostics")
     print("=" * 50)
     for label, passed in checks:
@@ -891,10 +1495,16 @@ def diagnose() -> None:
         print("\n⚠️  Knowledge base not found or incomplete")
         print("   Run: python src/build_kb.py")
     elif checks[4][1] if len(checks) > 4 else False:
-        print("\n✅ Knowledge base is healthy")
+        # Check if we have ID gaps warning
+        has_id_gaps = any("Sequential IDs" in check[0] and not check[1] for check in checks)
+        if has_id_gaps:
+            print("\n✅ Knowledge base is healthy")
+            print("   Note: ID gaps are normal when papers are deleted")
+        else:
+            print("\n✅ Knowledge base is healthy")
     else:
         print("\n⚠️  Knowledge base version mismatch")
-        print("   Run: python src/build_kb.py --full")
+        print("   Run: python src/build_kb.py --rebuild")
 
 
 if __name__ == "__main__":

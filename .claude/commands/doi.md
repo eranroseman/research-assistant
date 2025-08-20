@@ -1,57 +1,62 @@
 ---
 description: Search for peer-reviewed articles and return DOIs
 argument-hint: <research topic or keywords> (optional - uses previous /research topic if empty)
-allowed-tools: WebSearch, WebFetch, Grep, Read
+allowed-tools: WebSearch, WebFetch, Read, Write
 model: claude-3-haiku-20240307
 ---
 
 # DOI Finder for Academic Articles
 
-## Determine Search Topic
+## Search Topic: $ARGUMENTS
 
-First, I'll check if arguments were provided or if I should use the topic from a previous /research command:
+I'll find DOIs for recent peer-reviewed articles on this topic.
 
-If "$ARGUMENTS" is empty:
-- Check for recent research reports in reports/ folder
-- Extract the topic from the most recent research report filename
-- Use that topic for the DOI search
+## Process
 
-Otherwise:
-- Use the provided arguments: $ARGUMENTS
+### 1. Determine Topic
 
-I'll search for peer-reviewed articles related to the determined topic.
+If no arguments provided:
+- Check for recent research reports in `reports/` folder
+- Look for identified gaps or DOI recommendations from previous /research commands
+- Extract specific missing areas or suggested searches
+- Use the most relevant gap as the search topic
 
-## Step 1: Search for Academic Articles
+If arguments provided:
+- Use the provided topic directly
 
-Searching multiple academic sources for relevant peer-reviewed papers:
+### 2. Web Search Strategy
 
-### Search on Google Scholar and Academic Databases
+I'll search for academic articles across these priority sources:
 
-I'll search for scholarly articles using academic-focused queries to find DOIs.
+- **PubMed/PubMed Central**: pubmed.ncbi.nlm.nih.gov
+- **Google Scholar**: scholar.google.com
+- **Semantic Scholar**: semanticscholar.org
+- **CrossRef**: search.crossref.org
+- **CORE**: core.ac.uk
+- **arXiv**: arxiv.org (for CS/physics/math papers)
+- **bioRxiv**: biorxiv.org (for biology preprints)
+- **PLOS ONE**: journals.plos.org/plosone
+- **Nature**: nature.com/search
+- **Science**: science.org
+- **The Lancet**: thelancet.com
+- **JAMA Network**: jamanetwork.com
+- **BMJ**: bmj.com
+- **Wiley Online**: onlinelibrary.wiley.com
+- **ScienceDirect**: sciencedirect.com
+- **Springer**: link.springer.com
+- **Taylor & Francis**: tandfonline.com
+- **IEEE Xplore**: ieeexplore.ieee.org (for engineering/CS)
+- **ACM Digital Library**: dl.acm.org (for computer science)
 
-## Step 2: Extract and Format DOIs
+### 3. Extract & Format DOIs
 
-After finding relevant articles, I'll extract their DOIs and present them in a structured list.
+I'll extract DOIs (pattern: `10.\d{4,}/[-._;()/:\w]+`) and present them in a clean list.
 
-## Output Format
+### 4. Output
 
-The results will be presented as:
+**Found DOIs for "$ARGUMENTS":**
 
-### Found Articles for "$ARGUMENTS":
-
-1. **[Article Title]**
-   - Authors: [Author Names]
-   - Journal: [Journal Name, Year]
-
-2. **[Article Title]**
-   - Authors: [Author Names]
-   - Journal: [Journal Name, Year]
-
-[Continue for all found articles...]
-
-### DOIs:
-
-```
+```text
 10.xxxx/xxxxx
 10.xxxx/xxxxx
 10.xxxx/xxxxx
@@ -59,15 +64,10 @@ The results will be presented as:
 10.xxxx/xxxxx
 ```
 
-### Search Strategy
+Results saved to: `reports/dois_<topic>_<timestamp>.txt`
 
-- Focus on peer-reviewed journals
-- Include recent publications (last 10 years unless specified otherwise)
-- Prioritize high-impact journals
-- Look for systematic reviews and meta-analyses when relevant
+## Notes
 
-### Note
-
-- Results limited to articles with valid DOIs
-- Preprints and non-peer-reviewed sources excluded
-- Conference proceedings included only if peer-reviewed
+- Focuses on papers from 2020-2025 unless specified otherwise
+- Prioritizes systematic reviews and RCTs when available
+- Returns 10-15 DOIs by default
