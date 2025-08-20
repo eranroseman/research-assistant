@@ -789,7 +789,8 @@ def search(
             keys = list(grouped.keys())
             if group_by == "year":
                 # Sort years in descending order, putting None at the end
-                keys.sort(key=lambda x: (x is None, -x if x is not None else 0), reverse=False)
+                # Cast to int since years are always integers when not None
+                keys.sort(key=lambda x: (x is None, -int(x) if x is not None else 0), reverse=False)
             else:
                 # Sort other fields alphabetically, putting None/Unknown at the end
                 keys.sort(key=lambda x: (x == "Unknown", x))
@@ -1644,10 +1645,10 @@ def batch(input: str, preset: str | None, output: str) -> None:
         sys.exit(1)
 
 
-def _generate_preset_commands(preset_name: str, topic: str) -> list[dict]:
+def _generate_preset_commands(preset_name: str, topic: str) -> list[dict[str, Any]]:
     """Generate batch commands for workflow presets."""
 
-    presets = {
+    presets: dict[str, list[dict[str, Any]]] = {
         "research": [
             {"cmd": "search", "query": topic, "k": 30, "show_quality": True},
             {"cmd": "search", "query": f"{topic} systematic review", "k": 15, "show_quality": True},
