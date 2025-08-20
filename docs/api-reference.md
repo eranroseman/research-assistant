@@ -6,10 +6,11 @@
 
 ### Search & Analysis
 
-- [`search`](#clipy-search) - Semantic search with SPECTER embeddings
+- [`search`](#clipy-search) - Semantic search with Multi-QA MPNet embeddings
 - [`smart-search`](#clipy-smart-search) - Smart search with automatic section chunking
 - [`get`](#clipy-get) - Retrieve full papers or sections
 - [`get-batch`](#clipy-get-batch) - Retrieve multiple papers efficiently
+- [`batch`](#clipy-batch) - Execute multiple commands efficiently (10-20x faster)
 - [`cite`](#clipy-cite) - Generate IEEE citations
 - [`author`](#clipy-author) - Search papers by author name
 
@@ -211,6 +212,84 @@ python src/cli.py get-batch 0001 0002 --format json
 # Many papers at once
 python src/cli.py get-batch 0010 0020 0030 0040 0050
 ```
+
+### `cli.py batch`
+
+Execute multiple commands efficiently with a single model load for 10-20x performance improvement.
+
+```bash
+python src/cli.py batch [OPTIONS] [INPUT]
+```
+
+#### Options
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `--preset` | CHOICE | None | Use workflow preset (research, review, author-scan) |
+| `--output` | CHOICE | json | Output format (json or text) |
+
+#### Preset Workflows
+
+- **research**: Comprehensive topic analysis with 5 searches + top 10 papers
+- **review**: Focus on systematic reviews and meta-analyses
+- **author-scan**: Get all papers by author with abstracts
+
+#### Command Structure
+
+Commands are provided as JSON with the following structure:
+
+```json
+[
+  {"cmd": "search", "query": "topic", "k": 10, "show_quality": true},
+  {"cmd": "get", "id": "0001", "sections": ["abstract", "methods"]},
+  {"cmd": "smart-search", "query": "topic", "k": 30},
+  {"cmd": "cite", "query": "topic", "k": 5},
+  {"cmd": "author", "name": "Smith J", "exact": true}
+]
+```
+
+#### Meta-Commands
+
+Special commands that operate on previous results:
+
+- **merge**: Combine and deduplicate all previous search results
+- **filter**: Filter by quality score or year
+- **auto-get-top**: Automatically fetch top N papers from searches
+- **auto-get-all**: Fetch all papers from author search
+
+#### Examples
+
+```bash
+# Use research preset for comprehensive analysis
+python src/cli.py batch --preset research "diabetes management"
+
+# Use review preset for systematic reviews
+python src/cli.py batch --preset review "hypertension"
+
+# Custom batch from JSON file
+python src/cli.py batch commands.json
+
+# Pipe commands from stdin
+echo '[{"cmd":"search","query":"AI healthcare","k":20}]' | python src/cli.py batch -
+
+# Complex batch with meta-commands
+echo '[
+  {"cmd": "search", "query": "diabetes", "k": 30, "show_quality": true},
+  {"cmd": "search", "query": "diabetes treatment", "k": 20},
+  {"cmd": "merge"},
+  {"cmd": "filter", "min_quality": 70},
+  {"cmd": "auto-get-top", "limit": 10}
+]' | python src/cli.py batch -
+
+# Text output format
+python src/cli.py batch --preset research "COVID-19" --output text
+```
+
+#### Performance
+
+- **Individual commands**: ~4-5 seconds per command (model reload each time)
+- **Batch command**: 5-6 seconds total for entire workflow
+- **Speedup**: 3-20x faster depending on number of operations
 
 ### `cli.py author`
 

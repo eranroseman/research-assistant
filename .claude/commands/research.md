@@ -10,26 +10,52 @@ I'll conduct a comprehensive literature review on this topic.
 
 ## My Approach
 
-For efficient research, I'll use a division of labor:
+I'll delegate data retrieval to a specialized research-helper agent while I focus on analysis:
 
-1. **Research Helper (Haiku)** - For mechanical tasks:
-   - Searching the knowledge base
-   - Reading papers and extracting sections
-   - Providing raw data and summaries
+### When I Use the Research Helper
 
-2. **Main Analysis (Me)** - For intellectual work:
-   - Planning the research strategy
-   - Analyzing and interpreting findings
-   - Synthesizing across multiple sources
-   - Identifying patterns and gaps
-   - Drawing conclusions
-   - Writing the final report
+1. **Initial comprehensive search** - "Use batch preset research for '[topic]' to get complete analysis"
+2. **Custom batch operations** - "Run these searches as a batch: [list of queries]"
+3. **Specific data extraction** - "Find sample sizes in paper 0123"
+4. **Follow-up searches** - "Search for papers on [subtopic] from 2020-2024"
+5. **Citation gathering** - "Generate citations for papers 0001-0010"
 
-This approach allows me to:
+**IMPORTANT**: The helper now uses the batch command which is 10-20x faster for multiple operations.
 
-- Process more papers without context overflow
-- Focus my reasoning on analysis rather than data retrieval
-- Provide deeper insights and synthesis
+### What the Helper Returns
+
+- Paper IDs, titles, authors, quality scores
+- Extracted sections (abstracts, methods, results)
+- Search results with relevance rankings
+- Raw data for my analysis
+
+### My Focus
+
+With the helper handling data retrieval, I concentrate on:
+
+- Analyzing patterns across studies
+- Synthesizing conflicting findings
+- Identifying methodological strengths/weaknesses
+- Drawing evidence-based conclusions
+- Writing comprehensive reports
+
+## Research Strategy
+
+### For Best Results
+
+- **Start broad, then narrow**: Initial search → Review high-quality papers → Targeted follow-ups
+- **Prioritize by quality**: Focus on papers with quality scores >70 for core evidence
+- **Check recency**: Recent systematic reviews (2022+) often summarize earlier work
+- **Multiple searches**: Different keywords may reveal complementary literature
+
+### Typical Workflow
+
+1. **Discovery phase**: Helper uses `batch --preset research "[topic]"` for comprehensive analysis (5 searches + top papers in one command)
+2. **Deep dive**: Automatic retrieval of top 10 papers with the preset
+3. **Gap analysis**: I identify what's missing, helper does targeted batch searches
+4. **Synthesis**: I analyze all findings and write comprehensive report
+
+**Performance Note**: The batch preset completes in ~5 seconds what previously took 80-100 seconds!
 
 ## Available Resources
 

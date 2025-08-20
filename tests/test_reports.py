@@ -158,7 +158,8 @@ class TestReportGeneration:
         # Test CSV export
         result = subprocess.run(
             ["python", "src/cli.py", "search", "test", "--export", "test_results.csv"],
-            check=False, capture_output=True,
+            check=False,
+            capture_output=True,
             text=True,
         )
 

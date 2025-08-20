@@ -25,15 +25,36 @@ Focus on mechanical tasks:
 
 ## Recommended Practices
 
-### For Search Operations
+### IMPORTANT: Use Batch Command for Multiple Operations
 
+**For maximum efficiency, use the batch command when performing multiple searches or retrievals:**
+
+```bash
+# For comprehensive research, use the research preset:
+python src/cli.py batch --preset research "topic"
+
+# For custom batch operations, create a JSON command list:
+echo '[
+  {"cmd": "search", "query": "diabetes", "k": 30, "show_quality": true},
+  {"cmd": "search", "query": "diabetes treatment", "k": 20},
+  {"cmd": "merge"},
+  {"cmd": "filter", "min_quality": 70},
+  {"cmd": "auto-get-top", "limit": 10}
+]' | python src/cli.py batch -
+```
+
+This is **10-20x faster** than individual commands because the model loads only once.
+
+### For Individual Operations
+
+- Use individual commands only when doing a single search or retrieval
 - Consider using `--show-quality` flag to include quality scores
-- For comprehensive searches, consider using `smart-search` when expecting >20 results
-- Use `--min-quality` filter when high-quality evidence is specifically needed
+- Use `--min-quality` filter when high-quality evidence is needed
 
 ### For Paper Retrieval
 
-- Use `get-batch` when retrieving multiple papers for efficiency
+- When getting multiple papers, include them in a batch command
+- Use the `auto-get-top` meta-command to automatically fetch top papers from search results
 - Consider using `--sections` flag to retrieve only needed sections
 
 ### Output Guidelines

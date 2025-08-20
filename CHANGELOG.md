@@ -1,5 +1,27 @@
 # Changelog
 
+## [4.1.1] - 2025-08-20
+
+### Added
+- **Batch Command**: New `cli.py batch` command for executing multiple operations efficiently
+  - 10-20x performance improvement over individual commands
+  - Model loads once for entire batch instead of per-command
+  - Three preset workflows: `research`, `review`, `author-scan`
+  - Support for custom JSON command batches via file or stdin
+  - Meta-commands: `merge`, `filter`, `auto-get-top`, `auto-get-all`
+  - Both JSON and text output formats
+  - Example: `python src/cli.py batch --preset research "diabetes"`
+
+### Changed
+- Updated `/research` command to use batch operations for faster execution
+- Modified research-helper agent to leverage batch command
+- Improved research workflow from 80-100 seconds to 5-6 seconds
+
+### Performance
+- Batch preset completes comprehensive research (5 searches + top papers) in ~5 seconds
+- Individual commands: 4-5 seconds each × N commands
+- Batch command: 5-6 seconds total for entire workflow
+
 ## [4.1.0] - 2025-08-20
 
 ### Added

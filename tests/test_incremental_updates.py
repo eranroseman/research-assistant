@@ -151,9 +151,9 @@ class TestIncrementalUpdates:
         builder.update_index_incrementally(metadata["papers"], changes)
 
         # Verify: Only 2 new papers were embedded
-        assert len(embeddings_generated) == 2, (
-            f"Should encode exactly 2 new papers, got {len(embeddings_generated)}"
-        )
+        assert (
+            len(embeddings_generated) == 2
+        ), f"Should encode exactly 2 new papers, got {len(embeddings_generated)}"
 
         # Check that the new papers were the ones encoded
         encoded_texts = set(embeddings_generated)
@@ -216,9 +216,9 @@ class TestIncrementalUpdates:
         builder.update_index_incrementally(metadata["papers"], changes)
 
         # Verify: Only 1 embedding was regenerated
-        assert len(embeddings_generated) == 1, (
-            f"Should encode exactly 1 updated paper, got {len(embeddings_generated)}"
-        )
+        assert (
+            len(embeddings_generated) == 1
+        ), f"Should encode exactly 1 updated paper, got {len(embeddings_generated)}"
         assert "Updated abstract" in embeddings_generated[0], "Should encode the updated paper"
 
         # Verify index still has 5 papers
@@ -329,9 +329,9 @@ class TestIncrementalUpdates:
         builder.update_index_incrementally(metadata["papers"], changes)
 
         # Verify: All papers were embedded
-        assert len(embeddings_generated) == 5, (
-            f"Should build embeddings for all 5 papers, got {len(embeddings_generated)}"
-        )
+        assert (
+            len(embeddings_generated) == 5
+        ), f"Should build embeddings for all 5 papers, got {len(embeddings_generated)}"
 
         # Verify index now exists with correct size
         import faiss

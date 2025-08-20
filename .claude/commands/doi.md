@@ -2,7 +2,7 @@
 description: Search for peer-reviewed articles and return DOIs
 argument-hint: <research topic or keywords> (optional - uses previous /research topic if empty)
 allowed-tools: WebSearch, WebFetch, Read, Write
-model: claude-3-haiku-20240307
+model: claude-3-5-sonnet-20241022
 ---
 
 # DOI Finder for Academic Articles
