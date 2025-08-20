@@ -14,7 +14,7 @@ python src/build_kb.py [--demo|--rebuild|--export file|--import file]
 python src/cli.py search "topic" [--show-quality] [--quality-min N]
 python src/cli.py smart-search "topic" -k 30
 python src/cli.py get 0001 [--sections abstract methods]
-python src/cli.py cite "topic"
+python src/cli.py cite 0001 0002 0003  # Generate IEEE citations for specific papers
 python src/cli.py [info|diagnose]
 
 # Claude Code
@@ -65,7 +65,7 @@ python src/build_kb.py --demo  # 5-paper test
 python src/cli.py search "diabetes" --quality-min 70 --show-quality
 python src/cli.py smart-search "digital health" -k 30
 python src/cli.py author "Smith J" --exact
-python src/cli.py cite "telemedicine" -k 10
+python src/cli.py cite 0001 0234 1426  # Generate citations for specific papers
 ```
 
 ## Troubleshooting

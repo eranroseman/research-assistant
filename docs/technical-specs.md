@@ -163,7 +163,7 @@ python cli.py get <paper_id>              # Returns full paper text
 python cli.py smart-search "query" -k 30        # Smart search with automatic chunking
 python cli.py get <paper_id> --sections abstract methods results  # Specific sections
 python cli.py info                        # Check knowledge base status
-python cli.py cite "query"                # Generate IEEE citations
+python cli.py cite 0001 0002 0003         # Generate IEEE citations for specific papers
 ```
 
 **Study Type Categories:**

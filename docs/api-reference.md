@@ -10,7 +10,7 @@
 - [`smart-search`](#clipy-smart-search) - Smart search with automatic section chunking
 - [`get`](#clipy-get) - Retrieve full papers or sections
 - [`get-batch`](#clipy-get-batch) - Retrieve multiple papers efficiently
-- [`batch`](#clipy-batch) - Execute multiple commands efficiently (10-20x faster)
+- [`batch`](#clipy-batch) - Execute multiple commands efficiently
 - [`cite`](#clipy-cite) - Generate IEEE citations
 - [`author`](#clipy-author) - Search papers by author name
 
@@ -245,7 +245,7 @@ Commands are provided as JSON with the following structure:
   {"cmd": "search", "query": "topic", "k": 10, "show_quality": true},
   {"cmd": "get", "id": "0001", "sections": ["abstract", "methods"]},
   {"cmd": "smart-search", "query": "topic", "k": 30},
-  {"cmd": "cite", "query": "topic", "k": 5},
+  {"cmd": "cite", "ids": ["0001", "0002", "0003"]},
   {"cmd": "author", "name": "Smith J", "exact": true}
 ]
 ```
@@ -370,30 +370,39 @@ Output is saved to `reports/smart_search_results.json` for further processing.
 
 ### `cli.py cite`
 
-Generate IEEE-style citations for papers matching a query.
+Generate IEEE-style citations for specific papers by their IDs.
 
 ```bash
-python src/cli.py cite [OPTIONS] QUERY
+python src/cli.py cite [OPTIONS] PAPER_IDS...
 ```
+
+#### Arguments
+
+- `PAPER_IDS`: One or more 4-digit paper IDs (e.g., 0001, 0234, 1426)
 
 #### Options
 
-| Option | Short | Type | Default | Description |
-|--------|-------|------|---------|-------------|
-| `--top-k` | `-k` | INT | 5 | Number of citations to generate |
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `--format` | TEXT | text | Output format (text or json) |
 
 #### Examples
 
 ```bash
-# Generate 5 citations (default)
-python src/cli.py cite "machine learning healthcare"
+# Generate citations for specific papers
+python src/cli.py cite 0001 0002 0003
 
-# Generate 10 citations
-python src/cli.py cite "digital therapeutics" -k 10
+# Generate citations with JSON output
+python src/cli.py cite 0234 1426 --format json
 
-# Generate citations for specific topic
-python src/cli.py cite "diabetes management" -k 15
+# Generate a single citation
+python src/cli.py cite 0042
 ```
+
+#### Output
+
+- **Text format (default)**: Formatted IEEE citations with sequential numbering
+- **JSON format**: Structured data with citations, errors, and count
 
 ### `cli.py info`
 

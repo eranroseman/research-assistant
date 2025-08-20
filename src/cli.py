@@ -24,7 +24,7 @@ Commands:
 Usage:
     python src/cli.py search "machine learning healthcare"
     python src/cli.py get 0042 --sections methods results
-    python src/cli.py cite "telemedicine" -k 10
+    python src/cli.py cite 0001 0002 0003
 """
 
 import json
@@ -34,7 +34,14 @@ from pathlib import Path
 from typing import Any
 
 import click
-import faiss
+
+try:
+    import faiss
+except ImportError as e:
+    print("Error: faiss-cpu is not installed.", file=sys.stderr)
+    print("Please install it with: pip install faiss-cpu", file=sys.stderr)
+    print(f"Details: {e}", file=sys.stderr)
+    sys.exit(1)
 
 # Global model cache to avoid reloading
 _model_cache = {}
@@ -503,7 +510,7 @@ def cli() -> None:
     QUICK START:
       python src/cli.py search "diabetes treatment" --show-quality
       python src/cli.py get 0001 --sections abstract methods
-      python src/cli.py cite "machine learning" -k 10
+      python src/cli.py cite 0001 0002 0003
       python src/cli.py smart-search "digital health" -k 30
 
     \b
@@ -1080,37 +1087,69 @@ def get_batch(paper_ids: tuple[str, ...], format: str) -> None:
 
 
 @cli.command()
-@click.argument("query_text")
-@click.option(
-    "--top-k",
-    "-k",
-    default=DEFAULT_CITATION_COUNT,
-    help=f"Number of citations to generate (default: {DEFAULT_CITATION_COUNT})",
-)
-def cite(query_text: str, top_k: int) -> None:
-    """Generate IEEE-style citations for papers matching a query.
+@click.argument("paper_ids", nargs=-1, required=True)
+@click.option("--format", type=click.Choice(["text", "json"]), default="text", help="Output format")
+def cite(paper_ids: tuple[str, ...], format: str) -> None:
+    """Generate IEEE-style citations for specific papers by their IDs.
 
-    Search for relevant papers and format them as ready-to-use citations.
-    Perfect for literature reviews and reference lists.
+    Retrieve papers by ID and format them as ready-to-use IEEE citations.
+    Perfect for creating reference lists from known papers.
 
     \b
     Examples:
-      python src/cli.py cite "machine learning"         # Top 5 citations
-      python src/cli.py cite "diabetes" -k 10           # Get 10 citations
-      python src/cli.py cite "AI ethics"                # Default citations
+      python src/cli.py cite 0001 0002 0003        # Cite three papers
+      python src/cli.py cite 0234 1426             # Cite specific papers
+      python src/cli.py cite 0001 0002 --format json  # JSON output
 
-    Citations are formatted in IEEE style with DOI links.
+    Paper IDs are always 4-digit zero-padded.
+    Output formats: text (default) or json.
     """
+    results = []
+    errors = []
+
     try:
         research_cli = ResearchCLI()
-        search_results = research_cli.search(query_text, top_k)
 
-        print(f"\nIEEE Citations for: '{query_text}'")
-        print("=" * 50)
+        for idx, paper_id in enumerate(paper_ids, 1):
+            try:
+                # Normalize ID to 4 digits
+                if paper_id.isdigit():
+                    paper_id = paper_id.zfill(4)
 
-        for i, (_idx, _dist, paper) in enumerate(search_results, 1):
-            citation_text = research_cli.format_ieee_citation(paper, i)
-            print(f"\n{citation_text}")
+                # Validate paper ID format
+                if not re.match(PAPER_ID_FORMAT, paper_id):
+                    errors.append(f"Invalid paper ID format: {paper_id}")
+                    continue
+
+                # Get paper metadata
+                paper = research_cli.kb_index.get_paper_by_id(paper_id)
+                if not paper:
+                    errors.append(f"Paper {paper_id} not found")
+                    continue
+
+                # Format as IEEE citation
+                citation_text = research_cli.format_ieee_citation(paper, idx)
+                results.append({"id": paper_id, "citation": citation_text, "number": idx})
+
+            except Exception as error:
+                errors.append(f"Error processing {paper_id}: {error}")
+
+        # Display results
+        if format == "json":
+            output = {"citations": results, "errors": errors, "count": len(results)}
+            print(json.dumps(output, indent=2))
+        else:
+            # Text format
+            if results:
+                print("\nIEEE Citations")
+                print("=" * 50)
+                for item in results:
+                    print(f"\n{item['citation']}")
+
+            if errors:
+                print("\n⚠️ Errors encountered:", file=sys.stderr)
+                for err_msg in errors:
+                    print(f"  - {err_msg}", file=sys.stderr)
 
     except FileNotFoundError:
         print(
@@ -1547,7 +1586,7 @@ def batch(input: str, preset: str | None, output: str) -> None:
       {"cmd": "search", "query": "topic", "k": 10, "show_quality": true}
       {"cmd": "get", "id": "0001", "sections": ["abstract", "methods"]}
       {"cmd": "smart-search", "query": "topic", "k": 30}
-      {"cmd": "cite", "query": "topic", "k": 5}
+      {"cmd": "cite", "ids": ["0001", "0002", "0003"]}
       {"cmd": "author", "name": "Smith J", "exact": true}
 
     \b

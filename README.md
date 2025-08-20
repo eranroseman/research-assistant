@@ -114,7 +114,7 @@ python src/cli.py author "Chen" --exact               # Exact match only
 # Utilities
 python src/cli.py info                                # KB status
 python src/cli.py diagnose                            # Health check
-python src/cli.py cite "topic"                        # Generate citations
+python src/cli.py cite 0001 0002 0003                 # Generate IEEE citations
 ```
 
 ### Claude Code Command
@@ -303,7 +303,9 @@ python src/build_kb.py --import kb_backup.tar.gz
 ### Generating Citations
 
 ```bash
-python src/cli.py cite "wearable devices" -k 5
+# Generate IEEE citations for specific papers
+python src/cli.py cite 0001 0002 0003
+python src/cli.py cite 0234 1426 --format json
 ```
 
 ## Building Your Knowledge Base

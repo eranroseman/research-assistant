@@ -1,5 +1,15 @@
 # Changelog
 
+## [Unreleased]
+
+### Changed
+- **cite command**: Now accepts paper IDs instead of search queries
+  - Old: `python src/cli.py cite "topic" -k 10` (performed search)
+  - New: `python src/cli.py cite 0001 0002 0003` (specific papers)
+  - Provides precise control over which papers to cite
+  - Supports both text and JSON output formats
+  - Consistent with `get-batch` command pattern
+
 ## [4.1.1] - 2025-08-20
 
 ### Added
