@@ -54,16 +54,16 @@ class TestCiteCommand:
         kb_path = Path("kb_data")
         if not kb_path.exists():
             pytest.skip("Knowledge base not found, skipping integration test")
-        
+
         # Try to cite paper 0001 (usually exists in most KBs)
         result = subprocess.run(
             ["python", "src/cli.py", "cite", "0001"],
             capture_output=True,
             text=True,
             check=False,
-            cwd=Path(__file__).parent.parent,
+            cwd=Path(__file__).parent.parent.parent,
         )
-        
+
         # Check if paper exists
         if "not found" not in result.stderr.lower() and "not found" not in result.stdout.lower():
             assert result.returncode == 0
@@ -76,16 +76,16 @@ class TestCiteCommand:
         kb_path = Path("kb_data")
         if not kb_path.exists():
             pytest.skip("Knowledge base not found, skipping integration test")
-        
+
         # Try to cite multiple papers
         result = subprocess.run(
             ["python", "src/cli.py", "cite", "0001", "0002"],
             capture_output=True,
             text=True,
             check=False,
-            cwd=Path(__file__).parent.parent,
+            cwd=Path(__file__).parent.parent.parent,
         )
-        
+
         # Check basic output structure
         if result.returncode == 0:
             output = result.stdout
@@ -95,33 +95,33 @@ class TestCiteCommand:
             if "not found" not in result.stderr:
                 lines = output.strip().split("\n")
                 # Should have multiple non-empty lines
-                assert len([l for l in lines if l.strip()]) > 2
+                assert len([line for line in lines if line.strip()]) > 2
 
     def test_cite_json_format(self):
         """Test JSON output format."""
         kb_path = Path("kb_data")
         if not kb_path.exists():
             pytest.skip("Knowledge base not found, skipping integration test")
-        
+
         # Try with JSON format
         result = subprocess.run(
             ["python", "src/cli.py", "cite", "0001", "--format", "json"],
             capture_output=True,
             text=True,
             check=False,
-            cwd=Path(__file__).parent.parent,
+            cwd=Path(__file__).parent.parent.parent,
         )
-        
+
         if result.returncode == 0:
             try:
                 # Strip any loading messages before JSON
                 output = result.stdout
-                json_start = output.find('{')
+                json_start = output.find("{")
                 if json_start != -1:
                     json_str = output[json_start:]
                 else:
                     json_str = output
-                    
+
                 json_output = json.loads(json_str)
                 assert "citations" in json_output
                 assert "errors" in json_output
@@ -129,7 +129,7 @@ class TestCiteCommand:
                 assert isinstance(json_output["count"], int)
                 assert isinstance(json_output["citations"], list)
                 assert isinstance(json_output["errors"], list)
-                
+
                 # If paper was found
                 if json_output["count"] > 0:
                     citation = json_output["citations"][0]
@@ -144,16 +144,16 @@ class TestCiteCommand:
         kb_path = Path("kb_data")
         if not kb_path.exists():
             pytest.skip("Knowledge base not found, skipping integration test")
-        
+
         # Use a very high ID that likely doesn't exist
         result = subprocess.run(
             ["python", "src/cli.py", "cite", "9999"],
             capture_output=True,
             text=True,
             check=False,
-            cwd=Path(__file__).parent.parent,
+            cwd=Path(__file__).parent.parent.parent,
         )
-        
+
         # Should handle gracefully
         assert result.returncode == 0  # Command completes but reports error
         # Error should be reported
@@ -165,32 +165,32 @@ class TestCiteCommand:
         kb_path = Path("kb_data")
         if not kb_path.exists():
             pytest.skip("Knowledge base not found, skipping integration test")
-        
+
         # Mix valid (0001) and invalid (9999) IDs
         result = subprocess.run(
             ["python", "src/cli.py", "cite", "0001", "9999", "--format", "json"],
             capture_output=True,
             text=True,
             check=False,
-            cwd=Path(__file__).parent.parent,
+            cwd=Path(__file__).parent.parent.parent,
         )
-        
+
         if result.returncode == 0:
             try:
                 # Strip any loading messages before JSON
                 output = result.stdout
-                json_start = output.find('{')
+                json_start = output.find("{")
                 if json_start != -1:
                     json_str = output[json_start:]
                 else:
                     json_str = output
-                    
+
                 json_output = json.loads(json_str)
                 # Should have structure even with errors
                 assert "citations" in json_output
                 assert "errors" in json_output
                 assert "count" in json_output
-                
+
                 # Should have at least one error for 9999
                 if len(json_output["errors"]) > 0:
                     error_text = " ".join(json_output["errors"])
@@ -207,25 +207,25 @@ class TestCiteCommand:
         kb_path = Path("kb_data")
         if not kb_path.exists():
             pytest.skip("Knowledge base not found, skipping integration test")
-        
+
         # Test with non-padded ID
         result1 = subprocess.run(
             ["python", "src/cli.py", "cite", "1"],
             capture_output=True,
             text=True,
             check=False,
-            cwd=Path(__file__).parent.parent,
+            cwd=Path(__file__).parent.parent.parent,
         )
-        
+
         # Test with padded ID
         result2 = subprocess.run(
             ["python", "src/cli.py", "cite", "0001"],
             capture_output=True,
             text=True,
             check=False,
-            cwd=Path(__file__).parent.parent,
+            cwd=Path(__file__).parent.parent.parent,
         )
-        
+
         # Both should produce same result (whether found or not found)
         if "not found" in result1.stderr and "not found" in result2.stderr:
             # Both not found - check they reference same ID
@@ -239,8 +239,8 @@ class TestCiteCommand:
             # Should have same citation content
             if "[1]" in output1 and "[1]" in output2:
                 # Extract citation line
-                cite1 = [l for l in output1.split("\n") if "[1]" in l]
-                cite2 = [l for l in output2.split("\n") if "[1]" in l]
+                cite1 = [line for line in output1.split("\n") if "[1]" in line]
+                cite2 = [line for line in output2.split("\n") if "[1]" in line]
                 if cite1 and cite2:
                     assert cite1[0] == cite2[0]
 
@@ -251,9 +251,9 @@ class TestCiteCommand:
             capture_output=True,
             text=True,
             check=False,
-            cwd=Path(__file__).parent.parent,
+            cwd=Path(__file__).parent.parent.parent,
         )
-        
+
         # Should reject invalid format
         assert result.returncode != 0
         assert "invalid" in result.stderr.lower() or "choice" in result.stderr.lower()

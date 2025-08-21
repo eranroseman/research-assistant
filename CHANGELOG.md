@@ -2,6 +2,14 @@
 
 ## [Unreleased]
 
+### Added
+- **Safety Features**: Knowledge base building now safe-by-default
+  - Never automatically rebuilds on errors (preserves existing data)
+  - Requires explicit `--rebuild` flag for destructive operations
+  - Multi-layer cache preservation during all operations
+  - Safe error handling with clear user guidance
+  - Connection errors result in safe exit instead of data deletion
+
 ### Changed
 - **cite command**: Now accepts paper IDs instead of search queries
   - Old: `python src/cli.py cite "topic" -k 10` (performed search)
@@ -9,6 +17,10 @@
   - Provides precise control over which papers to cite
   - Supports both text and JSON output formats
   - Consistent with `get-batch` command pattern
+- **build_kb.py**: Removed dangerous automatic rebuild fallback
+  - Default operation is now safe incremental updates only
+  - All existing cache files preserved during failures
+  - Clear error messages guide users to appropriate solutions
 
 ## [4.1.1] - 2025-08-20
 
@@ -58,7 +70,7 @@
 
 ## [4.0.0] - 2025-08-19
 
-### ⚠️ BREAKING CHANGES
+### BREAKING CHANGES
 - Complete rebuild required (`rm -rf kb_data/ && python src/build_kb.py`)
 - No backward compatibility with v3.x knowledge bases
 - Removed commands: `shortcuts`, `duplicates`, `analyze-gaps`
@@ -96,37 +108,37 @@
 
 ## [3.1.0] - 2025-08-19
 
-### 🎯 Smart Section Chunking (70% Context Reduction)
+### Smart Section Chunking (70% Context Reduction)
 - **Section extraction**: Automatically parse papers into standard academic sections
 - **Smart retrieval**: `smart-get` command intelligently selects relevant sections based on query
 - **Targeted reading**: `get --sections` allows specific section retrieval
 - **O(1) section access**: Sections index enables instant retrieval of any paper section
 - **Context optimization**: Reduces Claude's text processing by 70-90%
 
-### 🚀 Incremental Updates (10x Faster)
+### Incremental Updates (10x Faster)
 - **Smart updates**: `--update` flag adds only new papers without full rebuild
 - **Fingerprint tracking**: Content-based hashing detects changed papers
 - **Append-only indexing**: New papers added to existing FAISS index
 - **Time savings**: 2-3 minutes for updates vs 30+ minutes for full rebuild
 
-### 📝 Personal Shortcuts System
+### Personal Shortcuts System
 - **Shortcut configuration**: `.research_shortcuts.yaml` for saved searches
 - **Quick access**: `shortcut` command to run predefined queries
 - **Management**: `shortcut --list` to view, `shortcut --delete` to remove
 
-### 🔍 Research Gap Analysis
+### Research Gap Analysis
 - **Gap detection**: `--analyze-gaps` flag identifies unexplored areas
 - **Temporal analysis**: Shows research trends over time
 - **Methodology gaps**: Highlights missing study types in literature
 
-### 🛠 Other Improvements
+### Other Improvements
 - **Claude Code command**: `/research` for seamless integration
 - **Duplicate detection**: `duplicates` command with `--fix` option
 - **Section caching**: `.sections_cache.json` for faster retrieval
 - **Better prompts**: Clearer user interaction flow
 - **Export/Import**: Portable knowledge base archives
 
-### 🐛 Bug Fixes
+### Bug Fixes
 - Fixed KeyError when papers lack DOI/ISBN metadata
 - Improved error handling for missing Zotero attachments
 - Better recovery from corrupted cache files
@@ -134,25 +146,25 @@
 
 ## [3.0.0] - 2024-11-14
 
-### 🚀 Major Performance Improvements
+### Major Performance Improvements
 - **10x faster embedding generation**: O(1) hash-based cache lookups
 - **Dynamic batch sizing**: Automatically adjusts to available RAM/GPU
 - **Lazy model loading**: Reduced startup time by 50%
 - **Compressed caching**: 60% smaller cache files with NPZ format
 
-### 🎯 Enhanced Search Capabilities
+### Enhanced Search Capabilities
 - **SPECTER embeddings**: State-of-the-art scientific paper similarity
 - **Study type detection**: Automatically identifies RCTs, systematic reviews, etc.
 - **Quality scoring**: Papers ranked 0-100 based on evidence quality
 - **Advanced filters**: Filter by year, study type, quality score
 
-### 📊 Better Knowledge Management
+### Better Knowledge Management
 - **Zotero integration**: Direct connection to local Zotero library
 - **PDF extraction**: Full text from PDFs with 95%+ success rate
 - **Metadata enrichment**: DOIs, journals, volumes, pages auto-extracted
 - **IEEE citations**: Generate formatted citations instantly
 
-### 🛡 Robustness & Security
+### Robustness & Security
 - **Path traversal protection**: Safe handling of file paths
 - **Command injection prevention**: Secure subprocess execution
 - **Graceful degradation**: Continues despite individual PDF failures

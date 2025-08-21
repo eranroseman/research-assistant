@@ -16,7 +16,7 @@ I'll find DOIs for recent peer-reviewed articles on this topic.
 ### 1. Determine Topic
 
 If no arguments provided:
-- Check for recent research reports in `reports/` folder
+- Check for recent research reports in `reviews/` folder
 - Look for identified gaps or DOI recommendations from previous /research commands
 - Extract specific missing areas or suggested searches
 - Use the most relevant gap as the search topic
@@ -64,7 +64,7 @@ I'll extract DOIs (pattern: `10.\d{4,}/[-._;()/:\w]+`) and present them in a cle
 10.xxxx/xxxxx
 ```
 
-Results saved to: `reports/dois_<topic>_<timestamp>.txt`
+Results saved to: `reviews/external_dois_<topic>_<timestamp>.txt`
 
 ## Notes
 

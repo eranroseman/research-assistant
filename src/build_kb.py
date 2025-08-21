@@ -258,6 +258,7 @@ def extract_rct_sample_size(text: str, study_type: str) -> int | None:
         r"(\d+)\s+subjects?\s+were\s+randomised",
         r"enrolling\s+(\d+)\s+patients?",  # For "enrolling 324 patients"
         r"trial\s+with\s+(\d+)\s+patients?",  # For "trial with 150 patients"
+        r"enrolled\s+(\d+)\s+patients?",  # For "enrolled 1234 patients"
     ]
 
     for pattern in patterns:
@@ -689,6 +690,16 @@ class KnowledgeBaseBuilder:
         except ImportError:
             # If psutil not available, use conservative default
             return 128  # Better than original 64
+
+    def _test_zotero_connection(self, api_url: str | None = None) -> None:
+        """Test Zotero API connection without side effects."""
+        base_url = api_url or "http://localhost:23119/api"
+        try:
+            response = requests.get(f"{base_url}/", timeout=5)
+            if response.status_code != 200:
+                raise ConnectionError("Zotero API returned non-200 status")
+        except requests.exceptions.RequestException as error:
+            raise ConnectionError(f"Cannot connect to Zotero local API: {error}") from error
 
     def clean_knowledge_base(self) -> None:
         """Clean up existing knowledge base files before rebuilding.
@@ -1638,8 +1649,11 @@ class KnowledgeBaseBuilder:
         # Build the knowledge base
         self.build_from_papers(papers, pdf_stats)
 
-    def generate_small_pdfs_report(self, papers: list[dict]) -> Path:
-        """Generate report listing all papers with small PDFs (<5KB text).
+    def generate_pdf_quality_report(self, papers: list[dict]) -> Path:
+        """Generate comprehensive PDF quality report covering missing and small PDFs.
+
+        Combines analysis of papers missing PDFs and those with minimal extracted text.
+        Provides a complete overview of PDF-related issues in the knowledge base.
 
         Args:
             papers: List of paper dictionaries
@@ -1647,33 +1661,76 @@ class KnowledgeBaseBuilder:
         Returns:
             Path to generated report file
         """
-        report_lines = []
-        report_lines.append("# Small PDFs Report\n")
-        report_lines.append(f"**Generated:** {datetime.now(UTC).strftime('%Y-%m-%d %H:%M:%S UTC')}\n")
-        report_lines.append("This report lists all papers with less than 5KB of extracted text.\n")
-        report_lines.append("These PDFs likely contain only supplementary materials, not the full paper.\n")
-
-        # Find all papers with small PDFs
-        small_pdfs = []
+        # Categorize papers by PDF status
+        missing_pdfs = []  # No PDF at all
+        small_pdfs = []    # PDF exists but minimal text extracted
+        good_pdfs = []     # PDF exists with adequate text
+        
         for paper in papers:
-            if paper.get("full_text") and len(paper.get("full_text", "")) < MIN_FULL_TEXT_LENGTH:
+            if "full_text" not in paper or not paper.get("full_text"):
+                missing_pdfs.append(paper)
+            elif len(paper.get("full_text", "")) < MIN_FULL_TEXT_LENGTH:
                 small_pdfs.append(paper)
+            else:
+                good_pdfs.append(paper)
 
-        # Summary
-        report_lines.append("## Summary\n")
-        report_lines.append(f"- **Total papers:** {len(papers)}")
-        report_lines.append(
-            f"- **Papers with small PDFs:** {len(small_pdfs)} ({len(small_pdfs) * 100 / len(papers) if papers else 0:.1f}%)"
-        )
-        report_lines.append(f"- **Threshold:** {MIN_FULL_TEXT_LENGTH} characters (5KB)\n")
+        # Start building report
+        report_lines = []
+        report_lines.append("# PDF Quality Report\n")
+        report_lines.append(f"**Generated:** {datetime.now(UTC).strftime('%Y-%m-%d %H:%M:%S UTC')}\n")
+        report_lines.append("Comprehensive analysis of PDF availability and text extraction quality.\n")
 
-        # List ALL papers with small PDFs
+        # Summary statistics
+        total_papers = len(papers)
+        report_lines.append("## Summary Statistics\n")
+        report_lines.append(f"- **Total papers:** {total_papers:,}")
+        report_lines.append(f"- **Papers with good PDFs:** {len(good_pdfs):,} ({len(good_pdfs) * 100 / total_papers:.1f}%)")
+        report_lines.append(f"- **Papers with small PDFs:** {len(small_pdfs):,} ({len(small_pdfs) * 100 / total_papers:.1f}%)")
+        report_lines.append(f"- **Papers missing PDFs:** {len(missing_pdfs):,} ({len(missing_pdfs) * 100 / total_papers:.1f}%)")
+        report_lines.append(f"- **Text extraction threshold:** {MIN_FULL_TEXT_LENGTH:,} characters ({MIN_FULL_TEXT_LENGTH // 1000}KB)\n")
+
+        # Section 1: Missing PDFs
+        if missing_pdfs:
+            report_lines.append("## Papers Missing PDFs\n")
+            report_lines.append("These papers have no PDF attachments in Zotero or PDF extraction failed:\n")
+            
+            # Sort by year (newest first), then by title
+            missing_pdfs.sort(key=lambda p: (-p.get("year", 0) if p.get("year") else -9999, p.get("title", "")))
+            
+            # Limit to first 50 to avoid huge reports
+            for i, paper in enumerate(missing_pdfs[:50], 1):
+                year = paper.get("year", "n.d.")
+                title = paper.get("title", "Untitled")
+                authors = paper.get("authors", [])
+                first_author = authors[0].split()[-1] if authors else "Unknown"
+                journal = paper.get("journal", "Unknown journal")[:50]
+                
+                report_lines.append(f"{i}. **[{year}] {title}**")
+                report_lines.append(
+                    f"   - Authors: {first_author} et al."
+                    if len(authors) > 1
+                    else f"   - Author: {first_author}"
+                )
+                report_lines.append(f"   - Journal: {journal}")
+                if paper.get("doi"):
+                    report_lines.append(f"   - DOI: {paper['doi']}")
+                report_lines.append("")
+            
+            if len(missing_pdfs) > 50:
+                report_lines.append(f"... and {len(missing_pdfs) - 50} more papers\n")
+        else:
+            report_lines.append("## Papers Missing PDFs\n")
+            report_lines.append("✅ All papers have PDF attachments!\n")
+
+        # Section 2: Small PDFs
         if small_pdfs:
-            report_lines.append("## Complete List of Papers with Small PDFs\n")
-
+            report_lines.append("## Papers with Small PDFs\n")
+            report_lines.append(f"These papers have PDFs but extracted less than {MIN_FULL_TEXT_LENGTH // 1000}KB of text:")
+            report_lines.append("(Usually indicates supplementary materials, not full papers)\n")
+            
             # Sort by year (newest first), then by title
             small_pdfs.sort(key=lambda p: (-p.get("year", 0) if p.get("year") else -9999, p.get("title", "")))
-
+            
             for i, paper in enumerate(small_pdfs, 1):
                 text_len = len(paper.get("full_text", ""))
                 year = paper.get("year", "n.d.")
@@ -1681,7 +1738,7 @@ class KnowledgeBaseBuilder:
                 authors = paper.get("authors", [])
                 first_author = authors[0].split()[-1] if authors else "Unknown"
                 journal = paper.get("journal", "Unknown journal")
-
+                
                 report_lines.append(f"{i}. **[{year}] {title}**")
                 report_lines.append(
                     f"   - Authors: {first_author} et al."
@@ -1694,137 +1751,40 @@ class KnowledgeBaseBuilder:
                     report_lines.append(f"   - DOI: {paper['doi']}")
                 report_lines.append("")
         else:
-            report_lines.append("## No Small PDFs Found\n")
-            report_lines.append("All papers with PDFs have at least 5KB of extracted text.\n")
+            report_lines.append("## Papers with Small PDFs\n")
+            report_lines.append("✅ No papers with small PDFs found!")
+            report_lines.append("All PDFs extracted at least 5KB of text.\n")
 
-        # Recommendations
-        report_lines.append("\n## Recommendations\n")
-        report_lines.append("For papers with small PDFs:\n")
-        report_lines.append(
-            "1. **Check PDF content**: Open in Zotero to verify if it's the full paper or just supplementary material"
-        )
-        report_lines.append(
-            "2. **Replace with full paper**: Use Zotero's 'Find Available PDF' or manually download the full paper"
-        )
-        report_lines.append("3. **Verify PDF quality**: Some PDFs may be image-based and need OCR")
-        report_lines.append(
-            "4. **Re-run build**: After replacing PDFs, run `python src/build_kb.py` to update\n"
-        )
-
-        # Save report in reports directory
-        reports_dir = Path("reports")
-        reports_dir.mkdir(exist_ok=True)
-        report_path = reports_dir / "small_pdfs_report.md"
-        with report_path.open("w", encoding="utf-8") as f:
-            f.write("\n".join(report_lines))
-
-        return report_path
-
-    def generate_missing_pdfs_report(self, papers: list[dict]) -> Path:
-        """Generate markdown report of papers missing or with incomplete PDFs.
-
-        Args:
-            papers: List of paper dictionaries
-
-        Returns:
-            Path to generated report file
-        """
-        report_lines = []
-        report_lines.append("# Missing/Incomplete PDFs Report\n")
-        report_lines.append(f"**Generated:** {datetime.now(UTC).strftime('%Y-%m-%d %H:%M:%S UTC')}\n")
-
-        # Categorize papers
-        missing_pdfs = []
-        small_pdfs = []  # Likely supplementary materials
-        no_abstract = []
-
-        for paper in papers:
-            if "full_text" not in paper or not paper.get("full_text"):
-                missing_pdfs.append(paper)
-                if not paper.get("abstract"):
-                    no_abstract.append(paper)
-            elif len(paper.get("full_text", "")) < MIN_FULL_TEXT_LENGTH:  # Less than 5KB of text
-                small_pdfs.append(paper)
-
-        # Summary statistics
-        report_lines.append("## Summary Statistics\n")
-        report_lines.append(f"- **Total papers:** {len(papers)}")
-        report_lines.append(
-            f"- **Papers with full text:** {len(papers) - len(missing_pdfs)} ({(len(papers) - len(missing_pdfs)) * 100 / len(papers):.1f}%)"
-        )
-        report_lines.append(
-            f"- **Missing PDFs:** {len(missing_pdfs)} ({len(missing_pdfs) * 100 / len(papers):.1f}%)"
-        )
-        report_lines.append(f"- **Small PDFs (<5KB text):** {len(small_pdfs)}")
-        report_lines.append(f"- **No abstract or full text:** {len(no_abstract)}\n")
-
-        # List papers without PDFs
-        if missing_pdfs:
-            report_lines.append("## Papers Without Full Text\n")
-            report_lines.append("These papers have no PDF attachments in Zotero or PDF extraction failed:\n")
-
-            # Limit to first 100 to avoid huge reports
-            for i, paper in enumerate(missing_pdfs[:100], 1):
-                year = paper.get("year", "n.d.")
-                authors = paper.get("authors", [])
-                first_author = authors[0].split()[-1] if authors else "Unknown"
-                journal = paper.get("journal", "Unknown journal")[:40]
-
-                report_lines.append(
-                    f"{i}. **[{year}]** {first_author} et al." if authors else f"{i}. **[{year}]**"
-                )
-                report_lines.append(f"   - *{paper.get('title', 'Untitled')[:100]}*")
-                report_lines.append(f"   - {journal}")
-                if paper.get("doi"):
-                    report_lines.append(f"   - DOI: {paper['doi']}")
-                report_lines.append("")
-
-            if len(missing_pdfs) > MAX_MISSING_PDFS_IN_REPORT:
-                report_lines.append(
-                    f"\n*... and {len(missing_pdfs) - MAX_MISSING_PDFS_IN_REPORT} more papers without full text*\n"
-                )
-
-        # List papers with small PDFs (likely supplementary)
-        if small_pdfs:
-            report_lines.append("## Papers with Minimal Text (<5KB)\n")
-            report_lines.append(
-                "These PDFs likely contain only supplementary materials, not the full paper:\n"
-            )
-
-            for i, paper in enumerate(small_pdfs[:20], 1):
-                text_len = len(paper.get("full_text", ""))
-                year = paper.get("year", "n.d.")
-                report_lines.append(f"{i}. [{year}] {paper.get('title', 'Untitled')[:80]}")
-                report_lines.append(f"   - Text extracted: {text_len} characters")
-                report_lines.append("")
-
-            if len(small_pdfs) > MAX_SMALL_PDFS_DISPLAY:
-                report_lines.append(
-                    f"\n*... and {len(small_pdfs) - MAX_SMALL_PDFS_DISPLAY} more papers with minimal text*\n"
-                )
-
-        # Recommendations
+        # Recommendations section
         report_lines.append("## Recommendations\n")
-        report_lines.append("To improve full-text coverage:\n")
-        report_lines.append("1. **Add PDFs in Zotero**: Use Zotero's 'Find Available PDF' feature")
-        report_lines.append(
-            "2. **Check PDF quality**: Ensure PDFs contain full paper text, not just supplementary materials"
-        )
-        report_lines.append(
-            "3. **Verify attachments**: Some papers may have PDFs attached to child items instead of the main entry"
-        )
-        report_lines.append(
-            "4. **Re-run build**: After adding PDFs, run `python build_kb.py` (cache will speed up rebuild)"
-        )
+        
+        if missing_pdfs:
+            report_lines.append("**For papers missing PDFs:**\n")
+            report_lines.append("1. **Attach PDFs in Zotero**: Use Zotero's 'Find Available PDF' feature")
+            report_lines.append("2. **Manual download**: Search journal websites or preprint servers")
+            report_lines.append("3. **Check attachments**: Verify PDFs are attached to parent items, not child items")
+            report_lines.append("4. **Access permissions**: Ensure institutional access for paywalled papers\n")
+        
+        if small_pdfs:
+            report_lines.append("**For papers with small PDFs:**\n")
+            report_lines.append("1. **Verify content**: Check if PDF contains full paper or just supplementary material")
+            report_lines.append("2. **Replace with full paper**: Download complete version if current is incomplete")
+            report_lines.append("3. **OCR for scanned PDFs**: Some PDFs may be image-based and need text recognition")
+            report_lines.append("4. **Check file integrity**: Re-download if PDF appears corrupted\n")
+        
+        report_lines.append("**After fixing PDFs:**")
+        report_lines.append("- Run `python src/build_kb.py` to update the knowledge base")
+        report_lines.append("- Cache will speed up processing of unchanged papers")
 
-        # Save report in reports directory
-        reports_dir = Path("reports")
-        reports_dir.mkdir(exist_ok=True)
-        report_path = reports_dir / "missing_pdfs_report.md"
+        # Save unified report
+        exports_dir = Path("exports")
+        exports_dir.mkdir(exist_ok=True)
+        report_path = exports_dir / "analysis_pdf_quality.md"
         with report_path.open("w", encoding="utf-8") as f:
             f.write("\n".join(report_lines))
 
         return report_path
+
 
     def build_from_papers(self, papers: list[dict], pdf_stats: tuple[int, int] | None = None) -> None:
         """Build complete knowledge base from list of papers.
@@ -2122,26 +2082,23 @@ class KnowledgeBaseBuilder:
             for warning in warnings:
                 print(f"  - {warning}")
 
-        # Check for missing PDFs and offer to generate report
+        # Generate comprehensive PDF quality report (replaces separate missing/small reports)
         missing_count = sum(1 for p in papers if "full_text" not in p or not p.get("full_text"))
-        if missing_count > 0:
-            print(
-                f"\n📊 Note: {missing_count} papers lack full text PDFs ({missing_count * 100 / len(papers):.1f}%)"
-            )
-            response = input("Generate detailed missing PDFs report? (y/N): ").strip().lower()
-            if response == "y":
-                print("Generating report...")
-                report_path = self.generate_missing_pdfs_report(papers)
-                print(f"✅ Report saved to: {report_path}")
-
-        # Always generate small PDFs report
         small_pdfs_count = sum(
             1 for p in papers if p.get("full_text") and len(p.get("full_text", "")) < MIN_FULL_TEXT_LENGTH
         )
-        if small_pdfs_count > 0:
-            print(f"\n📋 Generating report for {small_pdfs_count} papers with small PDFs (<5KB text)...")
-            small_pdfs_report_path = self.generate_small_pdfs_report(papers)
-            print(f"✅ Small PDFs report saved to: {small_pdfs_report_path}")
+        
+        if missing_count > 0 or small_pdfs_count > 0:
+            print("\n📋 Generating PDF quality report...")
+            if missing_count > 0:
+                print(f"   - {missing_count} papers missing PDFs ({missing_count * 100 / len(papers):.1f}%)")
+            if small_pdfs_count > 0:
+                print(f"   - {small_pdfs_count} papers with small PDFs (<5KB text)")
+            
+            report_path = self.generate_pdf_quality_report(papers)
+            print(f"✅ PDF quality report saved to: {report_path}")
+        else:
+            print("\n✅ All papers have good PDF quality - no report needed")
 
     def build_demo_kb(self) -> None:
         """Build a demo knowledge base with 5 sample papers for testing."""
@@ -2239,13 +2196,23 @@ def main(
     """Build and maintain knowledge base from Zotero library for semantic search.
 
     \b
-    DEFAULT BEHAVIOR:
+    SAFE DEFAULT BEHAVIOR (NEW v4.1):
+      🛡️  DEFAULT MODE: UPDATE ONLY - NEVER auto-rebuilds or deletes data
       • No KB exists → Full build from Zotero library
-      • KB exists → Smart incremental update (only new/changed papers)
-      • Automatically detects: new papers, updated PDFs, deleted papers
+      • KB exists → Safe incremental update (only new/changed papers)
+      • Failures → Safe exit with clear guidance (data preserved)
+      • Rebuilds → Require explicit --rebuild flag with user confirmation
 
     \b
-    FEATURES:
+    SAFETY FEATURES:
+      🔒 Data Protection: No automatic deletion of existing papers or cache
+      📝 Update Only: Default operation adds/updates papers safely
+      🔧 Explicit Rebuilds: Destructive operations require --rebuild flag
+      💾 Cache Preservation: All cache files preserved during failures
+      📋 Clear Guidance: Detailed error messages with specific solutions
+
+    \b
+    CORE FEATURES:
       • Extracts full text from PDF attachments in Zotero
       • Generates Multi-QA MPNet embeddings optimized for healthcare & scientific papers
       • Creates FAISS index for ultra-fast similarity search
@@ -2255,15 +2222,14 @@ def main(
       • Generates reports for missing/small PDFs
 
     \b
-    GENERATED REPORTS (saved to reports/ directory):
-      • missing_pdfs_report.md - Papers without PDF attachments
-      • small_pdfs_report.md - Papers with <5KB text (likely supplementary)
+    GENERATED REPORTS (saved to exports/ directory):
+      • analysis_pdf_quality.md - Comprehensive analysis of missing and small PDFs
 
     \b
     EXAMPLES:
-      python src/build_kb.py                    # Smart update or initial build
+      python src/build_kb.py                    # 🛡️ SAFE: Update only (recommended)
       python src/build_kb.py --demo             # Quick 5-paper demo for testing
-      python src/build_kb.py --rebuild          # Force complete rebuild
+      python src/build_kb.py --rebuild          # ⚠️  Explicit rebuild with confirmation
       python src/build_kb.py --export kb.tar.gz # Export for backup/sharing
       python src/build_kb.py --import kb.tar.gz # Import from another machine
 
@@ -2313,8 +2279,9 @@ def main(
 
             # Backup existing KB
             import shutil
+            from datetime import datetime, timezone
 
-            backup_path = f"{kb_path}_backup_{datetime.now(UTC).strftime('%Y%m%d_%H%M%S')}"
+            backup_path = f"{kb_path}_backup_{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')}"
             shutil.move(str(kb_path), backup_path)
             print(f"📁 Backed up existing KB to {backup_path}")
 
@@ -2351,6 +2318,11 @@ def main(
     builder = KnowledgeBaseBuilder(knowledge_base_path, zotero_data_dir)
 
     if demo:
+        if builder.metadata_file_path.exists():
+            print(f"❌ Demo mode cannot run - knowledge base already exists at {knowledge_base_path}")
+            print("Demo mode is designed for development when no knowledge base exists.")
+            print("It creates 5 sample papers for testing purposes.")
+            sys.exit(1)
         print("Building demo knowledge base...")
         builder.build_demo_kb()
         return
@@ -2370,6 +2342,30 @@ def main(
     elif rebuild:
         # Force complete rebuild
         print("Complete rebuild requested...")
+        
+        # Test Zotero connection BEFORE deleting anything
+        try:
+            builder._test_zotero_connection(api_url)
+        except ConnectionError:
+            print("❌ Cannot connect to Zotero local API")
+            print("To fix this:")
+            print("1. Start Zotero application")
+            print("2. Go to Preferences → Advanced → Config Editor")
+            print("3. Set 'extensions.zotero.httpServer.enabled' to true")
+            print("4. Restart Zotero")
+            print("5. Verify API is accessible at http://localhost:23119")
+            print()
+            print("Then retry: python src/build_kb.py --rebuild")
+            sys.exit(1)
+        
+        # Create backup if KB exists
+        if builder.metadata_file_path.exists():
+            import shutil
+            from datetime import datetime, UTC
+            backup_path = f"kb_data_backup_{datetime.now(UTC).strftime('%Y%m%d_%H%M%S')}"
+            shutil.move(knowledge_base_path, backup_path)
+            print(f"📁 Backed up existing KB to {backup_path}")
+        
         try:
             builder.build_from_zotero_local(api_url, use_cache=True)
         except Exception as error:
@@ -2402,13 +2398,26 @@ def main(
             print("Update complete!")
 
         except Exception as error:
-            print(f"Incremental update failed: {error}")
-            print("Falling back to full rebuild...")
-            try:
-                builder.build_from_zotero_local(api_url, use_cache=True)
-            except Exception as e2:
-                print(f"Full rebuild also failed: {e2}")
+            # Handle connection errors specifically
+            if isinstance(error, ConnectionError) or "Connection refused" in str(error):
+                print("❌ Cannot connect to Zotero local API")
+                print("To fix this:")
+                print("1. Start Zotero application")
+                print("2. Go to Preferences → Advanced → Config Editor")
+                print("3. Set 'extensions.zotero.httpServer.enabled' to true")
+                print("4. Restart Zotero")
+                print("5. Verify API is accessible at http://localhost:23119")
+                print()
+                print("Then retry: python src/build_kb.py")
                 sys.exit(1)
+            
+            # For non-connection errors, show the detailed error
+            print(f"❌ Incremental update failed: {error}")
+            
+            # For all other errors: preserve data and guide user
+            print("Your knowledge base has been preserved.")
+            print("SOLUTION: python src/build_kb.py --rebuild")
+            sys.exit(1)
 
 
 if __name__ == "__main__":

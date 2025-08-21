@@ -33,7 +33,7 @@
 
 ### `cli.py search`
 
-Search the knowledge base for relevant papers with SPECTER embeddings.
+Search the knowledge base for relevant papers with Multi-QA MPNet embeddings.
 
 ```bash
 python src/cli.py search [OPTIONS] QUERY
@@ -46,7 +46,6 @@ python src/cli.py search [OPTIONS] QUERY
 | `--top-k` | `-k` | INT | 10 | Number of results to return |
 | `--verbose` | `-v` | FLAG | False | Show abstracts in results |
 | `--show-quality` | | FLAG | False | Display quality scores (0-100) |
-| `--quality-min` | | INT | None | Minimum quality score filter (deprecated, use --min-quality) |
 | `--json` | | FLAG | False | Output results as JSON |
 | `--after` | | INT | None | Filter papers published after this year |
 | `--type` | | MULTI | None | Filter by study type (can specify multiple) |
@@ -138,7 +137,7 @@ python src/cli.py get [OPTIONS] PAPER_ID
 
 | Option | Short | Type | Default | Description |
 |--------|-------|------|---------|-------------|
-| `--output` | `-o` | PATH | None | Save output to file (saves to reports/ directory) |
+| `--output` | `-o` | PATH | None | Save output to file (saves to exports/ directory) |
 | `--sections` | `-s` | MULTI | all | Specific sections to retrieve |
 
 #### Available Sections
@@ -366,7 +365,7 @@ python src/cli.py smart-search "how to implement LSTM"  # Prioritizes methods
 python src/cli.py smart-search "treatment outcomes"      # Prioritizes results
 ```
 
-Output is saved to `reports/smart_search_results.json` for further processing.
+Output is sent to stdout as JSON for further processing.
 
 ### `cli.py cite`
 
@@ -384,7 +383,7 @@ python src/cli.py cite [OPTIONS] PAPER_IDS...
 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
-| `--format` | TEXT | text | Output format (text or json) |
+| `--format` | CHOICE | text | Output format (text or json) |
 
 #### Examples
 
@@ -429,12 +428,12 @@ $ python src/cli.py info
 
 Knowledge Base Information
 ==================================================
-Total papers: 2146
+Total papers: 2150
 Last updated: 2025-08-19T19:42:19.834831+00:00
 Version: 4.0
 Location: /home/user/research-assistant/kb_data
 Index size: 15.2 MB
-Papers: 2146 files, 147.9 MB
+Papers: 2150 files, 152.0 MB
 
 Sample papers:
   - [0001] Digital Health Interventions for Depression...
@@ -475,7 +474,7 @@ Knowledge Base Diagnostics
 ✓ Index present
 ✓ Papers directory
 ✓ Version 4.0
-✓ Papers: 2146
+✓ Papers: 2150
 ✓ Sequential IDs
 
 ✅ Knowledge base is healthy
@@ -493,7 +492,37 @@ If there are issues:
 
 ### `build_kb.py`
 
-Build or update the knowledge base from Zotero library.
+Build and maintain knowledge base from Zotero library for semantic search.
+
+**DEFAULT BEHAVIOR (SAFE-BY-DEFAULT):**
+- No KB exists → Full build from Zotero library
+- KB exists → Safe incremental update (only new/changed papers)
+- Connection errors → Safe exit with guidance (never auto-rebuild)
+- Automatically detects: new papers, updated PDFs, deleted papers
+
+**SAFETY FEATURES:**
+- Never automatically rebuilds on errors (preserves existing data)
+- Requires explicit --rebuild flag for destructive operations
+- Multi-layer cache preservation during all operations
+- Safe error handling with clear user guidance
+
+**FEATURES:**
+- Extracts full text from PDF attachments in Zotero
+- Generates Multi-QA MPNet embeddings optimized for healthcare & scientific papers
+- Creates FAISS index for ultra-fast similarity search
+- Detects study types (RCT, systematic review, cohort, etc.)
+- Extracts sample sizes from RCT abstracts
+- Aggressive caching for faster rebuilds
+- Generates reports for missing/small PDFs
+
+**GENERATED REPORTS**:
+- `exports/analysis_pdf_quality.md` - Comprehensive analysis of missing and small PDFs
+- `reviews/*.md` - Literature review reports from /research command
+
+**REQUIREMENTS:**
+- Zotero must be running (for non-demo builds)
+- Enable "Allow other applications" in Zotero Settings → Advanced
+- PDFs should be attached to papers in Zotero
 
 ```bash
 python src/build_kb.py [OPTIONS]
@@ -503,18 +532,18 @@ python src/build_kb.py [OPTIONS]
 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
-| `--demo` | FLAG | False | Build demo database with 5 sample papers |
-| `--rebuild` | FLAG | False | Force complete rebuild (ignore existing KB) |
-| `--api-url` | STRING | <http://127.0.0.1:23119/api> | Custom Zotero API URL |
-| `--knowledge-base-path` | PATH | kb_data | Path to knowledge base directory |
-| `--zotero-data-dir` | PATH | ~/Zotero | Path to Zotero data directory |
-| `--export` | PATH | None | Export knowledge base to portable tar.gz archive |
-| `--import` | PATH | None | Import knowledge base from tar.gz archive |
+| `--demo` | FLAG | False | Build demo KB with 5 sample papers (no Zotero needed) |
+| `--rebuild` | FLAG | False | Force complete rebuild, ignore existing KB and cached data |
+| `--api-url` | STRING | http://localhost:23119/api | Custom Zotero API URL for WSL/Docker |
+| `--knowledge-base-path` | PATH | kb_data | Directory to store KB files |
+| `--zotero-data-dir` | PATH | ~/Zotero | Path to Zotero data folder with PDFs |
+| `--export` | PATH | None | Export KB to tar.gz for backup/sharing (e.g., my_kb.tar.gz) |
+| `--import` | PATH | None | Import KB from tar.gz archive (replaces existing KB) |
 
 #### Build Modes
 
-1. **Default (Smart Incremental)**: Detects changes and only processes new/updated papers
-2. **Rebuild**: Forces complete reconstruction of the knowledge base
+1. **Default (Safe Incremental)**: Detects changes and only processes new/updated papers, never auto-rebuilds on errors
+2. **Rebuild**: Forces complete reconstruction of the knowledge base (destructive, requires explicit flag)
 3. **Demo**: Creates a 5-paper demo KB for testing
 
 #### Examples
@@ -548,7 +577,7 @@ python src/build_kb.py --import kb_backup.tar.gz
 2. **Detection**: Identifies new, updated, and deleted papers
 3. **Extraction**: Extracts text from PDFs using PyMuPDF
 4. **Caching**: Uses persistent caches for PDF text and embeddings
-5. **Embedding**: Generates SPECTER embeddings (768-dimensional)
+5. **Embedding**: Generates Multi-QA MPNet embeddings (768-dimensional)
 6. **Indexing**: Builds FAISS index for similarity search
 7. **Validation**: Verifies integrity and reports statistics
 
@@ -557,15 +586,15 @@ python src/build_kb.py --import kb_backup.tar.gz
 The `kb_data/` directory contains all knowledge base files:
 
 ```
-kb_data/                          # Main knowledge base directory (~305MB for 2,146 papers)
+kb_data/                          # Main knowledge base directory (~352MB for 2,150 papers)
 │
-├── papers/                       # Individual paper files (~148MB)
+├── papers/                       # Individual paper files (~152MB)
 │   ├── paper_0001.md            # Paper in markdown format
 │   ├── paper_0002.md            # Each file contains full text + metadata
 │   └── ...                      # Files named with 4-digit IDs
 │
 ├── index.faiss                  # FAISS vector search index (~15MB)
-│                                # Contains 768-dimensional SPECTER embeddings
+│                                # Contains 768-dimensional Multi-QA MPNet embeddings
 │
 ├── metadata.json                # Paper metadata and mappings (~4MB)
 │                                # Maps paper IDs to metadata and FAISS indices
@@ -573,21 +602,55 @@ kb_data/                          # Main knowledge base directory (~305MB for 2,
 ├── sections_index.json          # Extracted sections mapping (~7KB)
 │                                # Maps paper IDs to their sections
 │
-├── .pdf_text_cache.json         # Cached PDF text (~156MB)
+├── .pdf_text_cache.json         # Cached PDF text (~149MB)
 │                                # Avoids re-extracting unchanged PDFs
 │
 ├── .embedding_cache.json        # Embedding metadata (~500B)
 │                                # Tracks cached embeddings for reuse
 │
-├── .embedding_data.npy          # Cached embedding vectors (~15MB)
+├── .embedding_data.npy          # Cached embedding vectors (~6.3MB)
 │                                # NumPy array of embedding vectors
 │
 ├── .search_cache.json           # Search results cache (optional)
 │                                # LRU cache of recent search results
 │
-└── missing_pdfs_report.md       # Report of papers without PDFs (optional)
-                                 # Generated when PDFs are missing
+└── (reports moved to separate directories - see below)
 ```
+
+## Output Directory Structure
+
+The system creates organized directories for different types of outputs:
+
+```
+exports/                         # User-valuable files (flat with prefixes)
+├── analysis_pdf_quality.md     # PDF quality analysis report
+├── search_diabetes.csv         # Search result exports (auto-prefixed)
+├── search_ai_healthcare.csv    # Additional search exports
+├── paper_0001_methods.md       # Individual paper exports (auto-prefixed)
+└── paper_0234_abstract.md      # More paper exports
+
+reviews/                         # Literature review reports (flat)
+├── ai_healthcare_2025-08-20.md # Research command outputs
+├── diabetes_2025-08-19.md      # Date-stamped reviews  
+└── digital_health_2025-08-18.md # Topic-based reviews
+
+system/                          # System and development files (flat with prefixes)
+├── dev_test_results.csv         # Development test outputs
+├── log_build_2025-08-20.txt     # Build logs (future)
+└── diag_kb_health.json          # Diagnostic reports (future)
+```
+
+### Output File Naming
+
+| Directory | Prefix | Purpose | Example |
+|-----------|--------|---------|---------|
+| `exports/` | `analysis_` | System analysis reports | `analysis_pdf_quality.md` |
+| `exports/` | `search_` | Search result exports | `search_diabetes.csv` |  
+| `exports/` | `paper_` | Individual paper exports | `paper_0001_methods.md` |
+| `reviews/` | *(none)* | Literature reviews | `topic_2025-08-20.md` |
+| `system/` | `dev_` | Development artifacts | `dev_test_results.csv` |
+| `system/` | `log_` | Build/system logs | `log_build_2025-08-20.txt` |
+| `system/` | `diag_` | Diagnostic reports | `diag_kb_health.json` |
 
 ### File Descriptions
 
@@ -603,7 +666,7 @@ kb_data/                          # Main knowledge base directory (~305MB for 2,
 **`index.faiss`**
 
 - Facebook AI Similarity Search (FAISS) index
-- Contains 768-dimensional SPECTER embeddings for each paper
+- Contains 768-dimensional Multi-QA MPNet embeddings for each paper
 - Enables fast k-nearest neighbor search
 - Size scales with number of papers (~7KB per 1000 papers)
 
@@ -684,11 +747,11 @@ kb_data/                          # Main knowledge base directory (~305MB for 2,
       }
     }
   ],
-  "total_papers": 2146,
+  "total_papers": 2150,
   "last_updated": "2025-08-19T19:42:19.834831+00:00",
-  "embedding_model": "sentence-transformers/allenai-specter",
+  "embedding_model": "sentence-transformers/multi-qa-mpnet-base-dot-v1",
   "embedding_dimensions": 768,
-  "model_version": "SPECTER",
+  "model_version": "Multi-QA MPNet",
   "version": "4.0"                     // KB format version
 }
 ```
@@ -759,7 +822,7 @@ Each paper in `papers/` follows this structure:
 ```json
 {
   "hashes": ["hash1", "hash2", ...],
-  "model_name": "SPECTER",
+  "model_name": "Multi-QA MPNet",
   "created_at": "2025-08-19T10:30:00Z"
 }
 ```

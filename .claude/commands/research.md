@@ -6,74 +6,76 @@ allowed-tools: Read, Write, Task, Bash(python src/cli.py:*)
 
 # Literature Research: $ARGUMENTS
 
-I'll conduct a comprehensive literature review on this topic.
+I'll conduct a comprehensive literature review, adapting my approach based on what will yield the most insightful results.
 
-## My Approach
+### When to use subagents
 
-I'll adapt my approach based on what will yield the most insightful results for this specific topic.
+**Research-helper subagents for:**
 
-### Research-helper subagents are useful when
+- Complex multi-step data retrieval
+- Multiple coordinated searches benefiting from batch operations  
+- Specific data extraction from multiple papers
+- Systematic literature mapping
 
-- Complex multi-step data retrieval is needed
-- Multiple coordinated searches would benefit from batch operations
-- Specific data extraction from multiple papers is required
-- The research question requires systematic literature mapping
+**Literature-analyzer subagents for:**
 
-**Performance note**: Batch operations can be 10-20x faster for multiple commands.
+- Deep methodological assessment of retrieved papers (>10 papers)
+- Evidence synthesis requiring systematic quality evaluation
+- Cross-paper pattern analysis and theme extraction
+- Implementation science or systematic review approaches
 
-### What the Helper Returns
+**Avoid literature-analyzer when:**
+
+- Few papers (<10) where direct analysis is faster
+- Simple background research not requiring methodological rigor
+- Time-sensitive queries where speed over depth is priority
+
+### When direct CLI execution is more effective
+
+- Quick iterative searches based on initial results
+- Testing different search terms or quality thresholds
+- Single focused queries rather than comprehensive mapping
+- Immediate analysis of specific papers found
+
+### Performance optimization
+- **Batch operations**: 10-20x faster for multiple commands
+- **Parallel subagents**: Launch multiple subagents simultaneously  
+- **Smart search**: Use for 20+ papers efficiently
+
+## Available Resources
+
+**Knowledge Base:** ~2,100 academic papers with quality scoring (0-100 scale)  
+**Documentation:** Complete command options in `docs/api-reference.md`
+
+### Key Commands
+
+- Search: `python src/cli.py search "query" [--min-quality N] [--show-quality]`
+- Get paper: `python src/cli.py get XXXX [--sections abstract methods results]`  
+- Batch operations: `python src/cli.py batch --preset research "topic"`
+- Smart search: `python src/cli.py smart-search "query" -k 30` (for 20+ papers)
+- Citations: `python src/cli.py cite XXXX XXXX XXXX` (space-separated IDs)
+
+### Quality considerations
+- Higher quality scores provide stronger evidence
+- Recent systematic reviews may summarize earlier work  
+- Multiple search approaches reveal complementary literature
+
+## Analysis Workflow
+
+### Helper provides
 
 - Paper IDs, titles, authors, quality scores
 - Extracted sections (abstracts, methods, results)
 - Search results with relevance rankings
-- Raw data for my analysis
+- Raw data for analysis
 
-### My Focus
-
-With the helper handling data retrieval, I concentrate on:
+### I concentrate on
 
 - Analyzing patterns across studies
 - Synthesizing conflicting findings
 - Identifying methodological strengths/weaknesses
 - Drawing evidence-based conclusions
 - Writing comprehensive reports
-
-## Research Approach
-
-I'll adapt my approach based on what will yield the most insightful results for this specific topic.
-
-### Quality considerations
-
-- Papers with higher quality scores often provide stronger evidence
-- Recent systematic reviews may summarize earlier work effectively
-- Multiple search approaches can reveal complementary literature
-
-**Key capabilities at my disposal:**
-
-- Batch operations (10-20x faster for multiple commands)
-- Direct paper access via `kb_data/papers/paper_XXXX.md`
-- IEEE citations using `python src/cli.py cite XXXX XXXX XXXX`
-- Knowledge base coverage assessment
-
-## Execution Considerations
-
-The nature of "$ARGUMENTS" will guide my approach:
-
-**Direct CLI execution when:**
-
-- The research question is focused and targeted
-- I want to iterate immediately based on results
-- The query is straightforward and well-defined
-
-## Available Resources
-
-The knowledge base contains ~2,100 academic papers. For complete command documentation and options, see `docs/api-reference.md`. Key capabilities include:
-
-- Semantic search with quality filtering (0-100 scale)
-- Study type filtering (systematic reviews, RCTs, etc.)
-- Direct paper access via 4-digit IDs
-- IEEE citation generation
-- Smart search for handling 20+ papers efficiently
 
 ## Output
 
@@ -86,10 +88,16 @@ I'll generate a comprehensive report saved to `reports/research_<topic>_<timesta
 
 The report will include appropriate citations, quality assessments where helpful, and identification of knowledge gaps in the research literature.
 
-**Note on Knowledge Base Limitations:** If I find that our knowledge base appears incomplete for your research topic (e.g., very few relevant papers, missing recent studies, or gaps in coverage), I'll notify you and ask for guidance on whether to:
+### Citation Guidelines
+- **Strong claims need citations**: Statistics, clinical outcomes, definitive statements
+- **IEEE format**: Numbered citations [1], [2], [3]; prioritize quality papers (>70 score)
+- **References**: Generate with `python src/cli.py cite XXXX XXXX`
 
-- Proceed with available papers
-- Suggest specific papers/DOIs to add
-- Adjust the research scope
+**Note on Knowledge Base Limitations:** If I find that our knowledge base appears incomplete for your research topic (e.g., fewer than 10 highly relevant papers, missing recent studies from 2023+, or obvious gaps in coverage), I'll notify you and ask for guidance on whether to:
+
+- Proceed with available papers and note limitations in the report
+- Suggest specific papers/DOIs to add to strengthen coverage  
+- Adjust the research scope to better match available evidence
+- Focus on related topics where we have stronger coverage
 
 Let me explore the literature and see what emerges.

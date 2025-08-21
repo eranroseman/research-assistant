@@ -106,7 +106,9 @@ research-assistant/
 │   ├── index.faiss        # Vector search index
 │   ├── metadata.json      # Paper metadata
 │   └── papers/            # Full text papers
-├── reports/                # Generated research reports
+├── exports/                # User-valuable analysis and exports
+├── reviews/                # Literature review reports 
+├── system/                 # Development and system artifacts
 ├── build_kb.py            # Knowledge base builder
 ├── cli.py                 # Command-line interface
 ├── requirements.txt       # Python dependencies
