@@ -10,17 +10,16 @@ I'll conduct a comprehensive literature review on this topic.
 
 ## My Approach
 
-I'll delegate data retrieval to a specialized research-helper agent while I focus on analysis:
+I'll adapt my approach based on what will yield the most insightful results for this specific topic.
 
-### When I Use the Research Helper
+### Research-helper subagents are useful when
 
-1. **Initial comprehensive search** - "Use batch preset research for '[topic]' to get complete analysis"
-2. **Custom batch operations** - "Run these searches as a batch: [list of queries]"
-3. **Specific data extraction** - "Find sample sizes in paper 0123"
-4. **Follow-up searches** - "Search for papers on [subtopic] from 2020-2024"
-5. **Citation gathering** - "Generate citations for papers 0001-0010"
+- Complex multi-step data retrieval is needed
+- Multiple coordinated searches would benefit from batch operations
+- Specific data extraction from multiple papers is required
+- The research question requires systematic literature mapping
 
-**IMPORTANT**: The helper now uses the batch command which is 10-20x faster for multiple operations.
+**Performance note**: Batch operations can be 10-20x faster for multiple commands.
 
 ### What the Helper Returns
 
@@ -39,23 +38,32 @@ With the helper handling data retrieval, I concentrate on:
 - Drawing evidence-based conclusions
 - Writing comprehensive reports
 
-## Research Strategy
+## Research Approach
 
-### For Best Results
+I'll adapt my approach based on what will yield the most insightful results for this specific topic.
 
-- **Start broad, then narrow**: Initial search → Review high-quality papers → Targeted follow-ups
-- **Prioritize by quality**: Focus on papers with quality scores >70 for core evidence
-- **Check recency**: Recent systematic reviews (2022+) often summarize earlier work
-- **Multiple searches**: Different keywords may reveal complementary literature
+### Quality considerations
 
-### Typical Workflow
+- Papers with higher quality scores often provide stronger evidence
+- Recent systematic reviews may summarize earlier work effectively
+- Multiple search approaches can reveal complementary literature
 
-1. **Discovery phase**: Helper uses `batch --preset research "[topic]"` for comprehensive analysis (5 searches + top papers in one command)
-2. **Deep dive**: Automatic retrieval of top 10 papers with the preset
-3. **Gap analysis**: I identify what's missing, helper does targeted batch searches
-4. **Synthesis**: I analyze all findings and write comprehensive report
+**Key capabilities at my disposal:**
 
-**Performance Note**: The batch preset completes in ~5 seconds what previously took 80-100 seconds!
+- Batch operations (10-20x faster for multiple commands)
+- Direct paper access via `kb_data/papers/paper_XXXX.md`
+- IEEE citations using `python src/cli.py cite XXXX XXXX XXXX`
+- Knowledge base coverage assessment
+
+## Execution Considerations
+
+The nature of "$ARGUMENTS" will guide my approach:
+
+**Direct CLI execution when:**
+
+- The research question is focused and targeted
+- I want to iterate immediately based on results
+- The query is straightforward and well-defined
 
 ## Available Resources
 
@@ -69,12 +77,19 @@ The knowledge base contains ~2,100 academic papers. For complete command documen
 
 ## Output
 
-I'll generate a comprehensive report saved to `reports/research_<topic>_<timestamp>.md` that includes:
+I'll generate a comprehensive report saved to `reports/research_<topic>_<timestamp>.md`. The specific format will depend on your research question - it might be:
 
-- Executive summary
-- Key findings with evidence quality assessment
-- Synthesis across studies
-- Knowledge gaps and future directions
-- IEEE citations for all referenced papers
+- A systematic evidence synthesis
+- A comparative analysis with detailed evidence synthesis
+- An implementation-focused review with practical insights
+- A methodological assessment for research planning
 
-Let me know if you have specific requirements for the research focus or output format.
+The report will include appropriate citations, quality assessments where helpful, and identification of knowledge gaps in the research literature.
+
+**Note on Knowledge Base Limitations:** If I find that our knowledge base appears incomplete for your research topic (e.g., very few relevant papers, missing recent studies, or gaps in coverage), I'll notify you and ask for guidance on whether to:
+
+- Proceed with available papers
+- Suggest specific papers/DOIs to add
+- Adjust the research scope
+
+Let me explore the literature and see what emerges.
