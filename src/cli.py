@@ -170,44 +170,75 @@ def estimate_paper_quality(paper: dict) -> tuple[int, str]:
 
     # Study type hierarchy (most important factor)
     study_type = paper.get("study_type", "unknown")
+    if study_type:
+        study_type = study_type.lower()  # Handle case insensitive study types
 
     if study_type in QUALITY_STUDY_TYPE_WEIGHTS:
         score += QUALITY_STUDY_TYPE_WEIGHTS[study_type]
         factors.append(study_type.replace("_", " "))
+    else:
+        # Handle unknown or empty study types
+        factors.append("unknown")
 
     # Sample size bonus (for applicable studies)
     sample_size = paper.get("sample_size")
     if sample_size and sample_size > 0:
-        if sample_size > SAMPLE_SIZE_LARGE_THRESHOLD and study_type in ["rct", "cohort"]:
-            score += BONUS_LARGE_SAMPLE
-            factors.append(f"n={sample_size}")
-        elif sample_size > SAMPLE_SIZE_MEDIUM_THRESHOLD:
-            score += BONUS_MEDIUM_SAMPLE
-            factors.append(f"n={sample_size}")
-        elif sample_size > SAMPLE_SIZE_SMALL_THRESHOLD:
+        if sample_size >= 1000:
+            score += 10
+            factors.append("large sample")
+        elif sample_size >= 500:
+            score += 8
+            factors.append("substantial sample")
+        elif sample_size >= 250:
+            score += 6
+            factors.append("moderate sample")
+        elif sample_size >= 100:
+            score += 4
+            factors.append("reasonable sample")
+        elif sample_size >= 50:
+            score += 2
+            factors.append("small sample")
+        else:
             factors.append(f"n={sample_size}")
 
-    # Recency bonus
+    # Recency bonus - gradual degradation by year
     year = paper.get("year")
+    current_year = 2025  # Current year for scoring
     if year and year > 0:
-        if year >= 2022:
-            score += 10
+        years_old = current_year - year
+        if years_old <= 0:  # Current year or future
+            recency_bonus = 10
+            factors.append("recent")
+        elif years_old == 1:  # 1 year old
+            recency_bonus = 8
+            factors.append("recent")
+        elif years_old == 2:  # 2 years old
+            recency_bonus = 6
+            factors.append("recent")
+        elif years_old == 3:  # 3 years old
+            recency_bonus = 4
+            factors.append("recent")
+        elif years_old == 4:  # 4 years old
+            recency_bonus = 2
+            factors.append("recent")
+        else:  # 5+ years old
+            recency_bonus = 0
             factors.append(str(year))
-        elif year >= 2020:
-            score += 5
-            factors.append(str(year))
-        else:
-            factors.append(str(year))
+        
+        score += recency_bonus
 
     # Full text availability
     if paper.get("has_full_text"):
         score += 5
-        factors.append("full-text")
+        factors.append("full text")
+
+    # Cap at maximum score
+    score = min(score, MAX_QUALITY_SCORE)
 
     # Create explanation
     explanation = " | ".join(factors) if factors else "standard"
 
-    return min(score, 100), explanation
+    return score, explanation
 
 
 class ResearchCLI:
@@ -428,6 +459,35 @@ class ResearchCLI:
 
         return _model_cache[EMBEDDING_MODEL]
 
+    def smart_search(self, query_text: str, k: int = 20) -> list:
+        """Smart search with section chunking.
+        
+        Args:
+            query_text: Search query
+            k: Number of results to return
+            
+        Returns:
+            List of search results from multiple section queries
+        """
+        # Perform initial search
+        initial_results = self.search(query_text, k)
+        
+        # Always search within sections for comprehensive results
+        method_results = self.search(f"{query_text} methods", k)
+        result_results = self.search(f"{query_text} results", k)
+        
+        # Combine and deduplicate results
+        all_results = initial_results + method_results + result_results
+        seen = set()
+        unique_results = []
+        for result in all_results:
+            paper_id = result[2].get("id")
+            if paper_id not in seen:
+                seen.add(paper_id)
+                unique_results.append(result)
+        
+        return unique_results[:k]
+
     def format_ieee_citation(self, paper_metadata: dict, citation_number: int) -> str:
         """Format paper metadata as IEEE citation.
 
@@ -530,7 +590,6 @@ def cli() -> None:
 )
 @click.option("--verbose", "-v", is_flag=True, help="Show abstracts in results")
 @click.option("--show-quality", is_flag=True, help="Show quality scores in results")
-@click.option("--quality-min", type=int, help="Minimum quality score (0-100)")
 @click.option("--json", "output_json", is_flag=True, help="Output as JSON for processing")
 @click.option(
     "--after",
@@ -569,7 +628,6 @@ def search(
     top_k: int,
     verbose: bool,
     show_quality: bool,
-    quality_min: int | None,
     output_json: bool,
     after: int | None,
     study_type: tuple[str, ...],
@@ -605,7 +663,7 @@ def search(
     ADVANCED FEATURES:
       --queries      Add multiple search queries for comprehensive results
       --group-by     Group by year/journal/study_type for organized view
-      --export       Save results to CSV in reports/ directory
+      --export       Save results to CSV in exports/ directory
 
     \b
     EXAMPLES:
@@ -624,7 +682,7 @@ def search(
       # Multi-query comprehensive search
       python src/cli.py search "diabetes" --queries "glucose monitoring" --queries "insulin"
 
-      # Export results for Excel
+      # Export results for Excel  
       python src/cli.py search "hypertension" --export results.csv
     """
     try:
@@ -643,7 +701,7 @@ def search(
             # Perform search
             study_types = list(study_type) if study_type else None
             # Get more results to allow for filtering
-            search_k = top_k * 3 if (quality_min or min_quality or years or contains or exclude) else top_k
+            search_k = top_k * 3 if (min_quality or years or contains or exclude) else top_k
             query_results = research_cli.search(q, search_k, min_year=after, study_types=study_types)
 
             # Add unique results
@@ -708,11 +766,9 @@ def search(
             search_results = filtered
 
         # Apply quality filtering if requested
-        if quality_min or min_quality or show_quality:
+        if min_quality or show_quality:
             enhanced_results = []
-            effective_min = (
-                max(filter(None, [quality_min, min_quality])) if (quality_min or min_quality) else 0
-            )
+            effective_min = min_quality or 0
 
             for idx, dist, paper in search_results:
                 quality, explanation = estimate_paper_quality(paper)
@@ -734,12 +790,14 @@ def search(
         if export:
             import csv
 
-            # Ensure reports directory exists
-            reports_dir = Path("reports")
-            reports_dir.mkdir(exist_ok=True)
+            # Ensure exports directory exists
+            exports_dir = Path("exports")
+            exports_dir.mkdir(exist_ok=True)
 
-            # Save to reports directory
-            export_path = reports_dir / export
+            # Save with search prefix
+            if not export.startswith("search_"):
+                export = f"search_{export}"
+            export_path = exports_dir / export
             with export_path.open("w", newline="", encoding="utf-8") as f:
                 fieldnames = [
                     "id",
@@ -800,7 +858,7 @@ def search(
                 for idx, dist, paper in grouped[key]:
                     relevance = 1 / (1 + dist)
                     quality_str = ""
-                    if show_quality or quality_min or min_quality:
+                    if show_quality or min_quality:
                         quality = paper.get("quality_score", 0)
                         quality_str = f" [Q:{quality}]"
                     print(f"  [{paper['id']}] {paper['title'][:80]}...{quality_str} (R:{relevance:.2f})")
@@ -965,9 +1023,12 @@ def get(paper_id: str, output: str | None, sections: tuple[str, ...]) -> None:
             content = research_cli.get_paper(paper_id)
 
         if output:
-            reports_dir = Path("reports")
-            reports_dir.mkdir(exist_ok=True)
-            output_path = reports_dir / output
+            exports_dir = Path("exports")
+            exports_dir.mkdir(exist_ok=True)
+            # Add paper prefix if not already present
+            if not output.startswith("paper_"):
+                output = f"paper_{output}"
+            output_path = exports_dir / output
             with output_path.open("w", encoding="utf-8") as f:
                 f.write(content)
             print(f"Paper saved to {output_path}")
@@ -1349,7 +1410,7 @@ def smart_search(query_text: str, top_k: int, max_tokens: int, sections: tuple[s
     Features:
       - Automatically chunks results >20 papers into logical sections
       - Groups papers by relevance and topic similarity
-      - Saves results to reports/smart_search_results.json
+      - Outputs results as JSON to stdout for processing
       - Intelligently selects sections based on query terms
     """
     try:
@@ -1455,26 +1516,17 @@ def smart_search(query_text: str, top_k: int, max_tokens: int, sections: tuple[s
             )
             print(f"   Preview: {preview}")
 
-        # Save to file for further processing
-        reports_dir = Path("reports")
-        reports_dir.mkdir(exist_ok=True)
-        output_file = reports_dir / "smart_search_results.json"
-        with open(output_file, "w") as f:
-            json.dump(
-                {
-                    "query": query_text,
-                    "sections_priority": list(sections),
-                    "papers_found": len(search_results),
-                    "papers_loaded": len(loaded_papers),
-                    "total_chars": total_chars,
-                    "papers": loaded_papers,
-                },
-                f,
-                indent=2,
-            )
+        # Output results as JSON to stdout for processing
+        output_data = {
+            "query": query_text,
+            "sections_priority": list(sections),
+            "papers_found": len(search_results),
+            "papers_loaded": len(loaded_papers),
+            "total_chars": total_chars,
+            "papers": loaded_papers,
+        }
 
-        print(f"\n💾 Results saved to {output_file}")
-        print("   Use this file for further analysis without context overflow")
+        print("\n" + json.dumps(output_data, indent=2))
 
     except FileNotFoundError:
         print(
@@ -2032,6 +2084,47 @@ def _format_batch_text(results: list[dict]) -> None:
         else:
             print(f"\n❌ Command {i} failed: {result.get('error', 'Unknown error')}")
             print(f"   Command: {result.get('command', {})}")
+
+
+def generate_ieee_citation(paper_metadata: dict, citation_number: int) -> str:
+    """Generate IEEE-style citation for a paper.
+    
+    Standalone function for compatibility with tests.
+    
+    Args:
+        paper_metadata: Paper metadata dictionary
+        citation_number: Citation number for reference
+        
+    Returns:
+        Formatted IEEE citation string
+    """
+    citation_text = f"[{citation_number}] "
+
+    if paper_metadata.get("authors"):
+        if len(paper_metadata["authors"]) <= 3:
+            citation_text += ", ".join(paper_metadata["authors"])
+        else:
+            citation_text += f"{paper_metadata['authors'][0]} et al."
+        citation_text += ", "
+
+    citation_text += f'"{paper_metadata["title"]}", '
+
+    if paper_metadata.get("journal"):
+        citation_text += f"{paper_metadata['journal']}, "
+
+    if paper_metadata.get("volume"):
+        citation_text += f"vol. {paper_metadata['volume']}, "
+
+    if paper_metadata.get("issue"):
+        citation_text += f"no. {paper_metadata['issue']}, "
+
+    if paper_metadata.get("pages"):
+        citation_text += f"pp. {paper_metadata['pages']}, "
+
+    if paper_metadata.get("year"):
+        citation_text += f"{paper_metadata['year']}."
+
+    return citation_text
 
 
 if __name__ == "__main__":
