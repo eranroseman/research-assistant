@@ -53,8 +53,12 @@ By participating in this project, you agree to maintain a respectful and inclusi
 
 5. **Run tests and checks**
    ```bash
-   # Run tests
-   python -m pytest
+   # Run all tests (193 total)
+   pytest tests/ -v
+
+   # Run specific test categories
+   pytest tests/unit/ -v                               # Unit tests (123 tests, fast)
+   pytest tests/e2e/test_e2e_cli_commands.py::TestCriticalE2EFunctionality -v  # Critical tests
 
    # Type checking
    mypy src/
@@ -84,10 +88,15 @@ By participating in this project, you agree to maintain a respectful and inclusi
 
 ### Testing
 
-- Write unit tests for new features
-- Maintain or improve code coverage
-- Test edge cases and error conditions
-- Use pytest for testing framework
+- **Test Organization**: Follow `test_{type}_{component}.py` naming convention
+- **Write comprehensive tests**: Unit tests for functions, integration tests for workflows
+- **Test Categories**:
+  - `tests/unit/test_unit_*.py` - Component tests (fast, isolated)
+  - `tests/integration/test_integration_*.py` - Workflow tests (medium speed)
+  - `tests/e2e/test_e2e_*.py` - End-to-end tests (slower, critical functionality)
+  - `tests/performance/test_performance_*.py` - Benchmarks and regression tests
+- **Coverage Goals**: 80%+ overall coverage, 90%+ for core functions
+- **Framework**: Use pytest with fixtures and mocking
 
 ### Documentation
 
@@ -107,7 +116,7 @@ research-assistant/
 │   ├── metadata.json      # Paper metadata
 │   └── papers/            # Full text papers
 ├── exports/                # User-valuable analysis and exports
-├── reviews/                # Literature review reports 
+├── reviews/                # Literature review reports
 ├── system/                 # Development and system artifacts
 ├── build_kb.py            # Knowledge base builder
 ├── cli.py                 # Command-line interface

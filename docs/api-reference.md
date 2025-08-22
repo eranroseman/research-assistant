@@ -139,6 +139,7 @@ python src/cli.py get [OPTIONS] PAPER_ID
 |--------|-------|------|---------|-------------|
 | `--output` | `-o` | PATH | None | Save output to file (saves to exports/ directory) |
 | `--sections` | `-s` | MULTI | all | Specific sections to retrieve |
+| `--add-citation` | | FLAG | False | Append IEEE citation to paper content |
 
 #### Available Sections
 
@@ -176,6 +177,10 @@ python src/cli.py get 0001 --output my_paper.md
 # Multiple sections
 python src/cli.py get 0042 -s abstract -s methods -s conclusion
 
+# With IEEE citation
+python src/cli.py get 0001 --add-citation
+python src/cli.py get 0001 --sections abstract --add-citation
+
 # Invalid formats (blocked)
 python src/cli.py get 1        # Error: Must be 4 digits
 python src/cli.py get abc      # Error: Must be 4 digits
@@ -195,6 +200,7 @@ python src/cli.py get-batch [OPTIONS] PAPER_IDS...
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
 | `--format` | CHOICE | text | Output format (text or json) |
+| `--add-citation` | FLAG | False | Append IEEE citation to each paper (numbered sequentially) |
 
 **Note**: `get-batch` retrieves complete papers and does NOT support the `--sections` flag. To get specific sections from multiple papers, use the batch command with individual get commands.
 
@@ -209,6 +215,12 @@ python src/cli.py get-batch 0234 1426 0888
 
 # JSON output for processing
 python src/cli.py get-batch 0001 0002 --format json
+
+# With numbered IEEE citations
+python src/cli.py get-batch 0001 0002 0003 --add-citation
+
+# JSON format with citations
+python src/cli.py get-batch 0001 0002 --format json --add-citation
 
 # Many papers at once
 python src/cli.py get-batch 0010 0020 0030 0040 0050
@@ -631,11 +643,12 @@ exports/                         # User-valuable files (flat with prefixes)
 
 reviews/                         # Literature review reports (flat)
 ├── ai_healthcare_2025-08-20.md # Research command outputs
-├── diabetes_2025-08-19.md      # Date-stamped reviews  
+├── diabetes_2025-08-19.md      # Date-stamped reviews
 └── digital_health_2025-08-18.md # Topic-based reviews
 
 system/                          # System and development files (flat with prefixes)
 ├── dev_test_results.csv         # Development test outputs
+├── ux_analytics_20250821.jsonl  # UX analytics logs (daily rotation)
 ├── log_build_2025-08-20.txt     # Build logs (future)
 └── diag_kb_health.json          # Diagnostic reports (future)
 ```
@@ -645,10 +658,11 @@ system/                          # System and development files (flat with prefi
 | Directory | Prefix | Purpose | Example |
 |-----------|--------|---------|---------|
 | `exports/` | `analysis_` | System analysis reports | `analysis_pdf_quality.md` |
-| `exports/` | `search_` | Search result exports | `search_diabetes.csv` |  
+| `exports/` | `search_` | Search result exports | `search_diabetes.csv` |
 | `exports/` | `paper_` | Individual paper exports | `paper_0001_methods.md` |
 | `reviews/` | *(none)* | Literature reviews | `topic_2025-08-20.md` |
 | `system/` | `dev_` | Development artifacts | `dev_test_results.csv` |
+| `system/` | `ux_analytics_` | UX analytics logs | `ux_analytics_20250821.jsonl` |
 | `system/` | `log_` | Build/system logs | `log_build_2025-08-20.txt` |
 | `system/` | `diag_` | Diagnostic reports | `diag_kb_health.json` |
 
@@ -863,6 +877,51 @@ Each paper in `papers/` follows this structure:
 | EMB002 | CUDA out of memory | Reduce batch size or use CPU |
 | ID001 | Invalid paper ID format | Use 4-digit format (e.g., 0001) |
 | ID002 | Paper ID not found | Check available IDs with `info` command |
+
+## UX Analytics
+
+The Research Assistant automatically logs usage analytics to help improve user experience. All logs are stored locally and never transmitted.
+
+### Log Files
+
+- **Location**: `system/ux_analytics_YYYYMMDD.jsonl`
+- **Format**: Newline-delimited JSON (one event per line)
+- **Rotation**: Daily (new file each day)
+- **Privacy**: Local only, automatically disabled during testing
+
+### Data Captured
+
+Each CLI command execution logs:
+
+- **Start events**: Command name, parameters, filters, session ID
+- **Success events**: Execution time, results count, performance metrics
+- **Error events**: Error type, error message, execution time
+
+### Example Log Entries
+
+```json
+{"timestamp": "2025-08-21T16:26:00.428088+00:00", "session_id": "089ddbb4", "level": "INFO", "message": "", "event_type": "command_start", "command": "search", "query_length": 8, "top_k": 1, "has_additional_queries": false, "additional_queries_count": 0, "has_after_filter": false, "after_year": null, "has_study_type_filter": false, "study_types": [], "has_year_range_filter": false, "has_contains_filter": false, "has_exclude_filter": false, "full_text_search": false, "min_quality": null, "show_quality": true, "output_json": false, "group_by": null, "export_requested": false}
+
+{"timestamp": "2025-08-21T16:26:08.907754+00:00", "session_id": "089ddbb4", "level": "INFO", "message": "", "event_type": "command_success", "command": "search", "execution_time_ms": 8479, "results_found": 1, "exported_to_csv": false}
+```
+
+### Configuration
+
+UX analytics can be configured in `src/config.py`:
+
+```python
+UX_LOG_ENABLED = True                    # Enable/disable logging
+UX_LOG_PATH = Path("system")             # Log directory
+UX_LOG_PREFIX = "ux_analytics_"          # Log file prefix
+UX_LOG_LEVEL = "INFO"                    # Log level
+```
+
+### Privacy & Testing
+
+- **Test Environment**: Automatically disabled when pytest is running
+- **Error Handling**: Setup failures don't break core CLI functionality
+- **Local Only**: Logs never leave your machine
+- **Session Tracking**: 8-character session IDs for user journey analysis
 
 ## Performance Tips
 

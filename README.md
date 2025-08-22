@@ -32,7 +32,7 @@ python src/build_kb.py
 | **Smart incremental by default** | Automatic change detection and updates |
 | **Integrity checking** | Detects and prevents corruption |
 | **Improved UX** | Cleaner prompts, better defaults |
-| **Better testing** | 50 comprehensive tests covering all functionality |
+| **Better testing** | 193 comprehensive tests covering all functionality |
 
 
 ## Quick Start
@@ -382,11 +382,25 @@ system/                 # Development and system artifacts
 └── dev_*.csv          # Test results and system data
 
 tests/
-├── test_critical.py    # Core functionality tests (14 tests)
-├── test_incremental_updates.py # Smart update tests (4 tests)
-├── test_kb_index.py    # O(1) lookup tests (8 tests)
-├── test_reports.py     # Report generation tests (5 tests)
-└── test_v4_features.py # v4.0 specific tests (19 tests)
+├── unit/                           # Component tests (123 tests)
+│   ├── test_unit_citation_system.py      # IEEE citation formatting
+│   ├── test_unit_cli_batch_commands.py   # CLI batch operations
+│   ├── test_unit_cli_interface.py        # CLI utility functions
+│   ├── test_unit_knowledge_base.py       # KB building, indexing, caching
+│   ├── test_unit_quality_scoring.py      # Paper quality algorithms
+│   ├── test_unit_search_engine.py        # Search, embedding, ranking
+│   └── test_unit_ux_analytics.py         # Analytics logging
+├── integration/                    # Workflow tests (40 tests)
+│   ├── test_integration_batch_operations.py
+│   ├── test_integration_incremental_updates.py
+│   ├── test_integration_kb_building.py
+│   ├── test_integration_reports.py
+│   └── test_integration_search_workflow.py
+├── e2e/                           # End-to-end tests (23 tests)
+│   ├── test_e2e_cite_command.py
+│   └── test_e2e_cli_commands.py
+└── performance/                   # Benchmarks (7 tests)
+    └── test_performance_benchmarks.py
 ```
 
 ## System Requirements
@@ -426,11 +440,12 @@ tests/
    - Run ruff linting and formatting
    - Catch debug statements
 
-3. **Run tests** (50 tests covering all functionality)
+3. **Run tests** (193 tests covering all functionality)
    ```bash
-   pytest tests/ -v              # All tests
-   pytest tests/test_critical.py # Core functionality only
-   pytest tests/ --cov=src       # With coverage report
+   pytest tests/ -v                                    # All tests (193 total)
+   pytest tests/unit/ -v                               # Unit tests (123 tests, fast)
+   pytest tests/e2e/test_e2e_cli_commands.py::TestCriticalE2EFunctionality -v  # Critical tests
+   pytest tests/ --cov=src                             # With coverage report
    ```
 
 4. **Quality checks**

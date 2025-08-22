@@ -28,10 +28,14 @@ Usage:
 """
 
 import json
+import logging
 import re
 import sys
+import time
+import uuid
+from datetime import datetime, timezone, UTC
 from pathlib import Path
-from typing import Any
+from typing import Any, Optional
 
 import click
 
@@ -84,6 +88,11 @@ try:
         QUALITY_GOOD,
         QUALITY_MODERATE,
         QUALITY_LOW,
+        # UX Analytics
+        UX_LOG_PATH,
+        UX_LOG_PREFIX,
+        UX_LOG_LEVEL,
+        UX_LOG_ENABLED,
     )
 except ImportError:
     # For direct script execution
@@ -119,6 +128,11 @@ except ImportError:
         QUALITY_GOOD,
         QUALITY_MODERATE,
         QUALITY_LOW,
+        # UX Analytics
+        UX_LOG_PATH,
+        UX_LOG_PREFIX,
+        UX_LOG_LEVEL,
+        UX_LOG_ENABLED,
     )
 
 
@@ -142,8 +156,90 @@ except ImportError:
 MAX_QUALITY_SCORE = 100
 PAPER_ID_FORMAT = VALID_PAPER_ID_PATTERN.pattern
 
+# ============================================================================
+# UX ANALYTICS SETUP
+# ============================================================================
 
-def estimate_paper_quality(paper: dict) -> tuple[int, str]:
+# Global session ID for tracking user sessions
+_session_id = str(uuid.uuid4())[:8]
+
+
+def _setup_ux_logger() -> logging.Logger | None:
+    """Set up UX analytics logger with JSON formatting."""
+    try:
+        # Disable logging in test environment
+        if not UX_LOG_ENABLED or "pytest" in sys.modules:
+            return None
+
+        # Ensure logs directory exists
+        UX_LOG_PATH.mkdir(exist_ok=True)
+
+        # Create log filename with date
+        log_date = datetime.now(UTC).strftime("%Y%m%d")
+        log_file = UX_LOG_PATH / f"{UX_LOG_PREFIX}{log_date}.jsonl"
+
+        # Create logger
+        logger = logging.getLogger("ux_analytics")
+        logger.setLevel(getattr(logging, UX_LOG_LEVEL))
+
+        # Remove existing handlers to avoid duplicates
+        logger.handlers.clear()
+
+        # Create file handler
+        handler = logging.FileHandler(log_file, mode="a", encoding="utf-8")
+        handler.setLevel(getattr(logging, UX_LOG_LEVEL))
+
+        # Create JSON formatter
+        class JSONFormatter(logging.Formatter):
+            def format(self, record: logging.LogRecord) -> str:
+                log_data = {
+                    "timestamp": datetime.now(UTC).isoformat(),
+                    "session_id": _session_id,
+                    "level": record.levelname,
+                    "message": record.getMessage(),
+                }
+                # Add any extra data from the record
+                if hasattr(record, "extra_data"):
+                    log_data.update(record.extra_data)
+                return json.dumps(log_data)
+
+        handler.setFormatter(JSONFormatter())
+        logger.addHandler(handler)
+        logger.propagate = False  # Don't propagate to root logger
+
+        return logger
+    except Exception:
+        # If logging setup fails, silently continue without logging
+        # This prevents UX analytics from breaking core functionality
+        return None
+
+
+# Initialize UX analytics logger
+_ux_logger = _setup_ux_logger()
+
+
+def _log_ux_event(event_type: str, **kwargs: Any) -> None:
+    """Log a UX analytics event."""
+    if not _ux_logger or not UX_LOG_ENABLED:
+        return
+
+    extra_data = {"event_type": event_type, **kwargs}
+
+    # Create a LogRecord with extra_data
+    record = logging.LogRecord(
+        name="ux_analytics", level=logging.INFO, pathname="", lineno=0, msg="", args=(), exc_info=None
+    )
+    record.extra_data = extra_data
+
+    _ux_logger.handle(record)
+
+
+# ============================================================================
+# QUALITY ESTIMATION
+# ============================================================================
+
+
+def estimate_paper_quality(paper: dict[str, Any]) -> tuple[int, str]:
     """Calculate quality score (0-100) for a paper.
 
     Scoring components:
@@ -224,7 +320,7 @@ def estimate_paper_quality(paper: dict) -> tuple[int, str]:
         else:  # 5+ years old
             recency_bonus = 0
             factors.append(str(year))
-        
+
         score += recency_bonus
 
     # Full text availability
@@ -291,8 +387,8 @@ class ResearchCLI:
         query_text: str,
         top_k: int = 10,
         min_year: int | None = None,
-        study_types: list | None = None,
-    ) -> list[tuple[int, float, dict]]:
+        study_types: list[str] | None = None,
+    ) -> list[tuple[int, float, dict[str, Any]]]:
         """Search for relevant papers using semantic similarity.
 
         Uses Multi-QA MPNet embeddings to find semantically similar papers,
@@ -384,7 +480,7 @@ class ResearchCLI:
 
     def format_search_results(
         self,
-        search_results: list[tuple[int, float, dict]],
+        search_results: list[tuple[int, float, dict[str, Any]]],
         show_abstracts: bool = False,
     ) -> str:
         """Format search results for display.
@@ -459,23 +555,23 @@ class ResearchCLI:
 
         return _model_cache[EMBEDDING_MODEL]
 
-    def smart_search(self, query_text: str, k: int = 20) -> list:
+    def smart_search(self, query_text: str, k: int = 20) -> list[tuple[int, float, dict[str, Any]]]:
         """Smart search with section chunking.
-        
+
         Args:
             query_text: Search query
             k: Number of results to return
-            
+
         Returns:
             List of search results from multiple section queries
         """
         # Perform initial search
         initial_results = self.search(query_text, k)
-        
+
         # Always search within sections for comprehensive results
         method_results = self.search(f"{query_text} methods", k)
         result_results = self.search(f"{query_text} results", k)
-        
+
         # Combine and deduplicate results
         all_results = initial_results + method_results + result_results
         seen = set()
@@ -485,10 +581,10 @@ class ResearchCLI:
             if paper_id not in seen:
                 seen.add(paper_id)
                 unique_results.append(result)
-        
+
         return unique_results[:k]
 
-    def format_ieee_citation(self, paper_metadata: dict, citation_number: int) -> str:
+    def format_ieee_citation(self, paper_metadata: dict[str, Any], citation_number: int) -> str:
         """Format paper metadata as IEEE citation.
 
         Args:
@@ -543,8 +639,8 @@ def cli() -> None:
 
     \b
     RETRIEVAL:
-      get           Get specific paper by ID (with section options)
-      get-batch     Retrieve multiple papers at once
+      get           Get specific paper by ID (with section options and citations)
+      get-batch     Retrieve multiple papers at once (with citation support)
 
     \b
     BATCH OPERATIONS:
@@ -565,11 +661,13 @@ def cli() -> None:
       • Group results by year, journal, or study type
       • Export to CSV for analysis
       • Smart section extraction from PDFs
+      • IEEE citation generation and embedding in paper content
 
     \b
     QUICK START:
       python src/cli.py search "diabetes treatment" --show-quality
       python src/cli.py get 0001 --sections abstract methods
+      python src/cli.py get 0001 --add-citation         # Paper with citation
       python src/cli.py cite 0001 0002 0003
       python src/cli.py smart-search "digital health" -k 30
 
@@ -682,9 +780,34 @@ def search(
       # Multi-query comprehensive search
       python src/cli.py search "diabetes" --queries "glucose monitoring" --queries "insulin"
 
-      # Export results for Excel  
+      # Export results for Excel
       python src/cli.py search "hypertension" --export results.csv
     """
+    start_time = time.time()
+
+    # Log search command start
+    _log_ux_event(
+        "command_start",
+        command="search",
+        query_length=len(query_text),
+        top_k=top_k,
+        has_additional_queries=len(queries) > 0,
+        additional_queries_count=len(queries),
+        has_after_filter=after is not None,
+        after_year=after,
+        has_study_type_filter=len(study_type) > 0,
+        study_types=list(study_type),
+        has_year_range_filter=years is not None,
+        has_contains_filter=contains is not None,
+        has_exclude_filter=exclude is not None,
+        full_text_search=full_text,
+        min_quality=min_quality,
+        show_quality=show_quality,
+        output_json=output_json,
+        group_by=group_by,
+        export_requested=export is not None,
+    )
+
     try:
         research_cli = ResearchCLI()
 
@@ -830,7 +953,7 @@ def search(
 
         # Handle grouping if requested
         if group_by:
-            grouped: dict[str, list] = {}
+            grouped: dict[str, list[tuple[int, float, dict[str, Any]]]] = {}
             for idx, dist, paper in search_results:
                 key = paper.get(group_by, "Unknown")
                 if key not in grouped:
@@ -912,7 +1035,25 @@ def search(
             else:
                 print(research_cli.format_search_results(search_results, verbose))
 
+        # Log successful search completion
+        execution_time_ms = int((time.time() - start_time) * 1000)
+        _log_ux_event(
+            "command_success",
+            command="search",
+            execution_time_ms=execution_time_ms,
+            results_found=len(search_results),
+            exported_to_csv=export is not None,
+        )
+
     except FileNotFoundError:
+        execution_time_ms = int((time.time() - start_time) * 1000)
+        _log_ux_event(
+            "command_error",
+            command="search",
+            execution_time_ms=execution_time_ms,
+            error_type="FileNotFoundError",
+            error_message="Knowledge base not found",
+        )
         print(
             "\n❌ Knowledge base not found.\n"
             "   Quick fix: python src/build_kb.py --demo\n"
@@ -921,12 +1062,28 @@ def search(
         )
         sys.exit(1)
     except ImportError as error:
+        execution_time_ms = int((time.time() - start_time) * 1000)
+        _log_ux_event(
+            "command_error",
+            command="search",
+            execution_time_ms=execution_time_ms,
+            error_type="ImportError",
+            error_message=str(error),
+        )
         print(
             f"\n❌ Missing dependency: {error}\n   Fix: pip install -r requirements.txt",
             file=sys.stderr,
         )
         sys.exit(1)
     except Exception as error:
+        execution_time_ms = int((time.time() - start_time) * 1000)
+        _log_ux_event(
+            "command_error",
+            command="search",
+            execution_time_ms=execution_time_ms,
+            error_type=type(error).__name__,
+            error_message=str(error),
+        )
         print(
             f"\n❌ Search failed: {error}\n"
             "   Possible fixes:\n"
@@ -950,7 +1107,8 @@ def search(
     ),
     help="Retrieve only specific sections (default: all)",
 )
-def get(paper_id: str, output: str | None, sections: tuple[str, ...]) -> None:
+@click.option("--add-citation", is_flag=True, help="Append IEEE citation to paper content")
+def get(paper_id: str, output: str | None, sections: tuple[str, ...], add_citation: bool) -> None:
     """Get a specific paper by its 4-digit ID.
 
     Retrieve the full content of a paper or specific sections only.
@@ -962,11 +1120,26 @@ def get(paper_id: str, output: str | None, sections: tuple[str, ...]) -> None:
       python src/cli.py get 0234 --sections abstract    # Abstract only
       python src/cli.py get 1426 --sections methods results  # Multiple sections
       python src/cli.py get 0005 --output paper.md      # Save to file
+      python src/cli.py get 0001 --add-citation         # Include IEEE citation
+      python src/cli.py get 0234 --sections abstract --add-citation  # Sections + citation
 
     \b
     Available sections: abstract, introduction, methods, results, discussion,
                        conclusion, references, all
     """
+    start_time = time.time()
+
+    # Log get command start
+    _log_ux_event(
+        "command_start",
+        command="get",
+        paper_id=paper_id,
+        has_sections_filter=len(sections) > 0,
+        sections_requested=list(sections),
+        sections_count=len(sections),
+        output_to_file=output is not None,
+    )
+
     try:
         research_cli = ResearchCLI()
 
@@ -1009,6 +1182,11 @@ def get(paper_id: str, output: str | None, sections: tuple[str, ...]) -> None:
                                 content += f"## {section_name.title()}\n\n*[Section not available]*\n\n"
 
                         content += f"\n---\n*Sections retrieved: {', '.join(sections)}*"
+
+                        # Add citation if requested
+                        if add_citation:
+                            citation = research_cli.format_ieee_citation(paper_metadata, 1)
+                            content += f"\n\n**Citation:** {citation}"
                     else:
                         # Fallback to regular get if metadata not found
                         content = research_cli.get_paper(paper_id)
@@ -1021,6 +1199,14 @@ def get(paper_id: str, output: str | None, sections: tuple[str, ...]) -> None:
         else:
             # Get full paper
             content = research_cli.get_paper(paper_id)
+
+        # Add citation if requested
+        if add_citation:
+            # Get paper metadata for citation
+            paper_metadata = research_cli.kb_index.get_paper_by_id(paper_id)
+            if paper_metadata:
+                citation = research_cli.format_ieee_citation(paper_metadata, 1)
+                content += f"\n\n---\n**Citation:** {citation}"
 
         if output:
             exports_dir = Path("exports")
@@ -1035,7 +1221,25 @@ def get(paper_id: str, output: str | None, sections: tuple[str, ...]) -> None:
         else:
             print(content)
 
+        # Log successful get completion
+        execution_time_ms = int((time.time() - start_time) * 1000)
+        _log_ux_event(
+            "command_success",
+            command="get",
+            execution_time_ms=execution_time_ms,
+            paper_retrieved=True,
+            saved_to_file=output is not None,
+        )
+
     except FileNotFoundError:
+        execution_time_ms = int((time.time() - start_time) * 1000)
+        _log_ux_event(
+            "command_error",
+            command="get",
+            execution_time_ms=execution_time_ms,
+            error_type="FileNotFoundError",
+            error_message="Knowledge base not found",
+        )
         print(
             "\n❌ Knowledge base not found.\n"
             "   Quick fix: python src/build_kb.py --demo\n"
@@ -1044,6 +1248,14 @@ def get(paper_id: str, output: str | None, sections: tuple[str, ...]) -> None:
         )
         sys.exit(1)
     except ValueError as error:
+        execution_time_ms = int((time.time() - start_time) * 1000)
+        _log_ux_event(
+            "command_error",
+            command="get",
+            execution_time_ms=execution_time_ms,
+            error_type="ValueError",
+            error_message=str(error),
+        )
         print(
             f"\n❌ Invalid paper ID: {error}\n"
             "   Paper IDs must be exactly 4 digits (e.g., 0001, 0234, 1234)\n"
@@ -1052,6 +1264,14 @@ def get(paper_id: str, output: str | None, sections: tuple[str, ...]) -> None:
         )
         sys.exit(1)
     except Exception as error:
+        execution_time_ms = int((time.time() - start_time) * 1000)
+        _log_ux_event(
+            "command_error",
+            command="get",
+            execution_time_ms=execution_time_ms,
+            error_type=type(error).__name__,
+            error_message=str(error),
+        )
         print(
             f"\n❌ Failed to retrieve paper: {error}\n"
             "   Make sure the paper ID is correct (4 digits, e.g., 0001)\n"
@@ -1064,7 +1284,8 @@ def get(paper_id: str, output: str | None, sections: tuple[str, ...]) -> None:
 @cli.command(name="get-batch")
 @click.argument("paper_ids", nargs=-1, required=True)
 @click.option("--format", type=click.Choice(["text", "json"]), default="text", help="Output format")
-def get_batch(paper_ids: tuple[str, ...], format: str) -> None:
+@click.option("--add-citation", is_flag=True, help="Append IEEE citation to each paper")
+def get_batch(paper_ids: tuple[str, ...], format: str, add_citation: bool) -> None:
     """Get multiple papers by their IDs in a single batch.
 
     Efficiently retrieve multiple papers at once. Useful for reviewing
@@ -1075,12 +1296,14 @@ def get_batch(paper_ids: tuple[str, ...], format: str) -> None:
       python src/cli.py get-batch 0001 0002 0003        # Get three papers
       python src/cli.py get-batch 0234 1426             # Get specific papers
       python src/cli.py get-batch 0001 0002 --format json  # JSON output
+      python src/cli.py get-batch 0001 0002 --add-citation  # Include numbered citations
+      python src/cli.py get-batch 0001 0002 --format json --add-citation  # JSON + citations
 
     Paper IDs are always 4-digit zero-padded.
     Output formats: text (default) or json.
     """
-    results = []
-    errors = []
+    results: list[dict[str, str]] = []
+    errors: list[str] = []
 
     try:
         research_cli = ResearchCLI()
@@ -1103,6 +1326,15 @@ def get_batch(paper_ids: tuple[str, ...], format: str) -> None:
                 if "not found" in content.lower():
                     errors.append(f"Paper {paper_id} not found")
                     continue
+
+                # Add citation if requested
+                if add_citation:
+                    # Get paper metadata for citation (use len(results) + 1 for citation number)
+                    paper_metadata = research_cli.kb_index.get_paper_by_id(paper_id)
+                    if paper_metadata:
+                        citation_number = len(results) + 1
+                        citation = research_cli.format_ieee_citation(paper_metadata, citation_number)
+                        content += f"\n\n---\n**Citation:** {citation}"
 
                 results.append({"id": paper_id, "content": content})
 
@@ -1166,6 +1398,13 @@ def cite(paper_ids: tuple[str, ...], format: str) -> None:
     Paper IDs are always 4-digit zero-padded.
     Output formats: text (default) or json.
     """
+    start_time = time.time()
+
+    # Log cite command start
+    _log_ux_event(
+        "command_start", command="cite", paper_count=len(paper_ids), paper_ids=list(paper_ids), format=format
+    )
+
     results = []
     errors = []
 
@@ -1213,13 +1452,39 @@ def cite(paper_ids: tuple[str, ...], format: str) -> None:
                 for err_msg in errors:
                     print(f"  - {err_msg}", file=sys.stderr)
 
+        # Log successful cite completion
+        execution_time_ms = int((time.time() - start_time) * 1000)
+        _log_ux_event(
+            "command_success",
+            command="cite",
+            execution_time_ms=execution_time_ms,
+            citations_generated=len(results),
+            errors_encountered=len(errors),
+        )
+
     except FileNotFoundError:
+        execution_time_ms = int((time.time() - start_time) * 1000)
+        _log_ux_event(
+            "command_error",
+            command="cite",
+            execution_time_ms=execution_time_ms,
+            error_type="FileNotFoundError",
+            error_message="Knowledge base not found",
+        )
         print(
             "Knowledge base not found. Run 'python src/build_kb.py --demo' to create one.",
             file=sys.stderr,
         )
         sys.exit(1)
     except Exception as error:
+        execution_time_ms = int((time.time() - start_time) * 1000)
+        _log_ux_event(
+            "command_error",
+            command="cite",
+            execution_time_ms=execution_time_ms,
+            error_type=type(error).__name__,
+            error_message=str(error),
+        )
         print(
             f"Citation generation failed: {error}. Try rebuilding with 'python src/build_kb.py'",
             file=sys.stderr,
@@ -1329,6 +1594,11 @@ def info() -> None:
 
     Use this to verify KB health and understand your paper collection.
     """
+    start_time = time.time()
+
+    # Log info command start
+    _log_ux_event("command_start", command="info")
+
     try:
         knowledge_base_path = Path("kb_data")
         metadata_file_path = knowledge_base_path / "metadata.json"
@@ -1364,7 +1634,24 @@ def info() -> None:
         for paper in metadata["papers"][:5]:
             print(f"  - [{paper['id']}] {paper['title'][:60]}...")
 
+        # Log successful info completion
+        execution_time_ms = int((time.time() - start_time) * 1000)
+        _log_ux_event(
+            "command_success",
+            command="info",
+            execution_time_ms=execution_time_ms,
+            total_papers=metadata.get("total_papers", 0),
+        )
+
     except Exception as error:
+        execution_time_ms = int((time.time() - start_time) * 1000)
+        _log_ux_event(
+            "command_error",
+            command="info",
+            execution_time_ms=execution_time_ms,
+            error_type=type(error).__name__,
+            error_message=str(error),
+        )
         print(
             f"Failed to get knowledge base info: {error}. Run 'python src/build_kb.py --demo' to create one.",
             file=sys.stderr,
@@ -1413,6 +1700,19 @@ def smart_search(query_text: str, top_k: int, max_tokens: int, sections: tuple[s
       - Outputs results as JSON to stdout for processing
       - Intelligently selects sections based on query terms
     """
+    start_time = time.time()
+
+    # Log smart_search command start
+    _log_ux_event(
+        "command_start",
+        command="smart_search",
+        query_length=len(query_text),
+        top_k=top_k,
+        max_tokens=max_tokens,
+        has_sections_filter=len(sections) > 0,
+        sections_requested=list(sections),
+    )
+
     try:
         research_cli = ResearchCLI()
 
@@ -1528,7 +1828,26 @@ def smart_search(query_text: str, top_k: int, max_tokens: int, sections: tuple[s
 
         print("\n" + json.dumps(output_data, indent=2))
 
+        # Log successful smart_search completion
+        execution_time_ms = int((time.time() - start_time) * 1000)
+        _log_ux_event(
+            "command_success",
+            command="smart_search",
+            execution_time_ms=execution_time_ms,
+            papers_found=len(search_results),
+            papers_loaded=len(loaded_papers),
+            total_chars=total_chars,
+        )
+
     except FileNotFoundError:
+        execution_time_ms = int((time.time() - start_time) * 1000)
+        _log_ux_event(
+            "command_error",
+            command="smart_search",
+            execution_time_ms=execution_time_ms,
+            error_type="FileNotFoundError",
+            error_message="Knowledge base not found",
+        )
         print(
             "\n❌ Knowledge base not found.\n"
             "   Quick fix: python src/build_kb.py --demo\n"
@@ -1537,6 +1856,14 @@ def smart_search(query_text: str, top_k: int, max_tokens: int, sections: tuple[s
         )
         sys.exit(1)
     except Exception as error:
+        execution_time_ms = int((time.time() - start_time) * 1000)
+        _log_ux_event(
+            "command_error",
+            command="smart_search",
+            execution_time_ms=execution_time_ms,
+            error_type=type(error).__name__,
+            error_message=str(error),
+        )
         print(f"\n❌ Smart search failed: {error}", file=sys.stderr)
         sys.exit(1)
 
@@ -1730,10 +2057,10 @@ def _generate_preset_commands(preset_name: str, topic: str) -> list[dict[str, An
     return presets[preset_name]
 
 
-def _execute_batch(research_cli: ResearchCLI, commands: list[dict]) -> list[dict]:
+def _execute_batch(research_cli: ResearchCLI, commands: list[dict[str, Any]]) -> list[dict[str, Any]]:
     """Execute batch commands with shared context."""
 
-    results: list[dict] = []
+    results: list[dict[str, Any]] = []
     context: dict[str, Any] = {
         "searches": [],  # All search results
         "papers": {},  # Retrieved papers by ID
@@ -1876,7 +2203,7 @@ def _execute_batch(research_cli: ResearchCLI, commands: list[dict]) -> list[dict
 
             elif cmd_type == "merge":
                 # Meta-command: Merge all search results
-                merged: dict[str, dict] = {}
+                merged: dict[str, dict[str, Any]] = {}
                 for search_results in context["searches"]:
                     for paper in search_results:
                         paper_id = paper["id"]
@@ -2028,7 +2355,7 @@ def _execute_batch(research_cli: ResearchCLI, commands: list[dict]) -> list[dict
     return results
 
 
-def _format_batch_text(results: list[dict]) -> None:
+def _format_batch_text(results: list[dict[str, Any]]) -> None:
     """Format batch results as human-readable text."""
 
     for i, result in enumerate(results, 1):
@@ -2086,15 +2413,15 @@ def _format_batch_text(results: list[dict]) -> None:
             print(f"   Command: {result.get('command', {})}")
 
 
-def generate_ieee_citation(paper_metadata: dict, citation_number: int) -> str:
+def generate_ieee_citation(paper_metadata: dict[str, Any], citation_number: int) -> str:
     """Generate IEEE-style citation for a paper.
-    
+
     Standalone function for compatibility with tests.
-    
+
     Args:
         paper_metadata: Paper metadata dictionary
         citation_number: Citation number for reference
-        
+
     Returns:
         Formatted IEEE citation string
     """

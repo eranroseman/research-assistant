@@ -13,7 +13,7 @@ I'll conduct a comprehensive literature review, adapting my approach based on wh
 **Research-helper subagents for:**
 
 - Complex multi-step data retrieval
-- Multiple coordinated searches benefiting from batch operations  
+- Multiple coordinated searches benefiting from batch operations
 - Specific data extraction from multiple papers
 - Systematic literature mapping
 
@@ -39,25 +39,25 @@ I'll conduct a comprehensive literature review, adapting my approach based on wh
 
 ### Performance optimization
 - **Batch operations**: 10-20x faster for multiple commands
-- **Parallel subagents**: Launch multiple subagents simultaneously  
+- **Parallel subagents**: Launch multiple subagents simultaneously
 - **Smart search**: Use for 20+ papers efficiently
 
 ## Available Resources
 
-**Knowledge Base:** ~2,100 academic papers with quality scoring (0-100 scale)  
+**Knowledge Base:** ~2,100 academic papers with quality scoring (0-100 scale)
 **Documentation:** Complete command options in `docs/api-reference.md`
 
 ### Key Commands
 
 - Search: `python src/cli.py search "query" [--min-quality N] [--show-quality]`
-- Get paper: `python src/cli.py get XXXX [--sections abstract methods results]`  
+- Get paper: `python src/cli.py get XXXX [--sections abstract methods results]`
 - Batch operations: `python src/cli.py batch --preset research "topic"`
 - Smart search: `python src/cli.py smart-search "query" -k 30` (for 20+ papers)
 - Citations: `python src/cli.py cite XXXX XXXX XXXX` (space-separated IDs)
 
 ### Quality considerations
 - Higher quality scores provide stronger evidence
-- Recent systematic reviews may summarize earlier work  
+- Recent systematic reviews may summarize earlier work
 - Multiple search approaches reveal complementary literature
 
 ## Analysis Workflow
@@ -96,7 +96,7 @@ The report will include appropriate citations, quality assessments where helpful
 **Note on Knowledge Base Limitations:** If I find that our knowledge base appears incomplete for your research topic (e.g., fewer than 10 highly relevant papers, missing recent studies from 2023+, or obvious gaps in coverage), I'll notify you and ask for guidance on whether to:
 
 - Proceed with available papers and note limitations in the report
-- Suggest specific papers/DOIs to add to strengthen coverage  
+- Suggest specific papers/DOIs to add to strengthen coverage
 - Adjust the research scope to better match available evidence
 - Focus on related topics where we have stronger coverage
 

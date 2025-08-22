@@ -1,6 +1,6 @@
 # Test Organization
 
-This directory contains the test suite for the Research Assistant project, organized following pytest best practices.
+This directory contains the test suite for the Research Assistant project, organized following pytest best practices with consistent naming conventions.
 
 ## Test Structure
 
@@ -12,26 +12,36 @@ tests/
 ├── README.md                  # This documentation
 ├── fixtures/                  # Test data and mock files
 │   └── mock_pdfs/
-├── unit/                      # Unit tests (fast, isolated)
-│   ├── test_build_kb.py          # KB building unit tests
-│   ├── test_build_kb_safety.py   # KB safety feature tests
-│   ├── test_cli_comprehensive.py # Comprehensive CLI functionality
-│   ├── test_cli_core.py          # Core CLI operations
-│   ├── test_kb_index_full.py     # KB index unit tests
-│   ├── test_quality_scoring.py   # Quality scoring algorithm
-│   └── test_search_parametrized.py # Parametrized search tests
-├── integration/               # Integration tests (component interactions)
-│   ├── test_batch_operations.py  # Batch command workflows
-│   ├── test_incremental_updates_full.py # Incremental update workflows
-│   ├── test_kb_building.py       # Full KB building process
-│   ├── test_reports_full.py      # Report generation workflows
-│   └── test_search_workflow.py   # Search workflow integration
-├── e2e/                       # End-to-end tests (full system)
-│   ├── test_cite_command_e2e.py  # Citation command E2E tests
-│   └── test_cli_commands.py      # Critical CLI functionality
-└── performance/               # Performance and benchmark tests
-    └── test_benchmarks.py        # Performance benchmarks
+├── unit/                      # Unit tests (123 tests, fast, isolated)
+│   ├── test_unit_citation_system.py      # IEEE citation formatting
+│   ├── test_unit_cli_batch_commands.py   # CLI batch operations
+│   ├── test_unit_cli_interface.py        # CLI utility functions
+│   ├── test_unit_knowledge_base.py       # KB building, indexing, caching
+│   ├── test_unit_quality_scoring.py      # Paper quality algorithms
+│   ├── test_unit_search_engine.py        # Search, embedding, ranking
+│   └── test_unit_ux_analytics.py         # Analytics logging
+├── integration/               # Integration tests (40 tests, component interactions)
+│   ├── test_integration_batch_operations.py    # Batch command workflows
+│   ├── test_integration_incremental_updates.py # Incremental update workflows
+│   ├── test_integration_kb_building.py         # Full KB building process
+│   ├── test_integration_reports.py             # Report generation workflows
+│   └── test_integration_search_workflow.py     # Search workflow integration
+├── e2e/                       # End-to-end tests (23 tests, full system)
+│   ├── test_e2e_cite_command.py          # Citation command E2E tests
+│   └── test_e2e_cli_commands.py          # Critical CLI functionality
+└── performance/               # Performance tests (7 tests, benchmarks)
+    └── test_performance_benchmarks.py    # Speed and memory benchmarks
 ```
+
+## File Naming Convention
+
+**Pattern**: `test_{type}_{component/feature}.py`
+
+This naming scheme provides several benefits:
+- **Immediate clarity**: Test type and component are obvious from filename
+- **Easy filtering**: Run specific test types with `pytest tests/unit/test_unit_*.py`
+- **Scalable organization**: Pattern supports adding new tests consistently
+- **IDE-friendly**: Better sorting and grouping in file explorers
 
 ## Test Categories
 
@@ -42,10 +52,13 @@ tests/
 - **High coverage**: Focus on edge cases and error conditions
 
 **Key Files**:
-- `test_cli_comprehensive.py`: Core CLI functionality, quality scoring
-- `test_search_parametrized.py`: Search filtering with multiple parameter combinations
-- `test_build_kb.py`: KB building components (PDF extraction, embeddings)
-- `test_quality_scoring.py`: Paper quality scoring algorithm
+- `test_unit_cli_batch_commands.py`: Core CLI functionality, batch operations
+- `test_unit_search_engine.py`: Search filtering with multiple parameter combinations
+- `test_unit_knowledge_base.py`: KB building components (PDF extraction, embeddings)
+- `test_unit_quality_scoring.py`: Paper quality scoring algorithm
+- `test_unit_citation_system.py`: IEEE citation formatting
+- `test_unit_cli_interface.py`: CLI utility functions and paper quality estimation
+- `test_unit_ux_analytics.py`: Analytics logging functionality
 
 ### Integration Tests (`integration/`)
 **Purpose**: Test component interactions and workflows
@@ -54,10 +67,11 @@ tests/
 - **Real component interaction**: Test actual class interactions
 
 **Key Files**:
-- `test_search_workflow.py`: Complete search workflows with quality filtering
-- `test_batch_operations.py`: Batch command execution and preset workflows
-- `test_kb_building.py`: Full KB building process integration
-- `test_incremental_updates_full.py`: Incremental update workflows
+- `test_integration_search_workflow.py`: Complete search workflows with quality filtering
+- `test_integration_batch_operations.py`: Batch command execution and preset workflows
+- `test_integration_kb_building.py`: Full KB building process integration
+- `test_integration_incremental_updates.py`: Incremental update workflows
+- `test_integration_reports.py`: Report generation workflows
 
 ### End-to-End Tests (`e2e/`)
 **Purpose**: Test complete user workflows through CLI
@@ -66,8 +80,8 @@ tests/
 - **Critical functionality**: Must-work features that users depend on
 
 **Key Files**:
-- `test_cli_commands.py`: Critical CLI commands (search, info, diagnose)
-- `test_cite_command_e2e.py`: Citation generation workflows
+- `test_e2e_cli_commands.py`: Critical CLI commands (search, info, diagnose)
+- `test_e2e_cite_command.py`: Citation generation workflows
 
 ### Performance Tests (`performance/`)
 **Purpose**: Benchmark performance and detect regressions
@@ -110,13 +124,13 @@ pytest tests/ -v
 
 ```bash
 # Run specific test file
-pytest tests/unit/test_cli_comprehensive.py
+pytest tests/unit/test_unit_cli_batch_commands.py
 
 # Run specific test class
-pytest tests/e2e/test_cli_commands.py::TestCriticalE2EFunctionality
+pytest tests/e2e/test_e2e_cli_commands.py::TestCriticalE2EFunctionality
 
 # Run specific test
-pytest tests/e2e/test_cli_commands.py::TestCriticalE2EFunctionality::test_kb_search_doesnt_crash
+pytest tests/e2e/test_e2e_cli_commands.py::TestCriticalE2EFunctionality::test_kb_search_doesnt_crash
 
 # Run tests matching pattern
 pytest tests/ -k "search"
@@ -135,15 +149,15 @@ pytest tests/unit/ -n 4
 ## Test Status
 
 ### ✅ Currently Working (193 total tests)
-- **Unit Tests**: 7 files - Core functionality tests
-- **Integration Tests**: 4/5 files working - Some batch format issues
-- **E2E Tests**: ✅ All critical tests passing
-- **Performance Tests**: 1 file - Benchmarking tests
+- **Unit Tests**: 7 files, 123 tests - Component-focused tests ✅ All passing
+- **Integration Tests**: 5 files, 40 tests - Workflow validation (some CLI attribute issues)
+- **E2E Tests**: 2 files, 23 tests - ✅ All critical tests passing
+- **Performance Tests**: 1 file, 7 tests - ✅ Benchmarking tests passing
 
 ### 🔧 Known Issues
-- Some integration tests expect different batch command output format
-- Parametrized search tests may have parameter mismatches
-- Mock setup complexity in some integration tests
+- Some integration tests have ResearchCLI attribute issues (not related to reorganization)
+- Integration tests work but may have CLI interface compatibility issues
+- All unit, e2e, and performance tests fully functional
 
 ## Test Configuration
 
@@ -180,7 +194,7 @@ Contains shared fixtures for:
 def test_function_behavior_when_condition():
     """Test that function behaves correctly when condition is met."""
     # Arrange
-    # Act  
+    # Act
     # Assert
 ```
 
@@ -229,7 +243,7 @@ def test_search_functionality(mock_transformer):
 pytest tests/unit/ tests/e2e/ -v
 
 # Check critical functionality
-pytest tests/e2e/test_cli_commands.py::TestCriticalE2EFunctionality -v
+pytest tests/e2e/test_e2e_cli_commands.py::TestCriticalE2EFunctionality -v
 
 # Verify no regressions
 python src/cli.py search "test" --export validation.csv

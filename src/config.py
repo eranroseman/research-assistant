@@ -64,6 +64,29 @@ SEARCH_CACHE_MAX_SIZE = 100  # Maximum number of cached queries (LRU eviction)
 # Papers are scored 0-100 based on study type, recency, sample size, and full text
 QUALITY_BASE_SCORE = 50  # Starting score for all papers
 
+# Enhanced Quality Scoring with Semantic Scholar API
+ENABLE_ENHANCED_QUALITY = True  # Enable API-enhanced quality scoring
+SEMANTIC_SCHOLAR_API_URL = "https://api.semanticscholar.org/graph/v1"
+API_REQUEST_TIMEOUT = 10  # Timeout for API requests in seconds
+API_RATE_LIMIT_DELAY = 0.001  # Minimum delay between API requests (1ms)
+API_MAX_RETRIES = 3  # Maximum retries for failed API requests
+API_RETRY_DELAY = 1.0  # Delay between retries in seconds
+
+# Enhanced scoring weights (total possible: 100 points)
+# Basic scoring: 60 points max
+BASIC_STUDY_TYPE_MAX = 20  # Reduced from 35 to make room for enhanced metrics
+BASIC_RECENCY_MAX = 10  # Unchanged
+BASIC_SAMPLE_SIZE_MAX = 5  # Reduced from 10
+BASIC_FULL_TEXT_BONUS = 5  # Unchanged
+BASIC_TOTAL_MAX = 40  # Total basic score
+
+# Enhanced API-based scoring: 60 points max
+ENHANCED_CITATION_IMPACT_MAX = 25  # Citation count and influence
+ENHANCED_VENUE_PRESTIGE_MAX = 15  # Journal/conference ranking
+ENHANCED_AUTHOR_AUTHORITY_MAX = 10  # Author h-index and reputation
+ENHANCED_CROSS_VALIDATION_MAX = 10  # Multi-source verification
+ENHANCED_TOTAL_MAX = 60  # Total enhanced score
+
 # Study type scores based on evidence hierarchy (max 35 points)
 # Higher scores = stronger evidence quality
 QUALITY_STUDY_TYPE_WEIGHTS = {
@@ -92,6 +115,37 @@ BONUS_MEDIUM_SAMPLE = 5  # Bonus for medium RCTs
 
 # Additional scoring factors
 BONUS_FULL_TEXT = 5  # Bonus for papers with full PDF text available
+
+# Citation impact scoring thresholds
+CITATION_COUNT_THRESHOLDS = {
+    "exceptional": 1000,  # 25 points
+    "high": 500,  # 20 points
+    "good": 100,  # 15 points
+    "moderate": 50,  # 10 points
+    "some": 20,  # 7 points
+    "few": 5,  # 4 points
+    "minimal": 1,  # 2 points
+    "none": 0,  # 0 points
+}
+
+# Venue prestige scoring (based on journal rankings)
+VENUE_PRESTIGE_SCORES = {
+    "Q1": 15,  # Top quartile journals
+    "Q2": 12,  # Second quartile
+    "Q3": 8,  # Third quartile
+    "Q4": 4,  # Fourth quartile
+    "unranked": 2,  # Unranked venues
+}
+
+# Author authority thresholds (based on h-index)
+AUTHOR_AUTHORITY_THRESHOLDS = {
+    "renowned": 50,  # 10 points
+    "established": 30,  # 8 points
+    "experienced": 15,  # 6 points
+    "emerging": 5,  # 4 points
+    "early_career": 1,  # 2 points
+    "unknown": 0,  # 0 points
+}
 
 # ============================================================================
 # BUILD CONFIGURATION
@@ -178,6 +232,15 @@ VALID_PAPER_TYPES = [
 ]
 
 # ============================================================================
+# UX ANALYTICS CONFIGURATION
+# ============================================================================
+# User experience analytics logging for improving functionality
+UX_LOG_PATH = Path("system")  # Use existing system directory
+UX_LOG_PREFIX = "ux_analytics_"  # Log file prefix
+UX_LOG_LEVEL = "INFO"  # Logging level for UX analytics
+UX_LOG_ENABLED = True  # Enable/disable UX analytics logging
+
+# ============================================================================
 # DISPLAY CONFIGURATION
 # ============================================================================
 # Study type markers for visual hierarchy
@@ -193,7 +256,19 @@ STUDY_TYPE_MARKERS = {
 }
 
 # Quality score thresholds
-QUALITY_EXCELLENT = 80  # Systematic reviews, meta-analyses
+QUALITY_EXCELLENT = 85  # Enhanced high-impact papers
+QUALITY_VERY_GOOD = 70  # Strong papers with good metrics
 QUALITY_GOOD = 60  # RCTs, recent high-quality studies
-QUALITY_MODERATE = 40  # Cohort studies, older papers
-QUALITY_LOW = 0  # Case reports, generic studies
+QUALITY_MODERATE = 45  # Cohort studies, older papers
+QUALITY_LOW = 30  # Case reports, minimal citations
+QUALITY_VERY_LOW = 0  # Unverified or poor quality
+
+# Quality score display colors/indicators
+QUALITY_INDICATORS = {
+    "excellent": "🌟",  # 85+
+    "very_good": "⭐",  # 70-84
+    "good": "●",  # 60-69
+    "moderate": "◐",  # 45-59
+    "low": "○",  # 30-44
+    "very_low": "·",  # 0-29
+}

@@ -1,12 +1,12 @@
 # Telemedicine Effectiveness During COVID-19: A Global Meta-Analysis
 
-**Authors:** James Wilson, Maria Garcia, Thomas Lee  
-**Year:** 2023  
-**Journal:** BMJ Global Health  
-**Volume:** 8  
-**Issue:** 4  
-**Pages:** e011234  
-**DOI:** 10.1136/bmjgh-2023-011234  
+**Authors:** James Wilson, Maria Garcia, Thomas Lee
+**Year:** 2023
+**Journal:** BMJ Global Health
+**Volume:** 8
+**Issue:** 4
+**Pages:** e011234
+**DOI:** 10.1136/bmjgh-2023-011234
 
 ## Abstract
 The COVID-19 pandemic accelerated telemedicine adoption globally. This meta-analysis of 156 studies across 42 countries evaluates telemedicine effectiveness for various conditions during 2020-2023. Patient satisfaction rates averaged 86%, with no significant differences in clinical outcomes compared to in-person care for chronic disease management. Cost savings averaged 23% per consultation. However, disparities in access persisted, particularly in low-resource settings.

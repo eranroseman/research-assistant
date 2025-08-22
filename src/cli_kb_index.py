@@ -54,7 +54,7 @@ class KnowledgeBaseIndex:
         """
         self.kb_path = Path(kb_path)
         self.metadata_file = self.kb_path / "metadata.json"
-        self.papers: list[dict] = []
+        self.papers: list[dict[str, Any]] = []
         self.id_to_index: dict[str, int] = {}
         self._load()
 
@@ -81,7 +81,7 @@ class KnowledgeBaseIndex:
         # Build ID lookup index - O(n) once at startup
         self.id_to_index = {paper["id"]: idx for idx, paper in enumerate(self.papers)}
 
-    def get_paper_by_id(self, paper_id: str) -> dict | None:
+    def get_paper_by_id(self, paper_id: str) -> dict[str, Any] | None:
         """
         Get paper by ID - O(1) lookup.
 
@@ -99,7 +99,7 @@ class KnowledgeBaseIndex:
             return self.papers[idx]
         return None
 
-    def get_paper_with_index(self, paper_id: str) -> tuple[dict, int] | None:
+    def get_paper_with_index(self, paper_id: str) -> tuple[dict[str, Any], int] | None:
         """
         Get paper and its FAISS index - O(1) lookup.
 
@@ -116,7 +116,7 @@ class KnowledgeBaseIndex:
             return self.papers[idx], idx
         return None
 
-    def get_paper_by_index(self, index: int) -> dict | None:
+    def get_paper_by_index(self, index: int) -> dict[str, Any] | None:
         """
         Get paper by FAISS index - O(1) lookup.
 
@@ -130,7 +130,7 @@ class KnowledgeBaseIndex:
             return self.papers[index]
         return None
 
-    def get_papers_by_ids(self, paper_ids: list[str]) -> list[dict]:
+    def get_papers_by_ids(self, paper_ids: list[str]) -> list[dict[str, Any]]:
         """
         Get multiple papers by IDs efficiently.
 
@@ -147,7 +147,7 @@ class KnowledgeBaseIndex:
                 papers.append(paper)
         return papers
 
-    def search_by_author(self, author_name: str) -> list[dict]:
+    def search_by_author(self, author_name: str) -> list[dict[str, Any]]:
         """
         Search papers by author name.
 
@@ -167,7 +167,7 @@ class KnowledgeBaseIndex:
 
         return results
 
-    def search_by_year_range(self, start_year: int, end_year: int) -> list[dict]:
+    def search_by_year_range(self, start_year: int, end_year: int) -> list[dict[str, Any]]:
         """
         Get papers within year range.
 

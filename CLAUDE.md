@@ -31,10 +31,12 @@ python src/cli.py [info|diagnose]
 ```bash
 mypy src/
 ruff check src/ tests/ [--fix]
-pytest tests/e2e/test_cli_commands.py::TestCriticalE2EFunctionality -v  # 3 critical tests
-pytest tests/unit/ -v              # Unit tests (fast)
+pytest tests/e2e/test_e2e_cli_commands.py::TestCriticalE2EFunctionality -v  # 3 critical tests
+pytest tests/unit/ -v              # Unit tests (123 tests, fast)
+pytest tests/integration/ -v       # Integration tests (workflow validation)
 pytest tests/e2e/ -v               # End-to-end tests (critical functionality)
-pytest tests/ -v                   # All tests (~193 total)
+pytest tests/performance/ -v       # Performance benchmarks
+pytest tests/ -v                   # All tests (193 total)
 ```
 
 ## Architecture
@@ -59,7 +61,8 @@ reviews/
 └── *.md                       # Literature review reports
 
 system/
-└── dev_*.csv                  # Development artifacts (flat with prefix)
+├── dev_*.csv                  # Development artifacts (flat with prefix)
+└── ux_analytics_*.jsonl       # UX analytics logs (daily rotation)
 ```
 
 ## Key Details
@@ -112,8 +115,58 @@ python src/cli.py cite 0001 0234 1426  # Generate citations for specific papers
 
 - Python 3.11+, type hints required
 - `ruff format src/` for formatting
-- Test organization: unit/ (7 files), integration/ (5 files), e2e/ (2 files), performance/ (1 file)
-- Critical tests: `pytest tests/e2e/test_cli_commands.py::TestCriticalE2EFunctionality -v`
+- **Test Organization**: Consistent naming scheme `test_{type}_{component}.py`
+  - **unit/** (7 files): `test_unit_*.py` - Component-focused unit tests
+  - **integration/** (5 files): `test_integration_*.py` - Workflow validation tests  
+  - **e2e/** (2 files): `test_e2e_*.py` - End-to-end functionality tests
+  - **performance/** (1 file): `test_performance_*.py` - Benchmark and timing tests
+- **Critical tests**: `pytest tests/e2e/test_e2e_cli_commands.py::TestCriticalE2EFunctionality -v`
+
+## Test Structure
+
+```
+tests/
+├── unit/                           # Component-focused unit tests (123 tests)
+│   ├── test_unit_citation_system.py      # IEEE citation formatting
+│   ├── test_unit_cli_batch_commands.py   # CLI batch operations
+│   ├── test_unit_cli_interface.py        # CLI utility functions
+│   ├── test_unit_knowledge_base.py       # KB building, indexing, caching
+│   ├── test_unit_quality_scoring.py      # Paper quality algorithms
+│   ├── test_unit_search_engine.py        # Search, embedding, ranking
+│   └── test_unit_ux_analytics.py         # Analytics logging
+├── integration/                    # Workflow validation tests (40 tests)
+│   ├── test_integration_batch_operations.py    # Batch command workflows
+│   ├── test_integration_incremental_updates.py # KB update workflows
+│   ├── test_integration_kb_building.py         # KB building processes
+│   ├── test_integration_reports.py             # Report generation
+│   └── test_integration_search_workflow.py     # Search workflows
+├── e2e/                           # End-to-end functionality tests (23 tests)
+│   ├── test_e2e_cite_command.py          # Citation command E2E
+│   └── test_e2e_cli_commands.py          # Core CLI commands E2E
+├── performance/                   # Performance benchmarks (7 tests)
+│   └── test_performance_benchmarks.py    # Speed and memory tests
+├── conftest.py                    # Shared pytest fixtures
+└── utils.py                       # Test utilities and helpers
+```
+
+**Test Naming Convention**: `test_{type}_{component/feature}.py`
+- Makes test purpose immediately clear from filename
+- Enables easy filtering by test type (`pytest tests/unit/test_unit_*.py`)
+- Supports scalable organization as codebase grows
+
+## UX Analytics
+
+- **Purpose**: Tracks user behavior patterns for CLI improvement (not debugging)
+- **Location**: `system/ux_analytics_YYYYMMDD.jsonl` (daily rotation)
+- **Format**: Newline-delimited JSON with timestamps, session IDs, and detailed metrics
+- **Data Captured**: Command usage, parameters, execution time, results, errors
+- **Privacy**: Local logs only, automatically disabled during testing
+- **Configuration**: Controlled via `src/config.py` (UX_LOG_ENABLED, UX_LOG_PATH)
+
+Example log entry:
+```json
+{"timestamp": "2025-08-21T16:26:08.907754+00:00", "session_id": "089ddbb4", "level": "INFO", "message": "", "event_type": "command_success", "command": "search", "execution_time_ms": 8479, "results_found": 1, "exported_to_csv": false}
+```
 
 ## Notes
 
