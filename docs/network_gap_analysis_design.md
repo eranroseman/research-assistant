@@ -1,9 +1,9 @@
 # Network Gap Analysis Design v1.2
 
-**Created**: 2024-08-21  
-**Updated**: 2024-08-21  
-**Status**: Design Phase - Citation Networks + Simplified Author Networks  
-**Dependencies**: Enhanced Quality Scoring (v3.1)  
+**Created**: 2024-08-21
+**Updated**: 2024-08-21
+**Status**: Design Phase - Citation Networks + Simplified Author Networks
+**Dependencies**: Enhanced Quality Scoring (v3.1)
 **Breaking Changes**: Requires fresh KB rebuild, no backwards compatibility
 
 ## Overview
@@ -33,7 +33,7 @@ After users build their KB with `python src/build_kb.py`, they are prompted to r
 - Generates comprehensive markdown reports
 - Outputs organized DOI lists for Zotero import
 
-### Supporting Module: `src/gap_detection.py` 
+### Supporting Module: `src/gap_detection.py`
 - Core gap detection algorithms
 - Citation network analysis (Phase 1)
 - Simplified author network analysis (Phase 1)
@@ -102,7 +102,7 @@ Options:
 # Comprehensive analysis (citation + recent author networks)
 python src/analyze_gaps.py
 
-# High-impact gaps with conservative recency 
+# High-impact gaps with conservative recency
 python src/analyze_gaps.py --min-citations 50 --year-from 2022
 
 # Top 50 gaps by priority
@@ -176,7 +176,7 @@ Recency Threshold: 2022 (for author networks)
 10.1056/NEJMoa2023-456
 [...]
 
-### All Author Network Gaps (15 DOIs)  
+### All Author Network Gaps (15 DOIs)
 10.1016/j.diabres.2024-98765
 10.1093/jamia/ocad.2024.123
 [...]
@@ -212,7 +212,7 @@ Recency Threshold: 2022 (for author networks)
 ### New Config Constants (`src/config.py`)
 ```python
 # ============================================================================
-# GAP ANALYSIS CONFIGURATION  
+# GAP ANALYSIS CONFIGURATION
 # ============================================================================
 
 # Gap detection thresholds
@@ -234,14 +234,14 @@ API_RATE_LIMIT_RETRY_DELAY = 1.0  # Base delay for exponential backoff
 CITATION_NETWORK_MAX_DEPTH = 2  # How deep to traverse citation networks
 CITATION_RELEVANCE_THRESHOLD = 0.1  # Min relevance score for inclusion
 
-# Simplified author network analysis  
+# Simplified author network analysis
 AUTHOR_NETWORK_USE_EXISTING_IDS = True     # Use Semantic Scholar IDs from enhanced scoring
 AUTHOR_NETWORK_MAX_RECENT_PAPERS = 20      # Limit papers per author to prevent overwhelming
 AUTHOR_NETWORK_TOPIC_SIMILARITY_THRESHOLD = 0.6  # Minimum topic similarity to KB
 
 # Future algorithms (Phase 2+) - disabled in Phase 1
 # CO_CITATION_MIN_FREQUENCY = 3
-# SEMANTIC_SIMILARITY_HIGH = 0.8  
+# SEMANTIC_SIMILARITY_HIGH = 0.8
 # TEMPORAL_GAP_MIN_YEAR_COVERAGE = 0.5
 
 # Report generation
@@ -340,7 +340,7 @@ GAP_ANALYSIS_CACHE_EXPIRY_DAYS = 7  # Cache API responses for 7 days
 - [ ] Basic report generation matching gap analysis format
 - [ ] DOI lists for Zotero import
 
-### Phase 1B: Simplified Author Networks (Week 2) - Additional Value  
+### Phase 1B: Simplified Author Networks (Week 2) - Additional Value
 - [ ] Extract author IDs from enhanced scoring data (no disambiguation)
 - [ ] Implement recency filtering with configurable --year-from flag
 - [ ] Add topic similarity filtering using existing KB embeddings
@@ -364,7 +364,7 @@ GAP_ANALYSIS_CACHE_EXPIRY_DAYS = 7  # Cache API responses for 7 days
 - KB v4.0+ with Multi-QA MPNet embeddings and enhanced metadata
 - Python packages: `aiohttp`, `networkx`, `scikit-learn`
 
-### Optional  
+### Optional
 - `matplotlib`, `seaborn` for future visualization features
 - `plotly` for interactive gap analysis reports
 
@@ -401,7 +401,7 @@ def prompt_gap_analysis_after_build(total_papers: int, build_time: float) -> Non
     """Educational prompt for gap analysis after successful KB build."""
     print(f"\n✅ Knowledge base built successfully!")
     print(f"   {total_papers:,} papers indexed in {build_time:.1f} minutes")
-    
+
     if has_enhanced_scoring() and total_papers >= 20:
         print(f"\n🔍 Run gap analysis to discover missing papers in your collection?")
         print(f"\nGap analysis identifies 5 types of literature gaps:")
@@ -410,14 +410,14 @@ def prompt_gap_analysis_after_build(total_papers: int, build_time: float) -> Non
         print(f"• Papers frequently co-cited with your collection")
         print(f"• Recent developments in your research areas")
         print(f"• Semantically similar papers you don't have")
-        
+
         print(f"\nIf you choose 'Y', will run: python src/analyze_gaps.py (comprehensive analysis, no filters)")
         print(f"\nFor filtered analysis, run manually later with flags:")
         print(f"  --min-citations N     Only papers with N+ citations")
         print(f"  --year-from YYYY      Only papers from YYYY onwards")
         print(f"  --limit N            Top N results by priority")
         print(f"\nExample: python src/analyze_gaps.py --min-citations 50 --year-from 2020 --limit 100")
-        
+
         response = input("\nRun comprehensive gap analysis now? (Y/n): ").strip().lower()
         if response != 'n':
             print("\n🔍 Running comprehensive gap analysis...")
@@ -458,7 +458,7 @@ class TokenBucket:
         self.burst_allowance = burst_allowance
         self.tokens = burst_allowance
         self.last_update = time.time()
-    
+
     async def acquire(self):
         """Acquire a token, waiting if necessary"""
         # Implementation ensures sustainable API usage

@@ -117,7 +117,7 @@ python src/cli.py cite 0001 0234 1426  # Generate citations for specific papers
 - `ruff format src/` for formatting
 - **Test Organization**: Consistent naming scheme `test_{type}_{component}.py`
   - **unit/** (7 files): `test_unit_*.py` - Component-focused unit tests
-  - **integration/** (5 files): `test_integration_*.py` - Workflow validation tests  
+  - **integration/** (5 files): `test_integration_*.py` - Workflow validation tests
   - **e2e/** (2 files): `test_e2e_*.py` - End-to-end functionality tests
   - **performance/** (1 file): `test_performance_*.py` - Benchmark and timing tests
 - **Critical tests**: `pytest tests/e2e/test_e2e_cli_commands.py::TestCriticalE2EFunctionality -v`

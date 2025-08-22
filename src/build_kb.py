@@ -358,7 +358,10 @@ def display_operation_summary(
 
 
 def format_truncated_list(
-    items: list[Any], max_display: int = 10, item_formatter: Any = str, continuation_message: str | None = None
+    items: list[Any],
+    max_display: int = 10,
+    item_formatter: Any = str,
+    continuation_message: str | None = None,
 ) -> list[str]:
     """Format a list with truncation for display.
 
@@ -1551,7 +1554,9 @@ class KnowledgeBaseBuilder:
         print(f"  Found {len(papers)} research papers (from {len(all_items)} total items)")
         return papers
 
-    def augment_papers_with_pdfs(self, papers: list[dict[str, Any]], use_cache: bool = True) -> tuple[int, int]:
+    def augment_papers_with_pdfs(
+        self, papers: list[dict[str, Any]], use_cache: bool = True
+    ) -> tuple[int, int]:
         """Add full text from PDFs to paper dictionaries.
 
         Extracts text from PDF attachments found in Zotero's storage directory.
@@ -1807,7 +1812,9 @@ class KnowledgeBaseBuilder:
 
         return report_path
 
-    def build_from_papers(self, papers: list[dict[str, Any]], pdf_stats: tuple[int, int] | None = None) -> None:
+    def build_from_papers(
+        self, papers: list[dict[str, Any]], pdf_stats: tuple[int, int] | None = None
+    ) -> None:
         """Build complete knowledge base from list of papers.
 
         This is the main pipeline that:
@@ -2301,6 +2308,7 @@ def main(
             # Backup existing KB
             import shutil
             from datetime import datetime, UTC
+
             backup_path = f"{kb_path}_backup_{datetime.now(UTC).strftime('%Y%m%d_%H%M%S')}"
             shutil.move(str(kb_path), backup_path)
             print(f"📁 Backed up existing KB to {backup_path}")

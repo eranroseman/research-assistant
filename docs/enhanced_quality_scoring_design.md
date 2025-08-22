@@ -1,7 +1,7 @@
 # Enhanced Quality Scoring System Design
 
-**Date**: August 21, 2025  
-**Version**: 3.1  
+**Date**: August 21, 2025
+**Version**: 3.1
 **Status**: Production-Ready Design with Emergency Fallback
 
 ## Overview
@@ -158,28 +158,28 @@ class EmergencyFallbackManager:
         self.last_failure_time = None
         self.fallback_mode = False
         self.fallback_start_time = None
-    
+
     def record_failure(self):
         self.failure_count += 1
         self.last_failure_time = datetime.now()
-        
+
         if self.failure_count >= config.API_FAILURE_THRESHOLD:
             self.enable_fallback_mode()
-    
+
     def record_success(self):
         self.failure_count = 0
         self.last_failure_time = None
-    
+
     def enable_fallback_mode(self):
         if not self.fallback_mode:
             self.fallback_mode = True
             self.fallback_start_time = datetime.now()
             print(f"⚠️  Enhanced scoring API unavailable. Using basic scoring fallback for {config.EMERGENCY_FALLBACK_DURATION // 60} minutes.")
-    
+
     def should_retry_enhanced(self):
         if not self.fallback_mode:
             return True
-        
+
         if self.fallback_start_time:
             elapsed = (datetime.now() - self.fallback_start_time).total_seconds()
             if elapsed > config.EMERGENCY_FALLBACK_DURATION:
@@ -187,7 +187,7 @@ class EmergencyFallbackManager:
                 self.failure_count = 0
                 print("🔄 Retrying enhanced scoring after emergency fallback period.")
                 return True
-        
+
         return False
 
 # Global fallback manager
@@ -197,13 +197,13 @@ async def get_semantic_scholar_data(doi: Optional[str], title: str) -> Dict[str,
     """Fetch paper data from Semantic Scholar API."""
     if not doi and not title:
         raise ValueError("Either DOI or title required for quality scoring")
-        
+
     # Production-ready session with connection pooling and circuit breaker
     connector = aiohttp.TCPConnector(
         limit=config.API_CONNECTION_POOL_SIZE,
         limit_per_host=config.API_CONNECTION_POOL_HOST_LIMIT
     )
-    
+
     timeout = aiohttp.ClientTimeout(total=config.API_REQUEST_TIMEOUT)
     async with aiohttp.ClientSession(connector=connector, timeout=timeout) as session:
         try:
@@ -213,9 +213,9 @@ async def get_semantic_scholar_data(doi: Optional[str], title: str) -> Dict[str,
             else:
                 url = f"{config.SEMANTIC_SCHOLAR_API_URL}/paper/search"
                 params = {"query": title, "limit": 1}
-                
+
             fields = "citationCount,venue,authors,externalIds,publicationTypes,fieldsOfStudy"
-            
+
             for attempt in range(config.API_MAX_RETRIES):
                 try:
                     if doi:
@@ -228,12 +228,12 @@ async def get_semantic_scholar_data(doi: Optional[str], title: str) -> Dict[str,
                                 data = await response.json()
                                 if data.get("data") and len(data["data"]) > 0:
                                     return data["data"][0]
-                    
+
                     if response.status == 429:  # Rate limited
                         await asyncio.sleep(config.API_RETRY_DELAY * (attempt + 1))
                         continue
                     break
-                    
+
                 except aiohttp.ClientTimeout:
                     result = {"error": "timeout", "paper": doi or title}
                     if attempt == config.API_MAX_RETRIES - 1:
@@ -252,18 +252,18 @@ async def get_semantic_scholar_data(doi: Optional[str], title: str) -> Dict[str,
                     if attempt == config.API_MAX_RETRIES - 1:
                         print(f"API network error after {config.API_MAX_RETRIES} attempts: {e}")
                     await asyncio.sleep(config.API_RETRY_DELAY)
-                    
+
         except Exception as e:
             print(f"Semantic Scholar API error: {e}")
             raise Exception(f"Semantic Scholar API error: {e}") from e
 
 def calculate_quality_score(paper_data: dict, s2_data: Optional[Dict[str, Any]] = None) -> tuple[int, str]:
     """Calculate quality score with automatic fallback to basic scoring if needed."""
-    
+
     # Check if we should use enhanced scoring
     if config.ENHANCED_SCORING_EMERGENCY_FALLBACK and not fallback_manager.should_retry_enhanced():
         return calculate_basic_quality_score(paper_data)
-    
+
     # Try enhanced scoring if API data available
     if s2_data and not s2_data.get('error'):
         try:
@@ -281,71 +281,71 @@ def calculate_quality_score(paper_data: dict, s2_data: Optional[Dict[str, Any]] 
 
 def calculate_enhanced_quality_score(paper_data: dict, s2_data: Dict[str, Any]) -> tuple[int, str]:
     """Calculate unified enhanced quality score using paper data + API data."""
-    
+
     score = 0
     factors = []
-    
+
     # Core paper attributes (40 points max)
     score += calculate_study_type_score(paper_data.get("study_type"))
     score += calculate_recency_score(paper_data.get("year"))
     score += calculate_sample_size_score(paper_data.get("sample_size"))
     score += calculate_full_text_score(paper_data.get("has_full_text"))
-    
+
     # API-enhanced attributes (60 points max)
     citation_bonus = calculate_citation_impact_score(s2_data.get("citationCount", 0))
     venue_bonus = calculate_venue_prestige_score(s2_data.get("venue", {}))
     author_bonus = calculate_author_authority_score(s2_data.get("authors", []))
     validation_bonus = calculate_cross_validation_score(paper_data, s2_data)
-    
+
     score += citation_bonus + venue_bonus + author_bonus + validation_bonus
-    
+
     # Build explanation
     factors = build_quality_explanation(paper_data, s2_data, {
         "citation": citation_bonus,
-        "venue": venue_bonus, 
+        "venue": venue_bonus,
         "author": author_bonus,
         "validation": validation_bonus
     })
-    
+
     return min(score, 100), " | ".join(factors)
 
 def calculate_basic_quality_score(paper_data: dict) -> tuple[int, str]:
     """Calculate basic quality score using only paper metadata (fallback mode)."""
-    
+
     score = 0
     factors = []
-    
+
     # Study type scoring (35 points max - higher weight in basic mode)
     study_type_score = calculate_study_type_score(paper_data.get("study_type"))
     score += study_type_score
-    
+
     # Recency scoring (10 points max)
     recency_score = calculate_recency_score(paper_data.get("year"))
     score += recency_score
-    
-    # Sample size scoring (10 points max) 
+
+    # Sample size scoring (10 points max)
     sample_size_score = calculate_sample_size_score(paper_data.get("sample_size"))
     score += sample_size_score
-    
+
     # Full text availability (5 points max)
     full_text_score = calculate_full_text_score(paper_data.get("has_full_text"))
     score += full_text_score
-    
+
     # Build basic explanation
     factors.append(f"Study: {paper_data.get('study_type', 'unknown')} ({study_type_score}pts)")
     if paper_data.get('year'):
         factors.append(f"Year: {paper_data['year']} ({recency_score}pts)")
     if full_text_score > 0:
         factors.append(f"Full text ({full_text_score}pts)")
-    
+
     factors.append("[Basic scoring - API unavailable]")
-    
+
     return min(score, 100), " | ".join(factors)
 
 def calculate_citation_impact_score(citation_count: int) -> int:
     """Calculate citation impact component (25 points max)."""
     thresholds = config.CITATION_COUNT_THRESHOLDS
-    
+
     if citation_count >= thresholds["exceptional"]:
         return 25
     elif citation_count >= thresholds["high"]:
@@ -368,49 +368,49 @@ def calculate_venue_prestige_score(venue: Dict[str, Any]) -> int:
     # Simplified venue scoring using pattern matching
     # Future enhancement: integrate SCImago Journal Rank (SJR) data
     venue_name = venue.get("name", "").lower()
-    
+
     # Tier 1: Top-tier venues (Q1 equivalent)
     tier1_patterns = [
         "nature", "science", "cell", "lancet", "nejm", "jama",
         "pnas", "plos one", "neurips", "icml", "nips", "iclr"
     ]
-    
-    # Tier 2: High-quality venues (Q2 equivalent)  
+
+    # Tier 2: High-quality venues (Q2 equivalent)
     tier2_patterns = [
         "ieee transactions", "acm transactions", "journal of",
         "proceedings of", "international conference", "workshop"
     ]
-    
+
     # Tier 3: General academic venues (Q3 equivalent)
     tier3_patterns = [
         "journal", "proceedings", "conference", "symposium", "workshop"
     ]
-    
+
     for pattern in tier1_patterns:
         if pattern in venue_name:
             return config.VENUE_PRESTIGE_SCORES["Q1"]
-            
+
     for pattern in tier2_patterns:
         if pattern in venue_name:
             return config.VENUE_PRESTIGE_SCORES["Q2"]
-            
+
     for pattern in tier3_patterns:
         if pattern in venue_name:
             return config.VENUE_PRESTIGE_SCORES["Q3"]
-            
+
     return config.VENUE_PRESTIGE_SCORES["unranked"]
 
 def calculate_author_authority_score(authors: list) -> int:
     """Calculate author authority component (10 points max)."""
     if not authors:
         return 0
-        
+
     # Use highest h-index among authors
     max_h_index = 0
     for author in authors:
         h_index = author.get("hIndex", 0) or 0
         max_h_index = max(max_h_index, h_index)
-    
+
     thresholds = config.AUTHOR_AUTHORITY_THRESHOLDS
     if max_h_index >= thresholds["renowned"]:
         return 10
@@ -428,66 +428,66 @@ def calculate_author_authority_score(authors: list) -> int:
 def calculate_cross_validation_score(paper_data: dict, s2_data: Dict[str, Any]) -> int:
     """Calculate cross-validation component (10 points max)."""
     score = 0
-    
+
     # Check if paper has external IDs (DOI, PubMed, etc.)
     external_ids = s2_data.get("externalIds", {})
     if external_ids:
         score += 3
-    
+
     # Check if publication types are specified
     pub_types = s2_data.get("publicationTypes", [])
     if pub_types:
         score += 2
-        
+
     # Check if fields of study are specified
     fields_of_study = s2_data.get("fieldsOfStudy", [])
     if fields_of_study:
         score += 2
-        
+
     # Check consistency with extracted study type
     extracted_type = paper_data.get("study_type", "")
     if extracted_type in ["systematic_review", "meta_analysis", "rct"]:
         score += 3
-    
+
     return min(score, 10)
 
 # Modified process_paper function to include parallel processing:
 async def process_paper_async(paper_data: dict, pdf_text: str) -> tuple[np.ndarray, int, str]:
     """Process paper with parallel embedding generation and quality scoring."""
-    
+
     # Start both operations concurrently
     embedding_task = asyncio.create_task(
         generate_embedding_async(pdf_text)
     )
-    
+
     quality_task = asyncio.create_task(
         get_semantic_scholar_data(
-            paper_data.get("DOI"), 
+            paper_data.get("DOI"),
             paper_data.get("title", "")
         )
     )
-    
+
     # Wait for both to complete
     embedding, s2_data = await asyncio.gather(
         embedding_task,
         quality_task,
         return_exceptions=True
     )
-    
+
     # Handle exceptions - fail fast for required operations
     if isinstance(embedding, Exception):
         raise Exception(f"Embedding generation failed: {embedding}") from embedding
-        
+
     if isinstance(s2_data, Exception):
         raise Exception(f"Quality scoring API failed: {s2_data}") from s2_data
-    
+
     # Both operations must succeed
     if embedding is None or s2_data is None:
         raise Exception("Both embedding and quality data required")
-    
+
     # Calculate enhanced quality score
     quality_score, quality_explanation = calculate_enhanced_quality_score(paper_data, s2_data)
-    
+
     return embedding, quality_score, quality_explanation
 
 async def generate_embedding_async(text: str) -> np.ndarray:
@@ -522,13 +522,13 @@ def format_paper_with_enhanced_quality(paper: dict, score: float, show_quality: 
     # All papers have quality scores - no fallbacks needed
     quality_indicator = format_quality_indicator(paper["quality_score"])
     type_marker = config.STUDY_TYPE_MARKERS[paper["study_type"]]
-    
+
     authors_display = ", ".join(paper["authors"][:2])
     result = f"{paper['id']} {quality_indicator} {type_marker} {paper['title']} ({authors_display}, {paper['year']})"
-    
+
     if show_quality:
         result += f"\n    Quality: {paper['quality_score']}/100 ({paper['quality_explanation']})"
-    
+
     result += f" [{score:.3f}]"
     return result
 
@@ -537,12 +537,12 @@ def format_search_results(results: list, show_quality: bool = False) -> str:
     """Format search results with enhanced quality scoring."""
     if not results:
         return "No papers found."
-        
+
     formatted_results = []
     for idx, score, paper in results:
         formatted_paper = format_paper_with_enhanced_quality(paper, score, show_quality)
         formatted_results.append(formatted_paper)
-    
+
     return "\n".join(formatted_results)
 ```
 
@@ -554,7 +554,7 @@ def format_search_results(results: list, show_quality: bool = False) -> str:
 def get_papers_by_quality_range(self, min_quality: int, max_quality: int = 100) -> list[dict]:
     """Get papers within quality score range."""
     return [
-        paper for paper in self.papers 
+        paper for paper in self.papers
         if min_quality <= paper["quality_score"] <= max_quality
     ]
 
@@ -566,13 +566,13 @@ def get_quality_distribution(self) -> dict[str, int]:
     """Get distribution of papers across quality levels."""
     distribution = {
         "excellent": 0,      # 85+
-        "very_good": 0,      # 70-84  
+        "very_good": 0,      # 70-84
         "good": 0,           # 60-69
         "moderate": 0,       # 45-59
         "low": 0,            # 30-44
         "very_low": 0        # 0-29
     }
-    
+
     for paper in self.papers:
         quality = paper["quality_score"]
         if quality >= config.QUALITY_EXCELLENT:
@@ -587,16 +587,16 @@ def get_quality_distribution(self) -> dict[str, int]:
             distribution["low"] += 1
         else:
             distribution["very_low"] += 1
-            
+
     return distribution
 
 def stats(self) -> dict[str, Any]:
     """Enhanced stats including quality distribution."""
     base_stats = super().stats()  # Call parent stats method
-    
+
     # Add quality statistics - all papers have quality scores
     quality_scores = [p["quality_score"] for p in self.papers]
-    
+
     base_stats.update({
         "quality_stats": {
             "average_quality": sum(quality_scores) / len(quality_scores),
@@ -606,7 +606,7 @@ def stats(self) -> dict[str, Any]:
         },
         "quality_distribution": self.get_quality_distribution()
     })
-    
+
     return base_stats
 ```
 
@@ -651,29 +651,29 @@ def stats(self) -> dict[str, Any]:
 
 ## Risk Mitigation - Enhanced for Production
 
-1. **API Dependency**: 
+1. **API Dependency**:
    - ⚠️ **Breaking change**: Enhanced quality scoring required for all papers
    - ✅ Circuit breaker pattern prevents cascade failures during builds
    - ✅ Configurable timeout budgets protect against hanging builds
    - ✅ Clear error messages guide users to rebuild KB when API fails
    - ✅ **Migration strategy**: Users delete kb_data/ and rebuild
 
-2. **Rate Limiting**: 
+2. **Rate Limiting**:
    - ✅ Testing shows no rate limiting at sustained 5+ RPS
    - ✅ Conservative retry logic with exponential backoff
    - ✅ Connection pooling prevents resource exhaustion
 
-3. **Data Quality**: 
+3. **Data Quality**:
    - ✅ Cross-validation scoring identifies inconsistent data
    - ✅ Venue scoring uses pattern matching (can upgrade to SJR later)
    - ✅ Author authority based on h-index when available
 
-4. **Performance**: 
+4. **Performance**:
    - ✅ Parallel processing adds zero total build time
    - ✅ API calls complete in ~6 minutes vs ~20 minutes for embeddings
    - ✅ Connection pooling improves efficiency
 
-5. **Maintainability**: 
+5. **Maintainability**:
    - ✅ Clear separation allows independent updates
    - ✅ Comprehensive error logging for production debugging
    - ✅ Feature flags allow disabling if issues arise
@@ -726,7 +726,7 @@ def stats(self) -> dict[str, Any]:
 ### 🎯 Implementation Decision: Clean Break
 
 Based on API testing results, enhanced quality scoring is now **mandatory** for all papers. This eliminates:
-- Complex fallback logic between basic and enhanced scoring  
+- Complex fallback logic between basic and enhanced scoring
 - Feature flags and backwards compatibility code
 - Conditional quality score handling throughout the codebase
 - Migration complexity for existing installations

@@ -1,10 +1,10 @@
 # Discovery Tool Design v3.1 (Semantic Scholar First)
 
-**Created**: 2024-08-21  
-**Updated**: 2024-08-21  
-**Status**: Design Phase - Semantic Scholar Foundation with Coverage Documentation  
-**Purpose**: Comprehensive external paper discovery using Semantic Scholar with maximum infrastructure reuse  
-**Dependencies**: Enhanced Quality Scoring (v3.1)  
+**Created**: 2024-08-21
+**Updated**: 2024-08-21
+**Status**: Design Phase - Semantic Scholar Foundation with Coverage Documentation
+**Purpose**: Comprehensive external paper discovery using Semantic Scholar with maximum infrastructure reuse
+**Dependencies**: Enhanced Quality Scoring (v3.1)
 **Logging**: UX Analytics for usage pattern analysis and usability improvement
 
 ## Overview
@@ -47,7 +47,7 @@ Total: 10 manageable options with professional capability
 
 **Coverage Documentation Built-in:**
   --coverage-info             Show when to use specialized databases (PubMed, IEEE, arXiv)
-  
+
 Total: 11 manageable options including KB filtering and coverage guidance
 ```
 
@@ -90,8 +90,8 @@ class SearchQuery:
     filters: Dict[str, Any]
     source: str = "semantic_scholar"  # Fixed to Semantic Scholar in v3.0
 
-def generate_semantic_scholar_queries(keywords: List[str], 
-                                     year_from: Optional[int], 
+def generate_semantic_scholar_queries(keywords: List[str],
+                                     year_from: Optional[int],
                                      study_types: List[str],
                                      population_focus: Optional[str]) -> List[SearchQuery]:
     """Generate Semantic Scholar query variations with cross-domain optimization."""
@@ -115,20 +115,20 @@ class SemanticScholarDiscovery:
         )
         from src.cli import _setup_ux_logger, _log_ux_event
         from src.cli_kb_index import load_kb_index
-        
+
         self.client = get_semantic_scholar_client()
         self.cache = get_cache_manager()
         self.error_handler = get_error_handler()
         self.ux_logger = _setup_ux_logger()
         self.log_ux_event = _log_ux_event
         self.include_kb_papers = include_kb_papers
-        
+
         # Load KB DOIs for filtering (if exclude mode)
         if not include_kb_papers:
             self.kb_dois = self._load_kb_dois()
         else:
             self.kb_dois = set()
-    
+
     def _load_kb_dois(self) -> Set[str]:
         """Load all DOIs from knowledge base for filtering."""
         try:
@@ -137,61 +137,61 @@ class SemanticScholarDiscovery:
         except Exception:
             # If KB not available, don't filter
             return set()
-    
+
     async def search_papers(self, queries: List[SearchQuery]) -> List[Paper]:
         """Execute Semantic Scholar searches using existing infrastructure."""
         # Log search performance for optimization
         start_time = time.time()
-        
+
         # Search Semantic Scholar
         papers = await self._execute_searches(queries)
-        
+
         # Assess KB coverage before filtering (always performed)
         coverage_status = self._assess_kb_coverage(queries, papers)
-        
+
         # Filter out KB papers unless explicitly included
         if not self.include_kb_papers:
             kb_papers_found = len([p for p in papers if p.doi.lower() in self.kb_dois])
             papers = [p for p in papers if p.doi.lower() not in self.kb_dois]
-            
+
             # Log filtering results
             self.log_ux_event("discover_kb_filtering",
                             total_papers_found=len(papers) + kb_papers_found,
                             kb_papers_filtered=kb_papers_found,
                             new_papers_returned=len(papers),
                             kb_overlap_percentage=kb_papers_found / (len(papers) + kb_papers_found) * 100 if papers or kb_papers_found else 0)
-        
+
         # Log API performance metrics
         api_time = time.time() - start_time
-        self.log_ux_event("discover_api_performance", 
+        self.log_ux_event("discover_api_performance",
                          response_time_ms=int(api_time * 1000),
                          query_count=len(queries),
                          include_kb_papers=self.include_kb_papers)
-        
+
         return papers, coverage_status
-    
+
     def _assess_kb_coverage(self, queries: List[SearchQuery], discovery_papers: List[Paper]) -> Dict[str, Any]:
         """Assess KB coverage and return traffic light status."""
         from src.cli import search_papers  # Reuse existing search infrastructure
-        
+
         # Extract keywords from queries for KB search
         all_keywords = []
         for query in queries:
             all_keywords.extend(query.query_text.split())
         keywords_str = " ".join(set(all_keywords))
-        
+
         # Search KB using existing CLI infrastructure
         try:
             kb_results = search_papers(keywords_str, limit=1000)  # Get comprehensive KB results
             kb_count = len(kb_results)
         except Exception:
             kb_count = 0
-        
+
         # Analyze discovery results
         discovery_count = len(discovery_papers)
         high_impact_missing = len([p for p in discovery_papers if getattr(p, 'citation_count', 0) > 50])
         recent_missing = len([p for p in discovery_papers if getattr(p, 'year', 0) >= 2022])
-        
+
         # Traffic light assessment logic
         if kb_count < 10 or high_impact_missing > 10:
             status = "🔴 NEEDS UPDATE"
@@ -205,7 +205,7 @@ class SemanticScholarDiscovery:
             status = "🟢 EXCELLENT"
             message = f"{kb_count} KB papers found. Comprehensive coverage detected."
             recommendation = "Proceed with research confidently"
-        
+
         return {
             'status': status,
             'message': message,
@@ -219,12 +219,12 @@ class SemanticScholarDiscovery:
 
 ### 3. Paper Quality Scoring (Reused)
 ```python
-def score_discovery_papers(papers: List[Paper], 
+def score_discovery_papers(papers: List[Paper],
                           keywords: List[str]) -> List[ScoredPaper]:
     """Score papers using enhanced quality scoring infrastructure."""
     # Import from enhanced scoring module
     from src.enhanced_scoring import calculate_enhanced_quality_score
-    
+
     scored_papers = []
     for paper in papers:
         # Reuse existing quality calculation
@@ -234,25 +234,25 @@ def score_discovery_papers(papers: List[Paper],
         # Combine scores using existing patterns
         overall_score = (quality_score + relevance_score) / 2
         scored_papers.append(ScoredPaper(paper, quality_score, relevance_score, overall_score))
-    
+
     return sorted(scored_papers, key=lambda x: x.overall_score, reverse=True)
 ```
 
 ### 4. Report Generation (Aligned with Gap Analysis)
 ```python
-def generate_discovery_report(scored_papers: List[ScoredPaper], 
+def generate_discovery_report(scored_papers: List[ScoredPaper],
                              search_params: Dict[str, Any],
                              coverage_status: Dict[str, Any]) -> str:
     """Create discovery report matching gap analysis structure with KB coverage assessment."""
     # KB Coverage Status section (new)
     coverage_section = format_coverage_status(coverage_status)
-    
+
     # Use gap analysis report template
     # Same confidence grouping (HIGH/MEDIUM/LOW)
     # Same DOI list format for Zotero import
     # Consistent metadata and search documentation
     # Match exports/ directory structure
-    
+
     return f"""
 {coverage_section}
 
@@ -292,7 +292,7 @@ class Paper:
 
 ### Scored Paper
 ```python
-@dataclass  
+@dataclass
 class ScoredPaper:
     paper: Paper
     relevance_score: float  # 0-100: How well it addresses the gap
@@ -323,29 +323,29 @@ class SemanticScholarDiscovery:
         # Import ALL components from enhanced scoring
         from src.enhanced_scoring import (
             get_semantic_scholar_client,
-            get_cache_manager, 
+            get_cache_manager,
             get_error_handler,
             calculate_enhanced_quality_score,
             SEMANTIC_SCHOLAR_RATE_LIMIT,
             CONFIDENCE_HIGH_THRESHOLD,
             CONFIDENCE_MEDIUM_THRESHOLD
         )
-        
+
         self.client = get_semantic_scholar_client()
         self.cache = get_cache_manager()
         self.error_handler = get_error_handler()
         self.quality_scorer = calculate_enhanced_quality_score
-    
+
     async def search_papers(self, query: SearchQuery) -> List[Paper]:
         """Search using complete enhanced scoring infrastructure."""
         # All infrastructure already exists and tested
         papers = await self.client.search(query.query_text, **query.filters)
-        
+
         # Apply existing quality scoring
         scored_papers = [
             self.quality_scorer(paper) for paper in papers
         ]
-        
+
         return sorted(scored_papers, key=lambda x: x.overall_score, reverse=True)
 ```
 
@@ -353,13 +353,13 @@ class SemanticScholarDiscovery:
 ```python
 # Users access other sources manually when needed:
 # - PubMed: https://pubmed.ncbi.nlm.nih.gov/
-# - IEEE: https://ieeexplore.ieee.org/ 
+# - IEEE: https://ieeexplore.ieee.org/
 # - arXiv: https://arxiv.org/search/
 # - Direct DOI import to Zotero
 
 # Future slash command integration (Phase 2):
 # /pubmed "clinical diabetes trials"
-# /ieee "wearable health sensors" 
+# /ieee "wearable health sensors"
 # /arxiv "healthcare AI 2024"
 ```
 
@@ -368,13 +368,13 @@ class SemanticScholarDiscovery:
 ### Markdown Report Format
 ```markdown
 # Discovery Results
-**Generated**: 2024-08-21 10:30:00  
-**Search Strategy**: Cross-domain discovery for mobile health interventions  
+**Generated**: 2024-08-21 10:30:00
+**Search Strategy**: Cross-domain discovery for mobile health interventions
 **Duration**: 1.8 minutes
 
 ## 🟡 KB Coverage Status: ADEQUATE
 - **Current KB**: 34 relevant papers found
-- **External Papers**: 89 discovered  
+- **External Papers**: 89 discovered
 - **Assessment**: Good historical coverage, missing recent developments
 - **Recommendation**: Consider updating for latest developments
 
@@ -526,10 +526,10 @@ _ux_logger = _setup_ux_logger()
 def main():
     """Main discover function with comprehensive UX logging."""
     start_time = time.time()
-    
+
     # Parse command line arguments
     args = parse_arguments()
-    
+
     # Log command start with usage pattern details
     _log_ux_event(
         "discover_command_start",
@@ -544,11 +544,11 @@ def main():
         source=args.source,
         include_kb_papers=args.include_kb_papers
     )
-    
+
     try:
         # Execute discovery
         results = discover_papers(args)
-        
+
         # Log successful completion with results metrics
         execution_time_ms = int((time.time() - start_time) * 1000)
         _log_ux_event(
@@ -566,7 +566,7 @@ def main():
             kb_papers_found=results.coverage_status['kb_count'],
             high_impact_missing=results.coverage_status['high_impact_missing']
         )
-        
+
     except Exception as e:
         # Log error with diagnostic information
         execution_time_ms = int((time.time() - start_time) * 1000)
@@ -591,7 +591,7 @@ def log_feature_usage(args):
     _log_ux_event(
         "discover_feature_usage",
         option_population_focus=bool(args.population_focus),
-        option_quality_threshold=bool(args.quality_threshold),  
+        option_quality_threshold=bool(args.quality_threshold),
         option_author_filter=bool(args.author_filter),
         option_study_types=bool(args.study_types),
         option_min_citations=bool(args.min_citations),
@@ -677,7 +677,7 @@ class RateLimiter:
         }
         self.tokens = self.limits[source]['burst']
         self.last_update = time.time()
-    
+
     async def acquire(self):
         """Token bucket rate limiting implementation."""
         # Refill tokens based on elapsed time
@@ -691,13 +691,13 @@ class SearchCache:
     def __init__(self):
         self.cache_dir = Path("system/discovery_cache")
         self.expiry_days = 7
-    
+
     def get_cached_results(self, query_hash: str) -> Optional[List[Paper]]:
         """Load cached search results if still valid."""
         # Generate query hash from parameters
         # Check cache file existence and age
         # Return cached results or None
-    
+
     def save_results(self, query_hash: str, papers: List[Paper]):
         """Save search results to cache."""
         # Create cache directory if needed
@@ -744,24 +744,24 @@ def with_retry(max_retries: int = 3, delay: float = 1.0):
 def calculate_quality_score(paper: Paper, gap_context: str) -> float:
     """Calculate comprehensive quality score for discovered paper."""
     score = 0.0
-    
+
     # Citation impact (0-30 points)
     citation_score = min(paper.citation_count / 100 * 30, 30)
     score += citation_score
-    
+
     # Recency bonus (0-20 points)
     years_old = 2024 - paper.year
     recency_score = max(20 - years_old * 2, 0)
     score += recency_score
-    
+
     # Venue prestige (0-25 points)
     venue_score = get_venue_score(paper.venue)
     score += venue_score
-    
+
     # Study type appropriateness (0-25 points)
     study_type_score = get_study_type_score(paper.study_type, gap_context)
     score += study_type_score
-    
+
     return min(score, 100)
 
 def calculate_relevance_score(paper: Paper, keywords: List[str], gap_context: str) -> float:
@@ -836,7 +836,7 @@ POPULATION_FOCUS_TERMS = {
 # Quality threshold mappings (reuse enhanced scoring thresholds)
 QUALITY_THRESHOLD_MAPPING = {
     'HIGH': 80,      # CONFIDENCE_HIGH_THRESHOLD from enhanced scoring
-    'MEDIUM': 60,    # CONFIDENCE_MEDIUM_THRESHOLD from enhanced scoring  
+    'MEDIUM': 60,    # CONFIDENCE_MEDIUM_THRESHOLD from enhanced scoring
     'LOW': 40        # CONFIDENCE_LOW_THRESHOLD from enhanced scoring
 }
 
@@ -872,7 +872,7 @@ def show_coverage_info():
 # Systematic review preparation
 python src/discover.py --keywords "diabetes,AI" --quality-threshold HIGH --study-types "systematic_review,rct"
 
-# Clinical population research  
+# Clinical population research
 python src/discover.py --keywords "depression,therapy" --population-focus "adolescents" --author-filter "Smith J"
 
 # High-impact author tracking
@@ -888,11 +888,11 @@ def apply_smart_defaults(args):
     # If no quality threshold specified but high min-citations, auto-set HIGH
     if args.min_citations >= 50 and not args.quality_threshold:
         args.quality_threshold = 'HIGH'
-    
+
     # If population focus specified, adjust study type preferences
     if args.population_focus == 'pediatric' and not args.study_types:
         args.study_types = ['rct', 'cohort', 'systematic_review']
-    
+
     # Limit author filter to prevent query complexity
     if args.author_filter:
         authors = args.author_filter.split(',')[:5]  # Max 5 authors
@@ -945,13 +945,13 @@ python src/discover.py --keywords "digital therapeutics" --population-focus "eld
 # tests/unit/test_discover.py
 def test_query_generation():
     """Test search query generation with various parameters."""
-    
+
 def test_paper_scoring():
     """Test quality and relevance scoring algorithms."""
-    
+
 def test_deduplication():
     """Test DOI-based paper deduplication."""
-    
+
 def test_rate_limiting():
     """Test token bucket rate limiting."""
 ```
@@ -961,10 +961,10 @@ def test_rate_limiting():
 # tests/integration/test_discover_sources.py
 def test_pubmed_search():
     """Test actual PubMed API integration."""
-    
+
 def test_semantic_scholar_search():
     """Test Semantic Scholar API integration."""
-    
+
 def test_multi_source_search():
     """Test parallel search across multiple sources."""
 ```
@@ -974,7 +974,7 @@ def test_multi_source_search():
 # tests/performance/test_discover_performance.py
 def test_search_performance():
     """Benchmark search performance with different query sizes."""
-    
+
 def test_concurrent_searches():
     """Test performance with multiple concurrent searches."""
 ```
@@ -1011,7 +1011,7 @@ def test_concurrent_searches():
 - **Real-time updates**: Latest research before traditional databases
 - **Citation network analysis**: Built-in influence metrics and paper recommendations
 
-### Quality Consistency  
+### Quality Consistency
 - **Identical quality scoring**: Same enhanced scoring algorithms as gap analysis
 - **Same output format**: Familiar user experience across tools
 - **Same API patterns**: Rate limiting, caching, error handling all consistent

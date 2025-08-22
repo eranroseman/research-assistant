@@ -71,7 +71,7 @@ class TestPDFExtraction:
         Then: Returns extracted text
         """
         builder = KnowledgeBaseBuilder(knowledge_base_path=str(tmp_path))
-        
+
         # Create mock PDF file
         pdf_file = tmp_path / "test.pdf"
         pdf_file.write_bytes(b"Mock PDF content")
@@ -103,8 +103,11 @@ class TestPDFExtraction:
 
         # Set up cache with existing content (using file stats format)
         import os
+
         stat = os.stat(pdf_file)
-        builder.cache = {"KEY001": {"text": "Cached PDF content", "file_size": stat.st_size, "file_mtime": stat.st_mtime}}
+        builder.cache = {
+            "KEY001": {"text": "Cached PDF content", "file_size": stat.st_size, "file_mtime": stat.st_mtime}
+        }
 
         result = builder.extract_pdf_text(str(pdf_file), "KEY001", use_cache=True)
         assert result == "Cached PDF content"
@@ -116,47 +119,47 @@ class TestKnowledgeBaseIndex:
     def test_paper_lookup_by_id_should_return_correct_paper(self, temp_kb_dir):
         """Test O(1) paper lookup by ID."""
         from tests.utils import create_test_kb_structure
-        
+
         create_test_kb_structure(temp_kb_dir)
-        
+
         kb_index = KnowledgeBaseIndex(str(temp_kb_dir))
         paper = kb_index.get_paper_by_id("0001")
-        
+
         assert paper is not None
         assert paper["id"] == "0001"
 
     def test_paper_lookup_by_index_should_return_correct_paper(self, temp_kb_dir):
         """Test paper lookup by FAISS index."""
         from tests.utils import create_test_kb_structure
-        
+
         create_test_kb_structure(temp_kb_dir)
-        
+
         kb_index = KnowledgeBaseIndex(str(temp_kb_dir))
         paper = kb_index.get_paper_by_index(0)
-        
+
         assert paper is not None
         assert "id" in paper
 
     def test_author_search_should_find_matching_papers(self, temp_kb_dir):
         """Test author search functionality."""
         from tests.utils import create_test_kb_structure
-        
+
         create_test_kb_structure(temp_kb_dir)
-        
+
         kb_index = KnowledgeBaseIndex(str(temp_kb_dir))
         papers = kb_index.search_by_author("Smith")
-        
+
         # Should return list (may be empty if no matches)
         assert isinstance(papers, list)
 
     def test_invalid_paper_id_format_should_return_none(self, temp_kb_dir):
         """Test handling of invalid paper ID formats."""
         from tests.utils import create_test_kb_structure
-        
+
         create_test_kb_structure(temp_kb_dir)
-        
+
         kb_index = KnowledgeBaseIndex(str(temp_kb_dir))
-        
+
         # Invalid ID should raise ValueError, which we catch and return None
         try:
             paper = kb_index.get_paper_by_id("invalid_id")
@@ -183,7 +186,7 @@ class TestCacheManagement:
         Then: Returns empty dictionary
         """
         builder = KnowledgeBaseBuilder(knowledge_base_path=str(tmp_path))
-        
+
         # Create corrupted cache file
         cache_file = tmp_path / ".pdf_text_cache.json"
         cache_file.write_text("invalid json content")
@@ -206,7 +209,7 @@ class TestCacheManagement:
 
         cache_file = tmp_path / ".pdf_text_cache.json"
         assert cache_file.exists()
-        
+
         with open(cache_file) as f:
             saved_data = json.load(f)
         assert saved_data == builder.cache
@@ -220,7 +223,7 @@ class TestCacheManagement:
         Then: Removes file and clears data
         """
         builder = KnowledgeBaseBuilder(knowledge_base_path=str(tmp_path))
-        
+
         # Create cache file and data
         cache_file = tmp_path / ".pdf_text_cache.json"
         cache_file.write_text('{"KEY001": "content"}')
@@ -238,7 +241,7 @@ class TestZoteroSafety:
     def test_zotero_connection_placeholder_should_pass(self):
         """
         Placeholder test for Zotero functionality.
-        
+
         The test_zotero_connection function doesn't exist in the current implementation.
         Zotero integration is handled elsewhere in the system.
         """

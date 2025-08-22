@@ -1,9 +1,9 @@
 # `/discover` Slash Command Design v3.1
 
-**Created**: 2024-08-21  
-**Updated**: 2024-08-21  
-**Status**: Design Phase - Semantic Scholar Foundation  
-**Purpose**: Intelligent interface for comprehensive discovery leveraging Semantic Scholar-based discover.py tool  
+**Created**: 2024-08-21
+**Updated**: 2024-08-21
+**Status**: Design Phase - Semantic Scholar Foundation
+**Purpose**: Intelligent interface for comprehensive discovery leveraging Semantic Scholar-based discover.py tool
 **Dependencies**: Discovery Tool v3.1 (Semantic Scholar), Enhanced Quality Scoring v3.1
 
 ## Overview
@@ -16,16 +16,16 @@ The `/discover` slash command provides an intelligent interface for comprehensiv
 graph TD
     A[/discover command] --> B{Input Type?}
     B -->|No args| C[Read latest research report]
-    B -->|report_name.md| D[Read specific report] 
+    B -->|report_name.md| D[Read specific report]
     B -->|"topic string"| E[Direct topic search]
-    
+
     C --> F[Parse gaps from report]
     D --> F
     E --> G[Use topic as keywords]
-    
+
     F --> H[Extract structured parameters]
     G --> H
-    
+
     H --> I[Generate Semantic Scholar search parameters]
     I --> J[Call src/discover.py (Semantic Scholar comprehensive)]
     J --> K[Process results using enhanced scoring patterns]
@@ -40,7 +40,7 @@ graph TD
 # Use latest research report
 /discover
 
-# Use specific research report  
+# Use specific research report
 /discover research_diabetes_2024_08_21.md
 
 # Direct topic search (bypass gap analysis)
@@ -78,22 +78,22 @@ def extract_gap_keywords(text: str) -> List[str]:
 ```python
 def extract_search_parameters(gap_text: str, research_topic: str) -> SearchParams:
     """Extract Semantic Scholar search parameters from gap descriptions."""
-    
+
     # Extract keywords with cross-domain expansion
     keywords = extract_gap_keywords(gap_text) + extract_domain_terms(research_topic)
-    
+
     # Infer study types from gap description (expanded for cross-domain)
     study_types = infer_study_types(gap_text)  # Includes technical papers, conference proceedings
-    
+
     # Extract temporal parameters
     year_from = extract_year_requirements(gap_text)  # Default to 2020
-    
+
     # Extract population focus for enhanced filtering
     population_focus = extract_population_terms(gap_text)
-    
+
     # Extract quality threshold based on gap urgency
     quality_threshold = infer_quality_threshold(gap_text)
-    
+
     return SearchParams(
         keywords=keywords[:10],  # Limit to 10 keywords for optimal search
         study_types=study_types,
@@ -110,30 +110,30 @@ def extract_search_parameters(gap_text: str, research_topic: str) -> SearchParam
 ```python
 def extract_keywords_from_gap(gap_description: str, research_topic: str) -> List[str]:
     """Extract relevant search keywords from gap descriptions."""
-    
+
     # Primary keywords from gap description
     gap_keywords = extract_domain_terms(gap_description)
-    
+
     # Context keywords from research topic
     topic_keywords = extract_domain_terms(research_topic)
-    
+
     # Combine and deduplicate
     all_keywords = gap_keywords + topic_keywords
-    
+
     # Add methodological terms based on gap type
     if 'intervention' in gap_description.lower():
         all_keywords.extend(['intervention', 'treatment', 'therapy'])
-    
+
     if 'systematic review' in gap_description.lower():
         all_keywords.extend(['systematic review', 'meta-analysis'])
-    
+
     # Add technical/engineering terms for cross-domain coverage
     if any(term in gap_description.lower() for term in ['technical', 'engineering', 'implementation']):
         all_keywords.extend(['algorithm', 'system design', 'implementation'])
-    
+
     if any(term in gap_description.lower() for term in ['ai', 'machine learning', 'artificial intelligence']):
         all_keywords.extend(['machine learning', 'deep learning', 'neural networks'])
-    
+
     return deduplicate_and_rank(all_keywords)
 ```
 
@@ -141,9 +141,9 @@ def extract_keywords_from_gap(gap_description: str, research_topic: str) -> List
 ```python
 def infer_study_types_from_gap(gap_description: str) -> List[str]:
     """Infer appropriate study types based on gap description."""
-    
+
     study_types = []
-    
+
     # Methodological gaps suggest specific study types
     if 'limited RCT' in gap_description:
         study_types.append('rct')
@@ -153,18 +153,18 @@ def infer_study_types_from_gap(gap_description: str) -> List[str]:
         study_types.append('cohort')
     if 'intervention' in gap_description:
         study_types.extend(['rct', 'intervention'])
-    
+
     # Add technical publication types for cross-domain coverage
     if any(term in gap_description.lower() for term in ['technical', 'engineering', 'algorithm']):
         study_types.extend(['conference_paper', 'technical_report'])
-    
+
     if 'implementation' in gap_description.lower():
         study_types.extend(['case_study', 'pilot_study'])
-    
+
     # Default to comprehensive study types for cross-domain search
     if not study_types:
         study_types = ['systematic_review', 'rct', 'cohort', 'conference_paper']
-    
+
     return study_types
 ```
 
@@ -172,13 +172,13 @@ def infer_study_types_from_gap(gap_description: str) -> List[str]:
 ```python
 def extract_temporal_parameters(gap_description: str) -> Dict[str, Any]:
     """Extract temporal search parameters from gap description."""
-    
+
     temporal_params = {}
-    
+
     # Explicit year mentions
     year_pattern = r'\b(19|20)\d{2}\b'
     years = re.findall(year_pattern, gap_description)
-    
+
     # Temporal keywords
     if any(keyword in gap_description.lower() for keyword in ['recent', 'current', 'latest']):
         temporal_params['year_from'] = 2020
@@ -186,7 +186,7 @@ def extract_temporal_parameters(gap_description: str) -> Dict[str, Any]:
         temporal_params['year_from'] = 2020
     elif years:
         temporal_params['year_from'] = max(int(year) for year in years)
-    
+
     return temporal_params
 ```
 
@@ -232,9 +232,9 @@ search_strategies = {
 ```python
 def generate_search_strategy(gap_type: str, gap_text: str) -> str:
     """Generate human-readable search strategy explanation."""
-    
+
     strategy_template = search_strategies.get(gap_type, search_strategies['coverage_gap'])
-    
+
     # Customize strategy based on gap specifics
     if 'pediatric' in gap_text.lower():
         strategy_note = "Focus on pediatric populations across medical and technical literature"
@@ -246,7 +246,7 @@ def generate_search_strategy(gap_type: str, gap_text: str) -> str:
         strategy_note = "Emphasis on technical implementation and engineering solutions"
     else:
         strategy_note = "Comprehensive cross-domain search across all study types"
-    
+
     return f"{strategy_template['description']} - {strategy_note}"
 ```
 
@@ -256,31 +256,31 @@ def generate_search_strategy(gap_type: str, gap_text: str) -> str:
 ```python
 def build_discover_command(search_params: SearchParams, output_file: str) -> List[str]:
     """Build comprehensive command to call src/discover.py with Semantic Scholar."""
-    
+
     cmd = ['python', 'src/discover.py']
-    
+
     # Add required parameters
     cmd.extend(['--keywords', ','.join(search_params.keywords)])
-    
+
     # Add optional parameters
     if search_params.study_types:
         cmd.extend(['--study-types', ','.join(search_params.study_types)])
-    
+
     if search_params.year_from:
         cmd.extend(['--year-from', str(search_params.year_from)])
-    
+
     if search_params.population_focus:
         cmd.extend(['--population-focus', search_params.population_focus])
-    
+
     if search_params.quality_threshold:
         cmd.extend(['--quality-threshold', search_params.quality_threshold])
-    
+
     # Add output file
     cmd.extend(['--output-file', output_file])
-    
+
     # Source is Semantic Scholar in v3.1 for comprehensive coverage
     cmd.extend(['--source', 'semantic_scholar'])
-    
+
     return cmd
 ```
 
@@ -288,7 +288,7 @@ def build_discover_command(search_params: SearchParams, output_file: str) -> Lis
 ```python
 def process_discovery_results(raw_output: str, search_params: SearchParams, gaps_found: List[str]) -> str:
     """Process discover.py output with minimal context enhancement."""
-    
+
     # Add comprehensive header with gap context
     context_header = f"""
 # Semantic Scholar Discovery Results
@@ -303,16 +303,16 @@ def process_discovery_results(raw_output: str, search_params: SearchParams, gaps
 ## Coverage Information
 For specialized needs beyond comprehensive coverage, consider manual access:
 - 🔍 **PubMed**: Clinical trial protocols, regulatory submissions
-- 🔍 **IEEE**: Engineering standards, technical implementation details  
+- 🔍 **IEEE**: Engineering standards, technical implementation details
 - 🔍 **arXiv**: Latest AI/ML preprints (6-12 months ahead)
 
 ---
 
 """
-    
+
     # Combine with discovery tool output (already formatted correctly)
     enhanced_report = context_header + raw_output
-    
+
     # Add simple next steps
     next_steps = """
 ## Next Steps
@@ -323,7 +323,7 @@ For specialized needs beyond comprehensive coverage, consider manual access:
 5. **Cross-domain insights**: Look for unexpected connections between disciplines
 """
     enhanced_report += next_steps
-    
+
     return enhanced_report
 ```
 
@@ -346,8 +346,8 @@ For specialized needs beyond comprehensive coverage, consider manual access:
 ---
 
 # Discovery Results
-**Generated**: 2024-08-21 10:30:00  
-**Search Strategy**: Cross-domain coverage gap for mobile health interventions  
+**Generated**: 2024-08-21 10:30:00
+**Search Strategy**: Cross-domain coverage gap for mobile health interventions
 **Duration**: 1.8 minutes
 **Coverage**: Semantic Scholar comprehensive search (214M papers)
 
@@ -381,7 +381,7 @@ Based on the identified gap and discovered papers:
 ```markdown
 ## Next Steps
 1. **Import high-confidence papers**: Use provided DOI lists for Zotero import
-2. **Update research strategy**: Consider how discovered papers inform your research direction  
+2. **Update research strategy**: Consider how discovered papers inform your research direction
 3. **Identify collaborations**: Note key authors for potential research partnerships
 4. **Gap reassessment**: Determine if identified gap is adequately addressed or requires further search
 
@@ -423,24 +423,24 @@ DISCOVER_DEFAULTS = {
 ```python
 def handle_discover_errors(error_type: str, context: str) -> str:
     """Provide helpful error messages for common failure scenarios."""
-    
+
     error_messages = {
         'no_report_found': """
 No research reports found. Please:
 1. Run `/research "your topic"` first to generate a research report
 2. Or specify a topic directly: `/discover "your search topic"`
         """,
-        
+
         'no_gaps_identified': """
 No clear research gaps identified in the report. Try:
 1. `/discover "specific topic"` for direct search
 2. Review the research report for sections mentioning limitations or future work
         """,
-        
+
         'api_error': """
 External search temporarily unavailable. Please try again in a few minutes.
         """,
-        
+
         'invalid_report': """
 Report format not recognized. Ensure the file:
 1. Is a markdown file (.md)
@@ -448,7 +448,7 @@ Report format not recognized. Ensure the file:
 3. Is located in the reports/ directory
         """
     }
-    
+
     return error_messages.get(error_type, f"Error: {context}")
 ```
 
@@ -458,13 +458,13 @@ Report format not recognized. Ensure the file:
 ```python
 def test_gap_detection():
     """Test gap identification from various report formats."""
-    
+
     test_reports = [
         "report_with_explicit_gaps.md",
-        "report_with_implicit_limitations.md", 
+        "report_with_implicit_limitations.md",
         "report_with_methodological_concerns.md"
     ]
-    
+
     for report in test_reports:
         gaps = parse_gaps_from_report(report)
         assert len(gaps) > 0, f"No gaps found in {report}"
@@ -475,13 +475,13 @@ def test_gap_detection():
 ```python
 def test_simplified_parameter_extraction():
     """Test simplified conversion of gaps to PubMed search parameters."""
-    
+
     gap_text = "Limited studies on mobile health apps in pediatric diabetes management"
-    
+
     params = extract_search_parameters(gap_text, "diabetes research")
-    
+
     assert "pediatric" in params.keywords
-    assert "diabetes" in params.keywords  
+    assert "diabetes" in params.keywords
     assert "mobile health" in params.keywords
     assert len(params.keywords) <= 10  # Simplified constraint
     assert params.source == "semantic_scholar"   # Comprehensive source
@@ -491,13 +491,13 @@ def test_simplified_parameter_extraction():
 ```python
 def test_end_to_end_workflow():
     """Test complete workflow from report to results."""
-    
+
     # Mock research report
     test_report = create_test_report_with_gaps()
-    
+
     # Run discover command
     result = run_discover_command(test_report)
-    
+
     # Validate output
     assert "Discovery Results" in result
     assert "DOI Lists for Zotero Import" in result

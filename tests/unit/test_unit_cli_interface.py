@@ -33,11 +33,11 @@ class TestPaperQualityEstimation:
             "year": 2023,
             "study_type": "systematic_review",
             "sample_size": 1000,
-            "has_full_text": True
+            "has_full_text": True,
         }
-        
+
         score, explanation = estimate_paper_quality(paper)
-        
+
         assert isinstance(score, int)
         assert 0 <= score <= 100
         assert isinstance(explanation, str)
@@ -58,11 +58,11 @@ class TestPaperQualityEstimation:
             "abstract": "This randomized controlled trial enrolled patients...",
             "year": 2023,
             "study_type": "rct",
-            "sample_size": 500
+            "sample_size": 500,
         }
-        
+
         score, explanation = estimate_paper_quality(paper)
-        
+
         assert isinstance(score, int)
         assert 0 <= score <= 100
         # RCTs should score well
@@ -76,13 +76,10 @@ class TestPaperQualityEstimation:
         When: estimate_paper_quality is called
         Then: Handles missing data gracefully
         """
-        paper = {
-            "title": "Basic Paper",
-            "year": 2020
-        }
-        
+        paper = {"title": "Basic Paper", "year": 2020}
+
         score, explanation = estimate_paper_quality(paper)
-        
+
         assert isinstance(score, int)
         assert 0 <= score <= 100
         assert isinstance(explanation, str)
@@ -92,21 +89,17 @@ class TestPaperQualityEstimation:
         Test quality estimation with edge cases.
 
         Given: Papers with edge case data
-        When: estimate_paper_quality is called  
+        When: estimate_paper_quality is called
         Then: Handles edge cases gracefully
         """
         # Test with None values
-        none_paper = {
-            "title": "Edge Case Paper",
-            "year": None,
-            "study_type": None
-        }
-        
+        none_paper = {"title": "Edge Case Paper", "year": None, "study_type": None}
+
         score, explanation = estimate_paper_quality(none_paper)
         assert isinstance(score, int)
         assert 0 <= score <= 100
         assert isinstance(explanation, str)
-        
+
         # Test with empty dict
         empty_paper = {}
         score, explanation = estimate_paper_quality(empty_paper)
@@ -126,10 +119,10 @@ class TestUtilityFunctions:
         Then: Validates correctly
         """
         import re
-        
+
         # Mock the pattern from CLI
-        pattern = r'^\d{4}$'
-        
+        pattern = r"^\d{4}$"
+
         assert re.match(pattern, "0001")
         assert re.match(pattern, "1234")
         assert not re.match(pattern, "001")
@@ -144,8 +137,8 @@ class TestUtilityFunctions:
         When: Formatted for output
         Then: Handles characters correctly
         """
-        test_string = "Test with \"quotes\" and special chars: a, b, c"
-        
+        test_string = 'Test with "quotes" and special chars: a, b, c'
+
         # Should handle without errors
         formatted = f'"{test_string}"'
         assert "quotes" in formatted

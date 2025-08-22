@@ -27,7 +27,7 @@ class TestSearchParametrized:
             ("machine learning", str),
             ("covid-19", str),
             ("", str),
-        ]
+        ],
     )
     def test_search_with_various_queries_should_return_string_result(self, query, expected_type):
         """
@@ -41,10 +41,7 @@ class TestSearchParametrized:
         result = f"Search results for: {query}"
         assert isinstance(result, expected_type)
 
-    @pytest.mark.parametrize(
-        "k_value",
-        [1, 5, 10, 20, 50]
-    )
+    @pytest.mark.parametrize("k_value", [1, 5, 10, 20, 50])
     def test_search_with_various_k_values_should_handle_correctly(self, k_value):
         """
         Test search with different k values.
@@ -57,10 +54,7 @@ class TestSearchParametrized:
         assert k_value > 0
         assert k_value <= 100
 
-    @pytest.mark.parametrize(
-        "quality_threshold",
-        [0, 25, 50, 75, 100]
-    )
+    @pytest.mark.parametrize("quality_threshold", [0, 25, 50, 75, 100])
     def test_search_with_quality_filters_should_apply_correctly(self, quality_threshold):
         """
         Test search quality filtering.
@@ -102,14 +96,14 @@ class TestEmbeddingOperations:
         # Mock similarity calculation
         vec1 = np.random.randn(768).astype("float32")
         vec2 = np.random.randn(768).astype("float32")
-        
+
         # Normalize vectors
         vec1_norm = vec1 / np.linalg.norm(vec1)
         vec2_norm = vec2 / np.linalg.norm(vec2)
-        
+
         # Calculate cosine similarity
         similarity = np.dot(vec1_norm, vec2_norm)
-        
+
         assert -1.0 <= similarity <= 1.0
 
     def test_embedding_caching_should_improve_performance(self):
@@ -123,7 +117,7 @@ class TestEmbeddingOperations:
         # Mock cache behavior
         cache = {"test_text": np.random.randn(768).astype("float32")}
         text = "test_text"
-        
+
         if text in cache:
             result = cache[text]
             assert result.shape == (768,)
@@ -131,7 +125,7 @@ class TestEmbeddingOperations:
             # Would compute new embedding
             result = np.random.randn(768).astype("float32")
             cache[text] = result
-        
+
         assert text in cache
 
 
@@ -150,18 +144,18 @@ class TestResultRanking:
         results = [
             {"title": "High Quality Systematic Review", "study_type": "systematic_review", "year": 2024},
             {"title": "Medium Quality RCT", "study_type": "rct", "year": 2020},
-            {"title": "Low Quality Case Report", "study_type": "case_report", "year": 2015}
+            {"title": "Low Quality Case Report", "study_type": "case_report", "year": 2015},
         ]
-        
+
         # Calculate quality scores for ranking
         scored_results = []
         for paper in results:
             score, _ = estimate_paper_quality(paper)
             scored_results.append((score, paper))
-        
+
         # Sort by score descending
         scored_results.sort(key=lambda x: x[0], reverse=True)
-        
+
         # Verify ranking order
         assert scored_results[0][1]["study_type"] == "systematic_review"
         assert scored_results[1][1]["study_type"] == "rct"
@@ -182,13 +176,13 @@ class TestSearchFiltering:
         papers = [
             {"authors": ["Smith, J.", "Jones, A."]},
             {"authors": ["Brown, B.", "Davis, C."]},
-            {"authors": ["Smith, J.", "Wilson, D."]}
+            {"authors": ["Smith, J.", "Wilson, D."]},
         ]
-        
+
         # Mock author filtering
         target_author = "Smith"
         filtered = [p for p in papers if any(target_author in author for author in p["authors"])]
-        
+
         assert len(filtered) == 2
         assert all(any(target_author in author for author in p["authors"]) for p in filtered)
 
@@ -200,18 +194,12 @@ class TestSearchFiltering:
         When: Year filter is applied
         Then: Returns papers within specified range
         """
-        papers = [
-            {"year": 2020},
-            {"year": 2021},
-            {"year": 2022},
-            {"year": 2023},
-            {"year": 2024}
-        ]
-        
+        papers = [{"year": 2020}, {"year": 2021}, {"year": 2022}, {"year": 2023}, {"year": 2024}]
+
         # Mock year filtering
         min_year = 2022
         filtered = [p for p in papers if p["year"] >= min_year]
-        
+
         assert len(filtered) == 3
         assert all(p["year"] >= min_year for p in filtered)
 
@@ -227,13 +215,13 @@ class TestSearchFiltering:
             {"study_type": "rct"},
             {"study_type": "systematic_review"},
             {"study_type": "cohort"},
-            {"study_type": "rct"}
+            {"study_type": "rct"},
         ]
-        
+
         # Mock study type filtering
         target_type = "rct"
         filtered = [p for p in papers if p["study_type"] == target_type]
-        
+
         assert len(filtered) == 2
         assert all(p["study_type"] == target_type for p in filtered)
 

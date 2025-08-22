@@ -57,21 +57,16 @@ class TestCLICore:
     def test_quality_scoring_integration_with_cli_should_work_correctly(self):
         """Test quality scoring integration with CLI workflows."""
         # Test that quality scoring works within CLI context
-        paper = {
-            "title": "Test Integration Paper",
-            "study_type": "rct",
-            "year": 2023,
-            "sample_size": 500
-        }
-        
+        paper = {"title": "Test Integration Paper", "study_type": "rct", "year": 2023, "sample_size": 500}
+
         score, explanation = estimate_paper_quality(paper)
-        
+
         # Verify basic integration
         assert isinstance(score, int)
         assert 0 <= score <= 100
         assert isinstance(explanation, str)
         assert len(explanation) > 0
-        
+
         # Should score reasonably for an RCT
         assert score >= 50
 

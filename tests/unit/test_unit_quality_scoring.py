@@ -32,7 +32,9 @@ class TestQualityScoreParametrized:
             (None, 50, "unknown"),  # None value
         ],
     )
-    def test_quality_score_calculation_by_study_type_should_return_expected_score(self, study_type, expected_score, expected_explanation_text):
+    def test_quality_score_calculation_by_study_type_should_return_expected_score(
+        self, study_type, expected_score, expected_explanation_text
+    ):
         """Test quality scoring for different study types."""
         paper = {
             "study_type": study_type,
@@ -62,7 +64,9 @@ class TestQualityScoreParametrized:
             (None, 0),  # Missing year
         ],
     )
-    def test_quality_score_recency_bonus_calculation_should_return_expected_bonus(self, year, expected_recency_bonus):
+    def test_quality_score_recency_bonus_calculation_should_return_expected_bonus(
+        self, year, expected_recency_bonus
+    ):
         """Test recency bonus calculation."""
         paper = {
             "study_type": "rct",  # Fixed study type for consistent base score
@@ -96,7 +100,9 @@ class TestQualityScoreParametrized:
             (-1, 0, ""),  # Negative (invalid)
         ],
     )
-    def test_quality_score_sample_size_bonus_calculation_should_return_expected_bonus(self, sample_size, expected_bonus, expected_in_explanation):
+    def test_quality_score_sample_size_bonus_calculation_should_return_expected_bonus(
+        self, sample_size, expected_bonus, expected_in_explanation
+    ):
         """Test sample size bonus calculation."""
         paper = {
             "study_type": "rct",
@@ -122,7 +128,9 @@ class TestQualityScoreParametrized:
             (None, 0),  # Missing field
         ],
     )
-    def test_quality_score_full_text_bonus_calculation_should_return_expected_bonus(self, has_full_text, expected_bonus):
+    def test_quality_score_full_text_bonus_calculation_should_return_expected_bonus(
+        self, has_full_text, expected_bonus
+    ):
         """Test full text availability bonus."""
         paper = {
             "study_type": "rct",
@@ -159,7 +167,9 @@ class TestQualityScoreParametrized:
             ({"study_type": "cohort", "year": 2024}, (73, 73), ["cohort", "recent"]),
         ],
     )
-    def test_quality_score_with_combined_factors_should_calculate_within_expected_range(self, paper_data, expected_score_range, required_explanation_terms):
+    def test_quality_score_with_combined_factors_should_calculate_within_expected_range(
+        self, paper_data, expected_score_range, required_explanation_terms
+    ):
         """Test quality scoring with various field combinations."""
         score, explanation = estimate_paper_quality(paper_data)
 

@@ -35,11 +35,11 @@ class TestIEEECitationFormatting:
             "volume": "45",
             "issue": "3",
             "pages": "123-135",
-            "doi": "10.1109/TPAMI.2023.1234567"
+            "doi": "10.1109/TPAMI.2023.1234567",
         }
-        
+
         citation = generate_ieee_citation(paper, 1)
-        
+
         # Check IEEE format components
         assert "[1]" in citation
         assert "Advanced Machine Learning Techniques" in citation
@@ -55,14 +55,10 @@ class TestIEEECitationFormatting:
         When: generate_ieee_citation is called
         Then: Returns citation with available information
         """
-        paper = {
-            "title": "Basic Study",
-            "authors": ["Smith, J."],
-            "year": 2023
-        }
-        
+        paper = {"title": "Basic Study", "authors": ["Smith, J."], "year": 2023}
+
         citation = generate_ieee_citation(paper, 1)
-        
+
         # Check basic components
         assert "[1]" in citation
         assert "Basic Study" in citation
@@ -77,20 +73,15 @@ class TestIEEECitationFormatting:
         When: generate_ieee_citation is called
         Then: Uses correct citation number
         """
-        paper = {
-            "title": "Test Paper",
-            "authors": ["Smith, J."],
-            "year": 2023
-        }
-        
+        paper = {"title": "Test Paper", "authors": ["Smith, J."], "year": 2023}
+
         citation1 = generate_ieee_citation(paper, 1)
         citation5 = generate_ieee_citation(paper, 5)
-        
+
         assert "[1]" in citation1
         assert "[5]" in citation5
         assert "[1]" not in citation5
         assert "[5]" not in citation1
-
 
 
 if __name__ == "__main__":
