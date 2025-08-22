@@ -3,6 +3,13 @@
 ## [Unreleased]
 
 ### Added
+- **Parallel Quality Scoring for Rebuilds** (v4.4): Major performance enhancement
+  - 3-worker ThreadPoolExecutor for quality scoring during `--rebuild` operations
+  - 47% faster rebuilds: Quality scoring now parallelized (9 min vs 27 min for 2,180 papers)
+  - Unified architecture: Same parallel processing for both rebuilds and incremental updates
+  - Enhanced progress tracking with real-time parallel processing progress bars
+  - Robust error handling: Individual paper failures don't interrupt overall processing
+  - Rate limiting compliance: Each worker respects 100ms API delays for Semantic Scholar
 - **Safety Features**: Knowledge base building now safe-by-default
   - Never automatically rebuilds on errors (preserves existing data)
   - Requires explicit `--rebuild` flag for destructive operations

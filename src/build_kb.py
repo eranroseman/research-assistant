@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
-"""
-Knowledge Base Builder for Research Assistant v4.0.
+"""Knowledge Base Builder for Research Assistant v4.0.
 
 This module builds and maintains a searchable knowledge base from Zotero libraries.
 
@@ -51,17 +50,22 @@ from tqdm import tqdm
 # CUSTOM EXCEPTIONS
 # ============================================================================
 
+
 class SemanticScholarAPIError(Exception):
     """Exception raised when Semantic Scholar API calls fail."""
+
 
 class QualityScoringError(Exception):
     """Exception raised when quality scoring fails."""
 
+
 class EmbeddingGenerationError(Exception):
     """Exception raised when embedding generation fails."""
 
+
 class PaperProcessingError(Exception):
     """Exception raised when paper processing fails."""
+
 
 # ============================================================================
 # CONFIGURATION - Import from centralized config.py
@@ -209,17 +213,16 @@ except ImportError:
 # ============================================================================
 
 
-
 async def get_semantic_scholar_data(doi: str | None, title: str) -> dict[str, Any]:
     """Fetch paper data from Semantic Scholar API.
-    
+
     Args:
         doi: Paper DOI (preferred lookup method)
         title: Paper title (fallback lookup method)
-        
+
     Returns:
         Dictionary containing paper data from Semantic Scholar API
-        
+
     Raises:
         Exception: If API call fails after all retries
     """
@@ -228,12 +231,11 @@ async def get_semantic_scholar_data(doi: str | None, title: str) -> dict[str, An
 
     # Production-ready session with connection pooling and circuit breaker
     connector = aiohttp.TCPConnector(
-        limit=API_CONNECTION_POOL_SIZE,
-        limit_per_host=API_CONNECTION_POOL_HOST_LIMIT
+        limit=API_CONNECTION_POOL_SIZE, limit_per_host=API_CONNECTION_POOL_HOST_LIMIT
     )
 
     timeout = aiohttp.ClientTimeout(total=API_REQUEST_TIMEOUT)
-    
+
     try:
         async with aiohttp.ClientSession(connector=connector, timeout=timeout) as session:
             # Try DOI first, fall back to title search
@@ -279,7 +281,10 @@ async def get_semantic_scholar_data(doi: str | None, title: str) -> dict[str, An
                     await asyncio.sleep(API_RETRY_DELAY)
 
             # If all attempts failed, return error dict
-            return {"error": "api_failure", "message": f"Failed to fetch data for {doi or title} after {API_MAX_RETRIES} attempts"}
+            return {
+                "error": "api_failure",
+                "message": f"Failed to fetch data for {doi or title} after {API_MAX_RETRIES} attempts",
+            }
 
     except Exception as e:
         print(f"Semantic Scholar API error: {e}")
@@ -288,10 +293,10 @@ async def get_semantic_scholar_data(doi: str | None, title: str) -> dict[str, An
 
 def calculate_citation_impact_score(citation_count: int) -> int:
     """Calculate citation impact component (25 points max).
-    
+
     Args:
         citation_count: Number of citations for the paper
-        
+
     Returns:
         Integer score from 0-25 based on citation count thresholds
     """
@@ -300,7 +305,7 @@ def calculate_citation_impact_score(citation_count: int) -> int:
         from .config import CITATION_COUNT_THRESHOLDS
     except ImportError:
         from config import CITATION_COUNT_THRESHOLDS
-        
+
     thresholds = CITATION_COUNT_THRESHOLDS
 
     if citation_count >= thresholds["exceptional"]:
@@ -323,10 +328,10 @@ def calculate_citation_impact_score(citation_count: int) -> int:
 
 def calculate_venue_prestige_score(venue: dict[str, Any]) -> int:
     """Calculate venue prestige component (15 points max).
-    
+
     Args:
         venue: Venue information from Semantic Scholar API
-        
+
     Returns:
         Integer score from 0-15 based on venue quality patterns
     """
@@ -335,27 +340,39 @@ def calculate_venue_prestige_score(venue: dict[str, Any]) -> int:
         from .config import VENUE_PRESTIGE_SCORES
     except ImportError:
         from config import VENUE_PRESTIGE_SCORES
-        
+
     # Simplified venue scoring using pattern matching
     # Future enhancement: integrate SCImago Journal Rank (SJR) data
     venue_name = venue.get("name", "").lower()
 
     # Tier 1: Top-tier venues (Q1 equivalent)
     tier1_patterns = [
-        "nature", "science", "cell", "lancet", "nejm", "jama",
-        "pnas", "plos one", "neurips", "icml", "nips", "iclr"
+        "nature",
+        "science",
+        "cell",
+        "lancet",
+        "nejm",
+        "jama",
+        "pnas",
+        "plos one",
+        "neurips",
+        "icml",
+        "nips",
+        "iclr",
     ]
 
     # Tier 2: High-quality venues (Q2 equivalent)
     tier2_patterns = [
-        "ieee transactions", "acm transactions", "journal of",
-        "proceedings of", "international conference", "workshop"
+        "ieee transactions",
+        "acm transactions",
+        "journal of",
+        "proceedings of",
+        "international conference",
+        "workshop",
     ]
 
     # Tier 3: General academic venues (Q3 equivalent)
-    tier3_patterns = [
-        "journal", "proceedings", "conference", "symposium", "workshop"
-    ]
+    tier3_patterns = ["journal", "proceedings", "conference", "symposium", "workshop"]
 
     for pattern in tier1_patterns:
         if pattern in venue_name:
@@ -374,10 +391,10 @@ def calculate_venue_prestige_score(venue: dict[str, Any]) -> int:
 
 def calculate_author_authority_score(authors: list) -> int:
     """Calculate author authority component (10 points max).
-    
+
     Args:
         authors: List of author information from Semantic Scholar API
-        
+
     Returns:
         Integer score from 0-10 based on highest h-index among authors
     """
@@ -395,7 +412,7 @@ def calculate_author_authority_score(authors: list) -> int:
         from .config import AUTHOR_AUTHORITY_THRESHOLDS
     except ImportError:
         from config import AUTHOR_AUTHORITY_THRESHOLDS
-        
+
     thresholds = AUTHOR_AUTHORITY_THRESHOLDS
     if max_h_index >= thresholds["renowned"]:
         return 10
@@ -413,11 +430,11 @@ def calculate_author_authority_score(authors: list) -> int:
 
 def calculate_cross_validation_score(paper_data: dict, s2_data: dict[str, Any]) -> int:
     """Calculate cross-validation component (10 points max).
-    
+
     Args:
         paper_data: Original paper metadata
         s2_data: Semantic Scholar API data
-        
+
     Returns:
         Integer score from 0-10 based on data consistency and completeness
     """
@@ -448,23 +465,23 @@ def calculate_cross_validation_score(paper_data: dict, s2_data: dict[str, Any]) 
 
 def calculate_quality_score(paper_data: dict, s2_data: dict[str, Any]) -> tuple[int, str]:
     """Calculate enhanced quality score using paper data + API data.
-    
+
     Args:
         paper_data: Paper metadata dictionary
         s2_data: Semantic Scholar API data (required)
-        
+
     Returns:
         Tuple containing:
         - quality_score: Integer 0-100
         - explanation: Human-readable scoring factors
-        
+
     Raises:
         Exception: If API data is missing or invalid
     """
     # Enhanced scoring is now mandatory
-    if not s2_data or s2_data.get('error'):
+    if not s2_data or s2_data.get("error"):
         raise QualityScoringError(f"Enhanced quality scoring requires valid API data. Got: {s2_data}")
-        
+
     return calculate_enhanced_quality_score(paper_data, s2_data)
 
 
@@ -475,21 +492,21 @@ def calculate_study_type_score(study_type: str | None) -> int:
         from .config import STUDY_TYPE_WEIGHT
     except ImportError:
         from config import STUDY_TYPE_WEIGHT
-    
+
     if not study_type:
         return 0
-        
+
     study_type = study_type.lower()
     # Enhanced scoring uses different weights - 20 points max
     weights = {
-        'systematic_review': STUDY_TYPE_WEIGHT,     # 20 points
-        'meta_analysis': STUDY_TYPE_WEIGHT,        # 20 points
-        'rct': int(STUDY_TYPE_WEIGHT * 0.75),      # 15 points
-        'cohort': int(STUDY_TYPE_WEIGHT * 0.5),    # 10 points
-        'case_control': int(STUDY_TYPE_WEIGHT * 0.375), # 7.5 -> 8 points
-        'cross_sectional': int(STUDY_TYPE_WEIGHT * 0.25), # 5 points
-        'case_report': int(STUDY_TYPE_WEIGHT * 0.125), # 2.5 -> 3 points
-        'study': int(STUDY_TYPE_WEIGHT * 0.125)     # 3 points
+        "systematic_review": STUDY_TYPE_WEIGHT,  # 20 points
+        "meta_analysis": STUDY_TYPE_WEIGHT,  # 20 points
+        "rct": int(STUDY_TYPE_WEIGHT * 0.75),  # 15 points
+        "cohort": int(STUDY_TYPE_WEIGHT * 0.5),  # 10 points
+        "case_control": int(STUDY_TYPE_WEIGHT * 0.375),  # 7.5 -> 8 points
+        "cross_sectional": int(STUDY_TYPE_WEIGHT * 0.25),  # 5 points
+        "case_report": int(STUDY_TYPE_WEIGHT * 0.125),  # 2.5 -> 3 points
+        "study": int(STUDY_TYPE_WEIGHT * 0.125),  # 3 points
     }
     return weights.get(study_type, 0)
 
@@ -498,16 +515,16 @@ def calculate_recency_score(year: int | None) -> int:
     """Calculate recency component score for enhanced scoring."""
     if not year:
         return 0
-        
+
     # Import here to avoid circular dependencies
     try:
         from .config import RECENCY_WEIGHT
     except ImportError:
         from config import RECENCY_WEIGHT
-        
+
     current_year = 2025  # Current year for scoring
     years_old = current_year - year
-    
+
     if years_old <= 0:  # Current year or future
         return RECENCY_WEIGHT
     elif years_old == 1:  # 1 year old
@@ -526,13 +543,13 @@ def calculate_sample_size_score(sample_size: int | None) -> int:
     """Calculate sample size component score for enhanced scoring."""
     if not sample_size or sample_size <= 0:
         return 0
-        
+
     # Import here to avoid circular dependencies
     try:
         from .config import SAMPLE_SIZE_WEIGHT
     except ImportError:
         from config import SAMPLE_SIZE_WEIGHT
-        
+
     if sample_size >= 1000:
         return SAMPLE_SIZE_WEIGHT
     elif sample_size >= 500:
@@ -554,21 +571,37 @@ def calculate_full_text_score(has_full_text: bool | None) -> int:
         from .config import FULL_TEXT_WEIGHT
     except ImportError:
         from config import FULL_TEXT_WEIGHT
-        
+
     return FULL_TEXT_WEIGHT if has_full_text else 0
 
 
 def calculate_enhanced_quality_score(paper_data: dict, s2_data: dict[str, Any]) -> tuple[int, str]:
     """Calculate unified enhanced quality score using paper data + API data.
-    
+
+    Combines core paper attributes (40 points) with API-enhanced metrics (60 points)
+    for comprehensive quality assessment. Higher scores indicate stronger evidence.
+
     Args:
         paper_data: Paper metadata dictionary
         s2_data: Semantic Scholar API data
-        
+
     Returns:
         Tuple containing:
         - quality_score: Integer 0-100
         - explanation: Human-readable scoring factors
+
+    Examples:
+        >>> paper = {"study_type": "systematic_review", "year": 2023, "has_full_text": True}
+        >>> api_data = {"citationCount": 150, "venue": {"name": "Nature"}, "authors": [{"hIndex": 45}]}
+        >>> score, explanation = calculate_enhanced_quality_score(paper, api_data)
+        >>> score >= 85  # A+ quality (systematic review + high citations + top venue)
+        True
+
+        >>> paper = {"study_type": "case_report", "year": 2015, "has_full_text": False}
+        >>> api_data = {"citationCount": 2, "venue": {"name": "Unknown"}, "authors": []}
+        >>> score, explanation = calculate_enhanced_quality_score(paper, api_data)
+        >>> score < 30  # F quality (case report + old + low citations)
+        True
     """
     score = 0
     factors = []
@@ -578,7 +611,7 @@ def calculate_enhanced_quality_score(paper_data: dict, s2_data: dict[str, Any]) 
     recency_score = calculate_recency_score(paper_data.get("year"))
     sample_size_score = calculate_sample_size_score(paper_data.get("sample_size"))
     full_text_score = calculate_full_text_score(paper_data.get("has_full_text"))
-    
+
     score += study_type_score + recency_score + sample_size_score + full_text_score
 
     # API-enhanced attributes (60 points max)
@@ -590,49 +623,53 @@ def calculate_enhanced_quality_score(paper_data: dict, s2_data: dict[str, Any]) 
     score += citation_bonus + venue_bonus + author_bonus + validation_bonus
 
     # Build explanation
-    factors = build_quality_explanation(paper_data, s2_data, {
-        "citation": citation_bonus,
-        "venue": venue_bonus,
-        "author": author_bonus,
-        "validation": validation_bonus
-    })
+    factors = build_quality_explanation(
+        paper_data,
+        s2_data,
+        {
+            "citation": citation_bonus,
+            "venue": venue_bonus,
+            "author": author_bonus,
+            "validation": validation_bonus,
+        },
+    )
 
     return min(score, 100), " | ".join(factors) if factors else "enhanced scoring"
 
 
-
-
-def build_quality_explanation(paper_data: dict, s2_data: dict[str, Any], bonuses: dict[str, int]) -> list[str]:
+def build_quality_explanation(
+    paper_data: dict, s2_data: dict[str, Any], bonuses: dict[str, int]
+) -> list[str]:
     """Build human-readable explanation of quality score factors."""
     factors = []
-    
+
     # Core factors
-    study_type = paper_data.get('study_type', 'unknown')
+    study_type = paper_data.get("study_type", "unknown")
     factors.append(f"Study: {study_type}")
-    
-    if paper_data.get('year'):
+
+    if paper_data.get("year"):
         factors.append(f"Year: {paper_data['year']}")
-    
-    if paper_data.get('has_full_text'):
+
+    if paper_data.get("has_full_text"):
         factors.append("Full text")
-    
+
     # Enhanced factors
     citation_count = s2_data.get("citationCount", 0)
     if citation_count > 0:
         factors.append(f"Citations: {citation_count}")
-    
+
     venue = s2_data.get("venue", {}).get("name", "")
     if venue:
         factors.append(f"Venue: {venue[:30]}...")
-    
+
     authors = s2_data.get("authors", [])
     if authors:
         max_h_index = max((author.get("hIndex", 0) or 0 for author in authors), default=0)
         if max_h_index > 0:
             factors.append(f"Author h-index: {max_h_index}")
-    
+
     factors.append("[Enhanced scoring]")
-    
+
     return factors
 
 
@@ -640,43 +677,35 @@ def build_quality_explanation(paper_data: dict, s2_data: dict[str, Any], bonuses
 # ASYNC PARALLEL PROCESSING FOR EMBEDDINGS AND QUALITY SCORING
 # ============================================================================
 
+
 async def process_paper_async(paper_data: dict, pdf_text: str) -> tuple[Any, int, str]:
     """Process paper with parallel embedding generation and enhanced quality scoring.
-    
+
     Args:
         paper_data: Paper metadata dictionary
         pdf_text: Full text of the paper for embedding generation
-        
+
     Returns:
         Tuple containing:
         - embedding: NumPy array of embeddings
         - quality_score: Integer 0-100
         - quality_explanation: Human-readable scoring factors
-        
+
     Raises:
         Exception: If embedding generation or API call fails (both required)
     """
     import numpy as np
-    
+
     # Start both operations concurrently
-    embedding_task = asyncio.create_task(
-        generate_embedding_async(pdf_text)
-    )
+    embedding_task = asyncio.create_task(generate_embedding_async(pdf_text))
 
     quality_task = asyncio.create_task(
-        get_semantic_scholar_data(
-            paper_data.get("DOI"),
-            paper_data.get("title", "")
-        )
+        get_semantic_scholar_data(paper_data.get("DOI"), paper_data.get("title", ""))
     )
 
     # Wait for both to complete
     try:
-        embedding, s2_data = await asyncio.gather(
-            embedding_task,
-            quality_task,
-            return_exceptions=True
-        )
+        embedding, s2_data = await asyncio.gather(embedding_task, quality_task, return_exceptions=True)
     except Exception as e:
         raise PaperProcessingError(f"Failed to process paper concurrently: {e}") from e
 
@@ -696,20 +725,20 @@ async def process_paper_async(paper_data: dict, pdf_text: str) -> tuple[Any, int
 
 async def generate_embedding_async(text: str) -> Any:
     """Async wrapper for embedding generation.
-    
+
     Args:
         text: Text to generate embeddings for
-        
+
     Returns:
         NumPy array of embeddings
     """
     # Import here to avoid circular dependencies
     from sentence_transformers import SentenceTransformer
     import numpy as np
-    
+
     # Load model if not already loaded (cached by sentence-transformers)
     model = SentenceTransformer(EMBEDDING_MODEL)
-    
+
     # Convert synchronous embedding generation to async
     loop = asyncio.get_event_loop()
     return await loop.run_in_executor(None, model.encode, text)
@@ -735,6 +764,22 @@ def detect_study_type(text: str) -> str:
 
     Returns:
         Study type identifier (e.g., 'systematic_review', 'rct', 'cohort')
+
+    Examples:
+        >>> detect_study_type("Systematic review of diabetes interventions")
+        'systematic_review'
+        >>> detect_study_type("Randomized controlled trial of mobile health app")
+        'rct'
+        >>> detect_study_type("Cohort study following patients for 5 years")
+        'cohort'
+        >>> detect_study_type("Case-control study of risk factors")
+        'case_control'
+        >>> detect_study_type("Cross-sectional survey of health behaviors")
+        'cross_sectional'
+        >>> detect_study_type("Case report of rare condition")
+        'case_report'
+        >>> detect_study_type("Analysis of treatment outcomes")
+        'study'  # Default for unclassified
     """
     text_lower = text.lower()
 
@@ -784,6 +829,18 @@ def extract_rct_sample_size(text: str, study_type: str) -> int | None:
     Returns:
         Sample size as integer (validated 10-100,000 range), or
         None if not found, not an RCT, or outside valid range
+
+    Examples:
+        >>> extract_rct_sample_size("randomized 324 patients with diabetes", "rct")
+        324
+        >>> extract_rct_sample_size("enrolled and randomized 156 participants", "rct")
+        156
+        >>> extract_rct_sample_size("n = 89 were randomized to treatment", "rct")
+        89
+        >>> extract_rct_sample_size("cohort study of 500 patients", "cohort")
+        None  # Not an RCT
+        >>> extract_rct_sample_size("randomized 5 patients", "rct")
+        None  # Below minimum threshold (10)
     """
     if study_type != "rct":
         return None
@@ -1456,56 +1513,54 @@ class KnowledgeBaseBuilder:
 
     def has_papers_with_basic_scores(self, papers: list[dict]) -> tuple[bool, int]:
         """Check if KB has papers with basic quality scores that can be upgraded.
-        
+
         Args:
             papers: List of paper metadata dictionaries
-            
+
         Returns:
             Tuple of (has_basic_scores: bool, count: int)
         """
         basic_score_indicators = [
             "Enhanced scoring unavailable",
-            "API data unavailable", 
+            "API data unavailable",
             "Scoring failed",
-            ""  # Empty explanation also indicates basic scoring
+            "",  # Empty explanation also indicates basic scoring
         ]
-        
+
         basic_score_count = 0
         for paper in papers:
             explanation = paper.get("quality_explanation", "")
             # Also check if quality_score is None (indicates basic scoring fallback)
-            has_basic_score = (explanation in basic_score_indicators or 
-                             paper.get("quality_score") is None)
+            has_basic_score = explanation in basic_score_indicators or paper.get("quality_score") is None
             if has_basic_score:
                 basic_score_count += 1
-                
+
         return basic_score_count > 0, basic_score_count
 
     def get_papers_with_basic_scores(self, papers: list[dict]) -> set[str]:
         """Get zotero keys of papers with basic quality scores.
-        
+
         Args:
             papers: List of paper metadata dictionaries
-            
+
         Returns:
             Set of zotero keys for papers that need quality score upgrades
         """
         basic_score_indicators = [
             "Enhanced scoring unavailable",
             "API data unavailable",
-            "Scoring failed", 
-            ""  # Empty explanation also indicates basic scoring
+            "Scoring failed",
+            "",  # Empty explanation also indicates basic scoring
         ]
-        
+
         basic_score_keys = set()
         for paper in papers:
             explanation = paper.get("quality_explanation", "")
             # Also check if quality_score is None (indicates basic scoring fallback)
-            has_basic_score = (explanation in basic_score_indicators or 
-                             paper.get("quality_score") is None)
+            has_basic_score = explanation in basic_score_indicators or paper.get("quality_score") is None
             if has_basic_score:
                 basic_score_keys.add(paper["zotero_key"])
-                
+
         return basic_score_keys
 
     def apply_incremental_update(self, changes: dict[str, Any], api_url: str | None = None) -> None:
@@ -1526,14 +1581,14 @@ class KnowledgeBaseBuilder:
         # Process new and updated papers
         to_process = changes["new_keys"] | set(changes["updated_keys"])
 
-        # Check for quality score upgrades if no regular changes detected 
+        # Check for quality score upgrades if no regular changes detected
         # (but allow for minor embedding fixes which don't change paper content)
         regular_changes = changes["new_keys"] | set(changes.get("updated_keys", set()))
         if not regular_changes:
             # Test enhanced quality scoring availability
             print("\nChecking for quality score upgrades...")
             enhanced_scoring_available = True
-            
+
             try:
                 # Test API with first paper that has DOI or title
                 test_paper = None
@@ -1541,48 +1596,52 @@ class KnowledgeBaseBuilder:
                     if paper.get("doi") or paper.get("title"):
                         test_paper = paper
                         break
-                
+
                 if test_paper:
                     print(f"Testing API with paper: {test_paper.get('title', 'No title')[:60]}...")
-                    
+
                     # Add timeout for API test
                     import asyncio
+
                     try:
-                        test_s2_data = asyncio.run(asyncio.wait_for(
-                            get_semantic_scholar_data(
-                                doi=test_paper.get("doi", ""), 
-                                title=test_paper.get("title", "")
-                            ),
-                            timeout=10.0  # 10 second timeout
-                        ))
-                    except asyncio.TimeoutError:
-                        print("⚠️  API test timed out - enhanced scoring unavailable")
+                        test_s2_data = asyncio.run(
+                            asyncio.wait_for(
+                                get_semantic_scholar_data(
+                                    doi=test_paper.get("doi", ""), title=test_paper.get("title", "")
+                                ),
+                                timeout=10.0,  # 10 second timeout
+                            )
+                        )
+                    except TimeoutError:
+                        print("WARNING: API test timed out - enhanced scoring unavailable")
                         enhanced_scoring_available = False
                         test_s2_data = None
-                    
-                    if test_s2_data and not test_s2_data.get('error'):
+
+                    if test_s2_data and not test_s2_data.get("error"):
                         print("✅ Enhanced quality scoring API is available")
                     else:
-                        error_msg = test_s2_data.get('error', 'Unknown error') if test_s2_data else 'No response'
+                        error_msg = (
+                            test_s2_data.get("error", "Unknown error") if test_s2_data else "No response"
+                        )
                         print(f"❌ Enhanced quality scoring API unavailable: {error_msg}")
                         enhanced_scoring_available = False
                 else:
-                    print("⚠️  No papers with DOI or title found for API test")
+                    print("WARNING: No papers with DOI or title found for API test")
                     enhanced_scoring_available = False
-                    
+
             except Exception as e:
-                print(f"⚠️  API test failed: {e}")
+                print(f"WARNING: API test failed: {e}")
                 enhanced_scoring_available = False
-            
+
             if enhanced_scoring_available:
                 has_basic, count = self.has_papers_with_basic_scores(metadata["papers"])
                 if has_basic:
                     print(f"• Found {count} papers with basic quality scores.")
                     print("+ Enhanced quality scoring is now available.")
-                    
+
                     try:
                         response = input("Upgrade quality scores? (Y/n): ").strip().lower()
-                        if response != 'n':
+                        if response != "n":
                             # Add papers with basic scores to processing queue
                             basic_score_keys = self.get_papers_with_basic_scores(metadata["papers"])
                             to_process.update(basic_score_keys)
@@ -1595,21 +1654,23 @@ class KnowledgeBaseBuilder:
                 # API unavailable - inform user but don't interrupt workflow
                 has_basic, count = self.has_papers_with_basic_scores(metadata["papers"])
                 if has_basic:
-                    print(f"ℹ️  Found {count} papers with basic quality scores.")
-                    print("⚠️  Enhanced quality scoring currently unavailable (API issue).")
-                    print("📝 You can upgrade quality scores later when the API is available.")
+                    print(f"INFO: Found {count} papers with basic quality scores.")
+                    print("WARNING: Enhanced quality scoring currently unavailable (API issue).")
+                    print("NOTE: You can upgrade quality scores later when the API is available.")
                     print("   Just run 'python src/build_kb.py' again when you want to retry.")
 
         if to_process:
             # Check if we're doing quality upgrades
             quality_upgrades = self.get_papers_with_basic_scores(metadata["papers"])
             regular_changes = changes["new_keys"] | set(changes["updated_keys"])
-            
+
             if quality_upgrades & to_process:
                 quality_count = len(quality_upgrades & to_process)
                 regular_count = len(to_process - quality_upgrades)
                 if regular_count > 0:
-                    print(f"Processing {regular_count} paper changes + {quality_count} quality score upgrades...")
+                    print(
+                        f"Processing {regular_count} paper changes + {quality_count} quality score upgrades..."
+                    )
                 else:
                     print(f"Processing {quality_count} quality score upgrades...")
             else:
@@ -1629,21 +1690,15 @@ class KnowledgeBaseBuilder:
             existing_ids = [int(p["id"]) for p in metadata["papers"] if p.get("id", "").isdigit()]
             next_id = max(existing_ids) + 1 if existing_ids else 1
 
-            # Process each paper
+            # Process papers in parallel: basic metadata + quality scoring + embeddings
             quality_upgrades = self.get_papers_with_basic_scores(metadata["papers"])
-            papers_with_quality_upgrades = [p for p in papers_to_process if p.get("zotero_key") in quality_upgrades]
-            
-            if papers_with_quality_upgrades:
-                print(f"Upgrading quality scores for {len(papers_with_quality_upgrades)} papers...")
-                estimated_minutes = (len(papers_with_quality_upgrades) * 0.1) / 60  # 100ms per paper
-                print(f"⏱️  Estimated time: {estimated_minutes:.1f} minutes (due to API rate limiting)")
-                print("📊 Fetching citation counts, venue rankings, and author metrics...")
-                from tqdm import tqdm
-                paper_iter = tqdm(papers_to_process, desc="Processing papers with quality upgrades", unit="paper")
-            else:
-                paper_iter = papers_to_process
-                
-            for paper in paper_iter:
+            papers_with_quality_upgrades = [
+                p for p in papers_to_process if p.get("zotero_key") in quality_upgrades
+            ]
+
+            # Step 1: Process basic metadata for all papers first
+            print(f"Processing {len(papers_to_process)} papers...")
+            for paper in papers_to_process:
                 key = paper["zotero_key"]
 
                 # Generate paper ID
@@ -1663,7 +1718,7 @@ class KnowledgeBaseBuilder:
                 # Get PDF info
                 pdf_info = self.get_pdf_info(pdf_map.get(key, Path())) if key in pdf_map else {}
 
-                # Create paper metadata
+                # Create paper metadata (without quality scores yet)
                 paper_metadata = {
                     "id": paper_id,
                     "doi": paper.get("doi", ""),
@@ -1681,34 +1736,10 @@ class KnowledgeBaseBuilder:
                     "filename": f"paper_{paper_id}.md",
                     "zotero_key": key,
                     "pdf_info": pdf_info,
+                    # Preserve existing quality scores temporarily
+                    "quality_score": papers_dict.get(key, {}).get("quality_score"),
+                    "quality_explanation": papers_dict.get(key, {}).get("quality_explanation"),
                 }
-
-                # Add enhanced quality scoring if this paper needs it
-                if key in self.get_papers_with_basic_scores(metadata["papers"]):
-                    try:
-                        # Add rate limiting delay to respect Semantic Scholar API
-                        time.sleep(0.1)  # 100ms delay between requests
-                        
-                        # Fetch Semantic Scholar data
-                        s2_data = asyncio.run(get_semantic_scholar_data(
-                            doi=paper.get("doi", ""), 
-                            title=paper.get("title", "")
-                        ))
-                        
-                        # Calculate enhanced quality score
-                        if s2_data and not s2_data.get('error'):
-                            quality_score, quality_explanation = calculate_quality_score(paper_metadata, s2_data)
-                            paper_metadata["quality_score"] = quality_score
-                            paper_metadata["quality_explanation"] = quality_explanation
-                        else:
-                            # Individual paper API failure
-                            paper_metadata["quality_score"] = None
-                            paper_metadata["quality_explanation"] = "API data unavailable"
-                            
-                    except Exception:
-                        # Individual paper scoring error
-                        paper_metadata["quality_score"] = None
-                        paper_metadata["quality_explanation"] = "Scoring failed"
 
                 papers_dict[key] = paper_metadata
 
@@ -1717,6 +1748,70 @@ class KnowledgeBaseBuilder:
                 paper_file = self.papers_path / f"paper_{paper_id}.md"
                 with paper_file.open("w", encoding="utf-8") as f:
                     f.write(md_content)
+
+            # Step 2: Process quality score upgrades in parallel with embedding updates
+            if papers_with_quality_upgrades:
+                print(f"Upgrading quality scores for {len(papers_with_quality_upgrades)} papers...")
+                estimated_minutes = (len(papers_with_quality_upgrades) * 0.1) / 60  # 100ms per paper
+                print(f"TIME: Estimated time: {estimated_minutes:.1f} minutes (due to API rate limiting)")
+                print("DATA: Fetching citation counts, venue rankings, and author metrics...")
+
+                # Start quality scoring in background
+                import concurrent.futures
+                import threading
+                from tqdm import tqdm
+
+                def process_quality_upgrade(paper):
+                    """Process quality upgrade for a single paper."""
+                    key = paper["zotero_key"]
+                    try:
+                        # Add rate limiting delay to respect Semantic Scholar API
+                        time.sleep(0.1)  # 100ms delay between requests
+
+                        # Fetch Semantic Scholar data
+                        s2_data = asyncio.run(
+                            get_semantic_scholar_data(doi=paper.get("doi", ""), title=paper.get("title", ""))
+                        )
+
+                        # Calculate enhanced quality score
+                        if s2_data and not s2_data.get("error"):
+                            paper_metadata = papers_dict[key]
+                            quality_score, quality_explanation = calculate_quality_score(
+                                paper_metadata, s2_data
+                            )
+                            return key, quality_score, quality_explanation
+                        else:
+                            return key, None, "API data unavailable"
+
+                    except Exception:
+                        return key, None, "Scoring failed"
+
+                # Process quality upgrades concurrently
+                quality_results = {}
+                with concurrent.futures.ThreadPoolExecutor(max_workers=3) as executor:
+                    # Submit all quality scoring tasks
+                    future_to_paper = {
+                        executor.submit(process_quality_upgrade, paper): paper
+                        for paper in papers_with_quality_upgrades
+                    }
+
+                    # Collect results with progress bar
+                    for future in tqdm(
+                        concurrent.futures.as_completed(future_to_paper),
+                        total=len(papers_with_quality_upgrades),
+                        desc="Processing quality upgrades",
+                        unit="paper",
+                    ):
+                        key, score, explanation = future.result()
+                        quality_results[key] = (score, explanation)
+
+                # Apply quality score updates
+                for key, (score, explanation) in quality_results.items():
+                    if key in papers_dict:
+                        papers_dict[key]["quality_score"] = score
+                        papers_dict[key]["quality_explanation"] = explanation
+
+                print(f"✅ Quality scores updated for {len(quality_results)} papers")
 
         # Remove deleted papers
         for key in changes["deleted_keys"]:
@@ -1728,16 +1823,27 @@ class KnowledgeBaseBuilder:
         metadata["last_updated"] = datetime.now(UTC).isoformat()
         metadata["version"] = "4.0"
 
-        # Save metadata
+        # Save metadata immediately to preserve quality score updates
+        print("SAVE: Saving metadata with updated quality scores...")
         with self.metadata_file_path.open("w") as f:
             json.dump(metadata, f, indent=2, ensure_ascii=False)
+        print("✅ Metadata saved successfully")
 
-        # Update index incrementally
-        if to_process or changes["deleted_keys"]:
-            self.update_index_incrementally(metadata["papers"], changes)
-        elif changes.get("needs_reindex"):
-            # Only rebuild if explicitly needed
-            self.rebuild_simple_index(metadata["papers"])
+        # Update index incrementally (this can fail without losing quality scores)
+        try:
+            if to_process or changes["deleted_keys"]:
+                # Pass quality upgrade information to avoid unnecessary embedding generation
+                if papers_with_quality_upgrades:
+                    quality_upgrade_keys = {p["zotero_key"] for p in papers_with_quality_upgrades}
+                    changes["quality_upgrades"] = quality_upgrade_keys
+                self.update_index_incrementally(metadata["papers"], changes)
+            elif changes.get("needs_reindex"):
+                # Only rebuild if explicitly needed
+                self.rebuild_simple_index(metadata["papers"])
+        except Exception as e:
+            print(f"WARNING: Embedding update failed: {e}")
+            print("NOTE: Quality scores have been saved. Embeddings can be regenerated later.")
+            raise
 
     def update_index_incrementally(self, papers: list[dict[str, Any]], changes: dict[str, Any]) -> None:
         """Update FAISS index incrementally for changed papers only.
@@ -1752,7 +1858,17 @@ class KnowledgeBaseBuilder:
         import numpy as np
 
         # Identify papers that need new embeddings
-        changed_keys = changes["new_keys"] | set(changes.get("updated_keys", set()))
+        # Quality score upgrades don't change text content, so exclude them from embedding changes
+        quality_upgrades = changes.get("quality_upgrades", set())
+        content_changed_keys = changes["new_keys"] | set(changes.get("updated_keys", set()))
+        changed_keys = content_changed_keys - quality_upgrades
+
+        if quality_upgrades:
+            print(
+                f"CACHE: Smart caching: Excluding {len(quality_upgrades)} quality-only updates from embedding generation"
+            )
+        if changed_keys:
+            print(f"EMBED: Will generate embeddings for {len(changed_keys)} papers with content changes")
 
         # Try to load existing embeddings
         existing_embeddings = {}
@@ -2556,7 +2672,6 @@ class KnowledgeBaseBuilder:
             papers: List of paper dictionaries with metadata and full_text
             pdf_stats: Optional tuple of (papers_with_pdfs, cache_hits) for reporting
         """
-
         build_start_time = time.time()
 
         # Extract PDF stats if provided
@@ -2602,6 +2717,75 @@ class KnowledgeBaseBuilder:
 
         papers = unique_papers  # Use deduplicated list
 
+        # Enhanced Quality Scoring v4.0: Test API availability before processing
+        print("\nTesting enhanced quality scoring API availability...")
+        enhanced_scoring_available = True
+
+        try:
+            # Test API with first paper that has DOI or title
+            test_paper = None
+            for paper in papers[:10]:  # Check first 10 papers for one with DOI/title
+                if paper.get("doi") or paper.get("title"):
+                    test_paper = paper
+                    break
+
+            if test_paper:
+                print(f"Testing API with paper: {test_paper.get('title', 'No title')[:60]}...")
+
+                # Add timeout for API test
+                try:
+                    test_s2_data = asyncio.run(
+                        asyncio.wait_for(
+                            get_semantic_scholar_data(
+                                doi=test_paper.get("doi", ""), title=test_paper.get("title", "")
+                            ),
+                            timeout=10.0,  # 10 second timeout
+                        )
+                    )
+                except TimeoutError:
+                    print("WARNING: API test timed out - enhanced scoring unavailable")
+                    enhanced_scoring_available = False
+                    test_s2_data = None
+
+                if test_s2_data and not test_s2_data.get("error"):
+                    print("✅ Enhanced quality scoring API is available")
+                    print("DATA: Will fetch citation counts, venue rankings, and author metrics for all papers")
+                    estimated_minutes = (len(papers) * 0.15) / 60  # 150ms per paper
+                    print(f"TIME: Estimated time: {estimated_minutes:.1f} minutes (due to API rate limiting)")
+                else:
+                    error_msg = test_s2_data.get("error", "Unknown error") if test_s2_data else "No response"
+                    print(f"❌ Enhanced quality scoring API unavailable: {error_msg}")
+                    enhanced_scoring_available = False
+            else:
+                print("WARNING: No papers with DOI or title found for API test")
+                enhanced_scoring_available = False
+
+        except Exception as e:
+            print(f"WARNING: API test failed: {e}")
+            enhanced_scoring_available = False
+
+        # If API unavailable, ask user for approval to use basic scoring
+        if not enhanced_scoring_available:
+            print("\nWARNING: Enhanced quality scoring is unavailable")
+            print("This means papers will have basic quality scores without:")
+            print("  • Citation counts from Semantic Scholar")
+            print("  • Venue prestige rankings")
+            print("  • Author authority metrics")
+            print("  • Cross-validation scoring")
+            print("\nYou can upgrade to enhanced scoring later when the API is available")
+            print("by running 'python src/build_kb.py' again.")
+
+            try:
+                response = input("\nContinue with basic quality scoring? (Y/n): ").strip().lower()
+                if response == "n":
+                    print("Build cancelled. Please check your internet connection and try again.")
+                    sys.exit(1)
+                else:
+                    print("✓ Continuing with basic quality scoring...")
+            except (EOFError, KeyboardInterrupt):
+                print("\nBuild cancelled by user.")
+                sys.exit(1)
+
         metadata: dict[str, Any] = {
             "papers": [],
             "total_papers": len(papers),
@@ -2643,6 +2827,10 @@ class KnowledgeBaseBuilder:
                 "zotero_key": paper.get("zotero_key", ""),  # Store for future comparisons
             }
 
+            # Initialize quality fields - will be populated in parallel later
+            paper_metadata["quality_score"] = None
+            paper_metadata["quality_explanation"] = "Enhanced scoring unavailable"
+
             metadata["papers"].append(paper_metadata)
 
             # Extract sections if full text is available
@@ -2676,6 +2864,71 @@ class KnowledgeBaseBuilder:
             embedding_text = f"{title} [SEP] {abstract}" if abstract else title
 
             abstracts.append(embedding_text)
+
+        # Process quality scores in parallel (when API is available)
+        if enhanced_scoring_available:
+            print(f"\nProcessing quality scores for {len(papers)} papers in parallel...")
+            estimated_minutes = (len(papers) * 0.1) / 60  # 100ms per paper base rate
+            parallel_minutes = estimated_minutes / 3  # 3 workers
+            print(f"TIME: Estimated time: {parallel_minutes:.1f} minutes (3x parallel processing)")
+            
+            # Import required modules for parallel processing
+            import concurrent.futures
+            
+            def process_quality_score_rebuild(paper_tuple):
+                """Process quality scoring for a single paper during rebuild."""
+                paper_index, paper_data = paper_tuple
+                try:
+                    # Add rate limiting delay to respect Semantic Scholar API
+                    time.sleep(0.1)  # 100ms delay between requests
+                    
+                    # Fetch Semantic Scholar data
+                    s2_data = asyncio.run(get_semantic_scholar_data(
+                        doi=paper_data.get("doi", ""), 
+                        title=paper_data.get("title", "")
+                    ))
+                    
+                    # Calculate enhanced quality score
+                    if s2_data and not s2_data.get('error'):
+                        # Get the metadata for scoring
+                        paper_metadata = metadata["papers"][paper_index]
+                        quality_score, quality_explanation = calculate_quality_score(paper_metadata, s2_data)
+                        return paper_index, quality_score, quality_explanation
+                    else:
+                        return paper_index, None, "API data unavailable"
+                        
+                except Exception:
+                    return paper_index, None, "Enhanced scoring failed"
+
+            # Process quality scores concurrently
+            quality_results = {}
+            with concurrent.futures.ThreadPoolExecutor(max_workers=3) as executor:
+                # Submit all quality scoring tasks
+                future_to_paper = {
+                    executor.submit(process_quality_score_rebuild, (i, paper)): i
+                    for i, paper in enumerate(papers)
+                }
+                
+                # Collect results with progress bar
+                for future in tqdm(
+                    concurrent.futures.as_completed(future_to_paper),
+                    total=len(papers),
+                    desc="Processing quality scores",
+                    unit="paper",
+                ):
+                    try:
+                        paper_index, quality_score, quality_explanation = future.result()
+                        quality_results[paper_index] = (quality_score, quality_explanation)
+                    except Exception:
+                        paper_index = future_to_paper[future]
+                        quality_results[paper_index] = (None, "Processing failed")
+            
+            # Apply quality results to metadata
+            for paper_index, (quality_score, quality_explanation) in quality_results.items():
+                metadata["papers"][paper_index]["quality_score"] = quality_score
+                metadata["papers"][paper_index]["quality_explanation"] = quality_explanation
+        else:
+            print("Enhanced scoring API unavailable - using basic scoring indicators")
 
         print(f"\nBuilding search index for {len(abstracts):,} papers...")
         import faiss
@@ -2932,9 +3185,10 @@ class KnowledgeBaseBuilder:
 # NETWORK GAP ANALYSIS INTEGRATION FUNCTIONS
 # ============================================================================
 
+
 def has_enhanced_scoring() -> bool:
     """Check if enhanced quality scoring is available in the knowledge base.
-    
+
     Returns:
         bool: True if enhanced scoring is available, False otherwise
     """
@@ -2942,29 +3196,30 @@ def has_enhanced_scoring() -> bool:
         # Check if KB exists
         kb_path = Path("kb_data")
         metadata_file = kb_path / "metadata.json"
-        
+
         if not metadata_file.exists():
             return False
-            
+
         # Load metadata and check for enhanced scoring indicators
-        with open(metadata_file, encoding='utf-8') as f:
+        with open(metadata_file, encoding="utf-8") as f:
             metadata = json.load(f)
-            
+
         # Check if we have papers with enhanced quality scores
         papers = metadata.get("papers", [])
         if not papers:
             return False
-            
+
         # Look for enhanced quality scoring indicators in the first few papers
         for paper in papers[:5]:  # Check first 5 papers as sample
             quality_explanation = paper.get("quality_explanation", "")
-            if any(indicator in quality_explanation.lower() for indicator in [
-                "citations", "venue", "author authority", "cross-validation", "enhanced"
-            ]):
+            if any(
+                indicator in quality_explanation.lower()
+                for indicator in ["citations", "venue", "author authority", "cross-validation", "enhanced"]
+            ):
                 return True
-                
+
         return False
-        
+
     except Exception:
         # If we can't determine, assume enhanced scoring is not available
         return False
@@ -2984,7 +3239,9 @@ def prompt_gap_analysis_after_build(total_papers: int, build_time: float) -> Non
         print("• Recent developments in your research areas")
         print("• Semantically similar papers you don't have")
 
-        print("\nIf you choose 'Y', will run: python src/analyze_gaps.py (comprehensive analysis, no filters)")
+        print(
+            "\nIf you choose 'Y', will run: python src/analyze_gaps.py (comprehensive analysis, no filters)"
+        )
         print("\nFor filtered analysis, run manually later with flags:")
         print("  --min-citations N     Only papers with N+ citations")
         print("  --year-from YYYY      Only papers from YYYY onwards")
@@ -2992,9 +3249,10 @@ def prompt_gap_analysis_after_build(total_papers: int, build_time: float) -> Non
         print("\nExample: python src/analyze_gaps.py --min-citations 50 --year-from 2020 --limit 100")
 
         response = input("\nRun comprehensive gap analysis now? (Y/n): ").strip().lower()
-        if response != 'n':
+        if response != "n":
             print("\n» Running comprehensive gap analysis...")
             import subprocess
+
             subprocess.run(["python", "src/analyze_gaps.py"], check=False)
     else:
         print("\n   Gap analysis requires enhanced quality scoring and ≥20 papers")
@@ -3023,7 +3281,7 @@ def main(
     export_path: str | None,
     import_path: str | None,
 ) -> None:
-    """Build and maintain knowledge base from Zotero library for semantic search.
+    r"""Build and maintain knowledge base from Zotero library for semantic search.
 
     \b
     SAFE DEFAULT BEHAVIOR (NEW v4.1):
@@ -3036,9 +3294,9 @@ def main(
     \b
     SAFETY FEATURES:
       🔒 Data Protection: No automatic deletion of existing papers or cache
-      📝 Update Only: Default operation adds/updates papers safely
-      🔧 Explicit Rebuilds: Destructive operations require --rebuild flag
-      💾 Cache Preservation: All cache files preserved during failures
+      UPDATE: Default operation adds/updates papers safely
+      REBUILD: Destructive operations require --rebuild flag
+      CACHE: All cache files preserved during failures
       + Clear Guidance: Detailed error messages with specific solutions
 
     \b
@@ -3064,7 +3322,7 @@ def main(
       python src/build_kb.py --rebuild          # ! Explicit rebuild with confirmation
       python src/build_kb.py --export kb.tar.gz # Export for backup/sharing
       python src/build_kb.py --import kb.tar.gz # Import from another machine
-      
+
       # After build completes, prompted to run:
       python src/analyze_gaps.py                # Discover missing papers (comprehensive)
       python src/analyze_gaps.py --min-citations 50 --limit 100  # Filtered analysis
@@ -3084,7 +3342,7 @@ def main(
             print(f"x Knowledge base not found at {kb_path}")
             sys.exit(1)
 
-        print(f"📦 Exporting knowledge base to {export_path}...")
+        print(f"EXPORT: Exporting knowledge base to {export_path}...")
 
         # Create tar.gz archive
         with tarfile.open(export_path, "w:gz") as tar:
@@ -3121,7 +3379,7 @@ def main(
             shutil.move(str(kb_path), backup_path)
             print(f"📁 Backed up existing KB to {backup_path}")
 
-        print(f"📦 Importing knowledge base from {import_path}...")
+        print(f"IMPORT: Importing knowledge base from {import_path}...")
 
         # Extract archive
         with tarfile.open(import_path, "r:gz") as tar:
@@ -3204,7 +3462,7 @@ def main(
             print(f"📁 Backed up existing KB to {backup_path}")
 
         try:
-            builder.build_from_zotero_local(api_url, use_cache=True)
+            builder.build_from_zotero_local(api_url, use_cache=False)
         except Exception as error:
             print(f"Error building knowledge base: {error}")
             sys.exit(1)
@@ -3220,7 +3478,7 @@ def main(
 
             if changes["total"] == 0 and not changes["needs_reindex"]:
                 print("Knowledge base is up to date! No changes detected.")
-                
+
                 # Check for quality score upgrades even when no changes detected
                 builder.apply_incremental_update(changes, api_url)
                 return
@@ -3238,12 +3496,12 @@ def main(
             builder.apply_incremental_update(changes, api_url)
             update_time = (time.time() - update_start_time) / 60  # Convert to minutes
             print("Update complete!")
-            
+
             # Get current paper count for gap analysis prompt
             with open(builder.metadata_file_path) as f:
                 metadata = json.load(f)
             total_papers = metadata.get("total_papers", 0)
-            
+
             # Prompt for gap analysis after successful incremental update
             prompt_gap_analysis_after_build(total_papers, update_time)
 
