@@ -1604,7 +1604,20 @@ class KnowledgeBaseBuilder:
             next_id = max(existing_ids) + 1 if existing_ids else 1
 
             # Process each paper
-            for paper in papers_to_process:
+            quality_upgrades = self.get_papers_with_basic_scores(metadata["papers"])
+            papers_with_quality_upgrades = [p for p in papers_to_process if p.get("zotero_key") in quality_upgrades]
+            
+            if papers_with_quality_upgrades:
+                print(f"Upgrading quality scores for {len(papers_with_quality_upgrades)} papers...")
+                estimated_minutes = (len(papers_with_quality_upgrades) * 0.1) / 60  # 100ms per paper
+                print(f"⏱️  Estimated time: {estimated_minutes:.1f} minutes (due to API rate limiting)")
+                print("📊 Fetching citation counts, venue rankings, and author metrics...")
+                from tqdm import tqdm
+                paper_iter = tqdm(papers_to_process, desc="Processing papers with quality upgrades", unit="paper")
+            else:
+                paper_iter = papers_to_process
+                
+            for paper in paper_iter:
                 key = paper["zotero_key"]
 
                 # Generate paper ID
