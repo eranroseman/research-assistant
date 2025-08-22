@@ -2095,7 +2095,7 @@ def batch(input_file: str, preset: str | None, output: str) -> None:
             _format_batch_text(results)
 
     except FileNotFoundError:
-        click.echo(f"Error: File '{input}' not found", err=True)
+        click.echo(f"Error: File '{input_file}' not found", err=True)
         sys.exit(1)
     except json.JSONDecodeError as e:
         click.echo(f"Error: Invalid JSON - {e}", err=True)
