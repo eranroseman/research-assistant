@@ -133,7 +133,9 @@ class TestSearchWorkflowIntegration:
     @patch("src.cli_kb_index.KnowledgeBaseIndex")
     @patch("src.cli.faiss")
     @patch("sentence_transformers.SentenceTransformer")
-    def test_search_with_quality_filter_workflow_should_return_filtered_results(self, mock_transformer, mock_faiss, mock_kb_index, mock_kb):
+    def test_search_with_quality_filter_workflow_should_return_filtered_results(
+        self, mock_transformer, mock_faiss, mock_kb_index, mock_kb
+    ):
         """
         Test search workflow with quality filtering.
 
@@ -242,7 +244,9 @@ class TestSearchWorkflowIntegration:
     @patch("src.cli_kb_index.KnowledgeBaseIndex")
     @patch("src.cli.faiss")
     @patch("sentence_transformers.SentenceTransformer")
-    def test_batch_research_workflow_should_execute_comprehensive_search(self, mock_transformer, mock_faiss, mock_kb_index, mock_kb):
+    def test_batch_research_workflow_should_execute_comprehensive_search(
+        self, mock_transformer, mock_faiss, mock_kb_index, mock_kb
+    ):
         """
         Test complete batch research workflow.
 
@@ -299,7 +303,9 @@ class TestSearchWorkflowIntegration:
     @patch("src.cli_kb_index.KnowledgeBaseIndex")
     @patch("src.cli.faiss")
     @patch("sentence_transformers.SentenceTransformer")
-    def test_author_search_workflow_should_find_papers_by_author(self, mock_transformer, mock_faiss, mock_kb_index_class, mock_kb):
+    def test_author_search_workflow_should_find_papers_by_author(
+        self, mock_transformer, mock_faiss, mock_kb_index_class, mock_kb
+    ):
         """
         Test author search workflow.
 
@@ -348,7 +354,9 @@ class TestSearchWorkflowIntegration:
     @patch("src.cli_kb_index.KnowledgeBaseIndex")
     @patch("src.cli.faiss")
     @patch("sentence_transformers.SentenceTransformer")
-    def test_citation_generation_workflow_should_format_correctly(self, mock_transformer, mock_faiss, mock_kb_index, mock_kb):
+    def test_citation_generation_workflow_should_format_correctly(
+        self, mock_transformer, mock_faiss, mock_kb_index, mock_kb
+    ):
         """
         Test citation generation for multiple papers.
 
@@ -417,7 +425,9 @@ class TestSearchPerformance:
     @patch("src.cli_kb_index.KnowledgeBaseIndex")
     @patch("src.cli.faiss")
     @patch("sentence_transformers.SentenceTransformer")
-    def test_search_execution_should_complete_within_timeout(self, mock_transformer, mock_faiss, mock_kb_index, tmp_path):
+    def test_search_execution_should_complete_within_timeout(
+        self, mock_transformer, mock_faiss, mock_kb_index, tmp_path
+    ):
         """
         Test that search completes in reasonable time.
 

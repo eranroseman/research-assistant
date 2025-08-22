@@ -25,13 +25,8 @@ def create_mock_cli(
     Returns:
         Mock ResearchCLI instance with test data
     """
-    from src.cli import ResearchCLI
-
-    # Create mock CLI without calling __init__
-    with MagicMock() as mock_init:
-        mock_init.return_value = None
-        ResearchCLI.__init__ = mock_init
-        cli = ResearchCLI.__new__(ResearchCLI)
+    # Create a fully mocked CLI object instead of patching the class
+    cli = MagicMock()
 
     # Set up basic attributes
     cli.knowledge_base_path = kb_path or Path(".")
