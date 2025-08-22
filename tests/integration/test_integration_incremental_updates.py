@@ -83,7 +83,7 @@ class TestIncrementalUpdates:
         return index
 
     @patch("build_kb.KnowledgeBaseBuilder.embedding_model", new_callable=PropertyMock)
-    def test_incremental_update_only_new_papers(self, mock_embedding_prop, temp_kb):
+    def test_incremental_update_should_process_only_new_papers(self, mock_embedding_prop, temp_kb):
         """Verify only new papers get embedded."""
         from build_kb import KnowledgeBaseBuilder
 
@@ -167,7 +167,7 @@ class TestIncrementalUpdates:
         assert index.ntotal == 7, f"Index should have 7 papers, got {index.ntotal}"
 
     @patch("build_kb.KnowledgeBaseBuilder.embedding_model", new_callable=PropertyMock)
-    def test_reuse_existing_embeddings(self, mock_embedding_prop, temp_kb):
+    def test_incremental_update_should_reuse_existing_embeddings(self, mock_embedding_prop, temp_kb):
         """Verify unchanged papers keep embeddings."""
         from build_kb import KnowledgeBaseBuilder
 
@@ -228,7 +228,7 @@ class TestIncrementalUpdates:
         assert index.ntotal == 5, f"Index should still have 5 papers, got {index.ntotal}"
 
     @patch("build_kb.KnowledgeBaseBuilder.embedding_model", new_callable=PropertyMock)
-    def test_corrupted_index_triggers_rebuild(self, mock_embedding_prop, temp_kb):
+    def test_corrupted_index_should_trigger_rebuild(self, mock_embedding_prop, temp_kb):
         """Verify graceful handling of corruption."""
         from build_kb import KnowledgeBaseBuilder
 
@@ -283,7 +283,7 @@ class TestIncrementalUpdates:
         assert index.ntotal == 5, f"Index should have 5 papers after rebuild, got {index.ntotal}"
 
     @patch("build_kb.KnowledgeBaseBuilder.embedding_model", new_callable=PropertyMock)
-    def test_missing_index_triggers_build(self, mock_embedding_prop, temp_kb):
+    def test_missing_index_should_trigger_build(self, mock_embedding_prop, temp_kb):
         """Verify missing index triggers full build."""
         from build_kb import KnowledgeBaseBuilder
 

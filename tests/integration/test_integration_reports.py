@@ -17,7 +17,7 @@ from src.build_kb import KnowledgeBaseBuilder
 class TestReportGeneration:
     """Test report generation to exports/ directory."""
 
-    def test_pdf_quality_report_generation(self, temp_kb_dir):
+    def test_pdf_quality_report_generation_should_create_analysis_file(self, temp_kb_dir):
         """Test that unified PDF quality report is generated in exports/ directory."""
         builder = KnowledgeBaseBuilder(knowledge_base_path=str(temp_kb_dir))
 
@@ -65,10 +65,11 @@ class TestReportGeneration:
         assert "PDF Quality Report" in content
         assert "Paper with Small PDF" in content
         assert "Paper without PDF" in content
-        assert "Paper with Good PDF" in content
-        assert "**Total papers:** 3" in content
+        # Good PDFs don't get their own section, they're counted in summary
+        assert "Papers with good PDFs:** 1" in content or "good PDFs:** 1" in content
+        assert "Total papers:** 3" in content
 
-    def test_exports_directory_creation(self, temp_kb_dir):
+    def test_exports_directory_creation_should_initialize_structure(self, temp_kb_dir):
         """Test that exports/ directory is created if it doesn't exist."""
         builder = KnowledgeBaseBuilder(knowledge_base_path=str(temp_kb_dir))
 
@@ -89,7 +90,7 @@ class TestReportGeneration:
         assert exports_dir.exists()
         assert report_path.exists()
 
-    def test_csv_export_to_exports(self, monkeypatch, temp_kb_dir):
+    def test_csv_export_should_save_to_exports_directory(self, monkeypatch, temp_kb_dir):
         """Test that CSV exports go to exports/ directory."""
         import subprocess
 

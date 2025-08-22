@@ -358,7 +358,7 @@ def display_operation_summary(
 
 
 def format_truncated_list(
-    items: list, max_display: int = 10, item_formatter: Any = str, continuation_message: str | None = None
+    items: list[Any], max_display: int = 10, item_formatter: Any = str, continuation_message: str | None = None
 ) -> list[str]:
     """Format a list with truncation for display.
 
@@ -386,7 +386,7 @@ def format_truncated_list(
 
 
 def format_error_message(
-    error_type: str, details: str, suggestion: str | None = None, context: dict | None = None
+    error_type: str, details: str, suggestion: str | None = None, context: dict[str, Any] | None = None
 ) -> str:
     """Format consistent, helpful error messages.
 
@@ -730,7 +730,7 @@ class KnowledgeBaseBuilder:
             self.metadata_file_path.unlink()
             print("Removed old metadata file")
 
-    def check_for_changes(self, api_url: str | None = None) -> dict:
+    def check_for_changes(self, api_url: str | None = None) -> dict[str, Any]:
         """Detect changes in Zotero library since last build.
 
         Performs integrity checks and identifies:
@@ -839,7 +839,7 @@ class KnowledgeBaseBuilder:
             "deleted_keys": deleted,
         }
 
-    def get_zotero_items_minimal(self, api_url: str | None = None) -> list:
+    def get_zotero_items_minimal(self, api_url: str | None = None) -> list[dict[str, Any]]:
         """Get minimal paper info from Zotero for change detection.
 
         Args:
@@ -888,7 +888,7 @@ class KnowledgeBaseBuilder:
 
         return all_items
 
-    def get_pdf_info(self, pdf_path: Path) -> dict:
+    def get_pdf_info(self, pdf_path: Path) -> dict[str, Any]:
         """Get PDF file metadata for change detection.
 
         Args:
@@ -902,7 +902,7 @@ class KnowledgeBaseBuilder:
             return {"size": stat.st_size, "mtime": stat.st_mtime}
         return {}
 
-    def apply_incremental_update(self, changes: dict, api_url: str | None = None) -> None:
+    def apply_incremental_update(self, changes: dict[str, Any], api_url: str | None = None) -> None:
         """Apply incremental updates to existing knowledge base.
 
         Processes only changed papers to minimize computation time.
@@ -1007,7 +1007,7 @@ class KnowledgeBaseBuilder:
             # Only rebuild if explicitly needed
             self.rebuild_simple_index(metadata["papers"])
 
-    def update_index_incrementally(self, papers: list, changes: dict) -> None:
+    def update_index_incrementally(self, papers: list[dict[str, Any]], changes: dict[str, Any]) -> None:
         """Update FAISS index incrementally for changed papers only.
 
         Args:
@@ -1091,7 +1091,7 @@ class KnowledgeBaseBuilder:
         faiss.write_index(new_index, str(self.index_file_path))
         print(f"Index updated with {new_index.ntotal} papers")
 
-    def rebuild_simple_index(self, papers: list) -> None:
+    def rebuild_simple_index(self, papers: list[dict[str, Any]]) -> None:
         """Rebuild FAISS index from paper abstracts.
 
         Args:
@@ -1261,7 +1261,7 @@ class KnowledgeBaseBuilder:
             print(f"Error extracting PDF {pdf_path}: {error}")
             return None
 
-    def extract_sections(self, text: str) -> dict:
+    def extract_sections(self, text: str) -> dict[str, str]:
         """Extract common academic paper sections from full text.
 
         Identifies and extracts standard sections like abstract, introduction,
@@ -1416,7 +1416,7 @@ class KnowledgeBaseBuilder:
 
         return sections
 
-    def format_paper_as_markdown(self, paper_data: dict) -> str:
+    def format_paper_as_markdown(self, paper_data: dict[str, Any]) -> str:
         """Format paper data as markdown for storage.
 
         Args:
@@ -1451,7 +1451,7 @@ class KnowledgeBaseBuilder:
 
         return str(markdown_content)
 
-    def process_zotero_local_library(self, api_url: str | None = None) -> list[dict]:
+    def process_zotero_local_library(self, api_url: str | None = None) -> list[dict[str, Any]]:
         """Extract papers from Zotero local library using HTTP API.
 
         Args:
@@ -1551,7 +1551,7 @@ class KnowledgeBaseBuilder:
         print(f"  Found {len(papers)} research papers (from {len(all_items)} total items)")
         return papers
 
-    def augment_papers_with_pdfs(self, papers: list[dict], use_cache: bool = True) -> tuple[int, int]:
+    def augment_papers_with_pdfs(self, papers: list[dict[str, Any]], use_cache: bool = True) -> tuple[int, int]:
         """Add full text from PDFs to paper dictionaries.
 
         Extracts text from PDF attachments found in Zotero's storage directory.
@@ -1649,7 +1649,7 @@ class KnowledgeBaseBuilder:
         # Build the knowledge base
         self.build_from_papers(papers, pdf_stats)
 
-    def generate_pdf_quality_report(self, papers: list[dict]) -> Path:
+    def generate_pdf_quality_report(self, papers: list[dict[str, Any]]) -> Path:
         """Generate comprehensive PDF quality report covering missing and small PDFs.
 
         Combines analysis of papers missing PDFs and those with minimal extracted text.
@@ -1663,9 +1663,9 @@ class KnowledgeBaseBuilder:
         """
         # Categorize papers by PDF status
         missing_pdfs = []  # No PDF at all
-        small_pdfs = []    # PDF exists but minimal text extracted
-        good_pdfs = []     # PDF exists with adequate text
-        
+        small_pdfs = []  # PDF exists but minimal text extracted
+        good_pdfs = []  # PDF exists with adequate text
+
         for paper in papers:
             if "full_text" not in paper or not paper.get("full_text"):
                 missing_pdfs.append(paper)
@@ -1684,19 +1684,29 @@ class KnowledgeBaseBuilder:
         total_papers = len(papers)
         report_lines.append("## Summary Statistics\n")
         report_lines.append(f"- **Total papers:** {total_papers:,}")
-        report_lines.append(f"- **Papers with good PDFs:** {len(good_pdfs):,} ({len(good_pdfs) * 100 / total_papers:.1f}%)")
-        report_lines.append(f"- **Papers with small PDFs:** {len(small_pdfs):,} ({len(small_pdfs) * 100 / total_papers:.1f}%)")
-        report_lines.append(f"- **Papers missing PDFs:** {len(missing_pdfs):,} ({len(missing_pdfs) * 100 / total_papers:.1f}%)")
-        report_lines.append(f"- **Text extraction threshold:** {MIN_FULL_TEXT_LENGTH:,} characters ({MIN_FULL_TEXT_LENGTH // 1000}KB)\n")
+        report_lines.append(
+            f"- **Papers with good PDFs:** {len(good_pdfs):,} ({len(good_pdfs) * 100 / total_papers:.1f}%)"
+        )
+        report_lines.append(
+            f"- **Papers with small PDFs:** {len(small_pdfs):,} ({len(small_pdfs) * 100 / total_papers:.1f}%)"
+        )
+        report_lines.append(
+            f"- **Papers missing PDFs:** {len(missing_pdfs):,} ({len(missing_pdfs) * 100 / total_papers:.1f}%)"
+        )
+        report_lines.append(
+            f"- **Text extraction threshold:** {MIN_FULL_TEXT_LENGTH:,} characters ({MIN_FULL_TEXT_LENGTH // 1000}KB)\n"
+        )
 
         # Section 1: Missing PDFs
         if missing_pdfs:
             report_lines.append("## Papers Missing PDFs\n")
             report_lines.append("These papers have no PDF attachments in Zotero or PDF extraction failed:\n")
-            
+
             # Sort by year (newest first), then by title
-            missing_pdfs.sort(key=lambda p: (-p.get("year", 0) if p.get("year") else -9999, p.get("title", "")))
-            
+            missing_pdfs.sort(
+                key=lambda p: (-p.get("year", 0) if p.get("year") else -9999, p.get("title", ""))
+            )
+
             # Limit to first 50 to avoid huge reports
             for i, paper in enumerate(missing_pdfs[:50], 1):
                 year = paper.get("year", "n.d.")
@@ -1704,7 +1714,7 @@ class KnowledgeBaseBuilder:
                 authors = paper.get("authors", [])
                 first_author = authors[0].split()[-1] if authors else "Unknown"
                 journal = paper.get("journal", "Unknown journal")[:50]
-                
+
                 report_lines.append(f"{i}. **[{year}] {title}**")
                 report_lines.append(
                     f"   - Authors: {first_author} et al."
@@ -1715,7 +1725,7 @@ class KnowledgeBaseBuilder:
                 if paper.get("doi"):
                     report_lines.append(f"   - DOI: {paper['doi']}")
                 report_lines.append("")
-            
+
             if len(missing_pdfs) > 50:
                 report_lines.append(f"... and {len(missing_pdfs) - 50} more papers\n")
         else:
@@ -1725,12 +1735,14 @@ class KnowledgeBaseBuilder:
         # Section 2: Small PDFs
         if small_pdfs:
             report_lines.append("## Papers with Small PDFs\n")
-            report_lines.append(f"These papers have PDFs but extracted less than {MIN_FULL_TEXT_LENGTH // 1000}KB of text:")
+            report_lines.append(
+                f"These papers have PDFs but extracted less than {MIN_FULL_TEXT_LENGTH // 1000}KB of text:"
+            )
             report_lines.append("(Usually indicates supplementary materials, not full papers)\n")
-            
+
             # Sort by year (newest first), then by title
             small_pdfs.sort(key=lambda p: (-p.get("year", 0) if p.get("year") else -9999, p.get("title", "")))
-            
+
             for i, paper in enumerate(small_pdfs, 1):
                 text_len = len(paper.get("full_text", ""))
                 year = paper.get("year", "n.d.")
@@ -1738,7 +1750,7 @@ class KnowledgeBaseBuilder:
                 authors = paper.get("authors", [])
                 first_author = authors[0].split()[-1] if authors else "Unknown"
                 journal = paper.get("journal", "Unknown journal")
-                
+
                 report_lines.append(f"{i}. **[{year}] {title}**")
                 report_lines.append(
                     f"   - Authors: {first_author} et al."
@@ -1757,21 +1769,31 @@ class KnowledgeBaseBuilder:
 
         # Recommendations section
         report_lines.append("## Recommendations\n")
-        
+
         if missing_pdfs:
             report_lines.append("**For papers missing PDFs:**\n")
             report_lines.append("1. **Attach PDFs in Zotero**: Use Zotero's 'Find Available PDF' feature")
             report_lines.append("2. **Manual download**: Search journal websites or preprint servers")
-            report_lines.append("3. **Check attachments**: Verify PDFs are attached to parent items, not child items")
-            report_lines.append("4. **Access permissions**: Ensure institutional access for paywalled papers\n")
-        
+            report_lines.append(
+                "3. **Check attachments**: Verify PDFs are attached to parent items, not child items"
+            )
+            report_lines.append(
+                "4. **Access permissions**: Ensure institutional access for paywalled papers\n"
+            )
+
         if small_pdfs:
             report_lines.append("**For papers with small PDFs:**\n")
-            report_lines.append("1. **Verify content**: Check if PDF contains full paper or just supplementary material")
-            report_lines.append("2. **Replace with full paper**: Download complete version if current is incomplete")
-            report_lines.append("3. **OCR for scanned PDFs**: Some PDFs may be image-based and need text recognition")
+            report_lines.append(
+                "1. **Verify content**: Check if PDF contains full paper or just supplementary material"
+            )
+            report_lines.append(
+                "2. **Replace with full paper**: Download complete version if current is incomplete"
+            )
+            report_lines.append(
+                "3. **OCR for scanned PDFs**: Some PDFs may be image-based and need text recognition"
+            )
             report_lines.append("4. **Check file integrity**: Re-download if PDF appears corrupted\n")
-        
+
         report_lines.append("**After fixing PDFs:**")
         report_lines.append("- Run `python src/build_kb.py` to update the knowledge base")
         report_lines.append("- Cache will speed up processing of unchanged papers")
@@ -1785,8 +1807,7 @@ class KnowledgeBaseBuilder:
 
         return report_path
 
-
-    def build_from_papers(self, papers: list[dict], pdf_stats: tuple[int, int] | None = None) -> None:
+    def build_from_papers(self, papers: list[dict[str, Any]], pdf_stats: tuple[int, int] | None = None) -> None:
         """Build complete knowledge base from list of papers.
 
         This is the main pipeline that:
@@ -2087,14 +2108,14 @@ class KnowledgeBaseBuilder:
         small_pdfs_count = sum(
             1 for p in papers if p.get("full_text") and len(p.get("full_text", "")) < MIN_FULL_TEXT_LENGTH
         )
-        
+
         if missing_count > 0 or small_pdfs_count > 0:
             print("\n📋 Generating PDF quality report...")
             if missing_count > 0:
                 print(f"   - {missing_count} papers missing PDFs ({missing_count * 100 / len(papers):.1f}%)")
             if small_pdfs_count > 0:
                 print(f"   - {small_pdfs_count} papers with small PDFs (<5KB text)")
-            
+
             report_path = self.generate_pdf_quality_report(papers)
             print(f"✅ PDF quality report saved to: {report_path}")
         else:
@@ -2279,9 +2300,8 @@ def main(
 
             # Backup existing KB
             import shutil
-            from datetime import datetime, timezone
-
-            backup_path = f"{kb_path}_backup_{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')}"
+            from datetime import datetime, UTC
+            backup_path = f"{kb_path}_backup_{datetime.now(UTC).strftime('%Y%m%d_%H%M%S')}"
             shutil.move(str(kb_path), backup_path)
             print(f"📁 Backed up existing KB to {backup_path}")
 
@@ -2342,7 +2362,7 @@ def main(
     elif rebuild:
         # Force complete rebuild
         print("Complete rebuild requested...")
-        
+
         # Test Zotero connection BEFORE deleting anything
         try:
             builder._test_zotero_connection(api_url)
@@ -2357,15 +2377,16 @@ def main(
             print()
             print("Then retry: python src/build_kb.py --rebuild")
             sys.exit(1)
-        
+
         # Create backup if KB exists
         if builder.metadata_file_path.exists():
             import shutil
             from datetime import datetime, UTC
+
             backup_path = f"kb_data_backup_{datetime.now(UTC).strftime('%Y%m%d_%H%M%S')}"
             shutil.move(knowledge_base_path, backup_path)
             print(f"📁 Backed up existing KB to {backup_path}")
-        
+
         try:
             builder.build_from_zotero_local(api_url, use_cache=True)
         except Exception as error:
@@ -2410,10 +2431,10 @@ def main(
                 print()
                 print("Then retry: python src/build_kb.py")
                 sys.exit(1)
-            
+
             # For non-connection errors, show the detailed error
             print(f"❌ Incremental update failed: {error}")
-            
+
             # For all other errors: preserve data and guide user
             print("Your knowledge base has been preserved.")
             print("SOLUTION: python src/build_kb.py --rebuild")
