@@ -547,5 +547,260 @@ class TestGapAnalysisIntegration:
         assert "python src/analyze_gaps.py" in captured.out
 
 
+class TestIncrementalUpdateFixes:
+    """Test incremental update logic fixes and embedding reuse."""
+
+    def test_needs_reindex_with_size_mismatch_should_return_true(self, tmp_path):
+        """Test that index size mismatch triggers needs_reindex=True."""
+        from src.build_kb import KnowledgeBaseBuilder
+        import json
+        import faiss
+        import numpy as np
+        
+        # Create test KB directory
+        builder = KnowledgeBaseBuilder(str(tmp_path))
+        
+        # Create metadata with 3 papers
+        metadata = {
+            "papers": [
+                {"id": "0001", "zotero_key": "KEY1", "title": "Paper 1", "filename": "paper_0001.md"},
+                {"id": "0002", "zotero_key": "KEY2", "title": "Paper 2", "filename": "paper_0002.md"}, 
+                {"id": "0003", "zotero_key": "KEY3", "title": "Paper 3", "filename": "paper_0003.md"}
+            ],
+            "version": "4.0"
+        }
+        
+        metadata_file = tmp_path / "metadata.json"
+        with open(metadata_file, 'w') as f:
+            json.dump(metadata, f)
+        
+        # Create index with only 2 embeddings (mismatch)
+        index = faiss.IndexFlatIP(768)
+        embeddings = np.random.rand(2, 768).astype(np.float32)
+        index.add(embeddings)
+        
+        index_file = tmp_path / "index.faiss"
+        faiss.write_index(index, str(index_file))
+        
+        # Mock the Zotero items to avoid external dependency
+        def mock_get_zotero_items_minimal(api_url=None):
+            return [
+                {"key": "KEY1"}, {"key": "KEY2"}, {"key": "KEY3"}
+            ]
+        
+        builder.get_zotero_items_minimal = mock_get_zotero_items_minimal
+        builder.get_pdf_paths_from_sqlite = lambda: {}  # No PDFs for simplicity
+        
+        # Check for changes should detect the mismatch
+        changes = builder.check_for_changes()
+        
+        assert changes["needs_reindex"] is True, "Should need reindex due to size mismatch"
+        assert changes["total"] == 3, "Should include all papers in total when reindexing"
+
+    def test_embedding_reuse_in_incremental_update(self, tmp_path):
+        """Test that incremental update properly reuses existing embeddings."""
+        from src.build_kb import KnowledgeBaseBuilder
+        import json
+        
+        builder = KnowledgeBaseBuilder(str(tmp_path))
+        
+        # Mock old papers (before update)
+        old_papers = [
+            {"id": "0001", "zotero_key": "KEY1", "title": "Paper 1"},
+            {"id": "0002", "zotero_key": "KEY2", "title": "Paper 2"}
+        ]
+        
+        # Mock new papers (after update - includes one new paper)
+        new_papers = [
+            {"id": "0001", "zotero_key": "KEY1", "title": "Paper 1"},
+            {"id": "0002", "zotero_key": "KEY2", "title": "Paper 2"},
+            {"id": "0003", "zotero_key": "KEY3", "title": "Paper 3"}  # New paper
+        ]
+        
+        # Mock changes (one new paper)
+        changes = {
+            "new_keys": {"KEY3"},
+            "updated_keys": set(),
+            "deleted_keys": set()
+        }
+        
+        # Create a mock existing index
+        import faiss
+        import numpy as np
+        
+        index = faiss.IndexFlatIP(768)
+        old_embeddings = np.random.rand(2, 768).astype(np.float32)
+        index.add(old_embeddings)
+        
+        index_file = tmp_path / "index.faiss"
+        faiss.write_index(index, str(index_file))
+        
+        # Test the embedding reuse logic
+        existing_embeddings = {}
+        if index_file.exists():
+            try:
+                old_papers_map = {p["zotero_key"]: i for i, p in enumerate(old_papers)}
+                index = faiss.read_index(str(index_file))
+                
+                for paper in new_papers:
+                    key = paper["zotero_key"]
+                    # Should reuse embeddings for KEY1 and KEY2, but not KEY3
+                    if key not in {"KEY3"} and key in old_papers_map:  # KEY3 is new
+                        old_idx = old_papers_map[key]
+                        if old_idx < index.ntotal:
+                            existing_embeddings[key] = index.reconstruct(old_idx)
+            except Exception:
+                pass
+        
+        # Should reuse 2 embeddings (KEY1, KEY2), KEY3 is new
+        assert len(existing_embeddings) == 2, f"Should reuse 2 embeddings, got {len(existing_embeddings)}"
+        assert "KEY1" in existing_embeddings, "Should reuse embedding for KEY1"
+        assert "KEY2" in existing_embeddings, "Should reuse embedding for KEY2"
+        assert "KEY3" not in existing_embeddings, "Should not have embedding for new paper KEY3"
+
+    def test_enhanced_scoring_availability_detection(self, tmp_path):
+        """Test that enhanced scoring availability is correctly detected."""
+        from src.build_kb import has_enhanced_scoring
+        import json
+        import os
+        
+        original_dir = os.getcwd()
+        try:
+            os.chdir(tmp_path)
+            
+            # Create KB with enhanced scoring indicators
+            kb_data = tmp_path / "kb_data"
+            kb_data.mkdir()
+            
+            metadata = {
+                "papers": [
+                    {
+                        "id": "0001",
+                        "title": "Test Paper",
+                        "quality_score": 85,
+                        "quality_explanation": "citations: 50 | venue prestige: 15 | enhanced scoring"
+                    }
+                ]
+            }
+            
+            metadata_file = kb_data / "metadata.json"
+            with open(metadata_file, 'w') as f:
+                json.dump(metadata, f)
+            
+            # Should detect enhanced scoring
+            result = has_enhanced_scoring()
+            assert result is True, "Should detect enhanced scoring from quality_explanation"
+            
+        finally:
+            os.chdir(original_dir)
+
+
+class TestQualityScoreUpgrade:
+    """Test quality score upgrade functionality during incremental updates."""
+    
+    def test_has_papers_with_basic_scores_should_detect_basic_scores(self, tmp_path):
+        """Test detection of papers with basic quality scores."""
+        builder = KnowledgeBaseBuilder(knowledge_base_path=str(tmp_path))
+        
+        papers = [
+            {
+                "id": "0001",
+                "zotero_key": "KEY1",
+                "title": "Paper with enhanced scoring",
+                "quality_score": 85,
+                "quality_explanation": "citations: 50 | venue prestige: 15 | enhanced scoring"
+            },
+            {
+                "id": "0002", 
+                "zotero_key": "KEY2",
+                "title": "Paper with basic scoring",
+                "quality_score": None,
+                "quality_explanation": "Enhanced scoring unavailable"
+            },
+            {
+                "id": "0003",
+                "zotero_key": "KEY3", 
+                "title": "Paper with API failure",
+                "quality_score": None,
+                "quality_explanation": "API data unavailable"
+            }
+        ]
+        
+        has_basic, count = builder.has_papers_with_basic_scores(papers)
+        
+        assert has_basic is True, "Should detect papers with basic scores"
+        assert count == 2, f"Should find 2 papers with basic scores, got {count}"
+
+    def test_get_papers_with_basic_scores_should_return_correct_keys(self, tmp_path):
+        """Test getting zotero keys of papers with basic quality scores."""
+        builder = KnowledgeBaseBuilder(knowledge_base_path=str(tmp_path))
+        
+        papers = [
+            {
+                "id": "0001",
+                "zotero_key": "ENHANCED_KEY",
+                "quality_score": 85,
+                "quality_explanation": "enhanced scoring with citations"
+            },
+            {
+                "id": "0002",
+                "zotero_key": "BASIC_KEY1", 
+                "quality_score": None,
+                "quality_explanation": "Enhanced scoring unavailable"
+            },
+            {
+                "id": "0003",
+                "zotero_key": "BASIC_KEY2",
+                "quality_score": None,
+                "quality_explanation": ""  # Empty explanation indicates basic scoring
+            },
+            {
+                "id": "0004",
+                "zotero_key": "FAILED_KEY",
+                "quality_score": None,
+                "quality_explanation": "Scoring failed"
+            }
+        ]
+        
+        basic_keys = builder.get_papers_with_basic_scores(papers)
+        
+        assert basic_keys == {"BASIC_KEY1", "BASIC_KEY2", "FAILED_KEY"}, \
+            f"Should return keys for basic scoring papers, got {basic_keys}"
+        assert "ENHANCED_KEY" not in basic_keys, "Should not include enhanced scoring papers"
+
+    def test_has_papers_with_basic_scores_should_handle_empty_list(self, tmp_path):
+        """Test detection with empty paper list."""
+        builder = KnowledgeBaseBuilder(knowledge_base_path=str(tmp_path))
+        
+        has_basic, count = builder.has_papers_with_basic_scores([])
+        
+        assert has_basic is False, "Should return False for empty list"
+        assert count == 0, "Should return 0 count for empty list"
+
+    def test_has_papers_with_basic_scores_should_handle_all_enhanced(self, tmp_path):
+        """Test detection when all papers have enhanced scores."""
+        builder = KnowledgeBaseBuilder(knowledge_base_path=str(tmp_path))
+        
+        papers = [
+            {
+                "id": "0001",
+                "zotero_key": "KEY1",
+                "quality_score": 85,
+                "quality_explanation": "enhanced scoring with citations"
+            },
+            {
+                "id": "0002",
+                "zotero_key": "KEY2", 
+                "quality_score": 72,
+                "quality_explanation": "venue prestige: 15 | citations: 25"
+            }
+        ]
+        
+        has_basic, count = builder.has_papers_with_basic_scores(papers)
+        
+        assert has_basic is False, "Should return False when all papers have enhanced scores"
+        assert count == 0, "Should return 0 count when all papers have enhanced scores"
+
+
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])

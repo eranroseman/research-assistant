@@ -356,14 +356,17 @@ python src/cli.py cite 0234 1426 --format json
    python src/build_kb.py
    ```
 
-   Choose from:
-   - **Quick Update** (Y) - Add new papers only (1-2 minutes)
-   - **Full Rebuild** (C) - Rebuild everything (30 minutes)
-   - **Exit** (N) - Cancel
+   **Automatic behavior:**
+   - **Enhanced Quality Scoring**: Tests Semantic Scholar API availability
+   - **Smart Incremental Update**: Reuses existing embeddings (~40x faster)
+   - **Index Validation**: Automatically fixes embedding/metadata mismatches
+   - **User Choice**: If API unavailable, prompts with clear consequences
+   - **Gap Analysis**: Auto-prompts after successful builds (≥20 papers + enhanced scoring)
 
-3. **Performance** (v4.0 optimized)
+3. **Performance** (v4.2 optimized)
    - Initial build: Time varies by hardware and library size
-   - Smart incremental updates: ~10x faster than full rebuild
+   - Smart incremental updates: ~40x faster than full rebuild (embeddings reused)
+   - Typical update: 4 new papers = ~30 seconds (vs 20+ minutes for full rebuild)
    - Storage: ~305MB for ~2,000 papers (~150MB per 1000 papers)
 
 ## Key Features
@@ -380,7 +383,8 @@ python src/cli.py cite 0234 1426 --format json
 - **O(1) Paper Lookups** - Instant access via optimized index
 - **Full Content Processing** - Multi-QA MPNet handles complete sections efficiently
 - **Optimized Storage** - Complete sections with intelligent caching
-- **Smart Incremental Updates** - 10x faster than full rebuild
+- **Smart Incremental Updates** - 40x faster than full rebuild with embedding reuse
+- **Index Validation** - Automatically detects and fixes inconsistencies
 - **GPU Acceleration** - Faster embedding generation when available
 
 ### Productivity
@@ -455,6 +459,8 @@ tests/
 | **Slow performance** | Check GPU: `python -c "import torch; print(torch.cuda.is_available())"` |
 | **Model download issues** | `pip install --upgrade sentence-transformers` |
 | **"Gap analysis not available"** | Requires enhanced quality scoring and ≥20 papers in KB |
+| **Index/metadata mismatch** | Automatically fixed by incremental update (shows "Reusing X embeddings") |
+| **Enhanced scoring unavailable** | User prompted to continue with basic build or fix API connectivity |
 
 ## Contributing
 

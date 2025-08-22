@@ -1454,6 +1454,60 @@ class KnowledgeBaseBuilder:
             return {"size": stat.st_size, "mtime": stat.st_mtime}
         return {}
 
+    def has_papers_with_basic_scores(self, papers: list[dict]) -> tuple[bool, int]:
+        """Check if KB has papers with basic quality scores that can be upgraded.
+        
+        Args:
+            papers: List of paper metadata dictionaries
+            
+        Returns:
+            Tuple of (has_basic_scores: bool, count: int)
+        """
+        basic_score_indicators = [
+            "Enhanced scoring unavailable",
+            "API data unavailable", 
+            "Scoring failed",
+            ""  # Empty explanation also indicates basic scoring
+        ]
+        
+        basic_score_count = 0
+        for paper in papers:
+            explanation = paper.get("quality_explanation", "")
+            # Also check if quality_score is None (indicates basic scoring fallback)
+            has_basic_score = (explanation in basic_score_indicators or 
+                             paper.get("quality_score") is None)
+            if has_basic_score:
+                basic_score_count += 1
+                
+        return basic_score_count > 0, basic_score_count
+
+    def get_papers_with_basic_scores(self, papers: list[dict]) -> set[str]:
+        """Get zotero keys of papers with basic quality scores.
+        
+        Args:
+            papers: List of paper metadata dictionaries
+            
+        Returns:
+            Set of zotero keys for papers that need quality score upgrades
+        """
+        basic_score_indicators = [
+            "Enhanced scoring unavailable",
+            "API data unavailable",
+            "Scoring failed", 
+            ""  # Empty explanation also indicates basic scoring
+        ]
+        
+        basic_score_keys = set()
+        for paper in papers:
+            explanation = paper.get("quality_explanation", "")
+            # Also check if quality_score is None (indicates basic scoring fallback)
+            has_basic_score = (explanation in basic_score_indicators or 
+                             paper.get("quality_score") is None)
+            if has_basic_score:
+                basic_score_keys.add(paper["zotero_key"])
+                
+        return basic_score_keys
+
     def apply_incremental_update(self, changes: dict[str, Any], api_url: str | None = None) -> None:
         """Apply incremental updates to existing knowledge base.
 
@@ -1472,8 +1526,66 @@ class KnowledgeBaseBuilder:
         # Process new and updated papers
         to_process = changes["new_keys"] | set(changes["updated_keys"])
 
+        # Check for quality score upgrades if no regular changes detected
+        if not to_process or len(to_process) == 0:
+            # Test enhanced quality scoring availability
+            print("\nChecking for quality score upgrades...")
+            enhanced_scoring_available = True
+            
+            try:
+                # Test API with first paper that has DOI or title
+                test_paper = None
+                for paper in metadata["papers"][:10]:  # Check first 10 papers for one with DOI/title
+                    if paper.get("doi") or paper.get("title"):
+                        test_paper = paper
+                        break
+                
+                if test_paper:
+                    test_s2_data = asyncio.run(get_semantic_scholar_data(
+                        doi=test_paper.get("doi", ""), 
+                        title=test_paper.get("title", "")
+                    ))
+                    
+                    if not test_s2_data or test_s2_data.get('error'):
+                        enhanced_scoring_available = False
+                else:
+                    enhanced_scoring_available = False
+                    
+            except Exception:
+                enhanced_scoring_available = False
+            
+            if enhanced_scoring_available:
+                has_basic, count = self.has_papers_with_basic_scores(metadata["papers"])
+                if has_basic:
+                    print(f"📊 Found {count} papers with basic quality scores.")
+                    print("📈 Enhanced quality scoring is now available.")
+                    
+                    try:
+                        response = input("Upgrade quality scores? (Y/n): ").strip().lower()
+                        if response != 'n':
+                            # Add papers with basic scores to processing queue
+                            basic_score_keys = self.get_papers_with_basic_scores(metadata["papers"])
+                            to_process.update(basic_score_keys)
+                            print(f"✅ Added {len(basic_score_keys)} papers for quality score upgrade")
+                        else:
+                            print("⏭️  Skipping quality score upgrade")
+                    except (EOFError, KeyboardInterrupt):
+                        print("\n⏭️  Skipping quality score upgrade")
+
         if to_process:
-            print(f"Processing {len(to_process)} paper changes...")
+            # Check if we're doing quality upgrades
+            quality_upgrades = self.get_papers_with_basic_scores(metadata["papers"])
+            regular_changes = changes["new_keys"] | set(changes["updated_keys"])
+            
+            if quality_upgrades & to_process:
+                quality_count = len(quality_upgrades & to_process)
+                regular_count = len(to_process - quality_upgrades)
+                if regular_count > 0:
+                    print(f"Processing {regular_count} paper changes + {quality_count} quality score upgrades...")
+                else:
+                    print(f"Processing {quality_count} quality score upgrades...")
+            else:
+                print(f"Processing {len(to_process)} paper changes...")
 
             # Get full data for papers to process
             all_papers = self.process_zotero_local_library(api_url)
@@ -1529,6 +1641,33 @@ class KnowledgeBaseBuilder:
                     "zotero_key": key,
                     "pdf_info": pdf_info,
                 }
+
+                # Add enhanced quality scoring if this paper needs it
+                if key in self.get_papers_with_basic_scores(metadata["papers"]):
+                    try:
+                        # Add rate limiting delay to respect Semantic Scholar API
+                        time.sleep(0.1)  # 100ms delay between requests
+                        
+                        # Fetch Semantic Scholar data
+                        s2_data = asyncio.run(get_semantic_scholar_data(
+                            doi=paper.get("doi", ""), 
+                            title=paper.get("title", "")
+                        ))
+                        
+                        # Calculate enhanced quality score
+                        if s2_data and not s2_data.get('error'):
+                            quality_score, quality_explanation = calculate_quality_score(paper_metadata, s2_data)
+                            paper_metadata["quality_score"] = quality_score
+                            paper_metadata["quality_explanation"] = quality_explanation
+                        else:
+                            # Individual paper API failure
+                            paper_metadata["quality_score"] = None
+                            paper_metadata["quality_explanation"] = "API data unavailable"
+                            
+                    except Exception:
+                        # Individual paper scoring error
+                        paper_metadata["quality_score"] = None
+                        paper_metadata["quality_explanation"] = "Scoring failed"
 
                 papers_dict[key] = paper_metadata
 
