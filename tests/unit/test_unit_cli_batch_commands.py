@@ -10,10 +10,10 @@ import pytest
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from src.cli import (
-    estimate_paper_quality,
     _generate_preset_commands,
     _execute_batch,
 )
+from src.build_kb import calculate_enhanced_quality_score
 from tests.utils import (
     create_mock_cli,
     create_test_kb_structure,
@@ -55,17 +55,28 @@ class TestCLICore:
         assert results[0][2]["id"] == "0001"
 
     def test_quality_scoring_integration_with_cli_should_work_correctly(self):
-        """Test quality scoring integration with CLI workflows."""
-        # Test that quality scoring works within CLI context
+        """Test enhanced quality scoring integration with CLI workflows."""
+        # Test that enhanced quality scoring works within CLI context
         paper = {"title": "Test Integration Paper", "study_type": "rct", "year": 2023, "sample_size": 500}
+        
+        # Mock Semantic Scholar API data
+        s2_data = {
+            "citationCount": 50,
+            "venue": {"name": "Journal of Medicine"},
+            "authors": [{"hIndex": 15}],
+            "externalIds": {"DOI": "10.1000/test"},
+            "publicationTypes": ["JournalArticle"],
+            "fieldsOfStudy": ["Medicine"]
+        }
 
-        score, explanation = estimate_paper_quality(paper)
+        score, explanation = calculate_enhanced_quality_score(paper, s2_data)
 
-        # Verify basic integration
+        # Verify enhanced scoring integration
         assert isinstance(score, int)
         assert 0 <= score <= 100
         assert isinstance(explanation, str)
         assert len(explanation) > 0
+        assert "[Enhanced scoring]" in explanation
 
         # Should score reasonably for an RCT
         assert score >= 50

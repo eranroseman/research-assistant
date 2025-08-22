@@ -13,18 +13,18 @@ import pytest
 
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
-from src.cli import estimate_paper_quality
+from src.build_kb import calculate_enhanced_quality_score
 
 
-class TestPaperQualityEstimation:
-    """Test paper quality estimation functionality."""
+class TestEnhancedQualityScoring:
+    """Test enhanced quality scoring functionality."""
 
-    def test_estimate_paper_quality_with_systematic_review_should_score_high(self):
+    def test_enhanced_quality_scoring_with_systematic_review_should_score_high(self):
         """
-        Test quality estimation for systematic reviews.
+        Test enhanced quality scoring for systematic reviews.
 
-        Given: Paper with systematic review indicators
-        When: estimate_paper_quality is called
+        Given: Paper with systematic review indicators and API data
+        When: calculate_enhanced_quality_score is called
         Then: Returns high quality score
         """
         paper = {
@@ -35,22 +35,32 @@ class TestPaperQualityEstimation:
             "sample_size": 1000,
             "has_full_text": True,
         }
+        
+        # Mock Semantic Scholar API data
+        s2_data = {
+            "citationCount": 100,
+            "venue": {"name": "Nature Medicine"},
+            "authors": [{"hIndex": 30}],
+            "externalIds": {"DOI": "10.1000/test"},
+            "publicationTypes": ["JournalArticle"],
+            "fieldsOfStudy": ["Medicine"]
+        }
 
-        score, explanation = estimate_paper_quality(paper)
+        score, explanation = calculate_enhanced_quality_score(paper, s2_data)
 
         assert isinstance(score, int)
         assert 0 <= score <= 100
         assert isinstance(explanation, str)
         assert len(explanation) > 0
-        # Systematic reviews should score high
-        assert score >= 35
+        # Systematic reviews with good API data should score high
+        assert score >= 70
 
-    def test_estimate_paper_quality_with_rct_should_score_well(self):
+    def test_enhanced_quality_scoring_with_rct_should_score_well(self):
         """
-        Test quality estimation for RCTs.
+        Test enhanced quality scoring for RCTs.
 
-        Given: Paper with RCT indicators
-        When: estimate_paper_quality is called
+        Given: Paper with RCT indicators and API data
+        When: calculate_enhanced_quality_score is called
         Then: Returns good quality score
         """
         paper = {
@@ -60,51 +70,49 @@ class TestPaperQualityEstimation:
             "study_type": "rct",
             "sample_size": 500,
         }
+        
+        # Mock Semantic Scholar API data  
+        s2_data = {
+            "citationCount": 50,
+            "venue": {"name": "Journal of Medicine"},
+            "authors": [{"hIndex": 15}],
+            "externalIds": {"DOI": "10.1000/test2"},
+            "publicationTypes": ["JournalArticle"],
+            "fieldsOfStudy": ["Medicine"]
+        }
 
-        score, explanation = estimate_paper_quality(paper)
+        score, explanation = calculate_enhanced_quality_score(paper, s2_data)
 
         assert isinstance(score, int)
         assert 0 <= score <= 100
-        # RCTs should score well
-        assert score >= 25
+        # RCTs with decent API data should score well
+        assert score >= 60
 
-    def test_estimate_paper_quality_with_minimal_data_should_handle_gracefully(self):
+    def test_enhanced_quality_scoring_with_minimal_api_data_should_handle_gracefully(self):
         """
-        Test quality estimation with minimal data.
+        Test enhanced quality scoring with minimal API data.
 
-        Given: Paper with minimal metadata
-        When: estimate_paper_quality is called
+        Given: Paper with minimal metadata and minimal API data
+        When: calculate_enhanced_quality_score is called
         Then: Handles missing data gracefully
         """
-        paper = {"title": "Basic Paper", "year": 2020}
+        paper = {"title": "Basic Paper", "year": 2020, "study_type": "study"}
+        
+        # Minimal API data
+        s2_data = {
+            "citationCount": 0,
+            "venue": {},
+            "authors": [],
+            "externalIds": {},
+            "publicationTypes": [],
+            "fieldsOfStudy": []
+        }
 
-        score, explanation = estimate_paper_quality(paper)
+        score, explanation = calculate_enhanced_quality_score(paper, s2_data)
 
         assert isinstance(score, int)
         assert 0 <= score <= 100
         assert isinstance(explanation, str)
-
-    def test_estimate_paper_quality_with_edge_cases_should_handle_gracefully(self):
-        """
-        Test quality estimation with edge cases.
-
-        Given: Papers with edge case data
-        When: estimate_paper_quality is called
-        Then: Handles edge cases gracefully
-        """
-        # Test with None values
-        none_paper = {"title": "Edge Case Paper", "year": None, "study_type": None}
-
-        score, explanation = estimate_paper_quality(none_paper)
-        assert isinstance(score, int)
-        assert 0 <= score <= 100
-        assert isinstance(explanation, str)
-
-        # Test with empty dict
-        empty_paper = {}
-        score, explanation = estimate_paper_quality(empty_paper)
-        assert isinstance(score, int)
-        assert 0 <= score <= 100
 
 
 class TestUtilityFunctions:

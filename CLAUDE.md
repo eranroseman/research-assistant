@@ -1,8 +1,11 @@
 # Research Assistant v4.0
 
-**v4.0 requires KB rebuild**: `rm -rf kb_data/ && python src/build_kb.py`
+**⚠️ BREAKING CHANGE: Enhanced Quality Scoring is now mandatory!**
+- **v4.0+ requires complete KB rebuild**: `rm -rf kb_data/ && python src/build_kb.py`
+- **Internet connection required**: KB build now requires Semantic Scholar API access
+- **No fallback mode**: All papers must have enhanced quality scores from API data
 
-Literature search with Multi-QA MPNet embeddings. KB: ~2,000+ papers, ~305MB.
+Literature search with Multi-QA MPNet embeddings and mandatory enhanced quality scoring. KB: ~2,000+ papers, ~305MB.
 
 ## Commands
 
@@ -13,6 +16,10 @@ python src/build_kb.py --rebuild          # Explicit rebuild with confirmation
 python src/build_kb.py --demo             # 5-paper demo
 python src/build_kb.py --export file      # Export KB for backup
 python src/build_kb.py --import file      # Import KB from backup
+
+# Gap Analysis (Post-Build Integration)
+python src/analyze_gaps.py               # Comprehensive gap analysis (auto-prompted after builds)
+python src/analyze_gaps.py --min-citations 50 --year-from 2020 --limit 100  # Filtered analysis
 
 # Search
 python src/cli.py search "topic" [--show-quality] [--quality-min N]
@@ -41,9 +48,9 @@ pytest tests/ -v                   # All tests (193 total)
 
 ## Architecture
 
-- **build_kb.py**: Zotero→PDF→Multi-QA MPNet embeddings→FAISS index
-- **cli.py**: Search, quality scoring, smart chunking
-- **cli_kb_index.py**: O(1) lookups, author search
+- **build_kb.py**: Zotero→PDF→Full content extraction (no truncation)→Multi-QA MPNet embeddings→Enhanced quality scoring (Semantic Scholar API)→FAISS index
+- **cli.py**: Search, enhanced quality indicators, smart chunking
+- **cli_kb_index.py**: O(1) lookups, author search, quality filtering
 - **.claude/commands/**: Slash commands
 
 ```
@@ -68,8 +75,15 @@ system/
 ## Key Details
 
 - **Paper IDs**: 4-digit (0001-XXXX), path-validated
-- **Quality Score** (0-100): Study type (35), recency (10), sample size (10), full text (5)
-  - Systematic/meta: 35, RCT: 25, Cohort: 15, Case-control: 10, Cross-sectional: 5
+- **Enhanced Quality Score** (0-100): Citation impact (25), Venue prestige (15), Author authority (10), Cross-validation (10), Core factors (40)
+  - **API-powered scoring**: Semantic Scholar integration for citation counts, venue rankings, author h-index
+  - **Core factors**: Study type (20), Recency (10), Sample size (5), Full text availability (5)
+  - **Visual indicators**: 🌟 (90-100) ⭐ (80-89) ● (70-79) ◐ (60-69) ○ (50-59) · (0-49)
+  - **Clean break implementation**: No fallback to legacy scoring, API data required
+- **Full Content Preservation**: Complete paper sections with zero information loss
+  - **No truncation**: Methods, results, and discussion sections preserved in full
+  - **Complete interventions**: Digital health descriptions never cut mid-sentence
+  - **Generous limits**: 50KB safety limit per section (10x increase from v4.0)
 - **Multi-QA MPNet**: 768-dim embeddings, GPU auto-detect (10x faster)
 - **Caching**: PDF text, embeddings, incremental updates
 
@@ -83,9 +97,18 @@ python src/build_kb.py --demo  # 5-paper test
 # Daily Usage (Safe - Never Auto-Rebuilds)
 python src/build_kb.py         # Update only: adds new papers, preserves existing data
 python src/build_kb.py         # Safe exit with clear guidance if issues occur
+                               # Auto-prompts for gap analysis after successful builds
 
 # When Rebuild Needed (Explicit Only)
 python src/build_kb.py --rebuild  # Full rebuild with user confirmation
+
+# Gap Analysis Workflow (New in v4.2)
+# After successful KB build/update, prompted to discover literature gaps:
+# - Papers cited by your KB but missing from your collection
+# - Recent work from authors already in your KB  
+# - Papers frequently co-cited with your collection
+# - Recent developments in your research areas
+# - Semantically similar papers you don't have
 
 # Search Examples
 python src/cli.py search "diabetes" --quality-min 70 --show-quality
@@ -102,14 +125,15 @@ python src/cli.py cite 0001 0234 1426  # Generate citations for specific papers
 - **"Incremental update failed"**: Script exits safely, run `python src/build_kb.py --rebuild` if needed
 - **Corruption**: `python src/build_kb.py --rebuild`
 - **GPU check**: `python -c "import torch; print(torch.cuda.is_available())"`
+- **"Gap analysis not available"**: Requires enhanced quality scoring and ≥20 papers
 
-## Safety Features (New in v4.1)
+## System Requirements (v4.0+)
 
-- **Safe by Default**: Default operation NEVER automatically deletes or rebuilds your data
-- **Update Only**: `python src/build_kb.py` only adds new papers and updates changed ones
-- **Explicit Rebuilds**: Destructive operations require `--rebuild` flag with user confirmation
-- **Data Preservation**: All cache files and existing papers preserved during failures
-- **Clear Guidance**: Detailed error messages with specific solutions when issues occur
+- **Internet Connection Required**: KB building requires Semantic Scholar API access
+- **Enhanced Quality Scoring**: All papers must have API-based quality scores (no fallback)
+- **Breaking Changes**: Incompatible with v3.x knowledge bases - complete rebuild required
+- **API Dependencies**: KB build fails if Semantic Scholar API is unavailable
+- **Data Preservation**: Incremental updates still preserve existing papers and cache files
 
 ## Development
 

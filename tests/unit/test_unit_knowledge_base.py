@@ -278,5 +278,274 @@ class TestStudyTypeDetection:
         assert result == "study"
 
 
+class TestContentPreservation:
+    """Test that content extraction preserves full text without truncation."""
+
+    def test_extract_sections_should_preserve_long_content(self, tmp_path):
+        """Test that very long sections are preserved in full."""
+        from src.build_kb import KnowledgeBaseBuilder
+
+        # Create content longer than old 5000 character limit
+        long_methods = "Methods\n\n" + "This is detailed methodology content. " * 300  # ~12,000 chars
+        long_results = "Results\n\n" + "These are comprehensive research results. " * 400  # ~16,000 chars
+        
+        mock_paper_text = f"""
+        Abstract
+        This is the abstract section.
+        
+        {long_methods}
+        
+        {long_results}
+        
+        Discussion
+        This is the discussion section.
+        """
+        
+        builder = KnowledgeBaseBuilder(str(tmp_path))
+        sections = builder.extract_sections(mock_paper_text)
+        
+        # Verify sections are longer than old limit
+        assert len(sections["methods"]) > 5000, f"Methods should be > 5000 chars, got {len(sections['methods'])}"
+        assert len(sections["results"]) > 5000, f"Results should be > 5000 chars, got {len(sections['results'])}"
+        
+        # Verify content is preserved
+        assert "detailed methodology content" in sections["methods"]
+        assert "comprehensive research results" in sections["results"]
+        
+        # Verify no truncation occurred (content should contain repeated text)
+        assert sections["methods"].count("detailed methodology content") > 250
+        assert sections["results"].count("comprehensive research results") > 350
+
+    def test_extract_sections_should_handle_very_long_single_section(self, tmp_path):
+        """Test handling of extremely long single sections."""
+        from src.build_kb import KnowledgeBaseBuilder
+        
+        # Create a 25KB methods section (5x old limit)
+        very_long_methods = "Methods\n\n" + "A" * 25000
+        
+        mock_paper_text = f"""
+        Abstract
+        Short abstract.
+        
+        {very_long_methods}
+        
+        Conclusion  
+        Short conclusion.
+        """
+        
+        builder = KnowledgeBaseBuilder(str(tmp_path))
+        sections = builder.extract_sections(mock_paper_text)
+        
+        # Verify the very long section is preserved
+        assert len(sections["methods"]) >= 25000
+        assert "A" * 1000 in sections["methods"]  # Sample check for preserved content
+        
+        # Verify other sections still work normally
+        assert "Short abstract" in sections["abstract"]
+        assert "Short conclusion" in sections["conclusion"]
+
+    def test_extract_sections_should_preserve_intervention_descriptions(self, tmp_path):
+        """Test preservation of complete digital health intervention descriptions."""
+        from src.build_kb import KnowledgeBaseBuilder
+        
+        # Realistic long intervention description
+        intervention_description = (
+            "The digital health intervention consisted of a multi-component approach including: "
+            "(1) A mobile application with daily symptom tracking, medication reminders, and "
+            "educational content delivered through push notifications; "
+            "(2) A web-based dashboard for healthcare providers to monitor patient-reported "
+            "outcomes in real-time and adjust treatment plans accordingly; "
+            "(3) Automated text message reminders sent at personalized optimal times based on "
+            "user preference and engagement patterns; "
+            "(4) Integration with wearable devices to collect objective health metrics including "
+            "heart rate variability, sleep patterns, and physical activity levels; "
+            "(5) A telehealth platform enabling video consultations with certified health coaches "
+            "who provided personalized behavioral interventions and motivational interviewing; "
+            "(6) Machine learning algorithms that analyzed user interaction patterns to deliver "
+            "just-in-time adaptive interventions tailored to individual risk profiles; "
+            "(7) Social features allowing peer support and gamification elements to enhance "
+            "long-term engagement and adherence to the intervention protocol."
+        ) * 3  # Repeat to make it long but not hit 50KB limit
+        
+        methods_with_intervention = f"""
+        Methods
+        
+        Study Design and Participants
+        This randomized controlled trial enrolled 500 participants.
+        
+        Intervention Description
+        {intervention_description}
+        
+        Statistical Analysis  
+        We used intention-to-treat analysis with multiple imputation.
+        """
+        
+        builder = KnowledgeBaseBuilder(str(tmp_path))
+        sections = builder.extract_sections(methods_with_intervention)
+        
+        # Verify complete intervention description is preserved
+        assert "multi-component approach" in sections["methods"]
+        assert "Machine learning algorithms" in sections["methods"]
+        assert "just-in-time adaptive interventions" in sections["methods"]
+        assert "gamification elements" in sections["methods"]
+        
+        # Verify no mid-sentence cuts
+        assert "behavioral interventions and motivational interviewing;" in sections["methods"]
+        assert "tailored to individual risk profiles;" in sections["methods"]
+
+
+class TestGapAnalysisIntegration:
+    """Test gap analysis integration functions."""
+
+    def test_has_enhanced_scoring_with_missing_kb_should_return_false(self, tmp_path):
+        """Test has_enhanced_scoring with missing KB."""
+        import os
+        original_dir = os.getcwd()
+        try:
+            os.chdir(tmp_path)  # Change to temp directory without KB
+            
+            from src.build_kb import has_enhanced_scoring
+            result = has_enhanced_scoring()
+            
+            assert result is False
+        finally:
+            os.chdir(original_dir)
+
+    def test_has_enhanced_scoring_with_basic_kb_should_return_false(self, tmp_path):
+        """Test has_enhanced_scoring with basic (non-enhanced) KB."""
+        import os
+        import json
+        
+        original_dir = os.getcwd()
+        try:
+            os.chdir(tmp_path)
+            
+            # Create basic KB without enhanced scoring indicators
+            kb_data = tmp_path / "kb_data"
+            kb_data.mkdir()
+            
+            metadata = {
+                "papers": [
+                    {
+                        "id": "0001",
+                        "title": "Test Paper",
+                        "quality_explanation": "basic scoring"  # No enhanced indicators
+                    }
+                ]
+            }
+            
+            metadata_file = kb_data / "metadata.json"
+            with open(metadata_file, 'w') as f:
+                json.dump(metadata, f)
+            
+            from src.build_kb import has_enhanced_scoring
+            result = has_enhanced_scoring()
+            
+            assert result is False
+        finally:
+            os.chdir(original_dir)
+
+    def test_has_enhanced_scoring_with_enhanced_kb_should_return_true(self, tmp_path):
+        """Test has_enhanced_scoring with enhanced scoring KB."""
+        import os
+        import json
+        
+        original_dir = os.getcwd()
+        try:
+            os.chdir(tmp_path)
+            
+            # Create enhanced KB with enhanced scoring indicators
+            kb_data = tmp_path / "kb_data"
+            kb_data.mkdir()
+            
+            metadata = {
+                "papers": [
+                    {
+                        "id": "0001",
+                        "title": "Test Paper",
+                        "quality_explanation": "citations: 50 | venue prestige: 15 | enhanced scoring"
+                    }
+                ]
+            }
+            
+            metadata_file = kb_data / "metadata.json"
+            with open(metadata_file, 'w') as f:
+                json.dump(metadata, f)
+            
+            from src.build_kb import has_enhanced_scoring
+            result = has_enhanced_scoring()
+            
+            assert result is True
+        finally:
+            os.chdir(original_dir)
+
+    def test_prompt_gap_analysis_after_build_with_insufficient_papers(self, capsys, monkeypatch):
+        """Test gap analysis prompt with insufficient papers."""
+        # Mock has_enhanced_scoring to return True but use small paper count
+        import src.build_kb
+        original_has_enhanced = src.build_kb.has_enhanced_scoring
+        
+        def mock_has_enhanced():
+            return True
+        
+        monkeypatch.setattr(src.build_kb, 'has_enhanced_scoring', mock_has_enhanced)
+        
+        from src.build_kb import prompt_gap_analysis_after_build
+        
+        # Call with less than 20 papers
+        prompt_gap_analysis_after_build(15, 2.5)
+        
+        captured = capsys.readouterr()
+        assert "Knowledge base built successfully!" in captured.out
+        assert "15 papers indexed in 2.5 minutes" in captured.out
+        assert "Gap analysis requires enhanced quality scoring and ≥20 papers" in captured.out
+
+    def test_prompt_gap_analysis_after_build_with_no_enhanced_scoring(self, capsys, monkeypatch):
+        """Test gap analysis prompt without enhanced scoring."""
+        # Mock has_enhanced_scoring to return False
+        import src.build_kb
+        
+        def mock_has_enhanced():
+            return False
+        
+        monkeypatch.setattr(src.build_kb, 'has_enhanced_scoring', mock_has_enhanced)
+        
+        from src.build_kb import prompt_gap_analysis_after_build
+        
+        # Call with sufficient papers but no enhanced scoring
+        prompt_gap_analysis_after_build(50, 5.0)
+        
+        captured = capsys.readouterr()
+        assert "Knowledge base built successfully!" in captured.out
+        assert "50 papers indexed in 5.0 minutes" in captured.out
+        assert "Gap analysis requires enhanced quality scoring and ≥20 papers" in captured.out
+
+    def test_prompt_gap_analysis_after_build_with_valid_conditions(self, capsys, monkeypatch):
+        """Test gap analysis prompt with valid conditions (no user input simulation)."""
+        # Mock has_enhanced_scoring to return True
+        import src.build_kb
+        
+        def mock_has_enhanced():
+            return True
+        
+        monkeypatch.setattr(src.build_kb, 'has_enhanced_scoring', mock_has_enhanced)
+        
+        # Mock input to return 'n' to avoid actually running gap analysis
+        monkeypatch.setattr('builtins.input', lambda _: 'n')
+        
+        from src.build_kb import prompt_gap_analysis_after_build
+        
+        # Call with valid conditions
+        prompt_gap_analysis_after_build(100, 10.2)
+        
+        captured = capsys.readouterr()
+        assert "Knowledge base built successfully!" in captured.out
+        assert "100 papers indexed in 10.2 minutes" in captured.out
+        assert "Run gap analysis to discover missing papers" in captured.out
+        assert "Gap analysis identifies 5 types of literature gaps:" in captured.out
+        assert "Papers cited by your KB but missing from your collection" in captured.out
+        assert "python src/analyze_gaps.py" in captured.out
+
+
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])

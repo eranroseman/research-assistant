@@ -78,8 +78,13 @@ python src/cli.py search "digital health"
 ```bash
 # Build/Update KB
 python src/build_kb.py --demo        # 5-paper demo
-python src/build_kb.py               # Safe incremental update
+python src/build_kb.py               # Safe incremental update (auto-prompts gap analysis)
 python src/build_kb.py --rebuild     # Force complete rebuild
+
+# Gap Analysis (Auto-prompted after builds)
+python src/analyze_gaps.py                            # Comprehensive analysis
+python src/analyze_gaps.py --min-citations 50        # High-impact gaps only
+python src/analyze_gaps.py --year-from 2020 --limit 100  # Recent + limited results
 
 # Search Papers
 python src/cli.py search "topic"                      # Basic search
@@ -191,15 +196,18 @@ python src/cli.py search "diabetes" --quality-min 70 --export high_quality.csv
 # Example: exports/search_results.csv
 ```
 
-#### Quality Filters
+#### Quality Filters with Enhanced Scoring
 ```bash
-# High-quality evidence only (score >70)
+# High-quality evidence only (enhanced score ≥70)
 python src/cli.py search "metabolic syndrome" --quality-min 70 --show-quality
 
-# Recent RCTs and systematic reviews
-python src/cli.py search "diabetes" --after 2020 --type rct --type systematic_review
+# Exceptional quality papers (enhanced score ≥90: 🌟)
+python src/cli.py search "diabetes" --quality-min 90 --show-quality
 
-# Get more results for comprehensive review
+# Recent RCTs and systematic reviews with quality indicators
+python src/cli.py search "diabetes" --after 2020 --type rct --type systematic_review --show-quality
+
+# Get comprehensive results with visual quality indicators
 python src/cli.py search "AI diagnosis" -k 30 --show-quality
 ```
 
@@ -302,6 +310,30 @@ python src/build_kb.py --export kb_backup.tar.gz
 python src/build_kb.py --import kb_backup.tar.gz
 ```
 
+### Gap Analysis (New in v4.2)
+
+After successful KB builds, you'll be prompted to run gap analysis to discover missing papers:
+
+```bash
+# Comprehensive analysis (all gap types, no filters)
+python src/analyze_gaps.py
+
+# Filtered analysis examples
+python src/analyze_gaps.py --min-citations 50         # High-impact papers only
+python src/analyze_gaps.py --year-from 2022           # Recent work from your authors
+python src/analyze_gaps.py --limit 30                 # Top 30 gaps by priority
+python src/analyze_gaps.py --min-citations 50 --year-from 2020 --limit 100  # Combined filters
+```
+
+**Gap Types Identified:**
+- Papers cited by your KB but missing from your collection
+- Recent work from authors already in your KB  
+- Papers frequently co-cited with your collection
+- Recent developments in your research areas
+- Semantically similar papers you don't have
+
+**Requirements:** Enhanced quality scoring and ≥20 papers in KB
+
 ### Generating Citations
 
 ```bash
@@ -340,11 +372,14 @@ python src/cli.py cite 0234 1426 --format json
 - **Multi-QA MPNet Embeddings** - Optimized for healthcare and scientific literature
 - **Smart Search Modes** - Auto-detects questions vs. exploration
 - **Query Expansion** - Automatic synonym expansion
-- **Quality Scoring** - 0-100 based on study type, recency, sample size
+- **Enhanced Quality Scoring** - 0-100 using Semantic Scholar API: citations (25pts), venue prestige (15pts), author authority (10pts), cross-validation (10pts), plus core factors (40pts)
+- **Visual Quality Indicators** - Instant assessment with 🌟⭐●◐○· icons
+- **Full Content Preservation** - Complete paper sections with zero information loss, no truncation of methodology or results
 
 ### Performance
 - **O(1) Paper Lookups** - Instant access via optimized index
-- **Smart Section Chunking** - Significantly reduces text to process
+- **Full Content Processing** - Multi-QA MPNet handles complete sections efficiently
+- **Optimized Storage** - Complete sections with intelligent caching
 - **Smart Incremental Updates** - 10x faster than full rebuild
 - **GPU Acceleration** - Faster embedding generation when available
 
@@ -419,6 +454,7 @@ tests/
 | **Zotero connection failed** | 1. Start Zotero<br>2. Enable API in Settings → Advanced<br>3. [WSL setup guide](docs/advanced-usage.md#wsl-specific-setup-zotero-on-windows-host) |
 | **Slow performance** | Check GPU: `python -c "import torch; print(torch.cuda.is_available())"` |
 | **Model download issues** | `pip install --upgrade sentence-transformers` |
+| **"Gap analysis not available"** | Requires enhanced quality scoring and ≥20 papers in KB |
 
 ## Contributing
 

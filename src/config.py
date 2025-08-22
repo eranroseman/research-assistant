@@ -67,25 +67,6 @@ QUALITY_BASE_SCORE = 50  # Starting score for all papers
 # Enhanced Quality Scoring with Semantic Scholar API
 ENABLE_ENHANCED_QUALITY = True  # Enable API-enhanced quality scoring
 SEMANTIC_SCHOLAR_API_URL = "https://api.semanticscholar.org/graph/v1"
-API_REQUEST_TIMEOUT = 10  # Timeout for API requests in seconds
-API_RATE_LIMIT_DELAY = 0.001  # Minimum delay between API requests (1ms)
-API_MAX_RETRIES = 3  # Maximum retries for failed API requests
-API_RETRY_DELAY = 1.0  # Delay between retries in seconds
-
-# Enhanced scoring weights (total possible: 100 points)
-# Basic scoring: 60 points max
-BASIC_STUDY_TYPE_MAX = 20  # Reduced from 35 to make room for enhanced metrics
-BASIC_RECENCY_MAX = 10  # Unchanged
-BASIC_SAMPLE_SIZE_MAX = 5  # Reduced from 10
-BASIC_FULL_TEXT_BONUS = 5  # Unchanged
-BASIC_TOTAL_MAX = 40  # Total basic score
-
-# Enhanced API-based scoring: 60 points max
-ENHANCED_CITATION_IMPACT_MAX = 25  # Citation count and influence
-ENHANCED_VENUE_PRESTIGE_MAX = 15  # Journal/conference ranking
-ENHANCED_AUTHOR_AUTHORITY_MAX = 10  # Author h-index and reputation
-ENHANCED_CROSS_VALIDATION_MAX = 10  # Multi-source verification
-ENHANCED_TOTAL_MAX = 60  # Total enhanced score
 
 # Study type scores based on evidence hierarchy (max 35 points)
 # Higher scores = stronger evidence quality
@@ -148,10 +129,44 @@ AUTHOR_AUTHORITY_THRESHOLDS = {
 }
 
 # ============================================================================
+# ENHANCED QUALITY SCORING WITH SEMANTIC SCHOLAR API
+# ============================================================================
+# API Configuration
+API_REQUEST_TIMEOUT = 10  # Timeout for individual API requests
+API_TOTAL_TIMEOUT_BUDGET = 600  # Max 10 min for all API calls
+API_MAX_RETRIES = 3  # Retry failed requests
+API_RETRY_DELAY = 1.0  # Delay between retries
+
+# Emergency fallback configuration
+ENHANCED_SCORING_EMERGENCY_FALLBACK = True  # Enable fallback to basic scoring
+API_HEALTH_CHECK_TIMEOUT = 5  # Seconds for health check
+API_FAILURE_THRESHOLD = 3  # Consecutive failures before fallback
+EMERGENCY_FALLBACK_DURATION = 1800  # 30 minutes before retry enhanced scoring
+
+# Production reliability configuration
+API_CIRCUIT_BREAKER_THRESHOLD = 10  # Failures before temporary disable
+API_CIRCUIT_BREAKER_RESET_TIME = 300  # 5 min before retry after circuit opens
+API_CONNECTION_POOL_SIZE = 10  # Max concurrent connections
+API_CONNECTION_POOL_HOST_LIMIT = 5  # Max connections per host
+
+# Unified scoring weights (100 points total)
+# Core paper attributes: 40 points max
+STUDY_TYPE_WEIGHT = 20        # Evidence hierarchy scoring
+RECENCY_WEIGHT = 10           # Publication year scoring
+SAMPLE_SIZE_WEIGHT = 5        # Study size scoring (RCTs only)
+FULL_TEXT_WEIGHT = 5          # PDF availability
+
+# API-enhanced attributes: 60 points max
+CITATION_IMPACT_WEIGHT = 25   # Citation count and influence
+VENUE_PRESTIGE_WEIGHT = 15    # Journal/conference ranking
+AUTHOR_AUTHORITY_WEIGHT = 10  # Author h-index and reputation
+CROSS_VALIDATION_WEIGHT = 10  # Multi-source data verification
+
+# ============================================================================
 # BUILD CONFIGURATION
 # ============================================================================
 # Text extraction and section limits
-MAX_SECTION_LENGTH = 5000  # Max characters per paper section (methods, results, etc.)
+MAX_SECTION_LENGTH = 50000  # Generous safety limit for section length (10x previous limit)
 ABSTRACT_PREVIEW_LENGTH = 1000  # Fallback abstract length when full text unavailable
 CONCLUSION_PREVIEW_LENGTH = 1000  # Fallback conclusion length
 MIN_FULL_TEXT_LENGTH = 5000  # PDFs with less text are flagged as incomplete
@@ -262,6 +277,7 @@ QUALITY_GOOD = 60  # RCTs, recent high-quality studies
 QUALITY_MODERATE = 45  # Cohort studies, older papers
 QUALITY_LOW = 30  # Case reports, minimal citations
 QUALITY_VERY_LOW = 0  # Unverified or poor quality
+MAX_QUALITY_SCORE = 100  # Maximum possible quality score
 
 # Quality score display colors/indicators
 QUALITY_INDICATORS = {

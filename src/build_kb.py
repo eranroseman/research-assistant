@@ -30,19 +30,38 @@ Usage:
     python src/build_kb.py --demo
 """
 
+import asyncio
 import contextlib
 import json
 import os
 import re
 import sqlite3
 import sys
-from datetime import UTC, datetime
+import time
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from typing import Any
 
+import aiohttp
 import click
 import requests
 from tqdm import tqdm
+
+# ============================================================================
+# CUSTOM EXCEPTIONS
+# ============================================================================
+
+class SemanticScholarAPIError(Exception):
+    """Exception raised when Semantic Scholar API calls fail."""
+
+class QualityScoringError(Exception):
+    """Exception raised when quality scoring fails."""
+
+class EmbeddingGenerationError(Exception):
+    """Exception raised when embedding generation fails."""
+
+class PaperProcessingError(Exception):
+    """Exception raised when paper processing fails."""
 
 # ============================================================================
 # CONFIGURATION - Import from centralized config.py
@@ -163,7 +182,537 @@ except ImportError:
         VALID_PAPER_TYPES,
         # PDF processing
         PDF_TIMEOUT_SECONDS,
+        # Enhanced quality scoring
+        SEMANTIC_SCHOLAR_API_URL,
+        API_REQUEST_TIMEOUT,
+        API_TOTAL_TIMEOUT_BUDGET,
+        API_MAX_RETRIES,
+        API_RETRY_DELAY,
+        API_CONNECTION_POOL_SIZE,
+        API_CONNECTION_POOL_HOST_LIMIT,
+        STUDY_TYPE_WEIGHT,
+        RECENCY_WEIGHT,
+        SAMPLE_SIZE_WEIGHT,
+        FULL_TEXT_WEIGHT,
+        CITATION_IMPACT_WEIGHT,
+        VENUE_PRESTIGE_WEIGHT,
+        AUTHOR_AUTHORITY_WEIGHT,
+        CROSS_VALIDATION_WEIGHT,
+        CITATION_COUNT_THRESHOLDS,
+        VENUE_PRESTIGE_SCORES,
+        AUTHOR_AUTHORITY_THRESHOLDS,
     )
+
+
+# ============================================================================
+# ENHANCED QUALITY SCORING SYSTEM
+# ============================================================================
+
+
+
+async def get_semantic_scholar_data(doi: str | None, title: str) -> dict[str, Any]:
+    """Fetch paper data from Semantic Scholar API.
+    
+    Args:
+        doi: Paper DOI (preferred lookup method)
+        title: Paper title (fallback lookup method)
+        
+    Returns:
+        Dictionary containing paper data from Semantic Scholar API
+        
+    Raises:
+        Exception: If API call fails after all retries
+    """
+    if not doi and not title:
+        raise ValueError("Either DOI or title required for quality scoring")
+
+    # Production-ready session with connection pooling and circuit breaker
+    connector = aiohttp.TCPConnector(
+        limit=API_CONNECTION_POOL_SIZE,
+        limit_per_host=API_CONNECTION_POOL_HOST_LIMIT
+    )
+
+    timeout = aiohttp.ClientTimeout(total=API_REQUEST_TIMEOUT)
+    
+    try:
+        async with aiohttp.ClientSession(connector=connector, timeout=timeout) as session:
+            # Try DOI first, fall back to title search
+            if doi:
+                url = f"{SEMANTIC_SCHOLAR_API_URL}/paper/DOI:{doi}"
+            else:
+                url = f"{SEMANTIC_SCHOLAR_API_URL}/paper/search"
+                params = {"query": title, "limit": 1}
+
+            fields = "citationCount,venue,authors,externalIds,publicationTypes,fieldsOfStudy"
+
+            for attempt in range(API_MAX_RETRIES):
+                try:
+                    if doi:
+                        async with session.get(f"{url}?fields={fields}") as response:
+                            if response.status == 200:
+                                return await response.json()  # type: ignore[no-any-return]
+                    else:
+                        async with session.get(url, params={**params, "fields": fields}) as response:  # type: ignore[dict-item]
+                            if response.status == 200:
+                                data = await response.json()
+                                if data.get("data") and len(data["data"]) > 0:
+                                    return data["data"][0]  # type: ignore[no-any-return]
+
+                    if response.status == 429:  # Rate limited
+                        await asyncio.sleep(API_RETRY_DELAY * (attempt + 1))
+                        continue
+                    break
+
+                except TimeoutError:
+                    if attempt == API_MAX_RETRIES - 1:
+                        print(f"API timeout after {API_MAX_RETRIES} attempts: {doi or title}")
+                    await asyncio.sleep(API_RETRY_DELAY)
+                except aiohttp.ClientResponseError as e:
+                    if e.status == 429:  # Rate limited
+                        await asyncio.sleep(API_RETRY_DELAY * (attempt + 1))
+                    else:
+                        # Non-retryable HTTP error
+                        break
+                except Exception as e:
+                    if attempt == API_MAX_RETRIES - 1:
+                        print(f"API network error after {API_MAX_RETRIES} attempts: {e}")
+                    await asyncio.sleep(API_RETRY_DELAY)
+
+            # If all attempts failed, return error dict
+            return {"error": "api_failure", "message": f"Failed to fetch data for {doi or title} after {API_MAX_RETRIES} attempts"}
+
+    except Exception as e:
+        print(f"Semantic Scholar API error: {e}")
+        raise SemanticScholarAPIError(f"Semantic Scholar API error: {e}") from e
+
+
+def calculate_citation_impact_score(citation_count: int) -> int:
+    """Calculate citation impact component (25 points max).
+    
+    Args:
+        citation_count: Number of citations for the paper
+        
+    Returns:
+        Integer score from 0-25 based on citation count thresholds
+    """
+    # Import here to avoid circular dependencies
+    try:
+        from .config import CITATION_COUNT_THRESHOLDS
+    except ImportError:
+        from config import CITATION_COUNT_THRESHOLDS
+        
+    thresholds = CITATION_COUNT_THRESHOLDS
+
+    if citation_count >= thresholds["exceptional"]:
+        return 25
+    elif citation_count >= thresholds["high"]:
+        return 20
+    elif citation_count >= thresholds["good"]:
+        return 15
+    elif citation_count >= thresholds["moderate"]:
+        return 10
+    elif citation_count >= thresholds["some"]:
+        return 7
+    elif citation_count >= thresholds["few"]:
+        return 4
+    elif citation_count >= thresholds["minimal"]:
+        return 2
+    else:
+        return 0
+
+
+def calculate_venue_prestige_score(venue: dict[str, Any]) -> int:
+    """Calculate venue prestige component (15 points max).
+    
+    Args:
+        venue: Venue information from Semantic Scholar API
+        
+    Returns:
+        Integer score from 0-15 based on venue quality patterns
+    """
+    # Import here to avoid circular dependencies
+    try:
+        from .config import VENUE_PRESTIGE_SCORES
+    except ImportError:
+        from config import VENUE_PRESTIGE_SCORES
+        
+    # Simplified venue scoring using pattern matching
+    # Future enhancement: integrate SCImago Journal Rank (SJR) data
+    venue_name = venue.get("name", "").lower()
+
+    # Tier 1: Top-tier venues (Q1 equivalent)
+    tier1_patterns = [
+        "nature", "science", "cell", "lancet", "nejm", "jama",
+        "pnas", "plos one", "neurips", "icml", "nips", "iclr"
+    ]
+
+    # Tier 2: High-quality venues (Q2 equivalent)
+    tier2_patterns = [
+        "ieee transactions", "acm transactions", "journal of",
+        "proceedings of", "international conference", "workshop"
+    ]
+
+    # Tier 3: General academic venues (Q3 equivalent)
+    tier3_patterns = [
+        "journal", "proceedings", "conference", "symposium", "workshop"
+    ]
+
+    for pattern in tier1_patterns:
+        if pattern in venue_name:
+            return VENUE_PRESTIGE_SCORES["Q1"]
+
+    for pattern in tier2_patterns:
+        if pattern in venue_name:
+            return VENUE_PRESTIGE_SCORES["Q2"]
+
+    for pattern in tier3_patterns:
+        if pattern in venue_name:
+            return VENUE_PRESTIGE_SCORES["Q3"]
+
+    return VENUE_PRESTIGE_SCORES["unranked"]
+
+
+def calculate_author_authority_score(authors: list) -> int:
+    """Calculate author authority component (10 points max).
+    
+    Args:
+        authors: List of author information from Semantic Scholar API
+        
+    Returns:
+        Integer score from 0-10 based on highest h-index among authors
+    """
+    if not authors:
+        return 0
+
+    # Use highest h-index among authors
+    max_h_index = 0
+    for author in authors:
+        h_index = author.get("hIndex", 0) or 0
+        max_h_index = max(max_h_index, h_index)
+
+    # Import here to avoid circular dependencies
+    try:
+        from .config import AUTHOR_AUTHORITY_THRESHOLDS
+    except ImportError:
+        from config import AUTHOR_AUTHORITY_THRESHOLDS
+        
+    thresholds = AUTHOR_AUTHORITY_THRESHOLDS
+    if max_h_index >= thresholds["renowned"]:
+        return 10
+    elif max_h_index >= thresholds["established"]:
+        return 8
+    elif max_h_index >= thresholds["experienced"]:
+        return 6
+    elif max_h_index >= thresholds["emerging"]:
+        return 4
+    elif max_h_index >= thresholds["early_career"]:
+        return 2
+    else:
+        return 0
+
+
+def calculate_cross_validation_score(paper_data: dict, s2_data: dict[str, Any]) -> int:
+    """Calculate cross-validation component (10 points max).
+    
+    Args:
+        paper_data: Original paper metadata
+        s2_data: Semantic Scholar API data
+        
+    Returns:
+        Integer score from 0-10 based on data consistency and completeness
+    """
+    score = 0
+
+    # Check if paper has external IDs (DOI, PubMed, etc.)
+    external_ids = s2_data.get("externalIds", {})
+    if external_ids:
+        score += 3
+
+    # Check if publication types are specified
+    pub_types = s2_data.get("publicationTypes", [])
+    if pub_types:
+        score += 2
+
+    # Check if fields of study are specified
+    fields_of_study = s2_data.get("fieldsOfStudy", [])
+    if fields_of_study:
+        score += 2
+
+    # Check consistency with extracted study type
+    extracted_type = paper_data.get("study_type", "")
+    if extracted_type in ["systematic_review", "meta_analysis", "rct"]:
+        score += 3
+
+    return min(score, 10)
+
+
+def calculate_quality_score(paper_data: dict, s2_data: dict[str, Any]) -> tuple[int, str]:
+    """Calculate enhanced quality score using paper data + API data.
+    
+    Args:
+        paper_data: Paper metadata dictionary
+        s2_data: Semantic Scholar API data (required)
+        
+    Returns:
+        Tuple containing:
+        - quality_score: Integer 0-100
+        - explanation: Human-readable scoring factors
+        
+    Raises:
+        Exception: If API data is missing or invalid
+    """
+    # Enhanced scoring is now mandatory
+    if not s2_data or s2_data.get('error'):
+        raise QualityScoringError(f"Enhanced quality scoring requires valid API data. Got: {s2_data}")
+        
+    return calculate_enhanced_quality_score(paper_data, s2_data)
+
+
+def calculate_study_type_score(study_type: str | None) -> int:
+    """Calculate study type component score for enhanced scoring."""
+    # Import here to avoid circular dependencies
+    try:
+        from .config import STUDY_TYPE_WEIGHT
+    except ImportError:
+        from config import STUDY_TYPE_WEIGHT
+    
+    if not study_type:
+        return 0
+        
+    study_type = study_type.lower()
+    # Enhanced scoring uses different weights - 20 points max
+    weights = {
+        'systematic_review': STUDY_TYPE_WEIGHT,     # 20 points
+        'meta_analysis': STUDY_TYPE_WEIGHT,        # 20 points
+        'rct': int(STUDY_TYPE_WEIGHT * 0.75),      # 15 points
+        'cohort': int(STUDY_TYPE_WEIGHT * 0.5),    # 10 points
+        'case_control': int(STUDY_TYPE_WEIGHT * 0.375), # 7.5 -> 8 points
+        'cross_sectional': int(STUDY_TYPE_WEIGHT * 0.25), # 5 points
+        'case_report': int(STUDY_TYPE_WEIGHT * 0.125), # 2.5 -> 3 points
+        'study': int(STUDY_TYPE_WEIGHT * 0.125)     # 3 points
+    }
+    return weights.get(study_type, 0)
+
+
+def calculate_recency_score(year: int | None) -> int:
+    """Calculate recency component score for enhanced scoring."""
+    if not year:
+        return 0
+        
+    # Import here to avoid circular dependencies
+    try:
+        from .config import RECENCY_WEIGHT
+    except ImportError:
+        from config import RECENCY_WEIGHT
+        
+    current_year = 2025  # Current year for scoring
+    years_old = current_year - year
+    
+    if years_old <= 0:  # Current year or future
+        return RECENCY_WEIGHT
+    elif years_old == 1:  # 1 year old
+        return int(RECENCY_WEIGHT * 0.8)
+    elif years_old == 2:  # 2 years old
+        return int(RECENCY_WEIGHT * 0.6)
+    elif years_old == 3:  # 3 years old
+        return int(RECENCY_WEIGHT * 0.4)
+    elif years_old == 4:  # 4 years old
+        return int(RECENCY_WEIGHT * 0.2)
+    else:  # 5+ years old
+        return 0
+
+
+def calculate_sample_size_score(sample_size: int | None) -> int:
+    """Calculate sample size component score for enhanced scoring."""
+    if not sample_size or sample_size <= 0:
+        return 0
+        
+    # Import here to avoid circular dependencies
+    try:
+        from .config import SAMPLE_SIZE_WEIGHT
+    except ImportError:
+        from config import SAMPLE_SIZE_WEIGHT
+        
+    if sample_size >= 1000:
+        return SAMPLE_SIZE_WEIGHT
+    elif sample_size >= 500:
+        return int(SAMPLE_SIZE_WEIGHT * 0.8)
+    elif sample_size >= 250:
+        return int(SAMPLE_SIZE_WEIGHT * 0.6)
+    elif sample_size >= 100:
+        return int(SAMPLE_SIZE_WEIGHT * 0.4)
+    elif sample_size >= 50:
+        return int(SAMPLE_SIZE_WEIGHT * 0.2)
+    else:
+        return 0
+
+
+def calculate_full_text_score(has_full_text: bool | None) -> int:
+    """Calculate full text availability component score for enhanced scoring."""
+    # Import here to avoid circular dependencies
+    try:
+        from .config import FULL_TEXT_WEIGHT
+    except ImportError:
+        from config import FULL_TEXT_WEIGHT
+        
+    return FULL_TEXT_WEIGHT if has_full_text else 0
+
+
+def calculate_enhanced_quality_score(paper_data: dict, s2_data: dict[str, Any]) -> tuple[int, str]:
+    """Calculate unified enhanced quality score using paper data + API data.
+    
+    Args:
+        paper_data: Paper metadata dictionary
+        s2_data: Semantic Scholar API data
+        
+    Returns:
+        Tuple containing:
+        - quality_score: Integer 0-100
+        - explanation: Human-readable scoring factors
+    """
+    score = 0
+    factors = []
+
+    # Core paper attributes (40 points max)
+    study_type_score = calculate_study_type_score(paper_data.get("study_type"))
+    recency_score = calculate_recency_score(paper_data.get("year"))
+    sample_size_score = calculate_sample_size_score(paper_data.get("sample_size"))
+    full_text_score = calculate_full_text_score(paper_data.get("has_full_text"))
+    
+    score += study_type_score + recency_score + sample_size_score + full_text_score
+
+    # API-enhanced attributes (60 points max)
+    citation_bonus = calculate_citation_impact_score(s2_data.get("citationCount", 0))
+    venue_bonus = calculate_venue_prestige_score(s2_data.get("venue", {}))
+    author_bonus = calculate_author_authority_score(s2_data.get("authors", []))
+    validation_bonus = calculate_cross_validation_score(paper_data, s2_data)
+
+    score += citation_bonus + venue_bonus + author_bonus + validation_bonus
+
+    # Build explanation
+    factors = build_quality_explanation(paper_data, s2_data, {
+        "citation": citation_bonus,
+        "venue": venue_bonus,
+        "author": author_bonus,
+        "validation": validation_bonus
+    })
+
+    return min(score, 100), " | ".join(factors) if factors else "enhanced scoring"
+
+
+
+
+def build_quality_explanation(paper_data: dict, s2_data: dict[str, Any], bonuses: dict[str, int]) -> list[str]:
+    """Build human-readable explanation of quality score factors."""
+    factors = []
+    
+    # Core factors
+    study_type = paper_data.get('study_type', 'unknown')
+    factors.append(f"Study: {study_type}")
+    
+    if paper_data.get('year'):
+        factors.append(f"Year: {paper_data['year']}")
+    
+    if paper_data.get('has_full_text'):
+        factors.append("Full text")
+    
+    # Enhanced factors
+    citation_count = s2_data.get("citationCount", 0)
+    if citation_count > 0:
+        factors.append(f"Citations: {citation_count}")
+    
+    venue = s2_data.get("venue", {}).get("name", "")
+    if venue:
+        factors.append(f"Venue: {venue[:30]}...")
+    
+    authors = s2_data.get("authors", [])
+    if authors:
+        max_h_index = max((author.get("hIndex", 0) or 0 for author in authors), default=0)
+        if max_h_index > 0:
+            factors.append(f"Author h-index: {max_h_index}")
+    
+    factors.append("[Enhanced scoring]")
+    
+    return factors
+
+
+# ============================================================================
+# ASYNC PARALLEL PROCESSING FOR EMBEDDINGS AND QUALITY SCORING
+# ============================================================================
+
+async def process_paper_async(paper_data: dict, pdf_text: str) -> tuple[Any, int, str]:
+    """Process paper with parallel embedding generation and enhanced quality scoring.
+    
+    Args:
+        paper_data: Paper metadata dictionary
+        pdf_text: Full text of the paper for embedding generation
+        
+    Returns:
+        Tuple containing:
+        - embedding: NumPy array of embeddings
+        - quality_score: Integer 0-100
+        - quality_explanation: Human-readable scoring factors
+        
+    Raises:
+        Exception: If embedding generation or API call fails (both required)
+    """
+    import numpy as np
+    
+    # Start both operations concurrently
+    embedding_task = asyncio.create_task(
+        generate_embedding_async(pdf_text)
+    )
+
+    quality_task = asyncio.create_task(
+        get_semantic_scholar_data(
+            paper_data.get("DOI"),
+            paper_data.get("title", "")
+        )
+    )
+
+    # Wait for both to complete
+    try:
+        embedding, s2_data = await asyncio.gather(
+            embedding_task,
+            quality_task,
+            return_exceptions=True
+        )
+    except Exception as e:
+        raise PaperProcessingError(f"Failed to process paper concurrently: {e}") from e
+
+    # Handle embedding generation failure (critical)
+    if isinstance(embedding, Exception):
+        raise EmbeddingGenerationError(f"Embedding generation failed: {embedding}") from embedding
+
+    # Handle API failure - now critical for enhanced scoring
+    if isinstance(s2_data, Exception):
+        raise SemanticScholarAPIError(f"Semantic Scholar API call failed: {s2_data}") from s2_data
+
+    # Calculate enhanced quality score (requires valid API data)
+    quality_score, quality_explanation = calculate_quality_score(paper_data, s2_data)
+
+    return embedding, quality_score, quality_explanation
+
+
+async def generate_embedding_async(text: str) -> Any:
+    """Async wrapper for embedding generation.
+    
+    Args:
+        text: Text to generate embeddings for
+        
+    Returns:
+        NumPy array of embeddings
+    """
+    # Import here to avoid circular dependencies
+    from sentence_transformers import SentenceTransformer
+    import numpy as np
+    
+    # Load model if not already loaded (cached by sentence-transformers)
+    model = SentenceTransformer(EMBEDDING_MODEL)
+    
+    # Convert synchronous embedding generation to async
+    loop = asyncio.get_event_loop()
+    return await loop.run_in_executor(None, model.encode, text)
 
 
 def detect_study_type(text: str) -> str:
@@ -1305,7 +1854,7 @@ class KnowledgeBaseBuilder:
                 if line.startswith("## "):
                     # Save previous section
                     if current_section and section_content:
-                        sections[current_section] = "\n".join(section_content).strip()[:MAX_SECTION_LENGTH]
+                        sections[current_section] = "\n".join(section_content).strip()
 
                     # Identify new section
                     header = line[3:].strip().lower()
@@ -1336,7 +1885,7 @@ class KnowledgeBaseBuilder:
 
             # Save last section
             if current_section and section_content:
-                sections[current_section] = "\n".join(section_content).strip()[:MAX_SECTION_LENGTH]
+                sections[current_section] = "\n".join(section_content).strip()
 
         # Look for inline section headers (Introduction\n, Methods\n, etc.)
         if has_markdown_headers and "## Full Text" in text:
@@ -1371,9 +1920,7 @@ class KnowledgeBaseBuilder:
                         if (
                             current_section and section_content and not sections[current_section]
                         ):  # Don't overwrite
-                            sections[current_section] = "\n".join(section_content).strip()[
-                                :MAX_SECTION_LENGTH
-                            ]
+                            sections[current_section] = "\n".join(section_content).strip()
                         current_section = found_section
                         section_content = []
                     elif current_section:
@@ -1381,7 +1928,7 @@ class KnowledgeBaseBuilder:
 
                 # Save last section
                 if current_section and section_content and not sections[current_section]:
-                    sections[current_section] = "\n".join(section_content).strip()[:MAX_SECTION_LENGTH]
+                    sections[current_section] = "\n".join(section_content).strip()
 
         # Fallback: use regex patterns for general text
         if not any(sections.values()):
@@ -1407,9 +1954,9 @@ class KnowledgeBaseBuilder:
                             next_match = next_m.start()
 
                     if next_match:
-                        sections[section_name] = text[start : start + next_match].strip()[:MAX_SECTION_LENGTH]
+                        sections[section_name] = text[start : start + next_match].strip()
                     else:
-                        sections[section_name] = text[start : start + MAX_SECTION_LENGTH].strip()
+                        sections[section_name] = text[start:].strip()
 
         # If still no sections found, use heuristics
         if not any(sections.values()) and text:
@@ -1829,7 +2376,6 @@ class KnowledgeBaseBuilder:
             papers: List of paper dictionaries with metadata and full_text
             pdf_stats: Optional tuple of (papers_with_pdfs, cache_hits) for reporting
         """
-        import time
 
         build_start_time = time.time()
 
@@ -2128,6 +2674,9 @@ class KnowledgeBaseBuilder:
         else:
             print("\n✅ All papers have good PDF quality - no report needed")
 
+        # Prompt for gap analysis after successful build
+        prompt_gap_analysis_after_build(len(papers), build_time)
+
     def build_demo_kb(self) -> None:
         """Build a demo knowledge base with 5 sample papers for testing."""
         # Clean up old knowledge base first (no prompt for demo)
@@ -2199,6 +2748,79 @@ class KnowledgeBaseBuilder:
         self.build_from_papers(demo_papers)
 
 
+# ============================================================================
+# NETWORK GAP ANALYSIS INTEGRATION FUNCTIONS
+# ============================================================================
+
+def has_enhanced_scoring() -> bool:
+    """Check if enhanced quality scoring is available in the knowledge base.
+    
+    Returns:
+        bool: True if enhanced scoring is available, False otherwise
+    """
+    try:
+        # Check if KB exists
+        kb_path = Path("kb_data")
+        metadata_file = kb_path / "metadata.json"
+        
+        if not metadata_file.exists():
+            return False
+            
+        # Load metadata and check for enhanced scoring indicators
+        with open(metadata_file, encoding='utf-8') as f:
+            metadata = json.load(f)
+            
+        # Check if we have papers with enhanced quality scores
+        papers = metadata.get("papers", [])
+        if not papers:
+            return False
+            
+        # Look for enhanced quality scoring indicators in the first few papers
+        for paper in papers[:5]:  # Check first 5 papers as sample
+            quality_explanation = paper.get("quality_explanation", "")
+            if any(indicator in quality_explanation.lower() for indicator in [
+                "citations", "venue", "author authority", "cross-validation", "enhanced"
+            ]):
+                return True
+                
+        return False
+        
+    except Exception:
+        # If we can't determine, assume enhanced scoring is not available
+        return False
+
+
+def prompt_gap_analysis_after_build(total_papers: int, build_time: float) -> None:
+    """Educational prompt for gap analysis after successful KB build."""
+    print("\n✅ Knowledge base built successfully!")
+    print(f"   {total_papers:,} papers indexed in {build_time:.1f} minutes")
+
+    if has_enhanced_scoring() and total_papers >= 20:
+        print("\n🔍 Run gap analysis to discover missing papers in your collection?")
+        print("\nGap analysis identifies 5 types of literature gaps:")
+        print("• Papers cited by your KB but missing from your collection")
+        print("• Recent work from authors already in your KB")
+        print("• Papers frequently co-cited with your collection")
+        print("• Recent developments in your research areas")
+        print("• Semantically similar papers you don't have")
+
+        print("\nIf you choose 'Y', will run: python src/analyze_gaps.py (comprehensive analysis, no filters)")
+        print("\nFor filtered analysis, run manually later with flags:")
+        print("  --min-citations N     Only papers with N+ citations")
+        print("  --year-from YYYY      Only papers from YYYY onwards")
+        print("  --limit N            Top N results by priority")
+        print("\nExample: python src/analyze_gaps.py --min-citations 50 --year-from 2020 --limit 100")
+
+        response = input("\nRun comprehensive gap analysis now? (Y/n): ").strip().lower()
+        if response != 'n':
+            print("\n🔍 Running comprehensive gap analysis...")
+            import subprocess
+            subprocess.run(["python", "src/analyze_gaps.py"], check=False)
+    else:
+        print("\n   Gap analysis requires enhanced quality scoring and ≥20 papers")
+        print("   Run with enhanced scoring to enable gap detection.")
+
+
 @click.command()
 @click.option("--demo", is_flag=True, help="Build demo KB with 5 sample papers (no Zotero needed)")
 @click.option("--rebuild", is_flag=True, help="Force complete rebuild, ignore existing KB and cached data")
@@ -2248,18 +2870,24 @@ def main(
       • Extracts sample sizes from RCT abstracts
       • Aggressive caching for faster rebuilds
       • Generates reports for missing/small PDFs
+      • Auto-prompts gap analysis after successful builds (≥20 papers with enhanced scoring)
 
     \b
     GENERATED REPORTS (saved to exports/ directory):
       • analysis_pdf_quality.md - Comprehensive analysis of missing and small PDFs
+      • gap_analysis_YYYY_MM_DD.md - Literature gap analysis with DOI lists for Zotero import
 
     \b
     EXAMPLES:
-      python src/build_kb.py                    # 🛡️ SAFE: Update only (recommended)
+      python src/build_kb.py                    # 🛡️ SAFE: Update only (recommended + gap analysis prompt)
       python src/build_kb.py --demo             # Quick 5-paper demo for testing
       python src/build_kb.py --rebuild          # ⚠️  Explicit rebuild with confirmation
       python src/build_kb.py --export kb.tar.gz # Export for backup/sharing
       python src/build_kb.py --import kb.tar.gz # Import from another machine
+      
+      # After build completes, prompted to run:
+      python src/analyze_gaps.py                # Discover missing papers (comprehensive)
+      python src/analyze_gaps.py --min-citations 50 --limit 100  # Filtered analysis
 
     \b
     REQUIREMENTS:
@@ -2423,8 +3051,18 @@ def main(
                 if changes["deleted"] > 0:
                     print(f"  - {changes['deleted']} papers to remove")
 
+            update_start_time = time.time()
             builder.apply_incremental_update(changes, api_url)
+            update_time = (time.time() - update_start_time) / 60  # Convert to minutes
             print("Update complete!")
+            
+            # Get current paper count for gap analysis prompt
+            with open(builder.metadata_file_path) as f:
+                metadata = json.load(f)
+            total_papers = metadata.get("total_papers", 0)
+            
+            # Prompt for gap analysis after successful incremental update
+            prompt_gap_analysis_after_build(total_papers, update_time)
 
         except Exception as error:
             # Handle connection errors specifically

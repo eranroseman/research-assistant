@@ -14,7 +14,7 @@ import pytest
 
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
-from src.cli import estimate_paper_quality
+from src.build_kb import calculate_enhanced_quality_score
 
 
 class TestSearchParametrized:
@@ -147,10 +147,18 @@ class TestResultRanking:
             {"title": "Low Quality Case Report", "study_type": "case_report", "year": 2015},
         ]
 
-        # Calculate quality scores for ranking
+        # Calculate quality scores for ranking using enhanced scoring
         scored_results = []
         for paper in results:
-            score, _ = estimate_paper_quality(paper)
+            # Mock API data based on paper quality
+            if paper["study_type"] == "systematic_review":
+                s2_data = {"citationCount": 200, "venue": {"name": "Cochrane"}, "authors": [{"hIndex": 50}]}
+            elif paper["study_type"] == "rct":
+                s2_data = {"citationCount": 50, "venue": {"name": "Medical Journal"}, "authors": [{"hIndex": 20}]}
+            else:
+                s2_data = {"citationCount": 5, "venue": {"name": "Case Reports"}, "authors": [{"hIndex": 5}]}
+            
+            score, _ = calculate_enhanced_quality_score(paper, s2_data)
             scored_results.append((score, paper))
 
         # Sort by score descending

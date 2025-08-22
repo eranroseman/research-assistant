@@ -255,16 +255,106 @@ class KnowledgeBaseIndex:
             "issues": issues,
         }
 
+    def get_papers_by_quality_range(self, min_quality: int, max_quality: int = 100) -> list[dict[str, Any]]:
+        """Get papers within quality score range.
+        
+        Args:
+            min_quality: Minimum quality score (inclusive)
+            max_quality: Maximum quality score (inclusive, default 100)
+            
+        Returns:
+            List of papers within the specified quality range
+        """
+        return [
+            paper for paper in self.papers
+            if min_quality <= paper.get("quality_score", 0) <= max_quality
+        ]
+
+    def get_top_quality_papers(self, limit: int = 10) -> list[dict[str, Any]]:
+        """Get highest quality papers.
+        
+        Args:
+            limit: Maximum number of papers to return
+            
+        Returns:
+            List of papers sorted by quality score (highest first)
+        """
+        return sorted(
+            self.papers, 
+            key=lambda p: p.get("quality_score", 0), 
+            reverse=True
+        )[:limit]
+
+    def get_quality_distribution(self) -> dict[str, int]:
+        """Get distribution of papers across quality levels.
+        
+        Returns:
+            Dictionary with quality level names and counts
+        """
+        # Use hardcoded thresholds to avoid import redefinition issues
+        # These match the values in config.py
+        excellent_threshold = 85  # QUALITY_EXCELLENT
+        very_good_threshold = 70  # QUALITY_VERY_GOOD
+        good_threshold = 60       # QUALITY_GOOD
+        moderate_threshold = 45   # QUALITY_MODERATE
+        low_threshold = 30        # QUALITY_LOW
+        
+        distribution = {
+            "excellent": 0,      # 85+
+            "very_good": 0,      # 70-84
+            "good": 0,           # 60-69
+            "moderate": 0,       # 45-59
+            "low": 0,            # 30-44
+            "very_low": 0        # 0-29
+        }
+
+        for paper in self.papers:
+            quality = paper.get("quality_score", 0)
+            if quality >= excellent_threshold:
+                distribution["excellent"] += 1
+            elif quality >= very_good_threshold:
+                distribution["very_good"] += 1
+            elif quality >= good_threshold:
+                distribution["good"] += 1
+            elif quality >= moderate_threshold:
+                distribution["moderate"] += 1
+            elif quality >= low_threshold:
+                distribution["low"] += 1
+            else:
+                distribution["very_low"] += 1
+
+        return distribution
+
     def stats(self) -> dict[str, Any]:
-        """Get index statistics."""
+        """Get enhanced index statistics including quality distribution."""
         year_counts: dict[int | str, int] = {}
         for paper in self.papers:
             year = paper.get("year", "Unknown")
             year_counts[year] = year_counts.get(year, 0) + 1
 
-        return {
+        # Add quality statistics - all papers should have quality scores
+        quality_scores = [p.get("quality_score", 0) for p in self.papers if p.get("quality_score") is not None]
+
+        base_stats = {
             "total_papers": len(self.papers),
             "unique_ids": len(self.id_to_index),
             "year_distribution": year_counts,
             "has_faiss_index": (self.kb_path / "index.faiss").exists(),
         }
+
+        # Add quality statistics if papers have quality scores
+        if quality_scores:
+            base_stats.update({
+                "quality_stats": {
+                    "average_quality": sum(quality_scores) / len(quality_scores),
+                    "highest_quality": max(quality_scores),
+                    "lowest_quality": min(quality_scores),
+                    "papers_with_quality": len(quality_scores),
+                    "total_papers": len(self.papers)
+                },
+                "quality_distribution": self.get_quality_distribution()
+            })
+        else:
+            base_stats["quality_stats"] = {"message": "No papers with quality scores found"}
+
+        return base_stats

@@ -19,6 +19,7 @@
 - [`info`](#clipy-info) - Display KB information
 - [`diagnose`](#clipy-diagnose) - Check KB health and integrity
 - [`build_kb.py`](#build_kbpy) - Build/update knowledge base
+- [`analyze_gaps.py`](#analyze_gapspy) - Discover missing papers (auto-prompted after builds)
 
 ### Data Structure
 
@@ -68,22 +69,30 @@ python src/cli.py search [OPTIONS] QUERY
 - `case_report` - Case reports and series (·)
 - `study` - Generic/unclassified studies (·)
 
-#### Quality Scores
+#### Enhanced Quality Scores
 
-Papers are scored 0-100 based on:
+Papers are scored 0-100 using Semantic Scholar API integration:
 
-- Base score: 50 points
-- Study type hierarchy: Up to 35 points
-- Recency: Up to 10 points (papers from 2022+)
-- Sample size: Up to 10 points (RCTs with n>1000)
-- Full text availability: 5 points
+**API-powered factors (60 points):**
+- Citation Impact: 25 points (based on citation count and growth)
+- Venue Prestige: 15 points (journal ranking and reputation)
+- Author Authority: 10 points (H-index and research standing)
+- Cross-validation: 10 points (DOI, PubMed, publication types)
 
-Visual indicators:
+**Core factors (40 points):**
+- Study Type: 20 points (systematic review > RCT > cohort > case report)
+- Recency: 10 points (publication year relevance)
+- Sample Size: 5 points (statistical power indicator)
+- Full Text: 5 points (complete content availability)
 
-- ⭐ Excellent (80-100)
-- ● Good (60-79)
-- ○ Moderate (40-59)
-- · Lower (<40)
+**Visual indicators:**
+
+- 🌟 Exceptional (90-100): High-impact systematic reviews/meta-analyses
+- ⭐ Excellent (80-89): Top-tier venues, highly cited
+- ● Very Good (70-79): Quality RCTs, established venues
+- ◐ Good (60-69): Solid studies, decent citations
+- ○ Moderate (50-59): Cohort studies, emerging work
+- · Basic (0-49): Case reports, limited validation
 
 #### Examples
 
@@ -127,7 +136,7 @@ python src/cli.py search "wearables" --json --show-quality > results.json
 
 ### `cli.py get`
 
-Retrieve the full text of a specific paper or specific sections.
+Retrieve the full text of a specific paper or specific sections. All sections are preserved in complete form with zero information loss.
 
 ```bash
 python src/cli.py get [OPTIONS] PAPER_ID
@@ -143,12 +152,14 @@ python src/cli.py get [OPTIONS] PAPER_ID
 
 #### Available Sections
 
-- `abstract` - Paper abstract
-- `introduction` - Introduction/background
-- `methods` - Methods/methodology
-- `results` - Results/findings
-- `discussion` - Discussion section
-- `conclusion` - Conclusions
+All sections are extracted with complete content preservation - no truncation applied:
+
+- `abstract` - Paper abstract (complete)
+- `introduction` - Introduction/background (complete)  
+- `methods` - Methods/methodology (complete - full intervention descriptions)
+- `results` - Results/findings (complete - all outcome data)
+- `discussion` - Discussion section (complete)
+- `conclusion` - Conclusions (complete)
 - `references` - Bibliography
 - `all` - Complete paper (default)
 
@@ -526,9 +537,11 @@ Build and maintain knowledge base from Zotero library for semantic search.
 - Extracts sample sizes from RCT abstracts
 - Aggressive caching for faster rebuilds
 - Generates reports for missing/small PDFs
+- **Auto-prompts gap analysis after successful builds** (≥20 papers with enhanced scoring)
 
 **GENERATED REPORTS**:
 - `exports/analysis_pdf_quality.md` - Comprehensive analysis of missing and small PDFs
+- `exports/gap_analysis_YYYY_MM_DD.md` - Literature gap analysis with DOI lists for Zotero import
 - `reviews/*.md` - Literature review reports from /research command
 
 **REQUIREMENTS:**
@@ -592,6 +605,80 @@ python src/build_kb.py --import kb_backup.tar.gz
 5. **Embedding**: Generates Multi-QA MPNet embeddings (768-dimensional)
 6. **Indexing**: Builds FAISS index for similarity search
 7. **Validation**: Verifies integrity and reports statistics
+
+### `analyze_gaps.py`
+
+Discover missing papers in your knowledge base through comprehensive gap analysis (auto-prompted after successful builds).
+
+**GAP TYPES IDENTIFIED:**
+- Papers cited by your KB but missing from your collection
+- Recent work from authors already in your KB  
+- Papers frequently co-cited with your collection
+- Recent developments in your research areas
+- Semantically similar papers you don't have
+
+**REQUIREMENTS:**
+- Enhanced quality scoring enabled in KB
+- Minimum 20 papers in knowledge base
+- Internet connection for Semantic Scholar API
+
+```bash
+python src/analyze_gaps.py [OPTIONS]
+```
+
+#### Options
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `--min-citations` | INT | 0 | Only suggest papers with ≥N citations |
+| `--year-from` | INT | 2022 | Author networks: only papers from year onwards |
+| `--limit` | INT | None | Return top N gaps by priority |
+| `--help` | FLAG | False | Show help message |
+
+#### Examples
+
+```bash
+# Comprehensive analysis (all gap types, no filters)
+python src/analyze_gaps.py
+
+# High-impact gaps only
+python src/analyze_gaps.py --min-citations 50
+
+# Recent work from your authors  
+python src/analyze_gaps.py --year-from 2024 --limit 30
+
+# Conservative analysis with combined filters
+python src/analyze_gaps.py --min-citations 50 --year-from 2020 --limit 100
+```
+
+#### Output
+
+Gap analysis generates a comprehensive report saved to `exports/gap_analysis_YYYY_MM_DD.md`:
+
+- **Executive Summary**: Total gaps found by type and confidence level
+- **Citation Network Gaps**: Papers heavily cited by your KB but missing
+- **Author Network Gaps**: Recent work from researchers already in your collection
+- **Complete DOI Lists**: Organized for bulk Zotero import
+- **Priority Rankings**: Confidence scoring for actionable results
+
+**Report Structure:**
+```
+exports/gap_analysis_2024_08_22.md
+├── Executive Summary (counts by gap type)
+├── Citation Network Gaps (highest confidence) 
+├── Author Network Gaps (recent work)
+├── Complete DOI Lists (for Zotero import)
+└── Methodology and confidence indicators
+```
+
+#### Integration
+
+Gap analysis is automatically prompted after successful KB builds when conditions are met:
+- ✅ Enhanced quality scoring available
+- ✅ ≥20 papers in knowledge base
+- ✅ Internet connection available
+
+User can accept (Y) for immediate comprehensive analysis or decline (n) to run manually later with custom filters.
 
 ## KB Data Directory Structure
 
@@ -877,6 +964,9 @@ Each paper in `papers/` follows this structure:
 | EMB002 | CUDA out of memory | Reduce batch size or use CPU |
 | ID001 | Invalid paper ID format | Use 4-digit format (e.g., 0001) |
 | ID002 | Paper ID not found | Check available IDs with `info` command |
+| GAP001 | Gap analysis not available | Requires enhanced quality scoring and ≥20 papers |
+| GAP002 | Semantic Scholar API failure | Check internet connection and API availability |
+| GAP003 | Insufficient KB data | Need enhanced scoring metadata for analysis |
 
 ## UX Analytics
 

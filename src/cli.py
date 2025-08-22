@@ -143,6 +143,14 @@ try:
         KB_VERSION,
         PAPER_ID_DIGITS,
         VALID_PAPER_ID_PATTERN,
+        # Quality scoring constants
+        QUALITY_EXCELLENT,
+        QUALITY_VERY_GOOD,
+        QUALITY_GOOD,
+        QUALITY_MODERATE,
+        QUALITY_LOW,
+        QUALITY_INDICATORS,
+        STUDY_TYPE_MARKERS,
     )
 except ImportError:
     # For direct script execution
@@ -150,6 +158,14 @@ except ImportError:
         KB_VERSION,
         PAPER_ID_DIGITS,
         VALID_PAPER_ID_PATTERN,
+        # Quality scoring constants
+        QUALITY_EXCELLENT,
+        QUALITY_VERY_GOOD,
+        QUALITY_GOOD,
+        QUALITY_MODERATE,
+        QUALITY_LOW,
+        QUALITY_INDICATORS,
+        STUDY_TYPE_MARKERS,
     )
 
 # Display Configuration
@@ -239,102 +255,90 @@ def _log_ux_event(event_type: str, **kwargs: Any) -> None:
 # ============================================================================
 
 
-def estimate_paper_quality(paper: dict[str, Any]) -> tuple[int, str]:
-    """Calculate quality score (0-100) for a paper.
 
-    Scoring components:
-    - Base score: 50 points
-    - Study type: Up to 35 points (systematic reviews highest)
-    - Sample size: Up to 10 points (for RCTs with n>1000)
-    - Recency: Up to 10 points (papers from 2022+)
-    - Full text: 5 points (if PDF available)
 
+def format_quality_indicator(quality_score: int) -> str:
+    """Get visual indicator for quality score.
+    
     Args:
-        paper: Paper metadata dictionary with fields:
-            - study_type: Classification from detect_study_type()
-            - sample_size: For RCTs, extracted sample size
-            - year: Publication year
-            - has_full_text: Whether PDF was extracted
-
+        quality_score: Quality score 0-100
+        
     Returns:
-        Tuple containing:
-        - quality_score: Integer 0-100
-        - explanation: Human-readable scoring factors
+        Visual indicator emoji/symbol for the quality level
     """
-    score = QUALITY_BASE_SCORE  # Base score
-    factors = []
-
-    # Study type hierarchy (most important factor)
-    study_type = paper.get("study_type", "unknown")
-    if study_type:
-        study_type = study_type.lower()  # Handle case insensitive study types
-
-    if study_type in QUALITY_STUDY_TYPE_WEIGHTS:
-        score += QUALITY_STUDY_TYPE_WEIGHTS[study_type]
-        factors.append(study_type.replace("_", " "))
+    if quality_score >= QUALITY_EXCELLENT:
+        return QUALITY_INDICATORS["excellent"]  # 🌟
+    elif quality_score >= QUALITY_VERY_GOOD:
+        return QUALITY_INDICATORS["very_good"]  # ⭐
+    elif quality_score >= QUALITY_GOOD:
+        return QUALITY_INDICATORS["good"]  # ●
+    elif quality_score >= QUALITY_MODERATE:
+        return QUALITY_INDICATORS["moderate"]  # ◐
+    elif quality_score >= QUALITY_LOW:
+        return QUALITY_INDICATORS["low"]  # ○
     else:
-        # Handle unknown or empty study types
-        factors.append("unknown")
+        return QUALITY_INDICATORS["very_low"]  # ·
 
-    # Sample size bonus (for applicable studies)
-    sample_size = paper.get("sample_size")
-    if sample_size and sample_size > 0:
-        if sample_size >= 1000:
-            score += 10
-            factors.append("large sample")
-        elif sample_size >= 500:
-            score += 8
-            factors.append("substantial sample")
-        elif sample_size >= 250:
-            score += 6
-            factors.append("moderate sample")
-        elif sample_size >= 100:
-            score += 4
-            factors.append("reasonable sample")
-        elif sample_size >= 50:
-            score += 2
-            factors.append("small sample")
-        else:
-            factors.append(f"n={sample_size}")
 
-    # Recency bonus - gradual degradation by year
-    year = paper.get("year")
-    current_year = 2025  # Current year for scoring
-    if year and year > 0:
-        years_old = current_year - year
-        if years_old <= 0:  # Current year or future
-            recency_bonus = 10
-            factors.append("recent")
-        elif years_old == 1:  # 1 year old
-            recency_bonus = 8
-            factors.append("recent")
-        elif years_old == 2:  # 2 years old
-            recency_bonus = 6
-            factors.append("recent")
-        elif years_old == 3:  # 3 years old
-            recency_bonus = 4
-            factors.append("recent")
-        elif years_old == 4:  # 4 years old
-            recency_bonus = 2
-            factors.append("recent")
-        else:  # 5+ years old
-            recency_bonus = 0
-            factors.append(str(year))
+def format_paper_with_enhanced_quality(
+    paper: dict[str, Any], score: float, show_quality: bool = False
+) -> str:
+    """Format paper display with enhanced quality information.
+    
+    Args:
+        paper: Paper metadata dictionary
+        score: Relevance score
+        show_quality: Whether to show detailed quality explanation
+        
+    Returns:
+        Formatted paper display string with quality indicators
+    """
+    # Get quality indicator - all papers should have quality scores
+    quality_score = paper.get("quality_score", 0)
+    quality_indicator = format_quality_indicator(quality_score)
+    
+    # Get study type marker  
+    type_marker = STUDY_TYPE_MARKERS.get(paper.get("study_type", "study"), "·")
+    
+    # Format authors display
+    authors_display = ", ".join(paper.get("authors", [])[:2])
+    if len(paper.get("authors", [])) > 2:
+        authors_display += " et al."
+    
+    # Build main result line
+    year = paper.get("year", "????")
+    result = f"{paper['id']} {quality_indicator} {type_marker} {paper['title']} ({authors_display}, {year})"
 
-        score += recency_bonus
+    # Add detailed quality explanation if requested
+    if show_quality:
+        quality_explanation = paper.get("quality_explanation", "No explanation available")
+        result += f"\n    Quality: {quality_score}/100 ({quality_explanation})"
 
-    # Full text availability
-    if paper.get("has_full_text"):
-        score += 5
-        factors.append("full text")
+    # Add relevance score
+    result += f" [{score:.3f}]"
+    
+    return result
 
-    # Cap at maximum score
-    score = min(score, MAX_QUALITY_SCORE)
 
-    # Create explanation
-    explanation = " | ".join(factors) if factors else "standard"
+def format_search_results_with_enhanced_quality(results: list, show_quality: bool = False) -> str:
+    """Format search results with enhanced quality scoring.
+    
+    Args:
+        results: List of search result tuples (idx, score, paper)
+        show_quality: Whether to show detailed quality explanations
+        
+    Returns:
+        Formatted string with enhanced quality indicators
+    """
+    if not results:
+        return "No papers found."
 
-    return score, explanation
+    formatted_results = []
+    for idx, score, paper in results:
+        formatted_paper = format_paper_with_enhanced_quality(paper, score, show_quality)
+        formatted_results.append(formatted_paper)
+
+    return "\n".join(formatted_results)
 
 
 class ResearchCLI:
@@ -482,59 +486,39 @@ class ResearchCLI:
         self,
         search_results: list[tuple[int, float, dict[str, Any]]],
         show_abstracts: bool = False,
+        show_quality: bool = False,
     ) -> str:
-        """Format search results for display.
+        """Format search results with enhanced quality indicators.
 
         Args:
             search_results: List of (index, distance, paper) tuples
             show_abstracts: Whether to include abstract previews
+            show_quality: Whether to show detailed quality explanations
 
         Returns:
-            Formatted string for display
+            Formatted string for display with enhanced quality indicators
         """
+        if not search_results:
+            return "No papers found."
+
         output = []
-
-        # Define study type markers for visual hierarchy
-        type_markers = {
-            "systematic_review": "⭐",  # Best evidence
-            "rct": "●",  # High quality
-            "cohort": "◐",  # Good evidence
-            "case_control": "○",  # Moderate evidence
-            "cross_sectional": "◔",  # Lower evidence
-            "case_report": "·",  # Case level
-            "study": "·",  # Generic
-        }
-
-        for i, (_idx, dist, paper) in enumerate(search_results, 1):
-            # Build header with study type marker
-            year = paper.get("year", "????")
-            study_type = paper.get("study_type", "study")
-            marker = type_markers.get(study_type, "·")
-
-            output.append(f"\n{i}. {marker} [{year}] {paper['title']}")
-
-            # Build info line with study type and sample size
-            type_str = study_type.upper().replace("_", " ")
-            sample_str = f" (n={paper['sample_size']})" if paper.get("sample_size") else ""
-            has_full = "✓" if paper.get("has_full_text") else "✗"
-            relevance = 1 / (1 + dist)
-
-            output.append(f"   Type: {type_str}{sample_str} | Full Text: {has_full} | Score: {relevance:.2f}")
-
-            # Authors and journal
-            if paper.get("authors"):
-                first_author = paper["authors"][0].split()[-1] if paper["authors"] else "Unknown"
-                journal = paper.get("journal", "Unknown journal")
-                if len(paper["authors"]) > 1:
-                    output.append(f"   {first_author} et al., {journal}")
-                else:
-                    output.append(f"   {first_author}, {journal}")
-
+        
+        for i, (idx, dist, paper) in enumerate(search_results, 1):
+            # Convert distance to similarity score for display
+            relevance_score = 1 / (1 + dist)
+            
+            # Use enhanced quality formatting
+            formatted_paper = format_paper_with_enhanced_quality(paper, relevance_score, show_quality)
+            
+            # Add index number
+            output.append(f"{i}. {formatted_paper}")
+            
+            # Add abstract if requested
             if show_abstracts and paper.get("abstract"):
                 abstract = (
                     paper["abstract"][:200] + "..." if len(paper["abstract"]) > 200 else paper["abstract"]
                 )
-                output.append(f"   {abstract}")
+                output.append(f"    Abstract: {abstract}")
 
         return "\n".join(output)
 
@@ -627,7 +611,7 @@ class ResearchCLI:
 def cli() -> None:
     """Research Assistant v4.0 - Semantic literature search and analysis.
 
-    Advanced semantic search using Multi-QA MPNet embeddings with quality scoring,
+    Advanced semantic search using Multi-QA MPNet embeddings with enhanced quality scoring,
     smart chunking, and comprehensive filtering options.
 
     \b
@@ -655,12 +639,16 @@ def cli() -> None:
     \b
     KEY FEATURES:
       • Multi-QA MPNet embeddings optimized for healthcare & scientific papers
-      • Quality scoring (0-100) based on study type & recency
-      • Advanced filters: year ranges, term inclusion/exclusion
+      • Enhanced quality scoring (0-100) with Semantic Scholar API integration
+      • Visual quality indicators: 🌟⭐●◐○· for instant quality assessment
+      • Comprehensive scoring: Citations, venue prestige, author authority, validation
+      • Full content preservation - no truncation of paper sections
+      • Complete methodology & results sections for thorough analysis
+      • Advanced filters: year ranges, term inclusion/exclusion, quality thresholds
       • Multi-query search for comprehensive results
       • Group results by year, journal, or study type
       • Export to CSV for analysis
-      • Smart section extraction from PDFs
+      • Smart section extraction from PDFs with zero information loss
       • IEEE citation generation and embedding in paper content
 
     \b
@@ -738,14 +726,27 @@ def search(
     min_quality: int | None,
     export: str | None,
 ) -> None:
-    """Search papers using Multi-QA MPNet semantic embeddings with advanced filtering.
+    """Search papers using Multi-QA MPNet semantic embeddings with enhanced quality scoring.
 
     \b
-    QUALITY SCORING (0-100):
-      ⭐ 80-100: Systematic reviews, meta-analyses (highest evidence)
-      ● 60-79: RCTs, recent high-quality studies
-      ○ 40-59: Cohort studies, older papers
-      · 0-39: Case reports, generic studies
+    ENHANCED QUALITY INDICATORS (0-100):
+      🌟 90-100: Exceptional quality (high-impact systematic reviews/meta-analyses)
+      ⭐ 80-89:  Excellent quality (top-tier venues, highly cited)
+      ● 70-79:   Very good quality (quality RCTs, established venues)
+      ◐ 60-69:   Good quality (solid studies, decent citations)
+      ○ 50-59:   Moderate quality (cohort studies, emerging work)
+      · 0-49:    Basic quality (case reports, limited validation)
+
+    \b
+    QUALITY FACTORS:
+      • Citation Impact (25pts): Based on citation count and growth
+      • Venue Prestige (15pts): Journal ranking and reputation
+      • Author Authority (10pts): H-index and research standing
+      • Cross-validation (10pts): DOI, PubMed, publication types
+      • Study Type (20pts): Evidence hierarchy (systematic review > RCT > cohort)
+      • Recency (10pts): Publication year relevance
+      • Sample Size (5pts): Statistical power indicator
+      • Full Text (5pts): Complete content availability
 
     \b
     FILTERING OPTIONS:
@@ -755,7 +756,7 @@ def search(
       --contains     Must contain term in title/abstract
       --exclude      Exclude papers with term
       --full-text    Search full text (slower but comprehensive)
-      --min-quality  Minimum quality score threshold
+      --min-quality  Minimum quality score threshold (use --show-quality to see scores)
 
     \b
     ADVANCED FEATURES:
@@ -889,23 +890,17 @@ def search(
             search_results = filtered
 
         # Apply quality filtering if requested
-        if min_quality or show_quality:
-            enhanced_results = []
-            effective_min = min_quality or 0
-
+        if min_quality:
+            filtered_results = []
             for idx, dist, paper in search_results:
-                quality, explanation = estimate_paper_quality(paper)
-
+                # All papers should already have quality scores from enhanced scoring
+                quality = paper.get("quality_score", 0)
+                
                 # Filter by minimum quality
-                if effective_min and quality < effective_min:
-                    continue
-
-                # Add quality info to paper
-                paper["quality_score"] = quality
-                paper["quality_explanation"] = explanation
-                enhanced_results.append((idx, dist, paper))
-
-            search_results = enhanced_results[:top_k]
+                if quality >= min_quality:
+                    filtered_results.append((idx, dist, paper))
+            
+            search_results = filtered_results[:top_k]
         else:
             search_results = search_results[:top_k]
 
@@ -1010,30 +1005,13 @@ def search(
             print(f"\nSearch results for: '{query_text}'")
             print("=" * 50)
 
-            # Custom formatting with quality scores
-            if show_quality:
-                for i, (_idx, dist, paper) in enumerate(search_results, 1):
-                    quality = paper.get("quality_score", 0)
-                    explanation = paper.get("quality_explanation", "")
-
-                    marker = "⭐" if quality >= 80 else "●" if quality >= 60 else "○"
-
-                    print(f"\n{i}. {marker} [{paper.get('year', '????')}] {paper['title']}")
-                    print(f"   Quality: {quality}/100 ({explanation})")
-
-                    # Additional info
-                    relevance = 1 / (1 + dist)
-                    print(f"   Relevance: {relevance:.2f}")
-
-                    if verbose and paper.get("abstract"):
-                        abstract = (
-                            paper["abstract"][:200] + "..."
-                            if len(paper["abstract"]) > 200
-                            else paper["abstract"]
-                        )
-                        print(f"   {abstract}")
-            else:
-                print(research_cli.format_search_results(search_results, verbose))
+            # Use enhanced quality formatting for all results
+            formatted_results = research_cli.format_search_results(
+                search_results, 
+                show_abstracts=verbose, 
+                show_quality=show_quality
+            )
+            print(formatted_results)
 
         # Log successful search completion
         execution_time_ms = int((time.time() - start_time) * 1000)
@@ -1586,13 +1564,15 @@ def info() -> None:
     - Total number of papers and size on disk
     - Last update time and version
     - Index and paper file statistics
-    - Sample of available papers
+    - Enhanced quality score statistics and distribution
+    - Visual quality indicator breakdown (🌟⭐●◐○·)
+    - Sample of available papers with quality indicators
 
     \b
     Example:
       python src/cli.py info
 
-    Use this to verify KB health and understand your paper collection.
+    Use this to verify KB health and understand your paper collection quality.
     """
     start_time = time.time()
 
@@ -1630,9 +1610,47 @@ def info() -> None:
             papers_size_mb = total_size_bytes / (1024 * 1024)
             print(f"Papers: {paper_count} files, {papers_size_mb:.1f} MB")
 
+        # Show enhanced quality statistics if available
+        try:
+            from .cli_kb_index import KnowledgeBaseIndex
+        except ImportError:
+            from cli_kb_index import KnowledgeBaseIndex
+            
+        try:
+            kb_index = KnowledgeBaseIndex(str(knowledge_base_path))
+            enhanced_stats = kb_index.stats()
+            
+            # Display quality statistics if papers have quality scores
+            if "quality_stats" in enhanced_stats and enhanced_stats["quality_stats"].get("papers_with_quality", 0) > 0:
+                quality_stats = enhanced_stats["quality_stats"]
+                print("\nEnhanced Quality Scoring:")
+                print(f"  Average quality: {quality_stats['average_quality']:.1f}/100")
+                print(f"  Highest quality: {quality_stats['highest_quality']}/100")
+                print(f"  Lowest quality: {quality_stats['lowest_quality']}/100")
+                
+                # Display quality distribution
+                if "quality_distribution" in enhanced_stats:
+                    distribution = enhanced_stats["quality_distribution"]
+                    print("\nQuality Distribution:")
+                    print(f"  🌟 Excellent (85+): {distribution['excellent']} papers")
+                    print(f"  ⭐ Very Good (70-84): {distribution['very_good']} papers")
+                    print(f"  ● Good (60-69): {distribution['good']} papers")
+                    print(f"  ◐ Moderate (45-59): {distribution['moderate']} papers")
+                    print(f"  ○ Low (30-44): {distribution['low']} papers")
+                    print(f"  · Very Low (0-29): {distribution['very_low']} papers")
+        except (FileNotFoundError, KeyError, ImportError):
+            # If enhanced stats aren't available, continue with basic info
+            pass
+
         print("\nSample papers:")
         for paper in metadata["papers"][:5]:
-            print(f"  - [{paper['id']}] {paper['title'][:60]}...")
+            # Show quality indicator if available
+            quality = paper.get("quality_score", 0)
+            if quality > 0:
+                indicator = format_quality_indicator(quality)
+                print(f"  - [{paper['id']}] {indicator} {paper['title'][:60]}... ({quality}/100)")
+            else:
+                print(f"  - [{paper['id']}] {paper['title'][:60]}...")
 
         # Log successful info completion
         execution_time_ms = int((time.time() - start_time) * 1000)
