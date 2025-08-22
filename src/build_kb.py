@@ -1543,17 +1543,35 @@ class KnowledgeBaseBuilder:
                         break
                 
                 if test_paper:
-                    test_s2_data = asyncio.run(get_semantic_scholar_data(
-                        doi=test_paper.get("doi", ""), 
-                        title=test_paper.get("title", "")
-                    ))
+                    print(f"Testing API with paper: {test_paper.get('title', 'No title')[:60]}...")
                     
-                    if not test_s2_data or test_s2_data.get('error'):
+                    # Add timeout for API test
+                    import asyncio
+                    try:
+                        test_s2_data = asyncio.run(asyncio.wait_for(
+                            get_semantic_scholar_data(
+                                doi=test_paper.get("doi", ""), 
+                                title=test_paper.get("title", "")
+                            ),
+                            timeout=10.0  # 10 second timeout
+                        ))
+                    except asyncio.TimeoutError:
+                        print("⚠️  API test timed out - enhanced scoring unavailable")
+                        enhanced_scoring_available = False
+                        test_s2_data = None
+                    
+                    if test_s2_data and not test_s2_data.get('error'):
+                        print("✅ Enhanced quality scoring API is available")
+                    else:
+                        error_msg = test_s2_data.get('error', 'Unknown error') if test_s2_data else 'No response'
+                        print(f"❌ Enhanced quality scoring API unavailable: {error_msg}")
                         enhanced_scoring_available = False
                 else:
+                    print("⚠️  No papers with DOI or title found for API test")
                     enhanced_scoring_available = False
                     
-            except Exception:
+            except Exception as e:
+                print(f"⚠️  API test failed: {e}")
                 enhanced_scoring_available = False
             
             if enhanced_scoring_available:
@@ -1573,6 +1591,14 @@ class KnowledgeBaseBuilder:
                             print("» Skipping quality score upgrade")
                     except (EOFError, KeyboardInterrupt):
                         print("\n» Skipping quality score upgrade")
+            else:
+                # API unavailable - inform user but don't interrupt workflow
+                has_basic, count = self.has_papers_with_basic_scores(metadata["papers"])
+                if has_basic:
+                    print(f"ℹ️  Found {count} papers with basic quality scores.")
+                    print("⚠️  Enhanced quality scoring currently unavailable (API issue).")
+                    print("📝 You can upgrade quality scores later when the API is available.")
+                    print("   Just run 'python src/build_kb.py' again when you want to retry.")
 
         if to_process:
             # Check if we're doing quality upgrades
