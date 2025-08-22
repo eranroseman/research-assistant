@@ -324,30 +324,6 @@ def format_paper_with_enhanced_quality(
     return result
 
 
-def format_search_results_with_enhanced_quality(
-    results: list[tuple[int, float, dict[str, Any]]],
-    show_quality: bool = False,
-) -> str:
-    """Format search results with enhanced quality scoring.
-
-    Args:
-        results: List of search result tuples (idx, score, paper)
-        show_quality: Whether to show detailed quality explanations
-
-    Returns:
-        Formatted string with enhanced quality indicators
-    """
-    if not results:
-        return "No papers found."
-
-    formatted_results = []
-    for idx, score, paper in results:
-        formatted_paper = format_paper_with_enhanced_quality(paper, score, show_quality)
-        formatted_results.append(formatted_paper)
-
-    return "\n".join(formatted_results)
-
-
 class ResearchCLI:
     """Main class for CLI operations on the knowledge base.
 

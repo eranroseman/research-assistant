@@ -678,72 +678,6 @@ def build_quality_explanation(
 # ============================================================================
 
 
-async def process_paper_async(paper_data: dict[str, Any], pdf_text: str) -> tuple[Any, int, str]:
-    """Process paper with parallel embedding generation and enhanced quality scoring.
-
-    Args:
-        paper_data: Paper metadata dictionary
-        pdf_text: Full text of the paper for embedding generation
-
-    Returns:
-        Tuple containing:
-        - embedding: NumPy array of embeddings
-        - quality_score: Integer 0-100
-        - quality_explanation: Human-readable scoring factors
-
-    Raises:
-        Exception: If embedding generation or API call fails (both required)
-    """
-    import numpy as np
-
-    # Start both operations concurrently
-    embedding_task = asyncio.create_task(generate_embedding_async(pdf_text))
-
-    quality_task = asyncio.create_task(
-        get_semantic_scholar_data(paper_data.get("DOI"), paper_data.get("title", "")),
-    )
-
-    # Wait for both to complete
-    try:
-        embedding, s2_data = await asyncio.gather(embedding_task, quality_task, return_exceptions=True)
-    except Exception as e:
-        raise PaperProcessingError(f"Failed to process paper concurrently: {e}") from e
-
-    # Handle embedding generation failure (critical)
-    if isinstance(embedding, Exception):
-        raise EmbeddingGenerationError(f"Embedding generation failed: {embedding}") from embedding
-
-    # Handle API failure - now critical for enhanced scoring
-    if isinstance(s2_data, Exception):
-        raise SemanticScholarAPIError(f"Semantic Scholar API call failed: {s2_data}") from s2_data
-
-    # Calculate enhanced quality score (requires valid API data)
-    quality_score, quality_explanation = calculate_quality_score(paper_data, s2_data)
-
-    return embedding, quality_score, quality_explanation
-
-
-async def generate_embedding_async(text: str) -> Any:
-    """Async wrapper for embedding generation.
-
-    Args:
-        text: Text to generate embeddings for
-
-    Returns:
-        NumPy array of embeddings
-    """
-    # Import here to avoid circular dependencies
-    from sentence_transformers import SentenceTransformer
-    import numpy as np
-
-    # Load model if not already loaded (cached by sentence-transformers)
-    model = SentenceTransformer(EMBEDDING_MODEL)
-
-    # Convert synchronous embedding generation to async
-    loop = asyncio.get_event_loop()
-    return await loop.run_in_executor(None, model.encode, text)
-
-
 def detect_study_type(text: str) -> str:
     """Detect study type from paper text for quality scoring.
 
@@ -961,37 +895,6 @@ def display_operation_summary(
         print(f"  Device: {device.upper()}")
     if storage_estimate_mb:
         print(f"  Storage needed: ~{storage_estimate_mb:.0f} MB")
-
-
-def format_truncated_list(
-    items: list[Any],
-    max_display: int = 10,
-    item_formatter: Any = str,
-    continuation_message: str | None = None,
-) -> list[str]:
-    """Format a list with truncation for display.
-
-    Args:
-        items: List of items to format
-        max_display: Maximum number of items to show
-        item_formatter: Function to format each item
-        continuation_message: Custom message for remaining items
-
-    Returns:
-        List of formatted strings
-    """
-    lines = []
-    for item in items[:max_display]:
-        lines.append(item_formatter(item))
-
-    if len(items) > max_display:
-        remaining = len(items) - max_display
-        if continuation_message:
-            lines.append(continuation_message.format(count=remaining))
-        else:
-            lines.append(f"... and {remaining} more")
-
-    return lines
 
 
 def format_error_message(
@@ -1226,17 +1129,6 @@ class KnowledgeBaseBuilder:
         npy_cache_path = self.knowledge_base_path / ".embedding_data.npy"
         np.save(npy_cache_path, embeddings, allow_pickle=False)
         # Silent - cache saved
-
-    def clear_embedding_cache(self) -> None:
-        """Clear the embedding cache."""
-        self.embedding_cache = None
-        json_cache_path = self.knowledge_base_path / ".embedding_cache.json"
-        npy_cache_path = self.knowledge_base_path / ".embedding_data.npy"
-        if json_cache_path.exists():
-            json_cache_path.unlink()
-        if npy_cache_path.exists():
-            npy_cache_path.unlink()
-        print("Cleared embedding cache")
 
     def get_embedding_hash(self, text: str) -> str:
         """Generate SHA256 hash for embedding cache key.
