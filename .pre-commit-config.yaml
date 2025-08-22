@@ -57,6 +57,39 @@ repos:
       - id: python-safety-dependencies-check
         files: requirements.*\.txt$
 
+  # Pre-push hooks (more intensive checks)
+  - repo: local
+    hooks:
+      # Critical E2E tests before push
+      - id: critical-tests
+        name: critical-tests
+        entry: .venv/bin/pytest
+        language: system
+        stages: [pre-push]
+        args: ['tests/e2e/test_e2e_cli_commands.py::TestCriticalE2EFunctionality', '-v', '--tb=short']
+        pass_filenames: false
+        always_run: true
+
+      # Performance regression tests
+      - id: performance-tests
+        name: performance-tests
+        entry: .venv/bin/pytest
+        language: system
+        stages: [pre-push]
+        args: ['tests/performance/', '-v', '--tb=short']
+        pass_filenames: false
+        always_run: true
+
+  # Enhanced security scanning for push (informational - rules not covered by Ruff S)
+  - repo: https://github.com/PyCQA/bandit
+    rev: '1.7.7'
+    hooks:
+      - id: bandit
+        stages: [pre-push]
+        args: ['-r', 'src/', '--tests', 'B110,B404', '--severity-level', 'medium']  # Only fail on medium+ severity
+        pass_filenames: false
+        always_run: true
+
 # Configuration
 default_language_version:
   python: python3.11
