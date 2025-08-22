@@ -2017,7 +2017,7 @@ def diagnose() -> None:
 
 
 @cli.command()
-@click.argument("input", "input_file", default="-", type=str)
+@click.argument("input_file", default="-", type=str)
 @click.option(
     "--preset",
     type=click.Choice(["research", "review", "author-scan"]),
