@@ -80,7 +80,7 @@ def valid_cache_file(temp_kb_dir):
             "file_size": 1024,
             "file_mtime": 1234567890.0,
             "cached_at": "2025-01-01T00:00:00Z",
-        }
+        },
     }
     with open(cache_path, "w") as f:
         json.dump(cache_data, f)

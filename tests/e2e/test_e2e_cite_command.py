@@ -122,10 +122,7 @@ class TestCiteCommand:
                 # Strip any loading messages before JSON
                 output = result.stdout
                 json_start = output.find("{")
-                if json_start != -1:
-                    json_str = output[json_start:]
-                else:
-                    json_str = output
+                json_str = output[json_start:] if json_start != -1 else output
 
                 json_output = json.loads(json_str)
                 assert "citations" in json_output
@@ -185,10 +182,7 @@ class TestCiteCommand:
                 # Strip any loading messages before JSON
                 output = result.stdout
                 json_start = output.find("{")
-                if json_start != -1:
-                    json_str = output[json_start:]
-                else:
-                    json_str = output
+                json_str = output[json_start:] if json_start != -1 else output
 
                 json_output = json.loads(json_str)
                 # Should have structure even with errors

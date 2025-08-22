@@ -58,7 +58,7 @@ class TestCLICore:
         """Test enhanced quality scoring integration with CLI workflows."""
         # Test that enhanced quality scoring works within CLI context
         paper = {"title": "Test Integration Paper", "study_type": "rct", "year": 2023, "sample_size": 500}
-        
+
         # Mock Semantic Scholar API data
         s2_data = {
             "citationCount": 50,
@@ -66,7 +66,7 @@ class TestCLICore:
             "authors": [{"hIndex": 15}],
             "externalIds": {"DOI": "10.1000/test"},
             "publicationTypes": ["JournalArticle"],
-            "fieldsOfStudy": ["Medicine"]
+            "fieldsOfStudy": ["Medicine"],
         }
 
         score, explanation = calculate_enhanced_quality_score(paper, s2_data)
@@ -151,13 +151,13 @@ class TestCitationFunctionality:
                 "pages": "100-110",
                 "year": 2023,
                 "doi": "10.1234/test.2023.001",
-            }
+            },
         )
 
         # Mock the generate_ieee_citation method
         def mock_generate_citation(paper_id):
             paper = cli.metadata["papers"][0]
-            return f"{', '.join(paper['authors'])}, \"{paper['title']},\" {paper['journal']}, vol. {paper['volume']}, no. {paper['number']}, pp. {paper['pages']}, {paper['year']}."
+            return f'{", ".join(paper["authors"])}, "{paper["title"]}," {paper["journal"]}, vol. {paper["volume"]}, no. {paper["number"]}, pp. {paper["pages"]}, {paper["year"]}.'
 
         cli.generate_ieee_citation = MagicMock(side_effect=mock_generate_citation)
 

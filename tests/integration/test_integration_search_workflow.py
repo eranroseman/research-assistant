@@ -134,7 +134,11 @@ class TestSearchWorkflowIntegration:
     @patch("src.cli.faiss")
     @patch("sentence_transformers.SentenceTransformer")
     def test_search_with_quality_filter_workflow_should_return_filtered_results(
-        self, mock_transformer, mock_faiss, mock_kb_index, mock_kb
+        self,
+        mock_transformer,
+        mock_faiss,
+        mock_kb_index,
+        mock_kb,
     ):
         """
         Test search workflow with quality filtering.
@@ -189,7 +193,11 @@ class TestSearchWorkflowIntegration:
     @patch("src.cli.faiss")
     @patch("sentence_transformers.SentenceTransformer")
     def test_smart_search_section_chunking_workflow_should_process_sections(
-        self, mock_transformer, mock_faiss, mock_kb_index, mock_kb
+        self,
+        mock_transformer,
+        mock_faiss,
+        mock_kb_index,
+        mock_kb,
     ):
         """
         Test smart search with section chunking.
@@ -245,7 +253,11 @@ class TestSearchWorkflowIntegration:
     @patch("src.cli.faiss")
     @patch("sentence_transformers.SentenceTransformer")
     def test_batch_research_workflow_should_execute_comprehensive_search(
-        self, mock_transformer, mock_faiss, mock_kb_index, mock_kb
+        self,
+        mock_transformer,
+        mock_faiss,
+        mock_kb_index,
+        mock_kb,
     ):
         """
         Test complete batch research workflow.
@@ -304,7 +316,11 @@ class TestSearchWorkflowIntegration:
     @patch("src.cli.faiss")
     @patch("sentence_transformers.SentenceTransformer")
     def test_author_search_workflow_should_find_papers_by_author(
-        self, mock_transformer, mock_faiss, mock_kb_index_class, mock_kb
+        self,
+        mock_transformer,
+        mock_faiss,
+        mock_kb_index_class,
+        mock_kb,
     ):
         """
         Test author search workflow.
@@ -332,7 +348,7 @@ class TestSearchWorkflowIntegration:
 
         # Mock search_by_author method
         mock_kb_instance.search_by_author.return_value = [
-            {"id": "0001", "title": "Test Paper", "authors": ["Smith, J.", "Doe, A."]}
+            {"id": "0001", "title": "Test Paper", "authors": ["Smith, J.", "Doe, A."]},
         ]
 
         mock_kb_index_class.return_value = mock_kb_instance
@@ -355,7 +371,11 @@ class TestSearchWorkflowIntegration:
     @patch("src.cli.faiss")
     @patch("sentence_transformers.SentenceTransformer")
     def test_citation_generation_workflow_should_format_correctly(
-        self, mock_transformer, mock_faiss, mock_kb_index, mock_kb
+        self,
+        mock_transformer,
+        mock_faiss,
+        mock_kb_index,
+        mock_kb,
     ):
         """
         Test citation generation for multiple papers.
@@ -426,7 +446,11 @@ class TestSearchPerformance:
     @patch("src.cli.faiss")
     @patch("sentence_transformers.SentenceTransformer")
     def test_search_execution_should_complete_within_timeout(
-        self, mock_transformer, mock_faiss, mock_kb_index, tmp_path
+        self,
+        mock_transformer,
+        mock_faiss,
+        mock_kb_index,
+        tmp_path,
     ):
         """
         Test that search completes in reasonable time.
@@ -448,7 +472,7 @@ class TestSearchPerformance:
                     "abstract": f"Abstract for paper {i}",
                     "year": 2020 + (i % 5),
                     "study_type": ["rct", "systematic_review", "cohort"][i % 3],
-                }
+                },
             )
 
         metadata = {

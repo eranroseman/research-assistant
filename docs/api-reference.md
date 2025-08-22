@@ -155,7 +155,7 @@ python src/cli.py get [OPTIONS] PAPER_ID
 All sections are extracted with complete content preservation - no truncation applied:
 
 - `abstract` - Paper abstract (complete)
-- `introduction` - Introduction/background (complete)  
+- `introduction` - Introduction/background (complete)
 - `methods` - Methods/methodology (complete - full intervention descriptions)
 - `results` - Results/findings (complete - all outcome data)
 - `discussion` - Discussion section (complete)
@@ -612,7 +612,7 @@ Discover missing papers in your knowledge base through comprehensive gap analysi
 
 **GAP TYPES IDENTIFIED:**
 - Papers cited by your KB but missing from your collection
-- Recent work from authors already in your KB  
+- Recent work from authors already in your KB
 - Papers frequently co-cited with your collection
 - Recent developments in your research areas
 - Semantically similar papers you don't have
@@ -644,7 +644,7 @@ python src/analyze_gaps.py
 # High-impact gaps only
 python src/analyze_gaps.py --min-citations 50
 
-# Recent work from your authors  
+# Recent work from your authors
 python src/analyze_gaps.py --year-from 2024 --limit 30
 
 # Conservative analysis with combined filters
@@ -665,7 +665,7 @@ Gap analysis generates a comprehensive report saved to `exports/gap_analysis_YYY
 ```
 exports/gap_analysis_2024_08_22.md
 ├── Executive Summary (counts by gap type)
-├── Citation Network Gaps (highest confidence) 
+├── Citation Network Gaps (highest confidence)
 ├── Author Network Gaps (recent work)
 ├── Complete DOI Lists (for Zotero import)
 └── Methodology and confidence indicators

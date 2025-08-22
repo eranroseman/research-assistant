@@ -47,7 +47,10 @@ class TestSearchPerformance:
         # Measure filtered search
         start = time.time()
         results = cli.search(
-            "diabetes treatment", k=50, min_year=2022, study_types=["systematic_review", "rct"]
+            "diabetes treatment",
+            k=50,
+            min_year=2022,
+            study_types=["systematic_review", "rct"],
         )
         elapsed = time.time() - start
 
@@ -106,7 +109,7 @@ class TestKBBuildingPerformance:
                     "title": f"Paper {i}",
                     "abstract": f"Abstract for paper {i}" * 5,
                     "dateModified": "2024-01-01T00:00:00Z",
-                }
+                },
             )
 
         # Save initial metadata
@@ -186,7 +189,7 @@ class TestKBBuildingPerformance:
                         "title": f"Paper {i}",
                         "abstract": f"Abstract for paper {i}",
                         "authors": [f"Author {i}"],
-                    }
+                    },
                 )
 
             metadata = {"papers": papers, "total_papers": size, "version": "4.0"}
@@ -376,12 +379,12 @@ class TestCachePerformance:
         embedding_cache = builder.load_embedding_cache()
         embedding_load_time = time.time() - start
 
-        assert (
-            embedding_load_time < 1.0
-        ), f"Embedding cache loading took {embedding_load_time:.2f}s, expected < 1s"
-        assert (
-            len(embedding_cache["hashes"]) == 100
-        ), f"Expected 100 cached embeddings, got {len(embedding_cache['hashes'])}"
+        assert embedding_load_time < 1.0, (
+            f"Embedding cache loading took {embedding_load_time:.2f}s, expected < 1s"
+        )
+        assert len(embedding_cache["hashes"]) == 100, (
+            f"Expected 100 cached embeddings, got {len(embedding_cache['hashes'])}"
+        )
         assert embedding_cache["embeddings"].shape == (100, 768), "Embedding data should have correct shape"
 
         # Test cache access performance (should be O(1))
@@ -398,9 +401,9 @@ class TestCachePerformance:
 
         access_time = time.time() - start
 
-        assert (
-            access_time < 0.1
-        ), f"Cache access took {access_time:.2f}s, expected < 0.1s for O(1) performance"
+        assert access_time < 0.1, (
+            f"Cache access took {access_time:.2f}s, expected < 0.1s for O(1) performance"
+        )
 
 
 if __name__ == "__main__":

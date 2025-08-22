@@ -32,7 +32,7 @@ class TestBatchOperationsIntegration:
                 "quality_score": 95,
                 "authors": ["Smith, J."],
                 "journal": "Nature Medicine",
-            }
+            },
         )
         cli.metadata["papers"][1].update(
             {
@@ -43,7 +43,7 @@ class TestBatchOperationsIntegration:
                 "sample_size": 500,
                 "authors": ["Johnson, B."],
                 "journal": "NEJM",
-            }
+            },
         )
         cli.metadata["papers"][2].update(
             {
@@ -53,7 +53,7 @@ class TestBatchOperationsIntegration:
                 "quality_score": 70,
                 "authors": ["Lee, C."],
                 "journal": "BMJ",
-            }
+            },
         )
         cli.metadata["papers"][3].update(
             {
@@ -63,7 +63,7 @@ class TestBatchOperationsIntegration:
                 "quality_score": 45,
                 "authors": ["Brown, D."],
                 "journal": "Case Reports",
-            }
+            },
         )
 
         # Mock search method
@@ -71,13 +71,12 @@ class TestBatchOperationsIntegration:
             # Return different results based on query
             if "systematic" in query_text.lower():
                 return [(0, 0.95, cli.metadata["papers"][0])]
-            elif "rct" in query_text.lower() or "randomized" in query_text.lower():
+            if "rct" in query_text.lower() or "randomized" in query_text.lower():
                 return [(1, 0.90, cli.metadata["papers"][1])]
-            elif "cohort" in query_text.lower():
+            if "cohort" in query_text.lower():
                 return [(2, 0.85, cli.metadata["papers"][2])]
-            else:
-                # Return all papers for general queries
-                return [(i, 0.95 - i * 0.05, paper) for i, paper in enumerate(cli.metadata["papers"])]
+            # Return all papers for general queries
+            return [(i, 0.95 - i * 0.05, paper) for i, paper in enumerate(cli.metadata["papers"])]
 
         cli.search = MagicMock(side_effect=mock_search)
         return cli
@@ -100,7 +99,9 @@ class TestBatchOperationsIntegration:
 
         # Use utility to verify batch execution
         assert_batch_command_output(
-            result, expected_commands=["search", "search", "search"], expected_results_count=3
+            result,
+            expected_commands=["search", "search", "search"],
+            expected_results_count=3,
         )
 
         # Verify specific search results - using actual CLI format
@@ -127,7 +128,9 @@ class TestBatchOperationsIntegration:
 
         # Use utility to verify batch execution
         assert_batch_command_output(
-            result, expected_commands=["search", "search", "merge"], expected_results_count=3
+            result,
+            expected_commands=["search", "search", "merge"],
+            expected_results_count=3,
         )
 
         # Check merge-specific behavior - result is list format

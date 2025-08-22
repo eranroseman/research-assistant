@@ -19,6 +19,10 @@ from src.build_kb import KnowledgeBaseBuilder
 from src.cli_kb_index import KnowledgeBaseIndex
 
 
+class MockAPIError(Exception):
+    """Custom exception for test API failures."""
+
+
 class TestKnowledgeBaseBuilder:
     """Test KnowledgeBaseBuilder initialization and core functionality."""
 
@@ -102,11 +106,10 @@ class TestPDFExtraction:
         pdf_file.write_bytes(b"dummy pdf content")
 
         # Set up cache with existing content (using file stats format)
-        import os
 
-        stat = os.stat(pdf_file)
+        stat = Path(pdf_file).stat()
         builder.cache = {
-            "KEY001": {"text": "Cached PDF content", "file_size": stat.st_size, "file_mtime": stat.st_mtime}
+            "KEY001": {"text": "Cached PDF content", "file_size": stat.st_size, "file_mtime": stat.st_mtime},
         }
 
         result = builder.extract_pdf_text(str(pdf_file), "KEY001", use_cache=True)
@@ -324,12 +327,12 @@ class TestContentPreservation:
         sections = builder.extract_sections(mock_paper_text)
 
         # Verify sections are longer than old limit
-        assert (
-            len(sections["methods"]) > 5000
-        ), f"Methods should be > 5000 chars, got {len(sections['methods'])}"
-        assert (
-            len(sections["results"]) > 5000
-        ), f"Results should be > 5000 chars, got {len(sections['results'])}"
+        assert len(sections["methods"]) > 5000, (
+            f"Methods should be > 5000 chars, got {len(sections['methods'])}"
+        )
+        assert len(sections["results"]) > 5000, (
+            f"Results should be > 5000 chars, got {len(sections['results'])}"
+        )
 
         # Verify content is preserved
         assert "detailed methodology content" in sections["methods"]
@@ -455,8 +458,8 @@ class TestGapAnalysisIntegration:
                         "id": "0001",
                         "title": "Test Paper",
                         "quality_explanation": "basic scoring",  # No enhanced indicators
-                    }
-                ]
+                    },
+                ],
             }
 
             metadata_file = kb_data / "metadata.json"
@@ -490,8 +493,8 @@ class TestGapAnalysisIntegration:
                         "id": "0001",
                         "title": "Test Paper",
                         "quality_explanation": "citations: 50 | venue prestige: 15 | enhanced scoring",
-                    }
-                ]
+                    },
+                ],
             }
 
             metadata_file = kb_data / "metadata.json"
@@ -691,8 +694,8 @@ class TestIncrementalUpdateFixes:
                         "title": "Test Paper",
                         "quality_score": 85,
                         "quality_explanation": "citations: 50 | venue prestige: 15 | enhanced scoring",
-                    }
-                ]
+                    },
+                ],
             }
 
             metadata_file = kb_data / "metadata.json"
@@ -823,6 +826,7 @@ class TestParallelRebuildProcessing:
     def test_parallel_quality_processing_function_structure(self, tmp_path):
         """Test that parallel processing function is properly structured."""
         import concurrent.futures
+
         # Test the process_quality_score_rebuild function pattern
         # This simulates the function that gets submitted to ThreadPoolExecutor
         def mock_process_quality_score_rebuild(paper_tuple):
@@ -830,23 +834,23 @@ class TestParallelRebuildProcessing:
             paper_index, paper_data = paper_tuple
             # Simulate rate limiting
             import time
+
             time.sleep(0.001)  # Very short for testing
-            
+
             # Simulate API call
             mock_s2_data = {"error": None, "citations": 25}
-            
-            if mock_s2_data and not mock_s2_data.get('error'):
+
+            if mock_s2_data and not mock_s2_data.get("error"):
                 return paper_index, 75, "Mock enhanced scoring"
-            else:
-                return paper_index, None, "API data unavailable"
-        
+            return paper_index, None, "API data unavailable"
+
         # Test with mock papers
         papers = [
             {"doi": "10.1234/test1", "title": "Test Paper 1"},
             {"doi": "10.1234/test2", "title": "Test Paper 2"},
             {"doi": "10.1234/test3", "title": "Test Paper 3"},
         ]
-        
+
         # Test the parallel processing pattern
         results = {}
         with concurrent.futures.ThreadPoolExecutor(max_workers=3) as executor:
@@ -854,14 +858,14 @@ class TestParallelRebuildProcessing:
                 executor.submit(mock_process_quality_score_rebuild, (i, paper)): i
                 for i, paper in enumerate(papers)
             }
-            
+
             for future in concurrent.futures.as_completed(future_to_paper):
                 paper_index, quality_score, quality_explanation = future.result()
                 results[paper_index] = (quality_score, quality_explanation)
-        
+
         # Verify all papers were processed
         assert len(results) == 3, f"Should process all 3 papers, got {len(results)}"
-        
+
         # Verify structure of results
         for i in range(3):
             assert i in results, f"Should have result for paper {i}"
@@ -872,31 +876,29 @@ class TestParallelRebuildProcessing:
     def test_parallel_processing_error_handling(self, tmp_path):
         """Test that parallel processing handles errors gracefully."""
         import concurrent.futures
-        
+
         def mock_process_with_errors(paper_tuple):
             """Mock function that fails for some papers."""
             paper_index, paper_data = paper_tuple
-            
+
             # Fail for even indices, succeed for odd
             if paper_index % 2 == 0:
-                raise Exception("Mock API failure")
-            else:
-                return paper_index, 80, "Successful scoring"
-        
+                raise MockAPIError("Mock API failure")
+            return paper_index, 80, "Successful scoring"
+
         papers = [
             {"doi": "10.1234/test1", "title": "Test Paper 1"},  # index 0 - will fail
             {"doi": "10.1234/test2", "title": "Test Paper 2"},  # index 1 - will succeed
             {"doi": "10.1234/test3", "title": "Test Paper 3"},  # index 2 - will fail
             {"doi": "10.1234/test4", "title": "Test Paper 4"},  # index 3 - will succeed
         ]
-        
+
         results = {}
         with concurrent.futures.ThreadPoolExecutor(max_workers=2) as executor:
             future_to_paper = {
-                executor.submit(mock_process_with_errors, (i, paper)): i
-                for i, paper in enumerate(papers)
+                executor.submit(mock_process_with_errors, (i, paper)): i for i, paper in enumerate(papers)
             }
-            
+
             for future in concurrent.futures.as_completed(future_to_paper):
                 try:
                     paper_index, quality_score, quality_explanation = future.result()
@@ -905,10 +907,10 @@ class TestParallelRebuildProcessing:
                     # Handle failed papers
                     paper_index = future_to_paper[future]
                     results[paper_index] = (None, "Processing failed")
-        
+
         # Verify all papers are accounted for
         assert len(results) == 4, f"Should have results for all 4 papers, got {len(results)}"
-        
+
         # Verify successes and failures
         assert results[0] == (None, "Processing failed"), "Paper 0 should have failed"
         assert results[1] == (80, "Successful scoring"), "Paper 1 should have succeeded"
@@ -921,7 +923,7 @@ class TestParallelRebuildProcessing:
         # - ThreadPoolExecutor with max_workers=3
         # - 100ms rate limiting (0.1 second sleep)
         # - Same error handling pattern
-        
+
         # This test verifies the structural consistency
         rebuild_pattern = {
             "max_workers": 3,
@@ -929,16 +931,18 @@ class TestParallelRebuildProcessing:
             "progress_bar": True,
             "error_handling": True,
         }
-        
+
         incremental_pattern = {
             "max_workers": 3,
             "rate_limit_ms": 100,
             "progress_bar": True,
             "error_handling": True,
         }
-        
+
         # Verify patterns match
-        assert rebuild_pattern == incremental_pattern, "Rebuild and incremental should use same parallel patterns"
+        assert rebuild_pattern == incremental_pattern, (
+            "Rebuild and incremental should use same parallel patterns"
+        )
 
 
 if __name__ == "__main__":

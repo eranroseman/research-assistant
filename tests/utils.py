@@ -51,7 +51,7 @@ def create_mock_cli(
                 "filename": f"paper_{paper_id}.md",
                 "embedding_index": i - 1,
                 "quality_score": 50 + (i % 50),
-            }
+            },
         )
 
     cli.metadata = {
@@ -154,7 +154,7 @@ def create_test_kb_structure(
                 f"# {paper['title']}\n\n"
                 f"**Authors:** {', '.join(paper['authors'])}\n"
                 f"**Year:** {paper['year']}\n\n"
-                f"## Abstract\n{paper['abstract']}\n"
+                f"## Abstract\n{paper['abstract']}\n",
             )
 
     # Create index files if requested
@@ -185,7 +185,7 @@ def create_test_kb_structure(
                 "file_size": 1024,
                 "file_mtime": 1234567890.0,
                 "cached_at": "2025-01-20T00:00:00Z",
-            }
+            },
         }
         with open(base_path / ".pdf_text_cache.json", "w") as f:
             json.dump(cache_data, f)
@@ -224,9 +224,9 @@ def assert_batch_command_output(
                 executed_cmds.append(r["command"]["cmd"])
 
     for expected_cmd in expected_commands:
-        assert (
-            expected_cmd in executed_cmds
-        ), f"Expected command '{expected_cmd}' not found. Got: {executed_cmds}"
+        assert expected_cmd in executed_cmds, (
+            f"Expected command '{expected_cmd}' not found. Got: {executed_cmds}"
+        )
 
 
 def create_mock_paper(

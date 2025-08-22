@@ -43,11 +43,11 @@ def extract_sections(self, text: str) -> dict[str, str]:
 
     # Existing section detection logic (unchanged)
     # ... all existing pattern matching code ...
-    
+
     # CRITICAL CHANGE: Remove all [:MAX_SECTION_LENGTH] truncations
     # OLD: sections[current_section] = "\n".join(section_content).strip()[:MAX_SECTION_LENGTH]
     # NEW: sections[current_section] = "\n".join(section_content).strip()
-    
+
     return sections
 ```
 
@@ -58,17 +58,17 @@ def safe_section_text(text: str, max_length: int = 20000) -> str:
     """Preserve content with generous safety limits and sentence boundaries."""
     if len(text) <= max_length:
         return text
-    
+
     # Find last sentence boundary before limit
     for i in range(max_length - 1, max_length - 500, -1):
         if text[i] in '.!?' and i + 1 < len(text) and text[i + 1].isspace():
             return text[:i + 1].strip()
-    
+
     # Fallback to word boundary
     for i in range(max_length - 1, max_length - 200, -1):
         if text[i].isspace():
             return text[:i].strip()
-    
+
     # Hard fallback (should rarely happen)
     return text[:max_length].strip()
 ```
@@ -85,11 +85,11 @@ def safe_section_text(text: str, max_length: int = 20000) -> str:
 
 # Line 1839: BEFORE
 sections[current_section] = "\n".join(section_content).strip()[:MAX_SECTION_LENGTH]
-# Line 1839: AFTER  
+# Line 1839: AFTER
 sections[current_section] = "\n".join(section_content).strip()
 
 # Line 1870: BEFORE
-sections[current_section] = "\n".join(section_content).strip()[:MAX_SECTION_LENGTH]  
+sections[current_section] = "\n".join(section_content).strip()[:MAX_SECTION_LENGTH]
 # Line 1870: AFTER
 sections[current_section] = "\n".join(section_content).strip()
 
@@ -100,7 +100,7 @@ sections[current_section] = "\n".join(section_content).strip()
 
 ```python
 # REMOVE or comment out (no longer used):
-# MAX_SECTION_LENGTH = 5000  
+# MAX_SECTION_LENGTH = 5000
 
 # OPTIONAL: Add safety limit if concerned about memory
 MAX_SECTION_LENGTH = 50000  # Generous safety limit (10x current)
@@ -111,7 +111,7 @@ MAX_SECTION_LENGTH = 50000  # Generous safety limit (10x current)
 ### Clean Break Approach (Aligned with v4.1)
 
 - **No backward compatibility complexity** - Simple sections_index.json structure
-- **Full content preservation** - All text available for embedding and search  
+- **Full content preservation** - All text available for embedding and search
 - **No chunk variants** - Search logic remains simple
 - **Storage increase** - Estimated 305MB → 400-500MB (acceptable)
 
@@ -122,7 +122,7 @@ MAX_SECTION_LENGTH = 50000  # Generous safety limit (10x current)
   "paper_0001": {
     "abstract": "Full abstract text (any length)",
     "methods": "Complete methods section with full intervention descriptions",
-    "results": "Complete results section with all outcome data", 
+    "results": "Complete results section with all outcome data",
     "discussion": "Full discussion section"
   }
 }
@@ -133,11 +133,11 @@ MAX_SECTION_LENGTH = 50000  # Generous safety limit (10x current)
 ### Primary Advantages
 - **Zero information loss:** Complete preservation of intervention descriptions
 - **Minimal implementation risk:** Simple truncation removal vs complex chunking logic
-- **Better embeddings:** Multi-QA MPNet works optimally with full context 
+- **Better embeddings:** Multi-QA MPNet works optimally with full context
 - **Clean architecture:** No chunk handling complexity in search logic
 - **Storage acceptable:** 200MB increase for 2000 papers is reasonable
 
-### Technical Advantages  
+### Technical Advantages
 - **Extremely low complexity:** Remove 6 lines of truncation code
 - **No new edge cases:** Leverages existing section detection logic
 - **Easy testing:** No new algorithms to validate
@@ -154,7 +154,7 @@ MAX_SECTION_LENGTH = 50000  # Generous safety limit (10x current)
 
 ### Single Phase Implementation (Recommended)
 1. **Remove truncation limits** in `build_kb.py:extract_sections()`
-2. **Optional:** Add generous safety limit (20-50KB) in config 
+2. **Optional:** Add generous safety limit (20-50KB) in config
 3. **Test** with existing test suite (no new tests needed)
 4. **Deploy** with v4.1 KB rebuild
 
@@ -163,7 +163,7 @@ MAX_SECTION_LENGTH = 50000  # Generous safety limit (10x current)
 # 1. Modify build_kb.py
 # Remove [:MAX_SECTION_LENGTH] from lines 1839, 1870, 1906, 1915, 1941, 1943
 
-# 2. Optional: Update config.py  
+# 2. Optional: Update config.py
 # Change MAX_SECTION_LENGTH = 5000 to MAX_SECTION_LENGTH = 50000
 
 # 3. Test existing functionality
@@ -180,7 +180,7 @@ python src/build_kb.py --rebuild
 | Aspect | Smart Chunking Design | Simplified Approach |
 |--------|----------------------|-------------------- |
 | **Code Complexity** | +200 lines, 3 new functions | -6 characters (remove truncation) |
-| **Testing Required** | Extensive (boundaries, edge cases) | Minimal (existing tests sufficient) |  
+| **Testing Required** | Extensive (boundaries, edge cases) | Minimal (existing tests sufficient) |
 | **Storage Impact** | Multiple chunks per section | Single full section |
 | **Search Logic** | Handle chunk variants | No changes needed |
 | **Implementation Risk** | Medium (new algorithms) | Very low (remove existing code) |
@@ -192,7 +192,7 @@ python src/build_kb.py --rebuild
 
 **Choose the simplified approach:**
 - Achieves primary goal (zero information loss) with minimal risk
-- Aligns perfectly with v4.1 clean-break philosophy  
+- Aligns perfectly with v4.1 clean-break philosophy
 - Leverages Multi-QA MPNet's designed capability for long contexts
 - Eliminates complexity without sacrificing functionality
 - Easy to implement and easy to rollback if needed

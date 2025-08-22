@@ -327,7 +327,7 @@ python src/analyze_gaps.py --min-citations 50 --year-from 2020 --limit 100  # Co
 
 **Gap Types Identified:**
 - Papers cited by your KB but missing from your collection
-- Recent work from authors already in your KB  
+- Recent work from authors already in your KB
 - Papers frequently co-cited with your collection
 - Recent developments in your research areas
 - Semantically similar papers you don't have

@@ -231,7 +231,8 @@ async def get_semantic_scholar_data(doi: str | None, title: str) -> dict[str, An
 
     # Production-ready session with connection pooling and circuit breaker
     connector = aiohttp.TCPConnector(
-        limit=API_CONNECTION_POOL_SIZE, limit_per_host=API_CONNECTION_POOL_HOST_LIMIT
+        limit=API_CONNECTION_POOL_SIZE,
+        limit_per_host=API_CONNECTION_POOL_HOST_LIMIT,
     )
 
     timeout = aiohttp.ClientTimeout(total=API_REQUEST_TIMEOUT)
@@ -254,7 +255,7 @@ async def get_semantic_scholar_data(doi: str | None, title: str) -> dict[str, An
                             if response.status == 200:
                                 return await response.json()  # type: ignore[no-any-return]
                     else:
-                        async with session.get(url, params={**params, "fields": fields}) as response:  # type: ignore[dict-item]
+                        async with session.get(url, params={**params, "fields": fields}) as response:
                             if response.status == 200:
                                 data = await response.json()
                                 if data.get("data") and len(data["data"]) > 0:
@@ -310,20 +311,19 @@ def calculate_citation_impact_score(citation_count: int) -> int:
 
     if citation_count >= thresholds["exceptional"]:
         return 25
-    elif citation_count >= thresholds["high"]:
+    if citation_count >= thresholds["high"]:
         return 20
-    elif citation_count >= thresholds["good"]:
+    if citation_count >= thresholds["good"]:
         return 15
-    elif citation_count >= thresholds["moderate"]:
+    if citation_count >= thresholds["moderate"]:
         return 10
-    elif citation_count >= thresholds["some"]:
+    if citation_count >= thresholds["some"]:
         return 7
-    elif citation_count >= thresholds["few"]:
+    if citation_count >= thresholds["few"]:
         return 4
-    elif citation_count >= thresholds["minimal"]:
+    if citation_count >= thresholds["minimal"]:
         return 2
-    else:
-        return 0
+    return 0
 
 
 def calculate_venue_prestige_score(venue: dict[str, Any]) -> int:
@@ -389,7 +389,7 @@ def calculate_venue_prestige_score(venue: dict[str, Any]) -> int:
     return VENUE_PRESTIGE_SCORES["unranked"]
 
 
-def calculate_author_authority_score(authors: list) -> int:
+def calculate_author_authority_score(authors: list[dict[str, Any]]) -> int:
     """Calculate author authority component (10 points max).
 
     Args:
@@ -416,19 +416,18 @@ def calculate_author_authority_score(authors: list) -> int:
     thresholds = AUTHOR_AUTHORITY_THRESHOLDS
     if max_h_index >= thresholds["renowned"]:
         return 10
-    elif max_h_index >= thresholds["established"]:
+    if max_h_index >= thresholds["established"]:
         return 8
-    elif max_h_index >= thresholds["experienced"]:
+    if max_h_index >= thresholds["experienced"]:
         return 6
-    elif max_h_index >= thresholds["emerging"]:
+    if max_h_index >= thresholds["emerging"]:
         return 4
-    elif max_h_index >= thresholds["early_career"]:
+    if max_h_index >= thresholds["early_career"]:
         return 2
-    else:
-        return 0
+    return 0
 
 
-def calculate_cross_validation_score(paper_data: dict, s2_data: dict[str, Any]) -> int:
+def calculate_cross_validation_score(paper_data: dict[str, Any], s2_data: dict[str, Any]) -> int:
     """Calculate cross-validation component (10 points max).
 
     Args:
@@ -463,7 +462,7 @@ def calculate_cross_validation_score(paper_data: dict, s2_data: dict[str, Any]) 
     return min(score, 10)
 
 
-def calculate_quality_score(paper_data: dict, s2_data: dict[str, Any]) -> tuple[int, str]:
+def calculate_quality_score(paper_data: dict[str, Any], s2_data: dict[str, Any]) -> tuple[int, str]:
     """Calculate enhanced quality score using paper data + API data.
 
     Args:
@@ -527,16 +526,16 @@ def calculate_recency_score(year: int | None) -> int:
 
     if years_old <= 0:  # Current year or future
         return RECENCY_WEIGHT
-    elif years_old == 1:  # 1 year old
+    if years_old == 1:  # 1 year old
         return int(RECENCY_WEIGHT * 0.8)
-    elif years_old == 2:  # 2 years old
+    if years_old == 2:  # 2 years old
         return int(RECENCY_WEIGHT * 0.6)
-    elif years_old == 3:  # 3 years old
+    if years_old == 3:  # 3 years old
         return int(RECENCY_WEIGHT * 0.4)
-    elif years_old == 4:  # 4 years old
+    if years_old == 4:  # 4 years old
         return int(RECENCY_WEIGHT * 0.2)
-    else:  # 5+ years old
-        return 0
+    # 5+ years old
+    return 0
 
 
 def calculate_sample_size_score(sample_size: int | None) -> int:
@@ -552,16 +551,15 @@ def calculate_sample_size_score(sample_size: int | None) -> int:
 
     if sample_size >= 1000:
         return SAMPLE_SIZE_WEIGHT
-    elif sample_size >= 500:
+    if sample_size >= 500:
         return int(SAMPLE_SIZE_WEIGHT * 0.8)
-    elif sample_size >= 250:
+    if sample_size >= 250:
         return int(SAMPLE_SIZE_WEIGHT * 0.6)
-    elif sample_size >= 100:
+    if sample_size >= 100:
         return int(SAMPLE_SIZE_WEIGHT * 0.4)
-    elif sample_size >= 50:
+    if sample_size >= 50:
         return int(SAMPLE_SIZE_WEIGHT * 0.2)
-    else:
-        return 0
+    return 0
 
 
 def calculate_full_text_score(has_full_text: bool | None) -> int:
@@ -575,7 +573,7 @@ def calculate_full_text_score(has_full_text: bool | None) -> int:
     return FULL_TEXT_WEIGHT if has_full_text else 0
 
 
-def calculate_enhanced_quality_score(paper_data: dict, s2_data: dict[str, Any]) -> tuple[int, str]:
+def calculate_enhanced_quality_score(paper_data: dict[str, Any], s2_data: dict[str, Any]) -> tuple[int, str]:
     """Calculate unified enhanced quality score using paper data + API data.
 
     Combines core paper attributes (40 points) with API-enhanced metrics (60 points)
@@ -638,7 +636,9 @@ def calculate_enhanced_quality_score(paper_data: dict, s2_data: dict[str, Any]) 
 
 
 def build_quality_explanation(
-    paper_data: dict, s2_data: dict[str, Any], bonuses: dict[str, int]
+    paper_data: dict[str, Any],
+    s2_data: dict[str, Any],
+    bonuses: dict[str, int],
 ) -> list[str]:
     """Build human-readable explanation of quality score factors."""
     factors = []
@@ -678,7 +678,7 @@ def build_quality_explanation(
 # ============================================================================
 
 
-async def process_paper_async(paper_data: dict, pdf_text: str) -> tuple[Any, int, str]:
+async def process_paper_async(paper_data: dict[str, Any], pdf_text: str) -> tuple[Any, int, str]:
     """Process paper with parallel embedding generation and enhanced quality scoring.
 
     Args:
@@ -700,7 +700,7 @@ async def process_paper_async(paper_data: dict, pdf_text: str) -> tuple[Any, int
     embedding_task = asyncio.create_task(generate_embedding_async(pdf_text))
 
     quality_task = asyncio.create_task(
-        get_semantic_scholar_data(paper_data.get("DOI"), paper_data.get("title", ""))
+        get_semantic_scholar_data(paper_data.get("DOI"), paper_data.get("title", "")),
     )
 
     # Wait for both to complete
@@ -995,7 +995,10 @@ def format_truncated_list(
 
 
 def format_error_message(
-    error_type: str, details: str, suggestion: str | None = None, context: dict[str, Any] | None = None
+    error_type: str,
+    details: str,
+    suggestion: str | None = None,
+    context: dict[str, Any] | None = None,
 ) -> str:
     """Format consistent, helpful error messages.
 
@@ -1289,7 +1292,7 @@ class KnowledgeBaseBuilder:
                 batch_size = 64
 
             print(
-                f"Using batch size {batch_size} based on {available_gb:.1f}GB available (of {total_gb:.1f}GB total)"
+                f"Using batch size {batch_size} based on {available_gb:.1f}GB available (of {total_gb:.1f}GB total)",
             )
 
             # Note: On CPU, batch size has minimal impact on speed since the bottleneck
@@ -1367,7 +1370,7 @@ class KnowledgeBaseBuilder:
         paper_ids = [p["id"] for p in metadata["papers"]]
         unique_ids = set(paper_ids)
         if len(unique_ids) != len(paper_ids):
-            duplicates = [id for id in unique_ids if paper_ids.count(id) > 1]
+            duplicates = [paper_id for paper_id in unique_ids if paper_ids.count(paper_id) > 1]
             print(f"\nINTEGRITY ERROR: Found duplicate paper IDs: {duplicates}")
             print(f"  {len(paper_ids)} papers but only {len(unique_ids)} unique IDs")
             print("  Knowledge base is corrupted! Please rebuild with build_kb.py --rebuild")
@@ -1424,7 +1427,7 @@ class KnowledgeBaseBuilder:
                     diff = len(metadata["papers"]) - index.ntotal
                     if diff > 0:
                         print(
-                            f"\nNote: Index has {index.ntotal} embeddings, {len(metadata['papers'])} papers exist"
+                            f"\nNote: Index has {index.ntotal} embeddings, {len(metadata['papers'])} papers exist",
                         )
                         print(f"  Will generate embeddings for {diff} missing papers")
             except Exception as error:
@@ -1511,7 +1514,7 @@ class KnowledgeBaseBuilder:
             return {"size": stat.st_size, "mtime": stat.st_mtime}
         return {}
 
-    def has_papers_with_basic_scores(self, papers: list[dict]) -> tuple[bool, int]:
+    def has_papers_with_basic_scores(self, papers: list[dict[str, Any]]) -> tuple[bool, int]:
         """Check if KB has papers with basic quality scores that can be upgraded.
 
         Args:
@@ -1537,7 +1540,7 @@ class KnowledgeBaseBuilder:
 
         return basic_score_count > 0, basic_score_count
 
-    def get_papers_with_basic_scores(self, papers: list[dict]) -> set[str]:
+    def get_papers_with_basic_scores(self, papers: list[dict[str, Any]]) -> set[str]:
         """Get zotero keys of papers with basic quality scores.
 
         Args:
@@ -1607,10 +1610,11 @@ class KnowledgeBaseBuilder:
                         test_s2_data = asyncio.run(
                             asyncio.wait_for(
                                 get_semantic_scholar_data(
-                                    doi=test_paper.get("doi", ""), title=test_paper.get("title", "")
+                                    doi=test_paper.get("doi", ""),
+                                    title=test_paper.get("title", ""),
                                 ),
                                 timeout=10.0,  # 10 second timeout
-                            )
+                            ),
                         )
                     except TimeoutError:
                         print("WARNING: API test timed out - enhanced scoring unavailable")
@@ -1669,7 +1673,7 @@ class KnowledgeBaseBuilder:
                 regular_count = len(to_process - quality_upgrades)
                 if regular_count > 0:
                     print(
-                        f"Processing {regular_count} paper changes + {quality_count} quality score upgrades..."
+                        f"Processing {regular_count} paper changes + {quality_count} quality score upgrades...",
                     )
                 else:
                     print(f"Processing {quality_count} quality score upgrades...")
@@ -1761,7 +1765,7 @@ class KnowledgeBaseBuilder:
                 import threading
                 from tqdm import tqdm
 
-                def process_quality_upgrade(paper):
+                def process_quality_upgrade(paper: dict[str, Any]) -> tuple[str, int | None, str]:
                     """Process quality upgrade for a single paper."""
                     key = paper["zotero_key"]
                     try:
@@ -1770,18 +1774,18 @@ class KnowledgeBaseBuilder:
 
                         # Fetch Semantic Scholar data
                         s2_data = asyncio.run(
-                            get_semantic_scholar_data(doi=paper.get("doi", ""), title=paper.get("title", ""))
+                            get_semantic_scholar_data(doi=paper.get("doi", ""), title=paper.get("title", "")),
                         )
 
                         # Calculate enhanced quality score
                         if s2_data and not s2_data.get("error"):
                             paper_metadata = papers_dict[key]
                             quality_score, quality_explanation = calculate_quality_score(
-                                paper_metadata, s2_data
+                                paper_metadata,
+                                s2_data,
                             )
                             return key, quality_score, quality_explanation
-                        else:
-                            return key, None, "API data unavailable"
+                        return key, None, "API data unavailable"
 
                     except Exception:
                         return key, None, "Scoring failed"
@@ -1865,7 +1869,7 @@ class KnowledgeBaseBuilder:
 
         if quality_upgrades:
             print(
-                f"CACHE: Smart caching: Excluding {len(quality_upgrades)} quality-only updates from embedding generation"
+                f"CACHE: Smart caching: Excluding {len(quality_upgrades)} quality-only updates from embedding generation",
             )
         if changed_keys:
             print(f"EMBED: Will generate embeddings for {len(changed_keys)} papers with content changes")
@@ -1923,7 +1927,9 @@ class KnowledgeBaseBuilder:
         if texts_to_embed:
             batch_size = self.get_optimal_batch_size()
             new_embeddings = self.embedding_model.encode(
-                texts_to_embed, show_progress_bar=True, batch_size=batch_size
+                texts_to_embed,
+                show_progress_bar=True,
+                batch_size=batch_size,
             )
 
             # Fill in the placeholders
@@ -2007,7 +2013,7 @@ class KnowledgeBaseBuilder:
         """
         if not self.zotero_db_path.exists():
             print(
-                f"WARNING: Zotero database not found\n  Expected location: {self.zotero_db_path}\n  PDF paths will not be available"
+                f"WARNING: Zotero database not found\n  Expected location: {self.zotero_db_path}\n  PDF paths will not be available",
             )
             return {}
 
@@ -2052,7 +2058,10 @@ class KnowledgeBaseBuilder:
         return pdf_map
 
     def extract_pdf_text(
-        self, pdf_path: str | Path, paper_key: str | None = None, use_cache: bool = True
+        self,
+        pdf_path: str | Path,
+        paper_key: str | None = None,
+        use_cache: bool = True,
     ) -> str | None:
         """Extract text from PDF using PyMuPDF with caching support.
 
@@ -2075,7 +2084,7 @@ class KnowledgeBaseBuilder:
             if self.cache and paper_key in self.cache:
                 cache_entry = self.cache[paper_key]
                 # Check if file metadata matches
-                stat = os.stat(pdf_path)
+                stat = Path(pdf_path).stat()
                 if (
                     cache_entry.get("file_size") == stat.st_size
                     and cache_entry.get("file_mtime") == stat.st_mtime
@@ -2095,7 +2104,7 @@ class KnowledgeBaseBuilder:
             if use_cache and paper_key and stripped_text:
                 if self.cache is None:
                     self.load_cache()
-                stat = os.stat(pdf_path)
+                stat = Path(pdf_path).stat()
                 if self.cache is not None:
                     self.cache[paper_key] = {
                         "text": stripped_text,
@@ -2313,7 +2322,7 @@ class KnowledgeBaseBuilder:
             response = requests.get(f"{base_url}/", timeout=5)
             if response.status_code != 200:
                 raise ConnectionError(
-                    "Zotero local API not accessible. Ensure Zotero is running and 'Allow other applications' is enabled in Advanced settings."
+                    "Zotero local API not accessible. Ensure Zotero is running and 'Allow other applications' is enabled in Advanced settings.",
                 )
         except requests.exceptions.RequestException as error:
             raise ConnectionError(f"Cannot connect to Zotero local API: {error}") from error
@@ -2348,7 +2357,7 @@ class KnowledgeBaseBuilder:
                         str(error),
                         suggestion="Check that Zotero is running and accessible",
                         context={"API URL": api_url},
-                    )
+                    ),
                 )
                 raise RuntimeError("Cannot fetch Zotero items") from error
 
@@ -2398,7 +2407,9 @@ class KnowledgeBaseBuilder:
         return papers
 
     def augment_papers_with_pdfs(
-        self, papers: list[dict[str, Any]], use_cache: bool = True
+        self,
+        papers: list[dict[str, Any]],
+        use_cache: bool = True,
     ) -> tuple[int, int]:
         """Add full text from PDFs to paper dictionaries.
 
@@ -2442,7 +2453,7 @@ class KnowledgeBaseBuilder:
                     if paper["zotero_key"] in self.cache:
                         cache_entry = self.cache[paper["zotero_key"]]
                         try:
-                            stat = os.stat(pdf_path)
+                            stat = Path(pdf_path).stat()
                             if (
                                 cache_entry.get("file_size") == stat.st_size
                                 and cache_entry.get("file_mtime") == stat.st_mtime
@@ -2460,7 +2471,7 @@ class KnowledgeBaseBuilder:
 
         if use_cache and cache_hits > 0:
             print(
-                f"Extracted text from {papers_with_pdfs:,}/{len(papers):,} papers ({cache_hits:,} from cache)"
+                f"Extracted text from {papers_with_pdfs:,}/{len(papers):,} papers ({cache_hits:,} from cache)",
             )
         else:
             print(f"Extracted text from {papers_with_pdfs:,}/{len(papers):,} papers")
@@ -2533,16 +2544,16 @@ class KnowledgeBaseBuilder:
         report_lines.append("## Summary Statistics\n")
         report_lines.append(f"- **Total papers:** {total_papers:,}")
         report_lines.append(
-            f"- **Papers with good PDFs:** {len(good_pdfs):,} ({len(good_pdfs) * 100 / total_papers:.1f}%)"
+            f"- **Papers with good PDFs:** {len(good_pdfs):,} ({len(good_pdfs) * 100 / total_papers:.1f}%)",
         )
         report_lines.append(
-            f"- **Papers with small PDFs:** {len(small_pdfs):,} ({len(small_pdfs) * 100 / total_papers:.1f}%)"
+            f"- **Papers with small PDFs:** {len(small_pdfs):,} ({len(small_pdfs) * 100 / total_papers:.1f}%)",
         )
         report_lines.append(
-            f"- **Papers missing PDFs:** {len(missing_pdfs):,} ({len(missing_pdfs) * 100 / total_papers:.1f}%)"
+            f"- **Papers missing PDFs:** {len(missing_pdfs):,} ({len(missing_pdfs) * 100 / total_papers:.1f}%)",
         )
         report_lines.append(
-            f"- **Text extraction threshold:** {MIN_FULL_TEXT_LENGTH:,} characters ({MIN_FULL_TEXT_LENGTH // 1000}KB)\n"
+            f"- **Text extraction threshold:** {MIN_FULL_TEXT_LENGTH:,} characters ({MIN_FULL_TEXT_LENGTH // 1000}KB)\n",
         )
 
         # Section 1: Missing PDFs
@@ -2552,7 +2563,7 @@ class KnowledgeBaseBuilder:
 
             # Sort by year (newest first), then by title
             missing_pdfs.sort(
-                key=lambda p: (-p.get("year", 0) if p.get("year") else -9999, p.get("title", ""))
+                key=lambda p: (-p.get("year", 0) if p.get("year") else -9999, p.get("title", "")),
             )
 
             # Limit to first 50 to avoid huge reports
@@ -2567,7 +2578,7 @@ class KnowledgeBaseBuilder:
                 report_lines.append(
                     f"   - Authors: {first_author} et al."
                     if len(authors) > 1
-                    else f"   - Author: {first_author}"
+                    else f"   - Author: {first_author}",
                 )
                 report_lines.append(f"   - Journal: {journal}")
                 if paper.get("doi"):
@@ -2584,7 +2595,7 @@ class KnowledgeBaseBuilder:
         if small_pdfs:
             report_lines.append("## Papers with Small PDFs\n")
             report_lines.append(
-                f"These papers have PDFs but extracted less than {MIN_FULL_TEXT_LENGTH // 1000}KB of text:"
+                f"These papers have PDFs but extracted less than {MIN_FULL_TEXT_LENGTH // 1000}KB of text:",
             )
             report_lines.append("(Usually indicates supplementary materials, not full papers)\n")
 
@@ -2603,7 +2614,7 @@ class KnowledgeBaseBuilder:
                 report_lines.append(
                     f"   - Authors: {first_author} et al."
                     if len(authors) > 1
-                    else f"   - Author: {first_author}"
+                    else f"   - Author: {first_author}",
                 )
                 report_lines.append(f"   - Journal: {journal}")
                 report_lines.append(f"   - Text extracted: {text_len:,} characters")
@@ -2623,22 +2634,22 @@ class KnowledgeBaseBuilder:
             report_lines.append("1. **Attach PDFs in Zotero**: Use Zotero's 'Find Available PDF' feature")
             report_lines.append("2. **Manual download**: Search journal websites or preprint servers")
             report_lines.append(
-                "3. **Check attachments**: Verify PDFs are attached to parent items, not child items"
+                "3. **Check attachments**: Verify PDFs are attached to parent items, not child items",
             )
             report_lines.append(
-                "4. **Access permissions**: Ensure institutional access for paywalled papers\n"
+                "4. **Access permissions**: Ensure institutional access for paywalled papers\n",
             )
 
         if small_pdfs:
             report_lines.append("**For papers with small PDFs:**\n")
             report_lines.append(
-                "1. **Verify content**: Check if PDF contains full paper or just supplementary material"
+                "1. **Verify content**: Check if PDF contains full paper or just supplementary material",
             )
             report_lines.append(
-                "2. **Replace with full paper**: Download complete version if current is incomplete"
+                "2. **Replace with full paper**: Download complete version if current is incomplete",
             )
             report_lines.append(
-                "3. **OCR for scanned PDFs**: Some PDFs may be image-based and need text recognition"
+                "3. **OCR for scanned PDFs**: Some PDFs may be image-based and need text recognition",
             )
             report_lines.append("4. **Check file integrity**: Re-download if PDF appears corrupted\n")
 
@@ -2656,7 +2667,9 @@ class KnowledgeBaseBuilder:
         return report_path
 
     def build_from_papers(
-        self, papers: list[dict[str, Any]], pdf_stats: tuple[int, int] | None = None
+        self,
+        papers: list[dict[str, Any]],
+        pdf_stats: tuple[int, int] | None = None,
     ) -> None:
         """Build complete knowledge base from list of papers.
 
@@ -2737,10 +2750,11 @@ class KnowledgeBaseBuilder:
                     test_s2_data = asyncio.run(
                         asyncio.wait_for(
                             get_semantic_scholar_data(
-                                doi=test_paper.get("doi", ""), title=test_paper.get("title", "")
+                                doi=test_paper.get("doi", ""),
+                                title=test_paper.get("title", ""),
                             ),
                             timeout=10.0,  # 10 second timeout
-                        )
+                        ),
                     )
                 except TimeoutError:
                     print("WARNING: API test timed out - enhanced scoring unavailable")
@@ -2749,7 +2763,9 @@ class KnowledgeBaseBuilder:
 
                 if test_s2_data and not test_s2_data.get("error"):
                     print("✅ Enhanced quality scoring API is available")
-                    print("DATA: Will fetch citation counts, venue rankings, and author metrics for all papers")
+                    print(
+                        "DATA: Will fetch citation counts, venue rankings, and author metrics for all papers",
+                    )
                     estimated_minutes = (len(papers) * 0.15) / 60  # 150ms per paper
                     print(f"TIME: Estimated time: {estimated_minutes:.1f} minutes (due to API rate limiting)")
                 else:
@@ -2871,32 +2887,35 @@ class KnowledgeBaseBuilder:
             estimated_minutes = (len(papers) * 0.1) / 60  # 100ms per paper base rate
             parallel_minutes = estimated_minutes / 3  # 3 workers
             print(f"TIME: Estimated time: {parallel_minutes:.1f} minutes (3x parallel processing)")
-            
+
             # Import required modules for parallel processing
             import concurrent.futures
-            
-            def process_quality_score_rebuild(paper_tuple):
+
+            def process_quality_score_rebuild(
+                paper_tuple: tuple[int, dict[str, Any]],
+            ) -> tuple[int, int | None, str]:
                 """Process quality scoring for a single paper during rebuild."""
                 paper_index, paper_data = paper_tuple
                 try:
                     # Add rate limiting delay to respect Semantic Scholar API
                     time.sleep(0.1)  # 100ms delay between requests
-                    
+
                     # Fetch Semantic Scholar data
-                    s2_data = asyncio.run(get_semantic_scholar_data(
-                        doi=paper_data.get("doi", ""), 
-                        title=paper_data.get("title", "")
-                    ))
-                    
+                    s2_data = asyncio.run(
+                        get_semantic_scholar_data(
+                            doi=paper_data.get("doi", ""),
+                            title=paper_data.get("title", ""),
+                        ),
+                    )
+
                     # Calculate enhanced quality score
-                    if s2_data and not s2_data.get('error'):
+                    if s2_data and not s2_data.get("error"):
                         # Get the metadata for scoring
                         paper_metadata = metadata["papers"][paper_index]
                         quality_score, quality_explanation = calculate_quality_score(paper_metadata, s2_data)
                         return paper_index, quality_score, quality_explanation
-                    else:
-                        return paper_index, None, "API data unavailable"
-                        
+                    return paper_index, None, "API data unavailable"
+
                 except Exception:
                     return paper_index, None, "Enhanced scoring failed"
 
@@ -2908,7 +2927,7 @@ class KnowledgeBaseBuilder:
                     executor.submit(process_quality_score_rebuild, (i, paper)): i
                     for i, paper in enumerate(papers)
                 }
-                
+
                 # Collect results with progress bar
                 for future in tqdm(
                     concurrent.futures.as_completed(future_to_paper),
@@ -2922,7 +2941,7 @@ class KnowledgeBaseBuilder:
                     except Exception:
                         paper_index = future_to_paper[future]
                         quality_results[paper_index] = (None, "Processing failed")
-            
+
             # Apply quality results to metadata
             for paper_index, (quality_score, quality_explanation) in quality_results.items():
                 metadata["papers"][paper_index]["quality_score"] = quality_score
@@ -2963,7 +2982,7 @@ class KnowledgeBaseBuilder:
             cache_hits = len(cached_embeddings)
             if cache_hits > 0:
                 print(
-                    f"  Using cached embeddings: {cache_hits:,}/{len(abstracts):,} papers ({cache_hits * 100 // len(abstracts)}%)"
+                    f"  Using cached embeddings: {cache_hits:,}/{len(abstracts):,} papers ({cache_hits * 100 // len(abstracts)}%)",
                 )
 
             # Compute new embeddings if needed
@@ -2990,7 +3009,7 @@ class KnowledgeBaseBuilder:
                     minutes_min = int(estimated_time_min / 60)
                     minutes_max = int(estimated_time_max / 60)
                     print(
-                        f"Embedding generation will take approximately {minutes_min}-{minutes_max} minutes ({num_papers:,} papers on {self.device.upper()})"
+                        f"Embedding generation will take approximately {minutes_min}-{minutes_max} minutes ({num_papers:,} papers on {self.device.upper()})",
                     )
 
                     if estimated_time_min > 300:  # More than 5 minutes
@@ -3005,7 +3024,9 @@ class KnowledgeBaseBuilder:
                 print(f"  Total batches to process: {total_batches}")
 
                 new_embeddings = self.embedding_model.encode(
-                    new_abstracts, show_progress_bar=True, batch_size=batch_size
+                    new_abstracts,
+                    show_progress_bar=True,
+                    batch_size=batch_size,
                 )
             else:
                 new_embeddings = []
@@ -3060,12 +3081,12 @@ class KnowledgeBaseBuilder:
         print("\nKnowledge base built successfully!")
         print(f"  - Papers indexed: {len(papers)}")
         print(
-            f"  - PDFs extracted: {papers_with_pdfs}/{len(papers)} ({papers_with_pdfs / len(papers) * 100:.1f}%)"
+            f"  - PDFs extracted: {papers_with_pdfs}/{len(papers)} ({papers_with_pdfs / len(papers) * 100:.1f}%)",
         )
         print(f"  - Embeddings created: {embeddings_created}")
         if pdf_cache_hits > 0:
             print(
-                f"  - Cache hits: {pdf_cache_hits}/{papers_with_pdfs} ({pdf_cache_hits / papers_with_pdfs * 100:.1f}%)"
+                f"  - Cache hits: {pdf_cache_hits}/{papers_with_pdfs} ({pdf_cache_hits / papers_with_pdfs * 100:.1f}%)",
             )
         print(f"  - Build time: {build_time:.1f} minutes")
         print(f"  - Index: {self.index_file_path}")
@@ -3077,7 +3098,7 @@ class KnowledgeBaseBuilder:
             warnings.append(f"Low PDF coverage: only {papers_with_pdfs}/{len(papers)} papers have PDFs")
         if embeddings_created != len(papers):
             warnings.append(
-                f"Embedding count mismatch: {embeddings_created} embeddings for {len(papers)} papers"
+                f"Embedding count mismatch: {embeddings_created} embeddings for {len(papers)} papers",
             )
         if not self.index_file_path.exists():
             warnings.append("FAISS index file not created")
@@ -3240,7 +3261,7 @@ def prompt_gap_analysis_after_build(total_papers: int, build_time: float) -> Non
         print("• Semantically similar papers you don't have")
 
         print(
-            "\nIf you choose 'Y', will run: python src/analyze_gaps.py (comprehensive analysis, no filters)"
+            "\nIf you choose 'Y', will run: python src/analyze_gaps.py (comprehensive analysis, no filters)",
         )
         print("\nFor filtered analysis, run manually later with flags:")
         print("  --min-citations N     Only papers with N+ citations")
@@ -3267,7 +3288,9 @@ def prompt_gap_analysis_after_build(total_papers: int, build_time: float) -> Non
     help="Custom Zotero API URL for WSL/Docker (default: http://localhost:23119/api)",
 )
 @click.option(
-    "--knowledge-base-path", default="kb_data", help="Directory to store KB files (default: kb_data)"
+    "--knowledge-base-path",
+    default="kb_data",
+    help="Directory to store KB files (default: kb_data)",
 )
 @click.option("--zotero-data-dir", help="Path to Zotero data folder with PDFs (default: ~/Zotero)")
 @click.option("--export", "export_path", help="Export KB to tar.gz for backup/sharing (e.g., my_kb.tar.gz)")
@@ -3350,7 +3373,7 @@ def main(
             tar.add(kb_path, arcname="kb_data")
 
         # Calculate size
-        size_mb = os.path.getsize(export_path) / (1024 * 1024)
+        size_mb = Path(export_path).stat().st_size / (1024 * 1024)
         print(f"✓ Exported KB to {export_path} ({size_mb:.1f} MB)")
         print("\nTransfer this file to your other computer and import with:")
         print(f"  python src/build_kb.py --import {export_path}")
@@ -3387,7 +3410,7 @@ def main(
             # Safe extraction with path validation
             for member in tar.getmembers():
                 # Validate that extracted files stay within target directory
-                member_path = os.path.normpath(os.path.join(str(kb_path.parent), member.name))
+                member_path = os.path.normpath(str(kb_path.parent / member.name))
                 if not member_path.startswith(str(kb_path.parent)):
                     raise ValueError(f"Unsafe tar file: {member.name}")
             tar.extractall(kb_path.parent)  # noqa: S202

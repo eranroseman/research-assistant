@@ -35,7 +35,7 @@ class TestEnhancedQualityScoring:
             "sample_size": 1000,
             "has_full_text": True,
         }
-        
+
         # Mock Semantic Scholar API data
         s2_data = {
             "citationCount": 100,
@@ -43,7 +43,7 @@ class TestEnhancedQualityScoring:
             "authors": [{"hIndex": 30}],
             "externalIds": {"DOI": "10.1000/test"},
             "publicationTypes": ["JournalArticle"],
-            "fieldsOfStudy": ["Medicine"]
+            "fieldsOfStudy": ["Medicine"],
         }
 
         score, explanation = calculate_enhanced_quality_score(paper, s2_data)
@@ -70,15 +70,15 @@ class TestEnhancedQualityScoring:
             "study_type": "rct",
             "sample_size": 500,
         }
-        
-        # Mock Semantic Scholar API data  
+
+        # Mock Semantic Scholar API data
         s2_data = {
             "citationCount": 50,
             "venue": {"name": "Journal of Medicine"},
             "authors": [{"hIndex": 15}],
             "externalIds": {"DOI": "10.1000/test2"},
             "publicationTypes": ["JournalArticle"],
-            "fieldsOfStudy": ["Medicine"]
+            "fieldsOfStudy": ["Medicine"],
         }
 
         score, explanation = calculate_enhanced_quality_score(paper, s2_data)
@@ -97,7 +97,7 @@ class TestEnhancedQualityScoring:
         Then: Handles missing data gracefully
         """
         paper = {"title": "Basic Paper", "year": 2020, "study_type": "study"}
-        
+
         # Minimal API data
         s2_data = {
             "citationCount": 0,
@@ -105,7 +105,7 @@ class TestEnhancedQualityScoring:
             "authors": [],
             "externalIds": {},
             "publicationTypes": [],
-            "fieldsOfStudy": []
+            "fieldsOfStudy": [],
         }
 
         score, explanation = calculate_enhanced_quality_score(paper, s2_data)

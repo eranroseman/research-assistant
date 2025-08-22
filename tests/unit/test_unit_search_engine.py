@@ -154,10 +154,14 @@ class TestResultRanking:
             if paper["study_type"] == "systematic_review":
                 s2_data = {"citationCount": 200, "venue": {"name": "Cochrane"}, "authors": [{"hIndex": 50}]}
             elif paper["study_type"] == "rct":
-                s2_data = {"citationCount": 50, "venue": {"name": "Medical Journal"}, "authors": [{"hIndex": 20}]}
+                s2_data = {
+                    "citationCount": 50,
+                    "venue": {"name": "Medical Journal"},
+                    "authors": [{"hIndex": 20}],
+                }
             else:
                 s2_data = {"citationCount": 5, "venue": {"name": "Case Reports"}, "authors": [{"hIndex": 5}]}
-            
+
             score, _ = calculate_enhanced_quality_score(paper, s2_data)
             scored_results.append((score, paper))
 

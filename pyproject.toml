@@ -101,6 +101,11 @@ select = [
     "ASYNC", # flake8-async (async/await best practices)
     "T10",   # flake8-debugger (debugger imports)
     "D",     # pydocstyle (docstring conventions)
+
+    # Additional code quality rules
+    "COM",   # flake8-commas (trailing comma enforcement)
+    "Q",     # flake8-quotes (quote consistency)
+    "A",     # flake8-builtins (builtin shadowing prevention)
 ]
 
 # Ignore specific rules
@@ -109,23 +114,7 @@ ignore = [
     "W291", # Trailing whitespace (formatter handles)
     "W293", # Blank line with whitespace (formatter handles)
     "I001", # Import block is un-sorted (we have custom organization)
-
-    # Rules that would require refactoring
-    "D100", # Missing docstring in public module (some modules are self-explanatory)
-    "D101", # Missing docstring in public class (cli_kb_index has some without)
-    "D102", # Missing docstring in public method (some are self-explanatory)
-    "D103", # Missing docstring in public function (a few helper functions lack them)
-    "D104", # Missing docstring in public package
-    "D105", # Missing docstring in magic method
-    "D107", # Missing docstring in __init__
-    "D202", # No blank lines allowed after function docstring (existing style)
-    "D203", # 1 blank line required before class docstring (conflicts with D211)
-    "D212", # Multi-line summary should start at the first line (existing uses second line)
-    "D213", # Multi-line docstring summary should start at the second line (conflicts with D212)
-    "D301", # Use r""" for docstrings with backslashes (existing style)
-    "D400", # First line should end with a period (existing docstrings vary)
-    "D401", # First line should be in imperative mood (existing style varies)
-    "D415", # First line should end with a period, question mark, or exclamation point
+    "COM812", # Trailing comma (conflicts with formatter)
 
     # Security rules that are handled correctly in the code
     "S301", # pickle is not used, but rule might false positive
@@ -146,9 +135,9 @@ ignore = [
     "PT001", # Use @pytest.fixture() over @pytest.fixture
     "PT023", # Use @pytest.mark over pytest.mark
 
-    "PTH116", # Use os.stat() alternatives (existing usage is fine)
-    "PTH118", # Use Path.joinpath() instead of os.path.join (existing pattern)
-    "PTH202", # Use Path.stat().st_size instead of os.path.getsize (existing pattern)
+    # "PTH116", # Use os.stat() alternatives - REMOVED: now using Path.stat()
+    # "PTH118", # Use Path.joinpath() instead of os.path.join - REMOVED: now using Path operator
+    # "PTH202", # Use Path.stat().st_size instead of os.path.getsize - REMOVED: now using Path.stat()
 
     # Import patterns (existing organization is intentional)
     "PLC0415", # Import outside top-level (lazy imports for performance)
@@ -169,15 +158,12 @@ ignore = [
 
     # Return rules that would change logic
     "RET504", # Unnecessary variable assignment before return
-    "RET505", # Unnecessary else after return
-    "RET506", # Unnecessary else after raise
 
     # Simplification rules that would change readability
-    "SIM108", # Use ternary operator (sometimes less readable)
     "SIM114", # Combine if branches (sometimes clearer separate)
 
     # Logging rules (not all apply to Click output)
-    "G004", # Logging statement uses f-string
+    # "G004", # Logging statement uses f-string - REMOVED: f-strings in logging are fine
 
     # Import rules matching existing organization
     "TID252", # Relative imports (existing code uses them appropriately)
@@ -241,7 +227,7 @@ python_version = "3.11"
 warn_return_any = true
 warn_unused_configs = true
 disallow_untyped_defs = true
-disallow_any_unimported = false
+disallow_any_unimported = true
 no_implicit_optional = true
 warn_redundant_casts = true
 warn_unused_ignores = true
@@ -254,6 +240,7 @@ check_untyped_defs = true
 disallow_incomplete_defs = true
 disallow_untyped_calls = true
 disallow_untyped_decorators = true
+disallow_any_generics = true
 no_implicit_reexport = true
 strict_optional = true
 

@@ -231,7 +231,7 @@ Example log entry:
 
 ### Typical Performance Gains
 ```bash
-# Before (v4.2): Sequential processing  
+# Before (v4.2): Sequential processing
 Quality scoring: 2180 papers × 740ms = ~27 minutes (actual measured)
 Embeddings: All 2184 papers = 30+ minutes
 Total: ~57 minutes

@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
-"""
-Optimized knowledge base index for O(1) paper lookups.
+"""Optimized knowledge base index for O(1) paper lookups.
 
 This module provides fast, constant-time access to papers by ID,
 avoiding the O(n) linear search through all papers. Also provides
@@ -25,8 +24,7 @@ from typing import Any
 
 
 class KnowledgeBaseIndex:
-    """
-    Efficient index for knowledge base operations.
+    """Efficient index for knowledge base operations.
 
     Provides O(1) lookups and maintains consistency between paper IDs
     and FAISS indices. Builds a dictionary mapping on initialization
@@ -39,8 +37,7 @@ class KnowledgeBaseIndex:
     """
 
     def __init__(self, kb_path: str = "kb_data"):
-        """
-        Initialize KB index with O(1) lookup structures.
+        """Initialize KB index with O(1) lookup structures.
 
         Loads metadata once and builds dictionary mappings for
         constant-time access to papers by ID.
@@ -66,7 +63,7 @@ class KnowledgeBaseIndex:
         """
         if not self.metadata_file.exists():
             raise FileNotFoundError(
-                f"Knowledge base not found at {self.kb_path}. Run 'python src/build_kb.py' first."
+                f"Knowledge base not found at {self.kb_path}. Run 'python src/build_kb.py' first.",
             )
 
         try:
@@ -82,8 +79,7 @@ class KnowledgeBaseIndex:
         self.id_to_index = {paper["id"]: idx for idx, paper in enumerate(self.papers)}
 
     def get_paper_by_id(self, paper_id: str) -> dict[str, Any] | None:
-        """
-        Get paper by ID - O(1) lookup.
+        """Get paper by ID - O(1) lookup.
 
         Args:
             paper_id: Paper ID (will be zero-padded if needed)
@@ -100,8 +96,7 @@ class KnowledgeBaseIndex:
         return None
 
     def get_paper_with_index(self, paper_id: str) -> tuple[dict[str, Any], int] | None:
-        """
-        Get paper and its FAISS index - O(1) lookup.
+        """Get paper and its FAISS index - O(1) lookup.
 
         Args:
             paper_id: Paper ID
@@ -117,8 +112,7 @@ class KnowledgeBaseIndex:
         return None
 
     def get_paper_by_index(self, index: int) -> dict[str, Any] | None:
-        """
-        Get paper by FAISS index - O(1) lookup.
+        """Get paper by FAISS index - O(1) lookup.
 
         Args:
             index: FAISS index
@@ -131,8 +125,7 @@ class KnowledgeBaseIndex:
         return None
 
     def get_papers_by_ids(self, paper_ids: list[str]) -> list[dict[str, Any]]:
-        """
-        Get multiple papers by IDs efficiently.
+        """Get multiple papers by IDs efficiently.
 
         Args:
             paper_ids: List of paper IDs
@@ -148,14 +141,26 @@ class KnowledgeBaseIndex:
         return papers
 
     def search_by_author(self, author_name: str) -> list[dict[str, Any]]:
-        """
-        Search papers by author name.
+        """Search papers by author name.
+
+        Performs case-insensitive partial matching against all author names
+        in each paper. Useful for finding all works by a researcher.
 
         Args:
             author_name: Author name (case-insensitive partial match)
 
         Returns:
             List of matching papers
+
+        Examples:
+            >>> kb_index.search_by_author("Smith")
+            [{"id": "0001", "authors": ["John Smith", "Jane Doe"], ...}, ...]
+
+            >>> kb_index.search_by_author("jane doe")  # Case insensitive
+            [{"id": "0042", "authors": ["Jane Doe", "Bob Wilson"], ...}, ...]
+
+            >>> kb_index.search_by_author("rodriguez")  # Partial match
+            [{"id": "0123", "authors": ["Maria Rodriguez-Garcia"], ...}, ...]
         """
         author_lower = author_name.lower()
         results = []
@@ -168,8 +173,7 @@ class KnowledgeBaseIndex:
         return results
 
     def search_by_year_range(self, start_year: int, end_year: int) -> list[dict[str, Any]]:
-        """
-        Get papers within year range.
+        """Get papers within year range.
 
         Args:
             start_year: Start year (inclusive)
@@ -186,14 +190,29 @@ class KnowledgeBaseIndex:
         return results
 
     def _normalize_id(self, paper_id: str) -> str:
-        """
-        Normalize paper ID to 4-digit format.
+        """Normalize paper ID to 4-digit format.
 
         Args:
             paper_id: Raw paper ID
 
         Returns:
             Normalized 4-digit ID
+
+        Raises:
+            ValueError: If paper ID is invalid
+
+        Note:
+            Error cases:
+            - "abc" → ValueError: Invalid paper ID (non-numeric)
+            - "10000" → ValueError: Invalid paper ID (out of range 1-9999)
+            - "" → ValueError: Invalid paper ID (empty string)
+            - "0" → ValueError: Invalid paper ID (must be 1-9999)
+
+            Valid transformations:
+            - "1" → "0001"
+            - "42" → "0042"
+            - "0123" → "0123"
+            - " 234 " → "0234" (strips whitespace)
         """
         # Remove any dangerous characters
         paper_id = paper_id.strip()
@@ -213,8 +232,7 @@ class KnowledgeBaseIndex:
         raise ValueError(f"Invalid paper ID: {paper_id}")
 
     def validate_consistency(self) -> dict[str, Any]:
-        """
-        Validate index consistency.
+        """Validate index consistency.
 
         Returns:
             Dictionary with validation results
@@ -257,37 +275,30 @@ class KnowledgeBaseIndex:
 
     def get_papers_by_quality_range(self, min_quality: int, max_quality: int = 100) -> list[dict[str, Any]]:
         """Get papers within quality score range.
-        
+
         Args:
             min_quality: Minimum quality score (inclusive)
             max_quality: Maximum quality score (inclusive, default 100)
-            
+
         Returns:
             List of papers within the specified quality range
         """
-        return [
-            paper for paper in self.papers
-            if min_quality <= paper.get("quality_score", 0) <= max_quality
-        ]
+        return [paper for paper in self.papers if min_quality <= paper.get("quality_score", 0) <= max_quality]
 
     def get_top_quality_papers(self, limit: int = 10) -> list[dict[str, Any]]:
         """Get highest quality papers.
-        
+
         Args:
             limit: Maximum number of papers to return
-            
+
         Returns:
             List of papers sorted by quality score (highest first)
         """
-        return sorted(
-            self.papers, 
-            key=lambda p: p.get("quality_score", 0), 
-            reverse=True
-        )[:limit]
+        return sorted(self.papers, key=lambda p: p.get("quality_score", 0), reverse=True)[:limit]
 
     def get_quality_distribution(self) -> dict[str, int]:
         """Get distribution of papers across quality levels.
-        
+
         Returns:
             Dictionary with quality level names and counts
         """
@@ -295,17 +306,17 @@ class KnowledgeBaseIndex:
         # These match the values in config.py
         excellent_threshold = 85  # QUALITY_EXCELLENT
         very_good_threshold = 70  # QUALITY_VERY_GOOD
-        good_threshold = 60       # QUALITY_GOOD
-        moderate_threshold = 45   # QUALITY_MODERATE
-        low_threshold = 30        # QUALITY_LOW
-        
+        good_threshold = 60  # QUALITY_GOOD
+        moderate_threshold = 45  # QUALITY_MODERATE
+        low_threshold = 30  # QUALITY_LOW
+
         distribution = {
-            "excellent": 0,      # 85+
-            "very_good": 0,      # 70-84
-            "good": 0,           # 60-69
-            "moderate": 0,       # 45-59
-            "low": 0,            # 30-44
-            "very_low": 0        # 0-29
+            "excellent": 0,  # 85+
+            "very_good": 0,  # 70-84
+            "good": 0,  # 60-69
+            "moderate": 0,  # 45-59
+            "low": 0,  # 30-44
+            "very_low": 0,  # 0-29
         }
 
         for paper in self.papers:
@@ -333,7 +344,9 @@ class KnowledgeBaseIndex:
             year_counts[year] = year_counts.get(year, 0) + 1
 
         # Add quality statistics - all papers should have quality scores
-        quality_scores = [p.get("quality_score", 0) for p in self.papers if p.get("quality_score") is not None]
+        quality_scores = [
+            p.get("quality_score", 0) for p in self.papers if p.get("quality_score") is not None
+        ]
 
         base_stats = {
             "total_papers": len(self.papers),
@@ -344,16 +357,18 @@ class KnowledgeBaseIndex:
 
         # Add quality statistics if papers have quality scores
         if quality_scores:
-            base_stats.update({
-                "quality_stats": {
-                    "average_quality": sum(quality_scores) / len(quality_scores),
-                    "highest_quality": max(quality_scores),
-                    "lowest_quality": min(quality_scores),
-                    "papers_with_quality": len(quality_scores),
-                    "total_papers": len(self.papers)
+            base_stats.update(
+                {
+                    "quality_stats": {
+                        "average_quality": sum(quality_scores) / len(quality_scores),
+                        "highest_quality": max(quality_scores),
+                        "lowest_quality": min(quality_scores),
+                        "papers_with_quality": len(quality_scores),
+                        "total_papers": len(self.papers),
+                    },
+                    "quality_distribution": self.get_quality_distribution(),
                 },
-                "quality_distribution": self.get_quality_distribution()
-            })
+            )
         else:
             base_stats["quality_stats"] = {"message": "No papers with quality scores found"}
 

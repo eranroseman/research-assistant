@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
-"""
-Command-line interface for Research Assistant v4.0.
+"""Command-line interface for Research Assistant v4.0.
 
 Provides comprehensive literature search and retrieval capabilities with:
 - Semantic search using Multi-QA MPNet embeddings and FAISS
@@ -243,7 +242,13 @@ def _log_ux_event(event_type: str, **kwargs: Any) -> None:
 
     # Create a LogRecord with extra_data
     record = logging.LogRecord(
-        name="ux_analytics", level=logging.INFO, pathname="", lineno=0, msg="", args=(), exc_info=None
+        name="ux_analytics",
+        level=logging.INFO,
+        pathname="",
+        lineno=0,
+        msg="",
+        args=(),
+        exc_info=None,
     )
     record.extra_data = extra_data
 
@@ -255,56 +260,55 @@ def _log_ux_event(event_type: str, **kwargs: Any) -> None:
 # ============================================================================
 
 
-
-
 def format_quality_indicator(quality_score: int) -> str:
     """Get visual indicator for quality score.
-    
+
     Args:
         quality_score: Quality score 0-100
-        
+
     Returns:
         Visual indicator emoji/symbol for the quality level
     """
     if quality_score >= QUALITY_EXCELLENT:
-        return QUALITY_INDICATORS["excellent"]  # 🌟
-    elif quality_score >= QUALITY_VERY_GOOD:
-        return QUALITY_INDICATORS["very_good"]  # ⭐
-    elif quality_score >= QUALITY_GOOD:
+        return QUALITY_INDICATORS["excellent"]  # A+
+    if quality_score >= QUALITY_VERY_GOOD:
+        return QUALITY_INDICATORS["very_good"]  # A
+    if quality_score >= QUALITY_GOOD:
         return QUALITY_INDICATORS["good"]  # ●
-    elif quality_score >= QUALITY_MODERATE:
+    if quality_score >= QUALITY_MODERATE:
         return QUALITY_INDICATORS["moderate"]  # ◐
-    elif quality_score >= QUALITY_LOW:
+    if quality_score >= QUALITY_LOW:
         return QUALITY_INDICATORS["low"]  # ○
-    else:
-        return QUALITY_INDICATORS["very_low"]  # ·
+    return QUALITY_INDICATORS["very_low"]  # ·
 
 
 def format_paper_with_enhanced_quality(
-    paper: dict[str, Any], score: float, show_quality: bool = False
+    paper: dict[str, Any],
+    score: float,
+    show_quality: bool = False,
 ) -> str:
     """Format paper display with enhanced quality information.
-    
+
     Args:
         paper: Paper metadata dictionary
         score: Relevance score
         show_quality: Whether to show detailed quality explanation
-        
+
     Returns:
         Formatted paper display string with quality indicators
     """
     # Get quality indicator - all papers should have quality scores
     quality_score = paper.get("quality_score", 0)
     quality_indicator = format_quality_indicator(quality_score)
-    
-    # Get study type marker  
+
+    # Get study type marker
     type_marker = STUDY_TYPE_MARKERS.get(paper.get("study_type", "study"), "·")
-    
+
     # Format authors display
     authors_display = ", ".join(paper.get("authors", [])[:2])
     if len(paper.get("authors", [])) > 2:
         authors_display += " et al."
-    
+
     # Build main result line
     year = paper.get("year", "????")
     result = f"{paper['id']} {quality_indicator} {type_marker} {paper['title']} ({authors_display}, {year})"
@@ -316,17 +320,20 @@ def format_paper_with_enhanced_quality(
 
     # Add relevance score
     result += f" [{score:.3f}]"
-    
+
     return result
 
 
-def format_search_results_with_enhanced_quality(results: list, show_quality: bool = False) -> str:
+def format_search_results_with_enhanced_quality(
+    results: list[tuple[int, float, dict[str, Any]]],
+    show_quality: bool = False,
+) -> str:
     """Format search results with enhanced quality scoring.
-    
+
     Args:
         results: List of search result tuples (idx, score, paper)
         show_quality: Whether to show detailed quality explanations
-        
+
     Returns:
         Formatted string with enhanced quality indicators
     """
@@ -365,7 +372,7 @@ class ResearchCLI:
 
         if not self.knowledge_base_path.exists():
             raise FileNotFoundError(
-                f"Knowledge base not found at {knowledge_base_path}. Run build_kb.py first."
+                f"Knowledge base not found at {knowledge_base_path}. Run build_kb.py first.",
             )
 
         # Use cli_kb_index for O(1) lookups
@@ -449,8 +456,15 @@ class ResearchCLI:
 
         Raises:
             ValueError: If paper ID format is invalid
-        """
 
+        Note:
+            Common error scenarios:
+            - "123" → Auto-padded to "0123" (valid)
+            - "abc" → ValueError: Invalid paper ID (non-numeric)
+            - "12345" → ValueError: Invalid paper ID (out of range 1-9999)
+            - "" → ValueError: Invalid paper ID (empty string)
+            - "0000" → ValueError: Paper not found (IDs start at 0001)
+        """
         # Use kb_index for O(1) validation and lookup
         paper = self.kb_index.get_paper_by_id(paper_id)
         if not paper:
@@ -502,17 +516,17 @@ class ResearchCLI:
             return "No papers found."
 
         output = []
-        
+
         for i, (idx, dist, paper) in enumerate(search_results, 1):
             # Convert distance to similarity score for display
             relevance_score = 1 / (1 + dist)
-            
+
             # Use enhanced quality formatting
             formatted_paper = format_paper_with_enhanced_quality(paper, relevance_score, show_quality)
-            
+
             # Add index number
             output.append(f"{i}. {formatted_paper}")
-            
+
             # Add abstract if requested
             if show_abstracts and paper.get("abstract"):
                 abstract = (
@@ -571,12 +585,36 @@ class ResearchCLI:
     def format_ieee_citation(self, paper_metadata: dict[str, Any], citation_number: int) -> str:
         """Format paper metadata as IEEE citation.
 
+        Follows IEEE citation style with author names, title in quotes,
+        journal/venue, volume/issue, pages, and year.
+
         Args:
             paper_metadata: Paper metadata dictionary
             citation_number: Citation number for reference
 
         Returns:
             Formatted IEEE citation string
+
+        Examples:
+            >>> metadata = {
+            ...     "authors": ["J. Smith", "A. Jones"],
+            ...     "title": "Machine Learning in Healthcare",
+            ...     "journal": "Nature Medicine",
+            ...     "volume": "28",
+            ...     "issue": "3",
+            ...     "pages": "123-130",
+            ...     "year": 2022,
+            ... }
+            >>> format_ieee_citation(metadata, 1)
+            '[1] J. Smith, A. Jones, "Machine Learning in Healthcare", Nature Medicine, vol. 28, no. 3, pp. 123-130, 2022.'
+
+            >>> metadata = {
+            ...     "authors": ["A. Smith", "B. Jones", "C. Brown", "D. Wilson"],
+            ...     "title": "Large Study",
+            ...     "year": 2023,
+            ... }
+            >>> format_ieee_citation(metadata, 5)
+            '[5] A. Smith et al., "Large Study", 2023.'  # >3 authors uses "et al."
         """
         citation_text = f"[{citation_number}] "
 
@@ -609,7 +647,7 @@ class ResearchCLI:
 
 @click.group()
 def cli() -> None:
-    """Research Assistant v4.0 - Semantic literature search and analysis.
+    r"""Research Assistant v4.0 - Semantic literature search and analysis.
 
     Advanced semantic search using Multi-QA MPNet embeddings with enhanced quality scoring,
     smart chunking, and comprehensive filtering options.
@@ -695,12 +733,14 @@ def cli() -> None:
             "cross_sectional",
             "case_report",
             "study",
-        ]
+        ],
     ),
     help="Filter by study type (can specify multiple, e.g., --type rct --type systematic_review)",
 )
 @click.option(
-    "--group-by", type=click.Choice(["year", "journal", "study_type"]), help="Group results by field"
+    "--group-by",
+    type=click.Choice(["year", "journal", "study_type"]),
+    help="Group results by field",
 )
 @click.option("--years", help="Filter by year range (e.g., 2020-2024 or 2023)")
 @click.option("--contains", help="Filter by term in title/abstract")
@@ -726,7 +766,7 @@ def search(
     min_quality: int | None,
     export: str | None,
 ) -> None:
-    """Search papers using Multi-QA MPNet semantic embeddings with enhanced quality scoring.
+    r"""Search papers using Multi-QA MPNet semantic embeddings with enhanced quality scoring.
 
     \b
     ENHANCED QUALITY INDICATORS (0-100):
@@ -865,7 +905,9 @@ def search(
                     # Check contains
                     if contains:
                         ret = subprocess.run(
-                            ["grep", "-qi", contains, paper_file], check=False, capture_output=True
+                            ["grep", "-qi", contains, paper_file],
+                            check=False,
+                            capture_output=True,
                         )
                         if ret.returncode != 0:  # Not found
                             continue
@@ -873,7 +915,9 @@ def search(
                     # Check exclude
                     if exclude:
                         ret = subprocess.run(
-                            ["grep", "-qi", exclude, paper_file], check=False, capture_output=True
+                            ["grep", "-qi", exclude, paper_file],
+                            check=False,
+                            capture_output=True,
                         )
                         if ret.returncode == 0:  # Found (exclude it)
                             continue
@@ -895,11 +939,11 @@ def search(
             for idx, dist, paper in search_results:
                 # All papers should already have quality scores from enhanced scoring
                 quality = paper.get("quality_score", 0)
-                
+
                 # Filter by minimum quality
                 if quality >= min_quality:
                     filtered_results.append((idx, dist, paper))
-            
+
             search_results = filtered_results[:top_k]
         else:
             search_results = search_results[:top_k]
@@ -941,7 +985,7 @@ def search(
                             "study_type": paper.get("study_type", ""),
                             "quality_score": paper.get("quality_score", 0),
                             "doi": paper.get("doi", ""),
-                        }
+                        },
                     )
 
             print(f"✓ Exported {len(search_results)} results to {export_path}")
@@ -1007,9 +1051,9 @@ def search(
 
             # Use enhanced quality formatting for all results
             formatted_results = research_cli.format_search_results(
-                search_results, 
-                show_abstracts=verbose, 
-                show_quality=show_quality
+                search_results,
+                show_abstracts=verbose,
+                show_quality=show_quality,
             )
             print(formatted_results)
 
@@ -1081,13 +1125,13 @@ def search(
     "-s",
     multiple=True,
     type=click.Choice(
-        ["abstract", "introduction", "methods", "results", "discussion", "conclusion", "references", "all"]
+        ["abstract", "introduction", "methods", "results", "discussion", "conclusion", "references", "all"],
     ),
     help="Retrieve only specific sections (default: all)",
 )
 @click.option("--add-citation", is_flag=True, help="Append IEEE citation to paper content")
 def get(paper_id: str, output: str | None, sections: tuple[str, ...], add_citation: bool) -> None:
-    """Get a specific paper by its 4-digit ID.
+    r"""Get a specific paper by its 4-digit ID.
 
     Retrieve the full content of a paper or specific sections only.
     Paper IDs are always 4-digit zero-padded (e.g., 0001, 0234, 1426).
@@ -1261,10 +1305,16 @@ def get(paper_id: str, output: str | None, sections: tuple[str, ...], add_citati
 
 @cli.command(name="get-batch")
 @click.argument("paper_ids", nargs=-1, required=True)
-@click.option("--format", type=click.Choice(["text", "json"]), default="text", help="Output format")
+@click.option(
+    "--format",
+    "output_format",
+    type=click.Choice(["text", "json"]),
+    default="text",
+    help="Output format",
+)
 @click.option("--add-citation", is_flag=True, help="Append IEEE citation to each paper")
-def get_batch(paper_ids: tuple[str, ...], format: str, add_citation: bool) -> None:
-    """Get multiple papers by their IDs in a single batch.
+def get_batch(paper_ids: tuple[str, ...], output_format: str, add_citation: bool) -> None:
+    r"""Get multiple papers by their IDs in a single batch.
 
     Efficiently retrieve multiple papers at once. Useful for reviewing
     search results or specific paper collections.
@@ -1320,7 +1370,7 @@ def get_batch(paper_ids: tuple[str, ...], format: str, add_citation: bool) -> No
                 errors.append(f"Error reading {paper_id}: {error}")
 
         # Display results
-        if format == "json":
+        if output_format == "json":
             output = {"papers": results, "errors": errors, "count": len(results)}
             print(json.dumps(output, indent=2))
         else:
@@ -1360,9 +1410,15 @@ def get_batch(paper_ids: tuple[str, ...], format: str, add_citation: bool) -> No
 
 @cli.command()
 @click.argument("paper_ids", nargs=-1, required=True)
-@click.option("--format", type=click.Choice(["text", "json"]), default="text", help="Output format")
-def cite(paper_ids: tuple[str, ...], format: str) -> None:
-    """Generate IEEE-style citations for specific papers by their IDs.
+@click.option(
+    "--format",
+    "output_format",
+    type=click.Choice(["text", "json"]),
+    default="text",
+    help="Output format",
+)
+def cite(paper_ids: tuple[str, ...], output_format: str) -> None:
+    r"""Generate IEEE-style citations for specific papers by their IDs.
 
     Retrieve papers by ID and format them as ready-to-use IEEE citations.
     Perfect for creating reference lists from known papers.
@@ -1380,7 +1436,11 @@ def cite(paper_ids: tuple[str, ...], format: str) -> None:
 
     # Log cite command start
     _log_ux_event(
-        "command_start", command="cite", paper_count=len(paper_ids), paper_ids=list(paper_ids), format=format
+        "command_start",
+        command="cite",
+        paper_count=len(paper_ids),
+        paper_ids=list(paper_ids),
+        format=format,
     )
 
     results = []
@@ -1414,7 +1474,7 @@ def cite(paper_ids: tuple[str, ...], format: str) -> None:
                 errors.append(f"Error processing {paper_id}: {error}")
 
         # Display results
-        if format == "json":
+        if output_format == "json":
             output = {"citations": results, "errors": errors, "count": len(results)}
             print(json.dumps(output, indent=2))
         else:
@@ -1474,7 +1534,7 @@ def cite(paper_ids: tuple[str, ...], format: str) -> None:
 @click.argument("author_name")
 @click.option("--exact", is_flag=True, help="Exact match only")
 def author_search(author_name: str, exact: bool) -> None:
-    """Find all papers by a specific author.
+    r"""Find all papers by a specific author.
 
     Search for papers authored by a specific person. Supports partial
     name matching by default, or exact matching with --exact flag.
@@ -1558,7 +1618,7 @@ def author_search(author_name: str, exact: bool) -> None:
 
 @cli.command()
 def info() -> None:
-    """Show comprehensive knowledge base statistics and metadata.
+    r"""Show comprehensive knowledge base statistics and metadata.
 
     Display detailed information about the current knowledge base including:
     - Total number of papers and size on disk
@@ -1615,19 +1675,22 @@ def info() -> None:
             from .cli_kb_index import KnowledgeBaseIndex
         except ImportError:
             from cli_kb_index import KnowledgeBaseIndex
-            
+
         try:
             kb_index = KnowledgeBaseIndex(str(knowledge_base_path))
             enhanced_stats = kb_index.stats()
-            
+
             # Display quality statistics if papers have quality scores
-            if "quality_stats" in enhanced_stats and enhanced_stats["quality_stats"].get("papers_with_quality", 0) > 0:
+            if (
+                "quality_stats" in enhanced_stats
+                and enhanced_stats["quality_stats"].get("papers_with_quality", 0) > 0
+            ):
                 quality_stats = enhanced_stats["quality_stats"]
                 print("\nEnhanced Quality Scoring:")
                 print(f"  Average quality: {quality_stats['average_quality']:.1f}/100")
                 print(f"  Highest quality: {quality_stats['highest_quality']}/100")
                 print(f"  Lowest quality: {quality_stats['lowest_quality']}/100")
-                
+
                 # Display quality distribution
                 if "quality_distribution" in enhanced_stats:
                     distribution = enhanced_stats["quality_distribution"]
@@ -1698,7 +1761,7 @@ def info() -> None:
     help="Sections to prioritize (default: abstract, introduction, conclusion)",
 )
 def smart_search(query_text: str, top_k: int, max_tokens: int, sections: tuple[str, ...]) -> None:
-    """Smart search with automatic section chunking for large result sets.
+    r"""Smart search with automatic section chunking for large result sets.
 
     Intelligently handles large numbers of papers by chunking them into
     sections (Introduction, Methods, Results) for better readability.
@@ -1789,7 +1852,7 @@ def smart_search(query_text: str, top_k: int, max_tokens: int, sections: tuple[s
                                     "section": section,
                                     "text": section_text[:5000],  # Cap section length
                                     "relevance": 1 / (1 + dist),
-                                }
+                                },
                             )
                             total_chars += len(section_text)
                             paper_loaded = True
@@ -1807,7 +1870,7 @@ def smart_search(query_text: str, top_k: int, max_tokens: int, sections: tuple[s
                             "section": "abstract",
                             "text": abstract,
                             "relevance": 1 / (1 + dist),
-                        }
+                        },
                     )
                     total_chars += len(abstract)
                     paper_loaded = True
@@ -1817,15 +1880,13 @@ def smart_search(query_text: str, top_k: int, max_tokens: int, sections: tuple[s
                 break
 
         # Display results
-        print(
-            f"\n✓ Loaded {len(loaded_papers)} papers ({total_chars:,} chars, ~{total_chars // 4:,} tokens)"
-        )
+        print(f"\n✓ Loaded {len(loaded_papers)} papers ({total_chars:,} chars, ~{total_chars // 4:,} tokens)")
         print("\nPapers loaded:")
 
         for i, paper_data in enumerate(loaded_papers, 1):
             print(f"\n{i}. [{paper_data['id']}] {paper_data['title'][:60]}...")
             print(
-                f"   Year: {paper_data['year']} | Section: {paper_data['section']} | Relevance: {paper_data['relevance']:.2f}"
+                f"   Year: {paper_data['year']} | Section: {paper_data['section']} | Relevance: {paper_data['relevance']:.2f}",
             )
 
             # Show preview of text
@@ -1888,7 +1949,7 @@ def smart_search(query_text: str, top_k: int, max_tokens: int, sections: tuple[s
 
 @cli.command()
 def diagnose() -> None:
-    """Run comprehensive health checks on the knowledge base.
+    r"""Run comprehensive health checks on the knowledge base.
 
     Performs diagnostic tests to verify KB integrity:
     - Checks all required files exist
@@ -1956,13 +2017,15 @@ def diagnose() -> None:
 
 
 @cli.command()
-@click.argument("input", default="-", type=str)
+@click.argument("input", "input_file", default="-", type=str)
 @click.option(
-    "--preset", type=click.Choice(["research", "review", "author-scan"]), help="Use workflow preset"
+    "--preset",
+    type=click.Choice(["research", "review", "author-scan"]),
+    help="Use workflow preset",
 )
 @click.option("--output", type=click.Choice(["json", "text"]), default="json", help="Output format")
-def batch(input: str, preset: str | None, output: str) -> None:
-    """Execute batch commands for efficient multi-operation workflows.
+def batch(input_file: str, preset: str | None, output: str) -> None:
+    r"""Execute batch commands for efficient multi-operation workflows.
 
     Supports both custom command batches and preset workflows for common tasks.
     This dramatically improves performance by loading the model only once.
@@ -2010,16 +2073,16 @@ def batch(input: str, preset: str | None, output: str) -> None:
 
         # Handle preset workflows
         if preset:
-            if input == "-":
+            if input_file == "-":
                 click.echo("Error: Please provide a topic when using presets", err=True)
                 sys.exit(1)
-            commands = _generate_preset_commands(preset, input)
-        elif input == "-":
+            commands = _generate_preset_commands(preset, input_file)
+        elif input_file == "-":
             # Load commands from stdin
             commands = json.load(sys.stdin)
         else:
             # Load commands from file
-            with open(input) as f:
+            with open(input_file) as f:
                 commands = json.load(f)
 
         # Execute batch with shared context
@@ -2044,7 +2107,6 @@ def batch(input: str, preset: str | None, output: str) -> None:
 
 def _generate_preset_commands(preset_name: str, topic: str) -> list[dict[str, Any]]:
     """Generate batch commands for workflow presets."""
-
     presets: dict[str, list[dict[str, Any]]] = {
         "research": [
             {"cmd": "search", "query": topic, "k": 30, "show_quality": True},
@@ -2077,7 +2139,6 @@ def _generate_preset_commands(preset_name: str, topic: str) -> list[dict[str, An
 
 def _execute_batch(research_cli: ResearchCLI, commands: list[dict[str, Any]]) -> list[dict[str, Any]]:
     """Execute batch commands with shared context."""
-
     results: list[dict[str, Any]] = []
     context: dict[str, Any] = {
         "searches": [],  # All search results
@@ -2122,7 +2183,7 @@ def _execute_batch(research_cli: ResearchCLI, commands: list[dict[str, Any]]) ->
                         "type": "search",
                         "count": len(formatted),
                         "data": formatted,
-                    }
+                    },
                 )
 
             elif cmd_type == "smart-search":
@@ -2137,7 +2198,7 @@ def _execute_batch(research_cli: ResearchCLI, commands: list[dict[str, Any]]) ->
                             "title": paper["title"],
                             "score": float(score),
                             "quality": paper.get("quality_score", 0),
-                        }
+                        },
                     )
 
                 context["searches"].append(formatted)
@@ -2149,7 +2210,7 @@ def _execute_batch(research_cli: ResearchCLI, commands: list[dict[str, Any]]) ->
                         "type": "smart-search",
                         "count": len(formatted),
                         "data": formatted,
-                    }
+                    },
                 )
 
             elif cmd_type == "get":
@@ -2216,7 +2277,7 @@ def _execute_batch(research_cli: ResearchCLI, commands: list[dict[str, Any]]) ->
                         "type": "author",
                         "count": len(matches),
                         "data": matches,
-                    }
+                    },
                 )
 
             elif cmd_type == "merge":
@@ -2239,7 +2300,7 @@ def _execute_batch(research_cli: ResearchCLI, commands: list[dict[str, Any]]) ->
                         "type": "merge",
                         "count": len(merged_list),
                         "data": merged_list,
-                    }
+                    },
                 )
 
             elif cmd_type == "filter":
@@ -2265,7 +2326,7 @@ def _execute_batch(research_cli: ResearchCLI, commands: list[dict[str, Any]]) ->
                             "type": "filter",
                             "count": len(filtered),
                             "data": filtered,
-                        }
+                        },
                     )
                 else:
                     results.append({"success": False, "command": cmd, "error": "No results to filter"})
@@ -2321,15 +2382,15 @@ def _execute_batch(research_cli: ResearchCLI, commands: list[dict[str, Any]]) ->
                                 "type": "auto-get-top",
                                 "count": len(fetched),
                                 "data": fetched,
-                            }
+                            },
                         )
                     else:
                         results.append(
-                            {"success": False, "command": cmd, "error": "No valid results to process"}
+                            {"success": False, "command": cmd, "error": "No valid results to process"},
                         )
                 else:
                     results.append(
-                        {"success": False, "command": cmd, "error": "No results to get papers from"}
+                        {"success": False, "command": cmd, "error": "No results to get papers from"},
                     )
 
             elif cmd_type == "auto-get-all":
@@ -2357,11 +2418,11 @@ def _execute_batch(research_cli: ResearchCLI, commands: list[dict[str, Any]]) ->
                             "type": "auto-get-all",
                             "count": len(fetched),
                             "data": fetched,
-                        }
+                        },
                     )
                 else:
                     results.append(
-                        {"success": False, "command": cmd, "error": "No results to get papers from"}
+                        {"success": False, "command": cmd, "error": "No results to get papers from"},
                     )
 
             else:
@@ -2375,14 +2436,13 @@ def _execute_batch(research_cli: ResearchCLI, commands: list[dict[str, Any]]) ->
 
 def _format_batch_text(results: list[dict[str, Any]]) -> None:
     """Format batch results as human-readable text."""
-
     for i, result in enumerate(results, 1):
         if result["success"]:
             cmd_type = result.get("type", "unknown")
 
-            print(f"\n{'='*60}")
+            print(f"\n{'=' * 60}")
             print(f"Command {i}: {cmd_type}")
-            print(f"{'='*60}")
+            print(f"{'=' * 60}")
 
             if cmd_type in ["search", "smart-search", "merge", "filter"]:
                 papers = result.get("data", [])
@@ -2390,7 +2450,7 @@ def _format_batch_text(results: list[dict[str, Any]]) -> None:
 
                 for j, paper in enumerate(papers[:10], 1):  # Show top 10
                     quality = paper.get("quality", 0)
-                    quality_marker = "⭐ " if quality >= 80 else ""
+                    quality_marker = "[A] " if quality >= 80 else ""
                     print(f"{j}. {quality_marker}[{paper['id']}] {paper['title']}")
                     if paper.get("authors"):
                         authors = paper["authors"][:3]

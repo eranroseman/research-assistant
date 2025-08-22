@@ -131,11 +131,14 @@ AUTHOR_AUTHORITY_THRESHOLDS = {
 # ============================================================================
 # ENHANCED QUALITY SCORING WITH SEMANTIC SCHOLAR API
 # ============================================================================
-# API Configuration
-API_REQUEST_TIMEOUT = 10  # Timeout for individual API requests
-API_TOTAL_TIMEOUT_BUDGET = 600  # Max 10 min for all API calls
-API_MAX_RETRIES = 3  # Retry failed requests
-API_RETRY_DELAY = 1.0  # Delay between retries
+# API Configuration - Critical Relationships:
+# - API_REQUEST_TIMEOUT must be < API_TOTAL_TIMEOUT_BUDGET / API_MAX_RETRIES
+# - API_TOTAL_TIMEOUT_BUDGET should accommodate expected paper count x retry attempts
+# - API_RETRY_DELAY scales with API_MAX_RETRIES for exponential backoff
+API_REQUEST_TIMEOUT = 10  # Timeout for individual API requests (must be < 200s for 3 retries)
+API_TOTAL_TIMEOUT_BUDGET = 600  # Max 10 min for all API calls (must be > REQUEST_TIMEOUT x MAX_RETRIES)
+API_MAX_RETRIES = 3  # Retry failed requests (increase if REQUEST_TIMEOUT is very low)
+API_RETRY_DELAY = 1.0  # Base delay between retries (actual delay = RETRY_DELAY x attempt)
 
 # Emergency fallback configuration
 ENHANCED_SCORING_EMERGENCY_FALLBACK = True  # Enable fallback to basic scoring
@@ -149,18 +152,20 @@ API_CIRCUIT_BREAKER_RESET_TIME = 300  # 5 min before retry after circuit opens
 API_CONNECTION_POOL_SIZE = 10  # Max concurrent connections
 API_CONNECTION_POOL_HOST_LIMIT = 5  # Max connections per host
 
-# Unified scoring weights (100 points total)
-# Core paper attributes: 40 points max
-STUDY_TYPE_WEIGHT = 20        # Evidence hierarchy scoring
-RECENCY_WEIGHT = 10           # Publication year scoring
-SAMPLE_SIZE_WEIGHT = 5        # Study size scoring (RCTs only)
-FULL_TEXT_WEIGHT = 5          # PDF availability
+# Unified scoring weights (100 points total) - CRITICAL: Must sum to 100
+#
+# Core paper attributes: 40 points max (STUDY_TYPE + RECENCY + SAMPLE_SIZE + FULL_TEXT = 40)
+STUDY_TYPE_WEIGHT = 20  # Evidence hierarchy scoring (highest impact factor)
+RECENCY_WEIGHT = 10  # Publication year scoring (decreases with age)
+SAMPLE_SIZE_WEIGHT = 5  # Study size scoring (RCTs only - others get 0)
+FULL_TEXT_WEIGHT = 5  # PDF availability (binary: 5 or 0)
 
-# API-enhanced attributes: 60 points max
-CITATION_IMPACT_WEIGHT = 25   # Citation count and influence
-VENUE_PRESTIGE_WEIGHT = 15    # Journal/conference ranking
-AUTHOR_AUTHORITY_WEIGHT = 10  # Author h-index and reputation
-CROSS_VALIDATION_WEIGHT = 10  # Multi-source data verification
+# API-enhanced attributes: 60 points max (CITATION + VENUE + AUTHOR + CROSS_VALIDATION = 60)
+# CRITICAL: These weights must match the scoring functions in calculate_*_score()
+CITATION_IMPACT_WEIGHT = 25  # Citation count and influence (largest API component)
+VENUE_PRESTIGE_WEIGHT = 15  # Journal/conference ranking (Q1=15, Q2=12, Q3=8, Q4=4, unranked=2)
+AUTHOR_AUTHORITY_WEIGHT = 10  # Author h-index and reputation (max h-index among authors)
+CROSS_VALIDATION_WEIGHT = 10  # Multi-source data verification (DOI, PubMed, types, fields)
 
 # ============================================================================
 # BUILD CONFIGURATION
@@ -192,11 +197,13 @@ API_TIMEOUT_LONG = 30  # Timeout for data-heavy requests (seconds)
 API_BATCH_SIZE = 100  # Papers per API request (pagination size)
 
 # Processing time estimates for user feedback (Multi-QA MPNet)
-TIME_PER_PAPER_GPU_MIN = 0.04  # Best case: 40ms per paper on GPU
-TIME_PER_PAPER_GPU_MAX = 0.12  # Worst case: 120ms per paper on GPU
-TIME_PER_PAPER_CPU_MIN = 0.4  # Best case: 400ms per paper on CPU
-TIME_PER_PAPER_CPU_MAX = 0.8  # Worst case: 800ms per paper on CPU
-LONG_OPERATION_THRESHOLD = 300  # Prompt user if operation > 5 minutes
+# RELATIONSHIPS: GPU is ~10x faster than CPU, batch size affects actual times
+# Total time = (papers x TIME_PER_PAPER) / batch_efficiency_factor
+TIME_PER_PAPER_GPU_MIN = 0.04  # Best case: 40ms per paper on GPU (with optimal batch size)
+TIME_PER_PAPER_GPU_MAX = 0.12  # Worst case: 120ms per paper on GPU (small batches/overhead)
+TIME_PER_PAPER_CPU_MIN = 0.4  # Best case: 400ms per paper on CPU (10x slower than GPU)
+TIME_PER_PAPER_CPU_MAX = 0.8  # Worst case: 800ms per paper on CPU (memory constrained)
+LONG_OPERATION_THRESHOLD = 300  # Prompt user if operation > 5 minutes (300s)
 
 # ============================================================================
 # PATHS
@@ -270,21 +277,22 @@ STUDY_TYPE_MARKERS = {
     "study": "ST",  # Generic Study
 }
 
-# Quality score thresholds
-QUALITY_EXCELLENT = 85  # Enhanced high-impact papers
-QUALITY_VERY_GOOD = 70  # Strong papers with good metrics
-QUALITY_GOOD = 60  # RCTs, recent high-quality studies
-QUALITY_MODERATE = 45  # Cohort studies, older papers
-QUALITY_LOW = 30  # Case reports, minimal citations
-QUALITY_VERY_LOW = 0  # Unverified or poor quality
-MAX_QUALITY_SCORE = 100  # Maximum possible quality score
+# Quality score thresholds - CRITICAL: Must align with QUALITY_INDICATORS
+# These thresholds determine grade boundaries for enhanced quality scoring
+QUALITY_EXCELLENT = 85  # A+ grade: Enhanced high-impact papers (systematic reviews + high citations)
+QUALITY_VERY_GOOD = 70  # A grade: Strong papers with good metrics (RCTs + decent citations)
+QUALITY_GOOD = 60  # B grade: Quality studies (recent cohorts, established venues)
+QUALITY_MODERATE = 45  # C grade: Moderate quality (older studies, some citations)
+QUALITY_LOW = 30  # D grade: Lower quality (case reports, minimal validation)
+QUALITY_VERY_LOW = 0  # F grade: Poor quality (no citations, unverified)
+MAX_QUALITY_SCORE = 100  # Maximum possible quality score (all components maxed)
 
-# Quality score display indicators
+# Quality score display indicators - CRITICAL: Thresholds must match above values
 QUALITY_INDICATORS = {
-    "excellent": "A+",  # 85+
-    "very_good": "A",  # 70-84
-    "good": "B",  # 60-69
-    "moderate": "C",  # 45-59
-    "low": "D",  # 30-44
-    "very_low": "F",  # 0-29
+    "excellent": "A+",  # 85-100: Top tier papers
+    "very_good": "A",  # 70-84: Strong evidence
+    "good": "B",  # 60-69: Good quality
+    "moderate": "C",  # 45-59: Moderate quality
+    "low": "D",  # 30-44: Lower quality
+    "very_low": "F",  # 0-29: Poor quality
 }
