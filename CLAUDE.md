@@ -78,7 +78,7 @@ system/
 - **Enhanced Quality Score** (0-100): Citation impact (25), Venue prestige (15), Author authority (10), Cross-validation (10), Core factors (40)
   - **API-powered scoring**: Semantic Scholar integration for citation counts, venue rankings, author h-index
   - **Core factors**: Study type (20), Recency (10), Sample size (5), Full text availability (5)
-  - **Visual indicators**: 🌟 (90-100) ⭐ (80-89) ● (70-79) ◐ (60-69) ○ (50-59) · (0-49)
+  - **Visual indicators**: A+ (85-100) A (70-84) B (60-69) C (45-59) D (30-44) F (0-29)
   - **Clean break implementation**: No fallback to legacy scoring, API data required
 - **Full Content Preservation**: Complete paper sections with zero information loss
   - **No truncation**: Methods, results, and discussion sections preserved in full

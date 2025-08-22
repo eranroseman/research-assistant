@@ -1,6 +1,6 @@
 # Research Assistant v4.0
 
-**⚠️ BREAKING CHANGES IN v4.0 - Complete rebuild required**
+**! BREAKING CHANGES IN v4.0 - Complete rebuild required**
 
 A streamlined academic literature search tool featuring Multi-QA MPNet embeddings for semantic search, smart incremental updates, and Claude Code integration.
 
@@ -201,7 +201,7 @@ python src/cli.py search "diabetes" --quality-min 70 --export high_quality.csv
 # High-quality evidence only (enhanced score ≥70)
 python src/cli.py search "metabolic syndrome" --quality-min 70 --show-quality
 
-# Exceptional quality papers (enhanced score ≥90: 🌟)
+# Exceptional quality papers (enhanced score ≥85: A+)
 python src/cli.py search "diabetes" --quality-min 90 --show-quality
 
 # Recent RCTs and systematic reviews with quality indicators
@@ -376,7 +376,7 @@ python src/cli.py cite 0234 1426 --format json
 - **Smart Search Modes** - Auto-detects questions vs. exploration
 - **Query Expansion** - Automatic synonym expansion
 - **Enhanced Quality Scoring** - 0-100 using Semantic Scholar API: citations (25pts), venue prestige (15pts), author authority (10pts), cross-validation (10pts), plus core factors (40pts)
-- **Visual Quality Indicators** - Instant assessment with 🌟⭐●◐○· icons
+- **Visual Quality Indicators** - Instant assessment with A+ A B C D F grades
 - **Full Content Preservation** - Complete paper sections with zero information loss, no truncation of methodology or results
 
 ### Performance

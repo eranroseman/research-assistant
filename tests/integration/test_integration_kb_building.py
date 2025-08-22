@@ -231,7 +231,7 @@ class TestKnowledgeBaseBuildingProcess:
 
         if stats["papers_with_pdfs"] < stats["total_papers"] * 0.9:
             print(
-                f"⚠️  WARNING: Low PDF coverage ({stats['papers_with_pdfs']/stats['total_papers']*100:.1f}% < 90%)"
+                f"! WARNING: Low PDF coverage ({stats['papers_with_pdfs']/stats['total_papers']*100:.1f}% < 90%)"
             )
 
         print(f"Embeddings generated: {stats['papers_with_embeddings']}")
@@ -239,7 +239,7 @@ class TestKnowledgeBaseBuildingProcess:
         print(f"Cache hits: {stats['cache_hits']}")
 
         if stats["extraction_errors"] > 0:
-            print(f"⚠️  Extraction errors: {stats['extraction_errors']}")
+            print(f"! Extraction errors: {stats['extraction_errors']}")
 
         # Capture output
         captured = capsys.readouterr()

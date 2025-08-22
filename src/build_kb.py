@@ -1557,8 +1557,8 @@ class KnowledgeBaseBuilder:
             if enhanced_scoring_available:
                 has_basic, count = self.has_papers_with_basic_scores(metadata["papers"])
                 if has_basic:
-                    print(f"📊 Found {count} papers with basic quality scores.")
-                    print("📈 Enhanced quality scoring is now available.")
+                    print(f"• Found {count} papers with basic quality scores.")
+                    print("+ Enhanced quality scoring is now available.")
                     
                     try:
                         response = input("Upgrade quality scores? (Y/n): ").strip().lower()
@@ -1566,11 +1566,11 @@ class KnowledgeBaseBuilder:
                             # Add papers with basic scores to processing queue
                             basic_score_keys = self.get_papers_with_basic_scores(metadata["papers"])
                             to_process.update(basic_score_keys)
-                            print(f"✅ Added {len(basic_score_keys)} papers for quality score upgrade")
+                            print(f"✓ Added {len(basic_score_keys)} papers for quality score upgrade")
                         else:
-                            print("⏭️  Skipping quality score upgrade")
+                            print("» Skipping quality score upgrade")
                     except (EOFError, KeyboardInterrupt):
-                        print("\n⏭️  Skipping quality score upgrade")
+                        print("\n» Skipping quality score upgrade")
 
         if to_process:
             # Check if we're doing quality upgrades
@@ -2421,7 +2421,7 @@ class KnowledgeBaseBuilder:
                 report_lines.append(f"... and {len(missing_pdfs) - 50} more papers\n")
         else:
             report_lines.append("## Papers Missing PDFs\n")
-            report_lines.append("✅ All papers have PDF attachments!\n")
+            report_lines.append("✓ All papers have PDF attachments!\n")
 
         # Section 2: Small PDFs
         if small_pdfs:
@@ -2455,7 +2455,7 @@ class KnowledgeBaseBuilder:
                 report_lines.append("")
         else:
             report_lines.append("## Papers with Small PDFs\n")
-            report_lines.append("✅ No papers with small PDFs found!")
+            report_lines.append("✓ No papers with small PDFs found!")
             report_lines.append("All PDFs extracted at least 5KB of text.\n")
 
         # Recommendations section
@@ -2791,7 +2791,7 @@ class KnowledgeBaseBuilder:
             warnings.append("Metadata file not created")
 
         if warnings:
-            print("\n⚠️  Warnings:")
+            print("\n! Warnings:")
             for warning in warnings:
                 print(f"  - {warning}")
 
@@ -2802,16 +2802,16 @@ class KnowledgeBaseBuilder:
         )
 
         if missing_count > 0 or small_pdfs_count > 0:
-            print("\n📋 Generating PDF quality report...")
+            print("\n• Generating PDF quality report...")
             if missing_count > 0:
                 print(f"   - {missing_count} papers missing PDFs ({missing_count * 100 / len(papers):.1f}%)")
             if small_pdfs_count > 0:
                 print(f"   - {small_pdfs_count} papers with small PDFs (<5KB text)")
 
             report_path = self.generate_pdf_quality_report(papers)
-            print(f"✅ PDF quality report saved to: {report_path}")
+            print(f"✓ PDF quality report saved to: {report_path}")
         else:
-            print("\n✅ All papers have good PDF quality - no report needed")
+            print("\n✓ All papers have good PDF quality - no report needed")
 
         # Prompt for gap analysis after successful build
         prompt_gap_analysis_after_build(len(papers), build_time)
@@ -2931,11 +2931,11 @@ def has_enhanced_scoring() -> bool:
 
 def prompt_gap_analysis_after_build(total_papers: int, build_time: float) -> None:
     """Educational prompt for gap analysis after successful KB build."""
-    print("\n✅ Knowledge base built successfully!")
+    print("\n✓ Knowledge base built successfully!")
     print(f"   {total_papers:,} papers indexed in {build_time:.1f} minutes")
 
     if has_enhanced_scoring() and total_papers >= 20:
-        print("\n🔍 Run gap analysis to discover missing papers in your collection?")
+        print("\n? Run gap analysis to discover missing papers in your collection?")
         print("\nGap analysis identifies 5 types of literature gaps:")
         print("• Papers cited by your KB but missing from your collection")
         print("• Recent work from authors already in your KB")
@@ -2952,7 +2952,7 @@ def prompt_gap_analysis_after_build(total_papers: int, build_time: float) -> Non
 
         response = input("\nRun comprehensive gap analysis now? (Y/n): ").strip().lower()
         if response != 'n':
-            print("\n🔍 Running comprehensive gap analysis...")
+            print("\n» Running comprehensive gap analysis...")
             import subprocess
             subprocess.run(["python", "src/analyze_gaps.py"], check=False)
     else:
@@ -2986,7 +2986,7 @@ def main(
 
     \b
     SAFE DEFAULT BEHAVIOR (NEW v4.1):
-      🛡️  DEFAULT MODE: UPDATE ONLY - NEVER auto-rebuilds or deletes data
+      * DEFAULT MODE: UPDATE ONLY - NEVER auto-rebuilds or deletes data
       • No KB exists → Full build from Zotero library
       • KB exists → Safe incremental update (only new/changed papers)
       • Failures → Safe exit with clear guidance (data preserved)
@@ -2998,7 +2998,7 @@ def main(
       📝 Update Only: Default operation adds/updates papers safely
       🔧 Explicit Rebuilds: Destructive operations require --rebuild flag
       💾 Cache Preservation: All cache files preserved during failures
-      📋 Clear Guidance: Detailed error messages with specific solutions
+      + Clear Guidance: Detailed error messages with specific solutions
 
     \b
     CORE FEATURES:
@@ -3018,9 +3018,9 @@ def main(
 
     \b
     EXAMPLES:
-      python src/build_kb.py                    # 🛡️ SAFE: Update only (recommended + gap analysis prompt)
+      python src/build_kb.py                    # * SAFE: Update only (recommended + gap analysis prompt)
       python src/build_kb.py --demo             # Quick 5-paper demo for testing
-      python src/build_kb.py --rebuild          # ⚠️  Explicit rebuild with confirmation
+      python src/build_kb.py --rebuild          # ! Explicit rebuild with confirmation
       python src/build_kb.py --export kb.tar.gz # Export for backup/sharing
       python src/build_kb.py --import kb.tar.gz # Import from another machine
       
@@ -3040,7 +3040,7 @@ def main(
     if export_path:
         kb_path = Path(knowledge_base_path)
         if not kb_path.exists():
-            print(f"❌ Knowledge base not found at {kb_path}")
+            print(f"x Knowledge base not found at {kb_path}")
             sys.exit(1)
 
         print(f"📦 Exporting knowledge base to {export_path}...")
@@ -3052,7 +3052,7 @@ def main(
 
         # Calculate size
         size_mb = os.path.getsize(export_path) / (1024 * 1024)
-        print(f"✅ Exported KB to {export_path} ({size_mb:.1f} MB)")
+        print(f"✓ Exported KB to {export_path} ({size_mb:.1f} MB)")
         print("\nTransfer this file to your other computer and import with:")
         print(f"  python src/build_kb.py --import {export_path}")
         return
@@ -3060,14 +3060,14 @@ def main(
     # Handle import
     if import_path:
         if not Path(import_path).exists():
-            print(f"❌ Archive file not found: {import_path}")
+            print(f"x Archive file not found: {import_path}")
             sys.exit(1)
 
         kb_path = Path(knowledge_base_path)
 
         # Check if KB already exists
         if kb_path.exists():
-            response = input(f"⚠️  Knowledge base already exists at {kb_path}. Overwrite? [y/N]: ")
+            response = input(f"! Knowledge base already exists at {kb_path}. Overwrite? [y/N]: ")
             if response.lower() != "y":
                 print("Import cancelled.")
                 return
@@ -3101,11 +3101,11 @@ def main(
                 paper_count = metadata.get("total_papers", 0)
                 last_updated = metadata.get("last_updated", "Unknown")
 
-            print(f"✅ Successfully imported {paper_count} papers")
+            print(f"✓ Successfully imported {paper_count} papers")
             print(f"   Last updated: {last_updated}")
             print(f"   Location: {kb_path}")
         else:
-            print("⚠️  Import completed but metadata not found")
+            print("! Import completed but metadata not found")
 
         return
 
@@ -3114,7 +3114,7 @@ def main(
 
     if demo:
         if builder.metadata_file_path.exists():
-            print(f"❌ Demo mode cannot run - knowledge base already exists at {knowledge_base_path}")
+            print(f"x Demo mode cannot run - knowledge base already exists at {knowledge_base_path}")
             print("Demo mode is designed for development when no knowledge base exists.")
             print("It creates 5 sample papers for testing purposes.")
             sys.exit(1)
@@ -3142,7 +3142,7 @@ def main(
         try:
             builder._test_zotero_connection(api_url)
         except ConnectionError:
-            print("❌ Cannot connect to Zotero local API")
+            print("x Cannot connect to Zotero local API")
             print("To fix this:")
             print("1. Start Zotero application")
             print("2. Go to Preferences → Advanced → Config Editor")
@@ -3206,7 +3206,7 @@ def main(
         except Exception as error:
             # Handle connection errors specifically
             if isinstance(error, ConnectionError) or "Connection refused" in str(error):
-                print("❌ Cannot connect to Zotero local API")
+                print("x Cannot connect to Zotero local API")
                 print("To fix this:")
                 print("1. Start Zotero application")
                 print("2. Go to Preferences → Advanced → Config Editor")
@@ -3218,7 +3218,7 @@ def main(
                 sys.exit(1)
 
             # For non-connection errors, show the detailed error
-            print(f"❌ Incremental update failed: {error}")
+            print(f"x Incremental update failed: {error}")
 
             # For all other errors: preserve data and guide user
             print("Your knowledge base has been preserved.")

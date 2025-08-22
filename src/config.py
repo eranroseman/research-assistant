@@ -260,14 +260,14 @@ UX_LOG_ENABLED = True  # Enable/disable UX analytics logging
 # ============================================================================
 # Study type markers for visual hierarchy
 STUDY_TYPE_MARKERS = {
-    "systematic_review": "⭐",  # Best evidence
-    "meta_analysis": "⭐",  # Best evidence
-    "rct": "●",  # High quality
-    "cohort": "◐",  # Good evidence
-    "case_control": "○",  # Moderate evidence
-    "cross_sectional": "◔",  # Lower evidence
-    "case_report": "·",  # Case level
-    "study": "·",  # Generic
+    "systematic_review": "SR",  # Systematic Review
+    "meta_analysis": "MA",  # Meta-Analysis
+    "rct": "RCT",  # Randomized Controlled Trial
+    "cohort": "COH",  # Cohort Study
+    "case_control": "CC",  # Case-Control
+    "cross_sectional": "XS",  # Cross-Sectional
+    "case_report": "CR",  # Case Report
+    "study": "ST",  # Generic Study
 }
 
 # Quality score thresholds
@@ -279,12 +279,12 @@ QUALITY_LOW = 30  # Case reports, minimal citations
 QUALITY_VERY_LOW = 0  # Unverified or poor quality
 MAX_QUALITY_SCORE = 100  # Maximum possible quality score
 
-# Quality score display colors/indicators
+# Quality score display indicators
 QUALITY_INDICATORS = {
-    "excellent": "🌟",  # 85+
-    "very_good": "⭐",  # 70-84
-    "good": "●",  # 60-69
-    "moderate": "◐",  # 45-59
-    "low": "○",  # 30-44
-    "very_low": "·",  # 0-29
+    "excellent": "A+",  # 85+
+    "very_good": "A",  # 70-84
+    "good": "B",  # 60-69
+    "moderate": "C",  # 45-59
+    "low": "D",  # 30-44
+    "very_low": "F",  # 0-29
 }

@@ -640,7 +640,7 @@ def cli() -> None:
     KEY FEATURES:
       • Multi-QA MPNet embeddings optimized for healthcare & scientific papers
       • Enhanced quality scoring (0-100) with Semantic Scholar API integration
-      • Visual quality indicators: 🌟⭐●◐○· for instant quality assessment
+      • Visual quality indicators: A+ A B C D F for instant quality assessment
       • Comprehensive scoring: Citations, venue prestige, author authority, validation
       • Full content preservation - no truncation of paper sections
       • Complete methodology & results sections for thorough analysis
@@ -730,12 +730,12 @@ def search(
 
     \b
     ENHANCED QUALITY INDICATORS (0-100):
-      🌟 90-100: Exceptional quality (high-impact systematic reviews/meta-analyses)
-      ⭐ 80-89:  Excellent quality (top-tier venues, highly cited)
-      ● 70-79:   Very good quality (quality RCTs, established venues)
-      ◐ 60-69:   Good quality (solid studies, decent citations)
-      ○ 50-59:   Moderate quality (cohort studies, emerging work)
-      · 0-49:    Basic quality (case reports, limited validation)
+      A+ 85-100: Exceptional quality (high-impact systematic reviews/meta-analyses)
+      A  70-84:  Excellent quality (top-tier venues, highly cited)
+      B  60-69:  Good quality (quality RCTs, established venues)
+      C  45-59:  Moderate quality (solid studies, decent citations)
+      D  30-44:  Low quality (cohort studies, emerging work)
+      F  0-29:   Poor quality (case reports, limited validation)
 
     \b
     QUALITY FACTORS:
@@ -1033,7 +1033,7 @@ def search(
             error_message="Knowledge base not found",
         )
         print(
-            "\n❌ Knowledge base not found.\n"
+            "\nx Knowledge base not found.\n"
             "   Quick fix: python src/build_kb.py --demo\n"
             "   Full setup: python src/build_kb.py (requires Zotero)",
             file=sys.stderr,
@@ -1049,7 +1049,7 @@ def search(
             error_message=str(error),
         )
         print(
-            f"\n❌ Missing dependency: {error}\n   Fix: pip install -r requirements.txt",
+            f"\nx Missing dependency: {error}\n   Fix: pip install -r requirements.txt",
             file=sys.stderr,
         )
         sys.exit(1)
@@ -1063,7 +1063,7 @@ def search(
             error_message=str(error),
         )
         print(
-            f"\n❌ Search failed: {error}\n"
+            f"\nx Search failed: {error}\n"
             "   Possible fixes:\n"
             "   1. Rebuild knowledge base: python src/build_kb.py\n"
             "   2. Check if model matches index: python src/cli.py info\n"
@@ -1169,10 +1169,10 @@ def get(paper_id: str, output: str | None, sections: tuple[str, ...], add_citati
                         # Fallback to regular get if metadata not found
                         content = research_cli.get_paper(paper_id)
                 else:
-                    print(f"⚠️  No section index found for paper {paper_id}")
+                    print(f"! No section index found for paper {paper_id}")
                     content = research_cli.get_paper(paper_id)
             else:
-                print("⚠️  Section index not found. Rebuild KB to enable section retrieval.")
+                print("! Section index not found. Rebuild KB to enable section retrieval.")
                 content = research_cli.get_paper(paper_id)
         else:
             # Get full paper
@@ -1219,7 +1219,7 @@ def get(paper_id: str, output: str | None, sections: tuple[str, ...], add_citati
             error_message="Knowledge base not found",
         )
         print(
-            "\n❌ Knowledge base not found.\n"
+            "\nx Knowledge base not found.\n"
             "   Quick fix: python src/build_kb.py --demo\n"
             "   Full setup: python src/build_kb.py (requires Zotero)",
             file=sys.stderr,
@@ -1235,7 +1235,7 @@ def get(paper_id: str, output: str | None, sections: tuple[str, ...], add_citati
             error_message=str(error),
         )
         print(
-            f"\n❌ Invalid paper ID: {error}\n"
+            f"\nx Invalid paper ID: {error}\n"
             "   Paper IDs must be exactly 4 digits (e.g., 0001, 0234, 1234)\n"
             "   Use 'python src/cli.py search <query>' to find paper IDs",
             file=sys.stderr,
@@ -1251,7 +1251,7 @@ def get(paper_id: str, output: str | None, sections: tuple[str, ...], add_citati
             error_message=str(error),
         )
         print(
-            f"\n❌ Failed to retrieve paper: {error}\n"
+            f"\nx Failed to retrieve paper: {error}\n"
             "   Make sure the paper ID is correct (4 digits, e.g., 0001)\n"
             "   Check available papers: python src/cli.py info",
             file=sys.stderr,
@@ -1332,7 +1332,7 @@ def get_batch(paper_ids: tuple[str, ...], format: str, add_citation: bool) -> No
                 print(paper["content"])
 
             if errors:
-                print("\n⚠️ Errors encountered:", file=sys.stderr)
+                print("\n! Errors encountered:", file=sys.stderr)
                 for err_msg in errors:
                     print(f"  - {err_msg}", file=sys.stderr)
 
@@ -1343,7 +1343,7 @@ def get_batch(paper_ids: tuple[str, ...], format: str, add_citation: bool) -> No
 
     except FileNotFoundError:
         print(
-            "\n❌ Knowledge base not found.\n"
+            "\nx Knowledge base not found.\n"
             "   Quick fix: python src/build_kb.py --demo\n"
             "   Full setup: python src/build_kb.py (requires Zotero)",
             file=sys.stderr,
@@ -1351,7 +1351,7 @@ def get_batch(paper_ids: tuple[str, ...], format: str, add_citation: bool) -> No
         sys.exit(1)
     except Exception as error:
         print(
-            f"\n❌ Failed to retrieve papers: {error}\n"
+            f"\nx Failed to retrieve papers: {error}\n"
             "   Check that paper IDs are correct (4 digits, e.g., 0001)",
             file=sys.stderr,
         )
@@ -1426,7 +1426,7 @@ def cite(paper_ids: tuple[str, ...], format: str) -> None:
                     print(f"\n{item['citation']}")
 
             if errors:
-                print("\n⚠️ Errors encountered:", file=sys.stderr)
+                print("\n! Errors encountered:", file=sys.stderr)
                 for err_msg in errors:
                     print(f"  - {err_msg}", file=sys.stderr)
 
@@ -1521,15 +1521,15 @@ def author_search(author_name: str, exact: bool) -> None:
             # Study type marker
             study_type = paper.get("study_type", "study")
             marker = {
-                "systematic_review": "⭐",
-                "meta_analysis": "⭐",
-                "rct": "●",
-                "cohort": "◐",
-                "case_control": "○",
-                "cross_sectional": "◔",
-                "case_report": "·",
-                "study": "·",
-            }.get(study_type, "·")
+                "systematic_review": "SR",
+                "meta_analysis": "MA",
+                "rct": "RCT",
+                "cohort": "COH",
+                "case_control": "CC",
+                "cross_sectional": "XS",
+                "case_report": "CR",
+                "study": "ST",
+            }.get(study_type, "ST")
 
             print(f"\n{marker} [{paper['id']}] {paper['title']}")
             print(f"   Year: {year} | Journal: {journal[:50]}")
@@ -1542,7 +1542,7 @@ def author_search(author_name: str, exact: bool) -> None:
 
     except FileNotFoundError:
         print(
-            "\n❌ Knowledge base not found.\n"
+            "\nx Knowledge base not found.\n"
             "   Quick fix: python src/build_kb.py --demo\n"
             "   Full setup: python src/build_kb.py (requires Zotero)",
             file=sys.stderr,
@@ -1550,7 +1550,7 @@ def author_search(author_name: str, exact: bool) -> None:
         sys.exit(1)
     except Exception as error:
         print(
-            f"\n❌ Failed to search by author: {error}",
+            f"\nx Failed to search by author: {error}",
             file=sys.stderr,
         )
         sys.exit(1)
@@ -1565,7 +1565,7 @@ def info() -> None:
     - Last update time and version
     - Index and paper file statistics
     - Enhanced quality score statistics and distribution
-    - Visual quality indicator breakdown (🌟⭐●◐○·)
+    - Visual quality indicator breakdown (A+ A B C D F)
     - Sample of available papers with quality indicators
 
     \b
@@ -1632,12 +1632,12 @@ def info() -> None:
                 if "quality_distribution" in enhanced_stats:
                     distribution = enhanced_stats["quality_distribution"]
                     print("\nQuality Distribution:")
-                    print(f"  🌟 Excellent (85+): {distribution['excellent']} papers")
-                    print(f"  ⭐ Very Good (70-84): {distribution['very_good']} papers")
-                    print(f"  ● Good (60-69): {distribution['good']} papers")
-                    print(f"  ◐ Moderate (45-59): {distribution['moderate']} papers")
-                    print(f"  ○ Low (30-44): {distribution['low']} papers")
-                    print(f"  · Very Low (0-29): {distribution['very_low']} papers")
+                    print(f"  A+ Excellent (85+): {distribution['excellent']} papers")
+                    print(f"  A  Very Good (70-84): {distribution['very_good']} papers")
+                    print(f"  B  Good (60-69): {distribution['good']} papers")
+                    print(f"  C  Moderate (45-59): {distribution['moderate']} papers")
+                    print(f"  D  Low (30-44): {distribution['low']} papers")
+                    print(f"  F  Very Low (0-29): {distribution['very_low']} papers")
         except (FileNotFoundError, KeyError, ImportError):
             # If enhanced stats aren't available, continue with basic info
             pass
@@ -1753,7 +1753,7 @@ def smart_search(query_text: str, top_k: int, max_tokens: int, sections: tuple[s
             else:
                 sections = ("abstract", "introduction", "conclusion")
 
-        print(f"\n🔍 Smart search for: '{query_text}'")
+        print(f"\n» Smart search for: '{query_text}'")
         print(f"📚 Found {len(search_results)} papers")
         print(f"📄 Prioritizing sections: {', '.join(sections)}")
         print("=" * 50)
@@ -1818,7 +1818,7 @@ def smart_search(query_text: str, top_k: int, max_tokens: int, sections: tuple[s
 
         # Display results
         print(
-            f"\n✅ Loaded {len(loaded_papers)} papers ({total_chars:,} chars, ~{total_chars // 4:,} tokens)"
+            f"\n✓ Loaded {len(loaded_papers)} papers ({total_chars:,} chars, ~{total_chars // 4:,} tokens)"
         )
         print("\nPapers loaded:")
 
@@ -1867,7 +1867,7 @@ def smart_search(query_text: str, top_k: int, max_tokens: int, sections: tuple[s
             error_message="Knowledge base not found",
         )
         print(
-            "\n❌ Knowledge base not found.\n"
+            "\nx Knowledge base not found.\n"
             "   Quick fix: python src/build_kb.py --demo\n"
             "   Full setup: python src/build_kb.py (requires Zotero)",
             file=sys.stderr,
@@ -1882,7 +1882,7 @@ def smart_search(query_text: str, top_k: int, max_tokens: int, sections: tuple[s
             error_type=type(error).__name__,
             error_message=str(error),
         )
-        print(f"\n❌ Smart search failed: {error}", file=sys.stderr)
+        print(f"\nx Smart search failed: {error}", file=sys.stderr)
         sys.exit(1)
 
 
@@ -1940,18 +1940,18 @@ def diagnose() -> None:
         print(f"{'✓' if passed else '✗'} {label}")
 
     if not all(check[1] for check in checks[:4]):
-        print("\n⚠️  Knowledge base not found or incomplete")
+        print("\n! Knowledge base not found or incomplete")
         print("   Run: python src/build_kb.py")
     elif checks[4][1] if len(checks) > 4 else False:
         # Check if we have ID gaps warning
         has_id_gaps = any("Sequential IDs" in check[0] and not check[1] for check in checks)
         if has_id_gaps:
-            print("\n✅ Knowledge base is healthy")
+            print("\n✓ Knowledge base is healthy")
             print("   Note: ID gaps are normal when papers are deleted")
         else:
-            print("\n✅ Knowledge base is healthy")
+            print("\n✓ Knowledge base is healthy")
     else:
-        print("\n⚠️  Knowledge base version mismatch")
+        print("\n! Knowledge base version mismatch")
         print("   Run: python src/build_kb.py --rebuild")
 
 
@@ -2427,7 +2427,7 @@ def _format_batch_text(results: list[dict[str, Any]]) -> None:
                         print("  (content retrieved)")
 
         else:
-            print(f"\n❌ Command {i} failed: {result.get('error', 'Unknown error')}")
+            print(f"\nx Command {i} failed: {result.get('error', 'Unknown error')}")
             print(f"   Command: {result.get('command', {})}")
 
 
