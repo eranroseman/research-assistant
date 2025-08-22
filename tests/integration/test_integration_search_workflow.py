@@ -34,7 +34,7 @@ class TestSearchWorkflowIntegration:
         gc.collect()  # Force garbage collection to clean up any lingering objects
 
     @pytest.fixture(autouse=True)
-    def reset_mocks(self):
+    def _reset_mocks(self):
         """Reset mocks between tests to prevent state bleeding."""
         # This runs before and after each test automatically
         yield
