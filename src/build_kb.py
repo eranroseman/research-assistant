@@ -1526,8 +1526,10 @@ class KnowledgeBaseBuilder:
         # Process new and updated papers
         to_process = changes["new_keys"] | set(changes["updated_keys"])
 
-        # Check for quality score upgrades if no regular changes detected
-        if not to_process or len(to_process) == 0:
+        # Check for quality score upgrades if no regular changes detected 
+        # (but allow for minor embedding fixes which don't change paper content)
+        regular_changes = changes["new_keys"] | set(changes.get("updated_keys", set()))
+        if not regular_changes:
             # Test enhanced quality scoring availability
             print("\nChecking for quality score upgrades...")
             enhanced_scoring_available = True
@@ -3179,6 +3181,9 @@ def main(
 
             if changes["total"] == 0 and not changes["needs_reindex"]:
                 print("Knowledge base is up to date! No changes detected.")
+                
+                # Check for quality score upgrades even when no changes detected
+                builder.apply_incremental_update(changes, api_url)
                 return
 
             if changes["total"] > 0:
