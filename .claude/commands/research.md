@@ -1,7 +1,7 @@
 ---
 description: Research literature using local knowledge base
 argument-hint: <research topic or keywords>
-allowed-tools: Read, Write, Task, Bash(python src/cli.py:*)
+allowed-tools: Read, Write, Task, Bash(python src/cli.py:*), Bash(python src/discover.py:*)
 ---
 
 # Literature Research: $ARGUMENTS
@@ -86,18 +86,41 @@ I'll generate a comprehensive report saved to `reports/research_<topic>_<timesta
 - An implementation-focused review with practical insights
 - A methodological assessment for research planning
 
-The report will include appropriate citations, quality assessments where helpful, and identification of knowledge gaps in the research literature.
+The report will include appropriate citations, quality assessments where helpful, and identification of knowledge gaps. When coverage assessment reveals significant gaps, the report will distinguish between "what we know from current evidence" and "what's missing from the literature" with specific recommendations for KB expansion.
 
 ### Citation Guidelines
 - **Strong claims need citations**: Statistics, clinical outcomes, definitive statements
 - **IEEE format**: Numbered citations [1], [2], [3]; prioritize quality papers (>70 score)
 - **References**: Generate with `python src/cli.py cite XXXX XXXX`
 
-**Note on Knowledge Base Limitations:** If I find that our knowledge base appears incomplete for your research topic (e.g., fewer than 10 highly relevant papers, missing recent studies from 2023+, or obvious gaps in coverage), I'll notify you and ask for guidance on whether to:
+## Coverage Assessment Strategy
 
-- Proceed with available papers and note limitations in the report
-- Suggest specific papers/DOIs to add to strengthen coverage
-- Adjust the research scope to better match available evidence
-- Focus on related topics where we have stronger coverage
+Discovery is a powerful tool for identifying knowledge gaps - trust your research instincts about when to use it.
+
+### When Discovery Adds Value
+
+Research coverage gaps often occur when topics have **specificity** that may not be well-represented in a general knowledge base. Trust your intuition when something feels incomplete.
+
+**Research Intuition Signals** - if you find yourself thinking:
+- "This seems important, but results are surprisingly limited"
+- "The evidence feels too general for this specific context"
+- "I expected more targeted research on this intersection"
+- "There should be more recent work on this emerging area"
+- "The geographical/cultural/population focus seems underrepresented"
+
+→ These intuitions often indicate coverage gaps worth exploring
+
+### Discovery Commands
+```bash
+python src/discover.py --keywords "your,main,terms" --quality-threshold HIGH
+python src/discover.py --coverage-info  # Workflow integration guidance
+```
+
+### Coverage Assessment Integration
+- **🟢 Traffic Light**: Proceed confidently with KB analysis
+- **🟡 Traffic Light**: Note limitations, consider targeted discovery for specific gaps
+- **🔴 Traffic Light**: Significant gaps likely - discovery recommended for comprehensive analysis
+
+**Comprehensive research approach**: Analyze what we know + identify what we're missing + provide specific recommendations
 
 Let me explore the literature and see what emerges.

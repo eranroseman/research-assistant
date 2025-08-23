@@ -22,6 +22,11 @@
 - [`analyze_gaps.py`](#analyze_gapspy) - Discover missing papers (auto-prompted after builds)
 - [`discover.py`](#discoverpy) - Discover external papers via Semantic Scholar
 
+### Slash Commands
+
+- [`/research`](#research-slash-command) - Comprehensive literature research and review generation
+- [`/discover`](#discover-slash-command) - Gap-based external paper discovery via Semantic Scholar
+
 ### Data Structure
 
 - [KB Data Directory](#kb-data-directory-structure) - Complete folder structure
@@ -838,6 +843,132 @@ Discovery generates comprehensive markdown reports saved to `exports/discovery_Y
 2. **Import**: Copy DOI lists to Zotero for bulk import
 3. **Update KB**: `python src/build_kb.py` to add new papers
 4. **Search**: Use existing CLI commands on expanded knowledge base
+
+## Slash Commands
+
+### `/research` Slash Command
+
+Comprehensive literature research and review generation using the local knowledge base with intelligent analysis and report generation.
+
+```bash
+/research <your research question or topic>
+```
+
+#### Key Features
+
+**Comprehensive Analysis:**
+- Semantic search using Multi-QA MPNet embeddings across ~2,100 academic papers
+- Quality-based paper selection with enhanced scoring (0-100 scale)
+- Adaptive search strategies based on query type and available literature
+- Cross-paper synthesis and evidence analysis
+
+**Intelligent Processing:**
+- **Subagent Integration**: Research-helper for complex data retrieval, Literature-analyzer for deep methodological assessment
+- **Performance Optimization**: Batch operations (10-20x faster), smart search for 20+ papers
+- **Quality Assessment**: Visual indicators (A+ through F grades) with enhanced scoring markers
+- **Flexible Approach**: Adapts methodology based on research question and available evidence
+
+**Report Generation:**
+- Comprehensive literature review reports saved to `reviews/` directory
+- IEEE citation format with quality-prioritized references
+- Evidence synthesis with methodological assessment
+- Knowledge gap identification for future research
+
+#### Output Structure
+
+Reports are saved as `reviews/<topic>_YYYY-MM-DD.md` and typically include:
+- **Executive Summary**: Key findings and conclusions
+- **Methodology Assessment**: Study quality and evidence levels
+- **Synthesis**: Cross-study analysis and pattern identification
+- **Evidence Gaps**: Areas needing additional research
+- **References**: IEEE-formatted citations prioritizing high-quality papers (>70 score)
+
+#### Integration with External Discovery
+
+The `/research` command integrates with external discovery capabilities:
+- Can recommend follow-up `/discover` commands for gap analysis
+- Supports coverage assessment using Semantic Scholar discovery
+- Provides workflow guidance for expanding knowledge base coverage
+
+#### Examples
+
+```bash
+# Comprehensive topic research
+/research barriers to digital health adoption in elderly populations
+
+# Clinical research question
+/research effectiveness of telemedicine for diabetes management
+
+# Methodological inquiry
+/research implementation science approaches in mobile health interventions
+
+# Technology assessment
+/research AI applications in medical diagnosis accuracy
+```
+
+#### Performance Features
+
+- **Smart Caching**: Reuses search results and paper content for faster iterations
+- **Batch Processing**: Efficient multi-query execution with single model load
+- **Quality Filtering**: Automatic focus on higher-quality evidence when available
+- **Section Prioritization**: Intelligent content selection based on research question type
+
+### `/discover` Slash Command
+
+Gap-based external paper discovery using Semantic Scholar with intelligent web research integration.
+
+```bash
+/discover [report_name.md] or ["search topic"]
+```
+
+#### Usage Patterns
+
+| Input | Behavior |
+|-------|----------|
+| No arguments | Analyzes latest `reports/research_*.md` file for research gaps |
+| Quoted topic | Direct external search on specified topic |
+| `report_name.md` | Gap analysis of specific research report |
+
+#### Key Features
+
+**Primary Discovery:**
+- Semantic Scholar comprehensive search (214M papers, 85% digital health coverage)
+- Gap analysis from research reports to identify missing literature
+- Traffic light coverage assessment (🟢🟡🔴)
+- Population-specific term expansion and study type filtering
+
+**Web Research Integration:**
+- Supplements Semantic Scholar when <10 relevant papers found
+- Targets recent developments (6-12 months) and specialized repositories
+- Accesses regulatory documents, clinical trial protocols, grey literature
+- Avoids web search when Semantic Scholar provides sufficient results
+
+**Output:**
+- Comprehensive report saved to `exports/discovery_YYYY_MM_DD.md`
+- DOI lists formatted for Zotero bulk import
+- Coverage assessment with actionable recommendations
+- Integration guidance for knowledge base expansion
+
+#### Examples
+
+```bash
+# Gap analysis from latest research report
+/discover
+
+# Direct topic search
+/discover "AI medical diagnosis"
+
+# Specific report analysis
+/discover diabetes_review_2024.md
+```
+
+#### Integration with CLI Tools
+
+The slash command uses the underlying `discover.py` tool but adds:
+- Intelligent gap analysis from research reports
+- Adaptive search strategy based on research context
+- Web research when specialized sources needed
+- Consistent reporting format with other research workflows
 
 ## KB Data Directory Structure
 
