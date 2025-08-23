@@ -530,6 +530,10 @@ Build and maintain knowledge base from Zotero library for semantic search.
 - Safe error handling with clear user guidance
 
 **FEATURES:**
+- **Adaptive Rate Limiting (v4.6)**: Smart delays that adjust to API throttling patterns
+- **Real Checkpoint System**: Quality scores saved to disk every 50 papers with automatic recovery
+- **True Recovery**: Resume processing from exact point of interruption
+- **Zero Data Loss**: All completed work preserved even during process interruptions
 - Extracts full text from PDF attachments in Zotero
 - Generates Multi-QA MPNet embeddings optimized for healthcare & scientific papers
 - Creates FAISS index for ultra-fast similarity search
@@ -596,15 +600,19 @@ python src/build_kb.py --export kb_backup_$(date +%Y%m%d).tar.gz
 python src/build_kb.py --import kb_backup.tar.gz
 ```
 
-#### Process Flow
+#### Process Flow (v4.6)
 
 1. **Connection**: Connects to Zotero via local API (port 23119)
 2. **Detection**: Identifies new, updated, and deleted papers
-3. **Extraction**: Extracts text from PDFs using PyMuPDF
-4. **Caching**: Uses persistent caches for PDF text and embeddings
-5. **Embedding**: Generates Multi-QA MPNet embeddings (768-dimensional)
-6. **Indexing**: Builds FAISS index for similarity search
-7. **Validation**: Verifies integrity and reports statistics
+3. **Checkpoint Recovery**: Automatically detect completed work from previous runs
+4. **Extraction**: Extracts text from PDFs using PyMuPDF
+5. **Quality Scoring**: Sequential processing with adaptive rate limiting (100ms → 500ms+ delays)
+6. **Real Progress Saves**: Quality scores saved to disk every 50 papers
+7. **True Recovery**: Resume from exact interruption point with zero data loss
+8. **Caching**: Uses persistent caches for PDF text and embeddings
+9. **Embedding**: Generates Multi-QA MPNet embeddings (768-dimensional)
+10. **Indexing**: Builds FAISS index for similarity search
+11. **Validation**: Verifies integrity and reports statistics
 
 ### `analyze_gaps.py`
 

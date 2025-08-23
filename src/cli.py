@@ -260,7 +260,7 @@ def _log_ux_event(event_type: str, **kwargs: Any) -> None:
 # ============================================================================
 
 
-def format_quality_indicator(quality_score: int) -> str:
+def format_quality_indicator(quality_score: int | None) -> str:
     """Get visual indicator for quality score.
 
     Args:
@@ -269,6 +269,10 @@ def format_quality_indicator(quality_score: int) -> str:
     Returns:
         Visual indicator emoji/symbol for the quality level
     """
+    # Handle None quality scores (fallback for papers without enhanced scoring)
+    if quality_score is None:
+        quality_score = 0
+
     if quality_score >= QUALITY_EXCELLENT:
         return QUALITY_INDICATORS["excellent"]  # A+
     if quality_score >= QUALITY_VERY_GOOD:
@@ -915,6 +919,9 @@ def search(
             for idx, dist, paper in search_results:
                 # All papers should already have quality scores from enhanced scoring
                 quality = paper.get("quality_score", 0)
+                # Handle None quality scores (fallback for papers without enhanced scoring)
+                if quality is None:
+                    quality = 0
 
                 # Filter by minimum quality
                 if quality >= min_quality:
@@ -998,6 +1005,9 @@ def search(
                     quality_str = ""
                     if show_quality or min_quality:
                         quality = paper.get("quality_score", 0)
+                        # Handle None quality scores
+                        if quality is None:
+                            quality = 0
                         quality_str = f" [Q:{quality}]"
                     print(f"  [{paper['id']}] {paper['title'][:80]}...{quality_str} (R:{relevance:.2f})")
             return  # Skip normal display
@@ -2426,6 +2436,9 @@ def _format_batch_text(results: list[dict[str, Any]]) -> None:
 
                 for j, paper in enumerate(papers[:10], 1):  # Show top 10
                     quality = paper.get("quality", 0)
+                    # Handle None quality scores
+                    if quality is None:
+                        quality = 0
                     quality_marker = "[A] " if quality >= 80 else ""
                     print(f"{j}. {quality_marker}[{paper['id']}] {paper['title']}")
                     if paper.get("authors"):

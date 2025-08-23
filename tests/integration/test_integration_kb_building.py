@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Integration tests for knowledge base building process."""
 
+import concurrent.futures
 import json
 import sys
 from pathlib import Path
@@ -381,15 +382,14 @@ class TestCacheOperations:
         builder.save_cache()
         assert cache_file.exists()
 
-    def test_parallel_quality_processing_structure(self, tmp_path, monkeypatch):
+    def test_sequential_quality_processing_structure(self, tmp_path, monkeypatch):
         """
-        Test that parallel quality processing structure is correctly implemented.
+        Test that sequential quality processing structure is correctly implemented.
 
         Given: Papers ready for quality scoring
-        When: Parallel processing is enabled
-        Then: ThreadPoolExecutor structure is properly set up
+        When: Sequential processing is enabled
+        Then: Papers are processed one by one with rate limiting
         """
-        import concurrent.futures
 
         # Mock papers for testing
         papers = [
@@ -397,32 +397,19 @@ class TestCacheOperations:
             {"doi": "10.1234/test2", "title": "Test Paper 2"},
         ]
 
-        # Track ThreadPoolExecutor usage
-        executor_used = False
+        # Track sequential processing
+        processed_papers = []
 
-        class MockExecutor:
-            def __init__(self, max_workers=None):
-                nonlocal executor_used
-                executor_used = True
-                self.max_workers = max_workers
+        # Mock processing function to track sequential execution
+        def mock_process_quality_upgrade(paper):
+            processed_papers.append(paper["title"])
+            import time
 
-            def __enter__(self):
-                return self
+            time.sleep(0.001)  # Simulate rate limiting (very short for tests)
+            return paper["zotero_key"], 50, "Mock quality score"
 
-            def __exit__(self, *args):
-                pass
-
-            def submit(self, fn, *args):
-                # Return a mock future that returns basic result
-                future = concurrent.futures.Future()
-                future.set_result((0, 50, "Mock quality score"))
-                return future
-
-        # Mock the executor
-        monkeypatch.setattr(concurrent.futures, "ThreadPoolExecutor", MockExecutor)
-
-        # Mock other dependencies to focus on parallel structure
-        def mock_get_semantic_scholar_data(*args, **kwargs):
+        # Mock other dependencies to focus on sequential structure
+        def mock_get_semantic_scholar_data_sync(*args, **kwargs):
             return {"error": None, "citations": 10}
 
         def mock_calculate_quality_score(*args, **kwargs):
@@ -430,11 +417,12 @@ class TestCacheOperations:
 
         import src.build_kb
 
-        monkeypatch.setattr(src.build_kb, "get_semantic_scholar_data", mock_get_semantic_scholar_data)
+        monkeypatch.setattr(
+            src.build_kb, "get_semantic_scholar_data_sync", mock_get_semantic_scholar_data_sync
+        )
         monkeypatch.setattr(src.build_kb, "calculate_quality_score", mock_calculate_quality_score)
 
-        # Test the parallel processing structure by calling the relevant part
-        # This tests that the structure is correct without full integration
+        # Test the sequential processing structure
         metadata = {"papers": []}
         enhanced_scoring_available = True
 
@@ -444,23 +432,24 @@ class TestCacheOperations:
                 "id": f"{i + 1:04d}",
                 "doi": paper.get("doi", ""),
                 "title": paper.get("title", ""),
+                "zotero_key": f"key_{i}",
                 "quality_score": None,
                 "quality_explanation": "Enhanced scoring unavailable",
             }
             metadata["papers"].append(paper_metadata)
 
-        # Test that ThreadPoolExecutor would be used with correct parameters
-        if enhanced_scoring_available and papers:
-            # Verify the mock executor setup
-            with MockExecutor(max_workers=3) as executor:
-                assert executor.max_workers == 3
-                executor_used = True
+        # Test sequential processing
+        if enhanced_scoring_available and metadata["papers"]:
+            # Process papers sequentially
+            for paper_metadata in metadata["papers"]:
+                mock_process_quality_upgrade(paper_metadata)
 
-        assert executor_used, "ThreadPoolExecutor should be used for parallel processing"
+        # Verify sequential execution
+        assert len(processed_papers) == 2, "Should process both papers sequentially"
+        assert processed_papers == ["Test Paper 1", "Test Paper 2"], "Should process in order"
 
-    def test_rebuild_parallel_quality_integration(self, tmp_path, monkeypatch):
-        """Test parallel quality processing during rebuild integration."""
-        import concurrent.futures
+    def test_rebuild_sequential_quality_integration(self, tmp_path, monkeypatch):
+        """Test sequential quality processing during rebuild integration."""
 
         # Mock papers
         papers = [

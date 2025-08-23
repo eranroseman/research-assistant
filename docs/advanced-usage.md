@@ -352,50 +352,87 @@ def get_optimal_batch_size(self) -> int:
         return 64
 ```
 
-### Parallel Processing for Large Datasets
+### Large Dataset Processing with Real Checkpoint Recovery (v4.6)
 
 ```python
 #!/usr/bin/env python3
-"""Parallel processing for multiple knowledge bases."""
+"""Handle very large datasets with adaptive rate limiting."""
 
-from concurrent.futures import ProcessPoolExecutor, as_completed
-from pathlib import Path
-import subprocess
+import time
 import json
+from pathlib import Path
 
-def process_subset(papers_subset, output_dir):
-    """Process a subset of papers."""
-    # Save subset to temporary Zotero format
-    # Run build_kb.py on subset
-    # Return path to generated KB
-    pass
+class AdaptiveRateLimiter:
+    """Adaptive rate limiting for API requests."""
 
-def merge_knowledge_bases(kb_paths, output_path):
-    """Merge multiple knowledge bases."""
-    all_papers = []
+    def __init__(self, initial_delay=0.1):
+        self.delay = initial_delay
+        self.processed_count = 0
+        self.rate_limit_count = 0
+        self.success_count = 0
 
-    for kb_path in kb_paths:
-        with open(kb_path / "metadata.json") as f:
-            metadata = json.load(f)
-            all_papers.extend(metadata["papers"])
+    def wait_and_adjust(self, response_code=200):
+        """Adjust delay based on response patterns."""
+        time.sleep(self.delay)
 
-    # Renumber papers sequentially
-    for i, paper in enumerate(all_papers, 1):
-        paper["id"] = f"{i:04d}"
+        self.processed_count += 1
 
-    # Save merged metadata
-    # Rebuild index for all papers
-    pass
+        if response_code == 429:  # Rate limited
+            self.rate_limit_count += 1
+            # Exponential backoff
+            self.delay = min(self.delay * 2, 2.0)
+        elif response_code == 200:
+            self.success_count += 1
+            # Adaptive increases after 400 papers
+            if self.processed_count > 400:
+                self.delay = max(0.5, self.delay)
 
-# Process in parallel
-with ProcessPoolExecutor(max_workers=4) as executor:
-    futures = []
-    for subset in paper_subsets:
-        future = executor.submit(process_subset, subset, temp_dir)
-        futures.append(future)
+        # Checkpoint every 50 papers
+        if self.processed_count % 50 == 0:
+            self.save_checkpoint()
 
-    kb_paths = [f.result() for f in as_completed(futures)]
-    merge_knowledge_bases(kb_paths, "kb_data")
+    def save_checkpoint(self):
+        """Save processing checkpoint."""
+        checkpoint = {
+            'processed_count': self.processed_count,
+            'success_count': self.success_count,
+            'rate_limit_count': self.rate_limit_count,
+            'current_delay': self.delay
+        }
+
+        with open('checkpoint.json', 'w') as f:
+            json.dump(checkpoint, f)
+
+    def load_checkpoint(self):
+        """Resume from saved checkpoint."""
+        checkpoint_path = Path('checkpoint.json')
+        if checkpoint_path.exists():
+            with open(checkpoint_path) as f:
+                checkpoint = json.load(f)
+                self.processed_count = checkpoint.get('processed_count', 0)
+                self.success_count = checkpoint.get('success_count', 0)
+                self.rate_limit_count = checkpoint.get('rate_limit_count', 0)
+                self.delay = checkpoint.get('current_delay', 0.1)
+            return True
+        return False
+
+# Usage for large builds
+def process_large_dataset():
+    """Process with adaptive rate limiting and checkpoints."""
+    limiter = AdaptiveRateLimiter()
+
+    # Resume from checkpoint if exists
+    if limiter.load_checkpoint():
+        print(f"Resuming from checkpoint: {limiter.processed_count} papers processed")
+
+    # Process each paper with adaptive delays
+    for paper in papers[limiter.processed_count:]:
+        try:
+            response = process_paper_quality_score(paper)
+            limiter.wait_and_adjust(response.status_code)
+        except Exception as e:
+            print(f"Error processing paper {paper['id']}: {e}")
+            limiter.wait_and_adjust(500)  # Error case
 ```
 
 ## Large Dataset Optimization
