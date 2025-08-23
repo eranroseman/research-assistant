@@ -450,6 +450,7 @@ class TestParallelQualityProcessing:
             "updated": 3,
             "deleted": 0,
             "needs_reindex": False,
+            "quality_upgrades": {"KEY0001", "KEY0002", "KEY0003"},  # Mark these as quality-only upgrades
         }
 
         # Run incremental update
