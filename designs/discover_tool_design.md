@@ -4,16 +4,16 @@
 **Updated**: 2024-08-21
 **Status**: Design Phase - Semantic Scholar Foundation with Coverage Documentation
 **Purpose**: Comprehensive external paper discovery using Semantic Scholar with maximum infrastructure reuse
-**Dependencies**: Enhanced Quality Scoring (v3.1)
+**Dependencies**: Basic Quality Scoring (from build_kb.py)
 **Logging**: UX Analytics for usage pattern analysis and usability improvement
 
 ## Overview
 
-The `src/discover.py` tool provides comprehensive academic paper discovery using Semantic Scholar's 214M paper database with maximum infrastructure reuse. It leverages enhanced quality scoring's existing Semantic Scholar client for consistent API patterns, scoring, and caching while delivering superior "What's out there?" coverage.
+The `src/discover.py` tool provides comprehensive academic paper discovery using Semantic Scholar's 214M paper database with maximum infrastructure reuse. It leverages existing Semantic Scholar API patterns from build_kb.py for consistent API usage, basic quality scoring, and caching while delivering superior "What's out there?" coverage.
 
 **Key Design Principles:**
 - **Comprehensive Single Source**: Semantic Scholar's cross-domain coverage (85% of digital health research)
-- **Maximum Infrastructure Reuse**: Import enhanced quality scoring components completely
+- **Maximum Infrastructure Reuse**: Reuse existing Semantic Scholar API patterns from build_kb.py
 - **Output Consistency**: Match gap analysis report structure exactly
 - **Coverage Transparency**: Clear documentation of when specialized sources are needed
 - **User Flexibility**: Manual access to specialized sources + future slash commands
@@ -90,35 +90,47 @@ class SearchQuery:
     filters: Dict[str, Any]
     source: str = "semantic_scholar"  # Fixed to Semantic Scholar in v3.0
 
-def generate_semantic_scholar_queries(keywords: List[str],
-                                     year_from: Optional[int],
-                                     study_types: List[str],
-                                     population_focus: Optional[str]) -> List[SearchQuery]:
-    """Generate Semantic Scholar query variations with cross-domain optimization."""
-    # Generate keyword combinations
+def generate_semantic_scholar_query(keywords: List[str],
+                                   year_from: Optional[int],
+                                   study_types: List[str],
+                                   population_focus: Optional[str]) -> SearchQuery:
+    """Generate single comprehensive Semantic Scholar query for bulk search."""
+    # Combine all keywords into comprehensive OR query
+    base_terms = keywords.copy()
+
     # Add population-specific terms
-    # Apply study type filters
-    # Add temporal restrictions
-    # Cross-domain terminology expansion
-    # Return Semantic Scholar API formatted queries
+    if population_focus:
+        base_terms.extend(POPULATION_FOCUS_TERMS.get(population_focus, []))
+
+    # Add study type terms
+    if study_types:
+        base_terms.extend(study_types)
+
+    # Create single comprehensive query for bulk search endpoint
+    combined_query = " OR ".join(base_terms)
+
+    return SearchQuery(
+        query_text=combined_query,
+        filters={'year_from': year_from, 'limit': 1000},  # Use bulk search
+        source="semantic_scholar"
+    )
 ```
 
 ### 2. Semantic Scholar Academic Search (Comprehensive)
 ```python
 class SemanticScholarDiscovery:
     def __init__(self, include_kb_papers=False):
-        # Reuse enhanced scoring's Semantic Scholar client completely
-        from src.enhanced_scoring import (
-            get_semantic_scholar_client,
-            get_cache_manager,
-            get_error_handler
+        # Reuse existing Semantic Scholar API patterns from build_kb.py
+        from src.build_kb import (
+            get_semantic_scholar_data_sync,
+            get_semantic_scholar_data_batch
         )
         from src.cli import _setup_ux_logger, _log_ux_event
         from src.cli_kb_index import load_kb_index
 
-        self.client = get_semantic_scholar_client()
-        self.cache = get_cache_manager()
-        self.error_handler = get_error_handler()
+        self.api_sync = get_semantic_scholar_data_sync
+        self.api_batch = get_semantic_scholar_data_batch
+        self.rate_limiter = RateLimiter(requests_per_second=1.0)  # Unauthenticated limit
         self.ux_logger = _setup_ux_logger()
         self.log_ux_event = _log_ux_event
         self.include_kb_papers = include_kb_papers
@@ -138,13 +150,13 @@ class SemanticScholarDiscovery:
             # If KB not available, don't filter
             return set()
 
-    async def search_papers(self, queries: List[SearchQuery]) -> List[Paper]:
-        """Execute Semantic Scholar searches using existing infrastructure."""
+    async def search_papers(self, query: SearchQuery) -> List[Paper]:
+        """Execute single comprehensive Semantic Scholar search."""
         # Log search performance for optimization
         start_time = time.time()
 
-        # Search Semantic Scholar
-        papers = await self._execute_searches(queries)
+        # Single bulk search instead of multiple queries
+        papers = await self._execute_bulk_search(query)
 
         # Assess KB coverage before filtering (always performed)
         coverage_status = self._assess_kb_coverage(queries, papers)
@@ -217,23 +229,44 @@ class SemanticScholarDiscovery:
         }
 ```
 
-### 3. Paper Quality Scoring (Reused)
+### 3. Paper Quality Scoring (Basic Scoring - Fast & API-Free)
 ```python
 def score_discovery_papers(papers: List[Paper],
                           keywords: List[str]) -> List[ScoredPaper]:
-    """Score papers using enhanced quality scoring infrastructure."""
-    # Import from enhanced scoring module
-    from src.enhanced_scoring import calculate_enhanced_quality_score
+    """Score papers using basic quality scoring - no API calls required."""
+    # Import from build_kb.py (actual existing functions)
+    from src.build_kb import calculate_basic_quality_score, detect_study_type
 
     scored_papers = []
     for paper in papers:
-        # Reuse existing quality calculation
-        quality_score = calculate_enhanced_quality_score(paper)
+        # Detect study type from title/abstract (existing function)
+        study_type = detect_study_type(f"{paper.title} {paper.abstract}")
+
+        # Create paper dict for basic scoring
+        paper_data = {
+            'study_type': study_type,
+            'year': paper.year,
+            'journal': paper.venue,
+            'has_full_text': bool(paper.abstract)
+        }
+
+        # Use existing basic scoring function (no API required)
+        quality_score, explanation = calculate_basic_quality_score(paper_data)
+
         # Add keyword relevance scoring
         relevance_score = calculate_keyword_relevance(paper, keywords)
-        # Combine scores using existing patterns
         overall_score = (quality_score + relevance_score) / 2
-        scored_papers.append(ScoredPaper(paper, quality_score, relevance_score, overall_score))
+
+        confidence = "HIGH" if overall_score >= 80 else "MEDIUM" if overall_score >= 60 else "LOW"
+
+        scored_papers.append(ScoredPaper(
+            paper=paper,
+            quality_score=quality_score,
+            relevance_score=relevance_score,
+            overall_score=overall_score,
+            confidence=confidence,
+            reasoning=explanation
+        ))
 
     return sorted(scored_papers, key=lambda x: x.overall_score, reverse=True)
 ```
@@ -320,33 +353,49 @@ class SearchConfig:
 ```python
 class SemanticScholarDiscovery:
     def __init__(self):
-        # Import ALL components from enhanced scoring
-        from src.enhanced_scoring import (
-            get_semantic_scholar_client,
-            get_cache_manager,
-            get_error_handler,
-            calculate_enhanced_quality_score,
-            SEMANTIC_SCHOLAR_RATE_LIMIT,
+        # Import components from build_kb.py (actual existing functions)
+        from src.build_kb import (
+            get_semantic_scholar_data_sync,
+            get_semantic_scholar_data_batch,
+            calculate_basic_quality_score,
+            detect_study_type
+        )
+        from src.config import (
             CONFIDENCE_HIGH_THRESHOLD,
             CONFIDENCE_MEDIUM_THRESHOLD
         )
 
-        self.client = get_semantic_scholar_client()
-        self.cache = get_cache_manager()
-        self.error_handler = get_error_handler()
-        self.quality_scorer = calculate_enhanced_quality_score
+        self.api_sync = get_semantic_scholar_data_sync
+        self.api_batch = get_semantic_scholar_data_batch
+        self.rate_limiter = RateLimiter(requests_per_second=1.0)
+        self.quality_scorer = calculate_basic_quality_score
+        self.study_type_detector = detect_study_type
 
     async def search_papers(self, query: SearchQuery) -> List[Paper]:
-        """Search using complete enhanced scoring infrastructure."""
-        # All infrastructure already exists and tested
-        papers = await self.client.search(query.query_text, **query.filters)
+        """Search using bulk endpoint with rate limiting."""
+        # Use bulk search endpoint for efficiency
+        await self.rate_limiter.wait_if_needed()
 
-        # Apply existing quality scoring
-        scored_papers = [
-            self.quality_scorer(paper) for paper in papers
-        ]
+        # Single comprehensive search via bulk endpoint
+        response = requests.get(
+            f"{SEMANTIC_SCHOLAR_API_URL}/paper/search/bulk",
+            params={
+                'query': query.query_text,
+                'limit': query.filters.get('limit', 1000),
+                'fields': 'title,authors,year,abstract,citationCount,venue,externalIds'
+            }
+        )
 
-        return sorted(scored_papers, key=lambda x: x.overall_score, reverse=True)
+        if response.status_code == 200:
+            data = response.json()
+            papers = [self._parse_paper(p) for p in data.get('data', [])]
+
+            # Apply client-side filters (year, study type, etc.)
+            filtered_papers = self._apply_filters(papers, query.filters)
+
+            return filtered_papers
+        else:
+            raise APIConnectionError(f"Search failed: {response.status_code}")
 ```
 
 ### Manual Access Strategy (Phase 1)
@@ -370,7 +419,7 @@ class SemanticScholarDiscovery:
 # Discovery Results
 **Generated**: 2024-08-21 10:30:00
 **Search Strategy**: Cross-domain discovery for mobile health interventions
-**Duration**: 1.8 minutes
+**Duration**: 2-5 seconds (basic quality scoring, no API delays)
 
 ## 🟡 KB Coverage Status: ADEQUATE
 - **Current KB**: 34 relevant papers found
@@ -466,7 +515,7 @@ For specialized needs, consider manual access:
 {
   "discovery_session": {
     "timestamp": "2024-08-21T10:30:00Z",
-    "duration_minutes": 2.3,
+    "duration_seconds": 3.8,
     "search_params": {
       "keywords": ["diabetes", "mobile health", "pediatric"],
       "authors": [],
@@ -666,23 +715,35 @@ def log_usability_indicators(session_data):
 
 ## Technical Implementation
 
-### Rate Limiting Strategy
+### Rate Limiting Strategy (Proactive for Unauthenticated Access)
 ```python
 class RateLimiter:
-    def __init__(self, source: str):
-        self.limits = {
-            'pubmed': {'rps': 3, 'burst': 10},
-            'semantic_scholar': {'rps': 5, 'burst': 20},
-            'arxiv': {'rps': 3, 'burst': 5}
-        }
-        self.tokens = self.limits[source]['burst']
-        self.last_update = time.time()
+    def __init__(self, requests_per_second: float = 1.0):
+        """Proactive rate limiter for unauthenticated Semantic Scholar API."""
+        self.min_interval = 1.0 / requests_per_second  # 1 second for 1 RPS
+        self.last_request_time = 0.0
 
-    async def acquire(self):
-        """Token bucket rate limiting implementation."""
-        # Refill tokens based on elapsed time
-        # Wait if no tokens available
-        # Ensure sustainable API usage
+    async def wait_if_needed(self):
+        """Proactively wait to ensure we don't exceed rate limits."""
+        now = time.time()
+        time_since_last = now - self.last_request_time
+
+        if time_since_last < self.min_interval:
+            wait_time = self.min_interval - time_since_last
+            await asyncio.sleep(wait_time)
+
+        self.last_request_time = time.time()
+
+    def wait_sync(self):
+        """Synchronous version for requests library."""
+        now = time.time()
+        time_since_last = now - self.last_request_time
+
+        if time_since_last < self.min_interval:
+            wait_time = self.min_interval - time_since_last
+            time.sleep(wait_time)
+
+        self.last_request_time = time.time()
 ```
 
 ### Caching System
@@ -741,28 +802,50 @@ def with_retry(max_retries: int = 3, delay: float = 1.0):
 
 ### Quality Scoring Algorithm
 ```python
-def calculate_quality_score(paper: Paper, gap_context: str) -> float:
-    """Calculate comprehensive quality score for discovered paper."""
-    score = 0.0
+def calculate_basic_discovery_quality_score(paper: Paper) -> tuple[int, str]:
+    """Calculate basic quality score using only search result data (no API calls)."""
+    score = 50  # Base score
+    components = []
 
-    # Citation impact (0-30 points)
-    citation_score = min(paper.citation_count / 100 * 30, 30)
-    score += citation_score
+    # Study type scoring (20 points max) - from abstract text analysis
+    study_type = detect_study_type(f"{paper.title} {paper.abstract}")
+    if study_type == "rct":
+        score += 20
+        components.append("RCT (+20)")
+    elif study_type == "systematic_review":
+        score += 15
+        components.append("Systematic Review (+15)")
+    elif study_type == "cohort":
+        score += 10
+        components.append("Cohort Study (+10)")
 
-    # Recency bonus (0-20 points)
-    years_old = 2024 - paper.year
-    recency_score = max(20 - years_old * 2, 0)
-    score += recency_score
+    # Recency bonus (10 points max)
+    if paper.year and paper.year >= 2022:
+        score += 10
+        components.append("Recent (2022+) (+10)")
+    elif paper.year and paper.year >= 2020:
+        score += 5
+        components.append("Recent (2020+) (+5)")
 
-    # Venue prestige (0-25 points)
-    venue_score = get_venue_score(paper.venue)
-    score += venue_score
+    # Venue prestige (15 points max) - pattern matching
+    if paper.venue:
+        venue_lower = paper.venue.lower()
+        if any(prestige in venue_lower for prestige in ["nature", "science", "nejm", "lancet"]):
+            score += 15
+            components.append("Top Venue (+15)")
+        elif "journal" in venue_lower:
+            score += 5
+            components.append("Journal (+5)")
 
-    # Study type appropriateness (0-25 points)
-    study_type_score = get_study_type_score(paper.study_type, gap_context)
-    score += study_type_score
+    # Full text availability (5 points)
+    if paper.abstract:
+        score += 5
+        components.append("Abstract Available (+5)")
 
-    return min(score, 100)
+    score = min(score, 100)
+    explanation = f"Basic scoring: {', '.join(components)}" if components else "Basic scoring applied"
+
+    return score, explanation
 
 def calculate_relevance_score(paper: Paper, keywords: List[str], gap_context: str) -> float:
     """Calculate how well paper addresses the specific gap."""
@@ -842,7 +925,7 @@ QUALITY_THRESHOLD_MAPPING = {
 
 # Reuse ALL enhanced scoring configuration:
 # - SEMANTIC_SCHOLAR_API_URL
-# - SEMANTIC_SCHOLAR_RATE_LIMIT (100 RPS shared)
+# - SEMANTIC_SCHOLAR_RATE_LIMIT (1 RPS unauthenticated)
 # - API_CACHE_EXPIRY_DAYS (7 days)
 # - ENHANCED_QUALITY_* constants (citation impact, venue prestige, etc.)
 # - All confidence thresholds and scoring weights
@@ -999,9 +1082,9 @@ def test_concurrent_searches():
 ## Implementation Benefits (Semantic Scholar Foundation)
 
 ### Development Efficiency
-- **Maximum speed**: 2-3 weeks development time (vs. 5-6 weeks dual source)
-- **Minimal new code**: ~400 lines new code (vs. ~800 lines dual source)
-- **90% infrastructure reuse**: Semantic Scholar client, caching, scoring, error handling, logging all exist
+- **Realistic timeline**: 4-6 weeks development time (accounting for proper API integration)
+- **Moderate new code**: ~600 lines new code (including bulk search, basic scoring, rate limiting)
+- **60% infrastructure reuse**: Reuse existing API patterns from build_kb.py, adapt for search workflows
 - **No deduplication complexity**: Single comprehensive source eliminates multi-source coordination
 - **Shared analytics**: UX logging infrastructure already implemented and tested
 
@@ -1012,9 +1095,9 @@ def test_concurrent_searches():
 - **Citation network analysis**: Built-in influence metrics and paper recommendations
 
 ### Quality Consistency
-- **Identical quality scoring**: Same enhanced scoring algorithms as gap analysis
+- **Consistent quality scoring**: Basic scoring using same patterns as build_kb.py
 - **Same output format**: Familiar user experience across tools
-- **Same API patterns**: Rate limiting, caching, error handling all consistent
+- **Same API patterns**: Reuse proven request patterns from build_kb.py with proper rate limiting
 - **Same confidence thresholds**: HIGH/MEDIUM/LOW scoring alignment
 
 ### User Flexibility

@@ -81,6 +81,11 @@ python src/analyze_gaps.py                            # Comprehensive analysis
 python src/analyze_gaps.py --min-citations 50        # High-impact gaps only
 python src/analyze_gaps.py --year-from 2020 --limit 100  # Recent + limited results
 
+# External Paper Discovery
+python src/discover.py --keywords "topic,keywords"    # Discover external papers
+python src/discover.py --keywords "AI,healthcare" --quality-threshold HIGH  # High-quality only
+python src/discover.py --coverage-info               # Database coverage guide
+
 # Search Papers
 python src/cli.py search "topic"                      # Basic search
 python src/cli.py search "topic" --show-quality       # With quality scores
@@ -305,6 +310,37 @@ python src/build_kb.py --export kb_backup.tar.gz
 python src/build_kb.py --import kb_backup.tar.gz
 ```
 
+### External Paper Discovery (New in v4.6)
+
+Discover external papers using Semantic Scholar's comprehensive database (214M papers, 85% digital health coverage):
+
+```bash
+# Basic discovery with keywords
+python src/discover.py --keywords "diabetes,mobile health"
+
+# Advanced filtering for high-quality research
+python src/discover.py --keywords "AI,diagnostics" --quality-threshold HIGH --population-focus pediatric
+
+# Population-specific discovery
+python src/discover.py --keywords "telemedicine" --population-focus elderly --year-from 2020
+
+# Coverage guidance and database information
+python src/discover.py --coverage-info
+
+# Include existing KB papers in results (normally filtered out)
+python src/discover.py --keywords "treatment" --include-kb-papers
+```
+
+**Key Features:**
+- Traffic light coverage assessment (🟢🟡🔴) to evaluate KB completeness
+- Basic quality scoring (no API delays) with confidence indicators
+- Population-specific term expansion (pediatric, elderly, etc.)
+- Study type filtering and relevance scoring
+- DOI lists formatted for Zotero bulk import
+- Comprehensive search coverage via Semantic Scholar
+
+**Report Generation:** Results saved to `exports/discovery_YYYY_MM_DD.md` with organized DOI lists
+
 ### Gap Analysis (New in v4.2)
 
 After successful KB builds, you'll be prompted to run gap analysis to discover missing papers:
@@ -405,10 +441,12 @@ src/
 ├── build_kb.py         # Knowledge base builder from Zotero
 ├── cli.py              # Command-line interface for search
 ├── cli_kb_index.py     # O(1) paper lookups and index operations
+├── discover.py         # External paper discovery via Semantic Scholar
 └── config.py           # Configuration constants
 
 exports/                # User-valuable analysis and exports
 ├── analysis_pdf_quality.md    # KB quality analysis
+├── discovery_*.md             # External paper discovery reports
 ├── search_*.csv               # Search result exports
 └── paper_*.md                 # Individual paper exports
 

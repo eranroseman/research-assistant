@@ -668,7 +668,7 @@ def calculate_venue_prestige_score(venue: dict[str, Any] | str) -> int:
     elif isinstance(venue, str):
         venue_name = venue.lower()
     else:
-        venue_name = ""
+        venue_name = ""  # type: ignore[unreachable]
 
     # Tier 1: Top-tier venues (Q1 equivalent)
     tier1_patterns = [
@@ -3385,17 +3385,19 @@ class KnowledgeBaseBuilder:
                 # Note: Retry functionality could be added here in future versions
 
             # Apply quality results to metadata
-            for paper_index, (quality_score, quality_explanation) in quality_results.items():
-                if quality_score is None and use_fallback:
+            for paper_index, (quality_score, quality_explanation) in quality_results.items():  # type: ignore[assignment]
+                # Ensure paper_index is treated as int (it's defined as such in the dict type)
+                idx = int(paper_index)
+                if quality_score is None and use_fallback:  # type: ignore[unreachable]
                     # Use basic scoring with user consent
-                    paper_data = metadata["papers"][paper_index]
+                    paper_data = metadata["papers"][idx]  # type: ignore[unreachable]
                     basic_score, basic_explanation = calculate_basic_quality_score(paper_data)
-                    metadata["papers"][paper_index]["quality_score"] = basic_score
-                    metadata["papers"][paper_index]["quality_explanation"] = basic_explanation
+                    metadata["papers"][idx]["quality_score"] = basic_score
+                    metadata["papers"][idx]["quality_explanation"] = basic_explanation
                 else:
                     # Use enhanced score (or NULL if failed and user declined fallback)
-                    metadata["papers"][paper_index]["quality_score"] = quality_score
-                    metadata["papers"][paper_index]["quality_explanation"] = quality_explanation
+                    metadata["papers"][idx]["quality_score"] = quality_score
+                    metadata["papers"][idx]["quality_explanation"] = quality_explanation
 
             # Save metadata immediately to preserve quality scores before embedding generation
             print("SAVE: Saving metadata with quality scores...")

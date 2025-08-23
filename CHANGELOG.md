@@ -3,6 +3,14 @@
 ## [4.6.0] - 2025-08-23
 
 ### Added
+- **External Paper Discovery Tool**: Comprehensive paper discovery via Semantic Scholar
+  - New `discover.py` tool for finding external papers (214M paper database)
+  - Traffic light coverage assessment (🟢🟡🔴) for KB completeness evaluation
+  - Population-specific term expansion (elderly, pediatric, adult, women, men)
+  - Basic quality scoring with confidence indicators (no API delays)
+  - Study type filtering and DOI-based deduplication
+  - Comprehensive markdown reports with Zotero-compatible DOI lists
+  - Integration workflow: Discovery → Zotero Import → KB Update → Enhanced Search
 - **Batch API Processing**: Semantic Scholar batch endpoint integration
   - Reduced API calls from ~2,100 individual requests to ~5 batch requests
   - 400x reduction in API overhead for large knowledge bases

@@ -296,3 +296,78 @@ QUALITY_INDICATORS = {
     "low": "D",  # 30-44: Lower quality
     "very_low": "F",  # 0-29: Poor quality
 }
+
+# ============================================================================
+# DISCOVERY TOOL CONFIGURATION (SEMANTIC SCHOLAR FOUNDATION)
+# ============================================================================
+
+# Discovery-specific settings (reuse everything else from enhanced scoring)
+DISCOVERY_DEFAULT_SOURCE = "semantic_scholar"  # Leverage existing infrastructure
+DISCOVERY_DEFAULT_LIMIT = 50  # Conservative default
+DISCOVERY_MAX_KEYWORDS = 10  # Prevent overly complex queries
+DISCOVERY_DEFAULT_YEAR_FROM = 2020  # Recent research focus
+DISCOVERY_DEFAULT_INCLUDE_KB = False  # Exclude KB papers by default
+
+# UX Analytics Configuration (reuse cli.py logging infrastructure)
+DISCOVERY_UX_LOG_ENABLED = True  # Enable usage pattern tracking
+DISCOVERY_SESSION_TIMEOUT_MINUTES = 30  # Session boundary for analytics
+
+# Coverage guidance text
+COVERAGE_GUIDANCE = """
+## When to Use Manual Database Access
+
+**Semantic Scholar provides excellent comprehensive coverage (214M papers, 85% of digital health research).**
+
+**Consider manual access for specialized needs:**
+
+🔍 **PubMed** - When you need:
+  • Clinical trial protocols and regulatory submissions
+  • Medical Subject Heading (MeSH) precision
+  • FDA/NIH regulatory evidence
+  • Systematic review PRISMA compliance
+
+🔍 **IEEE Xplore** - When you need:
+  • Engineering implementation details
+  • Technical standards and specifications
+  • Conference proceedings in engineering/CS
+  • Industry best practices and benchmarks
+
+🔍 **arXiv** - When you need:
+  • Latest AI/ML preprints (6-12 months ahead of journals)
+  • Cutting-edge algorithm developments
+  • Reproducible research with code availability
+  • Early access to breakthrough methods
+
+**Manual Access Links:**
+• PubMed: https://pubmed.ncbi.nlm.nih.gov/
+• IEEE: https://ieeexplore.ieee.org/
+• arXiv: https://arxiv.org/search/
+
+**Future Enhancement:** Specialized slash commands planned (/pubmed, /ieee, /arxiv)
+"""
+
+# Population focus mappings for enhanced search
+POPULATION_FOCUS_TERMS = {
+    "pediatric": ["children", "pediatric", "adolescent", "youth", "minors"],
+    "elderly": ["elderly", "geriatric", "older adults", "seniors", "aging"],
+    "women": ["women", "female", "maternal", "pregnancy", "reproductive"],
+    "developing_countries": ["developing countries", "low-income", "global health", "LMIC"],
+}
+
+# Quality threshold mappings (reuse enhanced scoring thresholds)
+QUALITY_THRESHOLD_MAPPING = {
+    "HIGH": 80,  # CONFIDENCE_HIGH_THRESHOLD from enhanced scoring
+    "MEDIUM": 60,  # CONFIDENCE_MEDIUM_THRESHOLD from enhanced scoring
+    "LOW": 40,  # CONFIDENCE_LOW_THRESHOLD from enhanced scoring
+}
+
+# Reuse ALL enhanced scoring configuration:
+# - SEMANTIC_SCHOLAR_API_URL
+# - SEMANTIC_SCHOLAR_RATE_LIMIT (1 RPS unauthenticated)
+# - API_CACHE_EXPIRY_DAYS (7 days)
+# - ENHANCED_QUALITY_* constants (citation impact, venue prestige, etc.)
+# - All confidence thresholds and scoring weights
+
+# Output alignment with gap analysis
+DISCOVERY_OUTPUT_FORMAT = "markdown"  # Match gap analysis exactly
+DISCOVERY_EXPORT_PREFIX = "discovery"  # exports/discovery_YYYY_MM_DD.md

@@ -22,6 +22,15 @@ A production-ready academic literature search tool featuring batch API processin
 
 ## New Features in v4.6
 
+### External Paper Discovery Tool
+- **Comprehensive Discovery**: New `discover.py` tool accessing 214M papers via Semantic Scholar
+- **Coverage Assessment**: Traffic light system (🟢🟡🔴) evaluates KB completeness
+- **Population Focus**: Automatic term expansion for elderly, pediatric, adult, women, men
+- **Quality Filtering**: Basic scoring with confidence levels (HIGH/MEDIUM/LOW thresholds)
+- **Study Type Filtering**: Target specific research types (RCT, systematic reviews, etc.)
+- **Report Generation**: Markdown reports with Zotero-compatible DOI lists
+- **Integration Workflow**: Discovery → Import → KB Update → Enhanced Search
+
 ### Batch API Processing & Production Reliability
 - **Semantic Scholar Batch Endpoint**: Reduces API calls from ~2,100 to ~5 for large datasets (400x efficiency gain)
 - **96.9% Enhanced Scoring Success**: Production-tested reliability with comprehensive error handling
@@ -83,6 +92,7 @@ src/
 ├── build_kb.py          # Knowledge base builder from Zotero
 ├── cli.py               # Command-line interface for search and retrieval
 ├── cli_kb_index.py      # O(1) paper lookups and index operations
+├── discover.py          # External paper discovery via Semantic Scholar
 └── config.py            # Configuration constants and settings
 ```
 
@@ -188,6 +198,36 @@ python cli.py info                        # Check knowledge base status
 python cli.py cite 0001 0002 0003         # Generate IEEE citations for specific papers
 ```
 
+### 3. External Paper Discovery Tool (`discover.py`)
+
+**Purpose**: Discover external papers using Semantic Scholar's comprehensive database
+
+**Key Features**:
+
+- **214M Paper Database**: Access to Semantic Scholar's complete academic corpus
+- **Coverage Assessment**: Traffic light system (🟢🟡🔴) evaluating KB completeness
+- **Population-Specific Discovery**: Automatic keyword expansion for target populations
+- **Quality Filtering**: Basic scoring with HIGH/MEDIUM/LOW confidence thresholds
+- **Study Type Filtering**: Focus on specific research methodologies
+- **Rate Limiting**: Proactive 1 RPS limiting respecting API constraints
+
+**Usage**:
+
+```bash
+python discover.py --keywords "diabetes,mobile health"                   # Basic discovery
+python discover.py --keywords "AI,diagnostics" --quality-threshold HIGH # High-quality only
+python discover.py --keywords "telemedicine" --population-focus elderly # Population-specific
+python discover.py --coverage-info                                      # Coverage guidance
+```
+
+**Architecture**:
+
+1. **Query Generation**: Builds comprehensive OR queries from keywords and population terms
+2. **Paper Discovery**: Executes Semantic Scholar API calls with rate limiting
+3. **Analysis & Reporting**: Applies basic quality scoring and generates markdown reports
+
+**Integration Workflow**: Discovery → Zotero Import → KB Update → Enhanced Search
+
 **Study Type Categories:**
 
 - `systematic_review` - Systematic reviews and meta-analyses (⭐)
@@ -198,7 +238,7 @@ python cli.py cite 0001 0002 0003         # Generate IEEE citations for specific
 - `case_report` - Case reports and series (·)
 - `study` - Generic/unclassified studies (·)
 
-### 3. Claude Slash Command
+### 4. Claude Slash Command
 
 #### How Slash Commands Work in Claude Code
 

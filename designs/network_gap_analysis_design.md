@@ -3,7 +3,7 @@
 **Created**: 2024-08-21
 **Updated**: 2024-08-21
 **Status**: Design Phase - Citation Networks + Simplified Author Networks
-**Dependencies**: Enhanced Quality Scoring (v3.1)
+**Dependencies**: Basic Quality Scoring (metadata-based)
 **Breaking Changes**: Requires fresh KB rebuild, no backwards compatibility
 
 ## Overview
@@ -48,22 +48,22 @@ After users build their KB with `python src/build_kb.py`, they are prompted to r
 
 ### 1. Citation Network Gaps ⭐⭐⭐ **Primary Algorithm**
 **Method**: Analyze papers cited by KB papers but not in KB
-**Data Source**: Semantic Scholar API citation data (reuses enhanced scoring infrastructure)
-**Priority Scoring**: Citation frequency × paper quality score
+**Data Source**: Semantic Scholar API citation data (reuses build_kb.py infrastructure)
+**Priority Scoring**: Citation frequency × basic quality score (metadata-based)
 **Output**: High-impact papers frequently referenced by existing collection
 **Development Time**: 1-2 weeks
 **User Value**: VERY HIGH - clear relevance signal ("papers my collection cites")
 
 ### 2. Simplified Author Network Gaps ⭐⭐ **Secondary Algorithm**
 **Method**: Find recent papers from authors already in KB (no disambiguation needed)
-**Data Source**: Semantic Scholar author IDs from enhanced scoring + recent papers API
-**Priority Scoring**: Recency × topic similarity to KB × citation impact
+**Data Source**: Semantic Scholar author IDs from existing KB metadata + recent papers API
+**Priority Scoring**: Recency × topic similarity to KB × basic quality score
 **Output**: Recent work from researchers user already follows
 **Development Time**: 1 week additional
 **User Value**: HIGH - clear value proposition ("recent work from your authors")
 
 **Key Simplifications:**
-- No author disambiguation (uses existing Semantic Scholar author IDs from enhanced scoring)
+- No author disambiguation (uses existing Semantic Scholar author IDs from KB metadata)
 - No "productivity" assessment (all KB authors considered relevant)
 - Simple recency filter (configurable --year-from flag, default 2022)
 - Topic similarity filtering using existing KB embeddings
@@ -126,7 +126,7 @@ python src/analyze_gaps.py --year-from 2018
 Generated: 2024-08-21
 KB Version: 4.0
 Total Papers in KB: 2,157
-Analysis Duration: 1.8 minutes
+Analysis Duration: 15-25 minutes (depends on citation density and author count)
 Recency Threshold: 2022 (for author networks)
 
 ## Executive Summary
@@ -189,23 +189,24 @@ Recency Threshold: 2022 (for author networks)
 
 ### Data Flow
 1. **KB Analysis**: Load existing embeddings, metadata, and FAISS index
-2. **API Integration**: Query Semantic Scholar for citation/author data
-3. **Gap Detection**: Run 5 gap detection algorithms in parallel
-4. **Priority Scoring**: Rank gaps by relevance and impact
+2. **API Integration**: Batch queries using Semantic Scholar /paper/batch and /paper/search/bulk endpoints
+3. **Gap Detection**: Run 2 gap detection algorithms (citation + author networks)
+4. **Priority Scoring**: Rank gaps by relevance and impact using basic quality scores
 5. **Thematic Clustering**: Group related papers into blocks
 6. **Report Generation**: Create structured markdown with DOI lists
 
 ### Performance Considerations
-- **Parallel Processing**: Run gap detection algorithms concurrently
-- **API Rate Limiting**: Token bucket pattern (3 RPS max, 10 burst allowance)
+- **Sequential Processing**: Run gap detection algorithms sequentially due to API rate limits
+- **Proactive Rate Limiting**: Pre-emptive delays (1.0s between requests) to avoid 429 errors
+- **Adaptive Rate Limiting**: Increase delays to 2.0s if rate limiting detected
 - **Caching**: Cache API responses with 7-day expiry for development iteration
 - **Memory Management**: Stream large result sets to prevent OOM with large KBs
 - **Fail Fast**: Hard failures instead of graceful degradation for clarity
 
 ### Dependencies
-- **KB v4.0+ Only**: Requires FAISS index, Multi-QA MPNet embeddings, enhanced metadata
+- **KB v4.0+ Only**: Requires FAISS index, Multi-QA MPNet embeddings, basic metadata
 - **Semantic Scholar API**: Citation data, author information, paper details
-- **Enhanced Quality Scoring**: Required - citation impact and venue prestige data
+- **Basic Quality Scoring**: Uses metadata-based scoring (venue, year, citations) from build_kb.py
 
 ## Configuration Additions
 
@@ -226,8 +227,8 @@ GAP_ANALYSIS_AUTHOR_RECENCY_MIN = 2015      # Minimum allowed value (10 years)
 GAP_ANALYSIS_AUTHOR_RECENCY_MAX = 2024      # Maximum allowed value (current year)
 
 # API rate limiting (token bucket pattern)
-API_RATE_LIMIT_RPS = 3  # Conservative rate limit
-API_RATE_LIMIT_BURST = 10  # Burst allowance for initial requests
+API_RATE_LIMIT_RPS = 1.0  # Semantic Scholar actual limit: 1 RPS (unauthenticated shared pool)
+API_RATE_LIMIT_BURST = 3   # Conservative burst allowance
 API_RATE_LIMIT_RETRY_DELAY = 1.0  # Base delay for exponential backoff
 
 # Citation network analysis
@@ -235,7 +236,7 @@ CITATION_NETWORK_MAX_DEPTH = 2  # How deep to traverse citation networks
 CITATION_RELEVANCE_THRESHOLD = 0.1  # Min relevance score for inclusion
 
 # Simplified author network analysis
-AUTHOR_NETWORK_USE_EXISTING_IDS = True     # Use Semantic Scholar IDs from enhanced scoring
+AUTHOR_NETWORK_USE_EXISTING_IDS = True     # Use Semantic Scholar IDs from KB metadata
 AUTHOR_NETWORK_MAX_RECENT_PAPERS = 20      # Limit papers per author to prevent overwhelming
 AUTHOR_NETWORK_TOPIC_SIMILARITY_THRESHOLD = 0.6  # Minimum topic similarity to KB
 
@@ -255,17 +256,19 @@ CONFIDENCE_MEDIUM_THRESHOLD = 0.6  # MEDIUM priority gaps
 CONFIDENCE_LOW_THRESHOLD = 0.4     # LOW priority gaps
 
 # Performance settings
-GAP_ANALYSIS_PARALLEL_WORKERS = 4  # Parallel gap detection workers
-GAP_ANALYSIS_API_BATCH_SIZE = 10  # Papers per API batch request
+GAP_ANALYSIS_SEQUENTIAL_PROCESSING = True  # Sequential processing due to rate limits
+GAP_ANALYSIS_API_BATCH_SIZE = 500  # Papers per API batch request (use bulk endpoints)
 GAP_ANALYSIS_CACHE_EXPIRY_DAYS = 7  # Cache API responses for 7 days
+GAP_ANALYSIS_PROACTIVE_DELAY = 1.0  # Pre-emptive delay between API requests (seconds)
+GAP_ANALYSIS_ADAPTIVE_DELAY = 2.0  # Increased delay when rate limiting detected
 ```
 
 ## Error Handling & Requirements
 
 ### Hard Requirements
 - **KB v4.0+ Required**: Exit with clear error if KB version incompatible
-- **Enhanced Quality Scoring Required**: Exit if enhanced scoring not available
-- **Minimum KB Size**: Require ≥20 papers with enhanced quality scores
+- **Basic Quality Scoring Required**: Exit if KB lacks basic metadata for scoring
+- **Minimum KB Size**: Require ≥20 papers with basic metadata
 - **API Access Required**: Exit if Semantic Scholar API unavailable
 
 ### Fail Fast Error Handling
@@ -277,14 +280,14 @@ GAP_ANALYSIS_CACHE_EXPIRY_DAYS = 7  # Cache API responses for 7 days
 ### Validation (No Fallbacks)
 - **Paper ID Validation**: Exit if any KB papers have invalid structure
 - **Duplicate Detection**: Simple check against KB paper IDs
-- **Quality Filtering**: Require enhanced quality scores for all papers
+- **Quality Filtering**: Apply basic quality scores to all gap candidates
 
 ## Integration Points
 
-### With Enhanced Quality Scoring
-- **Required Integration**: Use existing Semantic Scholar API integration (no fallbacks)
-- **Quality Metrics**: Apply enhanced quality scoring to gap candidates (required)
-- **Shared Infrastructure**: Use same API client and caching
+### With Basic Quality Scoring
+- **Required Integration**: Use existing build_kb.py quality scoring functions
+- **Quality Metrics**: Apply basic quality scoring to gap candidates (venue, year, citations)
+- **Shared Infrastructure**: Use same calculate_basic_quality_score() function
 
 ### With Existing CLI
 - **Consistent Interface**: Follow same argument patterns as `src/cli.py`
@@ -305,8 +308,8 @@ GAP_ANALYSIS_CACHE_EXPIRY_DAYS = 7  # Cache API responses for 7 days
 - **Actionability**: % of suggested papers user actually imports into Zotero
 
 ### Performance
-- **Analysis Speed**: Complete analysis in <5 minutes for 2000-paper KB
-- **API Efficiency**: <500 API requests for typical gap analysis
+- **Analysis Speed**: Complete analysis in 15-25 minutes for 2000-paper KB (1 RPS rate limit)
+- **API Efficiency**: <50 API requests using batch endpoints (500 papers per request)
 - **Memory Usage**: Keep memory footprint <2GB during analysis
 
 ### User Experience
@@ -335,13 +338,15 @@ GAP_ANALYSIS_CACHE_EXPIRY_DAYS = 7  # Cache API responses for 7 days
 
 ### Phase 1A: Citation Networks (Week 1) - Highest ROI
 - [ ] Create `src/analyze_gaps.py` CLI interface with basic filtering
-- [ ] Reuse enhanced scoring's Semantic Scholar client and rate limiting
+- [ ] Reuse build_kb.py's Semantic Scholar client and rate limiting
+- [ ] Use /paper/batch endpoint for efficient citation data retrieval (500 papers/request)
 - [ ] Implement citation network gap detection with confidence scoring
 - [ ] Basic report generation matching gap analysis format
 - [ ] DOI lists for Zotero import
 
 ### Phase 1B: Simplified Author Networks (Week 2) - Additional Value
-- [ ] Extract author IDs from enhanced scoring data (no disambiguation)
+- [ ] Extract author IDs from existing KB metadata (no disambiguation)
+- [ ] Use /paper/search/bulk endpoint for recent papers by author (bulk author queries)
 - [ ] Implement recency filtering with configurable --year-from flag
 - [ ] Add topic similarity filtering using existing KB embeddings
 - [ ] Integrate author gaps into unified report structure
@@ -360,8 +365,8 @@ GAP_ANALYSIS_CACHE_EXPIRY_DAYS = 7  # Cache API responses for 7 days
 ## Dependencies & Prerequisites
 
 ### Required
-- Enhanced Quality Scoring v3.0+ (no fallback to basic scoring)
-- KB v4.0+ with Multi-QA MPNet embeddings and enhanced metadata
+- KB v4.0+ with Multi-QA MPNet embeddings and basic metadata
+- Basic quality scoring functions from build_kb.py (calculate_basic_quality_score)
 - Python packages: `aiohttp`, `networkx`, `scikit-learn`
 
 ### Optional
@@ -402,7 +407,7 @@ def prompt_gap_analysis_after_build(total_papers: int, build_time: float) -> Non
     print(f"\n✅ Knowledge base built successfully!")
     print(f"   {total_papers:,} papers indexed in {build_time:.1f} minutes")
 
-    if has_enhanced_scoring() and total_papers >= 20:
+    if total_papers >= 20:
         print(f"\n🔍 Run gap analysis to discover missing papers in your collection?")
         print(f"\nGap analysis identifies 5 types of literature gaps:")
         print(f"• Papers cited by your KB but missing from your collection")
@@ -424,8 +429,8 @@ def prompt_gap_analysis_after_build(total_papers: int, build_time: float) -> Non
             import subprocess
             subprocess.run(["python", "src/analyze_gaps.py"], check=False)
     else:
-        print("\n   Gap analysis requires enhanced quality scoring and ≥20 papers")
-        print("   Run with enhanced scoring to enable gap detection.")
+        print("\n   Gap analysis requires ≥20 papers")
+        print("   Build a larger knowledge base to enable gap detection.")
 ```
 
 ### Integration Benefits
@@ -442,18 +447,18 @@ def prompt_gap_analysis_after_build(total_papers: int, build_time: float) -> Non
 ```python
 def validate_kb_requirements():
     """Exit immediately if requirements not met"""
-    if not kb_has_enhanced_scoring():
-        sys.exit("ERROR: Enhanced Quality Scoring required. Run: rm -rf kb_data/ && python src/build_kb.py")
     if kb_version() < "4.0":
         sys.exit("ERROR: KB v4.0+ required. Delete kb_data/ and rebuild.")
     if len(load_kb_papers()) < 20:
         sys.exit("ERROR: Minimum 20 papers required for gap analysis.")
+    if not kb_has_basic_metadata():
+        sys.exit("ERROR: KB lacks basic metadata. Run: python src/build_kb.py")
 ```
 
 #### Rate Limiting Strategy
 ```python
 class TokenBucket:
-    def __init__(self, max_rps=3, burst_allowance=10):
+    def __init__(self, max_rps=1.0, burst_allowance=3):
         self.max_rps = max_rps
         self.burst_allowance = burst_allowance
         self.tokens = burst_allowance
@@ -461,17 +466,18 @@ class TokenBucket:
 
     async def acquire(self):
         """Acquire a token, waiting if necessary"""
-        # Implementation ensures sustainable API usage
+        # Pre-emptive delay: always wait 1.0s between requests
+        await asyncio.sleep(self.proactive_delay)
+        # Implementation ensures sustainable API usage and avoids 429 errors
 ```
 
-#### Confidence Scoring Framework (Enhanced Scores Only)
+#### Confidence Scoring Framework (Basic Scores)
 ```python
 def calculate_gap_confidence(gap_paper, kb_connections):
-    """Multi-factor confidence using enhanced quality scores"""
-    # Assumes enhanced quality scoring available - no fallbacks
-    enhanced_score = gap_paper.enhanced_quality_score  # Required field
+    """Multi-factor confidence using basic quality scores"""
+    basic_score = calculate_basic_quality_score(gap_paper)  # Uses venue, year, citations
     connection_score = len(kb_connections) / 10
-    return (enhanced_score / 100 + connection_score) / 2
+    return (basic_score / 100 + connection_score) / 2
 ```
 
 ### Implementation Priority Rationale

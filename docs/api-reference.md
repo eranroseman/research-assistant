@@ -20,6 +20,7 @@
 - [`diagnose`](#clipy-diagnose) - Check KB health and integrity
 - [`build_kb.py`](#build_kbpy) - Build/update knowledge base
 - [`analyze_gaps.py`](#analyze_gapspy) - Discover missing papers (auto-prompted after builds)
+- [`discover.py`](#discoverpy) - Discover external papers via Semantic Scholar
 
 ### Data Structure
 
@@ -688,6 +689,156 @@ Gap analysis is automatically prompted after successful KB builds when condition
 
 User can accept (Y) for immediate comprehensive analysis or decline (n) to run manually later with custom filters.
 
+### `discover.py`
+
+Discover external papers using Semantic Scholar's comprehensive database (214M papers, 85% digital health research coverage).
+
+**DISCOVERY STRATEGY:**
+- External paper discovery via Semantic Scholar API
+- KB coverage assessment with traffic light system (🟢🟡🔴)
+- Basic quality scoring for fast results (no API delays)
+- Population-specific term expansion
+- DOI-based filtering and deduplication
+
+**COVERAGE ASSESSMENT:**
+- 🟢 **EXCELLENT** (1000+ KB papers): Comprehensive coverage detected
+- 🟡 **GOOD** (100-999 KB papers): Solid coverage with potential gaps
+- 🔴 **NEEDS IMPROVEMENT** (<100 KB papers): Significant gaps likely
+
+**REQUIREMENTS:**
+- Internet connection for Semantic Scholar API
+- No KB requirements (works independently)
+
+```bash
+python src/discover.py [OPTIONS]
+```
+
+#### Options
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `--keywords` | STRING | Required | Comma-separated search keywords (e.g., "diabetes,mobile health") |
+| `--quality-threshold` | CHOICE | None | Minimum quality level (HIGH, MEDIUM, LOW) |
+| `--population-focus` | CHOICE | None | Target population (elderly, pediatric, adult, women, men) |
+| `--year-from` | INT | None | Only papers published from this year onwards |
+| `--year-to` | INT | None | Only papers published up to this year |
+| `--study-types` | MULTI | None | Filter by study types (rct, systematic_review, cohort, etc.) |
+| `--author` | STRING | None | Filter papers by author name (partial match) |
+| `--min-citations` | INT | 0 | Minimum citation count required |
+| `--limit` | INT | 1000 | Maximum papers to process |
+| `--include-kb-papers` | FLAG | False | Include existing KB papers in results (normally filtered out) |
+| `--coverage-info` | FLAG | False | Show database coverage information and exit |
+
+#### Quality Threshold Levels
+
+- **HIGH**: Score ≥80 (A+ and A grades)
+- **MEDIUM**: Score ≥60 (B+ and above)
+- **LOW**: Score ≥40 (C+ and above)
+
+#### Population Focus Terms
+
+When `--population-focus` is specified, keywords are automatically expanded:
+
+- **elderly**: "elderly", "older adults", "seniors", "geriatric"
+- **pediatric**: "pediatric", "children", "adolescent", "youth"
+- **adult**: "adult", "adults", "grown-up"
+- **women**: "women", "female", "maternal"
+- **men**: "men", "male", "paternal"
+
+#### Study Type Filters
+
+- `systematic_review` - Systematic reviews and meta-analyses
+- `rct` - Randomized controlled trials
+- `cohort` - Cohort studies
+- `case_control` - Case-control studies
+- `cross_sectional` - Cross-sectional studies
+- `case_report` - Case reports and series
+
+#### Examples
+
+```bash
+# Basic discovery with traffic light assessment
+python src/discover.py --keywords "diabetes,mobile health"
+
+# High-quality research for specific population
+python src/discover.py --keywords "AI,diagnostics" \
+                      --quality-threshold HIGH \
+                      --population-focus pediatric \
+                      --year-from 2020
+
+# Systematic reviews and RCTs only
+python src/discover.py --keywords "telemedicine" \
+                      --study-types systematic_review \
+                      --study-types rct \
+                      --min-citations 10
+
+# Recent work by specific author
+python src/discover.py --keywords "digital health" \
+                      --author "Smith" \
+                      --year-from 2022 \
+                      --limit 50
+
+# Coverage assessment and database information
+python src/discover.py --coverage-info
+
+# Include existing KB papers in analysis
+python src/discover.py --keywords "treatment" --include-kb-papers
+
+# Comprehensive discovery with all filters
+python src/discover.py --keywords "AI,healthcare,machine learning" \
+                      --quality-threshold MEDIUM \
+                      --population-focus elderly \
+                      --year-from 2020 \
+                      --year-to 2024 \
+                      --min-citations 5 \
+                      --limit 200
+```
+
+#### Output
+
+Discovery generates comprehensive markdown reports saved to `exports/discovery_YYYY_MM_DD.md`:
+
+**Report Structure:**
+```
+## 🟢 EXCELLENT (or 🟡 GOOD / 🔴 NEEDS IMPROVEMENT)
+- Current KB: X relevant papers found
+- External Papers: Y discovered
+- Assessment: Coverage evaluation
+- Recommendation: Actionable guidance
+
+## Search Parameters
+- All search criteria and filters used
+
+## Coverage Information
+- Database coverage explanation
+- Manual access recommendations for specialized needs
+
+## High Confidence Results (Score 80+)
+- Detailed paper information with scores
+- Abstract previews and relevance explanations
+
+## Search Performance
+- Discovery statistics and filtering results
+
+## DOI Lists for Zotero Import
+- High confidence papers (formatted list)
+- All papers combined (formatted list)
+```
+
+#### Performance
+
+- **Discovery Time**: 3-10 seconds depending on result count
+- **Rate Limiting**: 1 RPS to respect Semantic Scholar API limits
+- **Coverage**: 214M papers across all academic disciplines
+- **Specialization**: 85% coverage of digital health research
+
+#### Integration Workflow
+
+1. **Discovery**: `python src/discover.py --keywords "topic"`
+2. **Import**: Copy DOI lists to Zotero for bulk import
+3. **Update KB**: `python src/build_kb.py` to add new papers
+4. **Search**: Use existing CLI commands on expanded knowledge base
+
 ## KB Data Directory Structure
 
 The `kb_data/` directory contains all knowledge base files:
@@ -731,6 +882,7 @@ The system creates organized directories for different types of outputs:
 ```
 exports/                         # User-valuable files (flat with prefixes)
 ├── analysis_pdf_quality.md     # PDF quality analysis report
+├── discovery_2025_08_23.md     # External paper discovery reports
 ├── search_diabetes.csv         # Search result exports (auto-prefixed)
 ├── search_ai_healthcare.csv    # Additional search exports
 ├── paper_0001_methods.md       # Individual paper exports (auto-prefixed)
@@ -753,6 +905,7 @@ system/                          # System and development files (flat with prefi
 | Directory | Prefix | Purpose | Example |
 |-----------|--------|---------|---------|
 | `exports/` | `analysis_` | System analysis reports | `analysis_pdf_quality.md` |
+| `exports/` | `discovery_` | External paper discovery reports | `discovery_2025_08_23.md` |
 | `exports/` | `search_` | Search result exports | `search_diabetes.csv` |
 | `exports/` | `paper_` | Individual paper exports | `paper_0001_methods.md` |
 | `reviews/` | *(none)* | Literature reviews | `topic_2025-08-20.md` |

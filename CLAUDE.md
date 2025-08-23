@@ -4,6 +4,8 @@ Literature search with Multi-QA MPNet embeddings and enhanced quality scoring. K
 
 ## Key Features
 
+- **External Paper Discovery**: Comprehensive discovery via Semantic Scholar (214M papers, 85% digital health coverage)
+- **Traffic Light Assessment**: Coverage evaluation (🟢🟡🔴) for KB completeness guidance
 - **Adaptive Rate Limiting**: Smart delays (100ms → 500ms+) with checkpoint recovery every 50 papers
 - **Zero Data Loss**: All work preserved during process interruptions
 - **Enhanced Quality Scoring**: API-powered scoring with Semantic Scholar integration
@@ -24,6 +26,15 @@ python src/build_kb.py --import file      # Import KB from backup
 python src/analyze_gaps.py               # Comprehensive gap analysis (auto-prompted after builds)
 python src/analyze_gaps.py --min-citations 50 --year-from 2020 --limit 100  # Filtered analysis
 
+# External Paper Discovery (New in v4.6)
+python src/discover.py --keywords "diabetes,mobile health"  # Basic discovery with traffic light assessment
+python src/discover.py --keywords "AI,diagnostics" \
+                      --quality-threshold HIGH \
+                      --population-focus pediatric \
+                      --year-from 2022               # Advanced filtering for high-quality research
+python src/discover.py --coverage-info              # Database coverage guide and workflow integration
+python src/discover.py --keywords "telemedicine" --include-kb-papers  # Include existing KB papers in results
+
 # Search
 python src/cli.py search "topic" [--show-quality] [--quality-min N]
 python src/cli.py smart-search "topic" -k 30
@@ -42,16 +53,17 @@ python src/cli.py [info|diagnose]
 mypy src/
 ruff check src/ tests/ [--fix]
 pytest tests/e2e/test_e2e_cli_commands.py::TestCriticalE2EFunctionality -v  # 3 critical tests
-pytest tests/unit/ -v              # Unit tests (123 tests, fast)
+pytest tests/unit/ -v              # Unit tests (fast)
 pytest tests/integration/ -v       # Integration tests (workflow validation)
 pytest tests/e2e/ -v               # End-to-end tests (critical functionality)
 pytest tests/performance/ -v       # Performance benchmarks
-pytest tests/ -v                   # All tests (193 total)
+pytest tests/ -v                   # All tests (262 total)
 ```
 
 ## Architecture
 
 - **build_kb.py**: Zotero→PDF→Full content extraction (no truncation)→Multi-QA MPNet embeddings→Concurrent enhanced quality scoring (Semantic Scholar API)→FAISS index with smart caching
+- **discover.py**: External paper discovery via Semantic Scholar (214M papers), KB filtering, traffic light coverage assessment, basic quality scoring
 - **cli.py**: Search, enhanced quality indicators, smart chunking
 - **cli_kb_index.py**: O(1) lookups, author search, quality filtering
 - **.claude/commands/**: Slash commands
