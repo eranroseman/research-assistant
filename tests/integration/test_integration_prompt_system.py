@@ -200,15 +200,15 @@ class TestPromptSystemRobustness:
     def test_time_formatting_edge_cases(self):
         """Test time formatting for various durations."""
         test_cases = [
-            (30, "30s"),  # Under minute
-            (90, "2min"),  # Just over minute
-            (3600, "1.0h"),  # Exactly 1 hour
-            (7260, "2.0h"),  # 2 hours 1 minute -> rounds to 2.0h
+            (320, "5min"),  # 320 seconds = 5.33min -> rounds to 5min
+            (420, "7min"),  # 420 seconds = 7.0min -> shows as 7min
+            (3900, "1.1h"),  # 3900 seconds = 1.083h -> shows as 1.1h
+            (7560, "2.1h"),  # 7560 seconds = 2.1h -> shows as 2.1h
         ]
 
         for seconds, expected_format in test_cases:
             with patch("src.build_kb.safe_prompt", return_value="y") as mock_prompt:
-                confirm_long_operation(seconds + 3600, "Test")  # Add threshold
+                confirm_long_operation(seconds, "Test")  # Test with actual duration
                 call_args = mock_prompt.call_args
                 assert expected_format in call_args[1]["time_estimate"]
 

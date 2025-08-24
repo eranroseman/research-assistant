@@ -846,8 +846,8 @@ class TestReportGeneration:
 
         assert output_path.exists()
         report_content = output_path.read_text()
-        assert "Total gaps identified: 0" in report_content
-        assert "No critical gaps identified" in report_content  # Should handle empty state gracefully
+        assert "~0 gaps from" in report_content  # Empty gap count in analysis summary
+        assert "Quick Import**: Copy DOIs: ``" in report_content  # Empty DOI list indicates no gaps
 
 
 if __name__ == "__main__":

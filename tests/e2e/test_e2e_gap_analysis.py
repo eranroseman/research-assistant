@@ -18,97 +18,94 @@ import pytest
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
 
-class TestGapAnalysisE2E:
-    """End-to-end tests for gap analysis functionality."""
+@pytest.fixture
+def production_like_kb(temp_kb_dir):
+    """Set up a production-like KB for E2E testing."""
+    # Create realistic metadata with proper structure
+    metadata = {
+        "version": "4.0",
+        "total_papers": 25,  # Meet minimum requirement
+        "last_updated": "2025-01-15T10:30:00Z",
+        "embedding_model": "sentence-transformers/multi-qa-mpnet-base-dot-v1",
+        "embedding_dimensions": 768,
+        "build_stats": {"papers_with_pdfs": 20, "cache_hits": 15, "embedding_time": 120.5},
+        "papers": [],
+    }
 
-    @pytest.fixture
-    def production_like_kb(self, temp_kb_dir):
-        """Set up a production-like KB for E2E testing."""
-        # Create realistic metadata with proper structure
-        metadata = {
-            "version": "4.0",
-            "total_papers": 25,  # Meet minimum requirement
-            "last_updated": "2025-01-15T10:30:00Z",
-            "embedding_model": "sentence-transformers/multi-qa-mpnet-base-dot-v1",
-            "embedding_dimensions": 768,
-            "build_stats": {"papers_with_pdfs": 20, "cache_hits": 15, "embedding_time": 120.5},
-            "papers": [],
+    # Generate realistic paper data
+    topics = [
+        "Digital Health Interventions",
+        "Machine Learning in Healthcare",
+        "Telemedicine Applications",
+        "Mobile Health Technologies",
+        "Electronic Health Records",
+        "Clinical Decision Support",
+        "Health Information Systems",
+        "Patient Portal Systems",
+        "Wearable Health Devices",
+        "AI in Medical Diagnosis",
+    ]
+
+    authors_pool = [
+        "Smith J",
+        "Johnson M",
+        "Williams R",
+        "Brown K",
+        "Davis L",
+        "Miller S",
+        "Wilson T",
+        "Moore A",
+        "Taylor D",
+        "Anderson C",
+    ]
+
+    venues = [
+        "Journal of Medical Internet Research",
+        "NEJM",
+        "Nature Medicine",
+        "The Lancet",
+        "JAMIA",
+        "IEEE TBME",
+        "Health Affairs",
+        "Digital Health",
+        "NPJ Digital Medicine",
+    ]
+
+    for i in range(25):
+        paper_id = f"{i + 1:04d}"
+        topic = topics[i % len(topics)]
+
+        paper = {
+            "id": paper_id,
+            "doi": f"10.1234/paper_{paper_id}",
+            "title": f"{topic} - Study {i + 1}",
+            "authors": [authors_pool[i % len(authors_pool)], authors_pool[(i + 1) % len(authors_pool)]],
+            "year": 2020 + (i % 5),  # Years 2020-2024
+            "journal": venues[i % len(venues)],
+            "abstract": f"This study investigates {topic.lower()} with focus on practical applications and outcomes.",
+            "study_type": (study_type := ["rct", "systematic_review", "cohort", "case_control"][i % 4]),
+            "sample_size": 100 + (i * 50) if i % 4 == 0 else None,  # RCTs have sample sizes
+            "has_full_text": i % 3 != 0,  # Most have full text
+            "filename": f"paper_{paper_id}.md",
+            "embedding_index": i,
+            "semantic_scholar_id": f"s2_{12345 + i}",
+            "quality_score": 60 + (i % 40),  # Scores 60-99
+            "quality_explanation": f"High quality {study_type} with good methodology",
         }
+        metadata["papers"].append(paper)
 
-        # Generate realistic paper data
-        topics = [
-            "Digital Health Interventions",
-            "Machine Learning in Healthcare",
-            "Telemedicine Applications",
-            "Mobile Health Technologies",
-            "Electronic Health Records",
-            "Clinical Decision Support",
-            "Health Information Systems",
-            "Patient Portal Systems",
-            "Wearable Health Devices",
-            "AI in Medical Diagnosis",
-        ]
+    # Write metadata file
+    metadata_file = temp_kb_dir / "metadata.json"
+    with open(metadata_file, "w") as f:
+        json.dump(metadata, f, indent=2)
 
-        authors_pool = [
-            "Smith J",
-            "Johnson M",
-            "Williams R",
-            "Brown K",
-            "Davis L",
-            "Miller S",
-            "Wilson T",
-            "Moore A",
-            "Taylor D",
-            "Anderson C",
-        ]
+    # Create papers directory with sample papers
+    papers_dir = temp_kb_dir / "papers"
+    papers_dir.mkdir()
 
-        venues = [
-            "Journal of Medical Internet Research",
-            "NEJM",
-            "Nature Medicine",
-            "The Lancet",
-            "JAMIA",
-            "IEEE TBME",
-            "Health Affairs",
-            "Digital Health",
-            "NPJ Digital Medicine",
-        ]
-
-        for i in range(25):
-            paper_id = f"{i + 1:04d}"
-            topic = topics[i % len(topics)]
-
-            paper = {
-                "id": paper_id,
-                "doi": f"10.1234/paper_{paper_id}",
-                "title": f"{topic} - Study {i + 1}",
-                "authors": [authors_pool[i % len(authors_pool)], authors_pool[(i + 1) % len(authors_pool)]],
-                "year": 2020 + (i % 5),  # Years 2020-2024
-                "journal": venues[i % len(venues)],
-                "abstract": f"This study investigates {topic.lower()} with focus on practical applications and outcomes.",
-                "study_type": (study_type := ["rct", "systematic_review", "cohort", "case_control"][i % 4]),
-                "sample_size": 100 + (i * 50) if i % 4 == 0 else None,  # RCTs have sample sizes
-                "has_full_text": i % 3 != 0,  # Most have full text
-                "filename": f"paper_{paper_id}.md",
-                "embedding_index": i,
-                "semantic_scholar_id": f"s2_{12345 + i}",
-                "quality_score": 60 + (i % 40),  # Scores 60-99
-                "quality_explanation": f"High quality {study_type} with good methodology",
-            }
-            metadata["papers"].append(paper)
-
-        # Write metadata file
-        metadata_file = temp_kb_dir / "metadata.json"
-        with open(metadata_file, "w") as f:
-            json.dump(metadata, f, indent=2)
-
-        # Create papers directory with sample papers
-        papers_dir = temp_kb_dir / "papers"
-        papers_dir.mkdir()
-
-        for paper in metadata["papers"][:5]:  # Just create first 5 for performance
-            paper_file = papers_dir / paper["filename"]
-            content = f"""# {paper["title"]}
+    for paper in metadata["papers"][:5]:  # Just create first 5 for performance
+        paper_file = papers_dir / paper["filename"]
+        content = f"""# {paper["title"]}
 
 **DOI**: {paper["doi"]}
 **Authors**: {", ".join(paper["authors"])}
@@ -141,10 +138,14 @@ Clinical implications and future research directions are discussed.
 This study provides valuable insights for healthcare practitioners and researchers.
 Further investigation is warranted to expand these findings.
 """
-            with open(paper_file, "w") as f:
-                f.write(content)
+        with open(paper_file, "w") as f:
+            f.write(content)
 
-        return temp_kb_dir, metadata
+    return temp_kb_dir, metadata
+
+
+class TestGapAnalysisE2E:
+    """End-to-end tests for gap analysis functionality."""
 
     @patch("src.gap_detection.GapAnalyzer._api_request")
     def test_complete_gap_analysis_workflow(self, mock_api_request, production_like_kb):

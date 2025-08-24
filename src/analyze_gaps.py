@@ -65,7 +65,7 @@ try:
 except ImportError:
     # For direct script execution
     try:
-        from config import KB_VERSION, KB_DATA_PATH  # type: ignore[no-redef]
+        from config import KB_VERSION, KB_DATA_PATH
     except ImportError:
         # Fallback values
         KB_VERSION = "4.0+"
@@ -110,7 +110,10 @@ def validate_kb_requirements(kb_path: str) -> tuple[dict[str, Any], list[dict[st
 
     # Check KB exists
     if not kb_data_path.exists() or not metadata_file.exists():
-        from error_formatting import safe_exit
+        try:
+            from .error_formatting import safe_exit
+        except ImportError:
+            from error_formatting import safe_exit
 
         safe_exit(
             "Knowledge base not found",
@@ -118,13 +121,17 @@ def validate_kb_requirements(kb_path: str) -> tuple[dict[str, Any], list[dict[st
             "KB validation during gap analysis",
             module="analyze_gaps",
         )
+        return ({}, [])  # Unreachable in production, but needed for tests
 
     # Load metadata
     try:
         with open(metadata_file) as f:
             metadata = json.load(f)
     except (OSError, json.JSONDecodeError) as e:
-        from error_formatting import safe_exit
+        try:
+            from .error_formatting import safe_exit
+        except ImportError:
+            from error_formatting import safe_exit
 
         safe_exit(
             "Failed to load KB metadata",
@@ -133,10 +140,14 @@ def validate_kb_requirements(kb_path: str) -> tuple[dict[str, Any], list[dict[st
             technical_details=str(e),
             module="analyze_gaps",
         )
+        return ({}, [])  # Unreachable in production, but needed for tests
 
     # Check KB version
     if metadata.get("version") != KB_VERSION:
-        from error_formatting import safe_exit
+        try:
+            from .error_formatting import safe_exit
+        except ImportError:
+            from error_formatting import safe_exit
 
         safe_exit(
             f"KB v{KB_VERSION}+ required. Found v{metadata.get('version', 'unknown')}",
@@ -144,11 +155,15 @@ def validate_kb_requirements(kb_path: str) -> tuple[dict[str, Any], list[dict[st
             "KB version compatibility check",
             module="analyze_gaps",
         )
+        return ({}, [])  # Unreachable in production, but needed for tests
 
     # Check minimum papers
     papers = metadata.get("papers", [])
     if len(papers) < 20:
-        from error_formatting import safe_exit
+        try:
+            from .error_formatting import safe_exit
+        except ImportError:
+            from error_formatting import safe_exit
 
         safe_exit(
             "Minimum 20 papers required for gap analysis",
@@ -156,11 +171,15 @@ def validate_kb_requirements(kb_path: str) -> tuple[dict[str, Any], list[dict[st
             "Paper count validation",
             module="analyze_gaps",
         )
+        return ({}, [])  # Unreachable in production, but needed for tests
 
     # Check for basic metadata required for gap detection
     papers_with_metadata = [p for p in papers if p.get("title") and p.get("authors")]
     if len(papers_with_metadata) < 20:
-        from error_formatting import safe_exit
+        try:
+            from .error_formatting import safe_exit
+        except ImportError:
+            from error_formatting import safe_exit
 
         safe_exit(
             "KB lacks sufficient metadata for gap analysis",
@@ -168,6 +187,7 @@ def validate_kb_requirements(kb_path: str) -> tuple[dict[str, Any], list[dict[st
             "Paper metadata validation",
             module="analyze_gaps",
         )
+        return ({}, [])  # Unreachable in production, but needed for tests
 
     return metadata, papers
 
@@ -176,7 +196,10 @@ def _setup_gap_analysis_environment(
     kb_path: str,
 ) -> tuple[dict[str, Any], list[dict[str, Any]], Any]:
     """Setup gap analysis environment and initialize components."""
-    from output_formatting import ProgressTracker
+    try:
+        from .output_formatting import ProgressTracker
+    except ImportError:
+        from output_formatting import ProgressTracker
 
     # Validate KB requirements
     metadata, papers = validate_kb_requirements(kb_path)
@@ -193,11 +216,14 @@ def _import_gap_analyzer() -> type:
         return GapAnalyzer
     except ImportError:
         try:
-            from gap_detection import GapAnalyzer  # type: ignore[no-redef]
+            from gap_detection import GapAnalyzer
 
             return GapAnalyzer
         except ImportError:
-            from error_formatting import safe_exit
+            try:
+                from .error_formatting import safe_exit
+            except ImportError:
+                from error_formatting import safe_exit
 
             safe_exit(
                 "Gap detection module not found",
@@ -214,7 +240,10 @@ def _print_analysis_header(
     total_papers: int, metadata: dict[str, Any], min_citations: int, year_from: int, limit: int | None
 ) -> None:
     """Print analysis setup information."""
-    from output_formatting import print_status, print_header
+    try:
+        from .output_formatting import print_status, print_header
+    except ImportError:
+        from output_formatting import print_status, print_header
 
     print_header("🔍 Running Network Gap Analysis")
     print_status(f"Knowledge Base: {total_papers:,} papers", "info")
@@ -265,7 +294,10 @@ async def run_gap_analysis(kb_path: str, min_citations: int, year_from: int, lim
     total_papers = len(papers)
     _print_analysis_header(total_papers, metadata, min_citations, year_from, limit)
 
-    from output_formatting import print_status
+    try:
+        from .output_formatting import print_status
+    except ImportError:
+        from output_formatting import print_status
 
     # Import and initialize gap analyzer
     gap_analyzer_class = _import_gap_analyzer()
@@ -452,7 +484,10 @@ def main(min_citations: int, year_from: int, limit: int | None, kb_path: str) ->
     """
     # Validate command-line arguments with comprehensive error messages
     # Each validation provides specific remediation guidance
-    from error_formatting import safe_exit
+    try:
+        from .error_formatting import safe_exit
+    except ImportError:
+        from error_formatting import safe_exit
 
     if year_from < 2015:
         safe_exit(

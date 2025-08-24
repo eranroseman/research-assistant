@@ -130,8 +130,8 @@ class TestAnalyzeGapsFunctionalityWorks:
 
         with patch("builtins.print") as mock_print:
             progress = ProgressTracker("Test Workflow", total=3, show_eta=False)
-            progress.update(1, "Step 1")
-            progress.update(2, "Step 2")
+            progress.update(1, "Step 1", force=True)
+            progress.update(2, "Step 2", force=True)
             progress.complete("All done")
 
             # Should have made multiple print calls

@@ -246,7 +246,7 @@ class TestSafePromptEdgeCases:
 
     def test_whitespace_handling(self):
         """Test that whitespace in input is stripped."""
-        inputs_with_whitespace = ["  y  ", "\\t\\ny\\t\\n", "   n   "]
+        inputs_with_whitespace = ["  y  ", "\t\ny\t\n", "   n   "]
         expected = ["y", "y", "n"]
 
         for test_input, expected_result in zip(inputs_with_whitespace, expected, strict=False):

@@ -382,7 +382,7 @@ class TestCLIIntegration(unittest.TestCase):
         result = runner.invoke(main, ["--limit", "10"])
 
         assert result.exit_code == 1
-        assert "Keywords are required" in result.output
+        assert "Keywords required for paper discovery" in result.output
 
     @patch("discover.discover_papers")
     @patch("discover.generate_discovery_report")
