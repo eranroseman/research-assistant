@@ -57,13 +57,24 @@ try:
         GAP_ANALYSIS_CACHE_EXPIRY_DAYS,
         CONFIDENCE_HIGH_THRESHOLD,
         CONFIDENCE_MEDIUM_THRESHOLD,
+        AUTHOR_NETWORK_MAX_RECENT_PAPERS,
     )
     from .cli_kb_index import KnowledgeBaseIndex
 except ImportError:
     # For direct script execution
     from config import (
+        SEMANTIC_SCHOLAR_API_URL,
+        API_REQUEST_TIMEOUT,
+        API_MAX_RETRIES,
+        API_RETRY_DELAY,
+        GAP_ANALYSIS_MIN_KB_CONNECTIONS,
+        GAP_ANALYSIS_MAX_GAPS_PER_TYPE,
+        GAP_ANALYSIS_CACHE_EXPIRY_DAYS,
+        CONFIDENCE_HIGH_THRESHOLD,
+        CONFIDENCE_MEDIUM_THRESHOLD,
         AUTHOR_NETWORK_MAX_RECENT_PAPERS,
     )
+    from cli_kb_index import KnowledgeBaseIndex
 
 
 class TokenBucket:
@@ -242,7 +253,7 @@ class GapAnalyzer:
                 return {"timestamp": datetime.now(UTC).isoformat(), "data": {}}
 
             print(f"Loaded cache with {len(cache['data'])} entries ({age_days} days old)")
-            return cache
+            return dict(cache)
 
         except (json.JSONDecodeError, KeyError):
             print("Invalid cache file, starting fresh")
@@ -280,13 +291,15 @@ class GapAnalyzer:
 
         # Check cache first
         if cache_key in self.cache["data"]:
-            return self.cache["data"][cache_key]
+            return dict(self.cache["data"][cache_key])
 
         # Acquire rate limit token
         await self.rate_limiter.acquire()
 
         connector = aiohttp.TCPConnector(limit=10, limit_per_host=5)
         timeout = aiohttp.ClientTimeout(total=API_REQUEST_TIMEOUT)
+
+        result = None
 
         try:
             async with aiohttp.ClientSession(connector=connector, timeout=timeout) as session:
@@ -297,7 +310,8 @@ class GapAnalyzer:
                                 data = await response.json()
                                 # Cache successful response
                                 self.cache["data"][cache_key] = data
-                                return data
+                                result = dict(data)
+                                break
                             if (
                                 response.status == 429
                             ):  # Rate limited - exponential backoff required for 2025 API
@@ -306,27 +320,115 @@ class GapAnalyzer:
                                 await asyncio.sleep(wait_time)
                             else:
                                 print(f"API error {response.status}: {await response.text()}")
-                                return None
+                                break  # Non-retryable error
 
                     except TimeoutError:
                         if attempt < API_MAX_RETRIES - 1:
                             await asyncio.sleep(API_RETRY_DELAY)
                         else:
                             print(f"Request timeout after {API_MAX_RETRIES} attempts")
-                            return None
 
                     except Exception as e:
                         if attempt < API_MAX_RETRIES - 1:
                             await asyncio.sleep(API_RETRY_DELAY)
                         else:
                             print(f"Request failed: {e}")
-                            return None
 
         except Exception as e:
             print(f"Session error: {e}")
-            return None
 
-        return None
+        return result
+
+    def _separate_papers_by_doi(
+        self, paper_batch: list[dict[str, Any]]
+    ) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
+        """Separate papers with DOIs from those without."""
+        papers_with_dois = []
+        papers_without_dois = []
+
+        for paper_info in paper_batch:
+            paper_id = paper_info["id"]
+            if paper_id and paper_id.startswith("10."):  # DOI format
+                papers_with_dois.append(
+                    {"key": paper_info["key"], "doi": paper_id, "paper_data": paper_info["paper_data"]}
+                )
+            else:
+                papers_without_dois.append(paper_info)
+
+        return papers_with_dois, papers_without_dois
+
+    async def _process_batch_dois(self, papers_with_dois: list[dict[str, Any]]) -> dict[str, dict[str, Any]]:
+        """Process papers with DOIs using batch endpoint."""
+        if not papers_with_dois:
+            return {}
+
+        results = {}
+        fields = "references.title,references.authors,references.year,references.citationCount,references.externalIds,references.venue"
+        doi_ids = [f"DOI:{paper['doi']}" for paper in papers_with_dois]
+
+        # Use async requests for proper async compatibility
+        for attempt in range(3):  # API_MAX_RETRIES
+            try:
+                async with (
+                    aiohttp.ClientSession() as session,
+                    session.post(
+                        f"{SEMANTIC_SCHOLAR_API_URL}/paper/batch",
+                        params={"fields": fields},
+                        json={"ids": doi_ids},
+                        timeout=aiohttp.ClientTimeout(total=30),  # API_REQUEST_TIMEOUT
+                    ) as response,
+                ):
+                    if response.status == 200:
+                        batch_data = await response.json()
+
+                        # Map results back to paper keys
+                        for j, paper in enumerate(papers_with_dois):
+                            if j < len(batch_data) and batch_data[j] is not None:
+                                results[paper["key"]] = batch_data[j]
+                            else:
+                                results[paper["key"]] = {"references": []}
+                        break
+
+                    if response.status == 429:  # Rate limited
+                        await asyncio.sleep(2 * (attempt + 1))  # Exponential backoff
+                        continue
+                # For non-200, non-429 responses, mark all as failed
+                for paper in papers_with_dois:
+                    results[paper["key"]] = {"references": []}
+                break
+
+            except Exception:
+                if attempt == 2:  # Last attempt
+                    for paper in papers_with_dois:
+                        results[paper["key"]] = {"references": []}
+                else:
+                    await asyncio.sleep(2)
+
+        return results
+
+    async def _process_individual_papers(
+        self, papers_without_dois: list[dict[str, Any]]
+    ) -> dict[str, dict[str, Any]]:
+        """Process papers without DOIs individually."""
+        results = {}
+
+        for paper_info in papers_without_dois:
+            paper_id = paper_info["id"]
+            key = paper_info["key"]
+
+            # Use the existing individual API request method
+            url = f"{SEMANTIC_SCHOLAR_API_URL}/paper/{paper_id}"
+            params = {
+                "fields": "references.title,references.authors,references.year,references.citationCount,references.externalIds,references.venue"
+            }
+
+            api_response = await self._api_request(url, params)
+            if api_response:
+                results[key] = api_response
+            else:
+                results[key] = {"references": []}
+
+        return results
 
     async def _batch_get_references(self, paper_batch: list[dict[str, Any]]) -> dict[str, dict[str, Any]]:
         """Batch process papers to get their references using Semantic Scholar batch API.
@@ -340,82 +442,115 @@ class GapAnalyzer:
         Returns:
             Dictionary mapping paper keys to their reference data
         """
-        results = {}
-
         # Separate papers with DOIs from those without (batch endpoint requires DOIs)
-        papers_with_dois = []
-        papers_without_dois = []
+        papers_with_dois, papers_without_dois = self._separate_papers_by_doi(paper_batch)
 
-        for paper_info in paper_batch:
-            paper_id = paper_info["id"]
-            if paper_id and paper_id.startswith("10."):  # DOI format
-                papers_with_dois.append(
-                    {"key": paper_info["key"], "doi": paper_id, "paper_data": paper_info["paper_data"]}
-                )
-            else:
-                papers_without_dois.append(paper_info)
-
-        # Process papers with DOIs using batch endpoint
-        if papers_with_dois:
-            fields = "references.title,references.authors,references.year,references.citationCount,references.externalIds,references.venue"
-            doi_ids = [f"DOI:{paper['doi']}" for paper in papers_with_dois]
-
-            # Use async requests for proper async compatibility
-            for attempt in range(3):  # API_MAX_RETRIES
-                try:
-                    async with (
-                        aiohttp.ClientSession() as session,
-                        session.post(
-                            f"{SEMANTIC_SCHOLAR_API_URL}/paper/batch",
-                            params={"fields": fields},
-                            json={"ids": doi_ids},
-                            timeout=aiohttp.ClientTimeout(total=30),  # API_REQUEST_TIMEOUT
-                        ) as response,
-                    ):
-                        if response.status == 200:
-                            batch_data = await response.json()
-
-                            # Map results back to paper keys
-                            for j, paper in enumerate(papers_with_dois):
-                                if j < len(batch_data) and batch_data[j] is not None:
-                                    results[paper["key"]] = batch_data[j]
-                                else:
-                                    results[paper["key"]] = {"references": []}
-                            break
-
-                        if response.status == 429:  # Rate limited
-                            await asyncio.sleep(2 * (attempt + 1))  # Exponential backoff
-                            continue
-                    # For non-200, non-429 responses, mark all as failed
-                    for paper in papers_with_dois:
-                        results[paper["key"]] = {"references": []}
-                    break
-
-                except Exception:
-                    if attempt == 2:  # Last attempt
-                        for paper in papers_with_dois:
-                            results[paper["key"]] = {"references": []}
-                    else:
-                        await asyncio.sleep(2)
-
-        # Process papers without DOIs individually (fallback)
-        for paper_info in papers_without_dois:
-            paper_id = paper_info["id"]
-            key = paper_info["key"]
-
-            # Use the existing individual API request method
-            url = f"{SEMANTIC_SCHOLAR_API_URL}/paper/{paper_id}"
-            params = {
-                "fields": "references.title,references.authors,references.year,references.citationCount,references.externalIds,references.venue"
-            }
-
-            response = await self._api_request(url, params)
-            if response:
-                results[key] = response
-            else:
-                results[key] = {"references": []}
+        # Process both groups
+        results = {}
+        results.update(await self._process_batch_dois(papers_with_dois))
+        results.update(await self._process_individual_papers(papers_without_dois))
 
         return results
+
+    def _prepare_papers_for_batch_processing(self) -> list[dict[str, Any]]:
+        """Prepare papers for batch processing."""
+        papers_with_identifiers = []
+        for paper in self.papers:
+            paper_id = paper.get("semantic_scholar_id") or paper.get("doi")
+            if paper_id:
+                papers_with_identifiers.append(
+                    {
+                        "key": paper.get("zotero_key", paper.get("id", "unknown")),
+                        "id": paper_id,
+                        "paper_data": paper,
+                    }
+                )
+        return papers_with_identifiers
+
+    def _process_reference_for_gaps(
+        self,
+        ref: dict[str, Any],
+        kb_paper_dois: set[str],
+        citation_candidates: dict[str, Any],
+        paper: dict[str, Any],
+    ) -> None:
+        """Process a single reference for gap analysis."""
+        if not ref or not ref.get("title"):
+            return
+
+        # Skip if already in KB - avoid suggesting papers user already has
+        ref_doi = None
+        external_ids = ref.get("externalIds")
+        if external_ids and isinstance(external_ids, dict) and external_ids.get("DOI"):
+            ref_doi = external_ids["DOI"]
+            if ref_doi in kb_paper_dois:
+                return
+
+        # Track candidate papers and which KB papers cite them
+        # Use DOI as key when available, title as fallback for uniqueness
+        ref_key = ref_doi or ref["title"]
+        if ref_key not in citation_candidates:
+            citation_candidates[ref_key] = {
+                "title": ref["title"],
+                "authors": [
+                    a.get("name", "") if isinstance(a, dict) else str(a)
+                    for a in (ref.get("authors", []) or [])
+                ],
+                "year": ref.get("year"),
+                "citation_count": ref.get("citationCount", 0) or 0,
+                "venue": ref.get("venue", {}).get("name")
+                if isinstance(ref.get("venue"), dict)
+                else ref.get("venue"),
+                "doi": ref_doi,
+                "citing_papers": [],
+                "gap_type": "citation_network",
+            }
+
+        citation_candidates[ref_key]["citing_papers"].append(
+            {
+                "id": paper.get("id", "unknown") if isinstance(paper, dict) else str(paper),
+                "title": paper.get("title", "Unknown Title") if isinstance(paper, dict) else "Unknown Title",
+            }
+        )
+
+    def _filter_and_score_candidates(
+        self, citation_candidates: dict[str, Any], min_citations: int, limit: int | None
+    ) -> list[dict[str, Any]]:
+        """Filter candidates by citation count and calculate confidence scores."""
+        filtered_gaps = []
+
+        for candidate in citation_candidates.values():
+            # Apply citation count filter
+            if candidate["citation_count"] < min_citations:
+                continue
+
+            num_connections = len(candidate["citing_papers"])
+            if num_connections >= GAP_ANALYSIS_MIN_KB_CONNECTIONS:
+                # Calculate confidence using multi-factor scoring
+                confidence = min(1.0, (num_connections / 10 + candidate["citation_count"] / 1000))
+
+                candidate["confidence_score"] = confidence
+                candidate["confidence_level"] = self._get_confidence_level(confidence)
+                candidate["gap_priority"] = (
+                    "HIGH"
+                    if confidence >= CONFIDENCE_HIGH_THRESHOLD
+                    else "MEDIUM"
+                    if confidence >= CONFIDENCE_MEDIUM_THRESHOLD
+                    else "LOW"
+                )
+
+                filtered_gaps.append(candidate)
+
+        # Sort by confidence score (highest first) to prioritize best recommendations
+        filtered_gaps.sort(key=lambda x: x["confidence_score"], reverse=True)
+
+        # Apply limits
+        if limit:
+            filtered_gaps = filtered_gaps[:limit]
+        if len(filtered_gaps) > GAP_ANALYSIS_MAX_GAPS_PER_TYPE:
+            filtered_gaps = filtered_gaps[:GAP_ANALYSIS_MAX_GAPS_PER_TYPE]
+
+        return filtered_gaps
 
     async def find_citation_gaps(
         self, min_citations: int = 0, limit: int | None = None
@@ -433,22 +568,11 @@ class GapAnalyzer:
         """
         print(f"🔍 Citation network analysis: scanning {len(self.papers)} KB papers...")
 
-        citation_candidates = {}
-        kb_paper_dois = {p.get("doi") for p in self.papers if p.get("doi")}
-        # Skip - kb_paper_ids not needed for current implementation
+        citation_candidates: dict[str, Any] = {}
+        kb_paper_dois: set[str] = {p["doi"] for p in self.papers if p.get("doi") is not None}
 
         # Prepare papers for batch processing (400x efficiency improvement)
-        papers_with_identifiers = []
-        for paper in self.papers:
-            paper_id = paper.get("semantic_scholar_id") or paper.get("doi")
-            if paper_id:
-                papers_with_identifiers.append(
-                    {
-                        "key": paper.get("zotero_key", paper.get("id", "unknown")),
-                        "id": paper_id,
-                        "paper_data": paper,
-                    }
-                )
+        papers_with_identifiers = self._prepare_papers_for_batch_processing()
 
         # Process papers in batches of 500
         batch_size = 500
@@ -477,51 +601,7 @@ class GapAnalyzer:
 
                 references = batch_results[key].get("references", []) or []
                 for ref in references:
-                    if not ref or not ref.get("title"):
-                        continue
-
-                    # Skip if already in KB - avoid suggesting papers user already has
-                    ref_doi = None
-                    external_ids = ref.get("externalIds")
-                    if external_ids and isinstance(external_ids, dict) and external_ids.get("DOI"):
-                        ref_doi = external_ids["DOI"]
-                        if ref_doi in kb_paper_dois:
-                            continue
-
-                    # Apply citation count filter - focuses on established papers
-                    # Higher thresholds filter for well-cited papers, may miss recent work
-                    citation_count = ref.get("citationCount", 0) or 0
-                    if citation_count < min_citations:
-                        continue
-
-                    # Track candidate papers and which KB papers cite them
-                    # Use DOI as key when available, title as fallback for uniqueness
-                    ref_key = ref_doi or ref["title"]
-                    if ref_key not in citation_candidates:
-                        citation_candidates[ref_key] = {
-                            "title": ref["title"],
-                            "authors": [
-                                a.get("name", "") if isinstance(a, dict) else str(a)
-                                for a in (ref.get("authors", []) or [])
-                            ],
-                            "year": ref.get("year"),
-                            "citation_count": citation_count,
-                            "venue": ref.get("venue", {}).get("name")
-                            if isinstance(ref.get("venue"), dict)
-                            else ref.get("venue"),
-                            "doi": ref_doi,
-                            "citing_papers": [],
-                            "gap_type": "citation_network",
-                        }
-
-                    citation_candidates[ref_key]["citing_papers"].append(
-                        {
-                            "id": paper.get("id", "unknown") if isinstance(paper, dict) else str(paper),
-                            "title": paper.get("title", "Unknown Title")
-                            if isinstance(paper, dict)
-                            else "Unknown Title",
-                        }
-                    )
+                    self._process_reference_for_gaps(ref, kb_paper_dois, citation_candidates, paper)
 
             print(" ✓")
 
@@ -529,44 +609,70 @@ class GapAnalyzer:
             self._save_cache()
 
         # Filter by minimum KB connections and calculate confidence scores
-        # Only include papers cited by multiple KB papers to ensure relevance
-        filtered_gaps = []
-        for candidate in citation_candidates.values():
-            num_connections = len(candidate["citing_papers"])
-            if num_connections >= GAP_ANALYSIS_MIN_KB_CONNECTIONS:
-                # Calculate confidence using multi-factor scoring:
-                # - Connection strength: Number of KB papers citing this gap (0-1 scale, max at 10)
-                # - Citation impact: Total citations of the gap paper (0-1 scale, max at 1000)
-                # Combined score ranges 0-1, higher = more confident recommendation
-                confidence = min(1.0, (num_connections / 10 + candidate["citation_count"] / 1000))
-
-                candidate["confidence_score"] = confidence
-                candidate["confidence_level"] = self._get_confidence_level(confidence)
-                candidate["gap_priority"] = (
-                    "HIGH"
-                    if confidence >= CONFIDENCE_HIGH_THRESHOLD
-                    else "MEDIUM"
-                    if confidence >= CONFIDENCE_MEDIUM_THRESHOLD
-                    else "LOW"
-                )
-
-                filtered_gaps.append(candidate)
-
-        # Sort by confidence score (highest first) to prioritize best recommendations
-        filtered_gaps.sort(key=lambda x: x["confidence_score"], reverse=True)
-        if limit:
-            filtered_gaps = filtered_gaps[:limit]
-
-        # Apply hard limit to prevent overwhelming results
-        # Config limit ensures UI remains manageable even for very large KBs
-        if len(filtered_gaps) > GAP_ANALYSIS_MAX_GAPS_PER_TYPE:
-            filtered_gaps = filtered_gaps[:GAP_ANALYSIS_MAX_GAPS_PER_TYPE]
+        filtered_gaps = self._filter_and_score_candidates(citation_candidates, min_citations, limit)
 
         # Save cache after processing
         self._save_cache()
 
         print(f"✅ Found {len(filtered_gaps)} high-quality citation gaps")
         return filtered_gaps
+
+    def _get_author_frequencies(self) -> dict[str, int]:
+        """Extract and calculate author frequencies from KB papers."""
+        author_freq: dict[str, int] = {}
+        for paper in self.papers:
+            authors = paper.get("authors", []) or []
+            for author in authors:
+                if isinstance(author, str):
+                    author_freq[author] = author_freq.get(author, 0) + 1
+        return author_freq
+
+    def _is_paper_already_in_kb(self, paper: dict[str, Any]) -> bool:
+        """Check if a paper is already in the KB by DOI or title."""
+        # Check by DOI
+        paper_doi = None
+        external_ids = paper.get("externalIds")
+        if external_ids and isinstance(external_ids, dict) and external_ids.get("DOI"):
+            paper_doi = external_ids["DOI"]
+            if any(p.get("doi") == paper_doi for p in self.papers):
+                return True
+
+        # Check by title (case-insensitive)
+        return any(p.get("title", "").lower() == paper["title"].lower() for p in self.papers)
+
+    def _calculate_author_gap_confidence(self, paper: dict[str, Any]) -> float:
+        """Calculate confidence score for author network gaps."""
+        years_recent = 2025 - paper.get("year", 2020)
+        citation_score = min(1.0, paper.get("citationCount", 0) / 100)  # Scale: 0-1, max at 100 citations
+        recency_score = max(0.1, 1.0 - (years_recent / 5))  # Higher for recent papers, floor at 0.1
+        return float((citation_score + recency_score) / 2)  # Equal weight to both factors
+
+    def _create_author_gap_record(self, paper: dict[str, Any], author_name: str) -> dict[str, Any]:
+        """Create an author gap record from a paper."""
+        paper_doi = None
+        external_ids = paper.get("externalIds")
+        if external_ids and isinstance(external_ids, dict) and external_ids.get("DOI"):
+            paper_doi = external_ids["DOI"]
+
+        confidence = self._calculate_author_gap_confidence(paper)
+
+        return {
+            "title": paper["title"],
+            "authors": [
+                a.get("name", "") if isinstance(a, dict) else str(a) for a in (paper.get("authors", []) or [])
+            ],
+            "year": paper.get("year"),
+            "citation_count": paper.get("citationCount", 0),
+            "venue": paper.get("venue", {}).get("name")
+            if isinstance(paper.get("venue"), dict)
+            else paper.get("venue"),
+            "doi": paper_doi,
+            "gap_type": "author_network",
+            "source_author": author_name,
+            "confidence_score": confidence,
+            "confidence_level": self._get_confidence_level(confidence),
+            "gap_priority": "MEDIUM" if confidence >= CONFIDENCE_MEDIUM_THRESHOLD else "LOW",
+        }
 
     async def find_author_gaps(self, year_from: int = 2022, limit: int | None = None) -> list[dict[str, Any]]:
         """Find recent papers from authors already in KB.
@@ -582,34 +688,15 @@ class GapAnalyzer:
         """
         print(f"👥 Author network analysis: extracting authors from {len(self.papers)} KB papers...")
 
-        # Extract unique authors from KB papers
-        # Simple approach: use author names as strings (no disambiguation needed)
-        # More sophisticated: could use Semantic Scholar author IDs for precision
-        kb_authors = set()
-        for paper in self.papers:
-            authors = paper.get("authors", []) or []
-            for author in authors:
-                if isinstance(author, str):
-                    kb_authors.add(author)
+        # Get top authors by frequency in KB
+        author_freq = self._get_author_frequencies()
+        top_authors = sorted(author_freq.keys(), key=lambda a: author_freq[a], reverse=True)[:10]
 
-        print(f"   Found {len(kb_authors)} unique authors (analyzing top 10 by frequency)")
+        print(f"   Found {len(author_freq)} unique authors (analyzing top 10 by frequency)")
 
         # Search for recent papers by these authors
-        # Conservative limit to prevent API overload and focus on most relevant authors
         author_gaps = []
         processed_authors = 0
-
-        # Limit to 10 authors to prevent severe rate limiting
-        # Focus on most frequent/important authors in KB for highest ROI
-        author_freq: dict[str, int] = {}
-        for paper in self.papers:
-            authors = paper.get("authors", []) or []
-            for author in authors:
-                if isinstance(author, str):
-                    author_freq[author] = author_freq.get(author, 0) + 1
-
-        # Get top authors by frequency in KB
-        top_authors = sorted(author_freq.keys(), key=lambda a: author_freq[a], reverse=True)[:10]
 
         for author_name in top_authors:
             processed_authors += 1
@@ -620,7 +707,6 @@ class GapAnalyzer:
                 await asyncio.sleep(2.0)  # 2-second delay between authors
 
             # Search for recent papers by this author using Semantic Scholar search
-            # Query format: author:"Name" year:2022- limits to recent work
             url = f"{SEMANTIC_SCHOLAR_API_URL}/paper/search"
             params = {
                 "query": f'author:"{author_name}"',
@@ -629,56 +715,20 @@ class GapAnalyzer:
                 "fields": "title,authors,year,citationCount,venue,externalIds",
             }
 
-            response = await self._api_request(url, params)
-            if not response or "data" not in response:
+            api_response = await self._api_request(url, params)
+            if not api_response or "data" not in api_response:
                 continue
 
-            papers = response.get("data", []) or []
+            papers = api_response.get("data", []) or []
             for paper in papers:
                 if not paper or not paper.get("title"):
                     continue
 
                 # Skip if already in KB
-                paper_doi = None
-                external_ids = paper.get("externalIds")
-                if external_ids and isinstance(external_ids, dict) and external_ids.get("DOI"):
-                    paper_doi = external_ids["DOI"]
-                    if any(p.get("doi") == paper_doi for p in self.papers):
-                        continue
-
-                # Check if title already in KB (fuzzy match would be better)
-                if any(p.get("title", "").lower() == paper["title"].lower() for p in self.papers):
+                if self._is_paper_already_in_kb(paper):
                     continue
 
-                # Calculate confidence score for author network gaps
-                # Different from citation gaps - emphasizes recency over citations
-                # Recent papers may have low citations but high relevance
-                years_recent = 2025 - paper.get("year", 2020)
-                citation_score = min(
-                    1.0, paper.get("citationCount", 0) / 100
-                )  # Scale: 0-1, max at 100 citations
-                recency_score = max(0.1, 1.0 - (years_recent / 5))  # Higher for recent papers, floor at 0.1
-                confidence = (citation_score + recency_score) / 2  # Equal weight to both factors
-
-                author_gap = {
-                    "title": paper["title"],
-                    "authors": [
-                        a.get("name", "") if isinstance(a, dict) else str(a)
-                        for a in (paper.get("authors", []) or [])
-                    ],
-                    "year": paper.get("year"),
-                    "citation_count": paper.get("citationCount", 0),
-                    "venue": paper.get("venue", {}).get("name")
-                    if isinstance(paper.get("venue"), dict)
-                    else paper.get("venue"),
-                    "doi": paper_doi,
-                    "gap_type": "author_network",
-                    "source_author": author_name,
-                    "confidence_score": confidence,
-                    "confidence_level": self._get_confidence_level(confidence),
-                    "gap_priority": "MEDIUM" if confidence >= CONFIDENCE_MEDIUM_THRESHOLD else "LOW",
-                }
-
+                author_gap = self._create_author_gap_record(paper, author_name)
                 author_gaps.append(author_gap)
 
         # Sort by confidence and apply limit
@@ -966,6 +1016,158 @@ class GapAnalyzer:
 
         return dashboard
 
+    def _get_area_emoji(self, area_name: str) -> str:
+        """Get emoji for research area."""
+        if "Physical" in area_name:
+            return "🏃"
+        if "AI" in area_name:
+            return "🤖"
+        if "Implementation" in area_name:
+            return "⚕️"
+        if "Clinical" in area_name:
+            return "🧬"
+        if "Public" in area_name:
+            return "📊"
+        return "📚"
+
+    def _build_research_area_section(self, research_areas: dict[str, Any]) -> str:
+        """Build the research area section of the report."""
+        content = """## 🏃 **Citation Gaps by Research Area**
+
+**Why organize by area**: Helps you make strategic decisions about which research domains to prioritize for knowledge base expansion.
+
+"""
+
+        for area_name, area_papers in research_areas.items():
+            if not area_papers:
+                continue
+
+            # Sort papers within each area by impact
+            area_papers_sorted = sorted(
+                area_papers,
+                key=lambda x: (len(x.get("citing_papers", [])) * 1000 + x.get("citation_count", 0)),
+                reverse=True,
+            )
+
+            avg_citations = sum(p.get("citation_count", 0) for p in area_papers) // len(area_papers)
+            emoji = self._get_area_emoji(area_name)
+
+            content += f"""### {emoji} **{area_name}** ({len(area_papers)} papers, avg {avg_citations:,} citations)
+
+**Import Priority**: {"HIGH" if avg_citations > 1500 else "MEDIUM" if avg_citations > 500 else "MEDIUM-LOW"}
+**Quick Import DOIs**: `{", ".join([p.get("doi", "") for p in area_papers_sorted[:3] if p.get("doi")])}`
+
+"""
+
+            # Show top 3-5 papers per area
+            for i, gap in enumerate(area_papers_sorted[:5], 1):
+                citing_papers = gap.get("citing_papers", [])
+                citing_list = ", ".join([f"{p['id']}" for p in citing_papers[:3]])
+                if len(citing_papers) > 3:
+                    citing_list += f" (+{len(citing_papers) - 3} more)"
+
+                content += f"""**{i}.** `{gap.get("doi", "No DOI")}` ({gap.get("citation_count", 0):,} citations)
+   **{gap["title"][:80]}{"..." if len(gap["title"]) > 80 else ""}**
+   *{gap.get("venue", "Unknown venue")} • {gap.get("year", "Unknown year")} • Cited by KB: {citing_list}*
+
+"""
+
+            if len(area_papers_sorted) > 5:
+                content += f"   *... and {len(area_papers_sorted) - 5} more papers in this area*\n\n"
+
+        return content
+
+    def _build_author_gaps_section(self, author_gaps: list[dict[str, Any]], filtered_count: int) -> str:
+        """Build the author gaps section of the report."""
+        if not author_gaps:
+            return ""
+
+        content = f"""## 👥 **Recent Work from Your Researchers** ({len(author_gaps)} papers)
+*Smart filtered - removed {filtered_count} low-quality items (book reviews, duplicates, etc.)*
+
+**Why relevant**: Latest publications from authors already established in your knowledge base
+
+### High-Impact Recent Work (Import Priority: HIGH)
+"""
+
+        # Show only high-quality, high-impact recent work
+        high_impact_recent = [
+            g for g in author_gaps if g.get("citation_count", 0) > 50 or g.get("year", 0) >= 2024
+        ][:10]
+
+        for i, gap in enumerate(high_impact_recent, 1):
+            content += f"""**{i}.** `{gap.get("doi", "No DOI")}` ({gap.get("citation_count", 0)} citations)
+   **{gap["title"][:80]}{"..." if len(gap["title"]) > 80 else ""}**
+   *{gap.get("venue", "Unknown")} • {gap.get("year", "Unknown")} • Author: {gap.get("source_author", "Unknown")}*
+
+"""
+
+        return content
+
+    def _build_bulk_import_section(
+        self,
+        citation_gaps: list[dict[str, Any]],
+        author_gaps: list[dict[str, Any]],
+        research_areas: dict[str, Any],
+    ) -> str:
+        """Build the bulk import section of the report."""
+        content = """## 📥 **Bulk Import Center**
+
+### 🚀 **Power User Import** (Top Priority - 15 papers)
+*Copy this DOI list for immediate high-impact additions:*
+
+```
+"""
+
+        # Add top 15 DOIs by impact
+        top_dois = []
+        for gap in sorted(
+            citation_gaps,
+            key=lambda x: (len(x.get("citing_papers", [])) * 1000 + x.get("citation_count", 0)),
+            reverse=True,
+        )[:15]:
+            if gap.get("doi"):
+                top_dois.append(gap["doi"])
+
+        content += "\n".join(top_dois)
+
+        content += """
+```
+
+### 📚 **By Research Area**
+*Choose your focus areas for strategic KB expansion:*
+
+"""
+
+        # Add DOI lists by research area
+        for area_name, area_papers in research_areas.items():
+            if not area_papers:
+                continue
+
+            area_dois = [str(p.get("doi")) for p in area_papers if p.get("doi")][:10]
+            emoji = self._get_area_emoji(area_name)
+
+            content += f"""**{emoji} {area_name}** ({len(area_papers)} papers):
+```
+{chr(10).join(area_dois)}
+```
+
+"""
+
+        # Add author DOI section
+        content += f"""### 👥 **Recent Author Work** ({len(author_gaps)} papers)
+*Smart filtered for quality - removed duplicates and low-value content:*
+
+```
+"""
+        author_dois = [str(gap.get("doi")) for gap in author_gaps if gap.get("doi")]
+        content += "\n".join(author_dois)
+        content += """
+```
+"""
+
+        return content
+
     async def generate_report(
         self,
         citation_gaps: list[dict[str, Any]],
@@ -998,12 +1200,7 @@ class GapAnalyzer:
         # Generate executive dashboard
         dashboard = self._generate_executive_dashboard(citation_gaps, author_gaps, research_areas)
 
-        # Group gaps by priority
-        high_priority = [g for g in citation_gaps if g["gap_priority"] == "HIGH"]
-        medium_priority = [g for g in citation_gaps if g["gap_priority"] == "MEDIUM"]
-        low_priority = [g for g in citation_gaps if g["gap_priority"] == "LOW"]
-
-        # Start building report with new dashboard format
+        # Build report header
         report_content = (
             dashboard
             + f"""
@@ -1015,194 +1212,16 @@ class GapAnalyzer:
 
 ---
 
-## 🏃 **Citation Gaps by Research Area** ({len(citation_gaps)} papers)
-
-**Why organize by area**: Helps you make strategic decisions about which research domains to prioritize for knowledge base expansion.
-
 """
         )
 
-        # Add research area sections
-        for area_name, area_papers in research_areas.items():
-            if not area_papers:
-                continue
+        # Add main sections
+        report_content += self._build_research_area_section(research_areas)
+        report_content += self._build_author_gaps_section(author_gaps, filtered_count)
+        report_content += self._build_bulk_import_section(citation_gaps, author_gaps, research_areas)
 
-            # Sort papers within each area by impact (KB citations + total citations)
-            area_papers_sorted = sorted(
-                area_papers,
-                key=lambda x: (len(x.get("citing_papers", [])) * 1000 + x.get("citation_count", 0)),
-                reverse=True,
-            )
-
-            avg_citations = sum(p.get("citation_count", 0) for p in area_papers) // len(area_papers)
-            emoji = (
-                "🏃"
-                if "Physical" in area_name
-                else "🤖"
-                if "AI" in area_name
-                else "⚕️"
-                if "Implementation" in area_name
-                else "🧬"
-                if "Clinical" in area_name
-                else "📊"
-                if "Public" in area_name
-                else "📚"
-            )
-
-            report_content += f"""### {emoji} **{area_name}** ({len(area_papers)} papers, avg {avg_citations:,} citations)
-
-**Import Priority**: {"HIGH" if avg_citations > 1500 else "MEDIUM" if avg_citations > 500 else "MEDIUM-LOW"}
-**Quick Import DOIs**: `{", ".join([p.get("doi", "") for p in area_papers_sorted[:3] if p.get("doi")])}`
-
-"""
-
-            # Show top 3-5 papers per area (not all papers to keep manageable)
-            for i, gap in enumerate(area_papers_sorted[:5], 1):
-                citing_papers = gap.get("citing_papers", [])
-                citing_list = ", ".join([f"{p['id']}" for p in citing_papers[:3]])
-                if len(citing_papers) > 3:
-                    citing_list += f" (+{len(citing_papers) - 3} more)"
-
-                report_content += f"""**{i}.** `{gap.get("doi", "No DOI")}` ({gap.get("citation_count", 0):,} citations)
-   **{gap["title"][:80]}{"..." if len(gap["title"]) > 80 else ""}**
-   *{gap.get("venue", "Unknown venue")} • {gap.get("year", "Unknown year")} • Cited by KB: {citing_list}*
-
-"""
-
-            if len(area_papers_sorted) > 5:
-                report_content += f"   *... and {len(area_papers_sorted) - 5} more papers in this area*\n\n"
-
-        # Add filtered author network results
-        if author_gaps:
-            report_content += f"""## 👥 **Recent Work from Your Researchers** ({len(author_gaps)} papers)
-*Smart filtered - removed {filtered_count} low-quality items (book reviews, duplicates, etc.)*
-
-**Why relevant**: Latest publications from authors already established in your knowledge base
-
-### High-Impact Recent Work (Import Priority: HIGH)
-"""
-
-            # Show only high-quality, high-impact recent work
-            high_impact_recent = [
-                g for g in author_gaps if g.get("citation_count", 0) > 50 or g.get("year", 0) >= 2024
-            ][:10]
-
-            for i, gap in enumerate(high_impact_recent, 1):
-                report_content += f"""**{i}.** `{gap.get("doi", "No DOI")}` ({gap.get("citation_count", 0)} citations)
-   **{gap["title"][:80]}{"..." if len(gap["title"]) > 80 else ""}**
-   *{gap.get("venue", "Unknown")} • {gap.get("year", "Unknown")} • Author: {gap.get("source_author", "Unknown")}*
-
-"""
-
-        # Traditional section for reference (collapsible)
-        report_content += f"""---
-
-## 📋 **Complete Paper Catalog** (Reference Section)
-
-<details>
-<summary><strong>Citation Network Gaps - All Papers ({len(citation_gaps)})</strong></summary>
-
-**Why relevant**: Heavily cited by your existing papers but missing from KB
-
-"""
-
-        # Complete collapsed reference section (traditional format)
-        for priority_name, gaps in [
-            ("HIGH", high_priority),
-            ("MEDIUM", medium_priority),
-            ("LOW", low_priority),
-        ]:
-            if not gaps:
-                continue
-
-            report_content += f"""### {priority_name} Priority Citation Gaps ({len(gaps)} papers)
-
-"""
-            # Only show first few papers to keep manageable
-            for i, gap in enumerate(gaps[:10], 1):  # Limit to first 10 per priority
-                citing_papers = gap.get("citing_papers", [])
-                citing_list = ", ".join([f"{p['id']}" for p in citing_papers[:3]])
-                if len(citing_papers) > 3:
-                    citing_list += f" (+{len(citing_papers) - 3} more)"
-
-                report_content += f"""**{i}.** `{gap.get("doi", "No DOI")}` - {gap["title"][:100]}{"..." if len(gap["title"]) > 100 else ""}
-   *{gap.get("citation_count", 0)} citations • {gap.get("year", "Unknown")} • Cited by: {citing_list}*
-
-"""
-
-            if len(gaps) > 10:
-                report_content += (
-                    f"   *... and {len(gaps) - 10} more {priority_name.lower()} priority papers*\n\n"
-                )
-
-        report_content += """</details>
-
----
-
-## 📥 **Bulk Import Center**
-
-### 🚀 **Power User Import** (Top Priority - 15 papers)
-*Copy this DOI list for immediate high-impact additions:*
-
-```
-"""
-        # Add top 15 DOIs by impact
-        top_dois = []
-        for gap in sorted(
-            citation_gaps,
-            key=lambda x: (len(x.get("citing_papers", [])) * 1000 + x.get("citation_count", 0)),
-            reverse=True,
-        )[:15]:
-            if gap.get("doi"):
-                top_dois.append(gap["doi"])
-
-        report_content += "\n".join(top_dois)
-
-        report_content += """
-```
-
-### 📚 **By Research Area**
-*Choose your focus areas for strategic KB expansion:*
-
-"""
-
-        # Add DOI lists by research area
-        for area_name, area_papers in research_areas.items():
-            if not area_papers:
-                continue
-
-            area_dois = [p.get("doi") for p in area_papers if p.get("doi")][:10]  # Limit to 10 per area
-            emoji = (
-                "🏃"
-                if "Physical" in area_name
-                else "🤖"
-                if "AI" in area_name
-                else "⚕️"
-                if "Implementation" in area_name
-                else "🧬"
-                if "Clinical" in area_name
-                else "📊"
-                if "Public" in area_name
-                else "📚"
-            )
-
-            report_content += f"""**{emoji} {area_name}** ({len(area_papers)} papers):
-```
-{chr(10).join(area_dois)}
-```
-
-"""
-
-        report_content += f"""### 👥 **Recent Author Work** ({len(author_gaps)} papers)
-*Smart filtered for quality - removed duplicates and low-value content:*
-
-```
-"""
-        author_dois = [gap.get("doi") for gap in author_gaps if gap.get("doi")]
-        report_content += "\n".join(author_dois)
-
+        # Add workflow and summary sections
         report_content += f"""
-```
 
 ## 🔧 **Import Workflows**
 

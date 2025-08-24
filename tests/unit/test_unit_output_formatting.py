@@ -169,7 +169,13 @@ class TestOutputFormatter:
         """Test status printing with appropriate icons."""
         formatter = OutputFormatter()
 
-        test_cases = [("info", "ℹ️"), ("success", "✅"), ("warning", "⚠️"), ("error", "❌"), ("working", "🔄")]
+        test_cases = [
+            ("info", "\u2139\ufe0f"),
+            ("success", "✅"),
+            ("warning", "⚠️"),
+            ("error", "❌"),
+            ("working", "🔄"),
+        ]
 
         for status_type, expected_icon in test_cases:
             formatter.print_status(f"Test {status_type}", status_type)
@@ -321,7 +327,7 @@ class TestUtilityFunctions:
         status1 = format_status("Test", "info")
 
         # Global function should work consistently
-        assert "ℹ️ Test" in status1
+        assert "\u2139\ufe0f Test" in status1
 
 
 class TestProgressItem:

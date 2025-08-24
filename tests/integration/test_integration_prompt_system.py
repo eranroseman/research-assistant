@@ -171,13 +171,15 @@ class TestPromptIntegration:
 
     def test_prompt_gap_analysis_valid_conditions_user_declines(self, capsys):
         """Test gap analysis prompt with valid conditions and user declines."""
-        with patch("src.build_kb.has_enhanced_scoring", return_value=True):
-            with patch("src.build_kb.safe_prompt", return_value="n"):
-                with patch("subprocess.run") as mock_subprocess:
-                    prompt_gap_analysis_after_build(total_papers=50, build_time=3.1)
+        with (
+            patch("src.build_kb.has_enhanced_scoring", return_value=True),
+            patch("src.build_kb.safe_prompt", return_value="n"),
+            patch("subprocess.run") as mock_subprocess,
+        ):
+            prompt_gap_analysis_after_build(total_papers=50, build_time=3.1)
 
-                    # Verify subprocess was NOT called
-                    mock_subprocess.assert_not_called()
+            # Verify subprocess was NOT called
+            mock_subprocess.assert_not_called()
 
 
 class TestPromptSystemRobustness:
@@ -230,17 +232,19 @@ class TestPromptSystemRobustness:
 
     def test_gap_analysis_help_text_quality(self):
         """Test that gap analysis help text is comprehensive."""
-        with patch("src.build_kb.has_enhanced_scoring", return_value=True):
-            with patch("src.build_kb.safe_prompt", return_value="n") as mock_prompt:
-                prompt_gap_analysis_after_build(total_papers=250, build_time=12.5)
+        with (
+            patch("src.build_kb.has_enhanced_scoring", return_value=True),
+            patch("src.build_kb.safe_prompt", return_value="n") as mock_prompt,
+        ):
+            prompt_gap_analysis_after_build(total_papers=250, build_time=12.5)
 
-                call_args = mock_prompt.call_args
-                help_text = call_args[1]["help_text"]
+            call_args = mock_prompt.call_args
+            help_text = call_args[1]["help_text"]
 
-                # Check comprehensive help content
-                assert "What it does:" in help_text
-                assert "5 types of literature gaps identified:" in help_text
-                assert "Time estimate:" in help_text
-                assert "Output:" in help_text
-                assert "Value:" in help_text
-                assert "250" in help_text  # Paper count should be included
+            # Check comprehensive help content
+            assert "What it does:" in help_text
+            assert "5 types of literature gaps identified:" in help_text
+            assert "Time estimate:" in help_text
+            assert "Output:" in help_text
+            assert "Value:" in help_text
+            assert "250" in help_text  # Paper count should be included

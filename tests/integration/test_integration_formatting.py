@@ -215,7 +215,7 @@ class TestOutputFormattingIntegration:
         assert mock_print.call_count == len(status_scenarios)
 
         # Check each status has appropriate icon
-        icons = ["✅", "❌", "⚠️", "🔄", "ℹ️"]
+        icons = ["✅", "❌", "⚠️", "🔄", "\u2139\ufe0f"]
         for call, expected_icon in zip(mock_print.call_args_list, icons, strict=False):
             call_text = call[0][0]
             assert expected_icon in call_text
@@ -356,7 +356,7 @@ class TestCrossModuleFormattingConsistency:
             with patch("builtins.print") as mock_print:
                 print_status(f"Module {module} operation", "info")
                 status_result = mock_print.call_args[0][0]
-                assert "ℹ️" in status_result
+                assert "\u2139\ufe0f" in status_result
 
     def test_formatting_robustness_across_modules_should_handle_edge_cases(self):
         """Test that formatting handles edge cases consistently across modules."""
@@ -377,7 +377,7 @@ class TestCrossModuleFormattingConsistency:
             with patch("builtins.print") as mock_print:
                 print_status(test_message or "Empty status", "info")
                 status_result = mock_print.call_args[0][0]
-                assert "ℹ️" in status_result
+                assert "\u2139\ufe0f" in status_result
 
     def test_help_and_error_cross_references_should_be_accurate(self):
         """Test that help text and error messages have accurate cross-references."""

@@ -113,8 +113,7 @@ class TestAnalyzeGapsStatusFormatting:
 
     @patch("src.analyze_gaps.GapAnalyzer")
     @patch("builtins.print")
-    @pytest.mark.asyncio
-    async def test_workflow_status_formatting(self, mock_print, mock_analyzer_class, temp_kb_dir):
+    def test_workflow_status_formatting(self, mock_print, mock_analyzer_class, temp_kb_dir):
         """Test workflow uses unified status formatting."""
         import json
 
@@ -135,7 +134,7 @@ class TestAnalyzeGapsStatusFormatting:
         mock_analyzer.generate_report.return_value = None
         mock_analyzer_class.return_value = mock_analyzer
 
-        await run_gap_analysis(str(temp_kb_dir), 0, 2022, None)
+        run_gap_analysis(str(temp_kb_dir), 0, 2022, None)
 
         # Check that status messages use unified formatting
         all_output = " ".join([str(call[0][0]) for call in mock_print.call_args_list])
@@ -145,7 +144,7 @@ class TestAnalyzeGapsStatusFormatting:
         assert "=" * 60 in all_output  # Header separator
 
         # Should have info status messages
-        assert "ℹ️" in all_output  # Info icon used
+        assert "\u2139\ufe0f" in all_output  # Info icon used
         assert "Knowledge Base:" in all_output
         assert "papers" in all_output
         assert "KB Version: v4.0" in all_output
@@ -160,8 +159,7 @@ class TestAnalyzeGapsProgressTracking:
 
     @patch("src.analyze_gaps.GapAnalyzer")
     @patch("builtins.print")
-    @pytest.mark.asyncio
-    async def test_progress_tracking_integration(self, mock_print, mock_analyzer_class, temp_kb_dir):
+    def test_progress_tracking_integration(self, mock_print, mock_analyzer_class, temp_kb_dir):
         """Test that progress tracking shows workflow steps."""
         import json
 
@@ -182,7 +180,7 @@ class TestAnalyzeGapsProgressTracking:
         mock_analyzer.generate_report.return_value = None
         mock_analyzer_class.return_value = mock_analyzer
 
-        await run_gap_analysis(str(temp_kb_dir), 0, 2022, None)
+        run_gap_analysis(str(temp_kb_dir), 0, 2022, None)
 
         # Check that progress tracking is used
         all_output = " ".join([str(call[0][0]) for call in mock_print.call_args_list])

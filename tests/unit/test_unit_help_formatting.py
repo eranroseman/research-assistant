@@ -267,7 +267,7 @@ class TestClickIntegration:
 
     def test_click_help_decorator_invalid_command_should_raise(self):
         """Test that decorator with invalid command raises error."""
-        with pytest.raises(ValueError):
+        with pytest.raises(ValueError, match="Unknown command template"):
 
             @click_help_decorator("invalid_command")
             def dummy_function():

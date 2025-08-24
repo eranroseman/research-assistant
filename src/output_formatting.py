@@ -25,7 +25,7 @@ Usage:
 import time
 from typing import Any
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import datetime, UTC
 
 
 @dataclass
@@ -51,7 +51,7 @@ class ProgressTracker:
         self.current = 0
         self.last_update = self.start_time
 
-    def update(self, current: int, message: str = "", force: bool = False):
+    def update(self, current: int, message: str = "", force: bool = False) -> None:
         """Update progress with current count and optional message.
 
         Args:
@@ -91,7 +91,7 @@ class ProgressTracker:
 
         print(status_line, end="", flush=True)
 
-    def complete(self, message: str = ""):
+    def complete(self, message: str = "") -> None:
         """Mark progress as complete.
 
         Args:
@@ -118,7 +118,7 @@ class OutputFormatter:
         """Get formatted timestamp if enabled."""
         if not self.show_timestamps:
             return ""
-        return f"[{datetime.now(datetime.timezone.utc).strftime('%H:%M:%S')}] "
+        return f"[{datetime.now(UTC).strftime('%H:%M:%S')}] "
 
     def print_header(self, title: str, subtitle: str = "") -> None:
         """Print consistent section header.
@@ -142,7 +142,7 @@ class OutputFormatter:
             status_type: Type of status (info, success, warning, error)
         """
         timestamp = self.format_timestamp()
-        icons = {"info": "ℹ️", "success": "✅", "warning": "⚠️", "error": "❌", "working": "🔄"}
+        icons = {"info": "\u2139\ufe0f", "success": "✅", "warning": "⚠️", "error": "❌", "working": "🔄"}
         icon = icons.get(status_type, "•")
         print(f"{timestamp}{icon} {message}")
 
@@ -305,7 +305,7 @@ def format_status(message: str, status_type: str = "info") -> str:
     Returns:
         Formatted status string
     """
-    icons = {"info": "ℹ️", "success": "✅", "warning": "⚠️", "error": "❌", "working": "🔄"}
+    icons = {"info": "\u2139\ufe0f", "success": "✅", "warning": "⚠️", "error": "❌", "working": "🔄"}
     icon = icons.get(status_type, "•")
     return f"{icon} {message}"
 

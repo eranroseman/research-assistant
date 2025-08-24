@@ -22,7 +22,8 @@ Usage:
         pass
 """
 
-from typing import Any, Callable
+from typing import Any
+from collections.abc import Callable
 
 
 class HelpFormatter:
@@ -244,13 +245,15 @@ def get_command_help(command_name: str, **kwargs: Any) -> str:
 
     return format_command_help(
         str(help_config["description"]),
-        help_config.get("examples"),
-        help_config.get("notes"),
-        help_config.get("see_also"),
+        list(help_config.get("examples", [])) if help_config.get("examples") else None,
+        list(help_config.get("notes", [])) if help_config.get("notes") else None,
+        list(help_config.get("see_also", [])) if help_config.get("see_also") else None,
     )
 
 
-def click_help_decorator(command_name: str, **kwargs: Any) -> Callable[[Callable], Callable]:
+def click_help_decorator(
+    command_name: str, **kwargs: Any
+) -> Callable[[Callable[..., Any]], Callable[..., Any]]:
     """Decorator to apply consistent help text to Click commands.
 
     Args:
@@ -261,7 +264,7 @@ def click_help_decorator(command_name: str, **kwargs: Any) -> Callable[[Callable
         Click command decorator
     """
 
-    def decorator(func: Callable) -> Callable:
+    def decorator(func: Callable[..., Any]) -> Callable[..., Any]:
         help_text = get_command_help(command_name, **kwargs)
         func.__doc__ = help_text
         return func

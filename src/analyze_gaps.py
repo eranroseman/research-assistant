@@ -65,11 +65,11 @@ try:
 except ImportError:
     # For direct script execution
     try:
-        from config import KB_VERSION, KB_DATA_PATH
+        from config import KB_VERSION, KB_DATA_PATH  # type: ignore[no-redef]
     except ImportError:
         # Fallback values
         KB_VERSION = "4.0+"
-        KB_DATA_PATH = "kb_data"
+        KB_DATA_PATH = Path("kb_data")
 
 
 def validate_kb_requirements(kb_path: str) -> tuple[dict[str, Any], list[dict[str, Any]]]:
@@ -172,7 +172,9 @@ def validate_kb_requirements(kb_path: str) -> tuple[dict[str, Any], list[dict[st
     return metadata, papers
 
 
-def _setup_gap_analysis_environment(kb_path: str) -> tuple[dict[str, Any], list[dict[str, Any]], 'ProgressTracker']:
+def _setup_gap_analysis_environment(
+    kb_path: str,
+) -> tuple[dict[str, Any], list[dict[str, Any]], Any]:
     """Setup gap analysis environment and initialize components."""
     from output_formatting import ProgressTracker
 
@@ -191,7 +193,7 @@ def _import_gap_analyzer() -> type:
         return GapAnalyzer
     except ImportError:
         try:
-            from gap_detection import GapAnalyzer
+            from gap_detection import GapAnalyzer  # type: ignore[no-redef]
 
             return GapAnalyzer
         except ImportError:
@@ -203,7 +205,9 @@ def _import_gap_analyzer() -> type:
                 "Gap detection module import",
                 module="analyze_gaps",
             )
-            return None  # This line will never be reached due to safe_exit
+            raise SystemExit(
+                "Failed to import GapAnalyzer"
+            ) from None  # This line will never be reached due to safe_exit
 
 
 def _print_analysis_header(
@@ -262,7 +266,7 @@ async def run_gap_analysis(kb_path: str, min_citations: int, year_from: int, lim
     _print_analysis_header(total_papers, metadata, min_citations, year_from, limit)
 
     from output_formatting import print_status
-    
+
     # Import and initialize gap analyzer
     gap_analyzer_class = _import_gap_analyzer()
 

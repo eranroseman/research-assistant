@@ -160,7 +160,7 @@ class TestAnalyzeGapsFunctionalityWorks:
         with patch("builtins.print") as mock_print:
             print_status("Test message", "info")
             output = mock_print.call_args[0][0]
-            assert "ℹ️ Test message" in output
+            assert "\u2139\ufe0f Test message" in output
 
         with patch("builtins.print") as mock_print:
             print_status("Test message", "success")

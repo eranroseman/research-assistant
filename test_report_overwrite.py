@@ -27,7 +27,7 @@ def test_report_naming():
             stat = report_path.stat()
             print("📄 Existing report found:")
             print(f"   Size: {stat.st_size:,} bytes")
-            print(f"   Modified: {datetime.fromtimestamp(stat.st_mtime)}")
+            print(f"   Modified: {datetime.fromtimestamp(stat.st_mtime, tz=UTC)}")
             print("   ⚠️  PROBLEM: Running again will OVERWRITE this file!")
         else:
             print("📄 No existing report found - will create new file")

@@ -86,14 +86,14 @@ class TestGapAnalysisE2E:
                 "year": 2020 + (i % 5),  # Years 2020-2024
                 "journal": venues[i % len(venues)],
                 "abstract": f"This study investigates {topic.lower()} with focus on practical applications and outcomes.",
-                "study_type": ["rct", "systematic_review", "cohort", "case_control"][i % 4],
+                "study_type": (study_type := ["rct", "systematic_review", "cohort", "case_control"][i % 4]),
                 "sample_size": 100 + (i * 50) if i % 4 == 0 else None,  # RCTs have sample sizes
                 "has_full_text": i % 3 != 0,  # Most have full text
                 "filename": f"paper_{paper_id}.md",
                 "embedding_index": i,
                 "semantic_scholar_id": f"s2_{12345 + i}",
                 "quality_score": 60 + (i % 40),  # Scores 60-99
-                "quality_explanation": f"High quality {paper['study_type']} with good methodology",
+                "quality_explanation": f"High quality {study_type} with good methodology",
             }
             metadata["papers"].append(paper)
 

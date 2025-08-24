@@ -244,7 +244,7 @@ async def get_semantic_scholar_data(doi: str | None, title: str) -> dict[str, An
                 url = f"{SEMANTIC_SCHOLAR_API_URL}/paper/DOI:{doi}"
             else:
                 url = f"{SEMANTIC_SCHOLAR_API_URL}/paper/search"
-                params = {"query": title, "limit": 1}
+                params = {"query": title, "limit": "1"}
 
             fields = "citationCount,venue,authors,externalIds,publicationTypes,fieldsOfStudy"
 
@@ -255,7 +255,9 @@ async def get_semantic_scholar_data(doi: str | None, title: str) -> dict[str, An
                             if response.status == 200:
                                 return await response.json()  # type: ignore[no-any-return]
                     else:
-                        async with session.get(url, params={**params, "fields": fields}) as response:
+                        combined_params = dict(params)
+                        combined_params["fields"] = fields
+                        async with session.get(url, params=combined_params) as response:
                             if response.status == 200:
                                 data = await response.json()
                                 if data.get("data") and len(data["data"]) > 0:
@@ -4097,7 +4099,7 @@ def main(
                 existing_papers = len(metadata.get("papers", []))
                 kb_size_mb = sum(f.stat().st_size for f in kb_path.rglob("*") if f.is_file()) / (1024 * 1024)
             except Exception:
-                existing_papers = "unknown"
+                existing_papers = 0
                 kb_size_mb = 0
 
             help_text = f"""Import Operation Warning:

@@ -592,7 +592,7 @@ def main(
         module="discover",  # Module context for generic event names
         command="discover",
         session_id=session_id,
-        keywords_count=len(keywords.split(",")),
+        keywords_count=len(keywords.split(",")) if keywords else 0,
         has_population_focus=bool(population_focus),
         has_quality_threshold=bool(quality_threshold),
         has_author_filter=bool(author_filter),
@@ -606,7 +606,7 @@ def main(
     try:
         # Execute discovery
         results = discover_papers(
-            keywords=keywords.split(","),
+            keywords=keywords.split(",") if keywords else [],
             year_from=year_from,
             study_types=study_types.split(",") if study_types else [],
             min_citations=min_citations,
@@ -670,7 +670,7 @@ def main(
             execution_time_ms=execution_time_ms,
             error_type=type(e).__name__,
             error_message=str(e),  # Smart sanitization applied in _log_command_usage_event
-            keywords_count=len(keywords.split(",")),
+            keywords_count=len(keywords.split(",")) if keywords else 0,
             source=source,
         )
         print(f"❌ Error during discovery: {e}")
