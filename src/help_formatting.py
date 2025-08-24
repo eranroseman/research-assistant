@@ -264,9 +264,9 @@ def click_help_decorator(
         Click command decorator
     """
 
-    def decorator(func: Callable[..., Any]) -> Callable[..., Any]:
+    def decorator_func(func: Callable[..., Any]) -> Callable[..., Any]:
         help_text = get_command_help(command_name, **kwargs)
         func.__doc__ = help_text
         return func
 
-    return decorator
+    return decorator_func

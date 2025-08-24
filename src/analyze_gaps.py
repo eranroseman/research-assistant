@@ -58,18 +58,49 @@ from typing import Any
 
 import click
 
+# Import error handling and output formatting once at module level
+try:
+    from .error_formatting import safe_exit
+    from .output_formatting import ProgressTracker, print_status, print_header
+except ImportError:
+    try:
+        from error_formatting import safe_exit
+        from output_formatting import ProgressTracker, print_status, print_header
+    except ImportError:
+        # Minimal fallbacks if modules not available
+        import sys
+
+        def safe_exit(
+            error_type: str,
+            suggestion: str = "",
+            context: str = "",
+            technical_details: str = "",
+            module: str = "",
+            exit_code: int = 1,
+        ) -> None:
+            """Minimal fallback for safe_exit when module not available."""
+            print(f"ERROR: {error_type}")
+            if suggestion:
+                print(f"Suggestion: {suggestion}")
+            sys.exit(exit_code)
+
+        ProgressTracker = None  # type: ignore[assignment]
+        print_status = print  # type: ignore[assignment]
+        print_header = print  # type: ignore[assignment]
+
 # Configuration imports
 try:
     # For module imports (from tests)
-    from .config import KB_VERSION, KB_DATA_PATH
+    from .config import KB_VERSION, KB_DATA_PATH, MIN_PAPERS_FOR_GAP_ANALYSIS
 except ImportError:
     # For direct script execution
     try:
-        from config import KB_VERSION, KB_DATA_PATH
+        from config import KB_VERSION, KB_DATA_PATH, MIN_PAPERS_FOR_GAP_ANALYSIS
     except ImportError:
         # Fallback values
         KB_VERSION = "4.0+"
         KB_DATA_PATH = Path("kb_data")
+        MIN_PAPERS_FOR_GAP_ANALYSIS = 20
 
 
 def validate_kb_requirements(kb_path: str) -> tuple[dict[str, Any], list[dict[str, Any]]]:
@@ -110,11 +141,6 @@ def validate_kb_requirements(kb_path: str) -> tuple[dict[str, Any], list[dict[st
 
     # Check KB exists
     if not kb_data_path.exists() or not metadata_file.exists():
-        try:
-            from .error_formatting import safe_exit
-        except ImportError:
-            from error_formatting import safe_exit
-
         safe_exit(
             "Knowledge base not found",
             "Run: python src/build_kb.py --demo",
@@ -128,11 +154,6 @@ def validate_kb_requirements(kb_path: str) -> tuple[dict[str, Any], list[dict[st
         with open(metadata_file) as f:
             metadata = json.load(f)
     except (OSError, json.JSONDecodeError) as e:
-        try:
-            from .error_formatting import safe_exit
-        except ImportError:
-            from error_formatting import safe_exit
-
         safe_exit(
             "Failed to load KB metadata",
             "Run: python src/build_kb.py --rebuild",
@@ -144,11 +165,6 @@ def validate_kb_requirements(kb_path: str) -> tuple[dict[str, Any], list[dict[st
 
     # Check KB version
     if metadata.get("version") != KB_VERSION:
-        try:
-            from .error_formatting import safe_exit
-        except ImportError:
-            from error_formatting import safe_exit
-
         safe_exit(
             f"KB v{KB_VERSION}+ required. Found v{metadata.get('version', 'unknown')}",
             "Delete kb_data/ and rebuild: python src/build_kb.py",
@@ -159,14 +175,9 @@ def validate_kb_requirements(kb_path: str) -> tuple[dict[str, Any], list[dict[st
 
     # Check minimum papers
     papers = metadata.get("papers", [])
-    if len(papers) < 20:
-        try:
-            from .error_formatting import safe_exit
-        except ImportError:
-            from error_formatting import safe_exit
-
+    if len(papers) < MIN_PAPERS_FOR_GAP_ANALYSIS:
         safe_exit(
-            "Minimum 20 papers required for gap analysis",
+            f"Minimum {MIN_PAPERS_FOR_GAP_ANALYSIS} papers required for gap analysis",
             f"Found {len(papers)} papers. Build larger knowledge base.",
             "Paper count validation",
             module="analyze_gaps",
@@ -175,12 +186,7 @@ def validate_kb_requirements(kb_path: str) -> tuple[dict[str, Any], list[dict[st
 
     # Check for basic metadata required for gap detection
     papers_with_metadata = [p for p in papers if p.get("title") and p.get("authors")]
-    if len(papers_with_metadata) < 20:
-        try:
-            from .error_formatting import safe_exit
-        except ImportError:
-            from error_formatting import safe_exit
-
+    if len(papers_with_metadata) < MIN_PAPERS_FOR_GAP_ANALYSIS:
         safe_exit(
             "KB lacks sufficient metadata for gap analysis",
             "Run: python src/build_kb.py",
@@ -220,11 +226,6 @@ def _import_gap_analyzer() -> type:
 
             return GapAnalyzer
         except ImportError:
-            try:
-                from .error_formatting import safe_exit
-            except ImportError:
-                from error_formatting import safe_exit
-
             safe_exit(
                 "Gap detection module not found",
                 "Implementation in progress.",
@@ -240,11 +241,6 @@ def _print_analysis_header(
     total_papers: int, metadata: dict[str, Any], min_citations: int, year_from: int, limit: int | None
 ) -> None:
     """Print analysis setup information."""
-    try:
-        from .output_formatting import print_status, print_header
-    except ImportError:
-        from output_formatting import print_status, print_header
-
     print_header("🔍 Running Network Gap Analysis")
     print_status(f"Knowledge Base: {total_papers:,} papers", "info")
     print_status(f"KB Version: v{metadata.get('version')}", "info")
@@ -293,11 +289,6 @@ async def run_gap_analysis(kb_path: str, min_citations: int, year_from: int, lim
     metadata, papers, progress = _setup_gap_analysis_environment(kb_path)
     total_papers = len(papers)
     _print_analysis_header(total_papers, metadata, min_citations, year_from, limit)
-
-    try:
-        from .output_formatting import print_status
-    except ImportError:
-        from output_formatting import print_status
 
     # Import and initialize gap analyzer
     gap_analyzer_class = _import_gap_analyzer()
@@ -484,10 +475,6 @@ def main(min_citations: int, year_from: int, limit: int | None, kb_path: str) ->
     """
     # Validate command-line arguments with comprehensive error messages
     # Each validation provides specific remediation guidance
-    try:
-        from .error_formatting import safe_exit
-    except ImportError:
-        from error_formatting import safe_exit
 
     if year_from < 2015:
         safe_exit(

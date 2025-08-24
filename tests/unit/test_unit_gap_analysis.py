@@ -269,7 +269,10 @@ class TestBatchProcessing:
             {"references": [{"title": "Ref 2", "citationCount": 50}]},
         ]
 
-        with patch("aiohttp.ClientSession") as mock_session_class:
+        with (
+            patch("aiohttp.ClientSession") as mock_session_class,
+            patch("asyncio.sleep", new_callable=AsyncMock),
+        ):
             mock_session = AsyncMock()
             mock_response_obj = AsyncMock()
             mock_response_obj.status = 200
@@ -309,7 +312,10 @@ class TestBatchProcessing:
 
         paper_batch = [{"key": "0001", "id": "10.1234/test1", "paper_data": {"title": "Test Paper"}}]
 
-        with patch("aiohttp.ClientSession") as mock_session_class:
+        with (
+            patch("aiohttp.ClientSession") as mock_session_class,
+            patch("asyncio.sleep", new_callable=AsyncMock),
+        ):
             mock_session = AsyncMock()
 
             # First response is 429, second is success
@@ -699,7 +705,9 @@ class TestAuthorGapDetection:
         with patch.object(analyzer, "_api_request", new_callable=AsyncMock) as mock_api:
             mock_api.return_value = mock_author_response
 
-            gaps = await analyzer.find_author_gaps(year_from=2022)
+            # Mock asyncio.sleep to prevent delays in tests
+            with patch("asyncio.sleep", new_callable=AsyncMock):
+                gaps = await analyzer.find_author_gaps(year_from=2022)
 
         assert len(gaps) >= 1
         # Check gap structure

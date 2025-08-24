@@ -249,15 +249,37 @@ class OutputFormatter:
         Returns:
             Letter grade (A+, A, B, C, D, F)
         """
-        if score >= 85:
+        try:
+            from config import (
+                QUALITY_EXCELLENT,
+                QUALITY_VERY_GOOD,
+                QUALITY_GOOD,
+                QUALITY_MODERATE,
+                QUALITY_LOW,
+            )
+
+            quality_excellent = QUALITY_EXCELLENT
+            quality_very_good = QUALITY_VERY_GOOD
+            quality_good = QUALITY_GOOD
+            quality_moderate = QUALITY_MODERATE
+            quality_low = QUALITY_LOW
+        except ImportError:
+            # Fallback values if config not available
+            quality_excellent = 85
+            quality_very_good = 70
+            quality_good = 60
+            quality_moderate = 45
+            quality_low = 30
+
+        if score >= quality_excellent:
             return "A+"
-        if score >= 70:
+        if score >= quality_very_good:
             return "A"
-        if score >= 60:
+        if score >= quality_good:
             return "B"
-        if score >= 45:
+        if score >= quality_moderate:
             return "C"
-        if score >= 30:
+        if score >= quality_low:
             return "D"
         return "F"
 

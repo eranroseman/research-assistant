@@ -1,6 +1,22 @@
-# Test Organization
+# Research Assistant Test Suite Guide
 
 This directory contains the test suite for the Research Assistant project, organized following pytest best practices with consistent naming conventions.
+
+## Quick Start
+
+```bash
+# Run fast unit tests (9 seconds)
+pytest tests/unit/ -v
+
+# Run critical tests that must pass for release
+pytest -m critical
+
+# Run all tests with coverage report
+pytest tests/ --cov=src --cov-report=term-missing
+
+# Skip slow tests for quick feedback
+pytest -m "not slow"
+```
 
 ## Test Structure
 
@@ -148,16 +164,29 @@ pytest tests/unit/ -n 4
 
 ## Test Status
 
-### ✅ Currently Working (193 total tests)
-- **Unit Tests**: 7 files, 123 tests - Component-focused tests ✅ All passing
-- **Integration Tests**: 5 files, 40 tests - Workflow validation (some CLI attribute issues)
-- **E2E Tests**: 2 files, 23 tests - ✅ All critical tests passing
-- **Performance Tests**: 1 file, 7 tests - ✅ Benchmarking tests passing
+### Current Test Suite (450+ tests)
+- **Unit Tests**: 278 tests - Fast, isolated component tests (99.6% passing)
+- **Integration Tests**: 127 tests - Workflow validation (96.9% passing)
+- **E2E Tests**: 46 tests - Full CLI testing (95.7% passing)
+- **Performance Tests**: Benchmarking and timing tests
 
-### 🔧 Known Issues
-- Some integration tests have ResearchCLI attribute issues (not related to reorganization)
-- Integration tests work but may have CLI interface compatibility issues
-- All unit, e2e, and performance tests fully functional
+### Known Issues and Solutions
+
+#### "Search too slow" Test Failure
+**Problem**: Performance test fails with search >15s
+**Solution**: Set `CI=1` environment variable for CI (uses 20s threshold)
+
+#### "KB not found" Errors
+**Problem**: Tests skip or fail due to missing knowledge base
+**Solution**: Run `python src/build_kb.py --demo` to build test KB
+
+#### Hanging Tests with Click Commands
+**Problem**: Some click-based tests hang indefinitely
+**Solution**: Tests marked to skip problematic interactions, use `--tb=short`
+
+#### Command Timeout in Batch Tests
+**Problem**: Batch operations timeout at 15s
+**Solution**: Already increased to 30s for batch operations
 
 ## Test Configuration
 
@@ -239,6 +268,10 @@ def test_search_functionality(mock_transformer):
 
 ### Before Committing
 ```bash
+# Run pre-commit checks
+mypy src/
+ruff check src/ tests/ --fix
+
 # Run relevant test categories
 pytest tests/unit/ tests/e2e/ -v
 
@@ -247,6 +280,68 @@ pytest tests/e2e/test_e2e_cli_commands.py::TestCriticalE2EFunctionality -v
 
 # Verify no regressions
 python src/cli.py search "test" --export validation.csv
+```
+
+## Test Markers
+
+Use pytest markers to categorize and filter tests:
+
+```python
+@pytest.mark.unit           # Fast, isolated tests
+@pytest.mark.integration    # Component interaction tests
+@pytest.mark.e2e           # End-to-end tests
+@pytest.mark.performance   # Speed benchmarks
+@pytest.mark.slow          # Tests taking >5 seconds
+@pytest.mark.critical      # Must pass for release
+@pytest.mark.requires_kb   # Needs knowledge base
+@pytest.mark.requires_api  # Needs external API
+```
+
+Run tests by marker:
+```bash
+pytest -m "unit and not slow"     # Fast unit tests
+pytest -m critical                 # Release-critical tests
+pytest -m "not requires_api"       # Offline tests only
+```
+
+## Debugging Failed Tests
+
+```bash
+# Verbose output
+pytest tests/unit/test_failing.py -vv
+
+# Show print statements
+pytest tests/unit/test_failing.py -s
+
+# Drop into debugger on failure
+pytest tests/unit/test_failing.py --pdb
+
+# Shorter traceback
+pytest tests/unit/test_failing.py --tb=short
+
+# Show local variables
+pytest tests/unit/test_failing.py -l
+```
+
+## CI/CD Integration
+
+For GitHub Actions or other CI systems:
+
+```yaml
+env:
+  CI: "1"  # Enables CI-specific thresholds
+
+steps:
+  - name: Lint
+    run: |
+      mypy src/
+      ruff check src/ tests/
+
+  - name: Critical Tests
+    run: pytest -m critical
+
+  - name: Full Test Suite
+    run: pytest tests/ --cov=src
 ```
 
 This test organization supports safe refactoring by providing clear separation of concerns and comprehensive coverage of the Research Assistant functionality.

@@ -200,7 +200,7 @@ class TestGapAnalysisE2E:
         exports_dir = temp_kb_dir / "exports"
         exports_dir.mkdir()
 
-        with patch("pathlib.Path.cwd", return_value=temp_kb_dir):
+        with patch("pathlib.Path.cwd", return_value=temp_kb_dir), patch("asyncio.sleep"):
             result = runner.invoke(
                 main,
                 [
@@ -335,7 +335,7 @@ class TestGapAnalysisE2E:
         exports_dir = temp_kb_dir / "exports"
         exports_dir.mkdir()
 
-        with patch("pathlib.Path.cwd", return_value=temp_kb_dir):
+        with patch("pathlib.Path.cwd", return_value=temp_kb_dir), patch("asyncio.sleep"):
             runner.invoke(main, ["--kb-path", str(temp_kb_dir), "--limit", "5"])
 
         # Check for report with DOI lists
@@ -359,8 +359,8 @@ class TestNewFeatures:
     """Test new gap analysis features in E2E context."""
 
     @patch("src.gap_detection.GapAnalyzer._api_request")
-    def test_timestamp_format_prevents_overwrites(self, mock_api_request, production_like_kb):
-        """Test that new timestamp format prevents file overwrites."""
+    def test_e2e_timestamp_format_prevents_overwrites(self, mock_api_request, production_like_kb):
+        """Test that new timestamp format prevents file overwrites in E2E scenario."""
         temp_kb_dir, metadata = production_like_kb
 
         mock_api_request.return_value = {"references": []}
@@ -373,7 +373,7 @@ class TestNewFeatures:
         exports_dir.mkdir()
 
         # Run gap analysis twice in quick succession
-        with patch("pathlib.Path.cwd", return_value=temp_kb_dir):
+        with patch("pathlib.Path.cwd", return_value=temp_kb_dir), patch("asyncio.sleep"):
             runner.invoke(main, ["--kb-path", str(temp_kb_dir), "--limit", "1"])
             runner.invoke(main, ["--kb-path", str(temp_kb_dir), "--limit", "1"])
 
@@ -418,7 +418,7 @@ class TestNewFeatures:
         exports_dir = temp_kb_dir / "exports"
         exports_dir.mkdir()
 
-        with patch("pathlib.Path.cwd", return_value=temp_kb_dir):
+        with patch("pathlib.Path.cwd", return_value=temp_kb_dir), patch("asyncio.sleep"):
             runner.invoke(main, ["--kb-path", str(temp_kb_dir), "--limit", "5"])
 
         report_files = list(exports_dir.glob("gap_analysis_*.md"))

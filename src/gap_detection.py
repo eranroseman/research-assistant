@@ -303,36 +303,21 @@ class GapAnalyzer:
 
         try:
             async with aiohttp.ClientSession(connector=connector, timeout=timeout) as session:
-                for attempt in range(API_MAX_RETRIES):
-                    try:
-                        async with session.get(url, params=params) as response:
-                            if response.status == 200:
-                                data = await response.json()
-                                # Cache successful response
-                                self.cache["data"][cache_key] = data
-                                result = dict(data)
-                                break
-                            if (
-                                response.status == 429
-                            ):  # Rate limited - exponential backoff required for 2025 API
-                                wait_time = API_RETRY_DELAY * (2**attempt)
-                                print(f"Rate limited (429), exponential backoff: {wait_time}s...")
-                                await asyncio.sleep(wait_time)
-                            else:
-                                print(f"API error {response.status}: {await response.text()}")
-                                break  # Non-retryable error
+                # Import the new retry utility
+                try:
+                    from api_utils import async_api_request_with_retry
+                except ImportError:
+                    from .api_utils import async_api_request_with_retry
 
-                    except TimeoutError:
-                        if attempt < API_MAX_RETRIES - 1:
-                            await asyncio.sleep(API_RETRY_DELAY)
-                        else:
-                            print(f"Request timeout after {API_MAX_RETRIES} attempts")
+                # Use consistent retry logic
+                data = await async_api_request_with_retry(
+                    session, url, params=params, max_retries=API_MAX_RETRIES, base_delay=API_RETRY_DELAY
+                )
 
-                    except Exception as e:
-                        if attempt < API_MAX_RETRIES - 1:
-                            await asyncio.sleep(API_RETRY_DELAY)
-                        else:
-                            print(f"Request failed: {e}")
+                if data:
+                    # Cache successful response
+                    self.cache["data"][cache_key] = data
+                    result = dict(data)
 
         except Exception as e:
             print(f"Session error: {e}")

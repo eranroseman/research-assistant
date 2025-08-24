@@ -142,7 +142,13 @@ class TestAnalyzeGapsStatusFormatting:
         # Call the actual function with mocked dependencies
         import asyncio
 
-        asyncio.run(run_gap_analysis(str(temp_kb_dir), 0, 2022, None))
+        # Use a new event loop to avoid conflicts
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+        try:
+            loop.run_until_complete(run_gap_analysis(str(temp_kb_dir), 0, 2022, None))
+        finally:
+            loop.close()
 
         # Check that status messages use unified formatting
         all_output = " ".join([str(call[0][0]) for call in mock_print.call_args_list if call[0]])
@@ -167,8 +173,10 @@ class TestAnalyzeGapsProgressTracking:
 
     @patch("src.analyze_gaps._import_gap_analyzer")
     @patch("builtins.print")
-    def test_progress_tracking_integration(self, mock_print, mock_import_gap_analyzer, temp_kb_dir):
-        """Test that progress tracking shows workflow steps."""
+    def test_progress_tracking_formatting_integration(
+        self, mock_print, mock_import_gap_analyzer, temp_kb_dir
+    ):
+        """Test that progress tracking formatting shows workflow steps."""
         import json
 
         # Create valid KB
@@ -192,7 +200,13 @@ class TestAnalyzeGapsProgressTracking:
         # Call the actual function with mocked dependencies
         import asyncio
 
-        asyncio.run(run_gap_analysis(str(temp_kb_dir), 0, 2022, None))
+        # Use a new event loop to avoid conflicts
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+        try:
+            loop.run_until_complete(run_gap_analysis(str(temp_kb_dir), 0, 2022, None))
+        finally:
+            loop.close()
 
         # Check that progress tracking is used
         all_output = " ".join([str(call[0][0]) for call in mock_print.call_args_list if call[0]])

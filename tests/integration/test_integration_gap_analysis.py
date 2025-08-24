@@ -21,6 +21,9 @@ from src.gap_detection import GapAnalyzer
 import time
 
 
+@pytest.mark.integration
+@pytest.mark.gap_analysis
+@pytest.mark.requires_kb
 class TestKBValidation:
     """Test knowledge base validation for gap analysis."""
 
@@ -97,6 +100,10 @@ class TestKBValidation:
         assert len(result_papers) == 25
 
 
+@pytest.mark.integration
+@pytest.mark.gap_analysis
+@pytest.mark.requires_kb
+@pytest.mark.slow
 class TestGapAnalysisWorkflow:
     """Test complete gap analysis workflow integration."""
 
@@ -161,7 +168,9 @@ class TestGapAnalysisWorkflow:
             # Return citation response for all API calls
             mock_api.return_value = mock_citation_response
 
-            await run_gap_analysis(kb_path=str(temp_kb_dir), min_citations=0, year_from=2022, limit=None)
+            # Mock asyncio.sleep to prevent delays in tests
+            with patch("asyncio.sleep", new_callable=AsyncMock):
+                await run_gap_analysis(kb_path=str(temp_kb_dir), min_citations=0, year_from=2022, limit=None)
 
         # Check that report was generated with new timestamp format
         report_files = list(exports_dir.glob("gap_analysis_*.md"))
@@ -252,7 +261,9 @@ class TestGapAnalysisWorkflow:
             # Simulate API failures
             mock_api.return_value = None
 
-            await run_gap_analysis(kb_path=str(temp_kb_dir), min_citations=0, year_from=2022, limit=None)
+            # Mock asyncio.sleep to prevent delays in tests
+            with patch("asyncio.sleep", new_callable=AsyncMock):
+                await run_gap_analysis(kb_path=str(temp_kb_dir), min_citations=0, year_from=2022, limit=None)
 
         # Should complete even with API failures
         assert True
@@ -382,7 +393,9 @@ class TestBatchProcessingIntegration:
             analyzer = GapAnalyzer(str(temp_kb_dir))
 
             # Run citation gap analysis
-            await analyzer.find_citation_gaps(min_citations=0, limit=10)
+            # Mock asyncio.sleep to prevent delays in tests
+            with patch("asyncio.sleep", new_callable=AsyncMock):
+                await analyzer.find_citation_gaps(min_citations=0, limit=10)
 
         # Test passes if it completes without hanging (which was the main issue)
         # The mocking setup makes actual API call verification complex, but the key
@@ -413,7 +426,9 @@ class TestBatchProcessingIntegration:
         with patch.object(analyzer, "_api_request", new_callable=AsyncMock) as mock_api:
             mock_api.return_value = mock_response
 
-            await analyzer.find_author_gaps(year_from=2022)
+            # Mock asyncio.sleep to prevent delays in tests
+            with patch("asyncio.sleep", new_callable=AsyncMock):
+                await analyzer.find_author_gaps(year_from=2022)
 
             # Should have made exactly 10 API calls (top 10 authors by frequency)
             assert mock_api.call_count == 10
@@ -475,7 +490,9 @@ class TestSmartFilteringIntegration:
         with patch.object(analyzer, "_api_request", new_callable=AsyncMock) as mock_api:
             mock_api.return_value = mock_author_response
 
-            author_gaps = await analyzer.find_author_gaps(year_from=2022)
+            # Mock asyncio.sleep to prevent delays in tests
+            with patch("asyncio.sleep", new_callable=AsyncMock):
+                author_gaps = await analyzer.find_author_gaps(year_from=2022)
 
             # Should filter out low-quality items
             assert len(author_gaps) == 2  # Only 2 quality papers should remain

@@ -76,6 +76,7 @@ try:
     from .config import (
         # Version
         KB_VERSION,
+        SEMANTIC_SCHOLAR_BATCH_SIZE,
         # Paths
         KB_DATA_PATH,
         DEFAULT_ZOTERO_PATH,
@@ -134,6 +135,7 @@ except ImportError:
     from config import (
         # Version
         KB_VERSION,
+        SEMANTIC_SCHOLAR_BATCH_SIZE,
         # Paths
         KB_DATA_PATH,
         DEFAULT_ZOTERO_PATH,
@@ -248,40 +250,29 @@ async def get_semantic_scholar_data(doi: str | None, title: str) -> dict[str, An
 
             fields = "citationCount,venue,authors,externalIds,publicationTypes,fieldsOfStudy"
 
-            for attempt in range(API_MAX_RETRIES):
-                try:
-                    if doi:
-                        async with session.get(f"{url}?fields={fields}") as response:
-                            if response.status == 200:
-                                return await response.json()  # type: ignore[no-any-return]
-                    else:
-                        combined_params = dict(params)
-                        combined_params["fields"] = fields
-                        async with session.get(url, params=combined_params) as response:
-                            if response.status == 200:
-                                data = await response.json()
-                                if data.get("data") and len(data["data"]) > 0:
-                                    return data["data"][0]  # type: ignore[no-any-return]
+            # Import the new retry utility
+            from api_utils import async_api_request_with_retry
 
-                    if response.status == 429:  # Rate limited
-                        await asyncio.sleep(API_RETRY_DELAY * (attempt + 1))
-                        continue
-                    break
-
-                except TimeoutError:
-                    if attempt == API_MAX_RETRIES - 1:
-                        print(f"API timeout after {API_MAX_RETRIES} attempts: {doi or title}")
-                    await asyncio.sleep(API_RETRY_DELAY)
-                except aiohttp.ClientResponseError as e:
-                    if e.status == 429:  # Rate limited
-                        await asyncio.sleep(API_RETRY_DELAY * (attempt + 1))
-                    else:
-                        # Non-retryable HTTP error
-                        break
-                except Exception as e:
-                    if attempt == API_MAX_RETRIES - 1:
-                        print(f"API network error after {API_MAX_RETRIES} attempts: {e}")
-                    await asyncio.sleep(API_RETRY_DELAY)
+            # Use consistent retry logic
+            if doi:
+                full_url = f"{url}?fields={fields}"
+                result = await async_api_request_with_retry(
+                    session, full_url, max_retries=API_MAX_RETRIES, base_delay=API_RETRY_DELAY
+                )
+                if result:
+                    return result  # type: ignore[no-any-return]
+            else:
+                combined_params = dict(params)
+                combined_params["fields"] = fields
+                result = await async_api_request_with_retry(
+                    session,
+                    url,
+                    params=combined_params,
+                    max_retries=API_MAX_RETRIES,
+                    base_delay=API_RETRY_DELAY,
+                )
+                if result and result.get("data") and len(result["data"]) > 0:
+                    return result["data"][0]  # type: ignore[no-any-return]
 
             # If all attempts failed, return error dict
             return {
@@ -329,38 +320,23 @@ def get_semantic_scholar_data_sync(doi: str | None, title: str) -> dict[str, Any
         fields = "citationCount,venue,authors,externalIds,publicationTypes,fieldsOfStudy"
         params["fields"] = fields
 
-        for attempt in range(API_MAX_RETRIES):
-            try:
-                response = requests.get(url, params=params, timeout=API_REQUEST_TIMEOUT)  # type: ignore[arg-type]
+        # Import the new retry utility
+        from api_utils import sync_api_request_with_retry
 
-                if response.status_code == 200:
-                    data = response.json()
-                    if doi and data:
-                        return dict(data)  # Convert Any to dict
-                    if not doi and data.get("data") and len(data["data"]) > 0:
-                        return dict(data["data"][0])  # Convert Any to dict
+        # Use consistent retry logic
+        result = sync_api_request_with_retry(
+            url,
+            params=params,
+            timeout=API_REQUEST_TIMEOUT,
+            max_retries=API_MAX_RETRIES,
+            base_delay=API_RETRY_DELAY,
+        )
 
-                if response.status_code == 429:  # Rate limited
-                    import time
-
-                    time.sleep(API_RETRY_DELAY * (attempt + 1))
-                    continue
-
-                break
-
-            except requests.exceptions.Timeout:
-                if attempt == API_MAX_RETRIES - 1:
-                    return {"error": "timeout", "message": f"API timeout after {API_MAX_RETRIES} attempts"}
-                import time
-
-                time.sleep(API_RETRY_DELAY)
-
-            except requests.exceptions.RequestException as e:
-                if attempt == API_MAX_RETRIES - 1:
-                    return {"error": "network_error", "message": str(e)}
-                import time
-
-                time.sleep(API_RETRY_DELAY)
+        if result:
+            if doi:
+                return dict(result)  # Convert Any to dict
+            if result.get("data") and len(result["data"]) > 0:
+                return dict(result["data"][0])  # Convert Any to dict
 
         return {
             "error": "api_failure",
@@ -424,9 +400,9 @@ def get_semantic_scholar_data_batch(paper_identifiers: list[dict[str, str]]) -> 
 
         fields = "title,citationCount,venue,authors,externalIds,publicationTypes,fieldsOfStudy"
 
-        # Process papers with DOIs in batches of 500 (API limit)
+        # Process papers with DOIs in batches (API limit)
         if papers_with_dois:
-            batch_size = 500
+            batch_size = SEMANTIC_SCHOLAR_BATCH_SIZE
             total_batches = (len(papers_with_dois) + batch_size - 1) // batch_size
 
             print(
@@ -900,19 +876,21 @@ def calculate_sample_size_score(sample_size: int | None) -> int:
 
     # Import here to avoid circular dependencies
     try:
-        from .config import SAMPLE_SIZE_WEIGHT
+        from .config import SAMPLE_SIZE_WEIGHT, SAMPLE_SIZE_SCORING_THRESHOLDS
     except ImportError:
-        from config import SAMPLE_SIZE_WEIGHT
+        from config import SAMPLE_SIZE_WEIGHT, SAMPLE_SIZE_SCORING_THRESHOLDS
 
-    if sample_size >= 1000:
+    thresholds = SAMPLE_SIZE_SCORING_THRESHOLDS
+
+    if sample_size >= thresholds["very_large"]:
         return SAMPLE_SIZE_WEIGHT
-    if sample_size >= 500:
+    if sample_size >= thresholds["large"]:
         return int(SAMPLE_SIZE_WEIGHT * 0.8)
-    if sample_size >= 250:
+    if sample_size >= thresholds["medium"]:
         return int(SAMPLE_SIZE_WEIGHT * 0.6)
-    if sample_size >= 100:
+    if sample_size >= thresholds["small"]:
         return int(SAMPLE_SIZE_WEIGHT * 0.4)
-    if sample_size >= 50:
+    if sample_size >= thresholds["minimal"]:
         return int(SAMPLE_SIZE_WEIGHT * 0.2)
     return 0
 
@@ -1443,7 +1421,10 @@ class KnowledgeBaseBuilder:
         self.papers_path = self.knowledge_base_path / "papers"
         self.index_file_path = self.knowledge_base_path / "index.faiss"
         self.metadata_file_path = self.knowledge_base_path / "metadata.json"
-        self.cache_file_path = self.knowledge_base_path / ".pdf_text_cache.json"
+        # Use config constant for cache file name
+        from config import PDF_CACHE_FILE
+
+        self.cache_file_path = self.knowledge_base_path / PDF_CACHE_FILE.name
 
         self.knowledge_base_path.mkdir(exist_ok=True)
         self.papers_path.mkdir(exist_ok=True)
@@ -1553,8 +1534,10 @@ class KnowledgeBaseBuilder:
         if self.embedding_cache is not None:
             return self.embedding_cache
 
-        # Simple JSON cache only
-        json_cache_path = self.knowledge_base_path / ".embedding_cache.json"
+        # Use config constants for cache file names
+        from config import EMBEDDING_CACHE_FILE
+
+        json_cache_path = self.knowledge_base_path / EMBEDDING_CACHE_FILE.name
         npy_cache_path = self.knowledge_base_path / ".embedding_data.npy"
 
         if json_cache_path.exists() and npy_cache_path.exists():
@@ -1584,7 +1567,9 @@ class KnowledgeBaseBuilder:
         import numpy as np
 
         # Save metadata to JSON
-        json_cache_path = self.knowledge_base_path / ".embedding_cache.json"
+        from config import EMBEDDING_CACHE_FILE
+
+        json_cache_path = self.knowledge_base_path / EMBEDDING_CACHE_FILE.name
         cache_meta = {
             "hashes": hashes,
             "model_name": "Multi-QA MPNet",
@@ -1722,9 +1707,11 @@ class KnowledgeBaseBuilder:
         with open(self.metadata_file_path) as f:
             metadata = json.load(f)
 
-        # Version must be 4.0
-        if metadata.get("version") != "4.0":
-            raise ValueError("Knowledge base must be rebuilt. Delete kb_data/ and run build_kb.py")
+        # Version must match KB_VERSION
+        if metadata.get("version") != KB_VERSION:
+            raise ValueError(
+                f"Knowledge base version mismatch. Expected {KB_VERSION}, found {metadata.get('version')}. Delete kb_data/ and run build_kb.py"
+            )
 
         # Integrity check: Check for duplicate IDs
         paper_ids = [p["id"] for p in metadata["papers"]]
@@ -2295,7 +2282,7 @@ Value:
         metadata["papers"] = list(papers_dict.values())
         metadata["total_papers"] = len(metadata["papers"])
         metadata["last_updated"] = datetime.now(UTC).isoformat()
-        metadata["version"] = "4.0"
+        metadata["version"] = KB_VERSION
 
         # Save metadata immediately to preserve quality score updates
         print("SAVE: Saving metadata with updated quality scores...")
@@ -3420,7 +3407,7 @@ Why API might be unavailable:
             "embedding_model": EMBEDDING_MODEL,
             "embedding_dimensions": EMBEDDING_DIMENSIONS,
             "model_version": "Multi-QA MPNet",
-            "version": "4.0",
+            "version": KB_VERSION,
         }
 
         abstracts = []
@@ -3602,6 +3589,7 @@ Why API might be unavailable:
                 idx = int(paper_index)
                 if quality_score is None and use_fallback:  # type: ignore[unreachable]
                     # Use basic scoring with user consent
+                    # Note: mypy incorrectly thinks this is unreachable, but use_fallback can be True
                     paper_data = metadata["papers"][idx]  # type: ignore[unreachable]
                     basic_score, basic_explanation = calculate_basic_quality_score(paper_data)
                     metadata["papers"][idx]["quality_score"] = basic_score
@@ -4157,9 +4145,12 @@ Alternative approaches:
             # Safe extraction with path validation
             for member in tar.getmembers():
                 # Validate that extracted files stay within target directory
-                member_path = os.path.normpath(str(kb_path.parent / member.name))
-                if not member_path.startswith(str(kb_path.parent)):
+                # member.name should start with 'kb_data/' and not contain '..'
+                if ".." in member.name or os.path.isabs(member.name):
                     raise ValueError(f"Unsafe tar file: {member.name}")
+                # Ensure path starts with kb_data/
+                if not member.name.startswith("kb_data/") and member.name != "kb_data":
+                    raise ValueError(f"Unexpected path in archive: {member.name}")
             tar.extractall(kb_path.parent)  # noqa: S202
 
         # Verify import

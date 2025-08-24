@@ -95,22 +95,6 @@ class KnowledgeBaseIndex:
             return self.papers[idx]
         return None
 
-    def get_paper_with_index(self, paper_id: str) -> tuple[dict[str, Any], int] | None:
-        """Get paper and its FAISS index - O(1) lookup.
-
-        Args:
-            paper_id: Paper ID
-
-        Returns:
-            Tuple of (paper dict, FAISS index) or None
-        """
-        paper_id = self._normalize_id(paper_id)
-
-        idx = self.id_to_index.get(paper_id)
-        if idx is not None:
-            return self.papers[idx], idx
-        return None
-
     def get_paper_by_index(self, index: int) -> dict[str, Any] | None:
         """Get paper by FAISS index - O(1) lookup.
 
@@ -123,22 +107,6 @@ class KnowledgeBaseIndex:
         if 0 <= index < len(self.papers):
             return self.papers[index]
         return None
-
-    def get_papers_by_ids(self, paper_ids: list[str]) -> list[dict[str, Any]]:
-        """Get multiple papers by IDs efficiently.
-
-        Args:
-            paper_ids: List of paper IDs
-
-        Returns:
-            List of paper dicts (skips not found)
-        """
-        papers = []
-        for paper_id in paper_ids:
-            paper = self.get_paper_by_id(paper_id)
-            if paper:
-                papers.append(paper)
-        return papers
 
     def search_by_author(self, author_name: str) -> list[dict[str, Any]]:
         """Search papers by author name.
@@ -170,23 +138,6 @@ class KnowledgeBaseIndex:
             if any(author_lower in author.lower() for author in authors):
                 results.append(paper)
 
-        return results
-
-    def search_by_year_range(self, start_year: int, end_year: int) -> list[dict[str, Any]]:
-        """Get papers within year range.
-
-        Args:
-            start_year: Start year (inclusive)
-            end_year: End year (inclusive)
-
-        Returns:
-            List of papers in range
-        """
-        results = []
-        for paper in self.papers:
-            year = paper.get("year", 0)
-            if start_year <= year <= end_year:
-                results.append(paper)
         return results
 
     def _normalize_id(self, paper_id: str) -> str:
@@ -230,71 +181,6 @@ class KnowledgeBaseIndex:
             return paper_id
 
         raise ValueError(f"Invalid paper ID: {paper_id}")
-
-    def validate_consistency(self) -> dict[str, Any]:
-        """Validate index consistency.
-
-        Returns:
-            Dictionary with validation results
-        """
-        issues = []
-
-        # Check for duplicate IDs
-        seen_ids = set()
-        for paper in self.papers:
-            paper_id = paper.get("id")
-            if paper_id in seen_ids:
-                issues.append(f"Duplicate ID: {paper_id}")
-            seen_ids.add(paper_id)
-
-        # Check index mapping
-        for paper_id, idx in self.id_to_index.items():
-            if idx >= len(self.papers):
-                issues.append(f"Index out of range: {paper_id} -> {idx}")
-            elif self.papers[idx]["id"] != paper_id:
-                issues.append(f"Index mismatch: {paper_id} != {self.papers[idx]['id']}")
-
-        # Check FAISS index alignment
-        import faiss
-
-        index_file = self.kb_path / "index.faiss"
-        if index_file.exists():
-            try:
-                faiss_index = faiss.read_index(str(index_file))
-                if faiss_index.ntotal != len(self.papers):
-                    issues.append(f"FAISS index size mismatch: {faiss_index.ntotal} != {len(self.papers)}")
-            except Exception as error:
-                issues.append(f"Cannot read FAISS index: {error}")
-
-        return {
-            "valid": len(issues) == 0,
-            "total_papers": len(self.papers),
-            "unique_ids": len(self.id_to_index),
-            "issues": issues,
-        }
-
-    def get_papers_by_quality_range(self, min_quality: int, max_quality: int = 100) -> list[dict[str, Any]]:
-        """Get papers within quality score range.
-
-        Args:
-            min_quality: Minimum quality score (inclusive)
-            max_quality: Maximum quality score (inclusive, default 100)
-
-        Returns:
-            List of papers within the specified quality range
-        """
-        return [paper for paper in self.papers if min_quality <= paper.get("quality_score", 0) <= max_quality]
-
-    def get_top_quality_papers(self, limit: int = 10) -> list[dict[str, Any]]:
-        """Get highest quality papers.
-
-        Args:
-            limit: Maximum number of papers to return
-
-        Returns:
-            List of papers sorted by quality score (highest first)
-        """
-        return sorted(self.papers, key=lambda p: p.get("quality_score", 0), reverse=True)[:limit]
 
     def get_quality_distribution(self) -> dict[str, int]:
         """Get distribution of papers across quality levels.

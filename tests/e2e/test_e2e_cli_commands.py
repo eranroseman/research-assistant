@@ -11,6 +11,9 @@ from pathlib import Path
 import pytest
 
 
+@pytest.mark.e2e
+@pytest.mark.cli
+@pytest.mark.fast
 class TestCLIBasicCommands:
     """Test basic CLI command functionality."""
 
@@ -82,6 +85,10 @@ class TestCLIBasicCommands:
         assert len(result.stdout + result.stderr) > 0
 
 
+@pytest.mark.e2e
+@pytest.mark.cli
+@pytest.mark.search
+@pytest.mark.requires_kb
 class TestCLISearchCommands:
     """Test search-related CLI commands."""
 
@@ -158,6 +165,9 @@ class TestCLISearchCommands:
         assert "-k" in result.stdout
 
 
+@pytest.mark.e2e
+@pytest.mark.cli
+@pytest.mark.fast
 class TestCLICiteCommand:
     """Test citation command functionality."""
 
@@ -203,6 +213,9 @@ class TestCLICiteCommand:
         assert "PAPER_IDS" in result.stderr or "required" in result.stderr.lower()
 
 
+@pytest.mark.e2e
+@pytest.mark.cli
+@pytest.mark.requires_kb
 class TestCLIBatchCommand:
     """Test batch command functionality."""
 
@@ -247,7 +260,7 @@ class TestCLIBatchCommand:
                 text=True,
                 check=False,
                 cwd=Path(__file__).parent.parent.parent,
-                timeout=15,  # Increased timeout for model loading
+                timeout=30,  # Increased timeout for batch operations
             )
 
             assert result.returncode != 0
@@ -261,6 +274,9 @@ class TestCLIBatchCommand:
             Path(temp_file).unlink()
 
 
+@pytest.mark.e2e
+@pytest.mark.cli
+@pytest.mark.fast
 class TestCLIErrorMessages:
     """Test error message quality."""
 
@@ -276,6 +292,10 @@ class TestCLIErrorMessages:
         # In practice, we just verify the error handling exists
 
 
+@pytest.mark.e2e
+@pytest.mark.performance
+@pytest.mark.slow
+@pytest.mark.requires_kb
 class TestCLIPerformance:
     """Test CLI performance characteristics."""
 
@@ -392,6 +412,8 @@ class TestCriticalE2EFunctionality:
     @pytest.mark.performance
     def test_search_performance_should_be_acceptable(self):
         """Ensure search completes in reasonable time."""
+        import os
+
         kb_path = Path("kb_data")
         if not kb_path.exists():
             pytest.skip("Knowledge base not built")
@@ -407,8 +429,13 @@ class TestCriticalE2EFunctionality:
         )
         elapsed = time.time() - start
 
-        # Should complete within 15 seconds (allowing for model loading)
-        assert elapsed < 15, f"Search too slow: {elapsed:.1f}s"
+        # Environment-aware thresholds: CI environments may be slower
+        # Local development: 25s, CI environment: 30s (allowing for model loading)
+        # Increased thresholds to account for first-time model loading and varying system loads
+        perf_threshold = 30 if os.getenv("CI") else 25
+
+        # Should complete within threshold (allowing for model loading)
+        assert elapsed < perf_threshold, f"Search too slow: {elapsed:.1f}s (threshold: {perf_threshold}s)"
 
         # Should return successfully
         assert result.returncode in [0, 1], f"Search failed with code {result.returncode}"

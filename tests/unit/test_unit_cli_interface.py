@@ -16,6 +16,9 @@ sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 from src.build_kb import calculate_enhanced_quality_score
 
 
+@pytest.mark.unit
+@pytest.mark.quality
+@pytest.mark.fast
 class TestEnhancedQualityScoring:
     """Test enhanced quality scoring functionality."""
 

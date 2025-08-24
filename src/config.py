@@ -94,6 +94,15 @@ SAMPLE_SIZE_SMALL_THRESHOLD = 100  # n > 100 = small trial
 BONUS_LARGE_SAMPLE = 10  # Bonus for large RCTs
 BONUS_MEDIUM_SAMPLE = 5  # Bonus for medium RCTs
 
+# Sample size scoring thresholds for quality assessment
+SAMPLE_SIZE_SCORING_THRESHOLDS = {
+    "very_large": 1000,  # 5 points
+    "large": 500,  # 4 points
+    "medium": 250,  # 3 points
+    "small": 100,  # 2 points
+    "minimal": 50,  # 1 point
+}
+
 # Additional scoring factors
 BONUS_FULL_TEXT = 5  # Bonus for papers with full PDF text available
 
@@ -129,6 +138,11 @@ AUTHOR_AUTHORITY_THRESHOLDS = {
 }
 
 # ============================================================================
+# GAP ANALYSIS CONFIGURATION
+# ============================================================================
+MIN_PAPERS_FOR_GAP_ANALYSIS = 20  # Minimum papers required for meaningful gap analysis
+
+# ============================================================================
 # ENHANCED QUALITY SCORING WITH SEMANTIC SCHOLAR API
 # ============================================================================
 # API Configuration - Critical Relationships:
@@ -139,6 +153,7 @@ API_REQUEST_TIMEOUT = 10  # Timeout for individual API requests (must be < 200s 
 API_TOTAL_TIMEOUT_BUDGET = 600  # Max 10 min for all API calls (must be > REQUEST_TIMEOUT x MAX_RETRIES)
 API_MAX_RETRIES = 3  # Retry failed requests (increase if REQUEST_TIMEOUT is very low)
 API_RETRY_DELAY = 1.0  # Base delay between retries (actual delay = RETRY_DELAY x attempt)
+SEMANTIC_SCHOLAR_BATCH_SIZE = 500  # Maximum papers per batch API request
 
 # Emergency fallback configuration
 ENHANCED_SCORING_EMERGENCY_FALLBACK = True  # Enable fallback to basic scoring

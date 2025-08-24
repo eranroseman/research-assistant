@@ -183,7 +183,9 @@ def _setup_command_usage_logger() -> logging.Logger | None:
     """Set up command usage analytics logger with JSON formatting."""
     try:
         # Disable logging in test environment
-        if not COMMAND_USAGE_LOG_ENABLED or "pytest" in sys.modules:
+        import os
+
+        if not COMMAND_USAGE_LOG_ENABLED or "pytest" in sys.modules or os.environ.get("PYTEST_CURRENT_TEST"):
             return None
 
         # Ensure logs directory exists
@@ -207,16 +209,32 @@ def _setup_command_usage_logger() -> logging.Logger | None:
         # Create JSON formatter
         class JSONFormatter(logging.Formatter):
             def format(self, record: logging.LogRecord) -> str:
-                log_data = {
-                    "timestamp": datetime.now(UTC).isoformat(),
-                    "session_id": _session_id,
-                    "level": record.levelname,
-                    "message": record.getMessage(),
-                }
-                # Add any extra data from the record
-                if hasattr(record, "extra_data"):
-                    log_data.update(record.extra_data)
-                return json.dumps(log_data)
+                try:
+                    log_data = {
+                        "timestamp": datetime.now(UTC).isoformat(),
+                        "session_id": _session_id,
+                        "level": record.levelname,
+                        "message": record.getMessage(),
+                    }
+                    # Add any extra data from the record
+                    if hasattr(record, "extra_data"):
+                        # Only add serializable data
+                        extra = getattr(record, "extra_data", {})
+                        # Convert any non-serializable objects to strings
+                        serializable_extra = {}
+                        for key, value in extra.items():
+                            try:
+                                json.dumps(value)  # Test if serializable
+                                serializable_extra[key] = value
+                            except (TypeError, ValueError):
+                                serializable_extra[key] = str(value)
+                        log_data.update(serializable_extra)
+                    return json.dumps(log_data)
+                except Exception as e:
+                    # If serialization fails, return a simple string
+                    return (
+                        f'{{"error": "Failed to serialize log: {e!s}", "message": "{record.getMessage()}"}}'
+                    )
 
         handler.setFormatter(JSONFormatter())
         logger.addHandler(handler)
@@ -1485,7 +1503,7 @@ def cite(paper_ids: tuple[str, ...], output_format: str) -> None:
         command="cite",
         paper_count=len(paper_ids),
         paper_ids=list(paper_ids),
-        format=format,
+        output_format=output_format,
     )
 
     results = []
@@ -2582,4 +2600,26 @@ def generate_ieee_citation(paper_metadata: dict[str, Any], citation_number: int)
 
 
 if __name__ == "__main__":
-    cli()
+    import sys
+    import os
+
+    # Debug mode for testing
+    if os.environ.get("CLI_DEBUG"):
+        print("CLI starting...", file=sys.stderr)
+        sys.stderr.flush()
+
+    try:
+        if os.environ.get("CLI_DEBUG"):
+            print("About to call cli()...", file=sys.stderr)
+            sys.stderr.flush()
+        cli()
+        if os.environ.get("CLI_DEBUG"):
+            print("cli() completed", file=sys.stderr)
+            sys.stderr.flush()
+    except Exception as e:
+        if os.environ.get("CLI_DEBUG"):
+            print(f"CLI error: {e}", file=sys.stderr)
+            import traceback
+
+            traceback.print_exc(file=sys.stderr)
+        raise
