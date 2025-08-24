@@ -5,7 +5,7 @@
 **Status**: Design Phase - Semantic Scholar Foundation with Coverage Documentation
 **Purpose**: Comprehensive external paper discovery using Semantic Scholar with maximum infrastructure reuse
 **Dependencies**: Basic Quality Scoring (from build_kb.py)
-**Logging**: UX Analytics for usage pattern analysis and usability improvement
+**Logging**: Command Usage Analytics for usage pattern analysis and usability improvement
 
 ## Overview
 
@@ -17,7 +17,7 @@ The `src/discover.py` tool provides comprehensive academic paper discovery using
 - **Output Consistency**: Match gap analysis report structure exactly
 - **Coverage Transparency**: Clear documentation of when specialized sources are needed
 - **User Flexibility**: Manual access to specialized sources + future slash commands
-- **Usage Analytics**: Track user patterns for continuous usability improvements
+- **Command Usage Analytics**: Track user patterns for continuous usability improvements
 
 ## Core Architecture
 
@@ -125,13 +125,13 @@ class SemanticScholarDiscovery:
             get_semantic_scholar_data_sync,
             get_semantic_scholar_data_batch
         )
-        from src.cli import _setup_ux_logger, _log_ux_event
+        from src.cli import _setup_command_usage_logger, _log_command_usage_event
         from src.cli_kb_index import load_kb_index
 
         self.api_sync = get_semantic_scholar_data_sync
         self.api_batch = get_semantic_scholar_data_batch
         self.rate_limiter = RateLimiter(requests_per_second=1.0)  # Unauthenticated limit
-        self.ux_logger = _setup_ux_logger()
+        self.command_usage_logger = _setup_command_usage_logger()
         self.log_ux_event = _log_ux_event
         self.include_kb_papers = include_kb_papers
 
@@ -564,13 +564,13 @@ For specialized needs, consider manual access:
 ### Logging Infrastructure (Reused from cli.py)
 ```python
 # Import existing logging infrastructure
-from src.cli import _setup_ux_logger, _log_ux_event
+from src.cli import _setup_command_usage_logger, _log_command_usage_event
 import time
 import uuid
 
 # Initialize logging in main discover function
 _session_id = str(uuid.uuid4())[:8]
-_ux_logger = _setup_ux_logger()
+_command_usage_logger = _setup_command_usage_logger()
 
 def main():
     """Main discover function with comprehensive UX logging."""
@@ -871,7 +871,7 @@ DISCOVERY_DEFAULT_YEAR_FROM = 2020             # Recent research focus
 DISCOVERY_DEFAULT_INCLUDE_KB = False           # Exclude KB papers by default
 
 # UX Analytics Configuration (reuse cli.py logging infrastructure)
-DISCOVERY_UX_LOG_ENABLED = True                # Enable usage pattern tracking
+DISCOVERY_COMMAND_USAGE_LOG_ENABLED = True     # Enable usage pattern tracking
 DISCOVERY_SESSION_TIMEOUT_MINUTES = 30         # Session boundary for analytics
 
 # Coverage guidance text

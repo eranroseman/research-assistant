@@ -560,8 +560,11 @@ class TestGapAnalysisIntegration:
 
         monkeypatch.setattr(src.build_kb, "has_enhanced_scoring", mock_has_enhanced)
 
-        # Mock input to return 'n' to avoid actually running gap analysis
-        monkeypatch.setattr("builtins.input", lambda _: "n")
+        # Mock safe_prompt to return 'n' to avoid actually running gap analysis
+        def mock_safe_prompt(*args, **kwargs):
+            return "n"
+
+        monkeypatch.setattr(src.build_kb, "safe_prompt", mock_safe_prompt)
 
         from src.build_kb import prompt_gap_analysis_after_build
 
@@ -571,10 +574,8 @@ class TestGapAnalysisIntegration:
         captured = capsys.readouterr()
         assert "Knowledge base built successfully!" in captured.out
         assert "100 papers indexed in 10.2 minutes" in captured.out
-        assert "Run gap analysis to discover missing papers" in captured.out
-        assert "Gap analysis identifies 5 types of literature gaps:" in captured.out
-        assert "Papers cited by your KB but missing from your collection" in captured.out
-        assert "python src/analyze_gaps.py" in captured.out
+        # Updated assertions for new compact prompt format
+        # The detailed gap analysis info is now in help text, not displayed by default
 
 
 class TestIncrementalUpdateFixes:

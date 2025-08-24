@@ -172,6 +172,7 @@ CROSS_VALIDATION_WEIGHT = 10  # Multi-source data verification (DOI, PubMed, typ
 # ============================================================================
 # Text extraction and section limits
 MAX_SECTION_LENGTH = 50000  # Generous safety limit for section length (10x previous limit)
+MAX_QUALITY_SCORE = 100  # Maximum quality score value (moved from cli.py)
 ABSTRACT_PREVIEW_LENGTH = 1000  # Fallback abstract length when full text unavailable
 CONCLUSION_PREVIEW_LENGTH = 1000  # Fallback conclusion length
 MIN_FULL_TEXT_LENGTH = 5000  # PDFs with less text are flagged as incomplete
@@ -254,13 +255,13 @@ VALID_PAPER_TYPES = [
 ]
 
 # ============================================================================
-# UX ANALYTICS CONFIGURATION
+# COMMAND USAGE CONFIGURATION
 # ============================================================================
-# User experience analytics logging for improving functionality
-UX_LOG_PATH = Path("system")  # Use existing system directory
-UX_LOG_PREFIX = "ux_analytics_"  # Log file prefix
-UX_LOG_LEVEL = "INFO"  # Logging level for UX analytics
-UX_LOG_ENABLED = True  # Enable/disable UX analytics logging
+# Command usage analytics logging for script improvement
+COMMAND_USAGE_LOG_PATH = Path("system")  # Use existing system directory
+COMMAND_USAGE_LOG_PREFIX = "command_usage_"  # Log file prefix
+COMMAND_USAGE_LOG_LEVEL = "INFO"  # Logging level for command usage analytics
+COMMAND_USAGE_LOG_ENABLED = True  # Enable/disable command usage logging
 
 # ============================================================================
 # DISPLAY CONFIGURATION
@@ -308,8 +309,8 @@ DISCOVERY_MAX_KEYWORDS = 10  # Prevent overly complex queries
 DISCOVERY_DEFAULT_YEAR_FROM = 2020  # Recent research focus
 DISCOVERY_DEFAULT_INCLUDE_KB = False  # Exclude KB papers by default
 
-# UX Analytics Configuration (reuse cli.py logging infrastructure)
-DISCOVERY_UX_LOG_ENABLED = True  # Enable usage pattern tracking
+# Command Usage Analytics Configuration (reuse cli.py logging infrastructure)
+DISCOVERY_COMMAND_USAGE_LOG_ENABLED = True  # Enable usage pattern tracking
 DISCOVERY_SESSION_TIMEOUT_MINUTES = 30  # Session boundary for analytics
 
 # Coverage guidance text
@@ -371,3 +372,48 @@ QUALITY_THRESHOLD_MAPPING = {
 # Output alignment with gap analysis
 DISCOVERY_OUTPUT_FORMAT = "markdown"  # Match gap analysis exactly
 DISCOVERY_EXPORT_PREFIX = "discovery"  # exports/discovery_YYYY_MM_DD.md
+
+# ============================================================================
+# GAP ANALYSIS CONFIGURATION
+# ============================================================================
+
+# Gap detection thresholds
+GAP_ANALYSIS_MIN_CITATIONS_DEFAULT = 0
+GAP_ANALYSIS_MIN_KB_CONNECTIONS = 2  # Min KB papers that must cite a gap
+GAP_ANALYSIS_MAX_GAPS_PER_TYPE = 1000  # Prevent overwhelming results
+
+# Author network recency settings
+GAP_ANALYSIS_AUTHOR_RECENCY_DEFAULT = 2022  # Conservative default (3 years)
+GAP_ANALYSIS_AUTHOR_RECENCY_MIN = 2015  # Minimum allowed value (10 years)
+GAP_ANALYSIS_AUTHOR_RECENCY_MAX = 2024  # Maximum allowed value (current year)
+
+# API rate limiting (token bucket pattern)
+API_RATE_LIMIT_RPS = 1.0  # Semantic Scholar actual limit: 1 RPS (unauthenticated shared pool)
+API_RATE_LIMIT_BURST = 3  # Conservative burst allowance
+API_RATE_LIMIT_RETRY_DELAY = 1.0  # Base delay for exponential backoff
+
+# Citation network analysis
+CITATION_NETWORK_MAX_DEPTH = 2  # How deep to traverse citation networks
+CITATION_RELEVANCE_THRESHOLD = 0.1  # Min relevance score for inclusion
+
+# Simplified author network analysis
+AUTHOR_NETWORK_USE_EXISTING_IDS = True  # Use Semantic Scholar IDs from KB metadata
+AUTHOR_NETWORK_MAX_RECENT_PAPERS = 20  # Limit papers per author to prevent overwhelming
+AUTHOR_NETWORK_TOPIC_SIMILARITY_THRESHOLD = 0.6  # Minimum topic similarity to KB
+
+# Report generation
+GAP_REPORT_MAX_PAPERS_PER_BLOCK = 20  # Max papers per thematic block
+GAP_REPORT_BLOCK_MIN_SIZE = 3  # Min papers needed to form a block
+GAP_REPORT_EXPLANATION_MAX_LENGTH = 200  # Max chars for relevance explanations
+
+# Confidence indicators for user guidance
+CONFIDENCE_HIGH_THRESHOLD = 0.8  # HIGH priority gaps
+CONFIDENCE_MEDIUM_THRESHOLD = 0.6  # MEDIUM priority gaps
+CONFIDENCE_LOW_THRESHOLD = 0.4  # LOW priority gaps
+
+# Performance settings
+GAP_ANALYSIS_SEQUENTIAL_PROCESSING = True  # Sequential processing due to rate limits
+GAP_ANALYSIS_API_BATCH_SIZE = 500  # Papers per API batch request (use bulk endpoints)
+GAP_ANALYSIS_CACHE_EXPIRY_DAYS = 7  # Cache API responses for 7 days
+GAP_ANALYSIS_PROACTIVE_DELAY = 1.0  # Pre-emptive delay between API requests (seconds)
+GAP_ANALYSIS_ADAPTIVE_DELAY = 2.0  # Increased delay when rate limiting detected

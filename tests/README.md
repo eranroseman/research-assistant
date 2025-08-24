@@ -19,7 +19,7 @@ tests/
 │   ├── test_unit_knowledge_base.py       # KB building, indexing, caching
 │   ├── test_unit_quality_scoring.py      # Paper quality algorithms
 │   ├── test_unit_search_engine.py        # Search, embedding, ranking
-│   └── test_unit_ux_analytics.py         # Analytics logging
+│   └── test_unit_command_usage.py        # Command usage logging
 ├── integration/               # Integration tests (40 tests, component interactions)
 │   ├── test_integration_batch_operations.py    # Batch command workflows
 │   ├── test_integration_incremental_updates.py # Incremental update workflows
@@ -58,7 +58,7 @@ This naming scheme provides several benefits:
 - `test_unit_quality_scoring.py`: Paper quality scoring algorithm
 - `test_unit_citation_system.py`: IEEE citation formatting
 - `test_unit_cli_interface.py`: CLI utility functions and paper quality estimation
-- `test_unit_ux_analytics.py`: Analytics logging functionality
+- `test_unit_command_usage.py`: Command usage logging functionality
 
 ### Integration Tests (`integration/`)
 **Purpose**: Test component interactions and workflows

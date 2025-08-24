@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """
-Tests for UX analytics logging functionality.
+Tests for command usage analytics logging functionality.
 
-Tests the user experience analytics logging system that tracks
+Tests the command usage analytics logging system that tracks
 command usage patterns, performance metrics, and error patterns
 for improving the Research Assistant CLI.
 """
@@ -18,72 +18,72 @@ from unittest.mock import patch, MagicMock
 import pytest
 
 
-class TestUXAnalyticsLogging:
-    """Test UX analytics logging functionality."""
+class TestCommandUsageLogging:
+    """Test command usage analytics logging functionality."""
 
-    def test_ux_analytics_in_test_environment_should_be_disabled(self):
-        """Ensure UX analytics is disabled when pytest is running."""
+    def test_command_usage_analytics_in_test_environment_should_be_disabled(self):
+        """Ensure command usage analytics is disabled when pytest is running."""
         import sys
-        from src.cli import _setup_ux_logger
+        from src.cli import _setup_command_usage_logger
 
         # pytest should be in sys.modules during testing
         assert "pytest" in sys.modules
 
         # Logger should return None when pytest is detected
-        logger = _setup_ux_logger()
+        logger = _setup_command_usage_logger()
         assert logger is None
 
-    def test_ux_analytics_setup_with_enabled_flag_should_initialize_logger(self):
-        """Test UX analytics setup when enabled outside test environment."""
+    def test_command_usage_analytics_setup_with_enabled_flag_should_initialize_logger(self):
+        """Test command usage analytics setup when enabled outside test environment."""
         with (
             tempfile.TemporaryDirectory() as temp_dir,
             patch.dict("sys.modules"),
-            patch("src.cli.UX_LOG_ENABLED", True),
-            patch("src.cli.UX_LOG_PATH", Path(temp_dir)),
-            patch("src.cli.UX_LOG_PREFIX", "test_analytics_"),
-            patch("src.cli.UX_LOG_LEVEL", "INFO"),
+            patch("src.cli.COMMAND_USAGE_LOG_ENABLED", True),
+            patch("src.cli.COMMAND_USAGE_LOG_PATH", Path(temp_dir)),
+            patch("src.cli.COMMAND_USAGE_LOG_PREFIX", "test_analytics_"),
+            patch("src.cli.COMMAND_USAGE_LOG_LEVEL", "INFO"),
         ):
             if "pytest" in sys.modules:
                 del sys.modules["pytest"]
 
-            from src.cli import _setup_ux_logger
+            from src.cli import _setup_command_usage_logger
 
-            logger = _setup_ux_logger()
+            logger = _setup_command_usage_logger()
             assert logger is not None
-            assert logger.name == "ux_analytics"
+            assert logger.name == "command_usage"
 
-    def test_ux_analytics_setup_with_disabled_flag_should_skip_initialization(self):
-        """Test UX analytics setup when disabled."""
-        with patch("src.cli.UX_LOG_ENABLED", False):
-            from src.cli import _setup_ux_logger
+    def test_command_usage_analytics_setup_with_disabled_flag_should_skip_initialization(self):
+        """Test command usage analytics setup when disabled."""
+        with patch("src.cli.COMMAND_USAGE_LOG_ENABLED", False):
+            from src.cli import _setup_command_usage_logger
 
-            logger = _setup_ux_logger()
+            logger = _setup_command_usage_logger()
             assert logger is None
 
-    def test_ux_analytics_setup_with_errors_should_handle_gracefully(self):
-        """Test that UX analytics setup handles errors without breaking core functionality."""
+    def test_command_usage_analytics_setup_with_errors_should_handle_gracefully(self):
+        """Test that command usage analytics setup handles errors without breaking core functionality."""
         # Mock sys.modules to remove pytest
         with (
             patch.dict("sys.modules"),
-            patch("src.cli.UX_LOG_ENABLED", True),
-            patch("src.cli.UX_LOG_PATH", None),
+            patch("src.cli.COMMAND_USAGE_LOG_ENABLED", True),
+            patch("src.cli.COMMAND_USAGE_LOG_PATH", None),
         ):  # Invalid path
             if "pytest" in sys.modules:
                 del sys.modules["pytest"]
 
-            from src.cli import _setup_ux_logger
+            from src.cli import _setup_command_usage_logger
 
             # Should return None instead of raising exception
-            logger = _setup_ux_logger()
+            logger = _setup_command_usage_logger()
             assert logger is None
 
-    def test_log_ux_event_with_valid_logger_should_record_event(self):
+    def test_log_command_usage_event_with_valid_logger_should_record_event(self):
         """Test logging events when logger is available."""
         with tempfile.TemporaryDirectory() as temp_dir:
             log_file = Path(temp_dir) / "test_analytics.jsonl"
 
             # Create a test logger manually
-            logger = logging.getLogger("test_ux_analytics")
+            logger = logging.getLogger("test_command_usage")
             handler = logging.FileHandler(log_file, mode="a", encoding="utf-8")
 
             class JSONFormatter(logging.Formatter):
@@ -103,11 +103,14 @@ class TestUXAnalyticsLogging:
             logger.setLevel(logging.INFO)
 
             # Mock the global logger
-            with patch("src.cli._ux_logger", logger), patch("src.cli.UX_LOG_ENABLED", True):
-                from src.cli import _log_ux_event
+            with (
+                patch("src.cli._command_usage_logger", logger),
+                patch("src.cli.COMMAND_USAGE_LOG_ENABLED", True),
+            ):
+                from src.cli import _log_command_usage_event
 
                 # Test logging an event
-                _log_ux_event("test_event", command="search", query_length=10, success=True)
+                _log_command_usage_event("test_event", command="search", query_length=10, success=True)
 
             # Verify log was written
             assert log_file.exists()
@@ -120,22 +123,25 @@ class TestUXAnalyticsLogging:
                 assert log_data["query_length"] == 10
                 assert log_data["success"] is True
 
-    def test_log_ux_event_with_no_logger_should_skip_silently(self):
+    def test_log_command_usage_event_with_no_logger_should_skip_silently(self):
         """Test that logging gracefully handles missing logger."""
-        with patch("src.cli._ux_logger", None):
-            from src.cli import _log_ux_event
+        with patch("src.cli._command_usage_logger", None):
+            from src.cli import _log_command_usage_event
 
             # Should not raise exception
-            _log_ux_event("test_event", command="search")
+            _log_command_usage_event("test_event", command="search")
 
-    def test_log_ux_event_with_disabled_logging_should_skip_silently(self):
+    def test_log_command_usage_event_with_disabled_logging_should_skip_silently(self):
         """Test that logging respects the enabled flag."""
         mock_logger = MagicMock()
 
-        with patch("src.cli._ux_logger", mock_logger), patch("src.cli.UX_LOG_ENABLED", False):
-            from src.cli import _log_ux_event
+        with (
+            patch("src.cli._command_usage_logger", mock_logger),
+            patch("src.cli.COMMAND_USAGE_LOG_ENABLED", False),
+        ):
+            from src.cli import _log_command_usage_event
 
-            _log_ux_event("test_event", command="search")
+            _log_command_usage_event("test_event", command="search")
 
             # Logger should not be called when disabled
             mock_logger.handle.assert_not_called()
@@ -148,21 +154,21 @@ class TestUXAnalyticsLogging:
         assert len(_session_id) == 8
         assert isinstance(_session_id, str)
 
-    def test_analytics_log_file_naming_should_use_date_format(self):
+    def test_command_usage_log_file_naming_should_use_date_format(self):
         """Test that log files are named correctly with date prefix."""
         with tempfile.TemporaryDirectory() as temp_dir, patch.dict("sys.modules"):
             if "pytest" in sys.modules:
                 del sys.modules["pytest"]
 
             with (
-                patch("src.cli.UX_LOG_ENABLED", True),
-                patch("src.cli.UX_LOG_PATH", Path(temp_dir)),
-                patch("src.cli.UX_LOG_PREFIX", "test_analytics_"),
+                patch("src.cli.COMMAND_USAGE_LOG_ENABLED", True),
+                patch("src.cli.COMMAND_USAGE_LOG_PATH", Path(temp_dir)),
+                patch("src.cli.COMMAND_USAGE_LOG_PREFIX", "test_analytics_"),
             ):
-                from src.cli import _setup_ux_logger
+                from src.cli import _setup_command_usage_logger
                 from datetime import datetime, UTC
 
-                logger = _setup_ux_logger()
+                logger = _setup_command_usage_logger()
                 if logger:  # Only test if logger was created
                     expected_date = datetime.now(UTC).strftime("%Y%m%d")
                     expected_file = Path(temp_dir) / f"test_analytics_{expected_date}.jsonl"
@@ -172,14 +178,14 @@ class TestUXAnalyticsLogging:
 
 
 @pytest.mark.integration
-class TestUXAnalyticsIntegration:
-    """Integration tests for UX analytics in CLI commands."""
+class TestCommandUsageIntegration:
+    """Integration tests for command usage analytics in CLI commands."""
 
-    def test_analytics_in_pytest_environment_should_be_disabled(self):
-        """Test that analytics are properly disabled when running under pytest."""
-        from src.cli import _ux_logger
+    def test_command_usage_analytics_in_pytest_environment_should_be_disabled(self):
+        """Test that command usage analytics are properly disabled when running under pytest."""
+        from src.cli import _command_usage_logger
 
         # In test environment, logger should be None
-        assert _ux_logger is None
+        assert _command_usage_logger is None
 
         # This confirms that pytest detection is working

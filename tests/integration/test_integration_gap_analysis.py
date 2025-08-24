@@ -297,7 +297,7 @@ class TestCLIIntegration:
         mock_run_analysis.return_value = None
 
         runner = CliRunner()
-        result = runner.invoke(
+        runner.invoke(
             main,
             ["--min-citations", "50", "--year-from", "2020", "--limit", "100", "--kb-path", str(temp_kb_dir)],
         )
@@ -310,7 +310,7 @@ class TestCLIIntegration:
         assert args[3] == 100  # limit
 
     def test_cli_argument_validation_error_cases(self):
-        """Test CLI argument validation for error cases."""
+        """Test CLI argument validation for error cases with unified formatting."""
         from click.testing import CliRunner
         from src.analyze_gaps import main
 
@@ -319,18 +319,27 @@ class TestCLIIntegration:
         # Test invalid year (too old)
         result = runner.invoke(main, ["--year-from", "2010"])
         assert result.exit_code == 1
+        assert "❌ analyze_gaps: --year-from must be 2015 or later" in result.output
+        assert "Context: Command-line argument validation" in result.output
+        assert "Solution: Semantic Scholar coverage is limited before 2015" in result.output
 
         # Test invalid year (future)
         result = runner.invoke(main, ["--year-from", "2030"])
         assert result.exit_code == 1
+        assert "❌ analyze_gaps: --year-from cannot be in the future" in result.output
+        assert "Context: Command-line argument validation" in result.output
 
         # Test invalid limit (negative)
         result = runner.invoke(main, ["--limit", "-10"])
         assert result.exit_code == 1
+        assert "❌ analyze_gaps: --limit must be positive" in result.output
+        assert "Context: Command-line argument validation" in result.output
 
         # Test invalid min-citations (negative)
         result = runner.invoke(main, ["--min-citations", "-5"])
         assert result.exit_code == 1
+        assert "❌ analyze_gaps: --min-citations cannot be negative" in result.output
+        assert "Context: Command-line argument validation" in result.output
 
 
 class TestBatchProcessingIntegration:
@@ -683,10 +692,11 @@ Sample discussion content.
         from src.build_kb import prompt_gap_analysis_after_build
 
         # Mock has_enhanced_scoring to return True
-        with patch("src.build_kb.has_enhanced_scoring", return_value=True):
-            # Mock user input to say yes
-            with patch("builtins.input", return_value="y"):
-                prompt_gap_analysis_after_build(total_papers=len(metadata["papers"]), build_time=2.5)
+        with (
+            patch("src.build_kb.has_enhanced_scoring", return_value=True),
+            patch("builtins.input", return_value="y"),
+        ):
+            prompt_gap_analysis_after_build(total_papers=len(metadata["papers"]), build_time=2.5)
 
         # Should have called subprocess to run gap analysis
         mock_subprocess.assert_called_once()
@@ -710,7 +720,6 @@ Sample discussion content.
 
         # Test filename generation
         filename1 = f"gap_analysis_{timestamp1}.md"
-        filename2 = f"gap_analysis_{timestamp2}.md"
 
         # Filenames include hour/minute to prevent overwrites
         assert "_" in filename1[-9:]  # Should have underscore before time

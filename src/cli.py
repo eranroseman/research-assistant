@@ -41,10 +41,9 @@ import click
 try:
     import faiss
 except ImportError as e:
-    print("Error: faiss-cpu is not installed.", file=sys.stderr)
-    print("Please install it with: pip install faiss-cpu", file=sys.stderr)
-    print(f"Details: {e}", file=sys.stderr)
-    sys.exit(1)
+    from error_formatting import exit_with_common_error
+
+    exit_with_common_error("faiss_import", module="cli", technical_details=str(e))
 
 # Global model cache to avoid reloading
 _model_cache = {}
@@ -68,6 +67,7 @@ try:
         # Quality scoring
         QUALITY_BASE_SCORE,
         QUALITY_STUDY_TYPE_WEIGHTS,
+        MAX_QUALITY_SCORE,
         # Sample size
         SAMPLE_SIZE_LARGE_THRESHOLD,
         SAMPLE_SIZE_MEDIUM_THRESHOLD,
@@ -87,11 +87,11 @@ try:
         QUALITY_GOOD,
         QUALITY_MODERATE,
         QUALITY_LOW,
-        # UX Analytics
-        UX_LOG_PATH,
-        UX_LOG_PREFIX,
-        UX_LOG_LEVEL,
-        UX_LOG_ENABLED,
+        # Command Usage Analytics
+        COMMAND_USAGE_LOG_PATH,
+        COMMAND_USAGE_LOG_PREFIX,
+        COMMAND_USAGE_LOG_LEVEL,
+        COMMAND_USAGE_LOG_ENABLED,
     )
 except ImportError:
     # For direct script execution
@@ -108,6 +108,7 @@ except ImportError:
         # Quality scoring
         QUALITY_BASE_SCORE,
         QUALITY_STUDY_TYPE_WEIGHTS,
+        MAX_QUALITY_SCORE,
         # Sample size
         SAMPLE_SIZE_LARGE_THRESHOLD,
         SAMPLE_SIZE_MEDIUM_THRESHOLD,
@@ -127,11 +128,11 @@ except ImportError:
         QUALITY_GOOD,
         QUALITY_MODERATE,
         QUALITY_LOW,
-        # UX Analytics
-        UX_LOG_PATH,
-        UX_LOG_PREFIX,
-        UX_LOG_LEVEL,
-        UX_LOG_ENABLED,
+        # Command Usage Analytics
+        COMMAND_USAGE_LOG_PATH,
+        COMMAND_USAGE_LOG_PREFIX,
+        COMMAND_USAGE_LOG_LEVEL,
+        COMMAND_USAGE_LOG_ENABLED,
     )
 
 
@@ -168,41 +169,40 @@ except ImportError:
     )
 
 # Display Configuration
-MAX_QUALITY_SCORE = 100
 PAPER_ID_FORMAT = VALID_PAPER_ID_PATTERN.pattern
 
 # ============================================================================
-# UX ANALYTICS SETUP
+# COMMAND USAGE ANALYTICS SETUP
 # ============================================================================
 
 # Global session ID for tracking user sessions
 _session_id = str(uuid.uuid4())[:8]
 
 
-def _setup_ux_logger() -> logging.Logger | None:
-    """Set up UX analytics logger with JSON formatting."""
+def _setup_command_usage_logger() -> logging.Logger | None:
+    """Set up command usage analytics logger with JSON formatting."""
     try:
         # Disable logging in test environment
-        if not UX_LOG_ENABLED or "pytest" in sys.modules:
+        if not COMMAND_USAGE_LOG_ENABLED or "pytest" in sys.modules:
             return None
 
         # Ensure logs directory exists
-        UX_LOG_PATH.mkdir(exist_ok=True)
+        COMMAND_USAGE_LOG_PATH.mkdir(exist_ok=True)
 
         # Create log filename with date
         log_date = datetime.now(UTC).strftime("%Y%m%d")
-        log_file = UX_LOG_PATH / f"{UX_LOG_PREFIX}{log_date}.jsonl"
+        log_file = COMMAND_USAGE_LOG_PATH / f"{COMMAND_USAGE_LOG_PREFIX}{log_date}.jsonl"
 
         # Create logger
-        logger = logging.getLogger("ux_analytics")
-        logger.setLevel(getattr(logging, UX_LOG_LEVEL))
+        logger = logging.getLogger("command_usage")
+        logger.setLevel(getattr(logging, COMMAND_USAGE_LOG_LEVEL))
 
         # Remove existing handlers to avoid duplicates
         logger.handlers.clear()
 
         # Create file handler
         handler = logging.FileHandler(log_file, mode="a", encoding="utf-8")
-        handler.setLevel(getattr(logging, UX_LOG_LEVEL))
+        handler.setLevel(getattr(logging, COMMAND_USAGE_LOG_LEVEL))
 
         # Create JSON formatter
         class JSONFormatter(logging.Formatter):
@@ -225,24 +225,77 @@ def _setup_ux_logger() -> logging.Logger | None:
         return logger
     except Exception:
         # If logging setup fails, silently continue without logging
-        # This prevents UX analytics from breaking core functionality
+        # This prevents command usage analytics from breaking core functionality
         return None
 
 
-# Initialize UX analytics logger
-_ux_logger = _setup_ux_logger()
+# Initialize command usage analytics logger
+_command_usage_logger = _setup_command_usage_logger()
 
 
-def _log_ux_event(event_type: str, **kwargs: Any) -> None:
-    """Log a UX analytics event."""
-    if not _ux_logger or not UX_LOG_ENABLED:
+def _sanitize_error_message(error_message: str) -> str:
+    """Sanitize error messages to remove sensitive information while preserving debugging value.
+
+    Removes potentially sensitive patterns like:
+    - File paths with usernames
+    - API keys and tokens
+    - Email addresses
+    - URLs with credentials
+
+    Args:
+        error_message: Raw error message that may contain sensitive data
+
+    Returns:
+        Sanitized error message with sensitive patterns replaced but debugging info preserved
+    """
+    if not error_message:
+        return error_message
+
+    import re
+
+    sanitized = error_message
+
+    # Replace full file paths with just filename, preserving error context
+    # /home/username/path/file.py -> <path>/file.py
+    sanitized = re.sub(r"/[^/\s]+/[^/\s]+(/[^/\s]*)*/", "<path>/", sanitized)
+    sanitized = re.sub(r"[A-Z]:[\\\\][^\\\\s]+[\\\\]", "<path>\\\\", sanitized)  # Windows paths
+
+    # Replace potential API keys (long alphanumeric strings)
+    sanitized = re.sub(r"\b[A-Za-z0-9]{32,}\b", "<redacted>", sanitized)
+
+    # Replace email addresses
+    sanitized = re.sub(r"\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b", "<email>", sanitized)
+
+    # Replace URLs with credentials
+    sanitized = re.sub(r"https?://[^:\s]+:[^@\s]+@[^\s]+", "https://<credentials>@<host>", sanitized)
+
+    # Truncate if still too long after sanitization (preserve more than original 200 chars)
+    max_length = 500  # More generous limit after sanitization
+    if len(sanitized) > max_length:
+        sanitized = sanitized[: max_length - 3] + "..."
+
+    return sanitized
+
+
+def _log_command_usage_event(event_type: str, **kwargs: Any) -> None:
+    """Log a command usage analytics event with module context and sanitized error messages."""
+    if not _command_usage_logger or not COMMAND_USAGE_LOG_ENABLED:
         return
 
-    extra_data = {"event_type": event_type, **kwargs}
+    # Add module context for better event attribution
+    extra_data = {
+        "event_type": event_type,
+        "module": "cli",  # Add module context for generic event names
+        **kwargs,
+    }
+
+    # Sanitize error messages if present
+    if extra_data.get("error_message"):
+        extra_data["error_message"] = _sanitize_error_message(str(extra_data["error_message"]))
 
     # Create a LogRecord with extra_data
     record = logging.LogRecord(
-        name="ux_analytics",
+        name="command_usage",
         level=logging.INFO,
         pathname="",
         lineno=0,
@@ -252,7 +305,7 @@ def _log_ux_event(event_type: str, **kwargs: Any) -> None:
     )
     record.extra_data = extra_data
 
-    _ux_logger.handle(record)
+    _command_usage_logger.handle(record)
 
 
 # ============================================================================
@@ -365,9 +418,15 @@ class ResearchCLI:
 
         # Version must be 4.0
         if self.metadata.get("version") != KB_VERSION:
-            print("\nERROR: Knowledge base must be rebuilt")
-            print("  Delete kb_data/ and run: python src/build_kb.py")
-            sys.exit(1)
+            from error_formatting import safe_exit
+
+            safe_exit(
+                "Knowledge base version mismatch - rebuild required",
+                "Delete kb_data/ and run: python src/build_kb.py",
+                "Loading knowledge base metadata",
+                f"Found version {self.metadata.get('version')}, expected {KB_VERSION}",
+                module="cli",
+            )
 
         # Load Multi-QA MPNet model for search
         self.embedding_model = self._load_embedding_model()
@@ -807,7 +866,7 @@ def search(
     start_time = time.time()
 
     # Log search command start
-    _log_ux_event(
+    _log_command_usage_event(
         "command_start",
         command="search",
         query_length=len(query_text),
@@ -1045,7 +1104,7 @@ def search(
 
         # Log successful search completion
         execution_time_ms = int((time.time() - start_time) * 1000)
-        _log_ux_event(
+        _log_command_usage_event(
             "command_success",
             command="search",
             execution_time_ms=execution_time_ms,
@@ -1055,7 +1114,7 @@ def search(
 
     except FileNotFoundError:
         execution_time_ms = int((time.time() - start_time) * 1000)
-        _log_ux_event(
+        _log_command_usage_event(
             "command_error",
             command="search",
             execution_time_ms=execution_time_ms,
@@ -1071,7 +1130,7 @@ def search(
         sys.exit(1)
     except ImportError as error:
         execution_time_ms = int((time.time() - start_time) * 1000)
-        _log_ux_event(
+        _log_command_usage_event(
             "command_error",
             command="search",
             execution_time_ms=execution_time_ms,
@@ -1085,7 +1144,7 @@ def search(
         sys.exit(1)
     except Exception as error:
         execution_time_ms = int((time.time() - start_time) * 1000)
-        _log_ux_event(
+        _log_command_usage_event(
             "command_error",
             command="search",
             execution_time_ms=execution_time_ms,
@@ -1138,7 +1197,7 @@ def get(paper_id: str, output: str | None, sections: tuple[str, ...], add_citati
     start_time = time.time()
 
     # Log get command start
-    _log_ux_event(
+    _log_command_usage_event(
         "command_start",
         command="get",
         paper_id=paper_id,
@@ -1231,7 +1290,7 @@ def get(paper_id: str, output: str | None, sections: tuple[str, ...], add_citati
 
         # Log successful get completion
         execution_time_ms = int((time.time() - start_time) * 1000)
-        _log_ux_event(
+        _log_command_usage_event(
             "command_success",
             command="get",
             execution_time_ms=execution_time_ms,
@@ -1241,7 +1300,7 @@ def get(paper_id: str, output: str | None, sections: tuple[str, ...], add_citati
 
     except FileNotFoundError:
         execution_time_ms = int((time.time() - start_time) * 1000)
-        _log_ux_event(
+        _log_command_usage_event(
             "command_error",
             command="get",
             execution_time_ms=execution_time_ms,
@@ -1257,7 +1316,7 @@ def get(paper_id: str, output: str | None, sections: tuple[str, ...], add_citati
         sys.exit(1)
     except ValueError as error:
         execution_time_ms = int((time.time() - start_time) * 1000)
-        _log_ux_event(
+        _log_command_usage_event(
             "command_error",
             command="get",
             execution_time_ms=execution_time_ms,
@@ -1273,7 +1332,7 @@ def get(paper_id: str, output: str | None, sections: tuple[str, ...], add_citati
         sys.exit(1)
     except Exception as error:
         execution_time_ms = int((time.time() - start_time) * 1000)
-        _log_ux_event(
+        _log_command_usage_event(
             "command_error",
             command="get",
             execution_time_ms=execution_time_ms,
@@ -1421,7 +1480,7 @@ def cite(paper_ids: tuple[str, ...], output_format: str) -> None:
     start_time = time.time()
 
     # Log cite command start
-    _log_ux_event(
+    _log_command_usage_event(
         "command_start",
         command="cite",
         paper_count=len(paper_ids),
@@ -1478,7 +1537,7 @@ def cite(paper_ids: tuple[str, ...], output_format: str) -> None:
 
         # Log successful cite completion
         execution_time_ms = int((time.time() - start_time) * 1000)
-        _log_ux_event(
+        _log_command_usage_event(
             "command_success",
             command="cite",
             execution_time_ms=execution_time_ms,
@@ -1488,7 +1547,7 @@ def cite(paper_ids: tuple[str, ...], output_format: str) -> None:
 
     except FileNotFoundError:
         execution_time_ms = int((time.time() - start_time) * 1000)
-        _log_ux_event(
+        _log_command_usage_event(
             "command_error",
             command="cite",
             execution_time_ms=execution_time_ms,
@@ -1502,7 +1561,7 @@ def cite(paper_ids: tuple[str, ...], output_format: str) -> None:
         sys.exit(1)
     except Exception as error:
         execution_time_ms = int((time.time() - start_time) * 1000)
-        _log_ux_event(
+        _log_command_usage_event(
             "command_error",
             command="cite",
             execution_time_ms=execution_time_ms,
@@ -1623,15 +1682,16 @@ def info() -> None:
     start_time = time.time()
 
     # Log info command start
-    _log_ux_event("command_start", command="info")
+    _log_command_usage_event("command_start", command="info")
 
     try:
         knowledge_base_path = Path("kb_data")
         metadata_file_path = knowledge_base_path / "metadata.json"
 
         if not metadata_file_path.exists():
-            print("Knowledge base not found. Run build_kb.py first.")
-            sys.exit(1)
+            from error_formatting import exit_with_common_error
+
+            exit_with_common_error("kb_not_found", module="cli")
 
         with metadata_file_path.open(encoding="utf-8") as file:
             metadata = json.load(file)
@@ -1703,7 +1763,7 @@ def info() -> None:
 
         # Log successful info completion
         execution_time_ms = int((time.time() - start_time) * 1000)
-        _log_ux_event(
+        _log_command_usage_event(
             "command_success",
             command="info",
             execution_time_ms=execution_time_ms,
@@ -1712,7 +1772,7 @@ def info() -> None:
 
     except Exception as error:
         execution_time_ms = int((time.time() - start_time) * 1000)
-        _log_ux_event(
+        _log_command_usage_event(
             "command_error",
             command="info",
             execution_time_ms=execution_time_ms,
@@ -1770,7 +1830,7 @@ def smart_search(query_text: str, top_k: int, max_tokens: int, sections: tuple[s
     start_time = time.time()
 
     # Log smart_search command start
-    _log_ux_event(
+    _log_command_usage_event(
         "command_start",
         command="smart_search",
         query_length=len(query_text),
@@ -1895,7 +1955,7 @@ def smart_search(query_text: str, top_k: int, max_tokens: int, sections: tuple[s
 
         # Log successful smart_search completion
         execution_time_ms = int((time.time() - start_time) * 1000)
-        _log_ux_event(
+        _log_command_usage_event(
             "command_success",
             command="smart_search",
             execution_time_ms=execution_time_ms,
@@ -1906,7 +1966,7 @@ def smart_search(query_text: str, top_k: int, max_tokens: int, sections: tuple[s
 
     except FileNotFoundError:
         execution_time_ms = int((time.time() - start_time) * 1000)
-        _log_ux_event(
+        _log_command_usage_event(
             "command_error",
             command="smart_search",
             execution_time_ms=execution_time_ms,
@@ -1922,7 +1982,7 @@ def smart_search(query_text: str, top_k: int, max_tokens: int, sections: tuple[s
         sys.exit(1)
     except Exception as error:
         execution_time_ms = int((time.time() - start_time) * 1000)
-        _log_ux_event(
+        _log_command_usage_event(
             "command_error",
             command="smart_search",
             execution_time_ms=execution_time_ms,

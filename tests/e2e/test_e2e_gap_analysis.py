@@ -335,7 +335,7 @@ Further investigation is warranted to expand these findings.
         exports_dir.mkdir()
 
         with patch("pathlib.Path.cwd", return_value=temp_kb_dir):
-            result = runner.invoke(main, ["--kb-path", str(temp_kb_dir), "--limit", "5"])
+            runner.invoke(main, ["--kb-path", str(temp_kb_dir), "--limit", "5"])
 
         # Check for report with DOI lists
         report_files = list(exports_dir.glob("gap_analysis_*.md"))
@@ -373,8 +373,8 @@ class TestNewFeatures:
 
         # Run gap analysis twice in quick succession
         with patch("pathlib.Path.cwd", return_value=temp_kb_dir):
-            result1 = runner.invoke(main, ["--kb-path", str(temp_kb_dir), "--limit", "1"])
-            result2 = runner.invoke(main, ["--kb-path", str(temp_kb_dir), "--limit", "1"])
+            runner.invoke(main, ["--kb-path", str(temp_kb_dir), "--limit", "1"])
+            runner.invoke(main, ["--kb-path", str(temp_kb_dir), "--limit", "1"])
 
         # Should create separate files with timestamps
         report_files = list(exports_dir.glob("gap_analysis_*.md"))
@@ -418,7 +418,7 @@ class TestNewFeatures:
         exports_dir.mkdir()
 
         with patch("pathlib.Path.cwd", return_value=temp_kb_dir):
-            result = runner.invoke(main, ["--kb-path", str(temp_kb_dir), "--limit", "5"])
+            runner.invoke(main, ["--kb-path", str(temp_kb_dir), "--limit", "5"])
 
         report_files = list(exports_dir.glob("gap_analysis_*.md"))
         if report_files:

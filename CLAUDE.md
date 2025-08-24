@@ -84,7 +84,7 @@ reviews/
 
 system/
 ├── dev_*.csv                  # Development artifacts (flat with prefix)
-└── ux_analytics_*.jsonl       # UX analytics logs (daily rotation)
+└── command_usage_*.jsonl      # Command usage logs (daily rotation)
 ```
 
 ## Key Details
@@ -189,7 +189,7 @@ tests/
 │   ├── test_unit_knowledge_base.py       # KB building, indexing, caching
 │   ├── test_unit_quality_scoring.py      # Paper quality algorithms
 │   ├── test_unit_search_engine.py        # Search, embedding, ranking
-│   └── test_unit_ux_analytics.py         # Analytics logging
+│   └── test_unit_command_usage.py        # Command usage logging
 ├── integration/                    # Workflow validation tests (40 tests)
 │   ├── test_integration_batch_operations.py    # Batch command workflows
 │   ├── test_integration_incremental_updates.py # KB update workflows
@@ -211,14 +211,14 @@ tests/
 - Enables easy filtering by test type (`pytest tests/unit/test_unit_*.py`)
 - Supports scalable organization as codebase grows
 
-## UX Analytics
+## Command Usage Analytics
 
-- **Purpose**: Tracks user behavior patterns for CLI improvement (not debugging)
-- **Location**: `system/ux_analytics_YYYYMMDD.jsonl` (daily rotation)
+- **Purpose**: Tracks command usage patterns for script improvement (not debugging)
+- **Location**: `system/command_usage_YYYYMMDD.jsonl` (daily rotation)
 - **Format**: Newline-delimited JSON with timestamps, session IDs, and detailed metrics
 - **Data Captured**: Command usage, parameters, execution time, results, errors
 - **Privacy**: Local logs only, automatically disabled during testing
-- **Configuration**: Controlled via `src/config.py` (UX_LOG_ENABLED, UX_LOG_PATH)
+- **Configuration**: Controlled via `src/config.py` (COMMAND_USAGE_LOG_ENABLED, COMMAND_USAGE_LOG_PATH)
 
 Example log entry:
 

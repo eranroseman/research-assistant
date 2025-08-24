@@ -51,7 +51,6 @@ Performance Notes:
 
 import asyncio
 import json
-import sys
 import time
 from datetime import UTC, datetime
 from pathlib import Path
@@ -111,42 +110,116 @@ def validate_kb_requirements(kb_path: str) -> tuple[dict[str, Any], list[dict[st
 
     # Check KB exists
     if not kb_data_path.exists() or not metadata_file.exists():
-        print("ERROR: Knowledge base not found.", file=sys.stderr)
-        print("  Run: python src/build_kb.py --demo", file=sys.stderr)
-        sys.exit(1)
+        from error_formatting import safe_exit
+
+        safe_exit(
+            "Knowledge base not found",
+            "Run: python src/build_kb.py --demo",
+            "KB validation during gap analysis",
+            module="analyze_gaps",
+        )
 
     # Load metadata
     try:
         with open(metadata_file) as f:
             metadata = json.load(f)
     except (OSError, json.JSONDecodeError) as e:
-        print(f"ERROR: Failed to load KB metadata: {e}", file=sys.stderr)
-        print("  Run: python src/build_kb.py --rebuild", file=sys.stderr)
-        sys.exit(1)
+        from error_formatting import safe_exit
+
+        safe_exit(
+            "Failed to load KB metadata",
+            "Run: python src/build_kb.py --rebuild",
+            "KB metadata loading during gap analysis",
+            technical_details=str(e),
+            module="analyze_gaps",
+        )
 
     # Check KB version
     if metadata.get("version") != KB_VERSION:
-        print(
-            f"ERROR: KB v{KB_VERSION}+ required. Found v{metadata.get('version', 'unknown')}", file=sys.stderr
+        from error_formatting import safe_exit
+
+        safe_exit(
+            f"KB v{KB_VERSION}+ required. Found v{metadata.get('version', 'unknown')}",
+            "Delete kb_data/ and rebuild: python src/build_kb.py",
+            "KB version compatibility check",
+            module="analyze_gaps",
         )
-        print("  Delete kb_data/ and rebuild: python src/build_kb.py", file=sys.stderr)
-        sys.exit(1)
 
     # Check minimum papers
     papers = metadata.get("papers", [])
     if len(papers) < 20:
-        print("ERROR: Minimum 20 papers required for gap analysis.", file=sys.stderr)
-        print(f"  Found {len(papers)} papers. Build larger knowledge base.", file=sys.stderr)
-        sys.exit(1)
+        from error_formatting import safe_exit
+
+        safe_exit(
+            "Minimum 20 papers required for gap analysis",
+            f"Found {len(papers)} papers. Build larger knowledge base.",
+            "Paper count validation",
+            module="analyze_gaps",
+        )
 
     # Check for basic metadata required for gap detection
     papers_with_metadata = [p for p in papers if p.get("title") and p.get("authors")]
     if len(papers_with_metadata) < 20:
-        print("ERROR: KB lacks sufficient metadata for gap analysis.", file=sys.stderr)
-        print("  Run: python src/build_kb.py", file=sys.stderr)
-        sys.exit(1)
+        from error_formatting import safe_exit
+
+        safe_exit(
+            "KB lacks sufficient metadata for gap analysis",
+            "Run: python src/build_kb.py",
+            "Paper metadata validation",
+            module="analyze_gaps",
+        )
 
     return metadata, papers
+
+
+def _setup_gap_analysis_environment(kb_path: str) -> tuple[dict[str, Any], list[dict[str, Any]], 'ProgressTracker']:
+    """Setup gap analysis environment and initialize components."""
+    from output_formatting import ProgressTracker
+
+    # Validate KB requirements
+    metadata, papers = validate_kb_requirements(kb_path)
+    progress = ProgressTracker("Gap Analysis Workflow", total=4, show_eta=False)
+
+    return metadata, papers, progress
+
+
+def _import_gap_analyzer() -> type:
+    """Import gap detection module with fallback handling."""
+    try:
+        from .gap_detection import GapAnalyzer
+
+        return GapAnalyzer
+    except ImportError:
+        try:
+            from gap_detection import GapAnalyzer
+
+            return GapAnalyzer
+        except ImportError:
+            from error_formatting import safe_exit
+
+            safe_exit(
+                "Gap detection module not found",
+                "Implementation in progress.",
+                "Gap detection module import",
+                module="analyze_gaps",
+            )
+            return None  # This line will never be reached due to safe_exit
+
+
+def _print_analysis_header(
+    total_papers: int, metadata: dict[str, Any], min_citations: int, year_from: int, limit: int | None
+) -> None:
+    """Print analysis setup information."""
+    from output_formatting import print_status, print_header
+
+    print_header("🔍 Running Network Gap Analysis")
+    print_status(f"Knowledge Base: {total_papers:,} papers", "info")
+    print_status(f"KB Version: v{metadata.get('version')}", "info")
+    print_status("Analysis Settings:", "info")
+    print(f"  • Min citations: {min_citations}")
+    print(f"  • Author papers from: {year_from}")
+    print(f"  • Result limit: {limit or 'unlimited'}")
+    print()
 
 
 async def run_gap_analysis(kb_path: str, min_citations: int, year_from: int, limit: int | None) -> None:
@@ -183,55 +256,40 @@ async def run_gap_analysis(kb_path: str, min_citations: int, year_from: int, lim
         - Memory usage: <2GB during processing, results streamed to prevent OOM
         - Progress indicators: Updates every 50 papers processed
     """
-    print("🔍 Running Network Gap Analysis...")
-    print("=" * 50)
-
-    # Validate KB requirements
-    metadata, papers = validate_kb_requirements(kb_path)
+    # Setup analysis environment
+    metadata, papers, progress = _setup_gap_analysis_environment(kb_path)
     total_papers = len(papers)
+    _print_analysis_header(total_papers, metadata, min_citations, year_from, limit)
 
-    print(f"Knowledge Base: {total_papers:,} papers")
-    print(f"KB Version: v{metadata.get('version')}")
-    print("Analysis Settings:")
-    print(f"  • Min citations: {min_citations}")
-    print(f"  • Author papers from: {year_from}")
-    print(f"  • Result limit: {limit or 'unlimited'}")
-    print()
-
-    # Import gap detection module
-    try:
-        from .gap_detection import GapAnalyzer
-    except ImportError:
-        try:
-            from gap_detection import GapAnalyzer
-        except ImportError:
-            print("ERROR: Gap detection module not found.", file=sys.stderr)
-            print("  Implementation in progress.", file=sys.stderr)
-            sys.exit(1)
+    from output_formatting import print_status
+    
+    # Import and initialize gap analyzer
+    gap_analyzer_class = _import_gap_analyzer()
 
     # Initialize gap analyzer
-    analyzer = GapAnalyzer(kb_path)
+    progress.update(1, "Initializing gap analyzer")
+    analyzer = gap_analyzer_class(kb_path)
 
     # Run citation network analysis
-    print("🔗 Analyzing citation networks...")
+    progress.update(2, "Analyzing citation networks")
     start_time = time.time()
 
     citation_gaps = await analyzer.find_citation_gaps(min_citations=min_citations, limit=limit)
 
     citation_time = time.time() - start_time
-    print(f"   Found {len(citation_gaps)} citation gaps in {citation_time:.1f}s")
+    print_status(f"Found {len(citation_gaps)} citation gaps in {citation_time:.1f}s", "success")
 
     # Run author network analysis
-    print("👥 Analyzing author networks...")
+    progress.update(3, "Analyzing author networks")
     start_time = time.time()
 
     author_gaps = await analyzer.find_author_gaps(year_from=year_from, limit=limit)
 
     author_time = time.time() - start_time
-    print(f"   Found {len(author_gaps)} author gaps in {author_time:.1f}s")
+    print_status(f"Found {len(author_gaps)} author gaps in {author_time:.1f}s", "success")
 
     # Generate comprehensive report
-    print("📊 Generating gap analysis report...")
+    progress.update(4, "Generating report")
     total_gaps = len(citation_gaps) + len(author_gaps)
 
     # Create exports directory if needed
@@ -249,15 +307,17 @@ async def run_gap_analysis(kb_path: str, min_citations: int, year_from: int, lim
         kb_metadata=metadata,
     )
 
+    progress.complete("Analysis complete")
+
     # Summary
     print()
-    print("✅ Gap Analysis Complete!")
-    print(f"   Total gaps identified: {total_gaps}")
-    print(f"   Citation network gaps: {len(citation_gaps)}")
-    print(f"   Author network gaps: {len(author_gaps)}")
-    print(f"   Report saved to: {report_path}")
+    print_status("Gap Analysis Complete!", "success")
+    print_status(f"Total gaps identified: {total_gaps}", "info")
+    print_status(f"Citation network gaps: {len(citation_gaps)}", "info")
+    print_status(f"Author network gaps: {len(author_gaps)}", "info")
+    print_status(f"Report saved to: {report_path}", "info")
     print()
-    print("📥 Import DOIs into Zotero:")
+    print_status("Import DOIs into Zotero:", "info")
     print(f"   1. Open report: {report_path}")
     print("   2. Copy DOI lists from 'Complete DOI Lists' section")
     print("   3. Import into Zotero using Add Item by Identifier")
@@ -388,45 +448,69 @@ def main(min_citations: int, year_from: int, limit: int | None, kb_path: str) ->
     """
     # Validate command-line arguments with comprehensive error messages
     # Each validation provides specific remediation guidance
+    from error_formatting import safe_exit
+
     if year_from < 2015:
-        print("ERROR: --year-from must be 2015 or later", file=sys.stderr)
-        print("  Semantic Scholar coverage is limited before 2015", file=sys.stderr)
-        sys.exit(1)
+        safe_exit(
+            "--year-from must be 2015 or later",
+            "Semantic Scholar coverage is limited before 2015",
+            "Command-line argument validation",
+            module="analyze_gaps",
+        )
 
     if year_from > 2025:
-        print("ERROR: --year-from cannot be in the future", file=sys.stderr)
-        print("  Use current year or earlier for realistic results", file=sys.stderr)
-        sys.exit(1)
+        safe_exit(
+            "--year-from cannot be in the future",
+            "Use current year or earlier for realistic results",
+            "Command-line argument validation",
+            module="analyze_gaps",
+        )
 
     if limit is not None and limit <= 0:
-        print("ERROR: --limit must be positive", file=sys.stderr)
-        print("  Use positive integer or omit for unlimited results", file=sys.stderr)
-        sys.exit(1)
+        safe_exit(
+            "--limit must be positive",
+            "Use positive integer or omit for unlimited results",
+            "Command-line argument validation",
+            module="analyze_gaps",
+        )
 
     if min_citations < 0:
-        print("ERROR: --min-citations cannot be negative", file=sys.stderr)
-        print("  Use 0 for all papers or positive integer for citation threshold", file=sys.stderr)
-        sys.exit(1)
+        safe_exit(
+            "--min-citations cannot be negative",
+            "Use 0 for all papers or positive integer for citation threshold",
+            "Command-line argument validation",
+            module="analyze_gaps",
+        )
 
     # Run gap analysis with comprehensive error handling
     try:
         asyncio.run(run_gap_analysis(kb_path, min_citations, year_from, limit))
     except KeyboardInterrupt:
         # User interruption is safe - cache and progress are preserved
-        print("\n❌ Analysis interrupted by user.", file=sys.stderr)
-        print("  Progress saved. Re-run to continue from checkpoint.", file=sys.stderr)
-        sys.exit(1)
+        safe_exit(
+            "Analysis interrupted by user",
+            "Progress saved. Re-run to continue from checkpoint.",
+            "User interruption during gap analysis",
+            module="analyze_gaps",
+        )
     except ImportError as e:
         # Gap detection module missing - development/installation issue
-        print(f"\n❌ Gap detection module not available: {e}", file=sys.stderr)
-        print("  Check installation or run from correct directory.", file=sys.stderr)
-        sys.exit(1)
+        safe_exit(
+            "Gap detection module not available",
+            "Check installation or run from correct directory.",
+            "Gap detection module import during execution",
+            technical_details=str(e),
+            module="analyze_gaps",
+        )
     except Exception as e:
         # Catch-all for unexpected errors with diagnostic information
-        print(f"\n❌ Analysis failed: {e}", file=sys.stderr)
-        print("  Check KB integrity, network connection, and try again.", file=sys.stderr)
-        print("  For persistent issues, delete .gap_analysis_cache.json and retry.", file=sys.stderr)
-        sys.exit(1)
+        safe_exit(
+            "Analysis failed",
+            "Check KB integrity, network connection, and try again. For persistent issues, delete .gap_analysis_cache.json and retry.",
+            "Unexpected error during gap analysis",
+            technical_details=str(e),
+            module="analyze_gaps",
+        )
 
 
 if __name__ == "__main__":

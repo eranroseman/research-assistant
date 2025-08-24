@@ -21,14 +21,14 @@ Key Features:
 - Coverage assessment: Traffic light system (🟢🟡🔴) for KB completeness evaluation
 - Rate limiting: Proactive 1 RPS limiting for unauthenticated API access
 - Report generation: Markdown reports matching gap analysis format with DOI lists
-- UX Analytics: Session tracking and usage pattern analysis for continuous improvement
+- Command Usage Analytics: Session tracking and usage pattern analysis for continuous improvement
 - Error resilience: Graceful degradation on API failures, network issues, or KB unavailability
 
 Infrastructure Reuse:
     Maximizes reuse of existing components to maintain consistency:
     - Semantic Scholar patterns from build_kb.py
     - Quality scoring algorithms (calculate_basic_quality_score)
-    - UX analytics from cli.py (_setup_ux_logger, _log_ux_event)
+    - Command usage analytics from cli.py (_setup_command_usage_logger, _log_command_usage_event)
     - KB integration via cli_kb_index.py (KnowledgeBaseIndex)
     - Configuration constants from config.py
 
@@ -104,7 +104,11 @@ try:
     )
 
     # CLI and analytics infrastructure (pattern reuse)
-    from .cli import _setup_ux_logger, _log_ux_event, ResearchCLI
+    from .cli import (
+        _setup_command_usage_logger,
+        _log_command_usage_event,
+        ResearchCLI,
+    )
 
     # Knowledge base integration (DOI filtering)
     from .cli_kb_index import KnowledgeBaseIndex
@@ -130,7 +134,7 @@ except ImportError:
     )
 
     # CLI and KB integration
-    from cli import _setup_ux_logger, _log_ux_event, ResearchCLI  # type: ignore[no-redef]
+    from cli import _setup_command_usage_logger, _log_command_usage_event, ResearchCLI  # type: ignore[no-redef]
     from cli_kb_index import KnowledgeBaseIndex  # type: ignore[no-redef]
 
 
@@ -280,7 +284,7 @@ class DiscoveryResults:
 
     Usage:
         Used by generate_discovery_report() to create markdown output
-        and by UX analytics for usage pattern analysis.
+        and by command usage analytics for usage pattern analysis.
     """
 
     papers: list[ScoredPaper]  # Final scored and ranked results
@@ -564,23 +568,29 @@ def main(
 
     # Keywords are required for discovery
     if not keywords:
-        click.echo("\n❌ Error: Keywords are required for paper discovery.\n")
-        click.echo('Usage: python src/discover.py --keywords "your,search,terms"\n')
-        click.echo("Examples:")
-        click.echo('  python src/discover.py --keywords "diabetes,mobile health"')
-        click.echo('  python src/discover.py --keywords "AI,diagnostics" --quality-threshold HIGH')
-        click.echo("  python src/discover.py --coverage-info  # Show database guidance\n")
-        click.echo("For full help: python src/discover.py --help")
-        sys.exit(1)
+        from help_formatting import get_command_help
+        from error_formatting import safe_exit
 
-    # Initialize UX logging
+        # Show consistent help with error
+        help_text = get_command_help("discover")
+        click.echo(help_text)
+        safe_exit(
+            "Keywords required for paper discovery",
+            'Provide keywords with: --keywords "your,search,terms"',
+            "Paper discovery initialization",
+            module="discover",
+        )
+
+    # Initialize command usage logging
     session_id = str(uuid.uuid4())[:8]
-    _setup_ux_logger()
+    _setup_command_usage_logger()
     start_time = time.time()
 
     # Log command start with usage patterns
-    _log_ux_event(
-        "discover_command_start",
+    _log_command_usage_event(
+        "command_start",
+        module="discover",  # Module context for generic event names
+        command="discover",
         session_id=session_id,
         keywords_count=len(keywords.split(",")),
         has_population_focus=bool(population_focus),
@@ -625,8 +635,10 @@ def main(
 
         # Log successful completion
         execution_time_ms = int((time.time() - start_time) * 1000)
-        _log_ux_event(
-            "discover_command_success",
+        _log_command_usage_event(
+            "command_success",
+            module="discover",  # Module context for generic event names
+            command="discover",
             session_id=session_id,
             execution_time_ms=execution_time_ms,
             papers_found=len(results.papers),
@@ -648,14 +660,16 @@ def main(
         print(f"✓ Report saved to: {output_file}")
 
     except Exception as e:
-        # Log error with diagnostic information
+        # Log error with diagnostic information and smart sanitization
         execution_time_ms = int((time.time() - start_time) * 1000)
-        _log_ux_event(
-            "discover_command_error",
+        _log_command_usage_event(
+            "command_error",
+            module="discover",  # Module context for generic event names
+            command="discover",
             session_id=session_id,
             execution_time_ms=execution_time_ms,
             error_type=type(e).__name__,
-            error_message=str(e)[:200],  # Truncate for privacy
+            error_message=str(e),  # Smart sanitization applied in _log_command_usage_event
             keywords_count=len(keywords.split(",")),
             source=source,
         )
