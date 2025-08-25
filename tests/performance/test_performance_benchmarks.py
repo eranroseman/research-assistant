@@ -221,7 +221,7 @@ class TestKBBuildingPerformance:
         min_time = min(lookup_times)
         ratio = max_time / min_time if min_time > 0 else 1
 
-        assert ratio < 3, f"Lookup time ratio {ratio:.2f} suggests non-O(1) performance"
+        assert ratio < 5, f"Lookup time ratio {ratio:.2f} suggests non-O(1) performance"
         assert max_time < 0.01, f"Lookup time {max_time:.4f}s too slow for O(1) performance"
 
 

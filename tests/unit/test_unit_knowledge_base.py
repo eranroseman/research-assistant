@@ -26,10 +26,10 @@ class MockAPIError(Exception):
 
 @pytest.mark.unit
 @pytest.mark.knowledge_base
-@patch("src.kb_indexer.KBIndexer._detect_device", return_value="cpu")
 class TestKnowledgeBaseBuilder:
     """Test KnowledgeBaseBuilder initialization and core functionality."""
 
+    @patch("src.kb_indexer.KBIndexer._detect_device", return_value="cpu")
     def test_init_with_default_path_should_create_builder(self, mock_detect):
         """
         Test that KnowledgeBaseBuilder initializes with default path.
@@ -42,6 +42,7 @@ class TestKnowledgeBaseBuilder:
         assert builder.knowledge_base_path == Path("kb_data")
         assert builder.cache_file_path == Path("kb_data") / ".pdf_text_cache.json"
 
+    @patch("src.kb_indexer.KBIndexer._detect_device", return_value="cpu")
     def test_init_with_custom_path_should_create_builder(self, mock_detect, tmp_path):
         """
         Test that KnowledgeBaseBuilder initializes with custom path.
@@ -57,10 +58,10 @@ class TestKnowledgeBaseBuilder:
 
 @pytest.mark.unit
 @pytest.mark.knowledge_base
-@patch("src.kb_indexer.KBIndexer._detect_device", return_value="cpu")
 class TestPDFExtraction:
     """Test PDF text extraction functionality."""
 
+    @patch("src.kb_indexer.KBIndexer._detect_device", return_value="cpu")
     def test_extract_pdf_text_with_missing_file_should_return_none(self, mock_detect, tmp_path):
         """
         Test PDF extraction with missing file.
@@ -73,6 +74,7 @@ class TestPDFExtraction:
         result = builder.extract_pdf_text("nonexistent.pdf", "KEY001", use_cache=False)
         assert result is None
 
+    @patch("src.kb_indexer.KBIndexer._detect_device", return_value="cpu")
     def test_extract_pdf_text_with_valid_pdf_should_return_text(self, mock_detect, tmp_path):
         """
         Test PDF extraction with valid file.
@@ -98,6 +100,7 @@ class TestPDFExtraction:
             result = builder.extract_pdf_text(str(pdf_file), "KEY001", use_cache=False)
             assert result == "Extracted PDF text"
 
+    @patch("src.kb_indexer.KBIndexer._detect_device", return_value="cpu")
     def test_extract_pdf_text_with_cache_should_reuse_content(self, mock_detect, tmp_path):
         """
         Test PDF extraction with cache reuse.
@@ -190,10 +193,10 @@ class TestKnowledgeBaseIndex:
 @pytest.mark.unit
 @pytest.mark.fast
 @pytest.mark.knowledge_base
-@patch("src.kb_indexer.KBIndexer._detect_device", return_value="cpu")
 class TestCacheManagement:
     """Test caching system functionality."""
 
+    @patch("src.kb_indexer.KBIndexer._detect_device", return_value="cpu")
     def test_load_cache_with_corrupt_file_should_return_empty_dict(self, mock_detect, tmp_path):
         """
         Test cache loading with corrupted file.
@@ -211,6 +214,7 @@ class TestCacheManagement:
         cache = builder.load_cache()
         assert cache == {}
 
+    @patch("src.kb_indexer.KBIndexer._detect_device", return_value="cpu")
     def test_save_cache_should_write_json_file(self, mock_detect, tmp_path):
         """
         Test cache saving functionality.
@@ -231,6 +235,7 @@ class TestCacheManagement:
             saved_data = json.load(f)
         assert saved_data == builder.cache
 
+    @patch("src.kb_indexer.KBIndexer._detect_device", return_value="cpu")
     def test_clear_cache_should_remove_file_and_data(self, mock_detect, tmp_path):
         """
         Test cache clearing functionality.
@@ -251,6 +256,7 @@ class TestCacheManagement:
         assert not cache_file.exists()
         assert builder.cache == {}
 
+    @patch("src.kb_indexer.KBIndexer._detect_device", return_value="cpu")
     def test_load_cache_with_missing_file_should_return_empty_dict(self, mock_detect, tmp_path):
         """
         Test cache loading when cache file doesn't exist (e.g., after rebuild).
@@ -322,10 +328,10 @@ class TestStudyTypeDetection:
 
 @pytest.mark.unit
 @pytest.mark.knowledge_base
-@patch("src.kb_indexer.KBIndexer._detect_device", return_value="cpu")
 class TestContentPreservation:
     """Test that content extraction preserves full text without truncation."""
 
+    @patch("src.kb_indexer.KBIndexer._detect_device", return_value="cpu")
     def test_extract_sections_should_preserve_long_content(self, mock_detect, tmp_path):
         """Test that very long sections are preserved in full."""
         from src.build_kb import KnowledgeBaseBuilder
@@ -365,6 +371,7 @@ class TestContentPreservation:
         assert sections["methods"].count("detailed methodology content") > 250
         assert sections["results"].count("comprehensive research results") > 350
 
+    @patch("src.kb_indexer.KBIndexer._detect_device", return_value="cpu")
     def test_extract_sections_should_handle_very_long_single_section(self, mock_detect, tmp_path):
         """Test handling of extremely long single sections."""
         from src.build_kb import KnowledgeBaseBuilder
@@ -393,6 +400,7 @@ class TestContentPreservation:
         assert "Short abstract" in sections["abstract"]
         assert "Short conclusion" in sections["conclusion"]
 
+    @patch("src.kb_indexer.KBIndexer._detect_device", return_value="cpu")
     def test_extract_sections_should_preserve_intervention_descriptions(self, mock_detect, tmp_path):
         """Test preservation of complete digital health intervention descriptions."""
         from src.build_kb import KnowledgeBaseBuilder
@@ -604,10 +612,10 @@ class TestGapAnalysisIntegration:
 
 @pytest.mark.unit
 @pytest.mark.knowledge_base
-@patch("src.kb_indexer.KBIndexer._detect_device", return_value="cpu")
 class TestIncrementalUpdateFixes:
     """Test incremental update logic fixes and embedding reuse."""
 
+    @patch("src.kb_indexer.KBIndexer._detect_device", return_value="cpu")
     def test_needs_reindex_with_size_mismatch_should_return_true(self, mock_detect, tmp_path):
         """Test that index size mismatch triggers needs_reindex=True."""
         from src.build_kb import KnowledgeBaseBuilder
@@ -703,6 +711,7 @@ class TestIncrementalUpdateFixes:
         assert "KEY2" in existing_embeddings, "Should reuse embedding for KEY2"
         assert "KEY3" not in existing_embeddings, "Should not have embedding for new paper KEY3"
 
+    @patch("src.kb_indexer.KBIndexer._detect_device", return_value="cpu")
     def test_enhanced_scoring_availability_detection(self, mock_detect, tmp_path):
         """Test that enhanced scoring availability is correctly detected."""
         from src.build_kb import has_enhanced_scoring
@@ -742,10 +751,10 @@ class TestIncrementalUpdateFixes:
 
 @pytest.mark.unit
 @pytest.mark.knowledge_base
-@patch("src.kb_indexer.KBIndexer._detect_device", return_value="cpu")
 class TestQualityScoreUpgrade:
     """Test quality score upgrade functionality during incremental updates."""
 
+    @patch("src.kb_indexer.KBIndexer._detect_device", return_value="cpu")
     def test_has_papers_with_basic_scores_should_detect_basic_scores(self, mock_detect, tmp_path):
         """Test detection of papers with basic quality scores."""
         builder = KnowledgeBaseBuilder(knowledge_base_path=str(tmp_path))
@@ -779,6 +788,7 @@ class TestQualityScoreUpgrade:
         assert has_basic is True, "Should detect papers with basic scores"
         assert count == 2, f"Should find 2 papers with basic scores, got {count}"
 
+    @patch("src.kb_indexer.KBIndexer._detect_device", return_value="cpu")
     def test_get_papers_with_basic_scores_should_return_correct_keys(self, mock_detect, tmp_path):
         """Test getting zotero keys of papers with basic quality scores."""
         builder = KnowledgeBaseBuilder(knowledge_base_path=str(tmp_path))
@@ -819,6 +829,7 @@ class TestQualityScoreUpgrade:
         }, f"Should return keys for basic scoring papers, got {basic_keys}"
         assert "ENHANCED_KEY" not in basic_keys, "Should not include enhanced scoring papers"
 
+    @patch("src.kb_indexer.KBIndexer._detect_device", return_value="cpu")
     def test_has_papers_with_basic_scores_should_handle_empty_list(self, mock_detect, tmp_path):
         """Test detection with empty paper list."""
         builder = KnowledgeBaseBuilder(knowledge_base_path=str(tmp_path))
@@ -828,6 +839,7 @@ class TestQualityScoreUpgrade:
         assert has_basic is False, "Should return False for empty list"
         assert count == 0, "Should return 0 count for empty list"
 
+    @patch("src.kb_indexer.KBIndexer._detect_device", return_value="cpu")
     def test_has_papers_with_basic_scores_should_handle_all_enhanced(self, mock_detect, tmp_path):
         """Test detection when all papers have enhanced scores."""
         builder = KnowledgeBaseBuilder(knowledge_base_path=str(tmp_path))
