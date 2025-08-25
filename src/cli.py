@@ -427,7 +427,10 @@ class ResearchCLI:
             )
 
         # Use cli_kb_index for O(1) lookups
-        from src.cli_kb_index import KnowledgeBaseIndex
+        try:
+            from src.cli_kb_index import KnowledgeBaseIndex
+        except ImportError:
+            from cli_kb_index import KnowledgeBaseIndex
 
         self.kb_index = KnowledgeBaseIndex(str(self.knowledge_base_path))
         self.metadata = self.kb_index.metadata
@@ -1733,7 +1736,10 @@ def info() -> None:
             print(f"Papers: {paper_count} files, {papers_size_mb:.1f} MB")
 
         # Show enhanced quality statistics if available
-        from src.cli_kb_index import KnowledgeBaseIndex
+        try:
+            from src.cli_kb_index import KnowledgeBaseIndex
+        except ImportError:
+            from cli_kb_index import KnowledgeBaseIndex
 
         try:
             kb_index = KnowledgeBaseIndex(str(knowledge_base_path))
@@ -1767,7 +1773,7 @@ def info() -> None:
         print("\nSample papers:")
         for paper in metadata["papers"][:5]:
             # Show quality indicator if available
-            quality = paper.get("quality_score", 0)
+            quality = paper.get("quality_score") or 0
             if quality > 0:
                 indicator = format_quality_indicator(quality)
                 print(f"  - [{paper['id']}] {indicator} {paper['title'][:60]}... ({quality}/100)")

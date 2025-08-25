@@ -7,7 +7,7 @@ This module handles all paper quality scoring functionality, including:
 """
 
 from dataclasses import dataclass
-from typing import Any, Optional
+from typing import Any
 
 
 # ============================================================================
@@ -27,7 +27,7 @@ class QualityScoringError(Exception):
 @dataclass
 class QualityScore:
     """Represents a paper's quality score with components."""
-    
+
     score: int
     explanation: str
     components: dict[str, int]
@@ -39,7 +39,7 @@ class QualityScore:
 # ============================================================================
 
 
-def calculate_basic_quality_score(paper_data: dict[str, Any]) -> tuple[int, str]:
+def calculate_basic_quality_score(paper_data: dict[str, Any]) -> tuple[int, str]:  # noqa: PLR0912,PLR0915
     """Calculate basic quality score using only paper metadata (no API required).
 
     Args:
@@ -118,7 +118,9 @@ def calculate_basic_quality_score(paper_data: dict[str, Any]) -> tuple[int, str]
 
     # Create explanation
     if components:
-        explanation = f"Quality Score: {score}/100. Factors: {', '.join(components)}. [Basic scoring - no API data]"
+        explanation = (
+            f"Quality Score: {score}/100. Factors: {', '.join(components)}. [Basic scoring - no API data]"
+        )
     else:
         explanation = f"Quality Score: {score}/100. Base score only. [Basic scoring - no API data]"
 
@@ -130,7 +132,7 @@ def calculate_basic_quality_score(paper_data: dict[str, Any]) -> tuple[int, str]
 # ============================================================================
 
 
-def calculate_citation_impact_score(citation_count: int) -> int:
+def calculate_citation_impact_score(citation_count: int) -> int:  # noqa: PLR0911
     """Calculate citation impact component (25 points max)."""
     try:
         from src.config import CITATION_IMPACT_THRESHOLDS
@@ -155,22 +157,24 @@ def calculate_citation_impact_score(citation_count: int) -> int:
     return 0
 
 
-def calculate_venue_prestige_score(venue: dict[str, Any] | str) -> int:
+def calculate_venue_prestige_score(venue: dict[str, Any] | str) -> int:  # noqa: PLR0911
     """Calculate venue prestige component (15 points max).
-    
+
     Args:
         venue: Either a dict with 'name' key or a string venue name
-        
+
     Returns:
         Integer score from 0-15 based on venue prestige
     """
     # Handle both dict and string formats from Semantic Scholar API
+    venue_name = ""
     if isinstance(venue, dict):
         venue_name = venue.get("name", "").lower()
     elif isinstance(venue, str):
         venue_name = venue.lower()
-    else:
-        return 0
+
+    # For unknown formats, return 0 immediately
+    # But empty venue names should get the default score later
 
     # Import config constants
     try:
@@ -182,7 +186,7 @@ def calculate_venue_prestige_score(venue: dict[str, Any] | str) -> int:
     for top_venue in TOP_VENUES:
         if top_venue.lower() in venue_name:
             return 15
-    
+
     for q2_venue in Q2_VENUES:
         if q2_venue.lower() in venue_name:
             return 12
@@ -190,7 +194,7 @@ def calculate_venue_prestige_score(venue: dict[str, Any] | str) -> int:
     for high_venue in HIGH_QUALITY_VENUES:
         if high_venue.lower() in venue_name:
             return 10
-    
+
     for q3_venue in Q3_VENUES:
         if q3_venue.lower() in venue_name:
             return 8
@@ -206,12 +210,12 @@ def calculate_venue_prestige_score(venue: dict[str, Any] | str) -> int:
     return 0
 
 
-def calculate_author_authority_score(authors: list[dict[str, Any]]) -> int:
+def calculate_author_authority_score(authors: list[dict[str, Any]]) -> int:  # noqa: PLR0911
     """Calculate author authority component (10 points max).
-    
+
     Args:
         authors: List of author dicts from Semantic Scholar API
-        
+
     Returns:
         Integer score from 0-10 based on highest author h-index
     """
@@ -305,7 +309,7 @@ def calculate_study_type_score(study_type: str | None) -> int:
     return weights.get(study_type, 0)
 
 
-def calculate_recency_score(year: int | None) -> int:
+def calculate_recency_score(year: int | None) -> int:  # noqa: PLR0911
     """Calculate recency component score for enhanced scoring."""
     if not year:
         return 0
@@ -333,7 +337,7 @@ def calculate_recency_score(year: int | None) -> int:
     return 0
 
 
-def calculate_sample_size_score(sample_size: int | None) -> int:
+def calculate_sample_size_score(sample_size: int | None) -> int:  # noqa: PLR0911
     """Calculate sample size component score for enhanced scoring."""
     if not sample_size or sample_size <= 0:
         return 0
@@ -444,7 +448,7 @@ def calculate_enhanced_quality_score(paper_data: dict[str, Any], s2_data: dict[s
     study_type = paper_data.get("study_type")
     study_score = calculate_study_type_score(study_type)
     total_score += study_score
-    if study_score > 0:
+    if study_score > 0 and study_type:
         components.append(f"{study_type.replace('_', ' ').title()} (+{study_score})")
 
     # Recency (10 points)

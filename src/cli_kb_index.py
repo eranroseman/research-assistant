@@ -206,7 +206,7 @@ class KnowledgeBaseIndex:
         }
 
         for paper in self.papers:
-            quality = paper.get("quality_score", 0)
+            quality = paper.get("quality_score") or 0
             if quality >= excellent_threshold:
                 distribution["excellent"] += 1
             elif quality >= very_good_threshold:
