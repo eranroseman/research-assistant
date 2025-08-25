@@ -2132,10 +2132,7 @@ def batch(input_file: str, preset: str | None, output: str) -> None:
       echo '[{"cmd":"search","query":"AI healthcare","k":20}]' | python src/cli.py batch -
     """
     try:
-        # Initialize ResearchCLI once
-        research_cli = ResearchCLI()
-
-        # Handle preset workflows
+        # Parse commands first, before loading the model
         if preset:
             if input_file == "-":
                 click.echo("Error: Please provide a topic when using presets", err=True)
@@ -2148,6 +2145,9 @@ def batch(input_file: str, preset: str | None, output: str) -> None:
             # Load commands from file
             with open(input_file) as f:
                 commands = json.load(f)
+
+        # Initialize ResearchCLI only after successfully parsing commands
+        research_cli = ResearchCLI()
 
         # Execute batch with shared context
         results = _execute_batch(research_cli, commands)
