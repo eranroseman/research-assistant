@@ -133,7 +133,7 @@ The new journey tests complement the existing E2E test suite:
 # CLI journeys
 pytest tests/e2e/test_e2e_real_journeys.py -v
 
-# Build journeys  
+# Build journeys
 pytest tests/e2e/test_e2e_build_journeys.py -v
 
 # Both together

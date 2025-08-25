@@ -8,7 +8,7 @@ The E2E journey tests simulate complete user workflows from start to finish, tes
 
 ### Journey 1: First-Time Researcher
 **Purpose**: Validate new user onboarding and basic functionality
-**Coverage**: 
+**Coverage**:
 - System setup and initialization
 - Demo KB creation
 - Basic search operations

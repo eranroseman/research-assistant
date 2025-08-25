@@ -38,6 +38,7 @@ I'll conduct a comprehensive literature review, adapting my approach based on wh
 - Immediate analysis of specific papers found
 
 ### Performance optimization
+
 - **Batch operations**: 10-20x faster for multiple commands
 - **Parallel subagents**: Launch multiple subagents simultaneously
 - **Smart search**: Use for 20+ papers efficiently
@@ -56,6 +57,7 @@ I'll conduct a comprehensive literature review, adapting my approach based on wh
 - Citations: `python src/cli.py cite XXXX XXXX XXXX` (space-separated IDs)
 
 ### Quality considerations
+
 - Higher quality scores provide stronger evidence
 - Recent systematic reviews may summarize earlier work
 - Multiple search approaches reveal complementary literature
@@ -89,6 +91,7 @@ I'll generate a comprehensive report saved to `reports/research_<topic>_<timesta
 The report will include appropriate citations, quality assessments where helpful, and identification of knowledge gaps. When coverage assessment reveals significant gaps, the report will distinguish between "what we know from current evidence" and "what's missing from the literature" with specific recommendations for KB expansion.
 
 ### Citation Guidelines
+
 - **Strong claims need citations**: Statistics, clinical outcomes, definitive statements
 - **IEEE format**: Numbered citations [1], [2], [3]; prioritize quality papers (>70 score)
 - **References**: Generate with `python src/cli.py cite XXXX XXXX`
@@ -102,6 +105,7 @@ Discovery is a powerful tool for identifying knowledge gaps - trust your researc
 Research coverage gaps often occur when topics have **specificity** that may not be well-represented in a general knowledge base. Trust your intuition when something feels incomplete.
 
 **Research Intuition Signals** - if you find yourself thinking:
+
 - "This seems important, but results are surprisingly limited"
 - "The evidence feels too general for this specific context"
 - "I expected more targeted research on this intersection"
@@ -111,12 +115,14 @@ Research coverage gaps often occur when topics have **specificity** that may not
 → These intuitions often indicate coverage gaps worth exploring
 
 ### Discovery Commands
+
 ```bash
 python src/discover.py --keywords "your,main,terms" --quality-threshold HIGH
 python src/discover.py --coverage-info  # Workflow integration guidance
 ```
 
 ### Coverage Assessment Integration
+
 - **🟢 Traffic Light**: Proceed confidently with KB analysis
 - **🟡 Traffic Light**: Note limitations, consider targeted discovery for specific gaps
 - **🔴 Traffic Light**: Significant gaps likely - discovery recommended for comprehensive analysis
