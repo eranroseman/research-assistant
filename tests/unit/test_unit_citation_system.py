@@ -16,6 +16,9 @@ sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 from src.cli import generate_ieee_citation
 
 
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.citation
 class TestIEEECitationFormatting:
     """Test IEEE citation formatting functionality."""
 

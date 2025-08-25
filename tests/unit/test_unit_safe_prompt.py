@@ -10,12 +10,17 @@ import sys
 from pathlib import Path
 from unittest.mock import patch
 
+import pytest
+
 
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
 from src.build_kb import safe_prompt
 
 
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.safe_prompt
 class TestSafePromptBasicFunctionality:
     """Test basic safe_prompt functionality."""
 
@@ -56,6 +61,9 @@ class TestSafePromptBasicFunctionality:
             assert result == "n"
 
 
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.safe_prompt
 class TestSafePromptFormatting:
     """Test prompt formatting and display."""
 
@@ -96,6 +104,9 @@ class TestSafePromptFormatting:
             mock_input.assert_called_with("Backup data? [Y/n/?]: ")
 
 
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.safe_prompt
 class TestSafePromptHelpSystem:
     """Test help on demand functionality."""
 
@@ -127,6 +138,9 @@ class TestSafePromptHelpSystem:
             assert no_help_printed
 
 
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.safe_prompt
 class TestSafePromptErrorHandling:
     """Test error handling and invalid input."""
 
@@ -153,6 +167,9 @@ class TestSafePromptErrorHandling:
             assert mock_input.call_count == 4
 
 
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.safe_prompt
 class TestSafePromptRealWorldScenarios:
     """Test realistic usage scenarios."""
 
@@ -216,6 +233,9 @@ class TestSafePromptRealWorldScenarios:
             mock_input.assert_called_with(expected_prompt)
 
 
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.safe_prompt
 class TestSafePromptEdgeCases:
     """Test edge cases and boundary conditions."""
 

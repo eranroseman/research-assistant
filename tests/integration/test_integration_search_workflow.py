@@ -132,10 +132,10 @@ class TestSearchWorkflowIntegration:
 
     @patch("src.cli_kb_index.KnowledgeBaseIndex")
     @patch("src.cli.faiss")
-    @patch("sentence_transformers.SentenceTransformer")
+    @patch("src.cli.ResearchCLI._load_embedding_model")
     def test_search_with_quality_filter_workflow_should_return_filtered_results(
         self,
-        mock_transformer,
+        mock_load_model,
         mock_faiss,
         mock_kb_index,
         mock_kb,
@@ -149,10 +149,10 @@ class TestSearchWorkflowIntegration:
         """
         from src.cli import ResearchCLI
 
-        # Mock embedding model
+        # Mock embedding model (faster - no actual transformer loading)
         mock_model = MagicMock()
         mock_model.encode.return_value = np.random.randn(1, 768).astype("float32")
-        mock_transformer.return_value = mock_model
+        mock_load_model.return_value = mock_model
 
         # Mock FAISS index
         mock_index = MagicMock()
@@ -174,20 +174,18 @@ class TestSearchWorkflowIntegration:
         )
         mock_kb_index.return_value = mock_kb_instance
 
-        # Initialize CLI
-        with patch("src.cli.ResearchCLI._load_embedding_model") as mock_load_model:
-            mock_load_model.return_value = mock_model
-            cli = ResearchCLI(str(mock_kb))
+        # Initialize CLI (model already mocked)
+        cli = ResearchCLI(str(mock_kb))
 
-            # Search with basic parameters (quality filtering happens in CLI command, not method)
-            results = cli.search("diabetes treatment", top_k=10)
+        # Search with basic parameters (quality filtering happens in CLI command, not method)
+        results = cli.search("diabetes treatment", top_k=10)
 
-            # Should return all papers that match the query
-            assert len(results) == 3  # All papers match the query
-            paper_ids = [r[2]["id"] for r in results]
-            assert "0001" in paper_ids  # Systematic review
-            assert "0002" in paper_ids  # RCT
-            assert "0003" in paper_ids  # Case report
+        # Should return all papers that match the query
+        assert len(results) == 3  # All papers match the query
+        paper_ids = [r[2]["id"] for r in results]
+        assert "0001" in paper_ids  # Systematic review
+        assert "0002" in paper_ids  # RCT
+        assert "0003" in paper_ids  # Case report
 
     @patch("src.cli_kb_index.KnowledgeBaseIndex")
     @patch("src.cli.faiss")

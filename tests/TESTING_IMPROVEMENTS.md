@@ -6,7 +6,7 @@ Based on analysis of test failures and current test suite structure.
 
 The test suite has good structure but needs improvements in:
 1. **Test reliability** - Dead code and undefined variables causing failures
-2. **Performance thresholds** - Too strict for CI environments  
+2. **Performance thresholds** - Too strict for CI environments
 3. **Mock coverage** - Only 20-33% code coverage due to missing mocks
 4. **Test isolation** - Dependencies on external state (KB, APIs)
 
@@ -116,7 +116,7 @@ class TestMyFeature:
 ## Files Modified
 
 1. **tests/conftest.py** - Added 10+ new fixtures
-2. **tests/pytest.ini** - Enhanced marker definitions  
+2. **tests/pytest.ini** - Enhanced marker definitions
 3. **tests/unit/test_unit_cli_interface.py** - Added markers example
 4. **tests/integration/test_integration_gap_analysis.py** - Added markers
 5. **tests/e2e/test_e2e_cli_commands.py** - Added markers to all test classes
@@ -148,10 +148,10 @@ To apply these improvements throughout the test suite:
 jobs:
   fast-tests:
     run: pytest -m "unit and not slow"
-  
+
   integration-tests:
     run: pytest -m "integration" --mock-apis
-  
+
   critical-tests:
     run: pytest -m "critical"
 ```
@@ -168,7 +168,7 @@ jobs:
 #### 1.2 Performance Test Thresholds (HIGH PRIORITY)
 **File**: `tests/e2e/test_e2e_cli_commands.py:431`
 **Issue**: 15s threshold too strict (failing at 16s)
-**Fix**: 
+**Fix**:
 ```python
 # Add environment-aware thresholds
 import os
@@ -193,7 +193,7 @@ def mock_build_kb():
         mock.return_value = 0
         yield mock
 
-@pytest.fixture  
+@pytest.fixture
 def mock_embeddings():
     """Mock embedding generation."""
     with patch('sentence_transformers.SentenceTransformer') as mock:

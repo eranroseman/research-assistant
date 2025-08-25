@@ -17,6 +17,9 @@ sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 from src.build_kb import calculate_enhanced_quality_score
 
 
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.search
 class TestSearchParametrized:
     """Test parametrized search functionality."""
 
@@ -69,6 +72,9 @@ class TestSearchParametrized:
         assert isinstance(should_include, bool)
 
 
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.search
 class TestEmbeddingOperations:
     """Test embedding generation and similarity calculations."""
 
@@ -129,6 +135,8 @@ class TestEmbeddingOperations:
         assert text in cache
 
 
+@pytest.mark.unit
+@pytest.mark.search
 class TestResultRanking:
     """Test search result ranking and scoring."""
 
@@ -174,6 +182,9 @@ class TestResultRanking:
         assert scored_results[2][1]["study_type"] == "case_report"
 
 
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.search
 class TestSearchFiltering:
     """Test search filtering and refinement."""
 

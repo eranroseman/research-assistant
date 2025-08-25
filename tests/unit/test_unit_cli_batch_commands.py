@@ -20,6 +20,9 @@ from tests.utils import (
 )
 
 
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.cli
 class TestCLICore:
     """Test core CLI functionality."""
 
@@ -132,6 +135,9 @@ class TestCLICore:
 # Using parametrized tests for better coverage and less duplication
 
 
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.citation
 class TestCitationFunctionality:
     """Test citation generation."""
 

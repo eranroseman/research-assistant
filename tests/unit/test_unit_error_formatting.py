@@ -23,6 +23,9 @@ from src.error_formatting import (
 )
 
 
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.error_formatting
 class TestErrorFormatter:
     """Test ErrorFormatter class functionality."""
 
@@ -78,6 +81,9 @@ class TestErrorFormatter:
             assert "❌ test: Test error" in output
 
 
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.error_formatting
 class TestUtilityFunctions:
     """Test standalone utility functions."""
 
@@ -97,6 +103,9 @@ class TestUtilityFunctions:
             mock_print.assert_called_once()
 
 
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.error_formatting
 class TestCommonErrors:
     """Test pre-configured common error patterns."""
 
@@ -145,6 +154,9 @@ class TestCommonErrors:
             mock_exit.assert_called_once_with(2)
 
 
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.error_formatting
 class TestErrorIntegration:
     """Test error formatting integration scenarios."""
 
@@ -198,6 +210,9 @@ class TestErrorIntegration:
         assert "Details: Technical info" in result2
 
 
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.error_formatting
 class TestErrorValidation:
     """Test error formatting input validation and edge cases."""
 

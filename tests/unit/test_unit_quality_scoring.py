@@ -18,6 +18,9 @@ from src.build_kb import (
 )
 
 
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.quality
 class TestEnhancedQualityScoring:
     """Tests for enhanced quality scoring with API data."""
 
@@ -166,6 +169,8 @@ class TestEnhancedQualityScoring:
         assert "systematic_review" in explanation.lower()
 
 
+@pytest.mark.unit
+@pytest.mark.quality
 class TestAPIAvailabilityAndUserConsent:
     """Tests for API availability checking and user consent scenarios."""
 

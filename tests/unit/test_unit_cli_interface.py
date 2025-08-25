@@ -118,6 +118,9 @@ class TestEnhancedQualityScoring:
         assert isinstance(explanation, str)
 
 
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.cli
 class TestUtilityFunctions:
     """Test utility functions available in CLI."""
 

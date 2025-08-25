@@ -1,9 +1,11 @@
 """Test configuration and fixtures for research assistant tests."""
 
 import json
+import os
 import shutil
 import sys
 import tempfile
+import warnings
 from pathlib import Path
 from unittest.mock import Mock, patch
 
@@ -12,6 +14,32 @@ from click.testing import CliRunner
 
 # Add src to path so we can import our modules
 sys.path.insert(0, str(Path(__file__).parent.parent))
+
+# Suppress the torch docstring warning that happens with multiple imports
+warnings.filterwarnings("ignore", message=".*_has_torch_function.*already has a docstring")
+warnings.filterwarnings("ignore", category=RuntimeWarning, message=".*_has_torch_function.*")
+
+# Fix torch import issue by handling it properly
+os.environ["TOKENIZERS_PARALLELISM"] = "false"  # Disable tokenizers parallelism warnings
+
+# Mock torch early to prevent multiple registration issues
+if "torch" not in sys.modules:
+    # Create a comprehensive mock for torch
+    mock_torch = Mock()
+    mock_torch.cuda = Mock()
+    mock_torch.cuda.is_available = Mock(return_value=False)
+    mock_torch.cuda.get_device_properties = Mock(return_value=Mock(total_memory=8 * 1024**3))
+    mock_torch.set_num_threads = Mock()
+    mock_torch.__version__ = "2.0.0"
+    sys.modules["torch"] = mock_torch
+else:
+    # If torch is already imported, configure it for testing
+    try:
+        import torch
+
+        torch.set_num_threads(1)  # Reduce thread usage for tests
+    except (ImportError, AttributeError):
+        pass
 
 
 # ==================== File System Fixtures ====================
@@ -303,6 +331,45 @@ def mock_embeddings():
         mock_model.return_value = mock_instance
 
         yield mock_instance
+
+
+@pytest.fixture(autouse=True)
+def patch_cli_imports():
+    """Patch problematic imports in CLI module."""
+    # Create a mock torch module to avoid import conflicts
+    mock_torch = Mock()
+    mock_torch.cuda = Mock()
+    mock_torch.cuda.is_available = Mock(return_value=False)
+    mock_torch.cuda.get_device_properties = Mock(return_value=Mock(total_memory=8 * 1024**3))
+    mock_torch.set_num_threads = Mock()
+
+    # Create mock transformers with all required submodules
+    mock_transformers = Mock()
+    mock_transformers.utils = Mock()
+    mock_transformers.utils.PushToHubMixin = Mock
+    mock_transformers.configuration_utils = Mock()
+
+    # Create mock sentence_transformers
+    mock_st = Mock()
+    mock_st.SentenceTransformer = Mock
+    mock_st.backend = Mock()
+    mock_st.backend.load = Mock()
+
+    # Patch the transformers import issue
+    with patch.dict(
+        "sys.modules",
+        {
+            "transformers": mock_transformers,
+            "transformers.utils": mock_transformers.utils,
+            "transformers.configuration_utils": mock_transformers.configuration_utils,
+            "sentence_transformers": mock_st,
+            "sentence_transformers.backend": mock_st.backend,
+            "sentence_transformers.backend.load": mock_st.backend.load,
+            # Mock torch if not already imported
+            **({"torch": mock_torch} if "torch" not in sys.modules else {}),
+        },
+    ):
+        yield
 
 
 @pytest.fixture

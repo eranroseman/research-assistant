@@ -22,6 +22,9 @@ from src.help_formatting import (
 )
 
 
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.help_formatting
 class TestHelpFormatter:
     """Test HelpFormatter class functionality."""
 
@@ -113,6 +116,9 @@ class TestHelpFormatter:
         assert "--quality-min 50" in result
 
 
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.help_formatting
 class TestUtilityFunctions:
     """Test standalone utility functions."""
 
@@ -142,6 +148,9 @@ class TestUtilityFunctions:
         assert result1 == result2
 
 
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.help_formatting
 class TestCommandTemplates:
     """Test pre-configured command help templates."""
 
@@ -205,6 +214,9 @@ class TestCommandTemplates:
         assert any("population focus" in note.lower() for note in template["notes"])
 
 
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.help_formatting
 class TestGetCommandHelp:
     """Test get_command_help functionality."""
 
@@ -241,6 +253,9 @@ class TestGetCommandHelp:
             assert "Examples:" in result
 
 
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.help_formatting
 class TestClickIntegration:
     """Test Click framework integration."""
 
@@ -274,6 +289,9 @@ class TestClickIntegration:
                 pass
 
 
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.help_formatting
 class TestHelpConsistency:
     """Test help formatting consistency across commands."""
 
@@ -327,6 +345,9 @@ class TestHelpConsistency:
                     assert len(ref_command) > 2  # Should be meaningful reference
 
 
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.help_formatting
 class TestHelpValidation:
     """Test help formatting input validation and edge cases."""
 

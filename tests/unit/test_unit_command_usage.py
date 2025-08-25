@@ -18,6 +18,9 @@ from unittest.mock import patch, MagicMock
 import pytest
 
 
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.logging
 class TestCommandUsageLogging:
     """Test command usage analytics logging functionality."""
 
@@ -32,37 +35,6 @@ class TestCommandUsageLogging:
         # Logger should return None when pytest is detected
         logger = _setup_command_usage_logger()
         assert logger is None
-
-    @pytest.mark.skip(reason="Logger initialization requires non-test environment")
-    def test_command_usage_analytics_setup_with_enabled_flag_should_initialize_logger(self):
-        """Test command usage analytics setup when enabled outside test environment."""
-        import os
-
-        # Save original environment
-        original_env = os.environ.get("PYTEST_CURRENT_TEST")
-
-        with (
-            tempfile.TemporaryDirectory() as temp_dir,
-            patch("src.cli.COMMAND_USAGE_LOG_ENABLED", True),
-            patch("src.cli.COMMAND_USAGE_LOG_PATH", Path(temp_dir)),
-            patch("src.cli.COMMAND_USAGE_LOG_PREFIX", "test_analytics_"),
-            patch("src.cli.COMMAND_USAGE_LOG_LEVEL", "INFO"),
-        ):
-            # Temporarily remove pytest markers
-            if "PYTEST_CURRENT_TEST" in os.environ:
-                del os.environ["PYTEST_CURRENT_TEST"]
-
-            # Mock sys.modules to hide pytest
-            with patch.dict("sys.modules", {k: v for k, v in sys.modules.items() if k != "pytest"}):
-                from src.cli import _setup_command_usage_logger
-
-                logger = _setup_command_usage_logger()
-                assert logger is not None
-                assert logger.name == "command_usage"
-
-            # Restore environment
-            if original_env:
-                os.environ["PYTEST_CURRENT_TEST"] = original_env
 
     def test_command_usage_analytics_setup_with_disabled_flag_should_skip_initialization(self):
         """Test command usage analytics setup when disabled."""

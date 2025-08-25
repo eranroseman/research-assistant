@@ -50,26 +50,26 @@ response = sync_api_request_with_retry(url)  # Handles retries
 def build_knowledge_base(papers, checkpoint_interval=500):
     checkpoint_file = Path(".checkpoint")
     start_idx = 0
-    
+
     # Resume from checkpoint
     if checkpoint_file.exists():
         with open(checkpoint_file) as f:
             start_idx = json.load(f).get('last_processed', 0)
         print(f"Resuming from paper {start_idx}")
-    
+
     for i, paper in enumerate(papers[start_idx:], start=start_idx):
         try:
             process_paper(paper)
-            
+
             # Save checkpoint
             if (i + 1) % checkpoint_interval == 0:
                 with open(checkpoint_file, 'w') as f:
                     json.dump({'last_processed': i + 1}, f)
-                    
+
         except Exception as e:
             print(f"Failed on paper {i}: {e}")
             continue
-    
+
     # Clean up on success
     checkpoint_file.unlink(missing_ok=True)
 ```
@@ -97,7 +97,7 @@ class QualityScore:
     score: float
     explanation: str
     components: dict
-    
+
 def calculate_quality_score(paper: dict, api_data: Optional[dict] = None) -> QualityScore:
     """Calculate paper quality score with optional API enhancement."""
     # Existing logic moved here
@@ -123,7 +123,7 @@ class KBIndexer:
     def __init__(self, model_name: str, use_gpu: bool = True):
         self.model = SentenceTransformer(model_name)
         self.use_gpu = use_gpu and torch.cuda.is_available()
-        
+
     def create_index(self, papers: list) -> faiss.Index:
         """Create FAISS index from papers."""
         # Existing logic moved here

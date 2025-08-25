@@ -11,6 +11,8 @@ Tests unified output formatting system including:
 import time
 from unittest.mock import patch
 
+import pytest
+
 # Import the output formatting module
 from src.output_formatting import (
     ProgressTracker,
@@ -24,6 +26,9 @@ from src.output_formatting import (
 )
 
 
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.output_formatting
 class TestProgressTracker:
     """Test ProgressTracker class functionality."""
 
@@ -124,6 +129,9 @@ class TestProgressTracker:
             assert 6 <= filled_count <= 9  # ~25% of 30, with rounding tolerance
 
 
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.output_formatting
 class TestOutputFormatter:
     """Test OutputFormatter class functionality."""
 
@@ -286,6 +294,9 @@ class TestOutputFormatter:
         assert "Api Calls: 2,500" in all_output  # Large number formatting
 
 
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.output_formatting
 class TestUtilityFunctions:
     """Test standalone utility functions."""
 
@@ -330,6 +341,9 @@ class TestUtilityFunctions:
         assert "\u2139\ufe0f Test" in status1
 
 
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.output_formatting
 class TestProgressItem:
     """Test ProgressItem dataclass."""
 
@@ -347,6 +361,9 @@ class TestProgressItem:
         assert item.last_update == current_time
 
 
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.output_formatting
 class TestOutputConsistency:
     """Test output formatting consistency across functions."""
 
@@ -412,6 +429,9 @@ class TestOutputConsistency:
             assert "5,432" in all_output  # Medium numbers with commas
 
 
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.output_formatting
 class TestOutputValidation:
     """Test output formatting input validation and edge cases."""
 

@@ -85,10 +85,10 @@ class TestIncrementalUpdates:
 
         return index
 
-    @patch("build_kb.KnowledgeBaseBuilder.embedding_model", new_callable=PropertyMock)
-    def test_incremental_update_should_process_only_new_papers(self, mock_embedding_prop, temp_kb):
+    def test_incremental_update_should_process_only_new_papers(self, temp_kb):
         """Verify only new papers get embedded."""
         from build_kb import KnowledgeBaseBuilder
+        import faiss
 
         # Create mock embedding model
         mock_model = MagicMock()
@@ -96,22 +96,27 @@ class TestIncrementalUpdates:
 
         def mock_encode(texts, show_progress_bar=True, batch_size=64):
             # Track what was encoded
+            if isinstance(texts, str):
+                texts = [texts]
             embeddings_generated.extend(texts)
-            # Return deterministic embeddings
-            result = []
-            for text in texts:
-                seed = hash(text) % 10000
-                np.random.seed(seed)
-                result.append(np.random.rand(768).astype("float32"))
-            return np.array(result)
+            # Return deterministic embeddings quickly
+            return np.random.randn(len(texts), 768).astype("float32")
 
         mock_model.encode = MagicMock(side_effect=mock_encode)
-        mock_embedding_prop.return_value = mock_model
 
-        # Setup: Create KB with 5 papers
+        # Setup: Create KB with 5 papers using mock FAISS
         builder = KnowledgeBaseBuilder(str(temp_kb))
+
+        # Mock the embedding_model property directly
+        builder._embedding_model = mock_model
+
         self.create_test_metadata(temp_kb, 5)
-        self.create_test_index(temp_kb, 5)
+
+        # Create a smaller test index for speed
+        index = faiss.IndexFlatL2(768)
+        embeddings = np.random.randn(5, 768).astype("float32")
+        index.add(embeddings)
+        faiss.write_index(index, str(temp_kb / "index.faiss"))
 
         # Add 2 new papers to metadata
         with open(temp_kb / "metadata.json") as f:
@@ -164,8 +169,6 @@ class TestIncrementalUpdates:
         assert any("Test Paper 7" in text for text in encoded_texts), "Paper 7 should be encoded"
 
         # Verify the index has 7 total embeddings
-        import faiss
-
         index = faiss.read_index(str(temp_kb / "index.faiss"))
         assert index.ntotal == 7, f"Index should have 7 papers, got {index.ntotal}"
 

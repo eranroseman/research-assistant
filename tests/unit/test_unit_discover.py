@@ -4,6 +4,7 @@
 import unittest
 from unittest.mock import patch, Mock
 
+import pytest
 import sys
 from pathlib import Path
 
@@ -23,6 +24,9 @@ from discover import (
 )
 
 
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.discover
 class TestPaperDataStructures(unittest.TestCase):
     """Test paper data structures."""
 
@@ -73,6 +77,9 @@ class TestPaperDataStructures(unittest.TestCase):
         assert scored_paper.confidence == "HIGH"
 
 
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.discover
 class TestRateLimiter(unittest.TestCase):
     """Test rate limiting functionality."""
 
@@ -109,6 +116,9 @@ class TestRateLimiter(unittest.TestCase):
         mock_sleep.assert_not_called()
 
 
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.discover
 class TestSearchQueryGeneration(unittest.TestCase):
     """Test search query generation."""
 
@@ -152,6 +162,9 @@ class TestSearchQueryGeneration(unittest.TestCase):
         assert "systematic_review" in query.query_text
 
 
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.discover
 class TestKeywordRelevance(unittest.TestCase):
     """Test keyword relevance calculation."""
 
@@ -205,6 +218,9 @@ class TestKeywordRelevance(unittest.TestCase):
         assert score == 0.0
 
 
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.discover
 class TestPaperScoring(unittest.TestCase):
     """Test paper scoring functionality."""
 
@@ -260,6 +276,9 @@ class TestPaperScoring(unittest.TestCase):
         assert len(scored_papers) == 1
 
 
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.discover
 class TestKBCoverageAssessment(unittest.TestCase):
     """Test KB coverage assessment."""
 
@@ -333,6 +352,9 @@ class TestKBCoverageAssessment(unittest.TestCase):
         assert coverage["high_impact_missing"] == 15
 
 
+@pytest.mark.unit
+@pytest.mark.fast
+@pytest.mark.discover
 class TestReportGeneration(unittest.TestCase):
     """Test report generation functionality."""
 

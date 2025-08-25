@@ -14,6 +14,8 @@ import pytest
 @pytest.mark.e2e
 @pytest.mark.cli
 @pytest.mark.fast
+@pytest.mark.e2e
+@pytest.mark.cli
 class TestCLIBasicCommands:
     """Test basic CLI command functionality."""
 
@@ -85,6 +87,10 @@ class TestCLIBasicCommands:
         assert len(result.stdout + result.stderr) > 0
 
 
+@pytest.mark.e2e
+@pytest.mark.cli
+@pytest.mark.search
+@pytest.mark.requires_kb
 @pytest.mark.e2e
 @pytest.mark.cli
 @pytest.mark.search
@@ -168,6 +174,9 @@ class TestCLISearchCommands:
 @pytest.mark.e2e
 @pytest.mark.cli
 @pytest.mark.fast
+@pytest.mark.e2e
+@pytest.mark.cli
+@pytest.mark.requires_kb
 class TestCLICiteCommand:
     """Test citation command functionality."""
 
@@ -216,6 +225,10 @@ class TestCLICiteCommand:
 @pytest.mark.e2e
 @pytest.mark.cli
 @pytest.mark.requires_kb
+@pytest.mark.e2e
+@pytest.mark.cli
+@pytest.mark.batch
+@pytest.mark.slow
 class TestCLIBatchCommand:
     """Test batch command functionality."""
 
@@ -260,7 +273,7 @@ class TestCLIBatchCommand:
                 text=True,
                 check=False,
                 cwd=Path(__file__).parent.parent.parent,
-                timeout=30,  # Increased timeout for batch operations
+                timeout=20,  # Allow time for model loading even with invalid JSON
             )
 
             assert result.returncode != 0
@@ -277,6 +290,8 @@ class TestCLIBatchCommand:
 @pytest.mark.e2e
 @pytest.mark.cli
 @pytest.mark.fast
+@pytest.mark.e2e
+@pytest.mark.cli
 class TestCLIErrorMessages:
     """Test error message quality."""
 
@@ -292,6 +307,10 @@ class TestCLIErrorMessages:
         # In practice, we just verify the error handling exists
 
 
+@pytest.mark.e2e
+@pytest.mark.performance
+@pytest.mark.slow
+@pytest.mark.requires_kb
 @pytest.mark.e2e
 @pytest.mark.performance
 @pytest.mark.slow
@@ -366,6 +385,7 @@ class TestCriticalE2EFunctionality:
             capture_output=True,
             text=True,
             cwd=Path(__file__).parent.parent.parent,
+            timeout=25,  # Allow time for model loading
         )
 
         # Should either succeed or give a clear error message
@@ -425,13 +445,13 @@ class TestCriticalE2EFunctionality:
             capture_output=True,
             text=True,
             cwd=Path(__file__).parent.parent.parent,
-            timeout=30,
+            timeout=30,  # Increased timeout to account for initial model loading
         )
         elapsed = time.time() - start
 
         # Environment-aware thresholds: CI environments may be slower
         # Local development: 25s, CI environment: 30s (allowing for model loading)
-        # Increased thresholds to account for first-time model loading and varying system loads
+        # Reasonable thresholds for basic functionality testing
         perf_threshold = 30 if os.getenv("CI") else 25
 
         # Should complete within threshold (allowing for model loading)

@@ -71,8 +71,12 @@ class PaperProcessingError(Exception):
 # CONFIGURATION - Import from centralized config.py
 # ============================================================================
 
+# Add parent directory to path for direct script execution
+if __name__ == "__main__":
+    sys.path.insert(0, str(Path(__file__).parent.parent))
+
 try:
-    # For module imports (from tests)
+    # Try relative import first (for when imported as module)
     from .config import (
         # Version
         KB_VERSION,
@@ -131,7 +135,7 @@ try:
         PDF_TIMEOUT_SECONDS,
     )
 except ImportError:
-    # For direct script execution
+    # For direct script execution or when used in tests
     from config import (
         # Version
         KB_VERSION,
@@ -307,7 +311,12 @@ def get_semantic_scholar_data_sync(doi: str | None, title: str) -> dict[str, Any
                 API_RETRY_DELAY,
             )
         except ImportError:
-            from config import SEMANTIC_SCHOLAR_API_URL, API_MAX_RETRIES, API_REQUEST_TIMEOUT, API_RETRY_DELAY
+            from src.config import (
+                SEMANTIC_SCHOLAR_API_URL,
+                API_MAX_RETRIES,
+                API_REQUEST_TIMEOUT,
+                API_RETRY_DELAY,
+            )
 
         # Use requests instead of aiohttp to avoid async-sync issues
         if doi:
@@ -386,7 +395,12 @@ def get_semantic_scholar_data_batch(paper_identifiers: list[dict[str, str]]) -> 
                 API_RETRY_DELAY,
             )
         except ImportError:
-            from config import SEMANTIC_SCHOLAR_API_URL, API_MAX_RETRIES, API_REQUEST_TIMEOUT, API_RETRY_DELAY
+            from src.config import (
+                SEMANTIC_SCHOLAR_API_URL,
+                API_MAX_RETRIES,
+                API_REQUEST_TIMEOUT,
+                API_RETRY_DELAY,
+            )
 
         # Separate papers with DOIs from those without
         papers_with_dois = []
@@ -627,7 +641,7 @@ def calculate_citation_impact_score(citation_count: int) -> int:
     try:
         from .config import CITATION_COUNT_THRESHOLDS
     except ImportError:
-        from config import CITATION_COUNT_THRESHOLDS
+        from src.config import CITATION_COUNT_THRESHOLDS
 
     thresholds = CITATION_COUNT_THRESHOLDS
 
@@ -664,7 +678,7 @@ def calculate_venue_prestige_score(venue: dict[str, Any] | str) -> int:
     try:
         from .config import VENUE_PRESTIGE_SCORES
     except ImportError:
-        from config import VENUE_PRESTIGE_SCORES
+        from src.config import VENUE_PRESTIGE_SCORES
 
     # Simplified venue scoring using pattern matching
     # Future enhancement: integrate SCImago Journal Rank (SJR) data
@@ -742,7 +756,7 @@ def calculate_author_authority_score(authors: list[dict[str, Any]]) -> int:
     try:
         from .config import AUTHOR_AUTHORITY_THRESHOLDS
     except ImportError:
-        from config import AUTHOR_AUTHORITY_THRESHOLDS
+        from src.config import AUTHOR_AUTHORITY_THRESHOLDS
 
     thresholds = AUTHOR_AUTHORITY_THRESHOLDS
     if max_h_index >= thresholds["renowned"]:
@@ -821,7 +835,7 @@ def calculate_study_type_score(study_type: str | None) -> int:
     try:
         from .config import STUDY_TYPE_WEIGHT
     except ImportError:
-        from config import STUDY_TYPE_WEIGHT
+        from src.config import STUDY_TYPE_WEIGHT
 
     if not study_type:
         return 0
@@ -850,7 +864,7 @@ def calculate_recency_score(year: int | None) -> int:
     try:
         from .config import RECENCY_WEIGHT
     except ImportError:
-        from config import RECENCY_WEIGHT
+        from src.config import RECENCY_WEIGHT
 
     current_year = 2025  # Current year for scoring
     years_old = current_year - year
@@ -878,7 +892,7 @@ def calculate_sample_size_score(sample_size: int | None) -> int:
     try:
         from .config import SAMPLE_SIZE_WEIGHT, SAMPLE_SIZE_SCORING_THRESHOLDS
     except ImportError:
-        from config import SAMPLE_SIZE_WEIGHT, SAMPLE_SIZE_SCORING_THRESHOLDS
+        from src.config import SAMPLE_SIZE_WEIGHT, SAMPLE_SIZE_SCORING_THRESHOLDS
 
     thresholds = SAMPLE_SIZE_SCORING_THRESHOLDS
 
@@ -901,7 +915,7 @@ def calculate_full_text_score(has_full_text: bool | None) -> int:
     try:
         from .config import FULL_TEXT_WEIGHT
     except ImportError:
-        from config import FULL_TEXT_WEIGHT
+        from src.config import FULL_TEXT_WEIGHT
 
     return FULL_TEXT_WEIGHT if has_full_text else 0
 
@@ -1422,7 +1436,7 @@ class KnowledgeBaseBuilder:
         self.index_file_path = self.knowledge_base_path / "index.faiss"
         self.metadata_file_path = self.knowledge_base_path / "metadata.json"
         # Use config constant for cache file name
-        from config import PDF_CACHE_FILE
+        from src.config import PDF_CACHE_FILE
 
         self.cache_file_path = self.knowledge_base_path / PDF_CACHE_FILE.name
 
@@ -1443,12 +1457,16 @@ class KnowledgeBaseBuilder:
         self.embedding_cache: dict[str, Any] | None = None  # Embedding vectors cache, loaded on demand
 
         # Detect device early for time estimates
+        self.device = self._detect_device()
+
+    def _detect_device(self) -> str:
+        """Detect whether GPU is available for computation."""
         try:
             import torch
 
-            self.device = "cuda" if torch.cuda.is_available() else "cpu"
+            return "cuda" if torch.cuda.is_available() else "cpu"
         except ImportError:
-            self.device = "cpu"
+            return "cpu"
 
     @property
     def embedding_model(self) -> Any:
@@ -1535,7 +1553,7 @@ class KnowledgeBaseBuilder:
             return self.embedding_cache
 
         # Use config constants for cache file names
-        from config import EMBEDDING_CACHE_FILE
+        from src.config import EMBEDDING_CACHE_FILE
 
         json_cache_path = self.knowledge_base_path / EMBEDDING_CACHE_FILE.name
         npy_cache_path = self.knowledge_base_path / ".embedding_data.npy"
@@ -1567,7 +1585,7 @@ class KnowledgeBaseBuilder:
         import numpy as np
 
         # Save metadata to JSON
-        from config import EMBEDDING_CACHE_FILE
+        from src.config import EMBEDDING_CACHE_FILE
 
         json_cache_path = self.knowledge_base_path / EMBEDDING_CACHE_FILE.name
         cache_meta = {

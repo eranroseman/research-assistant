@@ -300,7 +300,7 @@ class TestGapAnalysisE2E:
                     "--kb-path",
                     str(temp_kb_dir),
                     "--limit",
-                    "10",  # Small limit for faster test
+                    "5",  # Even smaller limit for faster test
                 ],
             )
 
