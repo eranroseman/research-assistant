@@ -84,7 +84,7 @@ import requests
 
 try:
     # For module imports (from tests and internal usage)
-    from .config import (
+    from src.config import (
         # Discovery-specific configuration constants
         DISCOVERY_DEFAULT_SOURCE,  # Default: 'semantic_scholar'
         DISCOVERY_DEFAULT_LIMIT,  # Default: 50 papers
@@ -97,21 +97,23 @@ try:
         # Semantic Scholar API configuration (reused from build_kb.py)
         SEMANTIC_SCHOLAR_API_URL,  # Base URL for API endpoints
     )
-    from .build_kb import (
+    from src.kb_quality import (
         # Quality scoring functions (algorithm reuse)
         calculate_basic_quality_score,  # Fast scoring without API calls
+    )
+    from src.build_kb import (
         detect_study_type,  # Extract study type from text
     )
 
     # CLI and analytics infrastructure (pattern reuse)
-    from .cli import (
+    from src.cli import (
         _setup_command_usage_logger,
         _log_command_usage_event,
         ResearchCLI,
     )
 
     # Knowledge base integration (DOI filtering)
-    from .cli_kb_index import KnowledgeBaseIndex
+    from src.cli_kb_index import KnowledgeBaseIndex
 except ImportError:
     # For direct script execution (python src/discover.py)
     from config import (  # type: ignore[no-redef]
@@ -127,9 +129,10 @@ except ImportError:
         # Semantic Scholar configuration
         SEMANTIC_SCHOLAR_API_URL,
     )
-    from build_kb import (  # type: ignore[no-redef]
-        # Quality scoring functions
+    from kb_quality import (  # type: ignore[no-redef]
         calculate_basic_quality_score,
+    )
+    from build_kb import (  # type: ignore[no-redef]
         detect_study_type,
     )
 

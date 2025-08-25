@@ -8,7 +8,7 @@ import pytest
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from src.build_kb import (
+from src.kb_quality import (
     calculate_quality_score,
     calculate_enhanced_quality_score,
     calculate_citation_impact_score,
@@ -166,7 +166,7 @@ class TestEnhancedQualityScoring:
         assert score >= 70  # Very good quality threshold
         assert score <= 100  # Maximum possible
         assert "[Enhanced scoring]" in explanation
-        assert "systematic_review" in explanation.lower()
+        assert "systematic review" in explanation.lower()
 
 
 @pytest.mark.unit

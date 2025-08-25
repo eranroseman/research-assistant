@@ -54,7 +54,7 @@ _model_cache = {}
 
 try:
     # For module imports (from tests)
-    from .config import (
+    from src.config import (
         # Paths
         KB_DATA_PATH,
         # Model
@@ -139,7 +139,7 @@ except ImportError:
 # Import additional constants from config
 try:
     # For module imports (from tests)
-    from .config import (
+    from src.config import (
         KB_VERSION,
         PAPER_ID_DIGITS,
         VALID_PAPER_ID_PATTERN,
@@ -427,10 +427,8 @@ class ResearchCLI:
             )
 
         # Use cli_kb_index for O(1) lookups
-        try:
-            from .cli_kb_index import KnowledgeBaseIndex
-        except ImportError:
-            from cli_kb_index import KnowledgeBaseIndex
+        from src.cli_kb_index import KnowledgeBaseIndex
+
         self.kb_index = KnowledgeBaseIndex(str(self.knowledge_base_path))
         self.metadata = self.kb_index.metadata
 
@@ -1735,10 +1733,7 @@ def info() -> None:
             print(f"Papers: {paper_count} files, {papers_size_mb:.1f} MB")
 
         # Show enhanced quality statistics if available
-        try:
-            from .cli_kb_index import KnowledgeBaseIndex
-        except ImportError:
-            from cli_kb_index import KnowledgeBaseIndex
+        from src.cli_kb_index import KnowledgeBaseIndex
 
         try:
             kb_index = KnowledgeBaseIndex(str(knowledge_base_path))

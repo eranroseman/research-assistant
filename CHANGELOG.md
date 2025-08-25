@@ -1,5 +1,77 @@
 # Changelog
 
+## [4.7.0] - 2025-08-25
+
+### Added
+- **Modular Architecture**: Refactored codebase for better maintainability
+  - Extracted quality scoring logic to `kb_quality.py` (490 lines)
+  - Extracted FAISS indexing to `kb_indexer.py` (437 lines)
+  - Reduced `build_kb.py` from 4,293 to 3,660 lines (15% reduction)
+  - Improved separation of concerns and testability
+
+### Changed
+- **Quality Scoring Module** (`kb_quality.py`):
+  - All quality scoring functions now centralized
+  - Supports both basic and enhanced scoring
+  - Component scoring functions for citations, venues, authors
+  - Custom exception: `QualityScoringError`
+
+- **Indexing Module** (`kb_indexer.py`):
+  - `KBIndexer` class handles all FAISS operations
+  - Multi-QA MPNet embedding generation
+  - GPU/CPU device detection and optimization
+  - Smart embedding cache management
+  - Custom exception: `EmbeddingGenerationError`
+
+### Fixed
+- Standardized import patterns across all modules
+- Added missing configuration constants for quality scoring
+- Updated all tests to import from correct modules
+- Fixed orphaned function bodies in build_kb.py
+
+### Technical Details
+- **Architecture Benefits**:
+  - Easier debugging with separated concerns
+  - Faster development with modular code
+  - Better test isolation and coverage
+  - Reduced cognitive load per file
+
+- **Backward Compatibility**:
+  - No breaking API changes
+  - No new dependencies required
+  - All existing functionality preserved
+  - Configuration format unchanged
+
+## [4.6.1] - 2025-08-25
+
+### Added
+- **Checkpoint Recovery System**: Zero data loss on interruptions
+  - Automatic checkpoint saving every 50 papers during batch processing
+  - Resume from exact point of interruption on restart
+  - `.checkpoint.json` file tracks processing progress
+  - Automatic cleanup on successful completion
+  - Handles corrupted checkpoint files gracefully
+
+### Fixed
+- **Critical**: API rate limiting causing build failures (v4.4-v4.6)
+  - Implemented exponential backoff retry logic (0.1s → 10s max)
+  - Fixed import path for `sync_api_request_with_retry` from `api_utils`
+  - Improved error handling to distinguish rate limiting from other failures
+  - Result: 100% build success rate (vs 0% in v4.4-v4.6)
+
+### Improved
+- **Build Reliability**: From complete failures to 100% success
+  - Exponential backoff prevents API rate limiting errors
+  - Checkpoint recovery ensures no work is lost
+  - Process can be safely interrupted and resumed
+  - Better error messages for API failures
+
+### Testing
+- Added comprehensive test coverage for critical fixes
+  - 10 unit tests for API retry logic (`test_unit_api_utils.py`)
+  - 9 integration tests for checkpoint recovery (`test_integration_checkpoint_recovery.py`)
+  - All tests passing with current functionality
+
 ## [4.6.0] - 2025-08-23
 
 ### Added

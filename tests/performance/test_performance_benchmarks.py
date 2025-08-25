@@ -127,7 +127,7 @@ class TestKBBuildingPerformance:
         # Create embedding cache to simulate existing embeddings
         embedding_cache = {}
         for paper in initial_papers:
-            text_hash = builder.get_embedding_hash(paper["abstract"])
+            text_hash = builder.indexer.get_embedding_hash(paper["abstract"])
             embedding_cache[text_hash] = {
                 "embedding": np.random.randn(768).astype("float32").tolist(),
                 "text": paper["abstract"],
@@ -269,7 +269,7 @@ class TestMemoryUsage:
             print(f"No GPU detected, using CPU: {expected_device}, loading time: {elapsed:.3f}s")
 
         # Verify that optimal batch size scales with device capability
-        optimal_batch_size = builder.get_optimal_batch_size()
+        optimal_batch_size = builder.indexer.get_optimal_batch_size()
 
         if gpu_available:
             assert optimal_batch_size >= 32, "GPU should allow larger batch sizes"
@@ -376,7 +376,7 @@ class TestCachePerformance:
 
         # Test embedding cache loading performance
         start = time.time()
-        embedding_cache = builder.load_embedding_cache()
+        embedding_cache = builder.indexer.load_embedding_cache()
         embedding_load_time = time.time() - start
 
         assert embedding_load_time < 1.0, (

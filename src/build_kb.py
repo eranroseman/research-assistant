@@ -46,6 +46,29 @@ import click
 import requests
 from tqdm import tqdm
 
+# Add parent directory to path for direct script execution
+if __name__ == "__main__":
+    sys.path.insert(0, str(Path(__file__).parent.parent))
+
+# Import new modular components
+try:
+    from src.kb_quality import (
+        QualityScoringError,
+        calculate_basic_quality_score,
+        calculate_quality_score,
+        calculate_enhanced_quality_score,
+    )
+    from src.kb_indexer import KBIndexer, EmbeddingGenerationError
+except ImportError:
+    # Fallback for direct execution
+    from kb_quality import (
+        QualityScoringError,
+        calculate_basic_quality_score,
+        calculate_quality_score,
+        calculate_enhanced_quality_score,
+    )
+    from kb_indexer import KBIndexer, EmbeddingGenerationError
+
 # ============================================================================
 # CUSTOM EXCEPTIONS
 # ============================================================================
@@ -53,14 +76,6 @@ from tqdm import tqdm
 
 class SemanticScholarAPIError(Exception):
     """Exception raised when Semantic Scholar API calls fail."""
-
-
-class QualityScoringError(Exception):
-    """Exception raised when quality scoring fails."""
-
-
-class EmbeddingGenerationError(Exception):
-    """Exception raised when embedding generation fails."""
 
 
 class PaperProcessingError(Exception):
@@ -71,13 +86,9 @@ class PaperProcessingError(Exception):
 # CONFIGURATION - Import from centralized config.py
 # ============================================================================
 
-# Add parent directory to path for direct script execution
-if __name__ == "__main__":
-    sys.path.insert(0, str(Path(__file__).parent.parent))
-
 try:
     # Try relative import first (for when imported as module)
-    from .config import (
+    from src.config import (
         # Version
         KB_VERSION,
         SEMANTIC_SCHOLAR_BATCH_SIZE,
@@ -304,7 +315,7 @@ def get_semantic_scholar_data_sync(doi: str | None, title: str) -> dict[str, Any
 
         # Import config constants (handle both module and direct execution)
         try:
-            from .config import (
+            from src.config import (
                 SEMANTIC_SCHOLAR_API_URL,
                 API_MAX_RETRIES,
                 API_REQUEST_TIMEOUT,
@@ -329,8 +340,11 @@ def get_semantic_scholar_data_sync(doi: str | None, title: str) -> dict[str, Any
         fields = "citationCount,venue,authors,externalIds,publicationTypes,fieldsOfStudy"
         params["fields"] = fields
 
-        # Import the new retry utility
-        from api_utils import sync_api_request_with_retry
+        # Import the retry utility with proper path handling
+        try:
+            from src.api_utils import sync_api_request_with_retry
+        except ImportError:
+            from src.api_utils import sync_api_request_with_retry
 
         # Use consistent retry logic
         result = sync_api_request_with_retry(
@@ -388,7 +402,7 @@ def get_semantic_scholar_data_batch(paper_identifiers: list[dict[str, str]]) -> 
 
         # Import config constants (handle both module and direct execution)
         try:
-            from .config import (
+            from src.config import (
                 SEMANTIC_SCHOLAR_API_URL,
                 API_MAX_RETRIES,
                 API_REQUEST_TIMEOUT,
@@ -402,11 +416,34 @@ def get_semantic_scholar_data_batch(paper_identifiers: list[dict[str, str]]) -> 
                 API_RETRY_DELAY,
             )
 
-        # Separate papers with DOIs from those without
+        # Checkpoint recovery system - save progress every 50 papers
+        checkpoint_file = Path(".checkpoint.json")
+        checkpoint_interval = 50
+        processed_keys = set()
+
+        # Load checkpoint if exists
+        if checkpoint_file.exists():
+            try:
+                with open(checkpoint_file) as f:
+                    checkpoint_data = json.load(f)
+                    saved_results = checkpoint_data.get("results", {})
+                    processed_keys = set(checkpoint_data.get("processed_keys", []))
+                    if processed_keys:
+                        print(f"🔄 Checkpoint recovery: Found {len(processed_keys)} papers already processed")
+                        results.update(saved_results)
+            except (json.JSONDecodeError, ValueError):
+                print("Warning: Checkpoint file corrupted, starting fresh")
+                processed_keys = set()
+
+        # Separate papers with DOIs from those without (skip already processed)
         papers_with_dois = []
         papers_without_dois = []
 
         for paper in paper_identifiers:
+            # Skip if already processed in checkpoint
+            if paper["key"] in processed_keys:
+                continue
+
             if paper.get("doi"):
                 papers_with_dois.append(paper)
             else:
@@ -436,6 +473,7 @@ def get_semantic_scholar_data_batch(paper_identifiers: list[dict[str, str]]) -> 
                 # Prepare DOI list for batch request - format as "DOI:10.xxxx/yyyy"
                 doi_ids = [f"DOI:{paper['doi']}" for paper in batch]
 
+                # Use improved retry logic with exponential backoff (fixes v4.4-v4.6 issues)
                 for attempt in range(API_MAX_RETRIES):
                     try:
                         response = requests.post(
@@ -457,13 +495,39 @@ def get_semantic_scholar_data_batch(paper_identifiers: list[dict[str, str]]) -> 
                                         "error": "not_found",
                                         "message": f"Paper not found for DOI: {paper['doi']}",
                                     }
+
+                            # Save checkpoint every N papers
+                            processed_keys.update([p["key"] for p in batch])
+                            if len(processed_keys) % checkpoint_interval == 0:
+                                with open(checkpoint_file, "w") as f:
+                                    json.dump(
+                                        {
+                                            "results": results,
+                                            "processed_keys": list(processed_keys),
+                                            "timestamp": datetime.now(UTC).isoformat(),
+                                        },
+                                        f,
+                                    )
+                                print(f"\n   💾 Checkpoint saved: {len(processed_keys)} papers processed")
+
                             break
 
                         if response.status_code == 429:  # Rate limited
-                            import time
+                            # Use exponential backoff with cap (from api_utils pattern)
+                            delay = min(API_RETRY_DELAY * (2**attempt), 10.0)
+                            if attempt < API_MAX_RETRIES - 1:
+                                import time
 
-                            time.sleep(API_RETRY_DELAY * (attempt + 1))
-                            continue
+                                time.sleep(delay)
+                                continue
+                            # Final attempt failed - mark batch as failed
+                            for paper in batch:
+                                results[paper["key"]] = {
+                                    "error": "rate_limited",
+                                    "message": f"API rate limited after {API_MAX_RETRIES} attempts",
+                                }
+                            break
+
                         # For non-200, non-429 responses, mark all papers in batch as failed
                         for paper in batch:
                             results[paper["key"]] = {
@@ -473,25 +537,31 @@ def get_semantic_scholar_data_batch(paper_identifiers: list[dict[str, str]]) -> 
                         break
 
                     except requests.exceptions.Timeout:
-                        if attempt == API_MAX_RETRIES - 1:
-                            for paper in batch:
-                                results[paper["key"]] = {
-                                    "error": "timeout",
-                                    "message": f"API timeout after {API_MAX_RETRIES} attempts",
-                                }
-                        else:
+                        if attempt < API_MAX_RETRIES - 1:
+                            # Use exponential backoff
+                            delay = min(API_RETRY_DELAY * (2**attempt), 10.0)
                             import time
 
-                            time.sleep(API_RETRY_DELAY)
+                            time.sleep(delay)
+                            continue
+                        # Final attempt failed
+                        for paper in batch:
+                            results[paper["key"]] = {
+                                "error": "timeout",
+                                "message": f"API timeout after {API_MAX_RETRIES} attempts",
+                            }
 
                     except requests.exceptions.RequestException as e:
-                        if attempt == API_MAX_RETRIES - 1:
-                            for paper in batch:
-                                results[paper["key"]] = {"error": "network_error", "message": str(e)}
-                        else:
+                        if attempt < API_MAX_RETRIES - 1:
+                            # Use exponential backoff
+                            delay = min(API_RETRY_DELAY * (2**attempt), 10.0)
                             import time
 
-                            time.sleep(API_RETRY_DELAY)
+                            time.sleep(delay)
+                            continue
+                        # Final attempt failed
+                        for paper in batch:
+                            results[paper["key"]] = {"error": "network_error", "message": str(e)}
 
         # Process papers without DOIs using title search (fallback to individual requests)
         # Note: Batch endpoint doesn't support title search, so we use individual requests
@@ -505,11 +575,30 @@ def get_semantic_scholar_data_batch(paper_identifiers: list[dict[str, str]]) -> 
                     "message": "Neither DOI nor title provided",
                 }
 
+            # Update checkpoint for papers without DOIs
+            processed_keys.add(paper["key"])
+            if len(processed_keys) % checkpoint_interval == 0:
+                with open(checkpoint_file, "w") as f:
+                    json.dump(
+                        {
+                            "results": results,
+                            "processed_keys": list(processed_keys),
+                            "timestamp": datetime.now(UTC).isoformat(),
+                        },
+                        f,
+                    )
+
     except Exception as e:
         # If batch processing fails completely, mark all papers as failed
         for paper in paper_identifiers:
             if paper["key"] not in results:
                 results[paper["key"]] = {"error": "unexpected_error", "message": str(e)}
+
+    finally:
+        # Clean up checkpoint file on successful completion
+        if checkpoint_file.exists() and len(results) == len(paper_identifiers):
+            checkpoint_file.unlink()
+            print("✅ Checkpoint file cleaned up after successful completion")
 
     return results
 
@@ -576,456 +665,7 @@ Current situation:
     return False
 
 
-def calculate_basic_quality_score(paper_data: dict[str, Any]) -> tuple[int, str]:
-    """Calculate basic quality score using only paper metadata (no API required).
-
-    Args:
-        paper_data: Paper metadata dictionary
-
-    Returns:
-        Tuple of (score, explanation)
-    """
-    score = 50  # Base score
-    components = []
-
-    # Study type scoring (20 points max)
-    study_type = paper_data.get("study_type", "").lower()
-    if study_type == "rct":
-        score += 20
-        components.append("RCT (+20)")
-    elif study_type == "systematic_review":
-        score += 15
-        components.append("Systematic Review (+15)")
-    elif study_type == "cohort":
-        score += 10
-        components.append("Cohort Study (+10)")
-    elif study_type == "study":
-        score += 5
-        components.append("Study (+5)")
-
-    # Full text availability (10 points)
-    if paper_data.get("has_full_text"):
-        score += 10
-        components.append("Full Text (+10)")
-
-    # Recent publication (10 points)
-    year = paper_data.get("year")
-    if year and year >= 2020:
-        score += 10
-        components.append("Recent (2020+) (+10)")
-    elif year and year >= 2015:
-        score += 5
-        components.append("Recent (2015+) (+5)")
-
-    # Journal publication (5 points)
-    if paper_data.get("journal"):
-        score += 5
-        components.append("Journal (+5)")
-
-    score = min(score, 100)
-    explanation = f"Basic scoring: {', '.join(components)}" if components else "Basic scoring applied"
-
-    return score, explanation
-
-
-def calculate_citation_impact_score(citation_count: int) -> int:
-    """Calculate citation impact component (25 points max).
-
-    Args:
-        citation_count: Number of citations for the paper
-
-    Returns:
-        Integer score from 0-25 based on citation count thresholds
-    """
-    # Import here to avoid circular dependencies
-    try:
-        from .config import CITATION_COUNT_THRESHOLDS
-    except ImportError:
-        from src.config import CITATION_COUNT_THRESHOLDS
-
-    thresholds = CITATION_COUNT_THRESHOLDS
-
-    if citation_count >= thresholds["exceptional"]:
-        return 25
-    if citation_count >= thresholds["high"]:
-        return 20
-    if citation_count >= thresholds["good"]:
-        return 15
-    if citation_count >= thresholds["moderate"]:
-        return 10
-    if citation_count >= thresholds["some"]:
-        return 7
-    if citation_count >= thresholds["few"]:
-        return 4
-    if citation_count >= thresholds["minimal"]:
-        return 2
-    return 0
-
-
-def calculate_venue_prestige_score(venue: dict[str, Any] | str) -> int:
-    """Calculate venue prestige component (15 points max).
-
-    Fixed in v4.6 to handle both dict and string venue formats from Semantic Scholar API.
-    This bug fix increased quality scoring success rates from 0% to 96.9% in production.
-
-    Args:
-        venue: Venue information from Semantic Scholar API (dict or string format)
-
-    Returns:
-        Integer score from 0-15 based on venue quality patterns
-    """
-    # Import here to avoid circular dependencies
-    try:
-        from .config import VENUE_PRESTIGE_SCORES
-    except ImportError:
-        from src.config import VENUE_PRESTIGE_SCORES
-
-    # Simplified venue scoring using pattern matching
-    # Future enhancement: integrate SCImago Journal Rank (SJR) data
-    # Handle both dict and string venue formats from Semantic Scholar API
-    if isinstance(venue, dict):
-        venue_name = venue.get("name", "").lower()
-    elif isinstance(venue, str):
-        venue_name = venue.lower()
-    else:
-        venue_name = ""  # type: ignore[unreachable]
-
-    # Tier 1: Top-tier venues (Q1 equivalent)
-    tier1_patterns = [
-        "nature",
-        "science",
-        "cell",
-        "lancet",
-        "nejm",
-        "jama",
-        "pnas",
-        "plos one",
-        "neurips",
-        "icml",
-        "nips",
-        "iclr",
-    ]
-
-    # Tier 2: High-quality venues (Q2 equivalent)
-    tier2_patterns = [
-        "ieee transactions",
-        "acm transactions",
-        "journal of",
-        "proceedings of",
-        "international conference",
-        "workshop",
-    ]
-
-    # Tier 3: General academic venues (Q3 equivalent)
-    tier3_patterns = ["journal", "proceedings", "conference", "symposium", "workshop"]
-
-    for pattern in tier1_patterns:
-        if pattern in venue_name:
-            return VENUE_PRESTIGE_SCORES["Q1"]
-
-    for pattern in tier2_patterns:
-        if pattern in venue_name:
-            return VENUE_PRESTIGE_SCORES["Q2"]
-
-    for pattern in tier3_patterns:
-        if pattern in venue_name:
-            return VENUE_PRESTIGE_SCORES["Q3"]
-
-    return VENUE_PRESTIGE_SCORES["unranked"]
-
-
-def calculate_author_authority_score(authors: list[dict[str, Any]]) -> int:
-    """Calculate author authority component (10 points max).
-
-    Args:
-        authors: List of author information from Semantic Scholar API
-
-    Returns:
-        Integer score from 0-10 based on highest h-index among authors
-    """
-    if not authors:
-        return 0
-
-    # Use highest h-index among authors
-    max_h_index = 0
-    for author in authors:
-        h_index = author.get("hIndex", 0) or 0
-        max_h_index = max(max_h_index, h_index)
-
-    # Import here to avoid circular dependencies
-    try:
-        from .config import AUTHOR_AUTHORITY_THRESHOLDS
-    except ImportError:
-        from src.config import AUTHOR_AUTHORITY_THRESHOLDS
-
-    thresholds = AUTHOR_AUTHORITY_THRESHOLDS
-    if max_h_index >= thresholds["renowned"]:
-        return 10
-    if max_h_index >= thresholds["established"]:
-        return 8
-    if max_h_index >= thresholds["experienced"]:
-        return 6
-    if max_h_index >= thresholds["emerging"]:
-        return 4
-    if max_h_index >= thresholds["early_career"]:
-        return 2
-    return 0
-
-
-def calculate_cross_validation_score(paper_data: dict[str, Any], s2_data: dict[str, Any]) -> int:
-    """Calculate cross-validation component (10 points max).
-
-    Args:
-        paper_data: Original paper metadata
-        s2_data: Semantic Scholar API data
-
-    Returns:
-        Integer score from 0-10 based on data consistency and completeness
-    """
-    score = 0
-
-    # Check if paper has external IDs (DOI, PubMed, etc.)
-    external_ids = s2_data.get("externalIds", {})
-    if external_ids:
-        score += 3
-
-    # Check if publication types are specified
-    pub_types = s2_data.get("publicationTypes", [])
-    if pub_types:
-        score += 2
-
-    # Check if fields of study are specified
-    fields_of_study = s2_data.get("fieldsOfStudy", [])
-    if fields_of_study:
-        score += 2
-
-    # Check consistency with extracted study type
-    extracted_type = paper_data.get("study_type", "")
-    if extracted_type in ["systematic_review", "meta_analysis", "rct"]:
-        score += 3
-
-    return min(score, 10)
-
-
-def calculate_quality_score(paper_data: dict[str, Any], s2_data: dict[str, Any]) -> tuple[int, str]:
-    """Calculate enhanced quality score using paper data + API data.
-
-    Args:
-        paper_data: Paper metadata dictionary
-        s2_data: Semantic Scholar API data (required)
-
-    Returns:
-        Tuple containing:
-        - quality_score: Integer 0-100
-        - explanation: Human-readable scoring factors
-
-    Raises:
-        Exception: If API data is missing or invalid
-    """
-    # Enhanced scoring is now mandatory
-    if not s2_data or s2_data.get("error"):
-        raise QualityScoringError(f"Enhanced quality scoring requires valid API data. Got: {s2_data}")
-
-    return calculate_enhanced_quality_score(paper_data, s2_data)
-
-
-def calculate_study_type_score(study_type: str | None) -> int:
-    """Calculate study type component score for enhanced scoring."""
-    # Import here to avoid circular dependencies
-    try:
-        from .config import STUDY_TYPE_WEIGHT
-    except ImportError:
-        from src.config import STUDY_TYPE_WEIGHT
-
-    if not study_type:
-        return 0
-
-    study_type = study_type.lower()
-    # Enhanced scoring uses different weights - 20 points max
-    weights = {
-        "systematic_review": STUDY_TYPE_WEIGHT,  # 20 points
-        "meta_analysis": STUDY_TYPE_WEIGHT,  # 20 points
-        "rct": int(STUDY_TYPE_WEIGHT * 0.75),  # 15 points
-        "cohort": int(STUDY_TYPE_WEIGHT * 0.5),  # 10 points
-        "case_control": int(STUDY_TYPE_WEIGHT * 0.375),  # 7.5 -> 8 points
-        "cross_sectional": int(STUDY_TYPE_WEIGHT * 0.25),  # 5 points
-        "case_report": int(STUDY_TYPE_WEIGHT * 0.125),  # 2.5 -> 3 points
-        "study": int(STUDY_TYPE_WEIGHT * 0.125),  # 3 points
-    }
-    return weights.get(study_type, 0)
-
-
-def calculate_recency_score(year: int | None) -> int:
-    """Calculate recency component score for enhanced scoring."""
-    if not year:
-        return 0
-
-    # Import here to avoid circular dependencies
-    try:
-        from .config import RECENCY_WEIGHT
-    except ImportError:
-        from src.config import RECENCY_WEIGHT
-
-    current_year = 2025  # Current year for scoring
-    years_old = current_year - year
-
-    if years_old <= 0:  # Current year or future
-        return RECENCY_WEIGHT
-    if years_old == 1:  # 1 year old
-        return int(RECENCY_WEIGHT * 0.8)
-    if years_old == 2:  # 2 years old
-        return int(RECENCY_WEIGHT * 0.6)
-    if years_old == 3:  # 3 years old
-        return int(RECENCY_WEIGHT * 0.4)
-    if years_old == 4:  # 4 years old
-        return int(RECENCY_WEIGHT * 0.2)
-    # 5+ years old
-    return 0
-
-
-def calculate_sample_size_score(sample_size: int | None) -> int:
-    """Calculate sample size component score for enhanced scoring."""
-    if not sample_size or sample_size <= 0:
-        return 0
-
-    # Import here to avoid circular dependencies
-    try:
-        from .config import SAMPLE_SIZE_WEIGHT, SAMPLE_SIZE_SCORING_THRESHOLDS
-    except ImportError:
-        from src.config import SAMPLE_SIZE_WEIGHT, SAMPLE_SIZE_SCORING_THRESHOLDS
-
-    thresholds = SAMPLE_SIZE_SCORING_THRESHOLDS
-
-    if sample_size >= thresholds["very_large"]:
-        return SAMPLE_SIZE_WEIGHT
-    if sample_size >= thresholds["large"]:
-        return int(SAMPLE_SIZE_WEIGHT * 0.8)
-    if sample_size >= thresholds["medium"]:
-        return int(SAMPLE_SIZE_WEIGHT * 0.6)
-    if sample_size >= thresholds["small"]:
-        return int(SAMPLE_SIZE_WEIGHT * 0.4)
-    if sample_size >= thresholds["minimal"]:
-        return int(SAMPLE_SIZE_WEIGHT * 0.2)
-    return 0
-
-
-def calculate_full_text_score(has_full_text: bool | None) -> int:
-    """Calculate full text availability component score for enhanced scoring."""
-    # Import here to avoid circular dependencies
-    try:
-        from .config import FULL_TEXT_WEIGHT
-    except ImportError:
-        from src.config import FULL_TEXT_WEIGHT
-
-    return FULL_TEXT_WEIGHT if has_full_text else 0
-
-
-def calculate_enhanced_quality_score(paper_data: dict[str, Any], s2_data: dict[str, Any]) -> tuple[int, str]:
-    """Calculate unified enhanced quality score using paper data + API data.
-
-    Combines core paper attributes (40 points) with API-enhanced metrics (60 points)
-    for comprehensive quality assessment. Higher scores indicate stronger evidence.
-
-    Args:
-        paper_data: Paper metadata dictionary
-        s2_data: Semantic Scholar API data
-
-    Returns:
-        Tuple containing:
-        - quality_score: Integer 0-100
-        - explanation: Human-readable scoring factors
-
-    Examples:
-        >>> paper = {"study_type": "systematic_review", "year": 2023, "has_full_text": True}
-        >>> api_data = {"citationCount": 150, "venue": {"name": "Nature"}, "authors": [{"hIndex": 45}]}
-        >>> score, explanation = calculate_enhanced_quality_score(paper, api_data)
-        >>> score >= 85  # A+ quality (systematic review + high citations + top venue)
-        True
-
-        >>> paper = {"study_type": "case_report", "year": 2015, "has_full_text": False}
-        >>> api_data = {"citationCount": 2, "venue": {"name": "Unknown"}, "authors": []}
-        >>> score, explanation = calculate_enhanced_quality_score(paper, api_data)
-        >>> score < 30  # F quality (case report + old + low citations)
-        True
-    """
-    score = 0
-    factors = []
-
-    # Core paper attributes (40 points max)
-    study_type_score = calculate_study_type_score(paper_data.get("study_type"))
-    recency_score = calculate_recency_score(paper_data.get("year"))
-    sample_size_score = calculate_sample_size_score(paper_data.get("sample_size"))
-    full_text_score = calculate_full_text_score(paper_data.get("has_full_text"))
-
-    score += study_type_score + recency_score + sample_size_score + full_text_score
-
-    # API-enhanced attributes (60 points max)
-    citation_bonus = calculate_citation_impact_score(s2_data.get("citationCount", 0))
-    venue_bonus = calculate_venue_prestige_score(s2_data.get("venue", {}))
-    author_bonus = calculate_author_authority_score(s2_data.get("authors", []))
-    validation_bonus = calculate_cross_validation_score(paper_data, s2_data)
-
-    score += citation_bonus + venue_bonus + author_bonus + validation_bonus
-
-    # Build explanation
-    factors = build_quality_explanation(
-        paper_data,
-        s2_data,
-        {
-            "citation": citation_bonus,
-            "venue": venue_bonus,
-            "author": author_bonus,
-            "validation": validation_bonus,
-        },
-    )
-
-    return min(score, 100), " | ".join(factors) if factors else "enhanced scoring"
-
-
-def build_quality_explanation(
-    paper_data: dict[str, Any],
-    s2_data: dict[str, Any],
-    bonuses: dict[str, int],
-) -> list[str]:
-    """Build human-readable explanation of quality score factors."""
-    factors = []
-
-    # Core factors
-    study_type = paper_data.get("study_type", "unknown")
-    factors.append(f"Study: {study_type}")
-
-    if paper_data.get("year"):
-        factors.append(f"Year: {paper_data['year']}")
-
-    if paper_data.get("has_full_text"):
-        factors.append("Full text")
-
-    # Enhanced factors
-    citation_count = s2_data.get("citationCount", 0)
-    if citation_count > 0:
-        factors.append(f"Citations: {citation_count}")
-
-    # Handle both dict and string venue formats from Semantic Scholar API
-    venue_data = s2_data.get("venue", {})
-    if isinstance(venue_data, dict):
-        venue = venue_data.get("name", "")
-    elif isinstance(venue_data, str):
-        venue = venue_data
-    else:
-        venue = ""
-
-    if venue:
-        factors.append(f"Venue: {venue[:30]}...")
-
-    authors = s2_data.get("authors", [])
-    if authors:
-        max_h_index = max((author.get("hIndex", 0) or 0 for author in authors), default=0)
-        if max_h_index > 0:
-            factors.append(f"Author h-index: {max_h_index}")
-
-    factors.append("[Enhanced scoring]")
-
-    return factors
+# Quality scoring functions have been moved to kb_quality.py
 
 
 # ============================================================================
@@ -1452,54 +1092,16 @@ class KnowledgeBaseBuilder:
         self.zotero_db_path = self.zotero_data_dir / "zotero.sqlite"
         self.zotero_storage_path = self.zotero_data_dir / "storage"
 
-        self._embedding_model: Any = None
-        self.cache: dict[str, dict[str, Any]] | None = None  # PDF text cache, loaded on demand
-        self.embedding_cache: dict[str, Any] | None = None  # Embedding vectors cache, loaded on demand
+        # PDF text cache, loaded on demand
+        self.cache: dict[str, dict[str, Any]] | None = None
 
-        # Detect device early for time estimates
-        self.device = self._detect_device()
+        # Initialize the indexer for FAISS/embedding operations
+        self.indexer = KBIndexer(knowledge_base_path)
 
-    def _detect_device(self) -> str:
-        """Detect whether GPU is available for computation."""
-        try:
-            import torch
+        # Use device from indexer for consistency
+        self.device = self.indexer.device
 
-            return "cuda" if torch.cuda.is_available() else "cpu"
-        except ImportError:
-            return "cpu"
-
-    @property
-    def embedding_model(self) -> Any:
-        """Lazy load the Multi-QA MPNet embedding model.
-
-        Multi-QA MPNet (Multi-Question-Answer Mean Pooling Network) is optimized
-        for diverse question-answering tasks including healthcare and scientific
-        literature. Produces 768-dimensional vectors with excellent performance
-        on healthcare systems research while maintaining CS accuracy.
-
-        The model is loaded only when first needed to reduce startup time.
-        Automatically detects and uses GPU if available for faster processing.
-
-        Returns:
-            SentenceTransformer model configured for Multi-QA MPNet embeddings
-        """
-        if self._embedding_model is None:
-            from sentence_transformers import SentenceTransformer
-
-            # Device already detected in __init__, just report it
-            if self.device == "cuda":
-                print("GPU detected! Using CUDA for faster embeddings")
-            else:
-                print("No GPU detected, using CPU")
-
-            # Load Multi-QA MPNet model optimized for healthcare and scientific papers
-            print("Loading Multi-QA MPNet embedding model...")
-            self._embedding_model = SentenceTransformer(EMBEDDING_MODEL, device=self.device)
-            self.model_version = "Multi-QA MPNet"
-            print(f"Multi-QA MPNet model loaded successfully on {self.device}")
-
-        return self._embedding_model
-
+    # Indexing/embedding methods have been moved to kb_indexer.py
     def load_cache(self) -> dict[str, dict[str, Any]]:
         """Load the PDF text cache from disk.
 
@@ -1542,129 +1144,6 @@ class KnowledgeBaseBuilder:
         if self.cache_file_path.exists():
             self.cache_file_path.unlink()
             print("Cleared PDF text cache")
-
-    def load_embedding_cache(self) -> dict[str, Any]:
-        """Load the embedding cache from disk.
-
-        Returns:
-            Dictionary with 'embeddings' numpy array and 'hashes' list
-        """
-        if self.embedding_cache is not None:
-            return self.embedding_cache
-
-        # Use config constants for cache file names
-        from src.config import EMBEDDING_CACHE_FILE
-
-        json_cache_path = self.knowledge_base_path / EMBEDDING_CACHE_FILE.name
-        npy_cache_path = self.knowledge_base_path / ".embedding_data.npy"
-
-        if json_cache_path.exists() and npy_cache_path.exists():
-            import numpy as np
-
-            with json_cache_path.open() as f:
-                cache_meta = json.load(f)
-            embeddings = np.load(npy_cache_path, allow_pickle=False)
-            self.embedding_cache = {
-                "embeddings": embeddings,
-                "hashes": cache_meta["hashes"],
-                "model_name": cache_meta["model_name"],
-            }
-            # Silent - just return the cache
-            return self.embedding_cache
-
-        self.embedding_cache = {"embeddings": None, "hashes": []}
-        return self.embedding_cache
-
-    def save_embedding_cache(self, embeddings: Any, hashes: list[str]) -> None:
-        """Save embeddings to cache files (JSON metadata + NPY data).
-
-        Args:
-            embeddings: Numpy array of embedding vectors
-            hashes: List of content hashes for cache validation
-        """
-        import numpy as np
-
-        # Save metadata to JSON
-        from src.config import EMBEDDING_CACHE_FILE
-
-        json_cache_path = self.knowledge_base_path / EMBEDDING_CACHE_FILE.name
-        cache_meta = {
-            "hashes": hashes,
-            "model_name": "Multi-QA MPNet",
-            "created_at": datetime.now(UTC).isoformat(),
-        }
-        with json_cache_path.open("w") as f:
-            json.dump(cache_meta, f, indent=2)
-
-        # Save embeddings to NPY
-        npy_cache_path = self.knowledge_base_path / ".embedding_data.npy"
-        np.save(npy_cache_path, embeddings, allow_pickle=False)
-        # Silent - cache saved
-
-    def get_embedding_hash(self, text: str) -> str:
-        """Generate SHA256 hash for embedding cache key.
-
-        Args:
-            text: Text to hash
-
-        Returns:
-            Hexadecimal hash string
-        """
-        import hashlib
-
-        return hashlib.sha256(text.encode("utf-8")).hexdigest()
-
-    def get_optimal_batch_size(self) -> int:
-        """Determine optimal batch size based on available memory.
-
-        Returns:
-            Batch size optimized for GPU/CPU memory constraints
-        """
-        try:
-            import psutil
-
-            mem = psutil.virtual_memory()
-            available_gb = mem.available / (1024**3)
-            total_gb = mem.total / (1024**3)
-
-            # Adjust batch size for GPU if available
-            if hasattr(self, "device") and self.device == "cuda":
-                try:
-                    import torch
-
-                    if torch.cuda.is_available():
-                        # Get GPU memory in GB
-                        gpu_memory = torch.cuda.get_device_properties(0).total_memory / (1024**3)
-                        if gpu_memory > 8:
-                            batch_size = 256
-                        elif gpu_memory > 4:
-                            batch_size = 128
-                        else:
-                            batch_size = 64
-                        print(f"Using batch size {batch_size} for GPU with {gpu_memory:.1f}GB memory")
-                        return batch_size
-                except Exception:  # noqa: S110
-                    pass
-
-            # CPU memory-based batch sizing
-            if available_gb > 16:
-                batch_size = 256
-            elif available_gb > 8:
-                batch_size = 128
-            else:
-                batch_size = 64
-
-            print(
-                f"Using batch size {batch_size} based on {available_gb:.1f}GB available (of {total_gb:.1f}GB total)",
-            )
-
-            # Note: On CPU, batch size has minimal impact on speed since the bottleneck
-            # is model computation, not memory bandwidth. Larger batches may even be slower.
-            return batch_size
-
-        except ImportError:
-            # If psutil not available, use conservative default
-            return 128  # Better than original 64
 
     def _test_zotero_connection(self, api_url: str | None = None) -> None:
         """Test Zotero API connection without side effects."""
@@ -2315,166 +1794,14 @@ Value:
                 if papers_with_quality_upgrades:
                     quality_upgrade_keys = {p["zotero_key"] for p in papers_with_quality_upgrades}
                     changes["quality_upgrades"] = quality_upgrade_keys
-                self.update_index_incrementally(metadata["papers"], changes)
+                self.indexer.update_index_incrementally(metadata["papers"], changes)
             elif changes.get("needs_reindex"):
                 # Only rebuild if explicitly needed
-                self.rebuild_simple_index(metadata["papers"])
+                self.indexer.rebuild_simple_index(metadata["papers"])
         except Exception as e:
             print(f"WARNING: Embedding update failed: {e}")
             print("NOTE: Quality scores have been saved. Embeddings can be regenerated later.")
             raise
-
-    def update_index_incrementally(self, papers: list[dict[str, Any]], changes: dict[str, Any]) -> None:
-        """Update FAISS index incrementally for changed papers only.
-
-        Args:
-            papers: List of all paper metadata dictionaries
-            changes: Dictionary with 'new_keys', 'updated_keys', 'deleted_keys'
-        """
-        # For simplicity and reliability, just rebuild the index
-        # but only generate embeddings for new/changed papers
-        import faiss
-        import numpy as np
-
-        # Identify papers that need new embeddings
-        # Quality score upgrades don't change text content, so exclude them from embedding changes
-        quality_upgrades = changes.get("quality_upgrades", set())
-        content_changed_keys = changes["new_keys"] | set(changes.get("updated_keys", set()))
-        changed_keys = content_changed_keys - quality_upgrades
-
-        if quality_upgrades:
-            print(
-                f"CACHE: Smart caching: Excluding {len(quality_upgrades)} quality-only updates from embedding generation",
-            )
-        if changed_keys:
-            print(f"EMBED: Will generate embeddings for {len(changed_keys)} papers with content changes")
-
-        # Try to load existing embeddings
-        existing_embeddings = {}
-        if self.index_file_path.exists():
-            try:
-                # Load previous metadata to map papers to embeddings
-                with open(self.metadata_file_path) as f:
-                    old_metadata = json.load(f)
-                old_papers = {p["zotero_key"]: i for i, p in enumerate(old_metadata["papers"])}
-
-                # Load existing index
-                index = faiss.read_index(str(self.index_file_path))
-
-                # Extract embeddings for unchanged papers
-                for paper in papers:
-                    key = paper["zotero_key"]
-                    if key not in changed_keys and key in old_papers:
-                        old_idx = old_papers[key]
-                        if old_idx < index.ntotal:
-                            existing_embeddings[key] = index.reconstruct(old_idx)
-            except Exception as error:
-                print(f"Could not reuse existing embeddings: {error}")
-                existing_embeddings = {}
-
-        # Generate embeddings for all papers, reusing where possible
-        print(f"Updating index for {len(papers)} papers...")
-        if changed_keys:
-            print(f"  Generating new embeddings for {len(changed_keys)} papers")
-        if existing_embeddings:
-            print(f"  Reusing embeddings for {len(existing_embeddings)} unchanged papers")
-
-        all_embeddings: list[Any] = []
-        papers_to_embed: list[int] = []
-        texts_to_embed: list[str] = []
-
-        for paper in papers:
-            key = paper["zotero_key"]
-
-            if key in existing_embeddings:
-                # Reuse existing embedding
-                all_embeddings.append(existing_embeddings[key])
-            else:
-                # Need new embedding
-                title = paper.get("title", "").strip()
-                abstract = paper.get("abstract", "").strip()
-                embedding_text = f"{title} [SEP] {abstract}" if abstract else title
-                texts_to_embed.append(embedding_text)
-                papers_to_embed.append(len(all_embeddings))
-                all_embeddings.append(None)  # Placeholder
-
-        # Generate new embeddings if needed
-        if texts_to_embed:
-            batch_size = self.get_optimal_batch_size()
-            new_embeddings = self.embedding_model.encode(
-                texts_to_embed,
-                show_progress_bar=True,
-                batch_size=batch_size,
-            )
-
-            # Fill in the placeholders
-            for i, idx in enumerate(papers_to_embed):
-                all_embeddings[idx] = new_embeddings[i]
-
-        # Create new index
-        all_embeddings_array = np.array(all_embeddings, dtype="float32")
-        new_index = faiss.IndexFlatL2(768)
-        new_index.add(all_embeddings_array)
-
-        # Save updated index
-        faiss.write_index(new_index, str(self.index_file_path))
-        print(f"Index updated with {new_index.ntotal} papers")
-
-    def rebuild_simple_index(self, papers: list[dict[str, Any]]) -> None:
-        """Rebuild FAISS index from paper abstracts.
-
-        Args:
-            papers: List of paper metadata dictionaries
-        """
-        import faiss
-
-        print("Rebuilding search index from scratch...")
-
-        # Generate embeddings for all papers
-        abstracts = []
-        for paper in papers:
-            title = paper.get("title", "").strip()
-            abstract = paper.get("abstract", "").strip()
-            embedding_text = f"{title} [SEP] {abstract}" if abstract else title
-            abstracts.append(embedding_text)
-
-        if abstracts:
-            # Estimate time for embeddings
-            num_papers = len(abstracts)
-            batch_size = self.get_optimal_batch_size()
-
-            # Estimate and display processing time
-            time_min, time_max, time_message = estimate_processing_time(num_papers, self.device)
-
-            display_operation_summary(
-                "Embedding Generation",
-                item_count=num_papers,
-                time_estimate=time_message,
-                device=self.device,
-                storage_estimate_mb=num_papers * 0.15,
-            )
-
-            if not confirm_long_operation(time_min, "Embedding generation"):
-                sys.exit(0)
-
-            print(f"Generating embeddings for {num_papers} papers...")
-
-            # Generate embeddings
-            embeddings = self.embedding_model.encode(abstracts, show_progress_bar=True, batch_size=batch_size)
-
-            # Create new index
-            dimension = embeddings.shape[1]
-            index = faiss.IndexFlatL2(dimension)
-            index.add(embeddings.astype("float32"))
-
-            # Save index
-            faiss.write_index(index, str(self.index_file_path))
-            print(f"Index rebuilt with {len(embeddings)} papers")
-        else:
-            # Empty index
-            index = faiss.IndexFlatL2(768)
-            faiss.write_index(index, str(self.index_file_path))
-            print("Created empty index")
 
     def get_pdf_paths_from_sqlite(self) -> dict[str, Path]:
         """Get mapping of paper keys to PDF file paths from Zotero SQLite database.
@@ -3638,7 +2965,7 @@ Why API might be unavailable:
 
         if abstracts:
             # Load embedding cache
-            cache = self.load_embedding_cache()
+            cache = self.indexer.load_embedding_cache()
             cached_embeddings = []
             new_abstracts = []
             new_indices = []
@@ -3651,7 +2978,7 @@ Why API might be unavailable:
 
             # Check cache for each abstract
             for i, abstract_text in enumerate(abstracts):
-                text_hash = self.get_embedding_hash(abstract_text)
+                text_hash = self.indexer.get_embedding_hash(abstract_text)
                 all_hashes.append(text_hash)
 
                 # Try to find in cache (O(1) lookup)
@@ -3672,7 +2999,7 @@ Why API might be unavailable:
             if new_abstracts:
                 print(f"Computing embeddings for {len(new_abstracts):,} papers...")
                 # Use dynamic batch size based on available memory
-                batch_size = self.get_optimal_batch_size()
+                batch_size = self.indexer.get_optimal_batch_size()
 
                 # Estimate time for embeddings
                 num_papers = len(new_abstracts)
@@ -3706,7 +3033,7 @@ Why API might be unavailable:
                 total_batches = (len(new_abstracts) + batch_size - 1) // batch_size
                 print(f"  Total batches to process: {total_batches}")
 
-                new_embeddings = self.embedding_model.encode(
+                new_embeddings = self.indexer.embedding_model.encode(
                     new_abstracts,
                     show_progress_bar=True,
                     batch_size=batch_size,
@@ -3730,7 +3057,7 @@ Why API might be unavailable:
 
             # Save cache
             print("Saving embedding cache...")
-            self.save_embedding_cache(all_embeddings, all_hashes)
+            self.indexer.save_embedding_cache(all_embeddings, all_hashes)
 
             # Build FAISS index
             print("Creating searchable index...")

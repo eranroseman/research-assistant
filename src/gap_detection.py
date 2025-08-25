@@ -45,7 +45,7 @@ import aiohttp
 # Configuration imports
 try:
     # For module imports (from tests)
-    from .config import (
+    from src.config import (
         # Semantic Scholar API
         SEMANTIC_SCHOLAR_API_URL,
         API_REQUEST_TIMEOUT,
@@ -59,7 +59,7 @@ try:
         CONFIDENCE_MEDIUM_THRESHOLD,
         AUTHOR_NETWORK_MAX_RECENT_PAPERS,
     )
-    from .cli_kb_index import KnowledgeBaseIndex
+    from src.cli_kb_index import KnowledgeBaseIndex
 except ImportError:
     # For direct script execution
     from config import (
@@ -307,7 +307,7 @@ class GapAnalyzer:
                 try:
                     from api_utils import async_api_request_with_retry
                 except ImportError:
-                    from .api_utils import async_api_request_with_retry
+                    from src.api_utils import async_api_request_with_retry
 
                 # Use consistent retry logic
                 data = await async_api_request_with_retry(

@@ -118,6 +118,16 @@ CITATION_COUNT_THRESHOLDS = {
     "none": 0,  # 0 points
 }
 
+# Citation impact thresholds for quality scoring
+CITATION_IMPACT_THRESHOLDS = {
+    "exceptional": 1000,  # 25 points
+    "excellent": 500,  # 20 points
+    "very_good": 100,  # 15 points
+    "good": 50,  # 10 points
+    "moderate": 20,  # 5 points
+    "low": 1,  # 2 points
+}
+
 # Venue prestige scoring (based on journal rankings)
 VENUE_PRESTIGE_SCORES = {
     "Q1": 15,  # Top quartile journals
@@ -126,6 +136,57 @@ VENUE_PRESTIGE_SCORES = {
     "Q4": 4,  # Fourth quartile
     "unranked": 2,  # Unranked venues
 }
+
+# Top-tier venues (15 points)
+TOP_VENUES = [
+    "Nature",
+    "Science",
+    "Cell",
+    "NEJM",
+    "Lancet",
+    "JAMA",
+    "BMJ",
+    "Annals of Internal Medicine",
+    "Nature Medicine",
+    "Nature Biotechnology",
+    "Nature Genetics",
+    "Cell Stem Cell",
+]
+
+# High-quality venues (10 points)
+HIGH_QUALITY_VENUES = [
+    "PLOS Medicine",
+    "PLOS Biology",
+    "Diabetes Care",
+    "Circulation",
+    "Journal of Clinical Oncology",
+    "Gastroenterology",
+    "Hepatology",
+    "Blood",
+]
+
+# Reputable venues (5 points)
+REPUTABLE_VENUES = [
+    "PLOS ONE",
+    "Scientific Reports",
+    "BMC Medicine",
+    "Journal of Medical Internet Research",
+    "JMIR",
+    "npj Digital Medicine",
+    "Digital Health",
+]
+
+# Q2 tier venues (12 points) - for testing compatibility
+Q2_VENUES = [
+    "Journal of Medicine",
+    "IEEE Transactions on AI",
+]
+
+# Q3 tier venues (8 points) - for testing compatibility
+Q3_VENUES = [
+    "Some Journal",
+    "Conference Proceedings",
+]
 
 # Author authority thresholds (based on h-index)
 AUTHOR_AUTHORITY_THRESHOLDS = {

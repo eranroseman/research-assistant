@@ -13,7 +13,7 @@ from src.cli import (
     _generate_preset_commands,
     _execute_batch,
 )
-from src.build_kb import calculate_enhanced_quality_score
+from src.kb_quality import calculate_enhanced_quality_score
 from tests.utils import (
     create_mock_cli,
     create_test_kb_structure,

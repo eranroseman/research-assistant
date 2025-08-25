@@ -60,8 +60,8 @@ import click
 
 # Import error handling and output formatting once at module level
 try:
-    from .error_formatting import safe_exit
-    from .output_formatting import ProgressTracker, print_status, print_header
+    from src.error_formatting import safe_exit
+    from src.output_formatting import ProgressTracker, print_status, print_header
 except ImportError:
     try:
         from error_formatting import safe_exit
@@ -91,7 +91,7 @@ except ImportError:
 # Configuration imports
 try:
     # For module imports (from tests)
-    from .config import KB_VERSION, KB_DATA_PATH, MIN_PAPERS_FOR_GAP_ANALYSIS
+    from src.config import KB_VERSION, KB_DATA_PATH, MIN_PAPERS_FOR_GAP_ANALYSIS
 except ImportError:
     # For direct script execution
     try:
@@ -202,10 +202,7 @@ def _setup_gap_analysis_environment(
     kb_path: str,
 ) -> tuple[dict[str, Any], list[dict[str, Any]], Any]:
     """Setup gap analysis environment and initialize components."""
-    try:
-        from .output_formatting import ProgressTracker
-    except ImportError:
-        from output_formatting import ProgressTracker
+    from src.output_formatting import ProgressTracker
 
     # Validate KB requirements
     metadata, papers = validate_kb_requirements(kb_path)
@@ -217,7 +214,7 @@ def _setup_gap_analysis_environment(
 def _import_gap_analyzer() -> type:
     """Import gap detection module with fallback handling."""
     try:
-        from .gap_detection import GapAnalyzer
+        from src.gap_detection import GapAnalyzer
 
         return GapAnalyzer
     except ImportError:

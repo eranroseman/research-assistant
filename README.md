@@ -1,6 +1,6 @@
-# Research Assistant v4.6
+# Research Assistant v4.7.0
 
-**🎯 NEW: Adaptive Rate Limiting for Large-Scale Processing!**
+**🏗️ NEW: Modular Architecture for Better Maintainability!**
 
 A streamlined academic literature search tool featuring Multi-QA MPNet embeddings for semantic search, smart incremental updates, and Claude Code integration.
 
@@ -15,7 +15,16 @@ A streamlined academic literature search tool featuring Multi-QA MPNet embedding
 - [Troubleshooting](#troubleshooting) - Common issues and solutions
 - [Contributing](#contributing) - Development setup
 
-## v4.6 New Features
+## v4.7.0 New Features
+
+**🏗️ Modular Architecture**
+- Extracted quality scoring to dedicated `kb_quality.py` module (490 lines)
+- Extracted FAISS indexing to `kb_indexer.py` module (437 lines)
+- Reduced `build_kb.py` from 4,293 to 3,660 lines (15% reduction)
+- Improved separation of concerns and testability
+- No breaking changes - all existing functionality preserved
+
+## v4.6 Features
 
 **🎯 Batch API Processing & Production-Ready Reliability**
 - Semantic Scholar batch endpoint integration reduces API calls by 400x (2,100 → 5 requests)
@@ -593,12 +602,15 @@ python src/cli.py cite 0234 1426 --format json
 
 ```
 src/
-├── build_kb.py         # Knowledge base builder from Zotero
+├── build_kb.py         # Knowledge base builder from Zotero (3,660 lines)
+├── kb_quality.py       # Quality scoring module (490 lines) [NEW - v4.7]
+├── kb_indexer.py       # FAISS indexing and embeddings (437 lines) [NEW - v4.7]
 ├── cli.py              # Command-line interface for search
 ├── cli_kb_index.py     # O(1) paper lookups and index operations
 ├── discover.py         # External paper discovery via Semantic Scholar
 ├── analyze_gaps.py     # Network gap analysis CLI interface
 ├── gap_detection.py    # Core gap detection algorithms (citation + author networks)
+├── api_utils.py        # API retry logic with exponential backoff
 ├── error_formatting.py # Unified error message formatting with context-aware suggestions
 ├── help_formatting.py  # Standardized help text templates and command documentation
 ├── output_formatting.py # Consistent progress indicators, results display, and status formatting
@@ -664,6 +676,9 @@ tests/
 | **Zotero connection failed** | 1. Start Zotero<br>2. Enable API in Settings → Advanced<br>3. [WSL setup guide](docs/advanced-usage.md#wsl-specific-setup-zotero-on-windows-host) |
 | **Slow performance** | Check GPU: `python -c "import torch; print(torch.cuda.is_available())"` |
 | **Model download issues** | `pip install --upgrade sentence-transformers` |
+| **Build interrupted** | Fixed in v4.6.1 - Automatic checkpoint recovery on restart |
+| **API rate limiting errors** | Fixed in v4.6.1 - Exponential backoff prevents 429 errors |
+| **Checkpoint file corrupted** | Delete `.checkpoint.json` and restart (will process all papers) |
 | **"Gap analysis not available"** | Requires enhanced quality scoring and ≥20 papers in KB |
 | **"Gap detection module not found"** | Run from correct directory: `python src/analyze_gaps.py` |
 | **Gap analysis times out/rate limited** | Fixed in v4.7 - batch processing completes in ~66 seconds |
@@ -709,11 +724,15 @@ tests/
 
 ### Test Coverage
 
-The test suite comprehensively covers all functionality with 338+ tests:
+The test suite comprehensively covers all functionality with 469 tests:
 
-- **Unit Tests** (150+ tests): Component-focused testing including formatting modules with 100% coverage
-- **Integration Tests** (58+ tests): Workflow validation including cross-module formatting consistency
-- **E2E Tests** (23 tests): End-to-end functionality testing critical user workflows
+- **Unit Tests** (287 tests): Component-focused testing including formatting modules with 100% coverage
+  - Comprehensive quality scoring tests (`test_unit_quality_scoring.py`)
+  - API retry logic tests (`test_unit_api_utils.py`)
+- **Integration Tests** (136 tests): Workflow validation including cross-module formatting consistency
+  - Checkpoint recovery tests (`test_integration_checkpoint_recovery.py`)
+  - Incremental update tests updated for modular architecture
+- **E2E Tests** (39 tests): End-to-end functionality testing critical user workflows
 - **Performance Tests** (7 tests): Speed and memory benchmarks
 
 All tests are currently passing and reflect production behavior including:

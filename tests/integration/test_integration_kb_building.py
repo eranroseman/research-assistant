@@ -420,7 +420,9 @@ class TestCacheOperations:
         monkeypatch.setattr(
             src.build_kb, "get_semantic_scholar_data_sync", mock_get_semantic_scholar_data_sync
         )
-        monkeypatch.setattr(src.build_kb, "calculate_quality_score", mock_calculate_quality_score)
+        import src.kb_quality
+
+        monkeypatch.setattr(src.kb_quality, "calculate_quality_score", mock_calculate_quality_score)
 
         # Test the sequential processing structure
         metadata = {"papers": []}
@@ -478,7 +480,9 @@ class TestCacheOperations:
         import src.build_kb
 
         monkeypatch.setattr(src.build_kb, "get_semantic_scholar_data", mock_get_semantic_scholar_data)
-        monkeypatch.setattr(src.build_kb, "calculate_quality_score", mock_calculate_quality_score)
+        import src.kb_quality
+
+        monkeypatch.setattr(src.kb_quality, "calculate_quality_score", mock_calculate_quality_score)
 
         # Test parallel processing
         metadata = {"papers": []}

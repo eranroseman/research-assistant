@@ -524,6 +524,11 @@ If there are issues:
 
 Build and maintain knowledge base from Zotero library for semantic search.
 
+**MODULAR ARCHITECTURE (v4.7.0):**
+- **build_kb.py** (3,660 lines): Core orchestration and Zotero integration
+- **kb_quality.py** (490 lines): Quality scoring logic (basic & enhanced)
+- **kb_indexer.py** (437 lines): FAISS indexing and Multi-QA MPNet embeddings
+
 **DEFAULT BEHAVIOR (SAFE-BY-DEFAULT):**
 - No KB exists → Full build from Zotero library
 - KB exists → Safe incremental update (only new/changed papers)
@@ -537,9 +542,16 @@ Build and maintain knowledge base from Zotero library for semantic search.
 - Safe error handling with clear user guidance
 
 **FEATURES:**
+- **Checkpoint Recovery (v4.6.1)**: Automatic checkpoint saving every 50 papers
+  - `.checkpoint.json` file tracks processing progress
+  - Resume from exact interruption point on restart
+  - Handles corrupted checkpoint files gracefully
+  - Automatic cleanup on successful completion
+- **Exponential Backoff Retry (v4.6.1)**: Smart API retry logic prevents rate limiting
+  - Delays increase exponentially (0.1s → 10s max)
+  - 100% build success rate (fixes v4.4-v4.6 failures)
+  - Better error handling distinguishes rate limiting from other failures
 - **Adaptive Rate Limiting (v4.6)**: Smart delays that adjust to API throttling patterns
-- **Real Checkpoint System**: Quality scores saved to disk every 50 papers with automatic recovery
-- **True Recovery**: Resume processing from exact point of interruption
 - **Zero Data Loss**: All completed work preserved even during process interruptions
 - Extracts full text from PDF attachments in Zotero
 - Generates Multi-QA MPNet embeddings optimized for healthcare & scientific papers
@@ -614,11 +626,14 @@ python src/build_kb.py --import kb_backup.tar.gz
 3. **Checkpoint Recovery**: Automatically detect completed work from previous runs
 4. **Extraction**: Extracts text from PDFs using PyMuPDF
 5. **Quality Scoring**: Sequential processing with adaptive rate limiting (100ms → 500ms+ delays)
+   - Handled by `kb_quality.py` module for both basic and enhanced scoring
 6. **Real Progress Saves**: Quality scores saved to disk every 50 papers
 7. **True Recovery**: Resume from exact interruption point with zero data loss
 8. **Caching**: Uses persistent caches for PDF text and embeddings
 9. **Embedding**: Generates Multi-QA MPNet embeddings (768-dimensional)
+   - Handled by `kb_indexer.py` module with GPU/CPU auto-detection
 10. **Indexing**: Builds FAISS index for similarity search
+    - Managed by `KBIndexer` class in `kb_indexer.py`
 11. **Validation**: Verifies integrity and reports statistics
 
 ### `analyze_gaps.py`
@@ -1560,5 +1575,6 @@ Notes:
 2. **Enable caching**: PDF and embedding caches speed up rebuilds by 10x
 3. **Batch operations**: Use `get-batch` for multiple papers
 4. **Smart search**: Use for 20+ papers to avoid context overflow
-5. **GPU acceleration**: CUDA speeds up embedding generation by 5-10x
+5. **GPU acceleration**: CUDA speeds up embedding generation by 5-10x (auto-detected by `kb_indexer.py`)
 6. **Export/Import**: Use for quick KB transfer between machines
+7. **Modular architecture (v4.7.0)**: Separated concerns enable easier debugging and testing

@@ -26,7 +26,7 @@ class MockAPIError(Exception):
 
 @pytest.mark.unit
 @pytest.mark.knowledge_base
-@patch("src.build_kb.KnowledgeBaseBuilder._detect_device", return_value="cpu")
+@patch("src.kb_indexer.KBIndexer._detect_device", return_value="cpu")
 class TestKnowledgeBaseBuilder:
     """Test KnowledgeBaseBuilder initialization and core functionality."""
 
@@ -57,7 +57,7 @@ class TestKnowledgeBaseBuilder:
 
 @pytest.mark.unit
 @pytest.mark.knowledge_base
-@patch("src.build_kb.KnowledgeBaseBuilder._detect_device", return_value="cpu")
+@patch("src.kb_indexer.KBIndexer._detect_device", return_value="cpu")
 class TestPDFExtraction:
     """Test PDF text extraction functionality."""
 
@@ -190,7 +190,7 @@ class TestKnowledgeBaseIndex:
 @pytest.mark.unit
 @pytest.mark.fast
 @pytest.mark.knowledge_base
-@patch("src.build_kb.KnowledgeBaseBuilder._detect_device", return_value="cpu")
+@patch("src.kb_indexer.KBIndexer._detect_device", return_value="cpu")
 class TestCacheManagement:
     """Test caching system functionality."""
 
@@ -322,7 +322,7 @@ class TestStudyTypeDetection:
 
 @pytest.mark.unit
 @pytest.mark.knowledge_base
-@patch("src.build_kb.KnowledgeBaseBuilder._detect_device", return_value="cpu")
+@patch("src.kb_indexer.KBIndexer._detect_device", return_value="cpu")
 class TestContentPreservation:
     """Test that content extraction preserves full text without truncation."""
 
@@ -604,7 +604,7 @@ class TestGapAnalysisIntegration:
 
 @pytest.mark.unit
 @pytest.mark.knowledge_base
-@patch("src.build_kb.KnowledgeBaseBuilder._detect_device", return_value="cpu")
+@patch("src.kb_indexer.KBIndexer._detect_device", return_value="cpu")
 class TestIncrementalUpdateFixes:
     """Test incremental update logic fixes and embedding reuse."""
 
@@ -742,7 +742,7 @@ class TestIncrementalUpdateFixes:
 
 @pytest.mark.unit
 @pytest.mark.knowledge_base
-@patch("src.build_kb.KnowledgeBaseBuilder._detect_device", return_value="cpu")
+@patch("src.kb_indexer.KBIndexer._detect_device", return_value="cpu")
 class TestQualityScoreUpgrade:
     """Test quality score upgrade functionality during incremental updates."""
 
