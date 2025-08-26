@@ -3112,7 +3112,7 @@ Why API might be unavailable:
                 sections_index[paper_id] = extracted_sections
             else:
                 # Use abstract as the only section if no full text
-                sections_index[paper_id] = {
+                extracted_sections = {
                     "abstract": paper.get("abstract", ""),
                     "introduction": "",
                     "methods": "",
@@ -3122,6 +3122,7 @@ Why API might be unavailable:
                     "references": "",
                     "supplementary": "",
                 }
+                sections_index[paper_id] = extracted_sections
 
             md_content = self.format_paper_as_markdown(paper, sections=extracted_sections)
             markdown_file_path = self.papers_path / f"paper_{paper_id}.md"
