@@ -273,7 +273,7 @@ class PragmaticSectionExtractor:
 
         return sections, confidence
 
-    def _tier2_fuzzy_matching(
+    def _tier2_fuzzy_matching(  # noqa: PLR0912
         self, text: str, sections: dict[str, Section], confidence: dict[str, float]
     ) -> tuple[dict[str, Section], dict[str, float]]:
         """Tier 2: Fuzzy matching for variations, typos, and clinical formats."""
@@ -390,7 +390,7 @@ class PragmaticSectionExtractor:
 
         return sections, confidence
 
-    def _tier3_structure_analysis(
+    def _tier3_structure_analysis(  # noqa: PLR0912
         self, pdf_path: str, sections: dict[str, Section], confidence: dict[str, float]
     ) -> tuple[dict[str, Section], dict[str, float]]:
         """Tier 3: Full structure analysis with PDFPlumber for the 45% that need it."""
@@ -456,8 +456,8 @@ class PragmaticSectionExtractor:
                                                 )
                                                 confidence[section_name] = 0.6
                                                 break
-        except Exception:
-            # Silently fail and return what we have
+        except Exception:  # noqa: S110
+            # Silently fail and return what we have - PDF structure analysis is optional
             pass
 
         return sections, confidence

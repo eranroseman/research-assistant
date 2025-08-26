@@ -357,7 +357,7 @@ class KBIndexer:
         print(f"Index created with {len(embeddings)} vectors of dimension {dimension}")
         return index
 
-    def update_index_incrementally(self, papers: list[dict[str, Any]], changes: dict[str, Any]) -> None:
+    def update_index_incrementally(self, papers: list[dict[str, Any]], changes: dict[str, Any]) -> None:  # noqa: PLR0912, PLR0915
         """Update FAISS index incrementally for changed papers only.
 
         Args:

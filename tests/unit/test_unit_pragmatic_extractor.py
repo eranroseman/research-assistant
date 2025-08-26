@@ -379,7 +379,7 @@ This ensures the caching functionality works correctly."""
         extractor = PragmaticSectionExtractor()
 
         # Test with None text
-        with pytest.raises(ValueError):
+        with pytest.raises(ValueError, match="Either pdf_path or text must be provided"):
             extractor.extract(pdf_path=None, text=None)
 
         # Test with empty text

@@ -1642,8 +1642,14 @@ Value:
 
                 papers_dict[key] = paper_metadata
 
-                # Save paper file
-                md_content = self.format_paper_as_markdown(paper)
+                # Extract sections first if available
+                extracted_sections = {}
+                if paper.get("full_text"):
+                    pdf_path = paper.get("pdf_path")
+                    extracted_sections = self.extract_sections(paper["full_text"], paper, pdf_path=pdf_path)
+
+                # Save paper file with sections
+                md_content = self.format_paper_as_markdown(paper, sections=extracted_sections)
                 paper_file = self.papers_path / f"paper_{paper_id}.md"
                 with paper_file.open("w", encoding="utf-8") as f:
                     f.write(md_content)
@@ -2300,14 +2306,17 @@ Value:
 
         return sections
 
-    def format_paper_as_markdown(self, paper_data: dict[str, Any]) -> str:
+    def format_paper_as_markdown(
+        self, paper_data: dict[str, Any], sections: dict[str, str] | None = None
+    ) -> str:
         """Format paper data as markdown for storage.
 
         Args:
             paper_data: Dictionary with paper metadata and text
+            sections: Optional dictionary with extracted sections
 
         Returns:
-            Formatted markdown string
+            Formatted markdown string with structured sections
         """
         markdown_content = f"# {paper_data['title']}\n\n"
 
@@ -2326,12 +2335,43 @@ Value:
         if paper_data.get("doi"):
             markdown_content += f"**DOI:** {paper_data['doi']}  \n"
 
-        markdown_content += "\n## Abstract\n"
-        markdown_content += paper_data.get("abstract", "No abstract available.") + "\n\n"
+        # If sections are provided and contain content, use them
+        if sections and any(sections.values()):
+            # Add abstract if available
+            markdown_content += "\n## Abstract\n"
+            if sections.get("abstract"):
+                markdown_content += sections["abstract"] + "\n\n"
+            else:
+                markdown_content += paper_data.get("abstract", "No abstract available.") + "\n\n"
 
-        if paper_data.get("full_text"):
-            markdown_content += "## Full Text\n"
-            markdown_content += paper_data["full_text"] + "\n"
+            # Add other sections if they have content
+            section_order = [
+                ("introduction", "Introduction"),
+                ("methods", "Methods"),
+                ("results", "Results"),
+                ("discussion", "Discussion"),
+                ("conclusion", "Conclusion"),
+                ("references", "References"),
+                ("supplementary", "Supplementary"),
+            ]
+
+            for section_key, section_title in section_order:
+                if sections.get(section_key):
+                    markdown_content += f"## {section_title}\n"
+                    markdown_content += sections[section_key] + "\n\n"
+
+            # Add full text as fallback if no sections were extracted
+            if not any(sections.get(key) for key, _ in section_order) and paper_data.get("full_text"):
+                markdown_content += "## Full Text\n"
+                markdown_content += paper_data["full_text"] + "\n"
+        else:
+            # Fallback to original behavior if no sections provided
+            markdown_content += "\n## Abstract\n"
+            markdown_content += paper_data.get("abstract", "No abstract available.") + "\n\n"
+
+            if paper_data.get("full_text"):
+                markdown_content += "## Full Text\n"
+                markdown_content += paper_data["full_text"] + "\n"
 
         return str(markdown_content)
 
@@ -3083,7 +3123,7 @@ Why API might be unavailable:
                     "supplementary": "",
                 }
 
-            md_content = self.format_paper_as_markdown(paper)
+            md_content = self.format_paper_as_markdown(paper, sections=extracted_sections)
             markdown_file_path = self.papers_path / f"paper_{paper_id}.md"
             with open(markdown_file_path, "w", encoding="utf-8") as f:
                 f.write(md_content)
