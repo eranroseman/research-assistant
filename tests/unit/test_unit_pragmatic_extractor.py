@@ -107,7 +107,7 @@ This study provides evidence for the effectiveness of the intervention.
 
         metadata = result.get("_metadata", {})
         assert metadata["sections_found"] >= 4
-        assert "regex" in metadata["extraction_methods"] or "all_caps" in metadata["extraction_methods"]
+        assert "regex" in metadata["extraction_methods"] or "pattern_match" in metadata["extraction_methods"]
 
     @pytest.mark.skipif("rapidfuzz" not in globals(), reason="rapidfuzz not installed")
     def test_tier2_fuzzy_matching(self):

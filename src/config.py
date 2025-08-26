@@ -249,7 +249,7 @@ CROSS_VALIDATION_WEIGHT = 10  # Multi-source data verification (DOI, PubMed, typ
 # BUILD CONFIGURATION
 # ============================================================================
 # Text extraction and section limits
-MAX_SECTION_LENGTH = 50000  # Generous safety limit for section length (10x previous limit)
+# MAX_SECTION_LENGTH is defined below as a dict with per-section limits
 MAX_QUALITY_SCORE = 100  # Maximum quality score value (moved from cli.py)
 ABSTRACT_PREVIEW_LENGTH = 1000  # Fallback abstract length when full text unavailable
 CONCLUSION_PREVIEW_LENGTH = 1000  # Fallback conclusion length
@@ -260,11 +260,35 @@ MIN_TEXT_FOR_CONCLUSION = 2000  # Minimum text needed to extract conclusion sect
 PDF_TIMEOUT_SECONDS = 30  # Timeout for PDF text extraction (prevents hanging)
 
 # Section extraction configuration (PragmaticSectionExtractor)
-FUZZY_THRESHOLD = 75  # Minimum fuzzy match score (0-100) for section detection
+FUZZY_THRESHOLD = (
+    70  # Minimum fuzzy match score (0-100) for section detection - lowered to catch more variations
+)
 TIER1_EXIT_THRESHOLD = 4  # Exit Tier 1 if ≥4 sections found
 TIER2_EXIT_THRESHOLD = 3  # Exit Tier 2 if ≥3 sections found
 SECTION_EXTRACTION_TIMEOUT = 1.0  # Max time per paper (seconds)
 SECTION_EXTRACTION_N_WORKERS = 4  # Number of parallel workers for batch processing
+
+# Minimum section lengths - lowered to be more inclusive
+MIN_SECTION_LENGTH = {
+    "abstract": 50,  # Lowered from 100
+    "introduction": 50,  # Lowered from 100
+    "methods": 50,  # Lowered from 100
+    "results": 50,  # Lowered from 100
+    "discussion": 50,  # Lowered from 100
+    "conclusion": 30,  # Even shorter for conclusions
+    "references": 20,  # References can be very short
+}
+
+# Maximum section lengths to prevent over-extraction
+MAX_SECTION_LENGTH = {
+    "abstract": 5000,  # ~1000 words max
+    "introduction": 10000,  # ~2000 words
+    "methods": 15000,  # ~3000 words
+    "results": 15000,  # ~3000 words
+    "discussion": 15000,  # ~3000 words
+    "conclusion": 8000,  # ~1600 words
+    "references": 50000,  # Can be very long
+}
 
 # Sample size validation for RCTs
 MIN_SAMPLE_SIZE = 10  # Minimum believable sample size

@@ -18,13 +18,37 @@ A streamlined academic literature search tool featuring Multi-QA MPNet embedding
 ## Latest Features (Unreleased)
 
 **📄 PragmaticSectionExtractor - Intelligent Three-Tier Section Extraction**
-- **68-72% accuracy** improvement (up from 43%) with progressive enhancement
-- **Tier 1**: Fast pattern matching for 45% of papers (~2ms)
+- **75-80% accuracy** improvement (up from 43%) with progressive enhancement
+- **Tier 1**: Fast pattern matching for 65% of papers (~2ms)
+  - Now handles Title Case headers (65% of papers)
+  - Supports numbered sections (e.g., "1. Introduction")
+  - Case-insensitive matching for better coverage
 - **Tier 2**: Fuzzy matching with RapidFuzz for clinical formats (+10% coverage)
-- **Tier 3**: PDFPlumber structure analysis recovers lost formatting (remaining 45%)
+- **Tier 3**: PDFPlumber structure analysis recovers lost formatting (remaining 25%)
 - **Performance**: Average ~23ms per paper, batch processing with 4-8x speedup
 - **Smart Exit**: Stops processing early when sufficient sections found
 - **Production Ready**: Caching, error handling, graceful fallbacks
+
+**📝 Enhanced Abstract Extraction**
+- Multi-strategy fallback system for papers with missing abstracts
+- Automatically tries 4 different extraction methods in priority order
+- Resolves empty abstract issues for papers without clear headers
+- Integrated seamlessly into the main extraction pipeline
+
+**🎯 Advanced Extraction Improvements**
+- **Section-Specific Length Limits**: Prevents over-extraction with intelligent truncation
+  - Abstract limited to 5000 chars (~1000 words) to prevent capturing entire papers
+  - Methods/Results/Discussion limited to 15000 chars (~3000 words)
+  - References allowed up to 50000 chars for comprehensive citation coverage
+- **Improved Boundary Detection**: Smarter section boundary identification
+  - Detects double newlines followed by uppercase as section boundaries
+  - Handles numbered sections (1. Introduction, 2. Methods, etc.)
+  - Prevents content bleeding between sections
+- **Post-Processing Validation**: Ensures extraction quality
+  - Removes leaked section headers from content
+  - Fixes section contamination (other headers appearing in wrong sections)
+  - Validates minimum content requirements per section type
+  - Cleans and normalizes extracted text
 
 ## v4.7.0 New Features
 

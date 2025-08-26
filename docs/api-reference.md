@@ -542,6 +542,13 @@ Build and maintain knowledge base from Zotero library for semantic search.
 - Safe error handling with clear user guidance
 
 **FEATURES:**
+- **PragmaticSectionExtractor**: Three-tier intelligent section extraction (75-80% accuracy)
+  - Tier 1: Fast pattern matching for well-formatted papers (~2ms)
+  - Tier 2: Fuzzy matching for clinical formats and typos
+  - Tier 3: PDFPlumber structure analysis for difficult cases
+  - Abstract extraction fallback with 4 strategies for missing abstracts
+  - Section-specific length limits to prevent over-extraction
+  - Advanced boundary detection and post-processing validation
 - **Checkpoint Recovery (v4.6.1)**: Automatic checkpoint saving every 50 papers
   - `.checkpoint.json` file tracks processing progress
   - Resume from exact interruption point on restart

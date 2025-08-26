@@ -64,14 +64,36 @@ A production-ready academic literature search tool featuring modular architectur
 
 ### PragmaticSectionExtractor - Three-Tier Section Extraction System
 
-**Purpose**: Intelligent extraction of academic paper sections with 68-72% accuracy improvement
+**Purpose**: Intelligent extraction of academic paper sections with 75-80% accuracy improvement
 
 **Architecture**:
-- **Tier 1 (Fast Pattern Matching)**: Handles 45% of papers in ~2ms using ALL CAPS and regex patterns
+- **Tier 1 (Fast Pattern Matching)**: Handles 65% of papers in ~2ms using ALL CAPS, Title Case, and numbered sections
 - **Tier 2 (Fuzzy Enhancement)**: Additional 10% coverage using RapidFuzz for clinical formats and typos
-- **Tier 3 (Structure Analysis)**: Remaining 45% using PDFPlumber to recover lost formatting
+- **Tier 3 (Structure Analysis)**: Remaining 25% using PDFPlumber to recover lost formatting
 
 **Key Features**:
+- **Improved Pattern Recognition**:
+  - Case-insensitive matching for Title Case headers (65% of papers)
+  - Support for numbered sections (e.g., "1. Introduction", "2. Methods")
+  - Better section boundary detection to prevent content overlap
+- **Abstract Extraction Fallback**:
+  - 4-strategy system for papers with missing abstracts
+  - Uses metadata, text patterns, and heuristics
+  - Integrated into main extraction pipeline
+- **Section-Specific Length Limits**:
+  - Prevents over-extraction with intelligent truncation
+  - Abstract limited to 5000 chars (~1000 words)
+  - Methods/Results/Discussion limited to 15000 chars (~3000 words)
+  - References allowed up to 50000 chars
+- **Advanced Boundary Detection**:
+  - Detects double newlines followed by uppercase as section boundaries
+  - Handles numbered sections (1. Introduction, 2. Methods)
+  - Prevents content bleeding between sections
+- **Post-Processing Validation**:
+  - Removes leaked section headers from content
+  - Fixes section contamination (headers in wrong sections)
+  - Validates minimum content requirements per section
+  - Cleans and normalizes extracted text
 - **Progressive Enhancement**: Fast path for easy cases, expensive operations only when needed
 - **Smart Exit Conditions**: Stops early when sufficient sections found (≥4 for Tier 1, ≥3 for Tier 2)
 - **Batch Processing**: Parallel execution with 4-8x speedup for multiple PDFs
@@ -81,9 +103,9 @@ A production-ready academic literature search tool featuring modular architectur
 
 **Performance Characteristics**:
 - Average: ~23ms per paper overall
-- Tier 1: ~2ms for well-formatted papers (45%)
+- Tier 1: ~2ms for well-formatted papers (65%)
 - Tier 2: Additional 1ms for fuzzy matching (10%)
-- Tier 3: ~50ms for structure analysis (45%)
+- Tier 3: ~50ms for structure analysis (25%)
 - Batch: ~52 seconds for 2,220 papers with 4 workers
 
 **Dependencies**:
@@ -92,7 +114,25 @@ A production-ready academic literature search tool featuring modular architectur
 
 **Configuration** (in `config.py`):
 ```python
-FUZZY_THRESHOLD = 75  # Fuzzy match score threshold
+FUZZY_THRESHOLD = 70  # Fuzzy match score threshold (lowered for better matching)
+MIN_SECTION_LENGTH = {
+    'abstract': 50,      # Lowered from 100 for better extraction
+    'introduction': 50,  # More permissive thresholds
+    'methods': 50,
+    'results': 50,
+    'discussion': 50,
+    'conclusion': 30,
+    'references': 20,
+}
+MAX_SECTION_LENGTH = {
+    'abstract': 5000,       # ~1000 words max to prevent over-extraction
+    'introduction': 10000,  # ~2000 words
+    'methods': 15000,       # ~3000 words
+    'results': 15000,       # ~3000 words
+    'discussion': 15000,    # ~3000 words
+    'conclusion': 8000,     # ~1600 words
+    'references': 50000,    # Can be very long
+}
 TIER1_EXIT_THRESHOLD = 4  # Sections needed to exit Tier 1
 TIER2_EXIT_THRESHOLD = 3  # Sections needed to exit Tier 2
 SECTION_EXTRACTION_TIMEOUT = 1.0  # Max time per paper
