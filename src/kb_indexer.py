@@ -285,16 +285,35 @@ class KBIndexer:
                 )
                 new_embeddings.extend(batch_embeddings)
 
+            # Validate embedding count matches expected
+            if len(new_embeddings) != len(texts_to_embed):
+                raise EmbeddingGenerationError(
+                    f"Embedding count mismatch: generated {len(new_embeddings)} embeddings "
+                    f"for {len(texts_to_embed)} texts. This may indicate empty or problematic texts."
+                )
+
             # Insert new embeddings at correct positions
-            new_embeddings_array = np.array(new_embeddings)
-            for idx, embedding in zip(text_indices, new_embeddings_array, strict=False):
+            new_embeddings_array = np.array(new_embeddings, dtype="float32")
+            for idx, embedding in zip(text_indices, new_embeddings_array, strict=True):
                 # Replace placeholder positions with actual embeddings
                 if idx < len(all_embeddings):
                     all_embeddings[idx] = embedding
                 else:
                     all_embeddings.insert(idx, embedding)
 
-        return np.array(all_embeddings, dtype="float32")
+        # Ensure all embeddings are valid numpy arrays before final conversion
+        processed_embeddings = []
+        for emb in all_embeddings:
+            if emb is None:
+                raise EmbeddingGenerationError("Found None embedding in final conversion")
+            emb_array = np.array(emb, dtype="float32")
+            processed_embeddings.append(emb_array)
+
+        return (
+            np.vstack(processed_embeddings)
+            if processed_embeddings
+            else np.array([], dtype="float32").reshape(0, 768)
+        )
 
     def create_index(self, papers: list[dict[str, Any]]) -> Any:
         """Create FAISS index from papers.
@@ -400,18 +419,37 @@ class KBIndexer:
                 abstract = paper.get("abstract", "").strip()
                 embedding_text = f"{title} [SEP] {abstract}" if abstract else title
                 texts_to_embed.append(embedding_text)
+                # Record index BEFORE appending placeholder to avoid off-by-one error
                 papers_to_embed.append(len(all_embeddings))
                 all_embeddings.append(None)  # Placeholder
 
         # Generate new embeddings
         if texts_to_embed:
             new_embeddings = self.generate_embeddings(texts_to_embed)
+            # Validate embedding count matches expected
+            if len(new_embeddings) != len(texts_to_embed):
+                raise EmbeddingGenerationError(
+                    f"Embedding count mismatch in incremental update: generated {len(new_embeddings)} embeddings "
+                    f"for {len(texts_to_embed)} texts. This may indicate empty or problematic texts."
+                )
             # Replace placeholders with actual embeddings
-            for i, embedding in zip(papers_to_embed, new_embeddings, strict=False):
+            for i, embedding in zip(papers_to_embed, new_embeddings, strict=True):
                 all_embeddings[i] = embedding
 
-        # Create new index
-        all_embeddings_array = np.array(all_embeddings, dtype="float32")
+        # Create new index - ensure all embeddings are properly formatted
+        # Convert all embeddings to consistent numpy arrays with float32 dtype
+        processed_embeddings = []
+        for emb in all_embeddings:
+            if emb is None:
+                raise EmbeddingGenerationError("Found None embedding - generation incomplete")
+            # Ensure consistent dtype and shape
+            emb_array = np.array(emb, dtype="float32")
+            if emb_array.ndim == 1:
+                processed_embeddings.append(emb_array)
+            else:
+                raise EmbeddingGenerationError(f"Invalid embedding shape: {emb_array.shape}")
+
+        all_embeddings_array = np.vstack(processed_embeddings)
         new_index = faiss.IndexFlatL2(all_embeddings_array.shape[1])
         new_index.add(all_embeddings_array)
 

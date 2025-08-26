@@ -213,7 +213,9 @@ MIN_PAPERS_FOR_GAP_ANALYSIS = 20  # Minimum papers required for meaningful gap a
 API_REQUEST_TIMEOUT = 10  # Timeout for individual API requests (must be < 200s for 3 retries)
 API_TOTAL_TIMEOUT_BUDGET = 600  # Max 10 min for all API calls (must be > REQUEST_TIMEOUT x MAX_RETRIES)
 API_MAX_RETRIES = 3  # Retry failed requests (increase if REQUEST_TIMEOUT is very low)
-API_RETRY_DELAY = 1.0  # Base delay between retries (actual delay = RETRY_DELAY x attempt)
+API_RETRY_DELAY = (
+    2.0  # Base delay between retries (actual delay = RETRY_DELAY x attempt) - increased for rate limiting
+)
 SEMANTIC_SCHOLAR_BATCH_SIZE = 500  # Maximum papers per batch API request
 
 # Emergency fallback configuration
@@ -256,6 +258,13 @@ MIN_TEXT_FOR_CONCLUSION = 2000  # Minimum text needed to extract conclusion sect
 
 # PDF processing settings
 PDF_TIMEOUT_SECONDS = 30  # Timeout for PDF text extraction (prevents hanging)
+
+# Section extraction configuration (PragmaticSectionExtractor)
+FUZZY_THRESHOLD = 75  # Minimum fuzzy match score (0-100) for section detection
+TIER1_EXIT_THRESHOLD = 4  # Exit Tier 1 if ≥4 sections found
+TIER2_EXIT_THRESHOLD = 3  # Exit Tier 2 if ≥3 sections found
+SECTION_EXTRACTION_TIMEOUT = 1.0  # Max time per paper (seconds)
+SECTION_EXTRACTION_N_WORKERS = 4  # Number of parallel workers for batch processing
 
 # Sample size validation for RCTs
 MIN_SAMPLE_SIZE = 10  # Minimum believable sample size

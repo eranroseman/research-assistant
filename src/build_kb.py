@@ -59,6 +59,7 @@ try:
         calculate_enhanced_quality_score,
     )
     from src.kb_indexer import KBIndexer, EmbeddingGenerationError
+    from src.pragmatic_section_extractor import PragmaticSectionExtractor
 except ImportError:
     # Fallback for direct execution
     from kb_quality import (
@@ -68,6 +69,11 @@ except ImportError:
         calculate_enhanced_quality_score,
     )
     from kb_indexer import KBIndexer, EmbeddingGenerationError
+
+    try:
+        from pragmatic_section_extractor import PragmaticSectionExtractor
+    except ImportError:
+        PragmaticSectionExtractor = None  # type: ignore[assignment]  # Will fall back to old method
 
 # ============================================================================
 # CUSTOM EXCEPTIONS
@@ -516,8 +522,6 @@ def get_semantic_scholar_data_batch(paper_identifiers: list[dict[str, str]]) -> 
                             # Use exponential backoff with cap (from api_utils pattern)
                             delay = min(API_RETRY_DELAY * (2**attempt), 10.0)
                             if attempt < API_MAX_RETRIES - 1:
-                                import time
-
                                 time.sleep(delay)
                                 continue
                             # Final attempt failed - mark batch as failed
@@ -540,8 +544,6 @@ def get_semantic_scholar_data_batch(paper_identifiers: list[dict[str, str]]) -> 
                         if attempt < API_MAX_RETRIES - 1:
                             # Use exponential backoff
                             delay = min(API_RETRY_DELAY * (2**attempt), 10.0)
-                            import time
-
                             time.sleep(delay)
                             continue
                         # Final attempt failed
@@ -555,8 +557,6 @@ def get_semantic_scholar_data_batch(paper_identifiers: list[dict[str, str]]) -> 
                         if attempt < API_MAX_RETRIES - 1:
                             # Use exponential backoff
                             delay = min(API_RETRY_DELAY * (2**attempt), 10.0)
-                            import time
-
                             time.sleep(delay)
                             continue
                         # Final attempt failed
@@ -567,6 +567,8 @@ def get_semantic_scholar_data_batch(paper_identifiers: list[dict[str, str]]) -> 
         # Note: Batch endpoint doesn't support title search, so we use individual requests
         for paper in papers_without_dois:
             if paper.get("title"):
+                # Rate limiting: delay individual API calls to prevent 429 errors
+                time.sleep(1.1)
                 individual_result = get_semantic_scholar_data_sync(None, paper["title"])
                 results[paper["key"]] = individual_result
             else:
@@ -1223,7 +1225,10 @@ class KnowledgeBaseBuilder:
         # Integrity check: Verify paper files exist
         papers_dir = self.knowledge_base_path / "papers"
         if papers_dir.exists():
-            expected_files = {p["filename"] for p in metadata["papers"]}
+            # Handle both old and new metadata formats
+            expected_files = {
+                p.get("filename", f"paper_{p.get('id', 'XXXX')}.md") for p in metadata["papers"]
+            }
             actual_files = {f.name for f in papers_dir.glob("paper_*.md")}
             missing_files = expected_files - actual_files
             extra_files = actual_files - expected_files
@@ -1278,8 +1283,8 @@ class KnowledgeBaseBuilder:
                 print(f"\nWARNING: Could not validate index: {error}")
                 index_exists = False
 
-        # Only force reindex if index is completely missing or corrupted
-        needs_reindex = not index_exists
+        # Force reindex if index is missing, corrupted, or has missing embeddings
+        needs_reindex = not index_exists or not index_size_correct
 
         return {
             "new": len(new),
@@ -1920,19 +1925,71 @@ Value:
             print(f"Error extracting PDF {pdf_path}: {error}")
             return None
 
-    def extract_sections(self, text: str) -> dict[str, str]:
+    def extract_sections(
+        self, text: str, paper: dict[str, Any] | None = None, pdf_path: str | None = None
+    ) -> dict[str, str]:
         """Extract common academic paper sections from full text.
 
         Identifies and extracts standard sections like abstract, introduction,
-        methods, results, discussion, and conclusion. Handles both markdown-formatted
-        papers and raw text with section headers.
+        methods, results, discussion, and conclusion. Uses the new PragmaticSectionExtractor
+        for improved accuracy and speed when available.
 
         Args:
             text: Full text of the paper
+            paper: Optional paper dictionary with metadata (for Phase 3 book handling)
+            pdf_path: Optional path to PDF for structure analysis
 
         Returns:
             Dictionary mapping section names to their content (max 5000 chars per section)
         """
+        # Phase 3 Simplified: Skip extraction entirely for books
+        # Books should only use Zotero's abstractNote field
+        if paper and paper.get("item_type") in ["book", "bookSection"]:
+            sections = {
+                "abstract": "",
+                "introduction": "",
+                "methods": "",
+                "results": "",
+                "discussion": "",
+                "conclusion": "",
+                "references": "",
+                "supplementary": "",
+            }
+            if paper.get("abstract_note"):
+                sections["abstract"] = paper["abstract_note"]
+            # Return early - don't extract anything else for books
+            return sections
+
+        # Try to use PragmaticSectionExtractor if available
+        if PragmaticSectionExtractor is not None:
+            try:
+                from src.config import FUZZY_THRESHOLD
+
+                extractor = PragmaticSectionExtractor(fuzzy_threshold=FUZZY_THRESHOLD)
+
+                # Use the new extractor with PDF path if available
+                result = extractor.extract(pdf_path=pdf_path, text=text)
+
+                # Extract sections from result (excluding metadata)
+                sections = {
+                    "abstract": result.get("abstract", ""),
+                    "introduction": result.get("introduction", ""),
+                    "methods": result.get("methods", ""),
+                    "results": result.get("results", ""),
+                    "discussion": result.get("discussion", ""),
+                    "conclusion": result.get("conclusion", ""),
+                    "references": result.get("references", ""),
+                    "supplementary": result.get("supplementary", ""),
+                }
+
+                # If extraction was successful, return the sections
+                if result.get("_metadata", {}).get("sections_found", 0) > 0:
+                    return sections
+            except Exception as e:
+                # Fall back to old method if new extractor fails
+                print(f"PragmaticSectionExtractor failed, falling back to old method: {e}")
+
+        # Fall back to old extraction method
         import re
 
         sections = {
@@ -1983,7 +2040,7 @@ Value:
                         current_section = "supplementary"
                     elif "full text" in header:
                         # For demo papers that have "## Full Text" section
-                        current_section = "introduction"  # Will parse subsections below
+                        current_section = None  # Let regex patterns handle the content
                     else:
                         current_section = None
                     section_content = []
@@ -1993,6 +2050,104 @@ Value:
             # Save last section
             if current_section and section_content:
                 sections[current_section] = "\n".join(section_content).strip()
+
+        # Phase 1 Fix: Handle section extraction bugs for markdown headers
+        # Many papers have ## Section headers but content isn't captured due to boundary issues
+        if has_markdown_headers:
+            # Fix for sections that might be empty due to boundary detection issues
+            section_fixes = [
+                ("abstract", r"## Abstract\s*\n(.*?)(?=\n## |\Z)"),
+                ("introduction", r"## (?:Introduction|Background)\s*\n(.*?)(?=\n## |\Z)"),
+                ("methods", r"## (?:Methods?|Methodology|Materials and Methods)\s*\n(.*?)(?=\n## |\Z)"),
+                ("results", r"## (?:Results?|Findings?)\s*\n(.*?)(?=\n## |\Z)"),
+                ("discussion", r"## Discussion\s*\n(.*?)(?=\n## |\Z)"),
+                ("conclusion", r"## (?:Conclusions?|Summary)\s*\n(.*?)(?=\n## |\Z)"),
+            ]
+
+            for section_name, pattern in section_fixes:
+                if not sections.get(section_name):  # Only fix if section is empty
+                    match = re.search(pattern, text, re.DOTALL | re.IGNORECASE)
+                    if match and match.group(1).strip():
+                        sections[section_name] = match.group(1).strip()
+
+        # Phase 2A: Fix empty abstracts by extracting from full text (papers only, not books)
+        if has_markdown_headers and "## Full Text" in text and not sections.get("abstract"):
+            # Extract abstract from full text when it's empty between headers
+            full_text_match = re.search(r"## Full Text\s*\n(.*)", text, re.DOTALL)
+            if full_text_match:
+                full_text = full_text_match.group(1)
+
+                # Pattern 1: Look for "Abstract:" or similar keyword followed by content
+                abstract_patterns = [
+                    r"Abstract:\s*([^\n]{50,}(?:\n(?![A-Z]{2,})[^\n]+)*)",  # Abstract: followed by content
+                    r"ABSTRACT\s*\n([^\n]{50,}(?:\n(?![A-Z]{2,})[^\n]+)*)",  # ABSTRACT on its own line
+                    r"Summary:\s*([^\n]{50,}(?:\n(?![A-Z]{2,})[^\n]+)*)",  # Summary: variant
+                ]
+
+                for pattern in abstract_patterns:
+                    match = re.search(pattern, full_text[:5000], re.IGNORECASE)  # Check first 5000 chars
+                    if match:
+                        abstract_text = match.group(1).strip()
+                        # Clean up and validate
+                        if len(abstract_text) > 100 and len(abstract_text) < 5000:
+                            # Stop at next section keyword
+                            for keyword in ["Keywords:", "Introduction", "1.", "Background", "Methods"]:
+                                if keyword in abstract_text:
+                                    abstract_text = abstract_text.split(keyword)[0].strip()
+                                    break
+                            if len(abstract_text) > 100:  # Still valid after cleanup
+                                sections["abstract"] = abstract_text
+                                break
+
+        # Phase 2B: Extract IMRAD sections from full text
+        if has_markdown_headers and "## Full Text" in text:
+            full_text_match = re.search(r"## Full Text\s*\n(.*)", text, re.DOTALL)
+            if full_text_match:
+                full_text = full_text_match.group(1)
+
+                # Detect numbered sections (e.g., "1. Introduction", "2. Methods")
+                numbered_sections = re.findall(
+                    r"^(\d+\.?\s+)([A-Z][a-z]+(?:\s+[A-Za-z]+)*)\s*$", full_text, re.MULTILINE
+                )
+
+                if numbered_sections:
+                    # Build section map from numbered headers
+                    section_positions = []
+                    for match in re.finditer(
+                        r"^(\d+\.?\s+)([A-Z][a-z]+(?:\s+[A-Za-z]+)*)\s*$", full_text, re.MULTILINE
+                    ):
+                        section_title = match.group(2).lower()
+                        position = match.end()
+
+                        # Map to standard section names
+                        if "introduction" in section_title or "background" in section_title:
+                            section_positions.append(("introduction", position))
+                        elif "method" in section_title or "material" in section_title:
+                            section_positions.append(("methods", position))
+                        elif "result" in section_title or "finding" in section_title:
+                            section_positions.append(("results", position))
+                        elif "discussion" in section_title:
+                            section_positions.append(("discussion", position))
+                        elif "conclusion" in section_title or "summary" in section_title:
+                            section_positions.append(("conclusion", position))
+
+                    # Extract content between sections
+                    for i, (section_name, start_pos) in enumerate(section_positions):
+                        if not sections.get(section_name):  # Don't overwrite existing
+                            end_pos = (
+                                section_positions[i + 1][1]
+                                if i + 1 < len(section_positions)
+                                else len(full_text)
+                            )
+
+                            # Extract content between positions
+                            content = full_text[start_pos:end_pos].strip()
+
+                            # Clean up - remove subsection numbers and clean content
+                            content = re.sub(r"^\d+\.\d+\.?\s+", "", content, flags=re.MULTILINE)
+
+                            if len(content) > 100:  # Minimum content threshold
+                                sections[section_name] = content[:50000]  # Cap at 50k chars
 
         # Look for inline section headers (Introduction\n, Methods\n, etc.)
         if has_markdown_headers and "## Full Text" in text:
@@ -2037,8 +2192,10 @@ Value:
                 if current_section and section_content and not sections[current_section]:
                     sections[current_section] = "\n".join(section_content).strip()
 
-        # Fallback: use regex patterns for general text
-        if not any(sections.values()):
+        # Fallback: use regex patterns for sections that are empty or too short
+        # This handles cases where markdown parsing failed for specific sections
+        empty_sections = [name for name, content in sections.items() if len(content.strip()) < 50]
+        if empty_sections:
             section_patterns = {
                 "abstract": r"(?i)(?:abstract|summary)\s*[\n:]",
                 "introduction": r"(?i)(?:introduction|background)\s*[\n:]",
@@ -2050,8 +2207,28 @@ Value:
             }
 
             for section_name, pattern in section_patterns.items():
-                match = re.search(pattern, text)
-                if match:
+                # Only process sections that are empty or too short
+                if section_name not in empty_sections:
+                    continue
+
+                # Find all matches and choose the best one
+                matches = list(re.finditer(pattern, text))
+                if matches:
+                    # For abstract, prefer later matches (skip document headers)
+                    if section_name == "abstract" and len(matches) > 1:
+                        # Skip first match if it's likely document metadata
+                        first_match = matches[0]
+                        first_content_preview = text[first_match.end() : first_match.end() + 100].strip()
+                        if any(
+                            word in first_content_preview.lower()
+                            for word in ["full text", "received", "published", "##"]
+                        ):
+                            match = matches[1]  # Use second match
+                        else:
+                            match = matches[0]  # First match is good
+                    else:
+                        match = matches[0]  # Use first match for other sections
+
                     start = match.end()
                     # Find next section or end of text
                     next_match = None
@@ -2060,10 +2237,60 @@ Value:
                         if next_m and (next_match is None or next_m.start() < next_match):
                             next_match = next_m.start()
 
-                    if next_match:
-                        sections[section_name] = text[start : start + next_match].strip()
+                    content = text[start : start + next_match].strip() if next_match else text[start:].strip()
+
+                    # Clean up obvious metadata artifacts
+                    if section_name == "abstract" and len(content) > 50:
+                        content_lower = content.lower()
+                        # Skip if content contains document metadata patterns
+                        metadata_patterns = [
+                            "full text",
+                            "received",
+                            "published",
+                            "copyright",
+                            "© 20",
+                            "doi:",
+                            "vol.",
+                            "issue",
+                            "pages:",
+                            "manuscript",
+                            "accepted",
+                            "available online",
+                            "journal of",
+                            "research paper",
+                            "##",
+                            "elsevier",
+                            "springer",
+                            "published online",
+                        ]
+
+                        # Check first 300 chars for metadata patterns
+                        first_part = content_lower[:300]
+                        if not any(pattern in first_part for pattern in metadata_patterns):
+                            sections[section_name] = content
+                        # If it contains metadata but also has scientific indicators, try to extract just scientific part
+                        elif any(
+                            sci_word in content_lower
+                            for sci_word in ["objective", "background", "methods", "results", "conclusion"]
+                        ):
+                            # Try to find where scientific content starts
+                            lines = content.split("\\n")
+                            scientific_start = -1
+                            for i, line in enumerate(lines):
+                                line_lower = line.lower().strip()
+                                if any(
+                                    sci_word in line_lower
+                                    for sci_word in ["objective", "background", "aim", "purpose"]
+                                ):
+                                    scientific_start = i
+                                    break
+
+                            if scientific_start >= 0:
+                                scientific_content = "\\n".join(lines[scientific_start:]).strip()
+                                if len(scientific_content) > 100:  # Ensure we have substantial content
+                                    sections[section_name] = scientific_content
                     else:
-                        sections[section_name] = text[start:].strip()
+                        sections[section_name] = content
 
         # If still no sections found, use heuristics
         if not any(sections.values()) and text:
@@ -2193,6 +2420,8 @@ Value:
                 "doi": item["data"].get("DOI", ""),
                 "abstract": item["data"].get("abstractNote", ""),
                 "zotero_key": item.get("key", ""),
+                "item_type": item["data"].get("itemType", "unknown"),  # Phase 3: Add item type
+                "abstract_note": item["data"].get("abstractNote", ""),  # Phase 3: Keep Zotero abstract
             }
 
             for creator in item["data"].get("creators", []):
@@ -2268,6 +2497,7 @@ Value:
                 full_text = self.extract_pdf_text(pdf_path, paper["zotero_key"], use_cache)
                 if full_text:
                     paper["full_text"] = full_text
+                    paper["pdf_path"] = str(pdf_path)  # Store PDF path for structure analysis
                     papers_with_pdfs += 1
                     if was_cached:
                         cache_hits += 1
@@ -2329,8 +2559,13 @@ Value:
         small_pdfs = []  # PDF exists but minimal text extracted
         good_pdfs = []  # PDF exists with adequate text
         no_doi_papers = []  # Papers without DOIs (for basic quality scoring)
+        books_and_proceedings = []  # Books/proceedings (Phase 3: handled differently)
 
         for paper in papers:
+            # Phase 3: Track books separately
+            if paper.get("item_type") in ["book", "bookSection"]:
+                books_and_proceedings.append(paper)
+
             # Check DOI availability
             if not paper.get("doi"):
                 no_doi_papers.append(paper)
@@ -2360,6 +2595,11 @@ Value:
         report_lines.append(
             f"- **Papers without DOIs:** {len(no_doi_papers):,} ({len(no_doi_papers) * 100 / total_papers:.1f}%)"
         )
+        # Phase 3: Add book/proceedings information
+        if books_and_proceedings:
+            report_lines.append(
+                f"- **Books/Proceedings (special handling):** {len(books_and_proceedings):,} ({len(books_and_proceedings) * 100 / total_papers:.1f}%)"
+            )
         report_lines.append(
             f"- **Papers with good PDFs:** {len(good_pdfs):,} ({len(good_pdfs) * 100 / total_papers:.1f}%)",
         )
@@ -2520,6 +2760,34 @@ Value:
         else:
             report_lines.append("## Papers Without DOIs\n")
             report_lines.append("✓ All papers have DOI identifiers!\n")
+
+        # Books and Proceedings section (Phase 3)
+        if books_and_proceedings:
+            report_lines.append("## Books and Proceedings\n")
+            report_lines.append("These items are books or book sections that are handled differently:\n")
+            report_lines.append(
+                "- **Section extraction is skipped** for books to prevent 1M+ character abstracts"
+            )
+            report_lines.append("- **Only Zotero abstract is used** - add abstract in Zotero if needed\n")
+
+            # Sort by year and title
+            books_and_proceedings.sort(
+                key=lambda p: (-p.get("year", 0) if p.get("year") else -9999, p.get("title", ""))
+            )
+
+            for i, book in enumerate(books_and_proceedings[:20], 1):
+                year = book.get("year", "n.d.")
+                title = book.get("title", "Untitled")[:100]
+                item_type = book.get("item_type", "unknown")
+                has_abstract = bool(book.get("abstract_note"))
+
+                report_lines.append(f"{i}. **[{year}] {title}**")
+                report_lines.append(f"   - Type: {item_type}")
+                report_lines.append(f"   - Zotero abstract: {'✓ Present' if has_abstract else '✗ Missing'}")
+                report_lines.append("")
+
+            if len(books_and_proceedings) > 20:
+                report_lines.append(f"... and {len(books_and_proceedings) - 20} more books/proceedings\n")
 
         # Recommendations section
         report_lines.append("## Recommendations\n")
@@ -2794,7 +3062,13 @@ Why API might be unavailable:
 
             # Extract sections if full text is available
             if paper.get("full_text"):
-                extracted_sections = self.extract_sections(paper["full_text"])
+                # Get PDF path if available for better extraction with structure analysis
+                pdf_path = None
+                if paper.get("pdf_path"):
+                    pdf_path = paper["pdf_path"]
+                extracted_sections = self.extract_sections(
+                    paper["full_text"], paper, pdf_path=pdf_path
+                )  # Pass PDF path for structure analysis
                 sections_index[paper_id] = extracted_sections
             else:
                 # Use abstract as the only section if no full text

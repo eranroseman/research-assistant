@@ -655,12 +655,12 @@ class TestIncrementalUpdateFixes:
         builder.get_zotero_items_minimal = mock_get_zotero_items_minimal
         builder.get_pdf_paths_from_sqlite = dict  # No PDFs for simplicity
 
-        # Check for changes should detect the mismatch but NOT force full reindex
+        # Check for changes should detect the mismatch and force reindex
         changes = builder.check_for_changes()
 
-        # Current behavior: size mismatch doesn't trigger needs_reindex (only missing index does)
-        assert changes["needs_reindex"] is False, "Size mismatch should not force full reindex"
-        assert changes["total"] == 0, "Should not count papers for reindexing when index exists"
+        # Size mismatch should trigger needs_reindex=True (as per test name and docstring)
+        assert changes["needs_reindex"] is True, "Size mismatch should force reindex"
+        assert changes["total"] > 0, "Should count papers for reindexing when size mismatch"
 
     def test_embedding_reuse_in_incremental_update(self, tmp_path):
         """Test that incremental update properly reuses existing embeddings."""
@@ -863,6 +863,207 @@ class TestQualityScoreUpgrade:
 
         assert has_basic is False, "Should return False when all papers have enhanced scores"
         assert count == 0, "Should return 0 count when all papers have enhanced scores"
+
+
+@pytest.mark.unit
+@pytest.mark.knowledge_base
+class TestEmbeddingGenerationFix:
+    """Test embedding generation bug fixes (needs_reindex logic)."""
+
+    @patch("src.kb_indexer.KBIndexer._detect_device", return_value="cpu")
+    def test_needs_reindex_when_embeddings_missing_should_return_true(self, mock_detect, tmp_path):
+        """
+        Test that needs_reindex is True when embeddings are missing.
+
+        This tests the fix for the bug where missing embeddings didn't trigger reindexing.
+        Fixed in build_kb.py line 1282: needs_reindex = not index_exists or not index_size_correct
+        """
+        builder = KnowledgeBaseBuilder(knowledge_base_path=str(tmp_path))
+
+        # Mock metadata with papers
+        mock_metadata = {
+            "version": "4.0",
+            "papers": [
+                {"id": "0001", "zotero_key": "KEY1", "title": "Paper 1"},
+                {"id": "0002", "zotero_key": "KEY2", "title": "Paper 2"},
+                {"id": "0003", "zotero_key": "KEY3", "title": "Paper 3"},  # This one missing embedding
+            ],
+        }
+
+        # Create metadata file
+        metadata_file = tmp_path / "metadata.json"
+        with open(metadata_file, "w") as f:
+            json.dump(mock_metadata, f)
+
+        # Mock FAISS index that exists but has fewer embeddings than papers
+        with patch("faiss.read_index") as mock_read_index:
+            mock_index = MagicMock()
+            mock_index.ntotal = 2  # Only 2 embeddings for 3 papers
+            mock_read_index.return_value = mock_index
+
+            # Mock index file existence and Zotero connection
+            with (
+                patch.object(Path, "exists", return_value=True),
+                patch.object(
+                    builder,
+                    "get_zotero_items_minimal",
+                    return_value=[
+                        {"key": "KEY1", "title": "Paper 1"},
+                        {"key": "KEY2", "title": "Paper 2"},
+                        {"key": "KEY3", "title": "Paper 3"},
+                    ],
+                ),
+            ):
+                changes = builder.check_for_changes()
+
+        # Should trigger reindex because embeddings are missing (2 < 3)
+        assert changes["needs_reindex"] is True, "Should need reindex when embeddings missing"
+        assert changes["total"] > 0, "Should register changes when reindex needed"
+
+    @patch("src.kb_indexer.KBIndexer._detect_device", return_value="cpu")
+    def test_needs_reindex_when_index_missing_should_return_true(self, mock_detect, tmp_path):
+        """
+        Test that needs_reindex is True when index file doesn't exist.
+        """
+        builder = KnowledgeBaseBuilder(knowledge_base_path=str(tmp_path))
+
+        # Mock metadata with papers
+        mock_metadata = {"version": "4.0", "papers": [{"id": "0001", "zotero_key": "KEY1"}]}
+        metadata_file = tmp_path / "metadata.json"
+        with open(metadata_file, "w") as f:
+            json.dump(mock_metadata, f)
+
+        # Mock index file doesn't exist
+        with patch.object(Path, "exists", return_value=False):
+            changes = builder.check_for_changes()
+
+        assert changes["needs_reindex"] is True, "Should need reindex when index missing"
+
+    @patch("src.kb_indexer.KBIndexer._detect_device", return_value="cpu")
+    def test_needs_reindex_when_all_good_should_return_false(self, mock_detect, tmp_path):
+        """
+        Test that needs_reindex is False when index exists and has correct size.
+        """
+        builder = KnowledgeBaseBuilder(knowledge_base_path=str(tmp_path))
+
+        # Mock metadata with papers
+        mock_metadata = {
+            "version": "4.0",
+            "papers": [
+                {"id": "0001", "zotero_key": "KEY1", "title": "Paper 1"},
+                {"id": "0002", "zotero_key": "KEY2", "title": "Paper 2"},
+            ],
+        }
+        metadata_file = tmp_path / "metadata.json"
+        with open(metadata_file, "w") as f:
+            json.dump(mock_metadata, f)
+
+        # Mock FAISS index with correct size
+        with patch("faiss.read_index") as mock_read_index:
+            mock_index = MagicMock()
+            mock_index.ntotal = 2  # Matches number of papers
+            mock_read_index.return_value = mock_index
+
+            # Mock index file exists and no actual changes from Zotero
+            with (
+                patch.object(Path, "exists", return_value=True),
+                patch.object(builder, "get_zotero_items_minimal", return_value=[]),
+            ):
+                changes = builder.check_for_changes()
+
+        assert changes["needs_reindex"] is False, "Should not need reindex when all good"
+
+
+@pytest.mark.unit
+@pytest.mark.knowledge_base
+class TestRateLimitingFix:
+    """Test rate limiting fix for individual API calls."""
+
+    def test_individual_api_calls_have_rate_limiting_delay(self):
+        """
+        Test that individual API calls for papers without DOIs include rate limiting delays.
+
+        This tests the fix for API rate limiting in build_kb.py line 571:
+        Added time.sleep(1.1) before individual API calls to prevent 429 errors.
+        """
+        from src.build_kb import get_semantic_scholar_data_batch
+        from unittest.mock import patch, call
+
+        # Mock papers: some with DOIs, some without
+        paper_identifiers = [
+            {"key": "WITH_DOI_1", "doi": "10.1234/test1", "title": "Paper with DOI 1"},
+            {"key": "WITH_DOI_2", "doi": "10.1234/test2", "title": "Paper with DOI 2"},
+            {
+                "key": "NO_DOI_1",
+                "title": "Paper without DOI 1",
+            },  # No DOI key - should get individual call with delay
+            {
+                "key": "NO_DOI_2",
+                "title": "Paper without DOI 2",
+            },  # No DOI key - should get individual call with delay
+        ]
+
+        with (
+            patch("requests.post") as mock_post,
+            patch("src.build_kb.get_semantic_scholar_data_sync") as mock_individual_call,
+            patch("src.build_kb.time.sleep") as mock_sleep,
+        ):
+            # Mock successful batch response for DOI papers
+            mock_post.return_value.status_code = 200
+            mock_post.return_value.json.return_value = [
+                {"title": "Paper with DOI 1", "citationCount": 10},
+                {"title": "Paper with DOI 2", "citationCount": 15},
+            ]
+
+            # Mock successful individual responses
+            mock_individual_call.return_value = {"citationCount": 5}
+
+            # Call the function
+            results = get_semantic_scholar_data_batch(paper_identifiers)
+
+            # Verify rate limiting delays were added before individual API calls
+            expected_sleep_calls = [call(1.1), call(1.1)]  # One for each paper without DOI
+            assert mock_sleep.call_args_list == expected_sleep_calls, (
+                f"Expected {expected_sleep_calls}, got {mock_sleep.call_args_list}"
+            )
+
+            # Verify individual calls were made for papers without DOIs
+            assert mock_individual_call.call_count == 2, (
+                f"Should make 2 individual calls, made {mock_individual_call.call_count}"
+            )
+
+            # Verify results include both batch and individual papers
+            assert len(results) == 4, f"Should have 4 results, got {len(results)}"
+            assert "WITH_DOI_1" in results, "Should include batch-processed papers"
+            assert "NO_DOI_1" in results, "Should include individually-processed papers"
+
+    def test_rate_limiting_not_applied_when_no_papers_without_dois(self):
+        """
+        Test that rate limiting delays are not applied when all papers have DOIs.
+        """
+        from src.build_kb import get_semantic_scholar_data_batch
+
+        # Mock papers: all with DOIs
+        paper_identifiers = [
+            {"key": "WITH_DOI_1", "doi": "10.1234/test1", "title": "Paper with DOI 1"},
+            {"key": "WITH_DOI_2", "doi": "10.1234/test2", "title": "Paper with DOI 2"},
+        ]
+
+        with patch("requests.post") as mock_post, patch("time.sleep") as mock_sleep:
+            # Mock successful batch response
+            mock_post.return_value.status_code = 200
+            mock_post.return_value.json.return_value = [
+                {"title": "Paper 1", "citationCount": 10},
+                {"title": "Paper 2", "citationCount": 15},
+            ]
+
+            # Call the function
+            get_semantic_scholar_data_batch(paper_identifiers)
+
+            # Should not have any rate limiting delays since no individual calls needed
+            assert mock_sleep.call_count == 0, (
+                f"Should not call sleep when no individual API calls needed, called {mock_sleep.call_count} times"
+            )
 
 
 @pytest.mark.unit
