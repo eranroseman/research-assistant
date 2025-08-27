@@ -1904,13 +1904,34 @@ Value:
                 ):
                     return cache_entry.get("text")
 
-        # Extract text from PDF
+        # Extract text from PDF with structure preservation
         try:
-            pdf = fitz.open(str(pdf_path))
-            text = ""
-            for page in pdf:
-                text += page.get_text() + "\n"
-            pdf.close()
+            # Try PyMuPDF4LLM first for better structure preservation
+            extraction_method = "basic"  # Track which method we use
+            try:
+                import pymupdf4llm
+
+                text = pymupdf4llm.to_markdown(str(pdf_path))
+                extraction_method = "pymupdf4llm"
+                # Don't print for every file - too verbose
+                # self.console.print(f"[dim]Using PyMuPDF4LLM for {pdf_path.name}[/dim]", style="dim")
+            except ImportError:
+                # Fallback to basic extraction if PyMuPDF4LLM not available
+                self.console.print("[yellow]PyMuPDF4LLM not installed, using basic extraction[/yellow]")
+                pdf = fitz.open(str(pdf_path))
+                text = ""
+                for page in pdf:
+                    text += page.get_text() + "\n"
+                pdf.close()
+            except Exception as e:
+                # If PyMuPDF4LLM fails, fallback to basic
+                self.console.print(f"[dim]PyMuPDF4LLM failed ({e}), using basic extraction[/dim]")
+                pdf = fitz.open(str(pdf_path))
+                text = ""
+                for page in pdf:
+                    text += page.get_text() + "\n"
+                pdf.close()
+
             stripped_text = text.strip() if text else None
 
             # Update cache if enabled and key provided
@@ -1924,6 +1945,7 @@ Value:
                         "file_size": stat.st_size,
                         "file_mtime": stat.st_mtime,
                         "cached_at": datetime.now(UTC).isoformat(),
+                        "extraction_method": extraction_method,  # Track extraction method
                     }
 
             return stripped_text
@@ -2072,7 +2094,7 @@ Value:
                 extractor = PragmaticSectionExtractor(fuzzy_threshold=FUZZY_THRESHOLD)
 
                 # Use the new extractor with PDF path if available
-                result = extractor.extract(pdf_path=pdf_path, text=text)
+                result = extractor.extract(pdf_path=pdf_path, text=text, metadata=paper)
 
                 # Extract sections from result (excluding metadata)
                 sections = {

@@ -260,34 +260,34 @@ MIN_TEXT_FOR_CONCLUSION = 2000  # Minimum text needed to extract conclusion sect
 PDF_TIMEOUT_SECONDS = 30  # Timeout for PDF text extraction (prevents hanging)
 
 # Section extraction configuration (PragmaticSectionExtractor)
-FUZZY_THRESHOLD = (
-    70  # Minimum fuzzy match score (0-100) for section detection - lowered to catch more variations
-)
-TIER1_EXIT_THRESHOLD = 4  # Exit Tier 1 if ≥4 sections found
-TIER2_EXIT_THRESHOLD = 3  # Exit Tier 2 if ≥3 sections found
+FUZZY_THRESHOLD = 75  # Minimum fuzzy match score (0-100) - balanced for typos without false positives
+TIER1_EXIT_THRESHOLD = 5  # Exit Tier 1 if ≥5 sections found (typical paper structure)
+TIER2_EXIT_THRESHOLD = 4  # Exit Tier 2 if ≥4 sections found
 SECTION_EXTRACTION_TIMEOUT = 1.0  # Max time per paper (seconds)
 SECTION_EXTRACTION_N_WORKERS = 4  # Number of parallel workers for batch processing
 
-# Minimum section lengths - lowered to be more inclusive
+# Minimum section lengths - optimized for real papers
 MIN_SECTION_LENGTH = {
-    "abstract": 50,  # Lowered from 100
-    "introduction": 50,  # Lowered from 100
-    "methods": 50,  # Lowered from 100
-    "results": 50,  # Lowered from 100
-    "discussion": 50,  # Lowered from 100
-    "conclusion": 30,  # Even shorter for conclusions
-    "references": 20,  # References can be very short
+    "abstract": 100,  # ~20 words minimum for quality
+    "introduction": 200,  # Intro should have substance
+    "methods": 200,  # Methods need detail
+    "results": 200,  # Results need data
+    "discussion": 200,  # Discussion needs analysis
+    "conclusion": 100,  # Conclusions can be concise
+    "references": 50,  # References can vary
 }
 
-# Maximum section lengths to prevent over-extraction
+# Expected section lengths for monitoring (NOT enforced limits)
+# These are used only for quality monitoring - NO TRUNCATION occurs
+# Philosophy: Complete data preservation > Storage efficiency
 MAX_SECTION_LENGTH = {
-    "abstract": 5000,  # ~1000 words max
-    "introduction": 10000,  # ~2000 words
-    "methods": 15000,  # ~3000 words
-    "results": 15000,  # ~3000 words
-    "discussion": 15000,  # ~3000 words
-    "conclusion": 8000,  # ~1600 words
-    "references": 50000,  # Can be very long
+    "abstract": 5000,  # Expected ~1000 words (but structured abstracts can exceed)
+    "introduction": 15000,  # Expected ~3000 words
+    "methods": 25000,  # Expected ~5000 words (complex protocols preserved in full)
+    "results": 25000,  # Expected ~5000 words (all data preserved)
+    "discussion": 20000,  # Expected ~4000 words
+    "conclusion": 8000,  # Expected ~1600 words
+    "references": 75000,  # Expected ~15000 words (complete bibliography preserved)
 }
 
 # Sample size validation for RCTs

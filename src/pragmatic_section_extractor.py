@@ -23,6 +23,9 @@ from pathlib import Path
 from typing import Any
 
 from src.config import MAX_SECTION_LENGTH
+from src.simple_post_processor import SimplePostProcessor, StructuredAbstractHandler
+from src.enhanced_extraction import EnhancedAbstractExtractor, ContentBasedBoundaryDetector
+from src.markdown_parser import MarkdownParser, HybridMarkdownExtractor
 
 
 # Import fuzzy matching library
@@ -65,7 +68,7 @@ class PragmaticSectionExtractor:
     - Production-ready error handling
     """
 
-    def __init__(self, fuzzy_threshold: int = 75):
+    def __init__(self, fuzzy_threshold: int = 80):
         """Initialize the extractor.
 
         Args:
@@ -74,21 +77,34 @@ class PragmaticSectionExtractor:
         self.fuzzy_threshold = fuzzy_threshold
         self.compiled_patterns: dict[str, re.Pattern[str]] = {}  # Cache for regex patterns
         self.tier_thresholds = {
-            "tier1_exit": 4,  # Exit Tier 1 if ≥4 sections found
-            "tier2_exit": 3,  # Exit Tier 2 if ≥3 sections found
+            "tier1_exit": 5,  # Exit Tier 1 if ≥5 sections (abstract, intro, methods, results, discussion)
+            "tier2_exit": 4,  # Exit Tier 2 if ≥4 sections found
         }
         self._init_patterns()
+
+        # Initialize enhancement modules
+        self.post_processor = SimplePostProcessor()
+        self.abstract_handler = StructuredAbstractHandler()
+        self.abstract_extractor = EnhancedAbstractExtractor()
+        self.boundary_detector = ContentBasedBoundaryDetector()
+
+        # Initialize markdown parser for hybrid approach
+        self.markdown_parser = MarkdownParser()
+        self.hybrid_extractor = HybridMarkdownExtractor()
 
     def _init_patterns(self) -> None:
         """Initialize all patterns once for performance."""
         # Standard academic patterns (pre-compiled)
         self.standard_patterns: dict[str, re.Pattern[str]] = {
-            "abstract": re.compile(r"\n\s*(?:Abstract|ABSTRACT|Summary)\s*\n", re.IGNORECASE),
+            "abstract": re.compile(
+                r"\n\s*(?:Abstract|ABSTRACT|Summary|Executive\s+Summary)\s*[:.]?\s*\n", re.IGNORECASE
+            ),
             "introduction": re.compile(
                 r"\n\s*(?:1\.?\s*)?(?:Introduction|INTRODUCTION|Background)\s*\n", re.IGNORECASE
             ),
             "methods": re.compile(
-                r"\n\s*(?:2\.?\s*)?(?:Methods?|Materials?\s+and\s+Methods?|Methodology)\s*\n", re.IGNORECASE
+                r"\n\s*(?:2\.?\s*)?(?:Methods?|Materials?\s+and\s+Methods?|Methodology|Study\s+Design|Experimental\s+Design)\s*[:.]?\s*\n",
+                re.IGNORECASE,
             ),
             "results": re.compile(r"\n\s*(?:3\.?\s*)?(?:Results?|Findings?)\s*\n", re.IGNORECASE),
             "discussion": re.compile(r"\n\s*(?:4\.?\s*)?(?:Discussion|DISCUSSION)\s*\n", re.IGNORECASE),
@@ -129,12 +145,15 @@ class PragmaticSectionExtractor:
             "conclusion": ["in conclusion", "future research", "in summary", "implications"],
         }
 
-    def extract(self, pdf_path: str | None = None, text: str | None = None) -> dict[str, Any]:
+    def extract(
+        self, pdf_path: str | None = None, text: str | None = None, metadata: dict[str, Any] | None = None
+    ) -> dict[str, Any]:
         """Main extraction pipeline with three-tier approach.
 
         Args:
             pdf_path: Path to PDF file (preferred for structure analysis)
             text: Pre-extracted text (fallback if PDF not available)
+            metadata: Optional metadata dict (e.g., from Zotero) for enhanced extraction
 
         Returns:
             Dictionary with sections and metadata
@@ -142,13 +161,31 @@ class PragmaticSectionExtractor:
         start_time = time.time()
 
         # Get text if not provided
+        is_markdown = False
         if text is None and pdf_path:
-            text = self._extract_text_fast(pdf_path)
+            text, is_markdown = self._extract_text_with_structure(pdf_path)
         elif text is None:
             raise ValueError("Either pdf_path or text must be provided")
 
+        # Try markdown parsing first if we have markdown structure
+        if is_markdown and self.hybrid_extractor.should_use_markdown(text):
+            md_sections, method = self.hybrid_extractor.extract_with_fallback(text)
+            if md_sections:
+                # Convert to Section objects
+                sections = {}
+                confidence = {}
+                for name, content in md_sections.items():
+                    sections[name] = Section(
+                        content=content, confidence=0.95, method="markdown", start_pos=0, end_pos=len(content)
+                    )
+                    confidence[name] = 0.95
+
+                # If we got good sections from markdown, skip to enhancement
+                if len(sections) >= self.tier_thresholds["tier1_exit"]:
+                    return self._finalize(sections, confidence, "markdown", time.time() - start_time)
+
         # Tier 1: Fast exact matching (1ms)
-        sections, confidence = self._tier1_fast_patterns(text)
+        sections, confidence = self._tier1_fast_patterns(text, metadata)
         tier_used = "tier1"
 
         if len(sections) >= self.tier_thresholds["tier1_exit"]:
@@ -184,6 +221,28 @@ class PragmaticSectionExtractor:
 
         return self._finalize(sections, confidence, tier_used, time.time() - start_time)
 
+    def _extract_text_with_structure(self, pdf_path: str) -> tuple[str, bool]:
+        """Extract text, trying PyMuPDF4LLM first for structure preservation.
+
+        Returns:
+            Tuple of (text, is_markdown)
+        """
+        # Try PyMuPDF4LLM first for better structure
+        try:
+            import pymupdf4llm
+
+            md_text = pymupdf4llm.to_markdown(pdf_path)
+            if md_text:
+                return md_text, True
+        except ImportError:
+            pass  # PyMuPDF4LLM not available
+        except Exception as e:
+            # Log but continue with fallback
+            _ = e  # Acknowledge exception
+
+        # Fall back to regular extraction
+        return self._extract_text_fast(pdf_path), False
+
     def _extract_text_fast(self, pdf_path: str) -> str:
         """Fast text extraction with PyMuPDF."""
         try:
@@ -210,7 +269,9 @@ class PragmaticSectionExtractor:
             except ImportError:
                 return ""
 
-    def _tier1_fast_patterns(self, text: str) -> tuple[dict[str, Section], dict[str, float]]:
+    def _tier1_fast_patterns(
+        self, text: str, metadata: dict[str, Any] | None = None
+    ) -> tuple[dict[str, Section], dict[str, float]]:
         """Tier 1: Fast exact pattern matching for 76% of papers with clear formatting."""
         sections = {}
         confidence = {}
@@ -218,16 +279,16 @@ class PragmaticSectionExtractor:
         # Updated patterns: Handle Title Case, ALL CAPS, and numbered sections
         # Using case-insensitive matching to catch 65% more papers
         combined_patterns = [
-            (r"(?:^|\n)\s*(?:\d+\.?\s*)?(?:abstract|summary)[:.]?\s*(?:\n|$)", "abstract"),
-            (r"(?:^|\n)\s*(?:\d+\.?\s*)?(?:introduction|background)[:.]?\s*(?:\n|$)", "introduction"),
+            (r"(?:^|\n)\s*(?:\d+\.?\s*)?(?:abstract|summary)[:.]?\s*", "abstract"),
+            (r"(?:^|\n)\s*(?:\d+\.?\s*)?(?:introduction|background)[:.]?\s*", "introduction"),
             (
-                r"(?:^|\n)\s*(?:\d+\.?\s*)?(?:methods?|methodology|materials?\s+and\s+methods?)[:.]?\s*(?:\n|$)",
+                r"(?:^|\n)\s*(?:\d+\.?\s*)?(?:methods?|methodology|materials?\s+and\s+methods?)[:.]?\s*",
                 "methods",
             ),
-            (r"(?:^|\n)\s*(?:\d+\.?\s*)?(?:results?|findings)[:.]?\s*(?:\n|$)", "results"),
-            (r"(?:^|\n)\s*(?:\d+\.?\s*)?(?:discussion)[:.]?\s*(?:\n|$)", "discussion"),
-            (r"(?:^|\n)\s*(?:\d+\.?\s*)?(?:conclusions?|summary)[:.]?\s*(?:\n|$)", "conclusion"),
-            (r"(?:^|\n)\s*(?:references?|bibliography|literature\s+cited)[:.]?\s*(?:\n|$)", "references"),
+            (r"(?:^|\n)\s*(?:\d+\.?\s*)?(?:results?|findings)[:.]?\s*", "results"),
+            (r"(?:^|\n)\s*(?:\d+\.?\s*)?(?:discussion)[:.]?\s*", "discussion"),
+            (r"(?:^|\n)\s*(?:\d+\.?\s*)?(?:conclusions?|summary)[:.]?\s*", "conclusion"),
+            (r"(?:^|\n)\s*(?:references?|bibliography|literature\s+cited)[:.]?\s*", "references"),
         ]
 
         for pattern, section_name in combined_patterns:
@@ -239,8 +300,8 @@ class PragmaticSectionExtractor:
             if header_match:
                 # Extract content starting after the header
                 start_pos = header_match.end()
-                # Skip any immediate whitespace after header
-                while start_pos < len(text) and text[start_pos] in "\n\r \t":
+                # Only skip newlines, not spaces (content might start on same line after colon)
+                while start_pos < len(text) and text[start_pos] in "\n\r":
                     start_pos += 1
 
                 content = self._extract_section_content(text, start_pos, section_name)
@@ -489,6 +550,43 @@ class PragmaticSectionExtractor:
                 content = content[:ref_pos]
         return content.strip()
 
+    def _apply_enhancements(self, sections: dict[str, Section]) -> dict[str, Section]:
+        """Apply all enhancement modules to extracted sections."""
+        # Convert Section objects to string dict for post-processor
+        sections_dict = {}
+        for name, section in sections.items():
+            sections_dict[name] = section.content
+
+        # Apply structured abstract cleaning if abstract exists
+        if "abstract" in sections_dict:
+            sections_dict["abstract"] = self.abstract_handler.clean_structured_abstract(
+                sections_dict["abstract"]
+            )
+
+        # Apply post-processing
+        processed_dict = self.post_processor.process_sections(sections_dict)
+
+        # Convert back to Section objects
+        enhanced_sections = {}
+        for name, content in processed_dict.items():
+            original_section = sections.get(name)
+            if original_section:
+                enhanced_sections[name] = Section(
+                    content=content,
+                    confidence=original_section.confidence * 0.95,  # Slight confidence reduction
+                    method=original_section.method + "_enhanced",
+                    start_pos=original_section.start_pos,
+                    end_pos=original_section.end_pos,
+                )
+            else:
+                enhanced_sections[name] = Section(
+                    content=content,
+                    confidence=0.8,
+                    method="enhanced",
+                )
+
+        return enhanced_sections
+
     def _finalize(
         self,
         sections: dict[str, Section],
@@ -497,6 +595,8 @@ class PragmaticSectionExtractor:
         processing_time: float,
     ) -> dict[str, Any]:
         """Finalize results with metadata."""
+        # Apply enhancements before finalizing
+        sections = self._apply_enhancements(sections)
         # Apply post-processing validation and cleaning
         sections = self._validate_and_clean_sections(sections)
 

@@ -38,12 +38,16 @@ Digital interventions showed a significant reduction in HbA1c levels
 (mean difference -0.5%, 95% CI -0.7 to -0.3, p < 0.001).
 
 DISCUSSION
-Our findings suggest that digital health interventions are effective
-for diabetes management. These results are consistent with recent reviews.
+Our findings suggest that digital health interventions are effective for diabetes management
+in diverse patient populations. These results are consistent with recent systematic reviews
+and meta-analyses that have demonstrated the positive impact of technology-enabled care
+on glycemic control, medication adherence, and patient engagement in self-management behaviors.
 
 CONCLUSION
-Digital health interventions represent a promising approach for improving
-glycemic control in patients with type 2 diabetes.
+Digital health interventions represent a promising approach for improving glycemic control
+in patients with type 2 diabetes. Implementation of these technologies should be accompanied
+by appropriate training for healthcare providers and patients to maximize their effectiveness
+and ensure sustainable adoption across diverse healthcare settings.
 """
 
         result = extractor.extract(text=text)
@@ -70,30 +74,40 @@ glycemic control in patients with type 2 diabetes.
         text = """
 Abstract
 
-This paper presents a comprehensive analysis of healthcare outcomes.
+This paper presents a comprehensive analysis of healthcare outcomes in digital health interventions.
+We examine the effectiveness of mobile applications, wearable devices, and telehealth platforms
+in improving patient engagement and clinical outcomes across diverse populations.
 
 1. Introduction
 
-Healthcare systems worldwide face significant challenges in delivering
-quality care while managing costs effectively.
+Healthcare systems worldwide face significant challenges in delivering quality care while managing costs effectively.
+The integration of digital health technologies offers promising solutions to address these challenges
+through improved efficiency, enhanced patient engagement, and data-driven decision making that can
+transform traditional healthcare delivery models.
 
 2. Methods
 
-Participants were recruited from three urban hospitals.
-Data were collected using validated questionnaires.
+Participants were recruited from three urban hospitals over a 12-month period.
+Data were collected using validated questionnaires, electronic health records,
+and continuous monitoring through wearable devices to ensure comprehensive assessment.
 
 3. Results
 
-A total of 250 participants completed the study.
-Significant improvements were observed in all outcome measures.
+A total of 250 participants completed the study with an 85% retention rate.
+Significant improvements were observed in all outcome measures including medication adherence,
+physical activity levels, and overall quality of life scores.
 
 4. Discussion
 
-The results demonstrate the potential for system-wide improvements.
+The results demonstrate the potential for system-wide improvements in healthcare delivery.
+Digital health interventions show promise in addressing key challenges including access to care,
+cost reduction, and personalized treatment approaches for chronic disease management.
 
 5. Conclusion
 
-This study provides evidence for the effectiveness of the intervention.
+This study provides evidence for the effectiveness of digital health interventions in improving
+patient outcomes. Future research should focus on long-term sustainability and scalability
+of these interventions across different healthcare settings and populations.
 """
 
         result = extractor.extract(text=text)
@@ -107,7 +121,10 @@ This study provides evidence for the effectiveness of the intervention.
 
         metadata = result.get("_metadata", {})
         assert metadata["sections_found"] >= 4
-        assert "regex" in metadata["extraction_methods"] or "pattern_match" in metadata["extraction_methods"]
+        assert any(
+            method in metadata["extraction_methods"]
+            for method in ["regex", "pattern_match", "pattern_match_enhanced"]
+        )
 
     @pytest.mark.skipif("rapidfuzz" not in globals(), reason="rapidfuzz not installed")
     def test_tier2_fuzzy_matching(self):
@@ -163,8 +180,9 @@ INTERVENTION: Mobile app providing medication reminders and blood pressure track
 
 MAIN OUTCOME MEASURES: Change in systolic and diastolic blood pressure.
 
-RESULTS: The intervention group showed a mean reduction of 10 mmHg in systolic
-blood pressure compared to 3 mmHg in the control group (p < 0.001).
+RESULTS: The intervention group showed a mean reduction of 10 mmHg in systolic blood pressure
+compared to 3 mmHg in the control group (p < 0.001). Secondary outcomes including medication
+adherence and quality of life scores also showed statistically significant improvements.
 
 CONCLUSION: Mobile health interventions can effectively support blood pressure
 management in elderly patients.
@@ -299,26 +317,32 @@ CONCLUSION
         # Create test text instead of PDF files (with enough words to pass validation)
         test_texts = {
             "paper1": """ABSTRACT
-This is a test abstract with enough words to pass the validation threshold.
-We need at least ten words to ensure the section is accepted.
+This comprehensive study examines the effectiveness of digital health interventions in managing chronic diseases.
+We conducted a systematic review and meta-analysis of randomized controlled trials published between 2010 and 2024,
+focusing on mobile applications, wearable devices, and telehealth platforms that support patient self-management.
 
 METHODS
-The test methods section also needs sufficient content to be valid.
-This ensures that our extraction process works correctly.""",
+We searched PubMed, Embase, and Cochrane databases for relevant studies meeting our inclusion criteria.
+Participants were adults with chronic conditions using digital health interventions for at least three months.
+Statistical analysis was performed using random effects models to account for heterogeneity between studies.""",
             "paper2": """ABSTRACT
-Another abstract with sufficient content for proper extraction.
-Testing is important for ensuring code quality and reliability.
+This research investigates the impact of artificial intelligence on clinical decision support systems in primary care.
+We evaluated multiple AI-powered diagnostic tools across various healthcare settings to assess their accuracy,
+usability, and effect on patient outcomes compared to traditional clinical decision-making processes.
 
 RESULTS
-Test results show that the extraction process works as expected.
-All sections are properly identified and extracted.""",
+The analysis included 42 studies with a total of 8,456 participants from diverse geographic regions.
+AI-assisted diagnosis showed significant improvements in diagnostic accuracy with a sensitivity of 92% and specificity of 89%.
+Implementation of these systems reduced diagnostic errors by 35% and improved patient satisfaction scores.""",
             "paper3": """INTRODUCTION
-Test introduction with enough words to meet the minimum threshold.
-This section introduces the paper and its objectives.
+Healthcare systems worldwide face unprecedented challenges in delivering quality care while managing costs effectively.
+The integration of digital technologies offers promising solutions to address these challenges through improved efficiency,
+accessibility, and personalized care delivery that meets the diverse needs of patient populations.
 
 CONCLUSION
-Test conclusion summarizing the key findings and implications.
-This ensures proper section detection and extraction.""",
+This study provides compelling evidence for the effectiveness of digital health interventions in improving patient outcomes.
+Future research should focus on long-term sustainability, scalability across different healthcare settings,
+and strategies for addressing the digital divide to ensure equitable access to these innovations.""",
         }
 
         # Test batch processing by calling extract directly for each
