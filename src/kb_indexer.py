@@ -88,6 +88,15 @@ class KBIndexer:
             else:
                 print("Using CPU for embeddings (GPU not available)")
 
+                # Try to optimize with Intel Extension for PyTorch if available
+                try:
+                    import intel_extension_for_pytorch as ipex
+
+                    print("Intel Extension for PyTorch detected! Enabling CPU optimizations...")
+                    self._ipex_available = True
+                except ImportError:
+                    self._ipex_available = False
+
             # Load Multi-QA MPNet model optimized for healthcare and scientific papers
             print("Loading Multi-QA MPNet embedding model...")
             # Import config for embedding model
@@ -97,8 +106,34 @@ class KBIndexer:
                 from config import EMBEDDING_MODEL  # type: ignore[no-redef]
 
             self._embedding_model = SentenceTransformer(EMBEDDING_MODEL, device=self.device)
+
+            # Apply Intel Extension optimizations if on CPU
+            if self.device == "cpu" and hasattr(self, "_ipex_available") and self._ipex_available:
+                try:
+                    import torch
+                    import intel_extension_for_pytorch as ipex
+
+                    # Optimize the model's underlying transformer
+                    if hasattr(self._embedding_model, "_modules"):
+                        for module_name in self._embedding_model._modules:
+                            module = self._embedding_model._modules[module_name]
+                            if hasattr(module, "auto_model"):
+                                # Optimize the transformer model
+                                module.auto_model = ipex.optimize(module.auto_model, dtype=torch.float32)
+                                print(
+                                    "✅ Intel Extension for PyTorch optimizations applied to transformer model"
+                                )
+                                break
+                except Exception as e:
+                    print(f"Warning: Could not apply IPEX optimizations: {e}")
+
             self.model_version = "Multi-QA MPNet"
-            print(f"Multi-QA MPNet model loaded successfully on {self.device}")
+            ipex_status = (
+                " (IPEX-optimized)"
+                if self.device == "cpu" and hasattr(self, "_ipex_available") and self._ipex_available
+                else ""
+            )
+            print(f"Multi-QA MPNet model loaded successfully on {self.device}{ipex_status}")
 
         return self._embedding_model
 
@@ -273,17 +308,53 @@ class KBIndexer:
             batch_size = self.get_optimal_batch_size()
             new_embeddings = []
 
-            # Process in batches
-            for i in tqdm(
-                range(0, len(texts_to_embed), batch_size), desc="Embedding batches", disable=not show_progress
-            ):
-                batch = texts_to_embed[i : i + batch_size]
-                batch_embeddings = self.embedding_model.encode(
-                    batch,
-                    convert_to_numpy=True,
-                    show_progress_bar=False,
-                )
-                new_embeddings.extend(batch_embeddings)
+            # Process in batches with IPEX optimization if available
+            if self.device == "cpu" and hasattr(self, "_ipex_available") and self._ipex_available:
+                try:
+                    import torch
+
+                    # Enable automatic mixed precision for CPU
+                    with torch.cpu.amp.autocast(enabled=True):
+                        for i in tqdm(
+                            range(0, len(texts_to_embed), batch_size),
+                            desc="Embedding batches (IPEX)",
+                            disable=not show_progress,
+                        ):
+                            batch = texts_to_embed[i : i + batch_size]
+                            batch_embeddings = self.embedding_model.encode(
+                                batch,
+                                convert_to_numpy=True,
+                                show_progress_bar=False,
+                            )
+                            new_embeddings.extend(batch_embeddings)
+                except Exception:
+                    # Fallback to regular processing if IPEX fails
+                    for i in tqdm(
+                        range(0, len(texts_to_embed), batch_size),
+                        desc="Embedding batches",
+                        disable=not show_progress,
+                    ):
+                        batch = texts_to_embed[i : i + batch_size]
+                        batch_embeddings = self.embedding_model.encode(
+                            batch,
+                            convert_to_numpy=True,
+                            show_progress_bar=False,
+                        )
+                        new_embeddings.extend(batch_embeddings)
+            else:
+                # Regular processing for GPU or no IPEX
+                for i in tqdm(
+                    range(0, len(texts_to_embed), batch_size),
+                    desc="Embedding batches",
+                    disable=not show_progress,
+                ):
+                    batch = texts_to_embed[i : i + batch_size]
+                    batch_embeddings = self.embedding_model.encode(
+                        batch,
+                        convert_to_numpy=True,
+                        show_progress_bar=False,
+                    )
+                    new_embeddings.extend(batch_embeddings)
 
             # Validate embedding count matches expected
             if len(new_embeddings) != len(texts_to_embed):
