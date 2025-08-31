@@ -125,6 +125,8 @@ def get_maximum_extraction_params():
 
 ## 7-File Output Strategy
 
+**BUG FIX (Aug 31, 2025)**: Fixed critical bug where section content was not being extracted, only section titles. The `sections` field now properly contains both title and full text for each section.
+
 For maximum post-processing flexibility, we save 7 files per paper:
 
 ```

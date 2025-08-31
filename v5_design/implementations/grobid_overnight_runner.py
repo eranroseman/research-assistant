@@ -441,21 +441,31 @@ class OvernightGrobidExtractor:
 
     def _extract_sections(self, body, ns):
         """Extract all body sections with their content."""
-        sections = {}
+        sections = []
 
         for div in body.findall(".//tei:div", ns):
+            section_data = {}
+
             # Get section title
             head = div.find("tei:head", ns)
             if head is not None:
                 section_title = " ".join(head.itertext()).strip()
+                if section_title:
+                    section_data["title"] = section_title
 
-                # Get section content
-                paragraphs = []
-                for p in div.findall("tei:p", ns):
-                    paragraphs.append(" ".join(p.itertext()).strip())
+            # Get section content - extract ALL paragraphs
+            paragraphs = []
+            for p in div.findall("tei:p", ns):
+                text = " ".join(p.itertext()).strip()
+                if text:
+                    paragraphs.append(text)
 
-                if section_title and paragraphs:
-                    sections[section_title] = "\n\n".join(paragraphs)
+            if paragraphs:
+                section_data["text"] = "\n\n".join(paragraphs)
+
+            # Add section if it has either title or content
+            if section_data:
+                sections.append(section_data)
 
         return sections
 

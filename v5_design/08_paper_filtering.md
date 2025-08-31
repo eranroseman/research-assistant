@@ -120,9 +120,34 @@ def is_book_by_pages(pdf_path: Path) -> bool:
     return check_page_count(pdf_path) > 75
 ```
 
+## Quality Filtering Workflow (Updated Aug 31, 2025)
+
+### Stage 1: Grobid Extraction
+- Extract all PDFs with TEI XML output
+- ~99.5% success rate for research papers
+
+### Stage 2: Full Text Recovery
+- Re-process TEI XML to extract section text (bug fix)
+- Recovers ~85.9M characters of research content
+
+### Stage 3: Quality Filtering
+Papers are EXCLUDED only if they:
+- Have abstract-only (no full text)
+- Have no content at all (failed extraction)
+- Have insufficient text (<1000 chars)
+- Missing BOTH title AND DOI (unidentifiable)
+
+**IMPORTANT**: Papers missing ONLY title are INCLUDED if they have DOI + content.
+Titles can be recovered in post-processing via CrossRef/S2 lookup.
+
+### Stage 4: Post-Processing
+- Fetch missing titles using DOIs
+- Clean malformed DOIs
+- S2 enrichment for citations
+
 ## PDF Quality Report Integration
 
-Papers that fail both extraction passes are added to the PDF quality report:
+Papers that fail extraction or quality filtering are added to the PDF quality report:
 
 ```python
 def add_to_quality_report(failed_papers: List[Dict]):

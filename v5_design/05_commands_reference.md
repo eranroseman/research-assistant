@@ -1,5 +1,28 @@
 # Commands Reference
 
+## Updated Extraction Pipeline (Aug 31, 2025)
+
+### Complete Workflow
+
+```bash
+# Step 1: Extract PDFs with Grobid
+python v5_design/implementations/extract_zotero_library.py
+
+# Step 2: Fix full text extraction (recovers 85.9M chars)
+python reprocess_tei_xml.py
+
+# Step 3: Filter low-quality papers
+python pdf_quality_filter.py
+
+# Step 4: Enrich metadata
+python crossref_doi_finder.py        # Find missing DOIs
+python s2_retry_cleaned_dois.py      # Clean and retry DOIs
+# python fetch_missing_titles.py     # TODO: Get titles via DOI
+
+# Step 5: Build KB from filtered data
+python src/build_kb.py --input kb_filtered_*/
+```
+
 ## Script Name Changes (v4.6 → v5.0)
 
 | Old Name | New Name | Purpose | Rationale |

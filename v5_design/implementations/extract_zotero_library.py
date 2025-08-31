@@ -254,12 +254,32 @@ class ZoteroGrobidExtractor:
             references = root.findall('.//tei:text//tei:ref[@type="bibr"]', ns)
             data["num_references"] = len(references)
 
-            # Sections
+            # Sections - Extract both title AND full text content
             sections = []
             for div in root.findall(".//tei:text//tei:div", ns):
+                section_data = {}
+
+                # Get section title
                 head = div.find("tei:head", ns)
                 if head is not None and head.text:
-                    sections.append(head.text.strip())
+                    section_data["title"] = head.text.strip()
+
+                # Extract all paragraphs in this section
+                paragraphs = []
+                for p in div.findall("tei:p", ns):
+                    # Get all text from paragraph, including nested elements
+                    text = " ".join(p.itertext()).strip()
+                    if text:
+                        paragraphs.append(text)
+
+                # Combine paragraphs into section text
+                if paragraphs:
+                    section_data["text"] = "\n\n".join(paragraphs)
+
+                # Only add section if it has content
+                if section_data and (section_data.get("text") or section_data.get("title")):
+                    sections.append(section_data)
+
             if sections:
                 data["sections"] = sections
 

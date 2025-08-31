@@ -1,5 +1,25 @@
 # Implementation Guide
 
+## Bug Fixes and Updates (Aug 31, 2025)
+
+### Fixed Issues
+
+1. **Section Text Extraction Bug**
+   - **Files**: `extract_zotero_library.py`, `grobid_overnight_runner.py`
+   - **Issue**: Only section titles were saved, not paragraph content
+   - **Fix**: Modified to extract full text using `p.itertext()`
+   - **Impact**: Recovered 85.9M characters from 2,203 papers
+
+2. **Quality Filtering Logic**
+   - **File**: `pdf_quality_filter.py`
+   - **Issue**: Papers missing titles were excluded despite having content
+   - **Fix**: Include papers with DOI + content (titles recoverable via API)
+   - **Impact**: Preserved ~82 valuable papers for title recovery
+
+### Current Workflow
+
+1. **Grobid Extraction** → 2. **TEI Reprocessing** → 3. **Quality Filter** → 4. **Post-Processing** → 5. **KB Build**
+
 ## Shared Libraries Architecture
 
 v5.0 introduces shared libraries to eliminate code duplication and ensure consistency.
