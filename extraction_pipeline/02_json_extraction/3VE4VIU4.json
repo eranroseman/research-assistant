@@ -1,0 +1,726 @@
+{
+  "paper_id": "3VE4VIU4",
+  "title": "Comparisons Between Hypothesis-and Data-Driven Approaches for Multimorbidity Frailty Index: A Machine Learning Approach",
+  "abstract": "Background: Using big data and the theory of cumulative deficits to develop the multimorbidity frailty index (mFI) has become a widely accepted approach in public health and health care services. However, constructing the mFI using the most critical determinants and stratifying different risk groups with dose-response relationships remain major challenges in clinical practice. Objective: This study aimed to develop the mFI by using machine learning methods that select variables based on the optimal fitness of the model. In addition, we aimed to further establish 4 entities of risk using a machine learning approach that would achieve the best distinction between groups and demonstrate the dose-response relationship. \n Methods: In this study, we used Taiwan's National Health Insurance Research Database to develop a machine learning multimorbidity frailty index (ML-mFI) using the theory of cumulative diseases/deficits of an individual older person. Compared to the conventional mFI, in which the selection of diseases/deficits is based on expert opinion, we adopted the random forest method to select the most influential diseases/deficits that predict adverse outcomes for older people. To ensure that the survival curves showed a dose-response relationship with overlap during the follow-up, we developed the distance index and coverage index, which can be used at any time point to classify the ML-mFI of all subjects into the categories of fit, mild frailty, moderate frailty, and severe frailty. Survival analysis was conducted to evaluate the ability of the ML-mFI to predict adverse outcomes, such as unplanned hospitalizations, intensive care unit (ICU) admissions, and mortality. \n Results: The final ML-mFI model contained 38 diseases/deficits. Compared with conventional mFI, both indices had similar distribution patterns by age and sex; however, among people aged 65 to 69 years, the mean mFI and ML-mFI were 0.037 (SD 0.048) and 0.0070 (SD 0.0254), respectively. The difference may result from discrepancies in the diseases/deficits selected in the mFI and the ML-mFI. A total of 86,133 subjects aged 65 to 100 years were included in this study and were categorized into 4 groups according to the ML-mFI. Both the Kaplan-Meier survival curves and Cox models showed that the ML-mFI significantly predicted all outcomes of interest, including all-cause mortality, unplanned hospitalizations, and all-cause ICU admissions at 1, 5, and 8 years of follow-up (P<.01). In particular, a dose-response relationship was revealed between the 4 ML-mFI groups and adverse outcomes.",
+  "year": 2013,
+  "date": "2013-12",
+  "authors": [
+    {
+      "name": "Li-Ning Peng",
+      "affiliation": {
+        "organization": "Aging and Health Research Center",
+        "department": "Aging and Health Research Center",
+        "institution": "National Yang Ming University",
+        "address": "Taipei, Taiwan"
+      }
+    },
+    {
+      "name": "Fei-Yuan Hsiao",
+      "affiliation": {
+        "organization": "Graduate Institute of Clinical Pharmacy",
+        "department": "Graduate Institute of Clinical Pharmacy",
+        "institution": "National Taiwan University",
+        "address": "Taipei, Taiwan"
+      }
+    },
+    {
+      "name": "Wei-Ju Lee",
+      "affiliation": {
+        "organization": "Aging and Health Research Center",
+        "department": "Aging and Health Research Center",
+        "institution": "National Yang Ming University",
+        "address": "Taipei, Taiwan"
+      }
+    },
+    {
+      "name": "Shih-Tsung Huang",
+      "affiliation": {
+        "organization": "Graduate Institute of Clinical Pharmacy",
+        "department": "Graduate Institute of Clinical Pharmacy",
+        "institution": "National Taiwan University",
+        "address": "Taipei, Taiwan"
+      }
+    },
+    {
+      "name": "Liang-Kung Chen",
+      "email": "lkchen2@vghtpe.gov.tw",
+      "affiliation": {
+        "organization": "Aging and Health Research Center",
+        "department": "Aging and Health Research Center",
+        "institution": "National Yang Ming University",
+        "address": "Taipei, Taiwan"
+      }
+    },
+    {
+      "affiliation": {
+        "organization": "Center for Geriatrics and Gerontology",
+        "department": "Center for Geriatrics and Gerontology",
+        "institution": "Taipei Veterans General Hospital",
+        "address": "201 Section 2 Shih-Pai Road, 11217, Taipei, Taiwan"
+      }
+    }
+  ],
+  "doi": "10.2196/16213",
+  "md5": "03873E089500AC33A3262A4A25C01928",
+  "pmid": "32525481",
+  "publication": {
+    "journal": "Age Ageing",
+    "journal_inferred": true
+  },
+  "keywords": [
+    "multimorbidity frailty index",
+    "machine learning",
+    "random forest",
+    "unplanned hospitalizations",
+    "intensive care unit admissions",
+    "mortality"
+  ],
+  "funding": [
+    "",
+    "",
+    "",
+    "",
+    "Acknowledgments The authors thank the  National Health Insurance Association and National Health Research Institutes  for making available the databases used in this study; the  Ministry of Science and Technology, Taiwan , for the funding of this project ( MOST 107-2634-F-010-001 ,  MOST 108-2634-F-010-001 ,  MOST 109-2634-F-010-001 ); and  Tsung-Hsien Tsai ,  Pei-Jung Chen , and ACER for supporting data analysis. However, this paper in no way represents any official position of the  National Health Insurance Association , the  National Health Research Institutes , the  Ministry of Science and Technology , and ACER. The authors had full access to all the data in the study and take responsibility for the integrity of the data and the accuracy of the data analysis."
+  ],
+  "sections": [
+    {
+      "title": "Introduction",
+      "text": "Population aging is a global phenomenon that poses various challenges to societies  [1] . The health characteristics of older people and their health care service utilization differ greatly from those of younger adults  [2] , and frailty plays a pivotal role in the health of older people  [3] [4] [5] . Frailty has been widely accepted as a geriatric syndrome that substantially increases the complexity of diseases and the burden of care  [3] [4] [5] . In addition, frailty is recognized as an intermediate state between healthy and unhealthy states, and the potential reversibility of its nature highlights the importance of considering frailty when aiming to maintain the health of older people  [6] . Moreover, frailty involves the coexistence of multiple comorbid conditions, such as polypharmacy, depression, cognitive impairment, falls, and malnutrition  [7] . Therefore, the early identification of frailty and appropriate intervention remain the core of health care services for older people.\n\nDespite the clinical significance of frailty, conceptual and operational definitions of frailty are inconsistent across studies  [8] . Currently, the two most widely accepted approaches include the phenotypic approach for physical frailty and the frailty index based on the theory of cumulative deficits  [9] . Although the definitions of frailty provided by the two approaches overlapped to some extent, the major discrepancy is in the prefrail group, such that physically prefrail subjects demonstrated a wide range on the frailty index. Nevertheless, both definitions remain the most widely accepted  [10] . The theory of cumulative deficits proposed that aging may be characterized by the presence of cumulative deficits in various domains of health (eg, multimorbidity, functional assessment, and psychosocial perspectives)  [9] . With a sufficient number of variables, the individual component of the frailty index was considered the same weight to constitute the frailty index. Researchers applied the theory of cumulative deficits to various data sets and validated the ability of the frailty index (FI) to predict adverse clinical outcomes  [4, 9] . Internationally, documented health care services data sets have been widely used to develop the FI for the prediction of health outcomes, and studies from different countries have all shown optimal results  [5, 11, 12] . In the United Kingdom, researchers developed the electronic FI (eFI) using electronic medical records, which significantly predicted the mortality of older people  [13, 14] . Using similar principles, we developed the multimorbidity FI (mFI) using Taiwan's National Health Insurance data set and significantly predicted mortality, hospitalizations, and admissions to critical care units  [4] . However, it is always challenging to use data sets with large study samples and many variables to select appropriate variables to construct an FI and to optimally categorize the FI into risk classes. Both eFI and mFI adopted expert recommendations in the selection of variables, and the eFI and mFI were then categorized into quartiles for group comparisons, which is a widely accepted approach. Nonetheless, selecting variables based on expert recommendations may result in a failure to recognize previously unidentified associations. In addition, the quartile approach for risk group categorization may successfully be used to construct the prediction model, but the intergroup comparisons in survival analysis may overlap and fail to establish a clear distinction.\n\nTherefore, this study aimed to develop the mFI by using machine learning methods that select variables based on the best fitness of the model. Furthermore, we aim to further establish 4 entities of risk using a machine learning approach and ensure the dose-response relationship and the best distinction between groups."
+    },
+    {
+      "title": "Methods"
+    },
+    {
+      "title": "Study Design and Participants",
+      "text": "This is a retrospective cohort study using data from Taiwan's National Health Insurance Research Database (NHIRD). Details about the NHIRD have been published  [15] . Briefly, the NHIRD is a nationwide database composed of outpatient and inpatient claims, and it covers more than 99% of Taiwan's population."
+    },
+    {
+      "title": "Construction of the Machine Learning-Based Multimorbidity Frailty Index",
+      "text": "The mFI was constructed following standard procedures  [16] , and this method has been validated in the Taiwanese population  [4, 5] . Disease diagnoses (International Classification of Diseases, Ninth Revision, Clinical Modification [ICD-9-CM]) from outpatient and inpatient claims of the NHIRD between January 1 and December 31, 2005, were used to identify accumulated deficits to construct mFI. We adopted an algorithm widely used in studies using NHIRD as the data source to validate the diagnostic codes of the specified deficits within NHIRD; that is, only those who had at least 3 outpatient claim records or 1 inpatient claim record for that specified diagnosis code were considered to have the specified deficit. For example, an older adult must have at least 3 outpatient claim records or 1 inpatient claim record of diabetes mellitus [ICD-9-CM: 250] to be defined as having a deficit based on our definition.\n\nA random forest method, with significant improvements in classification accuracy that resulted from growing an ensemble of trees and letting them vote for the most popular class, was adopted  [17] . The variable importance of the random forest uses mean decrease accuracy to determine the specific conditions of machine learning-based multimorbidity frailty index (ML-mFI). The adequate constructive number of ML-mFI was 38 conditions, when the model accuracy reached the highest level, 0.602 (Figure  1  and Multimedia Appendix 1). The ML-mFI was calculated as the number of conditions a person encountered in a year out of the 38 selected ones."
+    },
+    {
+      "title": "Determination of Frailty Status by ML-mFI",
+      "text": "All subjects were further categorized into 4 entities (fit, mild frailty, moderate frailty, and severe frailty) based on their risk status; this categorization was used by a previous study  [4] . The fundamental rules for risk stratification included the following:\n\n(1) the individual risk groups were significantly different from each other, and (2) the health risk of these groups showed a dose-response relationship (ie, those in the severe frailty group had a higher risk than those in the moderate frailty group, who had a higher risk than those in the mild frailty group, and so on, at any follow-up time point after the first year). To achieve this purpose, we developed two indices, the distance index and the coverage index, which ensured the distinction and dose-response relationship of all survival curves.\n\nThe distance index measured the distance between each survival curve and the stability of those distances within groups. At any time point, the distance index was defined as . Therefore, the distances within groups are wider and more stable when the distance index is larger (Multimedia Appendix 2). Conversely, the coverage index aimed to evaluate the length of the confidence interval for each survival curve. The total length of the confidence intervals indicated the overall estimated error in the grouping method. In Multimedia Appendix 3, the coverage index was defined as at any individual time point, where L_total measured the difference in the estimated survival probability between the fit group and the severe frailty group, and L_error measured the total estimated errors within the 4 groups. When the coverage index is smaller, the estimated error within groups is smaller. With the application of both the distance index and the coverage index, the levels of frailty were successfully categorized into 4 groups by values of ML-mFI: fit was indicated by 0\u2264ML-mFI<0.026; mild frailty was 0.026\u2264ML-mFI<0.105; moderate frailty was 0.105\u2264ML-mFI<0.157; and severe frailty was 0.157\u2264ML-mFI. In the survival analysis, the grouping strategy successfully categorized all subjects into 4 groups with significant distinction during the follow-up period. In other words, there were no overlaps between the survival curves and the dose-response relationship between groups was clearly shown."
+    },
+    {
+      "title": "Outcomes of Interest",
+      "text": "The outcomes of interest in this study include all-cause mortality, unplanned hospitalizations, and intensive care unit (ICU) admissions. The date of mortality was identified as the date of disenrollment from the NHIRD, which has been validated in a previous study  [4] . Unplanned hospitalizations were any unexpected hospitalizations after an emergency department visit. ICU admissions were any hospital admissions with the use of ICU services. All study subjects were continuously followed from January 1, 2006, to the occurrence of each outcome or the end of 2013, whichever came first. For the outcomes of unplanned hospitalizations and ICU admissions, subjects were censored at death if it occurred first. Preplanned analyses were conducted to evaluate the effectiveness of ML-mFI in predicting outcomes at 1, 5, and 8 years."
+    },
+    {
+      "title": "Statistical Analysis",
+      "text": "Numerical variables were expressed as the mean (SD), and categorical variables were expressed as a number or percentage. A random forest method not only determined the number of disease items comprising ML-mFI but also identified potential conditions of ML-mFI with prediction accuracy and variable importance. The distance index and coverage index with min-max and max-min criteria were used to determine cut points and categorize the frailty group by ML-mFI automatically. The Kaplan-Meier survival curve with the log-rank test was used to examine the association between categories of ML-mFI (fit, mild frailty, moderate frailty, and severe frailty) and 8-year mortality and hospitalizations. Cox proportional hazard models were used to estimate the hazard ratios (HRs) and 95% CIs for mortality and hospitalizations at 1, 5, and 8 years after the ML-mFI and mFI were estimated (based on a previous study  [4] ), considering both to be the independent variable. We further included age and gender as covariates in all adjusted models. Sex-specific analysis was conducted.\n\nAll of the analyses were performed using R Version 3.4.4 (R Foundation for Statistical Computing). A two-sided P value of <.05 was considered statistically significant. The coxph function in the survival package showed nonviolation of the proportional hazards assumption and a linear relationship between the log hazard and each covariate. The random forest and importance functions in the randomForest package showed the model building and variable importance to predict the outcome occurrence and comprise ML-mFI, respectively."
+    },
+    {
+      "title": "Results"
+    },
+    {
+      "title": "Construction of ML-mFI",
+      "text": "The final ML-mFI with the highest model accuracy (0.6022061) contained 38 conditions (Multimedia Appendix 1). Details of convergences and divergences of composing conditions among ML-mFI and mFI are shown in Multimedia Appendix 4. Table  1  compares the ML-mFI group and traditional mFI by age and sex. There were two similar distribution patterns on mFI and ML-mFI. ML-mFI increased with age, but reached a plateau at age 80 years and older. Both indices were higher in males, which is compatible with the shorter life expectancy of men in Taiwan. However, the mFI was calculated based on 32 selected conditions a person may have in a year, while the ML-mFI was calculated based on 38 selected conditions a person may have in a year; thus, the actual numbers on the mFI and ML-mFI were very different. Among people aged 65 to 69 years, the mean mFI and ML-mFI were 0.037 (SD 0.048) and 0.0070 (SD 0.0254), respectively. The difference may result from discrepancies in the conditions selected on the mFI and the ML-mFI. For example, some conditions were selected only on the ML-mFI but not on the mFI (eg, ICD-9-CM: 250 [diabetes mellitus] and, vice versa, ICD-9-CM: 374 [entropion]). These discrepancies have been shown in Multimedia Appendix 1."
+    },
+    {
+      "title": "Survival Analysis",
+      "text": "Overall, 86,133 subjects aged 65 to 100 years were included in this study. With a mean follow-up of 6.57 (SD 2.37) years, 30,136 deaths (34.99%) occurred among the study cohort during the study period. Figure  2  summarizes the results of the Kaplan-Meier survival curves estimating 4 levels of ML-mFI on all-cause mortality, unplanned hospitalization, and ICU admission, and shows that ML-mFI significantly predicted all these outcomes of interest.\n\nTable  2  shows the hazard ratios of all-cause mortality, unplanned admissions, and ICU admissions for the ML-mFI and the mFI at the 1-, 5-and 8-year follow-up periods. Among all three outcomes of interest, ML-mFI posed higher hazards than did mFI. For example, those who were categorized as severely frail by the mFI or the ML-mFI were associated with 4.97-fold (adjusted HR 4.97, 95% CI 4.49-5.50) and 11.4-fold (adjusted HR 11.40, 95% CI 10.32-12.59) increases in 1-year all-cause mortality, respectively. Similar patterns were observed for 5-year and 8-year all-cause mortality."
+    },
+    {
+      "title": "Table 2.",
+      "text": "Hazard ratios of all-cause mortality, unplanned hospitalizations, and intensive care unit admissions for the ML-mFI and the mFI at the 1-, 5and 8-year follow-up periods. a,b,c All values are given as hazard ratio (95% CI)."
+    },
+    {
+      "title": "Severe frailty",
+      "text": "Moderate frailty Mild frailty Adverse outcomes at follow-up periods ML-mFI (n=1488) mFI (n=2498) ML-mFI (n=2522) mFI (n=4741) ML-mFI (n=9366) mFI (n=14,244) 1-year all-cause mortality HR d 16.62 (15.08-18.32) 7.52 (6.81-8.30) 8.81 (8.00-9.71) 4.09 (3.72-4.50) 3.66 (3.38-3.97) 2.21 (2.04-2.39) Unadjusted 11.40 (10.32-12.59) 4.97 (4.49-5.50) 6.79 (6.15-7.49) 3.08 (2.80-3.39) 3.13 (2.89-3.39) 1.86 (1.71-2.01) Adjusted 5-year all-cause mortality HR 9.02 (8.49-9.58) 5.00 (4.74-5.28) 5.27 (5.00-5.55) 2.85 (2.72-2.99) 2.57 (2.48-2.67) 1.76 (1.70-1.82) Unadjusted 6.15 (5.79-6.54) 3.28 (3.11-3.46) 4.04 (3.83-4.26) 2.14 (2.04-2.25) 2.19 (2.11-2.27) 1.46 (1.41-1.52) Adjusted 8-year all-cause mortality HR 8.05 (7.61-8.51) 4.50 (4.29-4.71) 4.72 (4.54-4.94) 2.65 (2.55-2.76) 2.32 (2.25-2.39) 1.69 (1.64-1.74) Unadjusted 5.52 (5.22-5.84) 2.98 (2.84-3.12) 3.70 (3.53-3.88) 2.01 (1.93-2.09) 1.99 (1.93-2.05) 1.41 (1.37-1.45) Adjusted 1-year unplanned hospitalization HR 7.65 (6.99-8.38) 5.29 (4.88-5.73) 5.21 (4.82-5.64) 3.30 (3.07-3.54) 2.86 (2.70-3.02) 2.08 (1.97-2.20) Unadjusted 6.20 (5.66-6.80) 4.28 (3.94-4.64) 4.53 (4.18-4.90) 2.85 (2.65-3.06) 2.63 (2.49-2.79) 1.91 (1.80-2.01) Adjusted 5-year unplanned hospitalization HR 5.43 (5.07-5.83) 3.85 (3.65-4.06) 3.79 (3.59-4.00) 2.51 (2.40-2.62) 2.28 (2.21-2.36) 1.78 (1.73-1.83) Unadjusted 4.33 (4.04-4.65) 3.05 (2.89-3.23) 3.23 (3.06-3.41) 2.14 (2.05-2.24) 2.09 (2.02-2.16) 1.61 (1.57-1.66) Adjusted 8-year unplanned hospitalization HR 5.03 (4.69-5.38) 3.53 (3.36-3.71) 3.53 (3.36-3.71) 2.32 (2.24-2.41) 2.11 (2.05-2.17) 1.67 (1.63-1.71) Unadjusted 3.98 (3.72-4.27) 2.79 (2.65-2.94) 3.01 (2.86-3.17) 1.98 (1.91-2.06) 1.93 (1.87-1.99) 1.51 (1.48-1.55) Adjusted 1-year intensive care unit admission HR 12.16 (10.98-13.46) 7.04 (6.38-7.76) 6.70 (6.08-7.38) 4.32 (3.95-4.72) 3.23 (3.00-3.48) 2.34 (2.18-2.52) Unadjusted 9.41 (8.49-10.44) 5.35 (4.84-5.91) 5.64 (5.11-6.23) 3.59 (3.28-3.92) 2.91 (2.70-3.13) 2.09 (1.94-2.25) Adjusted 5-year intensive care unit admission HR 7.84 (7.30-8.42) 4.84 (4.56-5.14) 4.75 (4.48-5.04) 2.92 (2.78-3.07) 2.39 (2.30-2.48) 1.86 (1.79-1.93) Unadjusted 6.00 (5.58-6.44) 3.65 (3.43-3.87) 3.96 (3.74-4.21) 2.42 (2.30-2.54) 2.14 (2.06-2.23) 1.64 (1.58-1.70) Adjusted 8-year intensive care unit admission HR 7.10 (6.63-7.60) 4.28 (4.05-4.52) 4.35 (4.12-4.59) 2.69 (2.58-2.81) 2.20 (2.12-2.28) 1.74 (1.69-1.79) Unadjusted 5.46 (5.10-5.85) 3.24 (3.06-3.42) 3.68 (3.49-3.89) 2.23 (2.14-2.34) 1.98 (1.92-2.05) 1.54 (1.49-1.59) Adjusted\n\na For all outcomes, the comparator is the study subjects in the fit categories (n=64,650). All data were adjusted for age and gender.\n\nb ML-mFI: machine learning multimorbidity frailty index. For unplanned hospitalizations, those who were categorized as severely frail by the mFI or the ML-mFI were associated with 4.28-fold (adjusted HR 4.28, 95% CI 3.94-4.64) and 6.20-fold (adjusted HR 6.20, 95% CI 5.66-6.80) increases in 1-year unplanned hospitalizations, respectively. Similar patterns were observed for 5-year and 8-year all-cause unplanned hospitalizations.\n\nFor ICU admissions, those who were categorized as severely frail by the mFI or the ML-mFI were associated with 4.28-fold (adjusted HR 5.35, 95% CI 4.84-5.91) and 9.41-fold (adjusted HR 9.41, 95% CI 8.49-10.44) increases in 1-year ICU admissions, respectively. Similar patterns were observed for 5-year and 8-year all-cause ICU admissions.\n\nSex-specific analysis showed that both indices were higher in men than in women for various outcomes and follow-up periods (Tables  3  and  4  for males and females, respectively). For example, men in the severe frailty group (as defined by the ML-mFI) were associated with a 12.64-fold increased risk of 1-year mortality, while women in the severe frailty group (as defined by the mFI) were associated with a 10.37-fold increased risk of 1-year mortality. a For all outcomes, the comparator is subjects in fit categories (n=64,650). All data were adjusted for age and gender.\n\nb ML-mFI: machine learning multimorbidity frailty index. c mFI: multimorbidity frailty index."
+    },
+    {
+      "title": "Discussion",
+      "text": "In this study, we successfully used a machine learning approach to define ML-mFI. Specifically, we selected disease/deficit items by the random forest method and ranked the importance of each individual disease accordingly. The selection of these diseases/deficits items to construct ML-mFI was driven solely by data, while the conventional mFI included disease/deficit items based on expert recommendations. Moreover, the combined use of the distance index and coverage index successfully distinguished 4 groups with dose-response risks of adverse outcomes. In epidemiological studies, researchers have often encountered similar challenges in selecting appropriate variables for analysis and optimally categorizing continuous variables into categorical variables for further comparisons. Traditionally, researchers need to search for literature support or adopt a generic approach to develop an optimal statistical model for data interpretation  [18] [19] [20] . The hypothesis-driven approach for a research question is of great importance in scientific development; however, previously unknown or unidentified factors may be overlooked in the analysis, which may lower the statistical power in the interpretation of the phenomenon. Compared to our previous work where we used a hypothesis-driven approach to construct the mFI  [4] , the machine learning model selected significantly different disease/deficit items for ML-mFI construction. The traditional approach selected the diseases/deficits of older adults based on the selection criteria, and the machine learning approach identified more disease/deficit items, including chronic diseases, infectious diseases, and even some cancers, but these items did not comprise the majority of disease/deficit items.\n\nThe FI developed by Rockwood et al  [18]  hypothesized that cumulative deficits in various health domains may represent the process of biological aging, and this FI has been widely validated to predict adverse health events and mortality in different countries  [5, 11, 12] . In theory, an FI may consist of as many variables as possible, so there are no issues regarding variable selection. However, to meet the needs of the busy clinical environment, the mFI is derived from the concept of the FI; a selection of age-related chronic conditions were the key variables used to construct the prediction model. Existing studies have shown that these previously developed mFIs can significantly predict the mortality of older adults  [13.14] . However, to maximize the effectiveness of the prediction model, using a data-driven approach to construct the ML-mFI may provide better prediction accuracy. Moreover, in the survival analysis, the dose-response relationship is usually expected when grouping continuous measurements into distinct risk groups in association with outcomes. However, the distinction between individual groups from the continuous measurements is not always statistically significant even though the whole model reached statistical significance. For example, in one Taiwanese study, the developed FI was found to predict the adverse outcomes of older adults, which was in line with most related studies  [5] . However, in that study, different risk groups that were categorized based on FI tertiles resulted in overlapping survival curves of the intermediate-and high-risk groups; it failed to achieve the stratification of risk groups. The combined use of the distance index and coverage index developed in this study engenders the ability to address the overlapping phenomenon of survival curves.\n\nAlthough the mFI we developed adequately predicted adverse outcomes for older adults, the ML-mFI showed relatively higher hazard ratios than did the mFI for all health outcomes. Overall, the data-driven ML-mFI may identify different at-risk populations than the hypothesis-driven mFI. The data-driven approach may disclose the phenomenon of the whole data set  [21] [22] [23] , but the hypothesis-driven approach may provide a better explanation for the observations  [24, 25] . The data-driven approach may not be superior to the hypothesis-driven approach, since the study purpose and research questions may vary greatly. Although a data-driven approach may usually establish a prediction model with better accuracy, it is difficult to implement intervention programs for the observed phenomenon. Applying the theory of cumulative deficits, a large number of variables may be used to construct the prediction model, but it becomes challenging to further utilize the prediction model with a large number of variables. Therefore, researchers have attempted to reduce the number of variables while maintaining optimal prediction accuracy. Our previous study used factor analysis to reduce the 125 selected variables into 35 factors to improve the clinical application  [5] . However, the machine learning approach in this study may play a similar role in reducing the selected number of variables and optimizing prediction accuracy. The main strength of this study was to demonstrate the methodological advance of processing a large data set to select appropriate variables to construct a prediction model and to ensure the distinction of different risk groups with dose-response relationships. This methodological advance may facilitate public health or social sciences research, or interdisciplinary research that uses a large data set with a wide array of data characteristics. In particular, the distance index and coverage index would be of great importance for future research to categorize the results of continuous variables into distinct entities with different health risks. Avoiding the overlap of the survival curves of different risk groups by using the distance index and coverage index is important to strengthen the observed phenomenon and the risk group classification.\n\nTherefore, this ML-mFI demonstrated an automatic approach to predict adverse outcomes in older people, and it can be applied to different populations in different countries. Using the same approach, different diseases can be selected to construct the new ML-mFI in another population to predict adverse outcomes in the corresponding population. For example, we further stratified our study population into 3 subcohorts, including those aged 65 to 75 years, 76 to 85 years, and 85 years and older, and we constructed three kinds of ML-mFI for each age group according to the same automatic machine learning approach and model selection criteria. We found that the total deficit number and composing deficits on the ML-mFI, as well the cut-off points of different frailty statuses, are quite different in distinct age groups. For example, the total deficit numbers on the ML-mFI were 59, 47, and 39 for those who were aged 65 to 75 years, 76 to 85 years, and 85 years and older, respectively. In addition, the composing deficits were different, as displayed in Multimedia Appendix 5. Although the composing deficits of the ML-mFI are different in distinct age groups, all of these ML-mFI can successfully predict all-cause mortality (C index>0.6). These findings are inspiring because they indicate that the same machine learning approach can be used to construct one's own ML-mFI to fulfill this purpose. Individual diseases may have different clinical impacts in different countries due to diagnosis, treatment, and quality of care. Therefore, the results of this study can be applied to different countries and populations using the same approach to construct their own ML-mFI to meet their needs. Therefore, our ML-mFI could have clinical implications in public health or in health care administration. For example, in large long-term care facilities management, the administration needs to optimize the admission waiting list through the estimation of the mortality of all residents. On the other hand, in public health settings, the government is able to accurately estimate the health risk of residents in a certain geographic area and to provide optimal health care or palliative care services. Traditionally, these decisions were made based on existing medical knowledge, but a data-driven approach may better predict outcomes and optimize the government's public health policy. In clinical practice, the ML-mFI may enable physicians and families to quantify health risks for optimal care planning. Hence, using available electronic medical records, the ML-mFI can be automatically generated and integrated as part of the medical record to facilitate certain forms of decision-making in care planning. Despite all the effort that went into this study, there are still some limitations. First, like all data-driven studies, the results of this study could not provide or validate a well-established hypothetical framework due to the nature of machine learning.\n\nSecond, it remained difficult to develop further intervention programs based on the diagnostic entities identified by machine learning. Third, another data set is needed to examine whether overfitting exists in the machine learning model. Finally, as in most of the previous frailty index studies, although we adjusted for age and sex as covariates in the Cox model, we were unable to access some residual confounders not routinely captured in a claims database, such as disease severity or lifestyle factors (eg, physical activity and diet).\n\nIn conclusion, the ML-mFI significantly predicted adverse health outcomes for older adults, and the risk groups defined by the combination of the distance index and coverage index distinguished the different risk groups with dose-response relationships and clear distinctions. The methodological advance of this study also had further research implications for studies with similar data and research questions. The data-driven approach may provide better prediction accuracy than the hypothesis-driven approach, but the superiority of the data-driven approach requires further study for confirmation."
+    },
+    {
+      "text": "The data are checked for quality and maintained by the Data Science Centre of the Ministry of Health and Welfare of Taiwan. We used a subset of the NHIRD, which contains claims data for one million randomly selected beneficiaries from the Registry of Beneficiaries of the NHIRD in 2005. The study cohort consisted of 86,133 older adults aged 65 to 100 years who had full National Health Insurance (NHI) coverage from January 1, 2005, to December 31, 2005. Claims data from 2005 to 2013 for the one million beneficiaries was extracted to compose a 9-year (2005-2013) panel of claims for analysis. The study protocol was approved by the Research Ethics Committee of"
+    },
+    {
+      "text": "Figure 1. Numbers of diseases versus random forest model accuracy to determine an adequate number of frailty indexes."
+    },
+    {
+      "text": "Figure 2. The 8-year Kaplan-Meier survival curve for the outcome of (A) all-cause mortality, (B) unplanned hospitalizations, and (C) intensive care unit admissions for different frailty categories."
+    },
+    {
+      "text": "c mFI: multimorbidity frailty index.d HR: hazard ratio."
+    },
+    {
+      "text": "Comparisons of mFI and ML-mFI by age and sex. a,b"
+    },
+    {
+      "text": "Male hazard ratios of all-cause mortality, unplanned hospitalization, and intensive care unit admission for ML-mFI and mFI among 1-, 5-, and 8-year follow-up periods. a,b,c For all outcomes, the comparator is subjects in fit categories (n=64,650). All data were adjusted for age and gender."
+    },
+    {
+      "text": "Female hazard ratios of all-cause mortality, unplanned hospitalization, and intensive care unit admission for ML-mFI and mFI among 1-, 5-, and 8-year follow-up periods. a,b,c"
+    },
+    {
+      "title": "Acknowledgments",
+      "text": "The authors thank the  National Health Insurance Association and National Health Research Institutes  for making available the databases used in this study; the  Ministry of Science and Technology, Taiwan , for the funding of this project ( MOST 107-2634-F-010-001 ,  MOST 108-2634-F-010-001 ,  MOST 109-2634-F-010-001 ); and  Tsung-Hsien Tsai ,  Pei-Jung Chen , and ACER for supporting data analysis. However, this paper in no way represents any official position of the  National Health Insurance Association , the  National Health Research Institutes , the  Ministry of Science and Technology , and ACER. The authors had full access to all the data in the study and take responsibility for the integrity of the data and the accuracy of the data analysis."
+    },
+    {
+      "title": "Conflicts of Interest",
+      "text": "STH, HFY, and CLK received research project funding (MOST 107-2634-F-010-001) sponsored by the Ministry of Science and Technology (Taiwan). All authors have declared no support from any organization for the submitted work; no financial relationships with any organizations that might have an interest in the submitted work in the previous 3 years; and no other relationships or activities that could appear to have influenced the submitted work."
+    },
+    {
+      "title": "Multimedia Appendix 1",
+      "text": "Model accuracy with various numbers of composite diseases.\n\n[DOCX File , 14 KB-Multimedia Appendix 1]"
+    },
+    {
+      "title": "Multimedia Appendix 2",
+      "text": "Survival curves with 4 frail groups to depict the calculation of the distance index."
+    }
+  ],
+  "references": [
+    {
+      "title": "Challenges of urban aging in Taiwan: Summary of urban aging forum",
+      "authors": [
+        "L Chen",
+        "H Inoue",
+        "C Won",
+        "C Lin",
+        "K Lin",
+        "S Tsay"
+      ],
+      "year": 2013,
+      "doi": "10.1016/j.jcgg.2013.05.001",
+      "journal": "Journal of Clinical Gerontology and Geriatrics",
+      "volume": "4",
+      "issue": "4",
+      "raw": "Challenges of urban aging in Taiwan: Summary of urban aging forum \n\t\t \n\t\t\t L K Chen \n\t\t \n\t\t \n\t\t\t H Inoue \n\t\t \n\t\t \n\t\t\t C W Won \n\t\t \n\t\t \n\t\t\t C H Lin \n\t\t \n\t\t \n\t\t\t K F Lin \n\t\t \n\t\t \n\t\t\t S F Tsay \n\t\t \n\t\t 10.1016/j.jcgg.2013.05.001 \n\t \n\t \n\t\t Journal of Clinical Gerontology and Geriatrics \n\t\t \n\t\t\t 4 \n\t\t\t 4 \n\t\t\t \n\t\t\t 2013 Dec \n\t\t \n\t \n\t Chen LK, Inoue H, Won CW, Lin CH, Lin KF, Tsay SF, et al. Challenges of urban aging in Taiwan: Summary of urban aging forum. Journal of Clinical Gerontology and Geriatrics 2013 Dec;4(4):97-101. [doi: 10.1016/j.jcgg.2013.05.001]"
+    },
+    {
+      "title": "Comparisons of annual health care utilization, drug consumption, and medical expenditure between the elderly and general population in Taiwan",
+      "authors": [
+        "W Lu",
+        "W Lee",
+        "L Chen",
+        "F Hsiao"
+      ],
+      "year": 2016,
+      "doi": "10.1016/j.jcgg.2015.08.002",
+      "journal": "Journal of Clinical Gerontology and Geriatrics",
+      "volume": "7",
+      "issue": "2",
+      "raw": "Comparisons of annual health care utilization, drug consumption, and medical expenditure between the elderly and general population in Taiwan \n\t\t \n\t\t\t W H Lu \n\t\t \n\t\t \n\t\t\t W J Lee \n\t\t \n\t\t \n\t\t\t L K Chen \n\t\t \n\t\t \n\t\t\t F Y Hsiao \n\t\t \n\t\t 10.1016/j.jcgg.2015.08.002 \n\t \n\t \n\t\t Journal of Clinical Gerontology and Geriatrics \n\t\t \n\t\t\t 7 \n\t\t\t 2 \n\t\t\t \n\t\t\t 2016 Jun \n\t\t \n\t \n\t Lu WH, Lee WJ, Chen LK, Hsiao FY. Comparisons of annual health care utilization, drug consumption, and medical expenditure between the elderly and general population in Taiwan. Journal of Clinical Gerontology and Geriatrics 2016 Jun;7(2):44-47. [doi: 10.1016/j.jcgg.2015.08.002]"
+    },
+    {
+      "title": "The synergic effects of frailty on disability associated with urbanization, multimorbidity, and mental health: implications for public health and medical care",
+      "authors": [
+        "W Lee",
+        "L Peng",
+        "C Lin",
+        "H Lin",
+        "C Loh",
+        "L Chen"
+      ],
+      "year": 2018,
+      "doi": "10.1038/s41598-018-32537-5",
+      "journal": "Sci Rep",
+      "volume": "8",
+      "issue": "1",
+      "pages": "14125",
+      "raw": "The synergic effects of frailty on disability associated with urbanization, multimorbidity, and mental health: implications for public health and medical care \n\t\t \n\t\t\t W J Lee \n\t\t \n\t\t \n\t\t\t L N Peng \n\t\t \n\t\t \n\t\t\t C H Lin \n\t\t \n\t\t \n\t\t\t H P Lin \n\t\t \n\t\t \n\t\t\t C H Loh \n\t\t \n\t\t \n\t\t\t L K Chen \n\t\t \n\t\t 10.1038/s41598-018-32537-5 \n\t\t Medline: 30237508 \n\t \n\t \n\t\t Sci Rep \n\t\t \n\t\t\t 8 \n\t\t\t 1 \n\t\t\t 14125 \n\t\t\t 2018 Sep 20 \n\t\t \n\t \n\t FREE Full text \n\t Lee WJ, Peng LN, Lin CH, Lin HP, Loh CH, Chen LK. The synergic effects of frailty on disability associated with urbanization, multimorbidity, and mental health: implications for public health and medical care. Sci Rep 2018 Sep 20;8(1):14125 [FREE Full text] [doi: 10.1038/s41598-018-32537-5] [Medline: 30237508]"
+    },
+    {
+      "title": "Predicting mortality and hospitalization of older adults by the multimorbidity frailty index",
+      "authors": [
+        "Y Wen",
+        "L Chen",
+        "F Hsiao"
+      ],
+      "year": 2017,
+      "doi": "10.1371/journal.pone.0187825",
+      "journal": "PLoS One",
+      "volume": "12",
+      "issue": "11",
+      "pages": "187825",
+      "raw": "Predicting mortality and hospitalization of older adults by the multimorbidity frailty index \n\t\t \n\t\t\t Y C Wen \n\t\t \n\t\t \n\t\t\t L K Chen \n\t\t \n\t\t \n\t\t\t F Y Hsiao \n\t\t \n\t\t 10.1371/journal.pone.0187825 \n\t\t Medline: 29145407 \n\t \n\t \n\t\t PLoS One \n\t\t \n\t\t\t 12 \n\t\t\t 11 \n\t\t\t 187825 \n\t\t\t 2017 Nov 16 \n\t\t \n\t \n\t FREE Full text \n\t Wen YC, Chen LK, Hsiao FY. Predicting mortality and hospitalization of older adults by the multimorbidity frailty index. PLoS One 2017 Nov 16;12(11):e0187825 [FREE Full text] [doi: 10.1371/journal.pone.0187825] [Medline: 29145407]"
+    },
+    {
+      "title": "Frailty Index Predicts All-Cause Mortality for Middle-Aged and Older Taiwanese: Implications for Active-Aging Programs",
+      "authors": [
+        "S Lin",
+        "W Lee",
+        "M Chou",
+        "L Peng",
+        "S Chiou",
+        "L Chen"
+      ],
+      "year": 2016,
+      "doi": "10.1371/journal.pone.0161456",
+      "journal": "PLoS One",
+      "volume": "11",
+      "issue": "8",
+      "pages": "161456",
+      "raw": "Frailty Index Predicts All-Cause Mortality for Middle-Aged and Older Taiwanese: Implications for Active-Aging Programs \n\t\t \n\t\t\t S Y Lin \n\t\t \n\t\t \n\t\t\t W J Lee \n\t\t \n\t\t \n\t\t\t M Y Chou \n\t\t \n\t\t \n\t\t\t L N Peng \n\t\t \n\t\t \n\t\t\t S Y Chiou \n\t\t \n\t\t \n\t\t\t L K Chen \n\t\t \n\t\t 10.1371/journal.pone.0161456 \n\t\t Medline: 27537684 \n\t \n\t \n\t\t PLoS One \n\t\t \n\t\t\t 11 \n\t\t\t 8 \n\t\t\t 161456 \n\t\t\t 2016 Aug 18 \n\t\t \n\t \n\t FREE Full text \n\t Lin SY, Lee WJ, Chou MY, Peng LN, Chiou SY, Chen LK. Frailty Index Predicts All-Cause Mortality for Middle-Aged and Older Taiwanese: Implications for Active-Aging Programs. PLoS One 2016 Aug 18;11(8):e0161456 [FREE Full text] [doi: 10.1371/journal.pone.0161456] [Medline: 27537684]"
+    },
+    {
+      "title": "Interventions for frail community-dwelling older adults have no significant effect on adverse outcomes: a systematic review and meta-analysis",
+      "authors": [
+        "M Van Der Elst",
+        "B Schoenmakers",
+        "D Duppen",
+        "D Lambotte",
+        "B Fret",
+        "B Vaes",
+        "D-Scope Consortium"
+      ],
+      "year": 2018,
+      "doi": "10.1186/s12877-018-0936-7",
+      "journal": "BMC Geriatr",
+      "volume": "18",
+      "issue": "1",
+      "pages": "249",
+      "raw": "Interventions for frail community-dwelling older adults have no significant effect on adverse outcomes: a systematic review and meta-analysis \n\t\t \n\t\t\t M Van Der Elst \n\t\t \n\t\t \n\t\t\t B Schoenmakers \n\t\t \n\t\t \n\t\t\t D Duppen \n\t\t \n\t\t \n\t\t\t D Lambotte \n\t\t \n\t\t \n\t\t\t B Fret \n\t\t \n\t\t \n\t\t\t B Vaes \n\t\t \n\t\t \n\t\t\t D-Scope Consortium \n\t\t \n\t\t 10.1186/s12877-018-0936-7 \n\t\t Medline: 30342479 \n\t \n\t \n\t\t BMC Geriatr \n\t\t \n\t\t\t 18 \n\t\t\t 1 \n\t\t\t 249 \n\t\t\t 2018 Oct 20 \n\t\t \n\t \n\t FREE Full text \n\t Van der Elst M, Schoenmakers B, Duppen D, Lambotte D, Fret B, Vaes B, D-SCOPE Consortium. Interventions for frail community-dwelling older adults have no significant effect on adverse outcomes: a systematic review and meta-analysis. BMC Geriatr 2018 Oct 20;18(1):249 [FREE Full text] [doi: 10.1186/s12877-018-0936-7] [Medline: 30342479]"
+    },
+    {
+      "title": "Frailty Is a Geriatric Syndrome Characterized by Multiple Impairments: A Comprehensive Approach Is Needed",
+      "authors": [
+        "L Chen",
+        "A Hwang",
+        "L Liu",
+        "W Lee",
+        "L Peng"
+      ],
+      "year": 2016,
+      "doi": "10.14283/jfa.2016.109",
+      "journal": "J Frailty Aging",
+      "volume": "5",
+      "issue": "4",
+      "raw": "Frailty Is a Geriatric Syndrome Characterized by Multiple Impairments: A Comprehensive Approach Is Needed \n\t\t \n\t\t\t L K Chen \n\t\t \n\t\t \n\t\t\t A C Hwang \n\t\t \n\t\t \n\t\t\t L K Liu \n\t\t \n\t\t \n\t\t\t W J Lee \n\t\t \n\t\t \n\t\t\t L N Peng \n\t\t \n\t\t 10.14283/jfa.2016.109 \n\t\t Medline: 27883167 \n\t \n\t \n\t\t J Frailty Aging \n\t\t \n\t\t\t 5 \n\t\t\t 4 \n\t\t\t \n\t\t\t 2016 \n\t\t \n\t \n\t Chen LK, Hwang AC, Liu LK, Lee WJ, Peng LN. Frailty Is a Geriatric Syndrome Characterized by Multiple Impairments: A Comprehensive Approach Is Needed. J Frailty Aging 2016;5(4):208-213. [doi: 10.14283/jfa.2016.109] [Medline: 27883167]"
+    },
+    {
+      "title": "Identifying frailty in primary care: A systematic review",
+      "authors": [
+        "L Lee",
+        "T Patel",
+        "L Hillier",
+        "N Maulkhan",
+        "K Slonim",
+        "A Costa"
+      ],
+      "year": 2017,
+      "doi": "10.1111/ggi.12955",
+      "journal": "Geriatr Gerontol Int",
+      "volume": "17",
+      "issue": "10",
+      "raw": "Identifying frailty in primary care: A systematic review \n\t\t \n\t\t\t L Lee \n\t\t \n\t\t \n\t\t\t T Patel \n\t\t \n\t\t \n\t\t\t L M Hillier \n\t\t \n\t\t \n\t\t\t N Maulkhan \n\t\t \n\t\t \n\t\t\t K Slonim \n\t\t \n\t\t \n\t\t\t A Costa \n\t\t \n\t\t 10.1111/ggi.12955 \n\t\t Medline: 28401737 \n\t \n\t \n\t\t Geriatr Gerontol Int \n\t\t \n\t\t\t 17 \n\t\t\t 10 \n\t\t\t \n\t\t\t 2017 Oct 12 \n\t\t \n\t \n\t Lee L, Patel T, Hillier LM, Maulkhan N, Slonim K, Costa A. Identifying frailty in primary care: A systematic review. Geriatr Gerontol Int 2017 Oct 12;17(10):1358-1377. [doi: 10.1111/ggi.12955] [Medline: 28401737]"
+    },
+    {
+      "title": "Frailty in relation to the accumulation of deficits",
+      "authors": [
+        "K Rockwood",
+        "A Mitnitski"
+      ],
+      "year": 2007,
+      "doi": "10.1093/gerona/62.7.722",
+      "journal": "J Gerontol A Biol Sci Med Sci",
+      "volume": "62",
+      "issue": "7",
+      "raw": "Frailty in relation to the accumulation of deficits \n\t\t \n\t\t\t K Rockwood \n\t\t \n\t\t \n\t\t\t A Mitnitski \n\t\t \n\t\t 10.1093/gerona/62.7.722 \n\t\t Medline: 17634318 \n\t \n\t \n\t\t J Gerontol A Biol Sci Med Sci \n\t\t \n\t\t\t 62 \n\t\t\t 7 \n\t\t\t \n\t\t\t 2007 Jul 01 \n\t\t \n\t \n\t Rockwood K, Mitnitski A. Frailty in relation to the accumulation of deficits. J Gerontol A Biol Sci Med Sci 2007 Jul 01;62(7):722-727. [doi: 10.1093/gerona/62.7.722] [Medline: 17634318]"
+    },
+    {
+      "title": "Frailty in NHANES: Comparing the frailty index and phenotype",
+      "authors": [
+        "J Blodgett",
+        "O Theou",
+        "S Kirkland",
+        "P Andreou",
+        "K Rockwood"
+      ],
+      "year": 2015,
+      "doi": "10.1016/j.archger.2015.01.016",
+      "journal": "Arch Gerontol Geriatr",
+      "volume": "60",
+      "issue": "3",
+      "raw": "Frailty in NHANES: Comparing the frailty index and phenotype \n\t\t \n\t\t\t J Blodgett \n\t\t \n\t\t \n\t\t\t O Theou \n\t\t \n\t\t \n\t\t\t S Kirkland \n\t\t \n\t\t \n\t\t\t P Andreou \n\t\t \n\t\t \n\t\t\t K Rockwood \n\t\t \n\t\t 10.1016/j.archger.2015.01.016 \n\t\t Medline: 25697060 \n\t \n\t \n\t\t Arch Gerontol Geriatr \n\t\t \n\t\t\t 60 \n\t\t\t 3 \n\t\t\t \n\t\t\t 2015 May \n\t\t \n\t \n\t Blodgett J, Theou O, Kirkland S, Andreou P, Rockwood K. Frailty in NHANES: Comparing the frailty index and phenotype. Arch Gerontol Geriatr 2015 May;60(3):464-470. [doi: 10.1016/j.archger.2015.01.016] [Medline: 25697060]"
+    },
+    {
+      "title": "Tracking changes in frailty throughout later life: results from a 17-year longitudinal study in the Netherlands",
+      "authors": [
+        "E Hoogendijk",
+        "K Rockwood",
+        "O Theou",
+        "J Armstrong",
+        "B Onwuteaka-Philipsen",
+        "Djh Deeg"
+      ],
+      "year": 2018,
+      "doi": "10.1093/ageing/afy081",
+      "journal": "Age Ageing",
+      "volume": "47",
+      "issue": "5",
+      "raw": "Tracking changes in frailty throughout later life: results from a 17-year longitudinal study in the Netherlands \n\t\t \n\t\t\t E O Hoogendijk \n\t\t \n\t\t \n\t\t\t K Rockwood \n\t\t \n\t\t \n\t\t\t O Theou \n\t\t \n\t\t \n\t\t\t J J Armstrong \n\t\t \n\t\t \n\t\t\t B D Onwuteaka-Philipsen \n\t\t \n\t\t \n\t\t\t Djh Deeg \n\t\t \n\t\t 10.1093/ageing/afy081 \n\t\t Medline: 29788032 \n\t \n\t \n\t\t Age Ageing \n\t\t \n\t\t\t 47 \n\t\t\t 5 \n\t\t\t \n\t\t\t 2018 Sep 01 \n\t\t \n\t \n\t Hoogendijk EO, Rockwood K, Theou O, Armstrong JJ, Onwuteaka-Philipsen BD, Deeg DJH, et al. Tracking changes in frailty throughout later life: results from a 17-year longitudinal study in the Netherlands. Age Ageing 2018 Sep 01;47(5):727-733. [doi: 10.1093/ageing/afy081] [Medline: 29788032]"
+    },
+    {
+      "title": "Co-occurrence of cardiometabolic diseases and frailty in older Chinese adults in the Beijing Longitudinal Study of Ageing",
+      "authors": [
+        "Z Tang",
+        "C Wang",
+        "X Song",
+        "J Shi",
+        "A Mitnitski",
+        "X Fang"
+      ],
+      "year": 2013,
+      "doi": "10.1093/ageing/aft004",
+      "journal": "Age Ageing",
+      "volume": "42",
+      "issue": "3",
+      "raw": "Co-occurrence of cardiometabolic diseases and frailty in older Chinese adults in the Beijing Longitudinal Study of Ageing \n\t\t \n\t\t\t Z Tang \n\t\t \n\t\t \n\t\t\t C Wang \n\t\t \n\t\t \n\t\t\t X Song \n\t\t \n\t\t \n\t\t\t J Shi \n\t\t \n\t\t \n\t\t\t A Mitnitski \n\t\t \n\t\t \n\t\t\t X Fang \n\t\t \n\t\t 10.1093/ageing/aft004 \n\t\t Medline: 23462693 \n\t \n\t \n\t\t Age Ageing \n\t\t \n\t\t\t 42 \n\t\t\t 3 \n\t\t\t \n\t\t\t 2013 May \n\t\t \n\t \n\t Tang Z, Wang C, Song X, Shi J, Mitnitski A, Fang X, et al. Co-occurrence of cardiometabolic diseases and frailty in older Chinese adults in the Beijing Longitudinal Study of Ageing. Age Ageing 2013 May;42(3):346-351. [doi: 10.1093/ageing/aft004] [Medline: 23462693]"
+    },
+    {
+      "title": "Development and validation of an electronic frailty index using routine primary care electronic health record data",
+      "authors": [
+        "A Clegg",
+        "C Bates",
+        "J Young",
+        "R Ryan",
+        "L Nichols",
+        "Ann Teale"
+      ],
+      "year": 2016,
+      "doi": "10.1093/ageing/afw039",
+      "journal": "Age Ageing",
+      "volume": "45",
+      "issue": "3",
+      "raw": "Development and validation of an electronic frailty index using routine primary care electronic health record data \n\t\t \n\t\t\t A Clegg \n\t\t \n\t\t \n\t\t\t C Bates \n\t\t \n\t\t \n\t\t\t J Young \n\t\t \n\t\t \n\t\t\t R Ryan \n\t\t \n\t\t \n\t\t\t L Nichols \n\t\t \n\t\t \n\t\t\t Ann Teale \n\t\t \n\t\t \n\t\t\t E \n\t\t \n\t\t 10.1093/ageing/afw039 \n\t\t Medline: 26944937 \n\t \n\t \n\t\t Age Ageing \n\t\t \n\t\t\t 45 \n\t\t\t 3 \n\t\t\t \n\t\t\t 2016 May 03 \n\t\t \n\t \n\t FREE Full text \n\t Clegg A, Bates C, Young J, Ryan R, Nichols L, Ann Teale E, et al. Development and validation of an electronic frailty index using routine primary care electronic health record data. Age Ageing 2016 May 03;45(3):353-360 [FREE Full text] [doi: 10.1093/ageing/afw039] [Medline: 26944937]"
+    },
+    {
+      "title": "The electronic frailty index as an indicator of community healthcare service utilisation in the older population",
+      "authors": [
+        "P Boyd",
+        "M Nevard",
+        "J Ford",
+        "M Khondoker",
+        "J Cross",
+        "C Fox"
+      ],
+      "year": 2019,
+      "doi": "10.1093/ageing/afy181",
+      "journal": "Age Ageing",
+      "volume": "48",
+      "issue": "2",
+      "raw": "The electronic frailty index as an indicator of community healthcare service utilisation in the older population \n\t\t \n\t\t\t P J Boyd \n\t\t \n\t\t \n\t\t\t M Nevard \n\t\t \n\t\t \n\t\t\t J A Ford \n\t\t \n\t\t \n\t\t\t M Khondoker \n\t\t \n\t\t \n\t\t\t J L Cross \n\t\t \n\t\t \n\t\t\t C Fox \n\t\t \n\t\t 10.1093/ageing/afy181 \n\t\t Medline: 30590413 \n\t \n\t \n\t\t Age Ageing \n\t\t \n\t\t\t 48 \n\t\t\t 2 \n\t\t\t \n\t\t\t 2019 Mar 01 \n\t\t \n\t \n\t Boyd PJ, Nevard M, Ford JA, Khondoker M, Cross JL, Fox C. The electronic frailty index as an indicator of community healthcare service utilisation in the older population. Age Ageing 2019 Mar 01;48(2):273-277. [doi: 10.1093/ageing/afy181] [Medline: 30590413]"
+    },
+    {
+      "title": "Using Taiwan's national health insurance research databases for pharmacoepidemiology research",
+      "authors": [
+        "F Hsiao",
+        "C Yang",
+        "Y Huang",
+        "W Huang"
+      ],
+      "year": 2007,
+      "doi": "10.38212/2224-6614.2426",
+      "journal": "J Food Drug Anal Jul",
+      "volume": "15",
+      "issue": "2",
+      "raw": "Using Taiwan's national health insurance research databases for pharmacoepidemiology research \n\t\t \n\t\t\t F Y Hsiao \n\t\t \n\t\t \n\t\t\t C L Yang \n\t\t \n\t\t \n\t\t\t Y T Huang \n\t\t \n\t\t \n\t\t\t W F Huang \n\t\t \n\t\t 10.38212/2224-6614.2426 \n\t \n\t \n\t\t J Food Drug Anal Jul \n\t\t \n\t\t\t 15 \n\t\t\t 2 \n\t\t\t \n\t\t\t 2007 Jun 15 \n\t\t \n\t \n\t Hsiao FY, Yang CL, Huang YT, Huang WF. Using Taiwan's national health insurance research databases for pharmacoepidemiology research. J Food Drug Anal Jul 2007 Jun 15;15(2):99-108."
+    },
+    {
+      "title": "A standard procedure for creating a frailty index",
+      "authors": [
+        "S Searle",
+        "A Mitnitski",
+        "E Gahbauer",
+        "T Gill",
+        "K Rockwood"
+      ],
+      "year": 2008,
+      "doi": "10.1186/1471-2318-8-24",
+      "journal": "BMC Geriatr",
+      "volume": "8",
+      "issue": "1",
+      "pages": "24",
+      "raw": "A standard procedure for creating a frailty index \n\t\t \n\t\t\t S D Searle \n\t\t \n\t\t \n\t\t\t A Mitnitski \n\t\t \n\t\t \n\t\t\t E A Gahbauer \n\t\t \n\t\t \n\t\t\t T M Gill \n\t\t \n\t\t \n\t\t\t K Rockwood \n\t\t \n\t\t 10.1186/1471-2318-8-24 \n\t\t Medline: 18826625 \n\t \n\t \n\t\t BMC Geriatr \n\t\t \n\t\t\t 8 \n\t\t\t 1 \n\t\t\t 24 \n\t\t\t 2008 Sep 30 \n\t\t \n\t \n\t FREE Full text \n\t Searle SD, Mitnitski A, Gahbauer EA, Gill TM, Rockwood K. A standard procedure for creating a frailty index. BMC Geriatr 2008 Sep 30;8(1):24 [FREE Full text] [doi: 10.1186/1471-2318-8-24] [Medline: 18826625]"
+    },
+    {
+      "title": "Random forests",
+      "authors": [
+        "L Breiman"
+      ],
+      "year": 2001,
+      "doi": "10.1201/9780367816377-11",
+      "journal": "Machine learning",
+      "volume": "45",
+      "issue": "1",
+      "raw": "Random forests \n\t\t \n\t\t\t L Breiman \n\t\t \n\t\t 10.1201/9780367816377-11 \n\t \n\t \n\t\t Machine learning \n\t\t \n\t\t\t 45 \n\t\t\t 1 \n\t\t\t \n\t\t\t 2001 \n\t\t \n\t \n\t Breiman L. Random forests. Machine learning 2001;45(1):5-32. [doi: 10.1201/9780367816377-11]"
+    },
+    {
+      "title": "A global clinical measure of fitness and frailty in elderly people",
+      "authors": [
+        "K Rockwood",
+        "X Song",
+        "C Macknight",
+        "H Bergman",
+        "D Hogan",
+        "I Mcdowell"
+      ],
+      "year": 2005,
+      "doi": "10.1503/cmaj.050051",
+      "journal": "CMAJ",
+      "volume": "173",
+      "issue": "5",
+      "raw": "A global clinical measure of fitness and frailty in elderly people \n\t\t \n\t\t\t K Rockwood \n\t\t \n\t\t \n\t\t\t X Song \n\t\t \n\t\t \n\t\t\t C Macknight \n\t\t \n\t\t \n\t\t\t H Bergman \n\t\t \n\t\t \n\t\t\t D B Hogan \n\t\t \n\t\t \n\t\t\t I Mcdowell \n\t\t \n\t\t 10.1503/cmaj.050051 \n\t\t Medline: 16129869 \n\t \n\t \n\t\t CMAJ \n\t\t \n\t\t\t 173 \n\t\t\t 5 \n\t\t\t \n\t\t\t 2005 Aug 30 \n\t\t \n\t \n\t FREE Full text \n\t Rockwood K, Song X, MacKnight C, Bergman H, Hogan DB, McDowell I, et al. A global clinical measure of fitness and frailty in elderly people. CMAJ 2005 Aug 30;173(5):489-495 [FREE Full text] [doi: 10.1503/cmaj.050051] [Medline: 16129869]"
+    },
+    {
+      "title": "A Frailty Index Based On Deficit Accumulation Quantifies Mortality Risk in Humans and in Mice",
+      "authors": [
+        "K Rockwood",
+        "J Blodgett",
+        "O Theou",
+        "M Sun",
+        "H Feridooni",
+        "A Mitnitski"
+      ],
+      "year": 2017,
+      "doi": "10.1038/srep43068",
+      "journal": "Sci Rep",
+      "volume": "7",
+      "issue": "1",
+      "pages": "43068",
+      "raw": "A Frailty Index Based On Deficit Accumulation Quantifies Mortality Risk in Humans and in Mice \n\t\t \n\t\t\t K Rockwood \n\t\t \n\t\t \n\t\t\t J M Blodgett \n\t\t \n\t\t \n\t\t\t O Theou \n\t\t \n\t\t \n\t\t\t M H Sun \n\t\t \n\t\t \n\t\t\t H A Feridooni \n\t\t \n\t\t \n\t\t\t A Mitnitski \n\t\t \n\t\t 10.1038/srep43068 \n\t\t Medline: 28220898 \n\t \n\t \n\t\t Sci Rep \n\t\t \n\t\t\t 7 \n\t\t\t 1 \n\t\t\t 43068 \n\t\t\t 2017 Feb 21 \n\t\t \n\t \n\t FREE Full text \n\t Rockwood K, Blodgett JM, Theou O, Sun MH, Feridooni HA, Mitnitski A, et al. A Frailty Index Based On Deficit Accumulation Quantifies Mortality Risk in Humans and in Mice. Sci Rep 2017 Feb 21;7(1):43068 [FREE Full text] [doi: 10.1038/srep43068] [Medline: 28220898]"
+    },
+    {
+      "title": "Frailty defined by deficit accumulation and geriatric medicine defined by frailty",
+      "authors": [
+        "K Rockwood",
+        "A Mitnitski"
+      ],
+      "year": 2011,
+      "doi": "10.1016/j.cger.2010.08.008",
+      "journal": "Clin Geriatr Med",
+      "volume": "27",
+      "issue": "1",
+      "raw": "Frailty defined by deficit accumulation and geriatric medicine defined by frailty \n\t\t \n\t\t\t K Rockwood \n\t\t \n\t\t \n\t\t\t A Mitnitski \n\t\t \n\t\t 10.1016/j.cger.2010.08.008 \n\t\t Medline: 21093719 \n\t \n\t \n\t\t Clin Geriatr Med \n\t\t \n\t\t\t 27 \n\t\t\t 1 \n\t\t\t \n\t\t\t 2011 Feb \n\t\t \n\t \n\t Rockwood K, Mitnitski A. Frailty defined by deficit accumulation and geriatric medicine defined by frailty. Clin Geriatr Med 2011 Feb;27(1):17-26. [doi: 10.1016/j.cger.2010.08.008] [Medline: 21093719]"
+    },
+    {
+      "title": "Sociomarkers and biomarkers: predictive modeling in identifying pediatric asthma patients at risk of hospital revisits",
+      "authors": [
+        "E Shin",
+        "R Mahajan",
+        "O Akbilgic",
+        "A Shaban-Nejad"
+      ],
+      "year": 2018,
+      "doi": "10.1038/s41746-018-0056-y",
+      "journal": "NPJ Digit Med",
+      "volume": "1",
+      "issue": "1",
+      "pages": "50",
+      "raw": "Sociomarkers and biomarkers: predictive modeling in identifying pediatric asthma patients at risk of hospital revisits \n\t\t \n\t\t\t E K Shin \n\t\t \n\t\t \n\t\t\t R Mahajan \n\t\t \n\t\t \n\t\t\t O Akbilgic \n\t\t \n\t\t \n\t\t\t A Shaban-Nejad \n\t\t \n\t\t 10.1038/s41746-018-0056-y \n\t\t Medline: 31304329 \n\t \n\t \n\t\t NPJ Digit Med \n\t\t \n\t\t\t 1 \n\t\t\t 1 \n\t\t\t 50 \n\t\t\t 2018 Oct 2 \n\t\t \n\t \n\t FREE Full text \n\t Shin EK, Mahajan R, Akbilgic O, Shaban-Nejad A. Sociomarkers and biomarkers: predictive modeling in identifying pediatric asthma patients at risk of hospital revisits. NPJ Digit Med 2018 Oct 2;1(1):50 [FREE Full text] [doi: 10.1038/s41746-018-0056-y] [Medline: 31304329]"
+    },
+    {
+      "title": "Comparison of Machine Learning Methods With National Cardiovascular Data Registry Models for Prediction of Risk of Bleeding After Percutaneous Coronary Intervention",
+      "authors": [
+        "B Mortazavi",
+        "E Bucholz",
+        "N Desai",
+        "C Huang",
+        "J Curtis",
+        "F Masoudi"
+      ],
+      "year": 2019,
+      "doi": "10.1001/jamanetworkopen.2019.6835",
+      "journal": "JAMA Netw Open",
+      "volume": "2",
+      "issue": "7",
+      "pages": "196835",
+      "raw": "Comparison of Machine Learning Methods With National Cardiovascular Data Registry Models for Prediction of Risk of Bleeding After Percutaneous Coronary Intervention \n\t\t \n\t\t\t B J Mortazavi \n\t\t \n\t\t \n\t\t\t E M Bucholz \n\t\t \n\t\t \n\t\t\t N R Desai \n\t\t \n\t\t \n\t\t\t C Huang \n\t\t \n\t\t \n\t\t\t J P Curtis \n\t\t \n\t\t \n\t\t\t F A Masoudi \n\t\t \n\t\t 10.1001/jamanetworkopen.2019.6835 \n\t\t Medline: 31290991 \n\t \n\t \n\t\t JAMA Netw Open \n\t\t \n\t\t\t 2 \n\t\t\t 7 \n\t\t\t 196835 \n\t\t\t 2019 Jul 03 \n\t\t \n\t \n\t FREE Full text \n\t Mortazavi BJ, Bucholz EM, Desai NR, Huang C, Curtis JP, Masoudi FA, et al. Comparison of Machine Learning Methods With National Cardiovascular Data Registry Models for Prediction of Risk of Bleeding After Percutaneous Coronary Intervention. JAMA Netw Open 2019 Jul 03;2(7):e196835 [FREE Full text] [doi: 10.1001/jamanetworkopen.2019.6835] [Medline: 31290991]"
+    },
+    {
+      "title": "Multimorbidity states associated with higher mortality rates in organ dysfunction and sepsis: a data-driven analysis in critical care",
+      "authors": [
+        "Z Zador",
+        "A Landry",
+        "M Cusimano",
+        "N Geifman"
+      ],
+      "year": 2019,
+      "doi": "10.1186/s13054-019-2486-6",
+      "journal": "Crit Care",
+      "volume": "23",
+      "issue": "1",
+      "pages": "247",
+      "raw": "Multimorbidity states associated with higher mortality rates in organ dysfunction and sepsis: a data-driven analysis in critical care \n\t\t \n\t\t\t Z Zador \n\t\t \n\t\t \n\t\t\t A Landry \n\t\t \n\t\t \n\t\t\t M D Cusimano \n\t\t \n\t\t \n\t\t\t N Geifman \n\t\t \n\t\t 10.1186/s13054-019-2486-6 \n\t\t Medline: 31287020 \n\t \n\t \n\t\t Crit Care \n\t\t \n\t\t\t 23 \n\t\t\t 1 \n\t\t\t 247 \n\t\t\t 2019 Jul 08 \n\t\t \n\t \n\t FREE Full text \n\t Zador Z, Landry A, Cusimano MD, Geifman N. Multimorbidity states associated with higher mortality rates in organ dysfunction and sepsis: a data-driven analysis in critical care. Crit Care 2019 Jul 08;23(1):247 [FREE Full text] [doi: 10.1186/s13054-019-2486-6] [Medline: 31287020]"
+    },
+    {
+      "title": "Comparison of hypothesis-and data-driven asthma phenotypes in NHANES 2007-2012: the importance of comprehensive data availability",
+      "authors": [
+        "R Amaral",
+        "A Pereira",
+        "T Jacinto",
+        "A Malinovschi",
+        "C Janson",
+        "K Alving"
+      ],
+      "year": 2019,
+      "doi": "10.1186/s13601-019-0258-7",
+      "journal": "Clin Transl Allergy",
+      "volume": "9",
+      "issue": "1",
+      "pages": "17",
+      "raw": "Comparison of hypothesis-and data-driven asthma phenotypes in NHANES 2007-2012: the importance of comprehensive data availability \n\t\t \n\t\t\t R Amaral \n\t\t \n\t\t \n\t\t\t A M Pereira \n\t\t \n\t\t \n\t\t\t T Jacinto \n\t\t \n\t\t \n\t\t\t A Malinovschi \n\t\t \n\t\t \n\t\t\t C Janson \n\t\t \n\t\t \n\t\t\t K Alving \n\t\t \n\t\t 10.1186/s13601-019-0258-7 \n\t\t Medline: 30918624 \n\t \n\t \n\t\t Clin Transl Allergy \n\t\t \n\t\t\t 9 \n\t\t\t 1 \n\t\t\t 17 \n\t\t\t 2019 Mar 13 \n\t\t \n\t \n\t FREE Full text \n\t Amaral R, Pereira AM, Jacinto T, Malinovschi A, Janson C, Alving K, et al. Comparison of hypothesis-and data-driven asthma phenotypes in NHANES 2007-2012: the importance of comprehensive data availability. Clin Transl Allergy 2019 Mar 13;9(1):17 [FREE Full text] [doi: 10.1186/s13601-019-0258-7] [Medline: 30918624]"
+    },
+    {
+      "title": "Using Two Different Approaches to Assess Dietary Patterns: Hypothesis-Driven and Data-Driven Analysis",
+      "authors": [
+        "A Previdelli",
+        "S De Andrade",
+        "R Fisberg",
+        "D Marchioni"
+      ],
+      "year": 2016,
+      "doi": "10.3390/nu8100593",
+      "journal": "Nutrients",
+      "volume": "8",
+      "issue": "10",
+      "pages": "593",
+      "raw": "Using Two Different Approaches to Assess Dietary Patterns: Hypothesis-Driven and Data-Driven Analysis \n\t\t \n\t\t\t A N Previdelli \n\t\t \n\t\t \n\t\t\t S C De Andrade \n\t\t \n\t\t \n\t\t\t R M Fisberg \n\t\t \n\t\t \n\t\t\t D M Marchioni \n\t\t \n\t\t 10.3390/nu8100593 \n\t\t Medline: 27669289 \n\t \n\t \n\t\t Nutrients \n\t\t \n\t\t\t 8 \n\t\t\t 10 \n\t\t\t 593 \n\t\t\t 2016 Sep 23 \n\t\t \n\t \n\t FREE Full text \n\t Previdelli AN, de Andrade SC, Fisberg RM, Marchioni DM. Using Two Different Approaches to Assess Dietary Patterns: Hypothesis-Driven and Data-Driven Analysis. Nutrients 2016 Sep 23;8(10):593 [FREE Full text] [doi: 10.3390/nu8100593] [Medline: 27669289]"
+    }
+  ],
+  "num_references": 25,
+  "figures": [
+    {
+      "description": "The data are checked for quality and maintained by the Data Science Centre of the Ministry of Health and Welfare of Taiwan. We used a subset of the NHIRD, which contains claims data for one million randomly selected beneficiaries from the Registry of Beneficiaries of the NHIRD in 2005. The study cohort consisted of 86,133 older adults aged 65 to 100 years who had full National Health Insurance (NHI) coverage from January 1, 2005, to December 31, 2005. Claims data from 2005 to 2013 for the one million beneficiaries was extracted to compose a 9-year (2005-2013) panel of claims for analysis. The study protocol was approved by the Research Ethics Committee of"
+    },
+    {
+      "caption": "Figure 1 .",
+      "description": "Figure 1. Numbers of diseases versus random forest model accuracy to determine an adequate number of frailty indexes."
+    },
+    {
+      "caption": "Figure 2 .",
+      "description": "Figure 2. The 8-year Kaplan-Meier survival curve for the outcome of (A) all-cause mortality, (B) unplanned hospitalizations, and (C) intensive care unit admissions for different frailty categories."
+    },
+    {
+      "description": "c mFI: multimorbidity frailty index.d HR: hazard ratio."
+    },
+    {
+      "type": "table",
+      "caption": "Table 1 .",
+      "description": "Comparisons of mFI and ML-mFI by age and sex. a,b"
+    },
+    {
+      "type": "table",
+      "caption": "Table 3 .",
+      "description": "Male hazard ratios of all-cause mortality, unplanned hospitalization, and intensive care unit admission for ML-mFI and mFI among 1-, 5-, and 8-year follow-up periods. a,b,c For all outcomes, the comparator is subjects in fit categories (n=64,650). All data were adjusted for age and gender."
+    },
+    {
+      "type": "table",
+      "caption": "Table 4 .",
+      "description": "Female hazard ratios of all-cause mortality, unplanned hospitalization, and intensive care unit admission for ML-mFI and mFI among 1-, 5-, and 8-year follow-up periods. a,b,c"
+    }
+  ],
+  "num_figures": 7,
+  "tables": [
+    {
+      "content": "Age (years) All subjects (N=86,133) Male (n=42,914) Female (n=43,219) mFI, mean (SD) ML-mFI, mean (SD) mFI, mean (SD) ML-mFI, mean (SD) mFI, mean (SD) ML-mFI, mean (SD) 65-69 (n=28,480) 0.037 (0.048) 0.0070 (0.0254) 0.038 (0.049) 0.0076 (0.0264) 0.037 (0.046) 0.0065 (0.0246) 70-74 (n=23,700) 0.050 (0.056) 0.0106 (0.0322) 0.053 (0.060) 0.0115 (0.0339) 0.046 (0.053) 0.0096 (0.0304) 75-79 (n=18,765) 0.062 (0.065) 0.0150 (0.0400) 0.067 (0.070) 0.0160 (0.0417) 0.056 (0.059) 0.0138 (0.0379) 80-84 (n=9934) 0.070 (0.071) 0.0201 (0.0473) 0.076 (0.075) 0.0212 (0.0490) 0.064 (0.065) 0.0190 (0.0455) \u226585 (n=5254) 0.070 (0.074) 0.0234 (0.0505) 0.077 (0.080) 0.0245 (0.0531) 0.064 (0.069) 0.0224 (0.0483) Total (N=86,133) 0.052 (0.060) 0.0122 (0.0359) 0.056 (0.064) 0.0132 (0.0376) 0.048 (0.056) 0.0113 (0.0341)"
+    },
+    {
+      "content": "Adverse outcome and Mild frailty Moderate frailty Severe frailty follow-up period mFI (n=14,244) ML-mFI mFI (n=4,741) ML-mFI mFI (n=2498) ML-mFI (n=1488) (n=9366) (n=2522) All-cause mortality 1-year 1.83 (1.65-2.04) 3.71 (3.37-4.09) 2.70 (2.37-3.07) 7.67 (6.76-8.69) 4.84 (4.26-5.49) 12.64 (11.20-14.27) 5-year 1.41 (1.35-1.48) 2.53 (2.42-2.65) 1.93 (1.82-2.06) 4.60 (4.29-4.93) 3.07 (2.86-3.28) 6.92 (6.40-7.48) 8-year 1.35 (1.30-1.41) 2.29 (2.21-2.38) 1.85 (1.75-1.95) 4.19 (3.94-4.47) 2.77 (2.61-2.94) 6.27 (5.83-6.74) Unplanned hospitalization 1-year 1.87 (1.73-2.01) 2.83 (2.64-3.04) 2.73 (2.48-3.00) 4.90 (4.41-5.45) 4.24 (3.83-4.71) 6.34 (5.63-7.14) 5-year 1.58 (1.51-1.64) 2.25 (2.16-2.35) 2.05 (1.93-2.17) 3.49 (3.25-3.76) 3.00 (2.80-3.21) 4.59 (4.19-5.03) 8-year 1.48 (1.43-1.53) 2.07 (1.99-2.15) 1.91 (1.81-2.01) 3.30 (3.08-3.54) 2.76 (2.59-2.95) 4.29 (3.92-4.69) Intensive care unit admission 1-year 2.02 (1.83-2.23) 3.35 (3.06-3.67) 3.28 (2.91-3.69) 5.91 (5.18-6.74) 4.85 (4.27-5.51) 9.50 (8.31-10.86) 5-year 1.58 (1.50-1.66) 2.42 (2.31-2.55) 2.24 (2.10-2.40) 4.33 (4.00-4.69) 3.39 (3.15-3.66) 6.28 (5.72-6.89) 8-year 1.48 (1.42-1.54) 2.22 (2.13-2.32) 2.05 (1.94-2.18) 4.04 (3.75-4.35) 2.99 (2.79-3.21) 5.80 (5.30-6.35)"
+    },
+    {
+      "content": "Adverse outcome and Mild frailty Moderate frailty Severe frailty follow-up period mFI (n=14,244) ML-mFI (n=9366) mFI (n=4741) ML-mFI (n=2522) mFI (n=2498) ML-mFI (n=1488) All-cause mortality 1-year 1.88 (1.66-2.13) 2.56 (2.28-2.87) 3.73 (3.22-4.32) 5.95 (5.19-6.82) 5.29 (4.46-6.27) 10.37 (8.97-12.00) 5-year 1.54 (1.46-1.62) 1.87 (1.77-1.97) 2.52 (2.34-2.71) 3.51 (3.25-3.78) 3.79 (3.46-4.15) 5.52 (5.04-6.05) 8-year 1.48 (1.42-1.55) 1.72 (1.65-1.80) 2.31 (2.17-2.46) 3.24 (3.04-3.46) 3.48 (3.22-3.76) 4.89 (4.49-5.32) Unplanned hospitalization 1-year 1.95 (1.80-2.11) 2.45 (2.26-2.65) 3.03 (2.72-3.38) 4.17 (3.72-4.66) 4.36 (3.81-4.98) 6.19 (5.40-7.09) 5-year 1.66 (1.59-1.73) 1.94 (1.86-2.03) 2.28 (2.14-2.44) 2.98 (2.77-3.21) 3.16 (2.89-3.46) 4.12 (3.71-4.58) 8-year 1.56 (1.50-1.62) 1.81 (1.74-1.88) 2.10 (1.98-2.22) 2.74 (2.55-2.94) 2.85 (2.62-3.11) 3.71 (3.34-4.12) Intensive care unit admission 1-year 2.18 (1.95-2.44) 2.48 (2.22-2.76) 4.09 (3.56-4.70) 5.39 (4.71-6.16) 6.44 (5.49-7.55) 9.73 (8.40-11.27) 5-year 1.73 (1.64-1.82) 1.88 (1.77-1.99) 2.70 (2.50-2.91) 3.62 (3.33-3.93) 4.21 (3.82-4.65) 5.89 (5.29-6.56) 8-year 1.62 (1.55-1.70) 1.77 (1.69-1.86) 2.54 (2.37-2.71) 3.34 (3.10-3.61) 3.79 (3.47-4.15) 5.27 (4.76-5.85)"
+    }
+  ],
+  "num_tables": 3,
+  "num_citations": 46,
+  "cited_references": [
+    "b3",
+    "b13",
+    "b18",
+    "b2",
+    "b14",
+    "b17",
+    "b9",
+    "b1",
+    "b20",
+    "b21",
+    "b12",
+    "b16",
+    "b15",
+    "b23",
+    "b5",
+    "b19",
+    "b10",
+    "b24",
+    "b4",
+    "b7",
+    "b11",
+    "b8",
+    "b22",
+    "b6",
+    "b0"
+  ],
+  "notes": [
+    "[raw_affiliation] 1  Aging and Health Research Center , National Yang Ming University , Taipei , Taiwan",
+    "[raw_affiliation] 2  Department of Geriatric Medicine , National Yang Ming University School of Medicine , Taipei , Taiwan",
+    "[raw_affiliation] 3  Center for Geriatrics and Gerontology , Taipei Veterans General Hospital , Taipei , Taiwan",
+    "[raw_affiliation] 4  Graduate Institute of Clinical Pharmacy , College of Medicine , National Taiwan University , Taipei , Taiwan",
+    "[raw_affiliation] 5  School of Pharmacy , College of Medicine , National Taiwan University , Taipei , Taiwan",
+    "[raw_affiliation] 6  Department of Pharmacy , National Taiwan University Hospital , Taipei , Taiwan",
+    "[raw_affiliation] 1  Aging and Health Research Center , National Yang Ming University , Taipei , Taiwan",
+    "[raw_affiliation] 2  Department of Geriatric Medicine , National Yang Ming University School of Medicine , Taipei , Taiwan",
+    "[raw_affiliation] 3  Center for Geriatrics and Gerontology , Taipei Veterans General Hospital , Taipei , Taiwan",
+    "[raw_affiliation] 7  Department of Family Medicine , Taipei Veterans General Hospital Yuanshan Branch , Yi-Lan , Taiwan",
+    "[raw_affiliation] 4  Graduate Institute of Clinical Pharmacy , College of Medicine , National Taiwan University , Taipei , Taiwan",
+    "[raw_affiliation] 1  Aging and Health Research Center , National Yang Ming University , Taipei , Taiwan",
+    "[raw_affiliation] 2  Department of Geriatric Medicine , National Yang Ming University School of Medicine , Taipei , Taiwan",
+    "[raw_affiliation] 3  Center for Geriatrics and Gerontology , Taipei Veterans General Hospital , Taipei , Taiwan",
+    "[raw_affiliation] Center for Geriatrics and Gerontology Taipei Veterans General Hospital 201 , Section 2 , Shih-Pai Road Taipei , 11217 Taiwan",
+    "a mFI: multimorbidity frailty index. b ML-mFI: machine learning multimorbidity frailty index.",
+    "a b ML-mFI: machine learning multimorbidity frailty index. c mFI: multimorbidity frailty index.",
+    "J Med Internet Res 2020 | vol. 22 | iss. 6 | e16213 | p. 2 http://www.jmir.org/2020/6/e16213/ (page number not for citation purposes)",
+    "J Med Internet Res 2020 | vol. 22 | iss. 6 | e16213 | p. 3 http://www.jmir.org/2020/6/e16213/ (page number not for citation purposes)",
+    "J Med Internet Res 2020 | vol. 22 | iss. 6 | e16213 | p. 4 http://www.jmir.org/2020/6/e16213/ (page number not for citation purposes)",
+    "J Med Internet Res 2020 | vol. 22 | iss. 6 | e16213 | p. 5 http://www.jmir.org/2020/6/e16213/ (page number not for citation purposes)",
+    "J Med Internet Res 2020 | vol. 22 | iss. 6 | e16213 | p. 6 http://www.jmir.org/2020/6/e16213/ (page number not for citation purposes)",
+    "J Med Internet Res 2020 | vol. 22 | iss. 6 | e16213 | p. 7 http://www.jmir.org/2020/6/e16213/ (page number not for citation purposes)",
+    "J Med Internet Res 2020 | vol. 22 | iss. 6 | e16213 | p. 8 http://www.jmir.org/2020/6/e16213/ (page number not for citation purposes)",
+    "J Med Internet Res 2020 | vol. 22 | iss. 6 | e16213 | p. 9 http://www.jmir.org/2020/6/e16213/ (page number not for citation purposes)",
+    "J Med Internet Res 2020 | vol. 22 | iss. 6 | e16213 | p. 10 http://www.jmir.org/2020/6/e16213/ (page number not for citation purposes)",
+    "[raw_reference] Chen LK, Inoue H, Won CW, Lin CH, Lin KF, Tsay SF, et al. Challenges of urban aging in Taiwan: Summary of urban aging forum. Journal of Clinical Gerontology and Geriatrics 2013 Dec;4(4):97-101. [doi: 10.1016/j.jcgg.2013.05.001]",
+    "[raw_reference] Lu WH, Lee WJ, Chen LK, Hsiao FY. Comparisons of annual health care utilization, drug consumption, and medical expenditure between the elderly and general population in Taiwan. Journal of Clinical Gerontology and Geriatrics 2016 Jun;7(2):44-47. [doi: 10.1016/j.jcgg.2015.08.002]",
+    "FREE Full text",
+    "[raw_reference] Lee WJ, Peng LN, Lin CH, Lin HP, Loh CH, Chen LK. The synergic effects of frailty on disability associated with urbanization, multimorbidity, and mental health: implications for public health and medical care. Sci Rep 2018 Sep 20;8(1):14125 [FREE Full text] [doi: 10.1038/s41598-018-32537-5] [Medline: 30237508]",
+    "FREE Full text",
+    "[raw_reference] Wen YC, Chen LK, Hsiao FY. Predicting mortality and hospitalization of older adults by the multimorbidity frailty index. PLoS One 2017 Nov 16;12(11):e0187825 [FREE Full text] [doi: 10.1371/journal.pone.0187825] [Medline: 29145407]",
+    "FREE Full text",
+    "[raw_reference] Lin SY, Lee WJ, Chou MY, Peng LN, Chiou SY, Chen LK. Frailty Index Predicts All-Cause Mortality for Middle-Aged and Older Taiwanese: Implications for Active-Aging Programs. PLoS One 2016 Aug 18;11(8):e0161456 [FREE Full text] [doi: 10.1371/journal.pone.0161456] [Medline: 27537684]",
+    "FREE Full text",
+    "[raw_reference] Van der Elst M, Schoenmakers B, Duppen D, Lambotte D, Fret B, Vaes B, D-SCOPE Consortium. Interventions for frail community-dwelling older adults have no significant effect on adverse outcomes: a systematic review and meta-analysis. BMC Geriatr 2018 Oct 20;18(1):249 [FREE Full text] [doi: 10.1186/s12877-018-0936-7] [Medline: 30342479]",
+    "[raw_reference] Chen LK, Hwang AC, Liu LK, Lee WJ, Peng LN. Frailty Is a Geriatric Syndrome Characterized by Multiple Impairments: A Comprehensive Approach Is Needed. J Frailty Aging 2016;5(4):208-213. [doi: 10.14283/jfa.2016.109] [Medline: 27883167]",
+    "[raw_reference] Lee L, Patel T, Hillier LM, Maulkhan N, Slonim K, Costa A. Identifying frailty in primary care: A systematic review. Geriatr Gerontol Int 2017 Oct 12;17(10):1358-1377. [doi: 10.1111/ggi.12955] [Medline: 28401737]",
+    "[raw_reference] Rockwood K, Mitnitski A. Frailty in relation to the accumulation of deficits. J Gerontol A Biol Sci Med Sci 2007 Jul 01;62(7):722-727. [doi: 10.1093/gerona/62.7.722] [Medline: 17634318]",
+    "[raw_reference] Blodgett J, Theou O, Kirkland S, Andreou P, Rockwood K. Frailty in NHANES: Comparing the frailty index and phenotype. Arch Gerontol Geriatr 2015 May;60(3):464-470. [doi: 10.1016/j.archger.2015.01.016] [Medline: 25697060]",
+    "[raw_reference] Hoogendijk EO, Rockwood K, Theou O, Armstrong JJ, Onwuteaka-Philipsen BD, Deeg DJH, et al. Tracking changes in frailty throughout later life: results from a 17-year longitudinal study in the Netherlands. Age Ageing 2018 Sep 01;47(5):727-733. [doi: 10.1093/ageing/afy081] [Medline: 29788032]",
+    "[raw_reference] Tang Z, Wang C, Song X, Shi J, Mitnitski A, Fang X, et al. Co-occurrence of cardiometabolic diseases and frailty in older Chinese adults in the Beijing Longitudinal Study of Ageing. Age Ageing 2013 May;42(3):346-351. [doi: 10.1093/ageing/aft004] [Medline: 23462693]",
+    "FREE Full text",
+    "[raw_reference] Clegg A, Bates C, Young J, Ryan R, Nichols L, Ann Teale E, et al. Development and validation of an electronic frailty index using routine primary care electronic health record data. Age Ageing 2016 May 03;45(3):353-360 [FREE Full text] [doi: 10.1093/ageing/afw039] [Medline: 26944937]",
+    "[raw_reference] Boyd PJ, Nevard M, Ford JA, Khondoker M, Cross JL, Fox C. The electronic frailty index as an indicator of community healthcare service utilisation in the older population. Age Ageing 2019 Mar 01;48(2):273-277. [doi: 10.1093/ageing/afy181] [Medline: 30590413]",
+    "[raw_reference] Hsiao FY, Yang CL, Huang YT, Huang WF. Using Taiwan's national health insurance research databases for pharmacoepidemiology research. J Food Drug Anal Jul 2007 Jun 15;15(2):99-108.",
+    "FREE Full text",
+    "[raw_reference] Searle SD, Mitnitski A, Gahbauer EA, Gill TM, Rockwood K. A standard procedure for creating a frailty index. BMC Geriatr 2008 Sep 30;8(1):24 [FREE Full text] [doi: 10.1186/1471-2318-8-24] [Medline: 18826625]",
+    "[raw_reference] Breiman L. Random forests. Machine learning 2001;45(1):5-32. [doi: 10.1201/9780367816377-11]",
+    "FREE Full text",
+    "[raw_reference] Rockwood K, Song X, MacKnight C, Bergman H, Hogan DB, McDowell I, et al. A global clinical measure of fitness and frailty in elderly people. CMAJ 2005 Aug 30;173(5):489-495 [FREE Full text] [doi: 10.1503/cmaj.050051] [Medline: 16129869]",
+    "FREE Full text",
+    "[raw_reference] Rockwood K, Blodgett JM, Theou O, Sun MH, Feridooni HA, Mitnitski A, et al. A Frailty Index Based On Deficit Accumulation Quantifies Mortality Risk in Humans and in Mice. Sci Rep 2017 Feb 21;7(1):43068 [FREE Full text] [doi: 10.1038/srep43068] [Medline: 28220898]",
+    "[raw_reference] Rockwood K, Mitnitski A. Frailty defined by deficit accumulation and geriatric medicine defined by frailty. Clin Geriatr Med 2011 Feb;27(1):17-26. [doi: 10.1016/j.cger.2010.08.008] [Medline: 21093719]",
+    "FREE Full text",
+    "[raw_reference] Shin EK, Mahajan R, Akbilgic O, Shaban-Nejad A. Sociomarkers and biomarkers: predictive modeling in identifying pediatric asthma patients at risk of hospital revisits. NPJ Digit Med 2018 Oct 2;1(1):50 [FREE Full text] [doi: 10.1038/s41746-018-0056-y] [Medline: 31304329]",
+    "FREE Full text",
+    "[raw_reference] Mortazavi BJ, Bucholz EM, Desai NR, Huang C, Curtis JP, Masoudi FA, et al. Comparison of Machine Learning Methods With National Cardiovascular Data Registry Models for Prediction of Risk of Bleeding After Percutaneous Coronary Intervention. JAMA Netw Open 2019 Jul 03;2(7):e196835 [FREE Full text] [doi: 10.1001/jamanetworkopen.2019.6835] [Medline: 31290991]",
+    "FREE Full text",
+    "[raw_reference] Zador Z, Landry A, Cusimano MD, Geifman N. Multimorbidity states associated with higher mortality rates in organ dysfunction and sepsis: a data-driven analysis in critical care. Crit Care 2019 Jul 08;23(1):247 [FREE Full text] [doi: 10.1186/s13054-019-2486-6] [Medline: 31287020]",
+    "FREE Full text",
+    "[raw_reference] Amaral R, Pereira AM, Jacinto T, Malinovschi A, Janson C, Alving K, et al. Comparison of hypothesis-and data-driven asthma phenotypes in NHANES 2007-2012: the importance of comprehensive data availability. Clin Transl Allergy 2019 Mar 13;9(1):17 [FREE Full text] [doi: 10.1186/s13601-019-0258-7] [Medline: 30918624]",
+    "FREE Full text",
+    "[raw_reference] Previdelli AN, de Andrade SC, Fisberg RM, Marchioni DM. Using Two Different Approaches to Assess Dietary Patterns: Hypothesis-Driven and Data-Driven Analysis. Nutrients 2016 Sep 23;8(10):593 [FREE Full text] [doi: 10.3390/nu8100593] [Medline: 27669289]"
+  ],
+  "processing_software": {
+    "GROBID": "0.8.2"
+  }
+}

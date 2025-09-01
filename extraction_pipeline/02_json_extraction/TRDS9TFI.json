@@ -1,0 +1,822 @@
+{
+  "paper_id": "TRDS9TFI",
+  "title": "Off-Policy Estimation of Long-Term Average Outcomes with Applications to Mobile Health",
+  "abstract": "Due to the recent advancements in wearables and sensing technology, health scientists are increasingly developing mobile health (mHealth) interventions. In mHealth interventions, mobile devices are used to deliver treatment to individuals as they go about their daily lives. These treatments are generally designed to impact a near time, proximal outcome such as stress or physical activity. The mHealth intervention policies, often called just-in-time adaptive interventions, are decision rules that map a individual's current state (e.g., individual's past behaviors as well as current observations of time, location, social activity, stress and urges to smoke) to a particular treatment at each of many time points. The vast majority of current mHealth interventions deploy expert-derived policies. In this paper, we provide an approach for conducting inference about the performance of one or more such policies using historical data collected under a possibly different policy. Our measure of performance is the average of proximal outcomes over a long time period should the particular mHealth policy be followed. We provide an estimator as well as confidence intervals. This work is motivated by HeartSteps, an mHealth physical activity intervention.",
+  "year": 2020,
+  "date": "2020-07-22",
+  "authors": [
+    {
+      "name": "Peng Liao",
+      "affiliation": {
+        "organization": "Department of Statistics",
+        "department": "Department of Statistics",
+        "institution": "University of Michigan Predrag"
+      }
+    },
+    {
+      "name": "Susan Murphy",
+      "affiliation": {
+        "organization": "Department of Statistics",
+        "department": "Department of Statistics",
+        "institution": "University of Michigan Predrag"
+      }
+    }
+  ],
+  "doi": "10.1007/s10994-007-5038-2",
+  "md5": "CF6F340D2BE21F7AA4D53AC169D70880",
+  "arxiv": "arXiv:1912.13088v3[cs.LG]",
+  "publication": {
+    "journal": "Machine learning",
+    "journal_inferred": true
+  },
+  "keywords": [
+    "sequential decision making",
+    "policy evaluation",
+    "markov decision process",
+    "reinforcement learning"
+  ],
+  "funding": [
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "Acknowledgment This work was supported by  National Institute on Alcohol Abuse and Alcoholism (NIAAA)  of the  National Institutes of Health  under award number  R01AA23187 ,  National Institute on Drug Abuse (NIDA)  of the  National Institutes of Health  under award numbers  P50DA039838  and  R01DA039901 ,  National Institute of Biomedical Imaging and Bioengineering (NIBIB)  of the  National Institutes of Health  under award number  U54EB020404 ,  National Cancer Institute (NCI)  of the  National Institutes of Health  under award number  U01CA229437 , and  National Heart, Lung, and Blood Institute (NHLBI)  of the  National Institutes of Health  under award number  R01HL125440 . The content is solely the responsibility of the authors and does not necessarily represent the official views of the National Institutes of Health."
+  ],
+  "sections": [
+    {
+      "title": "1. Introduction",
+      "text": "Due to the recent advancement in mobile device and sensing technology, health scientists are more and more interested in developing mobile health (mHealth) interventions. In mHealth, mobile devices (e.g., wearables and smartphones) are used to deliver interventions to individuals as they go about their daily lives. In general, there are two types of mHealth treatments.\n\nMost are pull treatments that reside on the individual's mobile device and allow the individual to access treatment content as needed. This work focuses on the second type, the \"push\" treatment, typically in the form of a notification or a text message that appears on a mobile device. There is a wide variety of possible treatment messages (e.g., behavioral, cognitive, and motivational message and reminders). These treatments are generally intended to impact a near time, proximal outcome, such as stress or behaviors such as physical activity over some subsequent minutes/hours. The mHealth intervention policies, often called just-in-time adaptive interventions in the mHealth literature  (Nahum-Shani et al. 2018) , are decision rules that map the individuals current state (e.g., past behaviors as well as current observations of location, social activity, stress and urges to smoke) to a particular treatment at each of many time points. Many mHealth interventions are designed for long-term use in chronic disease management  (Lee et al. 2018) . The vast majority of current mHealth interventions deploy expert-derived policies with limited use of data evidence (for an example see  Kizakevich et al. (2014) ), however the long-term efficacy of these policies on the health behavior is not well understood. An important first step toward developing data-based, effective mHealth interventions is to properly measure the long-term performance of these policies. In this work, we provide an approach for conducting inference about the optimality of one or more mHealth policies of interest. Our optimality criterion is the long-term average of the proximal outcomes should a particular mHealth policy be followed. We develop a flexible method to estimate the performance of an mHealth policy using a historical dataset in which the treatments are decided by a possibly different policy. This work is motivated by HeartSteps  (Klasnja et al. 2015) , an mHealth physical activity intervention. To design this intervention, we are conducting a series of studies. The first, already completed, study was for 42 days. The last study will be for one year. Here we focus on the intervention component involving activity suggestions. These suggestions may be delivered at each of the five individual-specified times per day. While in the first study there were 42 \u00d75 = 210 time points per individual, in the year-long study there will be about 2,000 time points per individual. The proximal outcome is the step count in the 30 minutes following each of the five times per day. Our goal is to use the data collected from the first 42day study to predict and estimate the long-term average of proximal outcomes for a variety of policies that could be used to decide whether or not to send the activity suggestion at each time point in the year-long study. The 42-day study was a Micro-Randomized Trial (MRT)  (Klasnja et al. 2015 , Liao et al. 2016) . In an MRT, a known stochastic policy, also called a behavior policy, is used to decide when and which type of treatment to provide at each time point. A partial list of MRTs in the field or completed can be found at the website foot_0  . From an experimental point of view, the stochastic behavior policy is used to conduct sequential randomizations within each individual. Here the adjective, \"stochastic\", means that at each time point each individual is randomized between the possible treatments. In this work we focus on settings in which the randomization probabilities are known functions of the individual's past data; this is the case with MRTs by design.\n\nThe rest of the article is organized as follows. Section 2 provides a review of Markov Decision Processes. In Section 3, we review related work. Section 4 develops an estimator for the long-term average proximal outcome; then Section 5 provides the asymptotic distribution of this estimator. As the estimation requires tuning parameters, in Section 6 we provide a procedure to select the tuning parameters. Simulations are used to assess the coverage probability of the proposed confidence intervals in various settings. A case study using data from the 42-day MRT of HeartSteps is presented in Section 7. We end with a discussion of future work in Section 8."
+    },
+    {
+      "title": "2. Distributional Assumptions and Goal",
+      "text": "The data for each individual is of the form\n\nwhere t indexes time points, S t \u2208 S is the individual's state and A t \u2208 A is the treatment (usually called the action) assigned at time, t. The action space, A, is discrete and finite.\n\nIn mHealth, the state, S t , contains the time-varying information (e.g., current location) as well as summaries of historical data up to and including time, t (e.g., summaries of previous physical activity). The actions are different types of treatments that are delivered to the individual via a smartdevice; these treatments can be reminders, motivational messages, messages prompting self-reflection and so on. For simplicity, we assume that the duration over which data is collected, T , is non-random and same for all individuals. The proximal outcome (also called the reward), denoted by R t+1 \u2208 R, is assumed to be a known function of (S t , A t , S t+1 ). In mHealth, the reward is often chosen to measure the near-term impact of the current action (e.g., the number of steps in a pre-specified time window after each time point). In this work, we focus on the case of continuous rewards (see Section 8 for a discussion about other types of rewards). In HeartSteps, the binary action is whether an activity suggestion is delivered and the reward is the 30-min step count following each decision time.\n\nWe assume that the distribution of the states satisfies the Markovian property, that is,\n\nDenote the transition kernel by P ; thus given a measurable set, B, in the state space,\n\n. Note that P does not depend on t due to the above time-homogeneity assumption. Denote by p(s \u2032 | s, a) the transition density with respect to some reference measure on S (e.g., counting measure when S is discrete). Let r(s, a) denote the conditional expectation of the reward given state and action, i.e., r(s, a) = E(R t+1 | S t = s, A t = a). The tuple, (S, A, P ), is called a Markov Decision Process (MDP)  (Howard 1960 , Puterman 1994 , Sutton & Barto 2018) . In mHealth, non-stationarity in P is likely to occur if there are unobserved aspects of the current state (e.g., individual's engagement and/or burden). Therefore, practically, it is critical to strive to collect sufficient information (via self-report or wearable sensors) to represent individual's state.\n\nNote that the MDP does not specify the distribution of the actions. And indeed the distribution of the actions may not satisfy the Markovian property. In an MRT, the actions, {A t } T t=1 , are randomized with probabilities that can depend on the entire history prior to time point t,\n\nT }, a stochastic behavior policy. Throughout we assume that \u03c0 b is known (as is the case in an MRT) and that the probabilities are strictly positive, i.e., \u03c0 b t (a | H t ) \u2265 p min > 0 for all a \u2208 A, H t and t \u2264 T .\n\nSuppose that a pre-specified time-invariant, Markovian policy, \u03c0, is being considered for use in future. Our goal is to conduct inference for the resulting average of the rewards over a large number of time points. In mHealth, the policy might be an expert-constructed policy. Considering a long time period makes most sense for individuals who are struggling with chronic problems or disorders for which, at this time, there is no general cure. Many health-behavior problems fall into this area including obesity, hypertension, adherence to medications for AIDs, mental illness and addictions. Let \u03c0(a | s) be the probability of choosing the action, a, at the state, s. Given a dataset that consists of n independent, identically distributed (i.i.d.) observations of D, we aim to estimate the average reward of the policy, defined as\n\nwhere the expectation, E \u03c0 , is taken over the trajectory {S 1 , A 1 , S 2 , . . . , S t * , A t * , S t * +1 } in which the actions are selected according to the policy, \u03c0, that is, the likelihood in the expectation is given by\n\nThe policy, \u03c0, induces a Markov chain on the state with the transition kernel,\n\nSuppose for now the state space, S, is finite. It is known that the limit in (1) exists, i.e.,  Puterman (1994) ).\n\nFurthermore, when the induced Markov chain, P \u03c0 , is irreducible, the average reward is independent of initial state and is given by\n\nwhere d \u03c0 (\u2022) is the stationary distribution. The existence of stationary distribution is guaranteed by the irreducibility assumption on P \u03c0 (Puterman (1994), p. 592). The above results can be extended to general state spaces (e.g., S \u2282 R d ) under more involved conditions on the transition kernel, P \u03c0 , analogous to the finite state case (see, for example, Hern\u00e1ndez-Lerma & Lasserre (1999), chap. 7). Practically the irreducibility assumption implies that time-invariant information cannot be included in the state. Motivated by mHealth applications, in Supplement A we present a generalization that allows the average reward to depend on time-invariant variables. In the case of mHealth, time-invariant variables might be gender, baseline severity, genetics and so on.\n\nWe propose to conduct inference about the long-term performance of each policy, \u03c0, via its average reward, \u03b7 \u03c0 . This is because the average reward, \u03b7 \u03c0 , is an asymptotic surrogate of the average of finite rewards over a long period of time. In fact, it can be shown that\n\nwhere the leading constant depends on the mixing time of P \u03c0 (see Theorem 7.5.10 in  Hern\u00e1ndez-Lerma & Lasserre (1999) ). In the case of HeartSteps, the goal is to use the data from the 42-day MRT study to estimate the average reward, \u03b7 \u03c0 , for a variety of policies \u03c0.\n\nThe average reward, \u03b7 \u03c0 , provides a proxy for the average of the 30-min step counts when the policy, \u03c0, is used to determine whether to send the activity suggestions over a long time period (e.g., a year: 5 \u00d7 365 time points).\n\nNote that the data, D, on each individual includes observations over T time points and the actions are selected according to a behavior policy. However, as will be seen, the above assumptions including the Markovian and irreducibility assumptions will allow us to estimate the average reward over a long time period and under a different policy.\n\nLastly as mentioned above the focus here is to conduct inference for the long run average of equally weighted rewards under the target policy using data collected under a possibly different policy. An alternate, and more common, inference target is based on an expected discounted sum of rewards, E \u03c0 ( \u221e t=1 \u03b3 t-1 R t+1 | S 1 = s), with the discount rate, \u03b3 \u2208 [0, 1). When the discount rate, \u03b3, is small (e.g., \u03b3 = 0.5), the discounted sum of rewards focuses only on finitely many near-term rewards. Note that even with a large discount rate of \u03b3 = 0.99, the reward at t = 100 has a weight of 0.37 and the reward t = 200 has a weight of 0.13.\n\nRecall our motivating mHealth intervention is being designed to optimize the overall physical activity over one year. From a scientific point of view, the rewards in the distant future are as important as the near-term ones, especially when considering the effect of habituation and burden. With this in mind, we opt for the long-term average reward, which can be viewed as a proxy for the (undiscounted) average of rewards over a long period of time. In fact, the conditional expectation of the sum of discounted rewards is related to the average reward; as \u03b3 \u2192 1, the above conditional expectation of the sum of the discounted rewards normalized by the constant, 1/(1\u03b3), converges to the average reward, \u03b7 \u03c0  (Mahadevan 1996) . In the online setting many researchers focus on a discounted sum of rewards. This is because the Bellman operator, for the expected discounted sum of rewards, is a contraction  (Sutton & Barto 2018) ; the contraction provides greater computational stability and simpler convergence arguments. However, as we shall see below, consideration of the average reward is not problematic in the batch (i.e., off-line) setting."
+    },
+    {
+      "title": "3. Related Work",
+      "text": "The evaluation of a given target policy using data collected from a different policy (i.e., the behavior policy) is called off-policy evaluation. This has been widely studied in both the statistical and reinforcement learning (RL) literature. Many authors have evaluated and contrasted policies in terms of the expected sum of rewards over a finite number of time points  (Murphy et al. 2001 , Chakraborty & Moodie 2013 , Jiang & Li 2015) . However, because these methods often use products of weights with probabilities from the behavior policy in the denominator, the extension to problems with a large number of time points often suffers from a large variance  (Thomas & Brunskill 2016 , Jiang & Li 2015) .\n\nThe most common off-policy evaluation methods for infinite-horizon problems (i.e., a large number of time points) focus on a discounted sum of rewards and are thus based in some way on the value function (in the discounted reward setting E \u03c0 ( \u221e t=1 \u03b3 t-1 R t+1 | S 1 = s) considered as a function of s is the value function). Farahmand et al. (2016)  proposed a regularized version of Least Square Temporal Difference  (Bradtke & Barto 1996)  and statistical properties were studied. They used a non-parametric model to estimate the value function and derived the convergence rate when training data consists of i.i.d. transition samples in the form of state, action, reward and next state. From a technical point of view, our estimation method is similar to  Farahmand et al. (2016) , albeit focused on the average reward; most importantly our method relaxes the assumption that Bellman operator can be modeled correctly for each candidate relative value function and only assumes the data consists of i.i.d. samples of trajectories. Luckett et al. (2020)  also focused on the discounted reward setting. They evaluated policy, \u03c0, based on an average of E \u03c0 ( \u221e t=1 \u03b3 t-1 R t+1 | S 1 = s) with respect to a pre-selected reference distribution of the state. While the reference distribution can be naturally chosen as the distribution of the initial state  (Farajtabar et al. 2018 , Liu et al. 2018 , Luckett et al. 2020 , Thomas & Brunskill 2016) , choosing a \"right\" discount rate, \u03b3, can be non-trivial, at least in mHealth. They assumed a parametric model for the value function and developed a regularized estimating equation. In computer science literature, there also exists many off-policy evaluation methods for the discounted reward setting. We refer the interested reader to the recent works by  Farajtabar et al. (2018)  and  Kallus & Uehara (2019)  and references therein.\n\nClosest to the setting of this work is the recent work by  Murphy et al. (2016)  and  Liu et al. (2018) . Murphy et al. (2016)  considered the average reward setting. They assumed a linear model for the value function and constructed the estimating equations to estimate the average reward. However the linearity assumption of the value function is unlikely to hold in practice and difficult to validate (e.g., the value function involves the infinite sum of the rewards). Our method allows the use of a non-parametric model for the value function to increase robustness. Liu et al. (2018)  also considered the average reward and proposed an estimator for the average reward based on estimating the ratio of the stationary distribution under the target policy divided by the stationary distribution under the behavior policy. However they did not provide confidence intervals or other inferential methods besides an estimator for the average reward. In addition, they restricted the behavior policy to be Markovian and time-stationary. In mHealth, the behavior policy can be determined by an algorithm based on the accruing data and thus violates this assumption  (Liao et al. 2018 , Dempsey et al. 2020) ."
+    },
+    {
+      "title": "4. Estimator for Off-Policy Evaluation",
+      "text": "We assume that the dataset, D n , consists of n trajectories:\n\nEach trajectory, D i , is an i.i.d. copy of D described in Section 2. Recall that {A t } T t=1 , the actions in D, are selected by the behavior policy, \u03c0 b . In the following, the expectation, E, without the subscript is with respect to the distribution of the trajectory, D, under the behavior policy.\n\nBelow we introduce the estimator for \u03b7 \u03c0 . We follow the so-called \"model-free\" approach (i.e., does not require modeling the transition kernel, P ) to estimate the average reward. Our estimator is based on the Bellman equation, also known as the Poisson equation  (Puterman 1994 ); as will be discussed below this equation characterizes the average reward.\n\nFirst consider the setting where the state space, S, is finite and the induced Markov chain, P \u03c0 , is irreducible. Recall that in this setting the average reward, \u03b7 \u03c0 , is a constant given in (2). Define the relative value function by\n\n(3) this limit is well-defined  (Puterman (1994) , p. 338). If the induced Markov chain is aperiodic, then the relative value function (3) can be expressed as  a) , measures the difference between the expected cumulative rewards under policy \u03c0 and the average reward when the initial state is s and the first action is a. It is easy to verify from the definition that (\u03b7 \u03c0 , Q \u03c0 ) is a solution of the Bellman equation:\n\n(4)\n\nFurthermore, when the induced Markov chain is irreducible, the Bellman equation (  4 ) uniquely identifies the average reward, \u03b7 \u03c0 , and identifies the relative value function, Q \u03c0 , up to a constant (see  Puterman (1994) , p. 343 for details). That is, the set of the solutions of the Bellman equation (  4 ) is given by\n\nsults can be generalized to general state spaces (see chap. 7 in Hern\u00e1ndez-Lerma & Lasserre (1999)). The key assumption for the method proposed here is as follows.\n\nAssumption 1. The average reward of the target policy, \u03c0, is independent of state and satisfies (2). (\u03b7 \u03c0 , Q \u03c0 ) is the unique solution of the Bellman equation (  4 ) up to a constant for Q \u03c0 . The stationary distribution of the induced transition kernel, P \u03c0 , exists.\n\nAs the focus of this work is to estimate the average reward, it will be sufficient to estimate a specific version of Q \u03c0 . Define the shifted relative value function by Q\u03c0 (s, a) = Q \u03c0 (s, a) -Q \u03c0 (s * , a * ) for a specific state-action pair, (s * , a * ). Obviously Q\u03c0 (s * , a * ) = 0 and Q\u03c0 (s 1 , a 1 ) -\n\n, that is, the difference in the relative value remains the same. By restricting the relative value function to satisfy Q(s * , a * ) = 0, the solution of Bellman equation (  4 ) is unique and given by (\u03b7 \u03c0 , Q\u03c0 ).\n\nIn the following, we assume that Q\u03c0 \u2208 Q, where Q denotes a vector space of functions on the state-action space S \u00d7 A such that Q(s * , a * ) = 0 for all Q \u2208 Q. The Bellman operator, T \u03c0 , with respect to the target policy \u03c0 is given by\n\n(5) Note that the above conditional expectation does not depend on the behavior policy due to the conditioning on current state and action. The Bellman error at (s, a) with respect to (\u03b7, Q) and \u03c0 is defined as T \u03c0 (s, a; Q)\u03b7 -Q(s, a). From the Bellman equation, this error is zero for all (s, a) when \u03b7 = \u03b7 \u03c0 and Q = Q\u03c0 .\n\nNote that the Bellman operator (5) involves the (unknown) transition kernel, P . Suppose for now that P is known and thus the Bellman operator is known. Since the Bellman error is zero at \u03b7 = \u03b7 \u03c0 and Q = Q\u03c0 , a natural way to estimate (\u03b7 \u03c0 , Q\u03c0 ) is to minimize the empirical squared Bellman error, i.e., min\n\nwhere\n\n) is the empirical mean over the training data, D n , for a function of the trajectory, f (D). Obviously, this is not a feasible estimator as we don't know the transition kernel and thus T \u03c0 (S t , A t ; Q) is unknown. A natural idea is to replace the Bellman operator by its sample counterpart, i.e., replace\n\nin the objective function of (6). Unlike the regression problem in which the dependent variable is fully observed, the dependent variable here is R t+1 + a \u2032 \u03c0(a \u2032 | S t+1 )Q(S t+1 , a \u2032 ), which involves the unknown relative value function, Q. As a result, this natural plug-in estimator is biased (see  Antos et al. (2008)  for a similar discussion in the discounted reward setting).\n\nThe above argument motivates a coupled estimator in which we use the estimated Bellman error to form an objective function. In particular, for each (\u03b7, Q), we replace the Bellman error, T \u03c0 (S t , A t ; Q)\u03b7 -Q(S t , A t ), in (  6 ) by an estimate of the \"projection\" of the Bellman error into a second function class, G:\n\nThroughout we assume the solution of the above optimization exists and is in G and we call g * \u03c0 (\u2022, \u2022; \u03b7, Q) a projection for simplicity. Recall that members of Q satisfy Q(s * , a * ) = 0. A similar constraint needs not be placed on the members of G. It is worth noting that we do not require the assumption that the Bellman error is modeled correctly by G, that is,\n\nQ}, however this is not mandatory. Farahmand et al. (2016)  assumed that the Bellman error (in discounted setting) is in fact in Q in order to develop a non-parametric estimator for the value function. As we will see, the assumption that the Bellman error belongs to G is in fact not necessary and can be relaxed (our proof will use the weaker assumption 4 in Section 5).\n\nThe key reason why the projected Bellman error (7) allows us to identify (\u03b7 \u03c0 , Q\u03c0 ) is because\n\nWe now formally introduce the estimator for (\u03b7 \u03c0 , Q\u03c0 ). This estimator is designed to minimize the projected Bellman error (7). Specifically, the estimator, (\u03b7 \u03c0 n , Q\u03c0 n ), of (\u03b7 \u03c0 , Q\u03c0 ), is found by solving a coupled (or nested) optimization problem:\n\nwhere for each (\u03b7, Q), \u011dn,\u03c0 (\u2022, \u2022; \u03b7, Q) is an estimator for the projection of the Bellman error given by \u011dn,\u03c0 (\u2022,\n\nwhere J 1 : Q \u2192 R + and J 2 : G \u2192 R + are two regularizers and \u03bb n and \u00b5 n are tuning parameters.\n\nWe can see that for every (\u03b7, Q), \u011dn,\u03c0 (\u2022, \u2022; \u03b7, Q) is a penalized estimator for the projected Bellman error g * \u03c0 (\u2022, \u2022; \u03b7, Q) in (  7 ). On the other hand, the objective function in (  8 ) is a plug-in version of the objective function in (6) where we replace the Bellman error by \u011dn,\u03c0 (\u2022, \u2022; \u03b7, Q).\n\nCompared to the classic empirical risk minimization, (\u03b7 \u03c0 n , Q\u03c0 n ) solves a nested optimization problem in the sense that the objective function (8) depends on \u011dn,\u03c0 (\u2022, \u2022; \u03b7, Q) which itself is the solution of another, lower-level optimization (9).\n\nThe penalty term, \u03bb n J 2 1 (Q), is used to balance between the model fitting (i.e., the squared estimated Bellman error) and the complexity of the relative value function measured by J 1 (Q). Similarly, \u00b5 n J 2 2 (g) is used to control the overfitting in estimating the projected Bellman error when the function class, G, is complex. In the case where the function space is k-th order Sobolev space, the regularizer is typically defined by the k-th order derivative to capture the smoothness of function. In the case where the function space is Reproducing Kernel Hilbert Space (RKHS), the regularizer is the endowed norm. In Supplement D, we provide a closed-form solution of the estimator when both Q and G are RKHSs.\n\nSo far we have focused on evaluating a single target policy. In practice, one might want to compare the target policy to some reference policy or contrast multiple target policies of interest. Suppose we are interested in K different target policies, {\u03c0 j } K j=1 . The above procedure (8) can be applied to estimate {\u03b7 \u03c0 j } K j=1 . In the next section, we will provide the result of the joint asymptotic distribution of \u03b7\u03c0 j n K j=1 (see Corollary 1). This can be used, for example, to construct the confidence interval of the difference of the average rewards between two policies."
+    },
+    {
+      "title": "5. Theoretical Results",
+      "text": "In this section, we first derive the global rate of convergence for (\u03b7 \u03c0 n , Q\u03c0 n ) in (  8 ) and derive the asymptotic distribution of \u03b7\u03c0 n for a single policy. We then extend the results to the case of multiple policies. For any state-action function, f (s, a, s \u2032 ), and distribution, \u03bd, on S \u00d7 A, denote the L 2 (\u03bd) norm by f 2 \u03bd = f 2 (s, a)d\u03bd(s, a). If the norm does not have a subscript, then the expectation is with respect to the average state-action distribution in the trajectory,\n\nWe first state two standard assumptions used in the non-parametric regression literature  (Gy\u00f6rfi et al. 2006) . Recall that the shifted relative value function is defined as Q\u03c0 =\n\nAssumption 2. The reward is uniformly bounded:\n\nThe assumption of a bounded reward is mainly to simplify the proof and can be relaxed to the sub-Gaussian case, that is, the error R t+1 -r(S t , A t ) is sub-Gaussian for all t \u2264 T . The boundedness assumption on the shifted relative value function can be ensured by assuming certain smoothness assumptions on the transition distribution  (Ortner & Ryabko 2012)  or assuming geometric convergence to the stationary distribution (Hern\u00e1ndez-Lerma & Lasserre 1999). The boundedness assumption, (i), for members of the function class, Q, is used to simplify the proof; a truncation argument can be used to avoid this assumption.\n\nRecall that g * \u03c0 (\u2022, \u2022; \u03b7, Q) is a projected Bellman error in (7) into a function class, G. We make the following assumptions about G.\n\nGiven R max and Q max , G max can be chosen as 2(R max +Q max ). Similar to Q, the boundedness assumption of G is used to simply the proof and can be relaxed   2016 ), here we do not assume\n\nIf this were the case, then we would have\n\nBelow we make assumptions on the complexity of the function classes, Q and G. These assumptions are satisfied for common function classes, for example RKHS and Sobolev spaces (Van de Geer 2000,  Zhao et al. 2016 , Steinwart & Christmann 2008 , Gy\u00f6rfi et al. 2006 ). We denote by N (\u01eb, F , \u2022 ) the \u01eb-covering number of a set of functions, F , with respect to the norm, \u2022 .\n\nAssumption 5. (i) The regularization functional J 1 and J 2 are pseudo norms and induced by the inner products J 1 (\u2022, \u2022) and J 2 (\u2022, \u2022), respectively. There exist constants C 1 , C 2 such that\n\nThere exist constants C 3 and \u03b1 \u2208 (0, 1), such that for any \u01eb, M > 0,\n\nThe upper bound on J 2 (g * \u03c0 (\u2022, \u2022; \u03b7, Q)) in (i) is realistic when the transition kernel is sufficiently smooth (see  Farahmand et al. (2016)  for an example of MDP satisfying this condition). We use a common \u03b1 \u2208 (0, 1) for both Q and G in (ii) to simply the proof. Now we are ready to state the theorem about the convergence rate for (\u03b7 \u03c0 n , Q\u03c0 n ) in terms of the Bellman error.\n\nTheorem 1 (Global Convergence Rate). Let (\u03b7 \u03c0 n , Q\u03c0 n ) be the estimator defined in (  8 ). Suppose Assumptions 1-5 hold and the tuning parameters,\n\nfor some constant, \u03c4 > 0. Then the following bounds hold with probability at least 1\u03b4,\n\nwhere the leading constants depend only on\n\nIn Lemma ?? in Supplement B, we show that up to a constant,\n\nand thus \u03b7\u03c0 n is a consistent estimator for \u03b7 \u03c0 when \u03bb n = o P (1). When the tuning parameters are chosen such that \u03bb n \u224d \u00b5 n and \u03bb n \u224d n -1/(1+\u03b1) , the Bellman error at (\u03b7 \u03c0 n , Q\u03c0 n ) has the optimal rate of convergence, i.e., T \u03c0 (\u2022,\n\n). The proof of Theorem 1 is provided in Supplement B.\n\nIn the following, we provide the asymptotic distribution of the estimated average reward. The direction, e \u03c0 , is used to control the bias (\u03b7 \u03c0 n\u03b7 \u03c0 ) caused by the penalization on the non-parametric component (i.e., relative value function) in the estimator (8). This is akin to  Donald et al. (1994) ,  Van de Geer (2000)  for the analysis in the regression problem). In our setting, the direction, e \u03c0 (s, a), satisfies the following orthogonality: for any state-action function, Q,\n\nTo see this, note that  10 ) is a ratio between the stationary distribution of state-action pair under target policy, \u03c0, and the average distribution of state-action pair in the trajectory, D, under the behavior policy. The denominator is the expectation of the ratio under the stationary distribution. As a result of the denominator, we have e \u03c0 (s, a)d \u03c0 (s, a)dsda = 1.\n\na similar structure to that of the relative value function (3) in which the \"reward\" at time, t, is {1e \u03c0 (S t , A t )} and the \"average reward\" is zero (i.e., {1-e \u03c0 (s, a)}d \u03c0 (s, a)dsda = 0). Similar to the relative value function (3), q \u03c0 (\u2022, \u2022) satisfies a Bellman-like equation:\n\nWe make the following smoothness assumption about e \u03c0 and q \u03c0 , akin to the assumptions used in partially linear regression literature (Van de Geer 2000,  Zhao et al. 2016 ).\n\nAssumption 6. The shifted function, q\u03c0 = q \u03c0q \u03c0 (s * , a * ) \u2208 Q and e \u03c0 \u2208 G.\n\nRecall that in Assumption 3 we restrict Q(s * , a * ) = 0 for all Q \u2208 Q. Thus we consider the shifted function q\u03c0 in the assumption above. The analog of q\u03c0 \u2208 Q in partially linear\n\nwhere F is the function class to model the nonparametric component, f (z)  (Donald et al. 1994 , Van de Geer 2000) . The condition, q\u03c0 \u2208 Q, will be used to prove the \u221a n rate of convergence and asymptotic normality of \u03b7\u03c0 n . On the other hand, unlike in the regression setting, we assume that the direction function, e \u03c0 , is sufficiently smooth (i.e., e \u03c0 \u2208 G).\n\nThis assumption will be used to show that the bias of the coupled estimator, \u03b7\u03c0 n , decreases sufficiently fast to zero.\n\nThe last assumption is a contraction-type property. This assumption will be used to control the variance of a remainder term caused by the estimation of Q \u03c0 .\n\nbe the function of the conditional expectation and \u00b5 \u03c0 (f ) = f (s, a)d \u03c0 (s, a)dsda be the expectation under stationary distribution induced by \u03c0 for a state-action function, f . There exist constants, C 4 > 0 and\n\nThe parameter, \u03b2, in Assumption 7 is akin to the discount factor, \u03b3, in the discounted reward setting. Intuitively, this is related to the \"mixing rate\" of the Markov chain induced by the target policy \u03c0. A similar assumption was imposed in Van Roy (1998) (Assumption 7.2 on p. 99). Now we are ready to present our main result, the asymptotic normality of the estimated average reward, \u03b7\u03c0 n .\n\nTheorem 2 (Asymptotic Distribution). Suppose the conditions in Theorem 1 hold. In addition, suppose Assumption 6 and 7 hold and \u03bb n = a n n -1/2 with a n \u2192 0. The estimator, \u03b7\u03c0 n , in (  9 ) is \u221a n-consistent and asymptotically normal:\n\nwhere\n\nFrom Theorem 2, the variance in estimating the average reward parameter, \u03b7 \u03c0 , depends on the length of trajectory and the ratio between the stationary distribution of the stateaction pair induced by the target policy (i.e., d \u03c0 ) and the average state-action distribution in the training data (i.e., dT ). To gain intuition of how these impact the asymptotic variance of \u03b7\u03c0 n , consider a simplified setting where the conditional variance of\n\nIt can be shown that the asymptotic variance becomes \u03c3 2 = \u03c3 2 0 T (1 + (d \u03c0 / dT ) -1 2 ). Thus the smaller (d \u03c0 / dT ) -1 2 (i.e., the ratio, d \u03c0 / dT , close to one), the smaller the asymptotic variance of the estimated average reward. Although here we focus only on the asymptotic properties of \u03b7\u03c0 n for large n (recall n is the number of i.i.d. trajectories), one can see that increasing length of the trajectory, T , reduces the asymptotic variance. Now we present the result for evaluating a class of policies, \u03a0 = {\u03c0 1 , . . . , \u03c0 K }. Denote by \u03b7\u03c0 j n the estimated average reward of the policy, \u03c0 j , using (8).\n\nCorollary 1 (Multiple Policies). Suppose the conditions in Theorem 1 and 2 hold for each\n\nfor each \u03c0 \u2208 \u03a0. Then the estimated average rewards, {\u03b7 \u03c0 1 n , . . . , \u03b7\u03c0 K n }, jointly converge in distribution to a multivariate Gaussian distribution:\n\nwhere the (i, j) element of \u03a3 is given by\n\nTo conduct inference, we need to estimate the asymptotic variance, \u03a3. For each \u03c0 \u2208 \u03a0, we denote the plug-in estimation of \u01eb \u03c0 t (defined in Corollary 1) by \u01eb\u03c0 t in which we plug in (\u03b7 \u03c0 n , Q\u03c0 n ) and an estimator for the ratio, d \u03c0 (s, a)/ dT (s, a). We then estimate the asymptotic variance, \u03a3, by \u03a3n = P n 1 T T t=1\n\n.\n\nWe can estimate the ratio, d \u03c0 / dT , as follows. First, we note that by taking the expectation on both sides of (10), the ratio can be written in terms of e \u03c0 : d \u03c0 (s, a)/ dT (s, a) = e \u03c0 (s, a)/E{(1/T )\n\nT t=1 e \u03c0 (S t , A t )}. It is enough to construct an estimator for e \u03c0 , which we denote by \u00ea\u03c0 n , and then estimate the ratio by \u00ea\u03c0 n (s, a)/P n {(1/T ) T t=1 \u00ea\u03c0 n (S t , A t )}. Motivated by the orthogonality (11) and the expression (12), we construct the estimator for e \u03c0 (\u2022, \u2022) by \u00ea\u03c0 n (\u2022, \u2022) = gn,\u03c0 (\u2022, \u2022; q\u03c0 n ), where q\u03c0 n (\u2022, \u2022) = argmin q\u2208Q P n {(1/T ) T t=1 g2\n\nn,\u03c0 (S t , A t ; q)} + \u03bbn J 2 1 (q) and gn,\u03c0 (\u2022, \u2022; q) = argmin g\u2208G P n [(1/T ) T t=1 {1-q(S t , A t )+ a \u2032 \u03c0(a \u2032 | S t+1 )q(S t+1 , a \u2032 )g(S t , A t )} 2 ] + \u03bcn J 2 2 (g) for each q \u2208 Q. Here ( \u03bbn , \u03bcn ) are some tuning parameters. Following a similar argument as in the proof of Theorem 1, q\u03c0 n can be shown to be a consistent estimator for q\u03c0 . Under the assumption that e \u03c0 \u2208 G, e \u03c0 can be consistently estimated by  12 ). See Supplement C for additional details about the estimator \u00ea\u03c0 n . In Supplement D, we provide a closed-form solution for the estimator for the asymptotic variance when Q and G are RKHSs."
+    },
+    {
+      "title": "6. Simulation",
+      "text": "In this section, we conduct a simulation study to evaluate the performance of the proposed method. The generative model is given as follows. We follow the state generative model in  Luckett et al. (2020) . Specifically, the state, S t = (S t,1 , S t,2 ), is a two-dimensional vector and the action, A t \u2208 {0, 1}, is binary. Given the current state, S t , and action, A t , the next state, S t+1 = (S t+1,1 , S t+1,2 ), is generated by S t+1,1 = (3/4)(2A t -1)S t,1 + (1/4)S t,1 S t,2 + N (0, 0.5 2 ) and S t+1,2 = (3/4)(1 -2A t )S t,2 + (1/4)S t,1 S t,2 + N (0, 0.5 2 ). Note that receiving a treatment (A t = 1) increases the value of S t,1 while decreases S t,2 . The reward is generated by R t+1 = S t+1,1 + (1/2)S t+1,2 + (1/4)(2A t -1). For each trajectory in the training data, the state variables are generated as independent standard normal random variables and the behavior policy is to choose A t = 1 with a fixed probability 0.5. We evaluate and compare two natural policies: the \"always treat\" policy, \u03c0 1 (a | s) = 1, and \"no treatment\" policy, \u03c0 2 (a | s) = 0.\n\nIn the implementation, we use RKHS with the radial basis function (RBF) kernel to construct the function classes, Q and G. The details of how to modify an arbitrary RKHS such that the value at (s * , a * ) is zero can be found in Supplement D. The bandwidth parameter in the RBF kernel is chosen by the median heuristic. Recall that the estimator (8) involves two tuning parameters, (\u03bb n , \u00b5 n ). Following the idea in  Farahmand & Szepesv\u00e1ri (2011) , we select these tuning parameters as follows. We first split the dataset into a training set, D trn , and a validation set, D val . For each candidate value of the tuning parameters, (\u03bb, \u00b5), the training set, D trn , is used to form the estimator by (  8 ) and (  9 ). Denote the corresponding estimator by \u03b7\u03c0 (\u03bb, \u00b5), Q\u03c0 (\u2022, \u2022; \u03bb, \u00b5) . Then the temporal difference (TD) error, R + a \u2032 Q\u03c0 (S \u2032 , a \u2032 ; \u03bb, \u00b5)\u03b7\u03c0 (\u03bb, \u00b5) -Q\u03c0 (S, A; \u03bb, \u00b5), is calculated for each transition sample, (S, A, S \u2032 , R), in the validation set, D val . Recall that the Bellman error is zero at (\u03b7 \u03c0 , Q\u03c0 ). We use the validation set, D val , to fit a model for the Bellman error with respect to (\u03b7 \u03c0 (\u03bb, \u00b5), Q\u03c0 (\u2022, \u2022; \u03bb, \u00b5)) and denote the estimated Bellman error by f (\u2022, \u2022; \u03bb, \u00b5). Note that this step is essentially a regression problem (i.e., the dependent variable is the TD error and independent variables are the current state and action). Finally, we choose (\u03bb, \u00b5) that minimizes the squared estimated Bellman error over the validation set, i.e., (S,A)\u2208D val f 2 (S, A; \u03bb, \u00b5).\n\nThe final estimator for \u03b7 \u03c0 is then calculated with the optimal tuning parameters using the entire dataset. In the simulation, we use (1/2) of the trajectories for the training set and\n\n(1/2) for the validation set and we use Gaussian Process regression to estimate the Bellman error in the validation step.\n\nWe consider different scenarios of the number of the trajectories, n \u2208 {25, 40}, and the length of each trajectory, T \u2208 {25, 50, 75}. In each scenario, we generate 500 simulated dataset and for each dataset we construct the 95% confidence intervals of \u03b7 \u03c0 1 , \u03b7 \u03c0 2 and \u03b7 \u03c0 1\u03b7 \u03c0 2 . The coverage probability of each confidence interval is calculated over 500 repetitions.\n\nThe simulation result is reported in Table  1 . When the number of trajectories is small (i.e., n = 25), the simulated coverage probability is slightly smaller than the claimed value, 0.95, especially when the length of the trajectory, T , is small. It can be seen that the coverage probability slightly improves when T increases. When n = 40, the coverage probability becomes closer to 0.95 as desired. Overall, the simulation result demonstrates the validity of the inference and the selection procedure for the tuning parameters. It suggests that it is necessary to perform a small-sample correction when both n and T are small. This is left for future work. We apply the method to the data collected in the first study in HeartSteps  (Klasnja et al. 2015 , Liao et al. 2016 , Klasnja et al. 2019 ). Below we refer to this study by HS1 for simplicity. HS1 was a 42-day MRT with 44 healthy sedentary adults. We focus on the activity suggestion intervention component. There were five individual-specified times in a day which were roughly separated by 2.5 hours and corresponded to the individuals morning commute, mid-day, mid-afternoon, evening commute, and post-dinner times. At each decision time, an activity suggestion was sent with a fixed probability 0.6 only if the participants were considered to be available for treatment. For example, the participants were considered unavailable when they were currently physically active (e.g., walking or running) or driving a vehicle.\n\nThe activity suggestions were intended to motivate near-time walking. Each participant wore a Jawbone wrist tracker and the minute-level step count data was recorded.\n\nWe construct the state based on the participant's step count data (e.g., the 30-min step count prior to the decision time and the total step count from yesterday), location, temperature and number of the notifications received over the last seven days. We also include in the state the time slot index in the day (1 to 5) and the indicator measuring how the step count varies at the current time slot over the last seven days. The reward is formed by the log transformation of the total step count collected in 30-min window after the decision time. The log transformation is performed as the step count data is positively skewed  (Klasnja et al. 2019 ). The step count data might be missing because the Jawbone tracker recorded data only when there were steps occurred. We use the same imputation procedure as in  Klasnja et al. (2019) . The state related to the step count are constructed based on the imputed step counts. The variables in the state are chosen to be predictive of the reward. In particular, each variable is selected, at the significance level of 0.05, based on a marginal Generalized Estimating Equation (GEE) analysis. In the analysis, we exclude seven participants' data as in the primary analysis in  Klasnja et al. (2019)  (three due to technical issues and four due to early dropout). In addition, from the 37 participants' data we exclude the decision times when participants were traveling abroad or experiencing technical issues or when the reward (i.e., post 30-min step count) is considered as missing (see  Klasnja et al. (2019)  for details).\n\nWe consider three target policies. The first policy, \u03c0 nothing , is \"do nothing\". The second policy, \u03c0 always , is the \"always treat\" policy. Recall that in HeartSteps the activity suggestion can be sent only when the participant is available. So here the \"always treat\" policy refers to always send the suggestion whenever the participant is available. The third policy, \u03c0 location , is based on the location. Specifically, we consider the policy that sends the activity suggestion when the participant is at either home or work location and available. This policy is of interest because people at home or work are in a more structured environment and thus might be able to better respond to an activity suggestion as compared with at other locations. In HS1, about 44% of the available decision times were at times that the participants were at their home or work location. Thus the policy, \u03c0 location , is different from the \"always treat\" policy, \u03c0 always .\n\nIn the implementation, we use the RKHS with the radial basis function kernel to form the function classes, Q and G. The tuning parameters are selected based on the procedure described in Section 6. The estimated average reward of the location-based policy, \u03c0 location , is 3.155 with the 95% confidence interval , [2.893, 3.417], which is slightly better than the \"do nothing\" policy. Specifically, the estimated average reward of \u03c0 nothing is 2.962 and the 95% confidence interval of the difference, \u03b7 \u03c0 location\u03b7 \u03c0 nothing , is  [-0.016, 0.402] . Translating back to the raw step count as in  Klasnja et al. (2019) , the location-based policy is able to increase the average 30-min step count roughly by 22% (i.e., exp(3.16 -2.96) -1 = 1.22), corresponding to 55 steps (the mean post-decision time step count is 248 across all decision times in the dataset). However if we compare the \"always treat\" policy (\u03b7 \u03c0 always = 3.127, 95% confidence interval is [2.840, 3.413]) with the location-based policy, \u03c0 location , we see no indication that providing treatment only at home or work is better than always providing treatment (the 95% confidence interval of \u03b7 \u03c0 location\u03b7 \u03c0 always is [-0.161, 0.217]). Recall that the sample size for this study is n = 37 thus this non-significant finding may be due to the small sample."
+    },
+    {
+      "title": "8. Discussion",
+      "text": "In this work we developed a flexible method to conduct inference about the the long-term average outcomes for given target policies using data collected from a possibly different behavior policy. We believe that this is an important first step towards developing data-based just-in-time adaptive interventions. Below we discuss some directions for future research.\n\nIn many MRT studies, a natural choice of the proximal outcome to assess the effectiveness of the intervention is binary. For example, in the Substance Abuse Research Assistance study  (Rabbi et al. 2018)  Non-stationarity occurs mainly because of the unobserved aspects of the current state (e.g., the engagement and/or burden) in many mHealth applications. It will be interesting to generalize the average reward framework to incorporate the non-stationarity detected in the observed trajectory. Alternatively, one can consider evaluating the treatment policy in the indefinite horizon setting where there is an absorbing state (akin to the individual disengaging from the mobile app) and thus we aim to conduct inference about the expected total rewards until the absorbing state is reached.\n\nWe focused on evaluating and contrasting multiple pre-specified treatment policies. An important next step is to extend the method to learn the optimal policy that would lead to the largest long-term average reward and to develop the inferential methods to assess the usefulness of certain variables in the policy."
+    },
+    {
+      "text": ". The value of \u03ba measures how well the function class, G, approximates the Bellman error for all (\u03b7, Q) in which \u03b7 \u2208 R and Q \u2208 Q. The condition of a strictly positive \u03ba ensures the estimator (8) based on minimizing the projected Bellman error onto the space, G, is able to identify the true values, (\u03b7 \u03c0 , Q\u03c0 ). This is similar to the eigenvalue condition (Assumption 5) in Luckett et al. (2020) , but they are essentially using the same function class for Q and G. Recall that, unlike inFarahmand et al. ("
+    },
+    {
+      "text": "This requires additional notation as follows. Define d \u03c0 (s, a) = \u03c0(a | s)d \u03c0 (s); d \u03c0 is the density of the stationary distribution of the state-action under the target policy, \u03c0. For each t \u2265 1, denote by d t (s, a) the density of the state-action pair in the trajectory, D, under the behavior policy. Let dT (s, a) be the average density over T decision times. Motivated by the least favorable direction in partial linear regression problems (Van de Geer 2000, Zhao et al. 2016), we define the direction function, e \u03c0 (s, a), by e \u03c0 (s, a) = d \u03c0 (s, a)/ dT (s, a) (d \u03c0 (s, \u00e3)/ dT (s, \u00e3))d \u03c0 (s, \u00e3)dsd\u00e3 . (10)"
+    },
+    {
+      "text": ", the proximal outcome was whether the individual completed a daily survey. An interesting open question is how to extend the method to the binary reward setting, which would require carefully choosing the model to represent the relative value function and/or the loss functions used in estimating the Bellman error and solving the Bellman equation."
+    },
+    {
+      "text": "Coverage probability of the 95% confidence interval and MAD (mean absolute deviation) over 500 repetitions. Case 1: policy evaluation of \u03c0 1 . Case 2: policy evaluation of \u03c0 2 . Case 3: policy comparison between \u03c0 1 and \u03c0 2 ."
+    },
+    {
+      "title": "Acknowledgment",
+      "text": "This work was supported by  National Institute on Alcohol Abuse and Alcoholism (NIAAA)  of the  National Institutes of Health  under award number  R01AA23187 ,  National Institute on Drug Abuse (NIDA)  of the  National Institutes of Health  under award numbers  P50DA039838  and  R01DA039901 ,  National Institute of Biomedical Imaging and Bioengineering (NIBIB)  of the  National Institutes of Health  under award number  U54EB020404 ,  National Cancer Institute (NCI)  of the  National Institutes of Health  under award number  U01CA229437 , and  National Heart, Lung, and Blood Institute (NHLBI)  of the  National Institutes of Health  under award number  R01HL125440 . The content is solely the responsibility of the authors and does not necessarily represent the official views of the National Institutes of Health."
+    }
+  ],
+  "references": [
+    {
+      "title": "Learning near-optimal policies with bellmanresidual minimization based fitted policy iteration and a single sample path",
+      "authors": [
+        "A Antos",
+        "C Szepesv\u00e1ri",
+        "R Munos"
+      ],
+      "year": 2008,
+      "doi": "10.1007/s10994-007-5038-2",
+      "journal": "Machine Learning",
+      "volume": "71",
+      "issue": "1",
+      "raw": "Learning near-optimal policies with bellmanresidual minimization based fitted policy iteration and a single sample path \n\t\t \n\t\t\t A Antos \n\t\t \n\t\t \n\t\t\t C Szepesv\u00e1ri \n\t\t \n\t\t \n\t\t\t R Munos \n\t\t \n\t\t 10.1007/s10994-007-5038-2 \n\t \n\t \n\t\t Machine Learning \n\t\t \n\t\t\t 71 \n\t\t\t 1 \n\t\t\t \n\t\t\t 2008 \n\t\t \n\t \n\t Antos, A., Szepesv\u00e1ri, C. & Munos, R. (2008), 'Learning near-optimal policies with bellman- residual minimization based fitted policy iteration and a single sample path', Machine Learning 71(1), 89-129."
+    },
+    {
+      "title": "Linear least-squares algorithms for temporal difference learning",
+      "authors": [
+        "S Bradtke",
+        "A Barto"
+      ],
+      "year": 1996,
+      "doi": "10.1023/a:1018056104778",
+      "journal": "Machine learning",
+      "volume": "22",
+      "issue": "1-3",
+      "raw": "Linear least-squares algorithms for temporal difference learning \n\t\t \n\t\t\t S J Bradtke \n\t\t \n\t\t \n\t\t\t A G Barto \n\t\t \n\t\t 10.1023/a:1018056104778 \n\t \n\t \n\t\t Machine learning \n\t\t \n\t\t\t 22 \n\t\t\t 1-3 \n\t\t\t \n\t\t\t 1996 \n\t\t \n\t \n\t Bradtke, S. J. & Barto, A. G. (1996), 'Linear least-squares algorithms for temporal difference learning', Machine learning 22(1-3), 33-57."
+    },
+    {
+      "title": "Statistical methods for dynamic treatment regimes",
+      "authors": [
+        "B Chakraborty",
+        "E Moodie"
+      ],
+      "year": 2013,
+      "doi": "10.1007/978-1-4614-7428-9",
+      "raw": "B Chakraborty \n\t\t \n\t\t \n\t\t\t E Moodie \n\t\t \n\t\t 10.1007/978-1-4614-7428-9 \n\t\t Statistical methods for dynamic treatment regimes \n\t\t \n\t\t\t Springer \n\t\t\t 2013 \n\t\t \n\t \n\t Chakraborty, B. & Moodie, E. (2013), Statistical methods for dynamic treatment regimes, Springer."
+    },
+    {
+      "title": "The stratified microrandomized trial design: sample size considerations for testing nested causal effects of time-varying treatments",
+      "authors": [
+        "W Dempsey",
+        "P Liao",
+        "S Kumar",
+        "S Murphy"
+      ],
+      "year": 2020,
+      "doi": "10.1214/19-aoas1293",
+      "journal": "Annals of Applied Statistics",
+      "volume": "14",
+      "issue": "2",
+      "raw": "The stratified microrandomized trial design: sample size considerations for testing nested causal effects of time-varying treatments \n\t\t \n\t\t\t W Dempsey \n\t\t \n\t\t \n\t\t\t P Liao \n\t\t \n\t\t \n\t\t\t S Kumar \n\t\t \n\t\t \n\t\t\t S A Murphy \n\t\t \n\t\t 10.1214/19-aoas1293 \n\t \n\t \n\t\t Annals of Applied Statistics \n\t\t \n\t\t\t 14 \n\t\t\t 2 \n\t\t\t \n\t\t\t 2020 \n\t\t \n\t \n\t Dempsey, W., Liao, P., Kumar, S., Murphy, S. A. et al. (2020), 'The stratified micro- randomized trial design: sample size considerations for testing nested causal effects of time-varying treatments', Annals of Applied Statistics 14(2), 661-684."
+    },
+    {
+      "title": "Series estimation of semilinear models",
+      "authors": [
+        "S Donald",
+        "W Newey"
+      ],
+      "year": 1994,
+      "doi": "10.1006/jmva.1994.1032",
+      "journal": "Journal of Multivariate Analysis",
+      "volume": "50",
+      "issue": "1",
+      "raw": "Series estimation of semilinear models \n\t\t \n\t\t\t S G Donald \n\t\t \n\t\t \n\t\t\t W K Newey \n\t\t \n\t\t 10.1006/jmva.1994.1032 \n\t \n\t \n\t\t Journal of Multivariate Analysis \n\t\t \n\t\t\t 50 \n\t\t\t 1 \n\t\t\t \n\t\t\t 1994 \n\t\t \n\t \n\t Donald, S. G., Newey, W. K. et al. (1994), 'Series estimation of semilinear models', Journal of Multivariate Analysis 50(1), 30-40."
+    },
+    {
+      "title": "Regularized policy iteration with nonparametric function spaces",
+      "authors": [
+        "A.-M Farahmand",
+        "M Ghavamzadeh",
+        "C Szepesv\u00e1ri",
+        "S Mannor"
+      ],
+      "year": 2016,
+      "doi": "10.1007/978-3-540-89722-4_5",
+      "journal": "The Journal of Machine Learning Research",
+      "volume": "17",
+      "issue": "1",
+      "raw": "Regularized policy iteration with nonparametric function spaces \n\t\t \n\t\t\t A.-M Farahmand \n\t\t \n\t\t \n\t\t\t M Ghavamzadeh \n\t\t \n\t\t \n\t\t\t C Szepesv\u00e1ri \n\t\t \n\t\t \n\t\t\t S Mannor \n\t\t \n\t\t 10.1007/978-3-540-89722-4_5 \n\t \n\t \n\t\t The Journal of Machine Learning Research \n\t\t \n\t\t\t 17 \n\t\t\t 1 \n\t\t\t \n\t\t\t 2016 \n\t\t \n\t \n\t Farahmand, A.-m., Ghavamzadeh, M., Szepesv\u00e1ri, C. & Mannor, S. (2016), 'Regularized policy iteration with nonparametric function spaces', The Journal of Machine Learning Research 17(1), 4809-4874."
+    },
+    {
+      "title": "Model selection in reinforcement learning",
+      "authors": [
+        "A.-M Farahmand",
+        "C Szepesv\u00e1ri"
+      ],
+      "year": 2011,
+      "journal": "Machine learning",
+      "volume": "85",
+      "issue": "3",
+      "raw": "Model selection in reinforcement learning \n\t\t \n\t\t\t A.-M Farahmand \n\t\t \n\t\t \n\t\t\t C Szepesv\u00e1ri \n\t\t \n\t \n\t \n\t\t Machine learning \n\t\t \n\t\t\t 85 \n\t\t\t 3 \n\t\t\t \n\t\t\t 2011 \n\t\t \n\t \n\t Farahmand, A.-m. & Szepesv\u00e1ri, C. (2011), 'Model selection in reinforcement learning', Machine learning 85(3), 299-332."
+    },
+    {
+      "title": "More robust doubly robust off-policy evaluation",
+      "authors": [
+        "M Farajtabar",
+        "Y Chow",
+        "M Ghavamzadeh"
+      ],
+      "year": 2018,
+      "raw": "More robust doubly robust off-policy evaluation \n\t\t \n\t\t\t M Farajtabar \n\t\t \n\t\t \n\t\t\t Y Chow \n\t\t \n\t\t \n\t\t\t M Ghavamzadeh \n\t\t \n\t \n\t \n\t\t International Conference on Machine Learning \n\t\t \n\t\t\t 2018 \n\t\t\t \n\t\t \n\t \n\t Farajtabar, M., Chow, Y. & Ghavamzadeh, M. (2018), More robust doubly robust off-policy evaluation, in 'International Conference on Machine Learning', pp. 1447-1456."
+    },
+    {
+      "title": "A distribution-free theory of nonparametric regression",
+      "authors": [
+        "L Gy\u00f6rfi",
+        "M Kohler",
+        "A Krzyzak",
+        "H Walk"
+      ],
+      "year": 2006,
+      "doi": "10.1007/b97848",
+      "raw": "A distribution-free theory of nonparametric regression \n\t\t \n\t\t\t L Gy\u00f6rfi \n\t\t \n\t\t \n\t\t\t M Kohler \n\t\t \n\t\t \n\t\t\t A Krzyzak \n\t\t \n\t\t \n\t\t\t H Walk \n\t\t \n\t\t 10.1007/b97848 \n\t\t \n\t\t\t 2006 \n\t\t\t Springer Science & Business Media \n\t\t \n\t \n\t Gy\u00f6rfi, L., Kohler, M., Krzyzak, A. & Walk, H. (2006), A distribution-free theory of non- parametric regression, Springer Science & Business Media."
+    },
+    {
+      "title": "Further topics on discrete-time Markov control processes",
+      "authors": [
+        "O Hern\u00e1ndez-Lerma",
+        "J Lasserre"
+      ],
+      "year": 1999,
+      "doi": "10.1007/978-1-4612-0561-6",
+      "volume": "42",
+      "raw": "Further topics on discrete-time Markov control processes \n\t\t \n\t\t\t O Hern\u00e1ndez-Lerma \n\t\t \n\t\t \n\t\t\t J B Lasserre \n\t\t \n\t\t 10.1007/978-1-4612-0561-6 \n\t\t \n\t\t\t 1999 \n\t\t\t Springer \n\t\t\t 42 \n\t\t \n\t \n\t Hern\u00e1ndez-Lerma, O. & Lasserre, J. B. (1999), Further topics on discrete-time Markov con- trol processes, Vol. 42, Springer."
+    },
+    {
+      "title": "Dynamic programming and markov processes",
+      "authors": [
+        "R Howard"
+      ],
+      "year": 1960,
+      "raw": "Dynamic programming and markov processes \n\t\t \n\t\t\t R A Howard \n\t\t \n\t\t \n\t\t\t 1960 \n\t\t \n\t \n\t Howard, R. A. (1960), 'Dynamic programming and markov processes.'."
+    },
+    {
+      "title": "Doubly robust off-policy value evaluation for reinforcement learning",
+      "authors": [
+        "N Jiang",
+        "L Li"
+      ],
+      "year": 2015,
+      "raw": "Doubly robust off-policy value evaluation for reinforcement learning \n\t\t \n\t\t\t N Jiang \n\t\t \n\t\t \n\t\t\t L Li \n\t\t \n\t\t arXiv:1511.03722 \n\t\t \n\t\t\t 2015 \n\t\t \n\t \n\t arXiv preprint \n\t Jiang, N. & Li, L. (2015), 'Doubly robust off-policy value evaluation for reinforcement learn- ing', arXiv preprint arXiv:1511.03722 ."
+    },
+    {
+      "title": "Intrinsically efficient, stable, and bounded off-policy evaluation for reinforcement learning",
+      "authors": [
+        "N Kallus",
+        "M Uehara"
+      ],
+      "year": 2019,
+      "doi": "10.1093/biomet/asad059",
+      "raw": "Intrinsically efficient, stable, and bounded off-policy evaluation for reinforcement learning \n\t\t \n\t\t\t N Kallus \n\t\t \n\t\t \n\t\t\t M Uehara \n\t\t \n\t\t 10.1093/biomet/asad059 \n\t \n\t \n\t\t Advances in Neural Information Processing Systems \n\t\t \n\t\t\t 2019 \n\t\t\t \n\t\t \n\t \n\t Kallus, N. & Uehara, M. (2019), Intrinsically efficient, stable, and bounded off-policy evalu- ation for reinforcement learning, in 'Advances in Neural Information Processing Systems', pp. 3320-3329."
+    },
+    {
+      "title": "A personal health information toolkit for health intervention research",
+      "authors": [
+        "P Kizakevich",
+        "R Eckhoff",
+        "S Weger",
+        "A Weeks",
+        "J Brown",
+        "S Bryant",
+        "V Bakalov",
+        "Y Zhang",
+        "J Lyden",
+        "J Spira"
+      ],
+      "year": 2014,
+      "journal": "Stud Health Technol Inform",
+      "volume": "199",
+      "raw": "A personal health information toolkit for health intervention research \n\t\t \n\t\t\t P N Kizakevich \n\t\t \n\t\t \n\t\t\t R Eckhoff \n\t\t \n\t\t \n\t\t\t S Weger \n\t\t \n\t\t \n\t\t\t A Weeks \n\t\t \n\t\t \n\t\t\t J Brown \n\t\t \n\t\t \n\t\t\t S Bryant \n\t\t \n\t\t \n\t\t\t V Bakalov \n\t\t \n\t\t \n\t\t\t Y Zhang \n\t\t \n\t\t \n\t\t\t J Lyden \n\t\t \n\t\t \n\t\t\t J Spira \n\t\t \n\t \n\t \n\t\t Stud Health Technol Inform \n\t\t \n\t\t\t 199 \n\t\t\t \n\t\t\t 2014 \n\t\t \n\t \n\t Kizakevich, P. N., Eckhoff, R., Weger, S., Weeks, A., Brown, J., Bryant, S., Bakalov, V., Zhang, Y., Lyden, J. & Spira, J. (2014), 'A personal health information toolkit for health intervention research', Stud Health Technol Inform 199, 35-39."
+    },
+    {
+      "title": "Micro-randomized trials: An experimental design for developing just-in-time adaptive interventions",
+      "authors": [
+        "P Klasnja",
+        "E Hekler",
+        "S Shiffman",
+        "A Boruvka",
+        "D Almirall",
+        "A Tewari",
+        "S Murphy"
+      ],
+      "doi": "10.1037/hea0000305",
+      "journal": "Health Psychology",
+      "volume": "34",
+      "issue": "S",
+      "raw": "Micro-randomized trials: An experimental design for developing just-in-time adaptive interventions \n\t\t \n\t\t\t P Klasnja \n\t\t \n\t\t \n\t\t\t E Hekler \n\t\t \n\t\t \n\t\t\t S Shiffman \n\t\t \n\t\t \n\t\t\t A Boruvka \n\t\t \n\t\t \n\t\t\t D Almirall \n\t\t \n\t\t \n\t\t\t A Tewari \n\t\t \n\t\t \n\t\t\t S Murphy \n\t\t \n\t\t 10.1037/hea0000305 \n\t \n\t \n\t\t Health Psychology \n\t\t \n\t\t\t 34 \n\t\t\t S \n\t\t\t 2015. 1220 \n\t\t \n\t \n\t Klasnja, P., Hekler, E., Shiffman, S., Boruvka, A., Almirall, D., Tewari, A. & Murphy, S. (2015), 'Micro-randomized trials: An experimental design for developing just-in-time adaptive interventions.', Health Psychology 34(S), 1220."
+    },
+    {
+      "title": "Efficacy of contextually tailored suggestions for physical activity: A microrandomized optimization trial of heartsteps",
+      "authors": [
+        "P Klasnja",
+        "S Smith",
+        "N Seewald",
+        "A Lee",
+        "K Hall",
+        "B Luers",
+        "E Hekler",
+        "S Murphy"
+      ],
+      "year": 2019,
+      "journal": "Annals of Behavioral Medicine",
+      "volume": "53",
+      "issue": "6",
+      "raw": "Efficacy of contextually tailored suggestions for physical activity: A microrandomized optimization trial of heartsteps \n\t\t \n\t\t\t P Klasnja \n\t\t \n\t\t \n\t\t\t S Smith \n\t\t \n\t\t \n\t\t\t N J Seewald \n\t\t \n\t\t \n\t\t\t A Lee \n\t\t \n\t\t \n\t\t\t K Hall \n\t\t \n\t\t \n\t\t\t B Luers \n\t\t \n\t\t \n\t\t\t E B Hekler \n\t\t \n\t\t \n\t\t\t S A Murphy \n\t\t \n\t \n\t \n\t\t Annals of Behavioral Medicine \n\t\t \n\t\t\t 53 \n\t\t\t 6 \n\t\t\t \n\t\t\t 2019 \n\t\t \n\t \n\t Klasnja, P., Smith, S., Seewald, N. J., Lee, A., Hall, K., Luers, B., Hekler, E. B. & Murphy, S. A. (2019), 'Efficacy of contextually tailored suggestions for physical activity: A micro- randomized optimization trial of heartsteps', Annals of Behavioral Medicine 53(6), 573- 582."
+    },
+    {
+      "title": "Effective behavioral intervention strategies using mobile health applications for chronic disease management: a systematic review",
+      "authors": [
+        "J.-A Lee",
+        "M Choi",
+        "S Lee",
+        "N Jiang"
+      ],
+      "year": 2018,
+      "doi": "10.1186/s12911-018-0591-0",
+      "journal": "BMC medical informatics and decision making",
+      "volume": "18",
+      "issue": "1",
+      "pages": "12",
+      "raw": "Effective behavioral intervention strategies using mobile health applications for chronic disease management: a systematic review \n\t\t \n\t\t\t J.-A Lee \n\t\t \n\t\t \n\t\t\t M Choi \n\t\t \n\t\t \n\t\t\t S A Lee \n\t\t \n\t\t \n\t\t\t N Jiang \n\t\t \n\t\t 10.1186/s12911-018-0591-0 \n\t \n\t \n\t\t BMC medical informatics and decision making \n\t\t \n\t\t\t 18 \n\t\t\t 1 \n\t\t\t 12 \n\t\t\t 2018 \n\t\t \n\t \n\t Lee, J.-A., Choi, M., Lee, S. A. & Jiang, N. (2018), 'Effective behavioral intervention strate- gies using mobile health applications for chronic disease management: a systematic review', BMC medical informatics and decision making 18(1), 12."
+    },
+    {
+      "title": "Just-in-time but not too much: Determining treatment timing in mobile health",
+      "authors": [
+        "P Liao",
+        "W Dempsey",
+        "H Sarker",
+        "S Hossain",
+        "M Absi",
+        "P Klasnja",
+        "S Murphy"
+      ],
+      "year": 2018,
+      "doi": "10.1145/3287057",
+      "journal": "Proceedings of the ACM on interactive, mobile, wearable and ubiquitous technologies",
+      "volume": "2",
+      "issue": "4",
+      "pages": "179",
+      "raw": "Just-in-time but not too much: Determining treatment timing in mobile health \n\t\t \n\t\t\t P Liao \n\t\t \n\t\t \n\t\t\t W Dempsey \n\t\t \n\t\t \n\t\t\t H Sarker \n\t\t \n\t\t \n\t\t\t S M Hossain \n\t\t \n\t\t \n\t\t\t M Absi \n\t\t \n\t\t \n\t\t\t P Klasnja \n\t\t \n\t\t \n\t\t\t S Murphy \n\t\t \n\t\t 10.1145/3287057 \n\t \n\t \n\t\t Proceedings of the ACM on interactive, mobile, wearable and ubiquitous technologies \n\t\t \n\t\t\t 2 \n\t\t\t 4 \n\t\t\t 179 \n\t\t\t 2018 \n\t\t \n\t \n\t Liao, P., Dempsey, W., Sarker, H., Hossain, S. M., al'Absi, M., Klasnja, P. & Murphy, S. (2018), 'Just-in-time but not too much: Determining treatment timing in mobile health', Proceedings of the ACM on interactive, mobile, wearable and ubiquitous tech- nologies 2(4), 179."
+    },
+    {
+      "title": "Micro-randomized trials in mhealth",
+      "authors": [
+        "P Liao",
+        "P Klasjna",
+        "A Tewari",
+        "S Murphy"
+      ],
+      "year": 2016,
+      "doi": "10.1002/sim.6847",
+      "journal": "Statistics in Medicine",
+      "volume": "35",
+      "issue": "12",
+      "raw": "Micro-randomized trials in mhealth \n\t\t \n\t\t\t P Liao \n\t\t \n\t\t \n\t\t\t P Klasjna \n\t\t \n\t\t \n\t\t\t A Tewari \n\t\t \n\t\t \n\t\t\t S Murphy \n\t\t \n\t\t 10.1002/sim.6847 \n\t \n\t \n\t\t Statistics in Medicine \n\t\t \n\t\t\t 35 \n\t\t\t 12 \n\t\t\t \n\t\t\t 2016 \n\t\t \n\t \n\t Liao, P., Klasjna, P., Tewari, A. & Murphy, S. (2016), 'Micro-randomized trials in mhealth', Statistics in Medicine 35(12), 1944-71."
+    },
+    {
+      "title": "Breaking the curse of horizon: Infinite-horizon off-policy estimation",
+      "authors": [
+        "Q Liu",
+        "L Li",
+        "Z Tang",
+        "D Zhou"
+      ],
+      "year": 2018,
+      "journal": "Advances in Neural Information Processing Systems",
+      "raw": "Breaking the curse of horizon: Infinite-horizon off-policy estimation \n\t\t \n\t\t\t Q Liu \n\t\t \n\t\t \n\t\t\t L Li \n\t\t \n\t\t \n\t\t\t Z Tang \n\t\t \n\t\t \n\t\t\t D Zhou \n\t\t \n\t \n\t \n\t\t Advances in Neural Information Processing Systems \n\t\t \n\t\t\t \n\t\t\t 2018 \n\t\t \n\t \n\t Liu, Q., Li, L., Tang, Z. & Zhou, D. (2018), Breaking the curse of horizon: Infinite-horizon off-policy estimation, in 'Advances in Neural Information Processing Systems', pp. 5356- 5366."
+    },
+    {
+      "title": "Estimating dynamic treatment regimes in mobile health using v-learning",
+      "authors": [
+        "D Luckett",
+        "E Laber",
+        "A Kahkoska",
+        "D Maahs",
+        "E Mayer-Davis",
+        "M Kosorok"
+      ],
+      "year": 2020,
+      "doi": "10.1080/01621459.2018.1537919",
+      "journal": "Journal of the American Statistical Association",
+      "volume": "115",
+      "issue": "530",
+      "raw": "Estimating dynamic treatment regimes in mobile health using v-learning \n\t\t \n\t\t\t D J Luckett \n\t\t \n\t\t \n\t\t\t E B Laber \n\t\t \n\t\t \n\t\t\t A R Kahkoska \n\t\t \n\t\t \n\t\t\t D M Maahs \n\t\t \n\t\t \n\t\t\t E Mayer-Davis \n\t\t \n\t\t \n\t\t\t M R Kosorok \n\t\t \n\t\t 10.1080/01621459.2018.1537919 \n\t \n\t \n\t\t Journal of the American Statistical Association \n\t\t \n\t\t\t 115 \n\t\t\t 530 \n\t\t\t \n\t\t\t 2020 \n\t\t \n\t \n\t Luckett, D. J., Laber, E. B., Kahkoska, A. R., Maahs, D. M., Mayer-Davis, E. & Kosorok, M. R. (2020), 'Estimating dynamic treatment regimes in mobile health using v-learning', Journal of the American Statistical Association 115(530), 692-706."
+    },
+    {
+      "title": "Average reward reinforcement learning: Foundations, algorithms, and empirical results",
+      "authors": [
+        "S Mahadevan"
+      ],
+      "year": 1996,
+      "doi": "10.1023/a:1018064306595",
+      "journal": "Machine learning",
+      "volume": "22",
+      "issue": "1-3",
+      "raw": "Average reward reinforcement learning: Foundations, algorithms, and empirical results \n\t\t \n\t\t\t S Mahadevan \n\t\t \n\t\t 10.1023/a:1018064306595 \n\t \n\t \n\t\t Machine learning \n\t\t \n\t\t\t 22 \n\t\t\t 1-3 \n\t\t\t \n\t\t\t 1996 \n\t\t \n\t \n\t Mahadevan, S. (1996), 'Average reward reinforcement learning: Foundations, algorithms, and empirical results', Machine learning 22(1-3), 159-195."
+    },
+    {
+      "title": "A batch, off-policy, actor-critic algorithm for optimizing the average reward",
+      "authors": [
+        "S Murphy",
+        "Y Deng",
+        "E Laber",
+        "H Maei",
+        "R Sutton",
+        "K Witkiewitz"
+      ],
+      "year": 2016,
+      "raw": "A batch, off-policy, actor-critic algorithm for optimizing the average reward \n\t\t \n\t\t\t S A Murphy \n\t\t \n\t\t \n\t\t\t Y Deng \n\t\t \n\t\t \n\t\t\t E B Laber \n\t\t \n\t\t \n\t\t\t H R Maei \n\t\t \n\t\t \n\t\t\t R S Sutton \n\t\t \n\t\t \n\t\t\t K Witkiewitz \n\t\t \n\t\t arXiv:1607.05047 \n\t\t \n\t\t\t 2016 \n\t\t \n\t \n\t arXiv preprint \n\t Murphy, S. A., Deng, Y., Laber, E. B., Maei, H. R., Sutton, R. S. & Witkiewitz, K. (2016), 'A batch, off-policy, actor-critic algorithm for optimizing the average reward', arXiv preprint arXiv:1607.05047 ."
+    },
+    {
+      "title": "Marginal mean models for dynamic regimes",
+      "authors": [
+        "S Murphy",
+        "M Van Der Laan",
+        "J Robins",
+        "C Group"
+      ],
+      "year": 2001,
+      "doi": "10.1198/016214501753382327",
+      "journal": "Journal of the American Statistical Association",
+      "volume": "96",
+      "issue": "456",
+      "raw": "Marginal mean models for dynamic regimes \n\t\t \n\t\t\t S A Murphy \n\t\t \n\t\t \n\t\t\t M J Van Der Laan \n\t\t \n\t\t \n\t\t\t J M Robins \n\t\t \n\t\t \n\t\t\t C P P R Group \n\t\t \n\t\t 10.1198/016214501753382327 \n\t \n\t \n\t\t Journal of the American Statistical Association \n\t\t \n\t\t\t 96 \n\t\t\t 456 \n\t\t\t \n\t\t\t 2001 \n\t\t \n\t \n\t Murphy, S. A., van der Laan, M. J., Robins, J. M. & Group, C. P. P. R. (2001), 'Marginal mean models for dynamic regimes', Journal of the American Statistical Association 96(456), 1410-1423."
+    },
+    {
+      "title": "Just-in-time adaptive interventions (jitais) in mobile health: key components and design principles for ongoing health behavior support",
+      "authors": [
+        "I Nahum-Shani",
+        "S Smith",
+        "B Spring",
+        "L Collins",
+        "K Witkiewitz",
+        "A Tewari",
+        "S Murphy"
+      ],
+      "year": 2018,
+      "doi": "10.1007/s12160-016-9830-8",
+      "journal": "Annals of Behavioral Medicine",
+      "volume": "52",
+      "issue": "6",
+      "raw": "Just-in-time adaptive interventions (jitais) in mobile health: key components and design principles for ongoing health behavior support \n\t\t \n\t\t\t I Nahum-Shani \n\t\t \n\t\t \n\t\t\t S N Smith \n\t\t \n\t\t \n\t\t\t B J Spring \n\t\t \n\t\t \n\t\t\t L M Collins \n\t\t \n\t\t \n\t\t\t K Witkiewitz \n\t\t \n\t\t \n\t\t\t A Tewari \n\t\t \n\t\t \n\t\t\t S A Murphy \n\t\t \n\t\t 10.1007/s12160-016-9830-8 \n\t \n\t \n\t\t Annals of Behavioral Medicine \n\t\t \n\t\t\t 52 \n\t\t\t 6 \n\t\t\t \n\t\t\t 2018 \n\t\t \n\t \n\t Nahum-Shani, I., Smith, S. N., Spring, B. J., Collins, L. M., Witkiewitz, K., Tewari, A. & Murphy, S. A. (2018), 'Just-in-time adaptive interventions (jitais) in mobile health: key components and design principles for ongoing health behavior support', Annals of Behavioral Medicine 52(6), 446-462."
+    },
+    {
+      "title": "Online regret bounds for undiscounted continuous reinforcement learning",
+      "authors": [
+        "R Ortner",
+        "D Ryabko"
+      ],
+      "year": 2012,
+      "journal": "Advances in Neural Information Processing Systems",
+      "raw": "Online regret bounds for undiscounted continuous reinforcement learning \n\t\t \n\t\t\t R Ortner \n\t\t \n\t\t \n\t\t\t D Ryabko \n\t\t \n\t \n\t \n\t\t Advances in Neural Information Processing Systems \n\t\t \n\t\t\t \n\t\t\t 2012 \n\t\t \n\t \n\t Ortner, R. & Ryabko, D. (2012), Online regret bounds for undiscounted continuous reinforce- ment learning, in 'Advances in Neural Information Processing Systems', pp. 1763-1771."
+    },
+    {
+      "title": "Markov decision processes: Discrete stochastic dynamic programming",
+      "authors": [
+        "M Puterman"
+      ],
+      "year": 1994,
+      "doi": "10.1002/9780470316887",
+      "raw": "Markov decision processes: Discrete stochastic dynamic programming \n\t\t \n\t\t\t M L Puterman \n\t\t \n\t\t 10.1002/9780470316887 \n\t\t \n\t\t\t 1994 \n\t\t \n\t \n\t Puterman, M. L. (1994), 'Markov decision processes: Discrete stochastic dynamic program- ming'."
+    },
+    {
+      "title": "Toward increasing engagement in substance use data collection: development of the substance abuse research assistant app and protocol for a microrandomized trial using adolescents and emerging adults",
+      "authors": [
+        "M Rabbi",
+        "M Kotov",
+        "R Cunningham",
+        "E Bonar",
+        "I Nahum-Shani",
+        "P Klasnja",
+        "M Walton",
+        "S Murphy"
+      ],
+      "year": 2018,
+      "doi": "10.2196/resprot.9850",
+      "journal": "JMIR research protocols",
+      "volume": "7",
+      "issue": "7",
+      "pages": "166",
+      "raw": "Toward increasing engagement in substance use data collection: development of the substance abuse research assistant app and protocol for a microrandomized trial using adolescents and emerging adults \n\t\t \n\t\t\t M Rabbi \n\t\t \n\t\t \n\t\t\t M P Kotov \n\t\t \n\t\t \n\t\t\t R Cunningham \n\t\t \n\t\t \n\t\t\t E E Bonar \n\t\t \n\t\t \n\t\t\t I Nahum-Shani \n\t\t \n\t\t \n\t\t\t P Klasnja \n\t\t \n\t\t \n\t\t\t M Walton \n\t\t \n\t\t \n\t\t\t S Murphy \n\t\t \n\t\t 10.2196/resprot.9850 \n\t \n\t \n\t\t JMIR research protocols \n\t\t \n\t\t\t 7 \n\t\t\t 7 \n\t\t\t 166 \n\t\t\t 2018 \n\t\t \n\t \n\t Rabbi, M., Kotov, M. P., Cunningham, R., Bonar, E. E., Nahum-Shani, I., Klasnja, P., Walton, M. & Murphy, S. (2018), 'Toward increasing engagement in substance use data collection: development of the substance abuse research assistant app and protocol for a microrandomized trial using adolescents and emerging adults', JMIR research protocols 7(7), e166."
+    },
+    {
+      "title": "Support vector machines",
+      "authors": [
+        "I Steinwart",
+        "A Christmann"
+      ],
+      "year": 2008,
+      "raw": "Support vector machines \n\t\t \n\t\t\t I Steinwart \n\t\t \n\t\t \n\t\t\t A Christmann \n\t\t \n\t\t \n\t\t\t 2008 \n\t\t\t Springer Science & Business Media \n\t\t \n\t \n\t Steinwart, I. & Christmann, A. (2008), Support vector machines, Springer Science & Business Media."
+    },
+    {
+      "title": "Reinforcement learning: An introduction",
+      "authors": [
+        "R Sutton",
+        "A Barto"
+      ],
+      "year": 2018,
+      "raw": "Reinforcement learning: An introduction \n\t\t \n\t\t\t R S Sutton \n\t\t \n\t\t \n\t\t\t A G Barto \n\t\t \n\t\t \n\t\t\t 2018 \n\t\t\t MIT press \n\t\t \n\t \n\t Sutton, R. S. & Barto, A. G. (2018), Reinforcement learning: An introduction, MIT press."
+    },
+    {
+      "title": "Data-efficient off-policy policy evaluation for reinforcement learning",
+      "authors": [
+        "P Thomas",
+        "E Brunskill"
+      ],
+      "year": 2016,
+      "raw": "Data-efficient off-policy policy evaluation for reinforcement learning \n\t\t \n\t\t\t P Thomas \n\t\t \n\t\t \n\t\t\t E Brunskill \n\t\t \n\t \n\t \n\t\t International Conference on Machine Learning \n\t\t \n\t\t\t 2016 \n\t\t\t \n\t\t \n\t \n\t Thomas, P. & Brunskill, E. (2016), Data-efficient off-policy policy evaluation for reinforce- ment learning, in 'International Conference on Machine Learning', pp. 2139-2148."
+    },
+    {
+      "title": "Empirical Processes in M-estimation",
+      "authors": [
+        "S Van De Geer"
+      ],
+      "year": 2000,
+      "volume": "6",
+      "raw": "S Van De Geer \n\t\t \n\t\t Empirical Processes in M-estimation \n\t\t \n\t\t\t Cambridge university press \n\t\t\t 2000 \n\t\t\t 6 \n\t\t \n\t \n\t Van de Geer, S. (2000), Empirical Processes in M-estimation, Vol. 6, Cambridge university press."
+    },
+    {
+      "title": "Learning and value function approximation in complex decision processes",
+      "authors": [
+        "B Van Roy"
+      ],
+      "year": 1998,
+      "doi": "10.5176/2301-394x_ace17.117",
+      "raw": "Learning and value function approximation in complex decision processes \n\t\t \n\t\t\t B Van Roy \n\t\t \n\t\t 10.5176/2301-394x_ace17.117 \n\t\t \n\t\t\t 1998 \n\t\t \n\t\t \n\t\t\t Massachusetts Institute of Technology \n\t\t \n\t \n\t PhD thesis \n\t Van Roy, B. (1998), Learning and value function approximation in complex decision pro- cesses, PhD thesis, Massachusetts Institute of Technology."
+    },
+    {
+      "title": "A partially linear framework for massive heterogeneous data",
+      "authors": [
+        "T Zhao",
+        "G Cheng",
+        "H Liu"
+      ],
+      "year": 2016,
+      "doi": "10.1214/15-aos1410",
+      "journal": "Annals of statistics",
+      "volume": "44",
+      "issue": "4",
+      "pages": "1400",
+      "raw": "A partially linear framework for massive heterogeneous data \n\t\t \n\t\t\t T Zhao \n\t\t \n\t\t \n\t\t\t G Cheng \n\t\t \n\t\t \n\t\t\t H Liu \n\t\t \n\t\t 10.1214/15-aos1410 \n\t \n\t \n\t\t Annals of statistics \n\t\t \n\t\t\t 44 \n\t\t\t 4 \n\t\t\t 1400 \n\t\t\t 2016 \n\t\t \n\t \n\t Zhao, T., Cheng, G. & Liu, H. (2016), 'A partially linear framework for massive heteroge- neous data', Annals of statistics 44(4), 1400."
+    }
+  ],
+  "num_references": 34,
+  "figures": [
+    {
+      "description": ". The value of \u03ba measures how well the function class, G, approximates the Bellman error for all (\u03b7, Q) in which \u03b7 \u2208 R and Q \u2208 Q. The condition of a strictly positive \u03ba ensures the estimator (8) based on minimizing the projected Bellman error onto the space, G, is able to identify the true values, (\u03b7 \u03c0 , Q\u03c0 ). This is similar to the eigenvalue condition (Assumption 5) in Luckett et al. (2020) , but they are essentially using the same function class for Q and G. Recall that, unlike inFarahmand et al. ("
+    },
+    {
+      "description": "This requires additional notation as follows. Define d \u03c0 (s, a) = \u03c0(a | s)d \u03c0 (s); d \u03c0 is the density of the stationary distribution of the state-action under the target policy, \u03c0. For each t \u2265 1, denote by d t (s, a) the density of the state-action pair in the trajectory, D, under the behavior policy. Let dT (s, a) be the average density over T decision times. Motivated by the least favorable direction in partial linear regression problems (Van de Geer 2000, Zhao et al. 2016), we define the direction function, e \u03c0 (s, a), by e \u03c0 (s, a) = d \u03c0 (s, a)/ dT (s, a) (d \u03c0 (s, \u00e3)/ dT (s, \u00e3))d \u03c0 (s, \u00e3)dsd\u00e3 . (10)"
+    },
+    {
+      "description": ", the proximal outcome was whether the individual completed a daily survey. An interesting open question is how to extend the method to the binary reward setting, which would require carefully choosing the model to represent the relative value function and/or the loss functions used in estimating the Bellman error and solving the Bellman equation."
+    },
+    {
+      "type": "table",
+      "caption": "Table 1 :",
+      "description": "Coverage probability of the 95% confidence interval and MAD (mean absolute deviation) over 500 repetitions. Case 1: policy evaluation of \u03c0 1 . Case 2: policy evaluation of \u03c0 2 . Case 3: policy comparison between \u03c0 1 and \u03c0 2 ."
+    }
+  ],
+  "num_figures": 4,
+  "tables": [
+    {
+      "content": "n T Coverage Prob. MAD n T Coverage Prob. MAD 25 25 0.926 0.0702 40 25 0.944 0.0546 Case 1 25 50 0.930 0.0535 40 50 0.944 0.0427 25 75 0.938 0.0438 40 75 0.948 0.0346 25 25 0.934 0.0368 40 25 0.928 0.0313 Case 2 25 50 0.946 0.0261 40 50 0.940 0.0224 25 75 0.922 0.0222 40 75 0.942 0.0185 25 25 0.932 0.0761 40 25 0.946 0.0612 Case 3 25 50 0.928 0.0598 40 50 0.948 0.0461 25 75 0.932 0.0480 40 75 0.948 0.0388 7 Case Study: HeartSteps"
+    }
+  ],
+  "num_tables": 1,
+  "formulas": [
+    {
+      "text": "D = {S 1 , A 1 , S 2 , A 2 , S 3 , . . . , S t , A t , S t+1 , . . . , S T +1 },"
+    },
+    {
+      "text": "for t \u2265 1, S t+1 \u22a5 {S 1 , A 1 , . . . , S t-1 , A t-1 } | {S t , A t }. Furthermore, we assume that the condi- tional distribution (also called the transition kernel) of S t+1 | {S t , A t } is time-homogeneous."
+    },
+    {
+      "text": "S, P (B | s, a) = Pr(S t+1 \u2208 B | S t = s, A t = a)"
+    },
+    {
+      "text": "H t = {S 1 , A 1 , . . . , S t }. Denote the distribution of A t | H t by \u03c0 b t (\u2022 | H t ). We call \u03c0 b = {\u03c0 b 1 , . . . , \u03c0 b"
+    },
+    {
+      "text": "\u03b7 \u03c0 (s) = limsup t * \u2192\u221e E \u03c0 1 t * t * t=1 R t+1 S 1 = s , (1)"
+    },
+    {
+      "text": "1 {S 1 =s} t * t=1 \u03c0(A t | S t )p(S t+1 | S t , A t )."
+    },
+    {
+      "text": "P \u03c0 (\u2022 | s) = a\u2208A \u03c0(a | s)P (\u2022 | s, a)."
+    },
+    {
+      "text": "\u03b7 \u03c0 (s) = lim t * \u2192\u221e E \u03c0 ( 1 t * t * t=1 R t+1 | S 1 = s) (Theorem A.6 on p. 595 in"
+    },
+    {
+      "text": "\u03b7 \u03c0 (s) = \u03b7 \u03c0 = s,a \u03c0(a | s)d \u03c0 (s)r(s, a), (2)"
+    },
+    {
+      "text": "sup s\u2208S E \u03c0 1 t * t * t=1 R t+1 S 1 = s -\u03b7 \u03c0 = O(1/t * ),"
+    },
+    {
+      "text": "D n = D i n i=1 = S i 1 , A i 1 , S i 2 , . . . , S i T , A i T , S i T +1 n i=1 ."
+    },
+    {
+      "text": "Q \u03c0 (s, a) = lim t * \u2192\u221e 1 t * t * t=1 E \u03c0 t k=1 {R k+1 -\u03b7 \u03c0 } S 1 = s, A 1 = a ;"
+    },
+    {
+      "text": "Q \u03c0 (s, a) = E \u03c0 { \u221e t=1 (R t+1 -\u03b7 \u03c0 ) | S 1 = s, A 1 = a}. The relative value function, Q \u03c0 (s,"
+    },
+    {
+      "text": "E \u03c0 {R t+1 + Q(S t+1 , A t+1 ) | S t = s, A t = a} = \u03b7 + Q(s, a), \u2200(s, a) \u2208 S \u00d7 A."
+    },
+    {
+      "text": "{(\u03b7 \u03c0 , Q) : Q = Q \u03c0 + c1, c \u2208 R, 1(s, a) = 1}. These re-"
+    },
+    {
+      "text": "Q\u03c0 (s 2 , a 2 ) = Q \u03c0 (s 1 , a 1 ) -Q \u03c0 (s 2 , a 2 )"
+    },
+    {
+      "text": "T \u03c0 (s, a; Q) = E R t+1 + a \u2032 \u03c0(a \u2032 | S t+1 )Q(S t+1 , a \u2032 ) S t = s, A t = a ."
+    },
+    {
+      "text": "(\u03b7,Q)\u2208R\u00d7Q P n 1 T T t=1 {T \u03c0 (S t , A t ; Q) -\u03b7 -Q(S t , A t )} 2 , ( 6"
+    },
+    {
+      "text": ")"
+    },
+    {
+      "text": "P n f (D) = (1/n) n i=1 f (D i"
+    },
+    {
+      "text": "T \u03c0 (S t , A t ; Q) by R t+1 + a \u2032 \u03c0(a \u2032 | S t+1 )Q(S t+1 , a \u2032 )"
+    },
+    {
+      "text": "g * \u03c0 (\u2022, \u2022; \u03b7, Q) = argmin g\u2208G E 1 T T t=1 {T \u03c0 (S t , A t ; Q) -\u03b7 -Q(S t , A t ) -g(S t , A t )} 2 . ( 7"
+    },
+    {
+      "text": ")"
+    },
+    {
+      "text": "T \u03c0 (\u2022, \u2022; Q) -\u03b7 -Q(\u2022, \u2022) may not be in G. A natural choice of G is R \u2295 Q = {c + Q : c \u2208 R, Q \u2208"
+    },
+    {
+      "text": "g * \u03c0 (\u2022, \u2022; \u03b7 \u03c0 , Q\u03c0 ) = 0 (see also (iii) in Assumption 4 )."
+    },
+    {
+      "text": "min (\u03b7,Q)\u2208R\u00d7Q P n 1 T T t=1 \u011d2 n,\u03c0 (S t , A t ; \u03b7, Q) + \u03bb n J 2 1 (Q), (8)"
+    },
+    {
+      "text": "\u2022; \u03b7, Q) = argmin g\u2208G P n 1 T T t=1 R t+1 + a \u2032 \u03c0(a \u2032 | S t+1 )Q(S t+1 , a \u2032 ) -\u03b7 -Q(S t , A t ) -g(S t , A t ) 2 + \u00b5 n J 2 2 (g). ( 9"
+    },
+    {
+      "text": ")"
+    },
+    {
+      "text": "D, that is, f 2 = E (1/T ) T t=1 f 2 (S t , A t ) ."
+    },
+    {
+      "text": "Q \u03c0 -Q \u03c0 (s * , a * )."
+    },
+    {
+      "text": "|R t+1 | \u2264 R max < \u221e for all t \u2265 1. The shifted relative value function is bounded: | Q\u03c0 (s, a)| \u2264 Q max for all s \u2208 S and a \u2208 A. Assumption 3. The function class, Q, satisfies (i) Q(s * , a * ) = 0 and Q \u221e \u2264 Q max for all Q \u2208 Q and (ii) Q\u03c0 \u2208 Q."
+    },
+    {
+      "text": "Assumption 4. The function class, G, satisfies (i) 0 \u2208 G, (ii) g \u221e \u2264 G max for all g \u2208 G, and (iii) \u03ba = inf g * \u03c0 (\u2022, \u2022; \u03b7, Q) : T \u03c0 (\u2022, \u2022; Q) -\u03b7 -Q(\u2022, \u2022) = 1, \u03b7 \u2208 R, Q \u2208 Q > 0."
+    },
+    {
+      "text": "T \u03c0 (\u2022, \u2022; Q) -\u03b7 -Q(\u2022, \u2022) \u2208 G for every (\u03b7, Q)."
+    },
+    {
+      "text": "g * \u03c0 (\u2022, \u2022; \u03b7, Q) = T \u03c0 (\u2022, \u2022; Q) -\u03b7 -Q(\u2022, \u2022) and thus \u03ba = 1."
+    },
+    {
+      "text": "J 2 (g * \u03c0 (\u2022, \u2022; \u03b7, Q)) \u2264 C 1 + C 2 J 1 (Q) holds for all (\u03b7, Q) \u2208 R \u00d7 Q. (ii) Let Q M = {c + Q : |c| \u2264 R max , Q \u2208 Q, J 1 (Q) \u2264 M} and G M = {g : g \u2208 G, J 2 (g) \u2264 M}."
+    },
+    {
+      "text": "max log N(\u01eb, G M , \u2022 \u221e ), log N (\u01eb, Q M , \u2022 \u221e ) \u2264 C 3 M \u01eb 2\u03b1 ."
+    },
+    {
+      "text": "(\u03bb n , \u00b5 n ), satisfy \u03c4 -1 n -1 1+\u03b1 \u2264 \u00b5 n \u2264 \u03c4 \u03bb n"
+    },
+    {
+      "text": "T \u03c0 (\u2022, \u2022; Q\u03c0 n ) -\u03b7\u03c0 n -Q\u03c0 n (\u2022, \u2022) 2 \u03ba -2 \u03bb n (1 + J 2 1 ( Q\u03c0 ))(1 + log(1/\u03b4)), J 1 ( Q\u03c0 n ) 1 + log(1/\u03b4) + J 2 1 ( Q\u03c0 ),"
+    },
+    {
+      "text": "(\u03c4, R max , Q max , G max , C 1 , C 2 , C 3 , \u03b1)."
+    },
+    {
+      "text": "|\u03b7 \u03c0 n -\u03b7 \u03c0 | T \u03c0 (\u2022, \u2022; Q\u03c0 n ) - \u03b7\u03c0 n -Q\u03c0 n (\u2022, \u2022) 2"
+    },
+    {
+      "text": "\u2022; \u03b7\u03c0 n , Q\u03c0 n ) -\u03b7\u03c0 n -Q\u03c0 n (\u2022, \u2022) 2 = O P (n -1/(1+\u03b1)"
+    },
+    {
+      "text": "partially linear regression problem, Y = f (Z) + X \u22a4 \u03b2 + \u01eb, in which the analog of e \u03c0 (s, a) is the residual x -E(X | Z = z) (see"
+    },
+    {
+      "text": "E 1 T T t=1 e \u03c0 (S t , A t ) Q(S t , A t ) - a \u2032 \u03c0(a \u2032 | S t+1 )Q(S t+1 , a \u2032 ) = 0. ( 11"
+    },
+    {
+      "text": ")"
+    },
+    {
+      "text": "Q(s, a)d \u03c0 (s, a)dsda = a \u2032 \u03c0(a \u2032 | s \u2032 )Q(s \u2032 , a \u2032 )P (s \u2032 | s, a)d \u03c0 (s, a)dsdads \u2032 . The numerator in ("
+    },
+    {
+      "text": "Next define q \u03c0 (s, a) = lim t * \u2192\u221e 1 t * t * t=1 E \u03c0 t k=1 {1 -e \u03c0 (S k , A k )} | S 1 = s, A 1 = a . Note q \u03c0 has"
+    },
+    {
+      "text": "q(s, a) = 1 -e \u03c0 (s, a) + E a \u2032 \u03c0(S t+1 , a \u2032 )q(S t+1 , a \u2032 ) S t = s, A t = a . ( 12"
+    },
+    {
+      "text": ")"
+    },
+    {
+      "text": "regression problem, Y = f (Z) + X \u22a4 \u03b2 + \u01eb, is the standard assumption that E[X|Z = \u2022] \u2208 F ,"
+    },
+    {
+      "text": "Assumption 7. Let (P \u03c0 f )(\u2022, \u2022) = E \u03c0 {f (S t+1 , A t+1 ) | S t = \u2022, A t = \u2022}"
+    },
+    {
+      "text": "0 \u2264 \u03b2 < 1, such that for f \u2208 L 2 and t \u2265 1, (P \u03c0 ) t (f ) -\u00b5 \u03c0 (f ) \u2264 C 4 f \u03b2 t . (13)"
+    },
+    {
+      "text": "\u221a n(\u03b7 \u03c0 n -\u03b7 \u03c0 ) \u21d2 N(0, \u03c3 2 ),"
+    },
+    {
+      "text": "\u03c3 2 = Var 1 T T t=1 d \u03c0 (S t , A t ) dT (S t , A t ) R t+1 + a \u2032 \u03c0(a \u2032 | S t+1 )Q \u03c0 (S t+1 , a \u2032 ) -\u03b7 \u03c0 -Q \u03c0 (S t , A t ) ."
+    },
+    {
+      "text": "R t+1 + a \u2032 Q \u03c0 (S t+1 , a \u2032 ) - \u03b7 \u03c0 -Q \u03c0 (S t , A t ) given (S t , A t ) is a constant, denoted by \u03c3 2 0 ."
+    },
+    {
+      "text": "\u03c0 \u2208 \u03a0. Let \u01eb \u03c0 t = d \u03c0 (St,At) dT (St,At) [R t+1 + a \u2032 \u03c0(a \u2032 | S t+1 )Q \u03c0 (S t+1 , a \u2032 ) -\u03b7 \u03c0 -Q \u03c0 (S t , A t )]"
+    },
+    {
+      "text": "\uf8eb \uf8ec \uf8ec \uf8ec \uf8ed \u221a n(\u03b7 \u03c0 1 n -\u03b7 \u03c0 1 ) . . . \u221a n(\u03b7 \u03c0 K n -\u03b7 \u03c0 K ) \uf8f6 \uf8f7 \uf8f7 \uf8f7 \uf8f8 \u21d2 MVN(0, \u03a3),"
+    },
+    {
+      "text": "E (1/T ) T t=1 \u01eb \u03c0 i t (1/T ) T t=1 \u01eb \u03c0 j t ."
+    },
+    {
+      "text": "\u01eb\u03c0 i t 1 T T t=1 \u01eb\u03c0 j t K i,j=1"
+    },
+    {
+      "text": "\u00ea\u03c0 n (\u2022, \u2022) = gn,\u03c0 (\u2022, \u2022; q\u03c0 n ) based on ("
+    }
+  ],
+  "num_formulas": 59,
+  "num_citations": 64,
+  "cited_references": [
+    "b3",
+    "b13",
+    "b18",
+    "b2",
+    "b14",
+    "b17",
+    "b25",
+    "b9",
+    "b1",
+    "b20",
+    "b21",
+    "b12",
+    "b30",
+    "b31",
+    "b29",
+    "b16",
+    "b15",
+    "b5",
+    "b19",
+    "b28",
+    "b10",
+    "b27",
+    "b24",
+    "b4",
+    "b6",
+    "b33",
+    "b7",
+    "b11",
+    "b8",
+    "b22",
+    "b23",
+    "b0",
+    "b26"
+  ],
+  "notes": [
+    "[raw_affiliation] Department of Statistics , University of Michigan Predrag Klasnja School of Information , University of Michigan Department of Statistics , Harvard University",
+    "[raw_affiliation] Department of Statistics , University of Michigan Predrag Klasnja School of Information , University of Michigan Department of Statistics , Harvard University",
+    "http://people.seas.harvard.edu/ ~samurphy/JITAI_MRT/mrts4.html",
+    "[raw_reference] Antos, A., Szepesv\u00e1ri, C. & Munos, R. (2008), 'Learning near-optimal policies with bellman- residual minimization based fitted policy iteration and a single sample path', Machine Learning 71(1), 89-129.",
+    "[raw_reference] Bradtke, S. J. & Barto, A. G. (1996), 'Linear least-squares algorithms for temporal difference learning', Machine learning 22(1-3), 33-57.",
+    "[raw_reference] Chakraborty, B. & Moodie, E. (2013), Statistical methods for dynamic treatment regimes, Springer.",
+    "[raw_reference] Dempsey, W., Liao, P., Kumar, S., Murphy, S. A. et al. (2020), 'The stratified micro- randomized trial design: sample size considerations for testing nested causal effects of time-varying treatments', Annals of Applied Statistics 14(2), 661-684.",
+    "[raw_reference] Donald, S. G., Newey, W. K. et al. (1994), 'Series estimation of semilinear models', Journal of Multivariate Analysis 50(1), 30-40.",
+    "[raw_reference] Farahmand, A.-m., Ghavamzadeh, M., Szepesv\u00e1ri, C. & Mannor, S. (2016), 'Regularized policy iteration with nonparametric function spaces', The Journal of Machine Learning Research 17(1), 4809-4874.",
+    "[raw_reference] Farahmand, A.-m. & Szepesv\u00e1ri, C. (2011), 'Model selection in reinforcement learning', Machine learning 85(3), 299-332.",
+    "[raw_reference] Farajtabar, M., Chow, Y. & Ghavamzadeh, M. (2018), More robust doubly robust off-policy evaluation, in 'International Conference on Machine Learning', pp. 1447-1456.",
+    "[raw_reference] Gy\u00f6rfi, L., Kohler, M., Krzyzak, A. & Walk, H. (2006), A distribution-free theory of non- parametric regression, Springer Science & Business Media.",
+    "[raw_reference] Hern\u00e1ndez-Lerma, O. & Lasserre, J. B. (1999), Further topics on discrete-time Markov con- trol processes, Vol. 42, Springer.",
+    "[raw_reference] Howard, R. A. (1960), 'Dynamic programming and markov processes.'.",
+    "[report_type] arXiv preprint",
+    "[raw_reference] Jiang, N. & Li, L. (2015), 'Doubly robust off-policy value evaluation for reinforcement learn- ing', arXiv preprint arXiv:1511.03722 .",
+    "[raw_reference] Kallus, N. & Uehara, M. (2019), Intrinsically efficient, stable, and bounded off-policy evalu- ation for reinforcement learning, in 'Advances in Neural Information Processing Systems', pp. 3320-3329.",
+    "[raw_reference] Kizakevich, P. N., Eckhoff, R., Weger, S., Weeks, A., Brown, J., Bryant, S., Bakalov, V., Zhang, Y., Lyden, J. & Spira, J. (2014), 'A personal health information toolkit for health intervention research', Stud Health Technol Inform 199, 35-39.",
+    "[raw_reference] Klasnja, P., Hekler, E., Shiffman, S., Boruvka, A., Almirall, D., Tewari, A. & Murphy, S. (2015), 'Micro-randomized trials: An experimental design for developing just-in-time adaptive interventions.', Health Psychology 34(S), 1220.",
+    "[raw_reference] Klasnja, P., Smith, S., Seewald, N. J., Lee, A., Hall, K., Luers, B., Hekler, E. B. & Murphy, S. A. (2019), 'Efficacy of contextually tailored suggestions for physical activity: A micro- randomized optimization trial of heartsteps', Annals of Behavioral Medicine 53(6), 573- 582.",
+    "[raw_reference] Lee, J.-A., Choi, M., Lee, S. A. & Jiang, N. (2018), 'Effective behavioral intervention strate- gies using mobile health applications for chronic disease management: a systematic review', BMC medical informatics and decision making 18(1), 12.",
+    "[raw_reference] Liao, P., Dempsey, W., Sarker, H., Hossain, S. M., al'Absi, M., Klasnja, P. & Murphy, S. (2018), 'Just-in-time but not too much: Determining treatment timing in mobile health', Proceedings of the ACM on interactive, mobile, wearable and ubiquitous tech- nologies 2(4), 179.",
+    "[raw_reference] Liao, P., Klasjna, P., Tewari, A. & Murphy, S. (2016), 'Micro-randomized trials in mhealth', Statistics in Medicine 35(12), 1944-71.",
+    "[raw_reference] Liu, Q., Li, L., Tang, Z. & Zhou, D. (2018), Breaking the curse of horizon: Infinite-horizon off-policy estimation, in 'Advances in Neural Information Processing Systems', pp. 5356- 5366.",
+    "[raw_reference] Luckett, D. J., Laber, E. B., Kahkoska, A. R., Maahs, D. M., Mayer-Davis, E. & Kosorok, M. R. (2020), 'Estimating dynamic treatment regimes in mobile health using v-learning', Journal of the American Statistical Association 115(530), 692-706.",
+    "[raw_reference] Mahadevan, S. (1996), 'Average reward reinforcement learning: Foundations, algorithms, and empirical results', Machine learning 22(1-3), 159-195.",
+    "[report_type] arXiv preprint",
+    "[raw_reference] Murphy, S. A., Deng, Y., Laber, E. B., Maei, H. R., Sutton, R. S. & Witkiewitz, K. (2016), 'A batch, off-policy, actor-critic algorithm for optimizing the average reward', arXiv preprint arXiv:1607.05047 .",
+    "[raw_reference] Murphy, S. A., van der Laan, M. J., Robins, J. M. & Group, C. P. P. R. (2001), 'Marginal mean models for dynamic regimes', Journal of the American Statistical Association 96(456), 1410-1423.",
+    "[raw_reference] Nahum-Shani, I., Smith, S. N., Spring, B. J., Collins, L. M., Witkiewitz, K., Tewari, A. & Murphy, S. A. (2018), 'Just-in-time adaptive interventions (jitais) in mobile health: key components and design principles for ongoing health behavior support', Annals of Behavioral Medicine 52(6), 446-462.",
+    "[raw_reference] Ortner, R. & Ryabko, D. (2012), Online regret bounds for undiscounted continuous reinforce- ment learning, in 'Advances in Neural Information Processing Systems', pp. 1763-1771.",
+    "[raw_reference] Puterman, M. L. (1994), 'Markov decision processes: Discrete stochastic dynamic program- ming'.",
+    "[raw_reference] Rabbi, M., Kotov, M. P., Cunningham, R., Bonar, E. E., Nahum-Shani, I., Klasnja, P., Walton, M. & Murphy, S. (2018), 'Toward increasing engagement in substance use data collection: development of the substance abuse research assistant app and protocol for a microrandomized trial using adolescents and emerging adults', JMIR research protocols 7(7), e166.",
+    "[raw_reference] Steinwart, I. & Christmann, A. (2008), Support vector machines, Springer Science & Business Media.",
+    "[raw_reference] Sutton, R. S. & Barto, A. G. (2018), Reinforcement learning: An introduction, MIT press.",
+    "[raw_reference] Thomas, P. & Brunskill, E. (2016), Data-efficient off-policy policy evaluation for reinforce- ment learning, in 'International Conference on Machine Learning', pp. 2139-2148.",
+    "[raw_reference] Van de Geer, S. (2000), Empirical Processes in M-estimation, Vol. 6, Cambridge university press.",
+    "[report_type] PhD thesis",
+    "[raw_reference] Van Roy, B. (1998), Learning and value function approximation in complex decision pro- cesses, PhD thesis, Massachusetts Institute of Technology.",
+    "[raw_reference] Zhao, T., Cheng, G. & Liu, H. (2016), 'A partially linear framework for massive heteroge- neous data', Annals of statistics 44(4), 1400."
+  ],
+  "processing_software": {
+    "GROBID": "0.8.2"
+  }
+}

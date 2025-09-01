@@ -1,0 +1,572 @@
+{
+  "paper_id": "XD9ICFIK",
+  "title": "Reflective Analytics for Interactive e-books",
+  "abstract": "This paper presents an analytics platform that has been developed for designers and teachers who build and use interactive e-books for learning. The analytics dashboard aims to increase awareness of the use of the e-books so that designers (and teachers in their role as designers) can make informed decisions on how to redesign and improve them taking into account both the overall learning design and the data from their usage. This paper presents architectural and design decisions on key features of the dashboard, and the evaluation of a high-fidelity prototype. We discuss findings related to use of the dashboard for exploratory data analysis and inquiry and how these generalise and can be taken into account by our future work or that of others.",
+  "year": 2010,
+  "date": "2010",
+  "authors": [
+    {
+      "name": "Mavrikis Manolis",
+      "email": "m.mavrikis@ucl.ac.uk",
+      "affiliation": {
+        "organization": "UCL Knowledge Lab",
+        "department": "UCL Knowledge Lab",
+        "institution": "University College London"
+      }
+    },
+    {
+      "name": "Sokratis Karkalas",
+      "affiliation": {
+        "organization": "UCL Knowledge Lab",
+        "department": "UCL Knowledge Lab",
+        "institution": "University College London"
+      }
+    }
+  ],
+  "doi": "10.1093/acref/9780198606536.001.0001",
+  "md5": "8CDE85FA8427D9AEF1D397682FF3E5DF",
+  "publication": {
+    "journal": "British Journal of Educational Technology",
+    "journal_inferred": true
+  },
+  "keywords": [
+    "learning analytics architecture",
+    "constructionist data analytics",
+    "analytics for designers"
+  ],
+  "funding": [
+    "",
+    "",
+    "Acknowledgments. The `M C Squared' project has received funding from the  European Union   Seventh Framework Programme  ( FP7/2007-2013 ) under grant agreement No  610467 ."
+  ],
+  "sections": [
+    {
+      "title": "1. Introduction",
+      "text": "The growing interest on learning analytics dashboards is partly due to their potential of providing, both in real time and retrospectively, an opportunity for awareness and decision-making that is otherwise di cult if not impossible. As educational applications are being adopted and used at scale, understanding their usage and their impact on learning is important. We are interested in the particular genre of digital, interactive `books' (or e-books) that are beginning to be established as a possible alternative to static textbooks offering several advantages both practical (such as portability or low cost) and pedagogical (such as interactivity and potential for formative feed-back)  [1, 2, 3] . We see carefully designed dashboards as having a lot to offer in the design cycle of educational resources. While the emergence of authoring software for e-books is making it easier to create or modify e-books, there is very little work to make this process more evidence-based. Similar to the growing interest in the possible synergies between learning analytics, learning design and teacher inquiry  [4, 5, 6]  we are observing a need for informing the design and re-design of resources based on empirical data from their usage.\n\nWhile the advent of data science and analytics in general several analytical tools are making their appearance but are not targeted to educational resources. Applications in the industry vary from developing a general understanding of user behaviour with online systems and apps such as games to predicting trends in business and finance  [7, 8, 9] . Even when considering e-books, publishers and authors are interested in (and to some extent only have access to) high level information such the number of pages read, average reading times and other details that reveal reading patterns that can correlate with sales figures. However, from an educational point of view a more in-depth analysis of learners' interaction is required. The ease of data collection offers unprecedented opportunities in enabling designers and teachers to make informed decisions as to how resources can be improved and serve better their original design or usage goals. While Learning Analytics tools are emerging as a response to this need, there is a lack of support for empirical inquiry in context, in which exploratory data analysis plays a key role. [10, 11]  This paper presents our approach towards a dashboard and associated visualisations particularly targeted to assist designers and teachers to reflect on the use of interactive e-books designed by so-called 'Communities of Interest' (CoI) in the context of the EU-funded M C Squared project. The project investigated the design and use of digital, interactive, creative, mathematics e-books. A key characteristic of these e-books is the inclusion of dynamic, interactive widgets that target creative mathematical thinking and problem solving rather than procedural knowledge. [3]  The project recognises that these resources can only be constructed by a community rather than an individual teacher both because of time and technical constraints. As such, the project developed the following key parts (for more details see  http://mc2- project.eu) :\n\n-Discussion tools to engage the members of a community in learning design and creation of these e-books authoring and configuration components to create, on one hand, the educational resources, interactive widgets and the pages that contain them  [3]  and, on the other hand, the configuration of the data analytics that these produces. -an analytics dashboard to support exploratory data analysis and inquiry in understanding how these e-books are used in relation to their intended design.\n\nThe focus of this paper is the analytics architecture and dashboard but particularly the requirements, usage scenario and evaluation are all in the context of the overall environment as explained in more detail below.\n\nIn Section 2, we present related work and architectural aspects that guided our design. Section 3 describes our overall design methodology and initial requirements after a series of workshops, sustained online interaction and engagement of key members of the CoIs. Section 4 and 5 present our underlying architecture, the dashboard itself and Section 6 a use case scenario that acted as guide for the development of the high-fidelity prototype and its evaluation that is presented in Section 7. Section 8 concludes the paper and raises some general issues that similar research and development efforts can take into account as future work."
+    },
+    {
+      "title": "2. Related Work"
+    },
+    {
+      "title": "2.1. Learning Analytics Dashboards",
+      "text": "There is a growing trend of learning analytics dashboards for online, face-to-face, and blended learning settings, largely targeted to teachers. As we cannot review them all here, we refer the reader to relevant reviews in the field (e.g. [12] ). The closest area of work is that in collaborative or open-ended digital learning environments that demonstrated the potential of tools for increasing awareness, supporting reflection and facilitating decision-making and intervention  [13, 14] . GLASS  [15]  is a web-based modular system that is based on data that follows the CAM schema  [16] . It is a versatile solution that can be used with any CAM data source. It focuses mainly on user activity and the detection of the most common events. A system that is more closely related to our project is eLAT  [17] . This is a framework and an implementation of a Learning Analytics Platform that is designed exclusively for teachers. The aim is to offer teachers opportunities for exploratory data analysis and the ability to evaluate and reflect on teaching practices and interventions."
+    },
+    {
+      "title": "2.2. Architectural aspects",
+      "text": "There are many platforms currently offering learning analytics but we have identified four main categories as follows.\n\nTightly coupled, these systems implement proprietary platform-specific APIs and analytics components or dashboards are tightly integrated into the hosting environments. Typically, these are well-tested and robust solutions but customisation and reusability is limited if non-existent. Examples include Blackboard  [18] , Khan Academy foot_0  and several other bespoke platforms tightly coupled with the application they support. Khan Academy offers some extensibility through plugins but these plugins are tightly integrated with the platform. A notable example is ALAS-KA  [19] .\n\nLoosely coupled, these systems are more open and implement a more componentbased architecture. In such systems, the learning platform is composed of pluggable components that implement standard interfaces. A system that follows this approach is Moodle. There are LA plugins that can be used with Moodle and provide similar functionality as above. The most notable example is Moodog  [20] .\n\nStandalone These are totally platform-independent and portable systems not necessarily dedicated or specialised to analytics. Typical systems of this category are Google Analytics foot_1  and Woopra foot_2  . The main limitation is their general scope and the consequent inability to record and analyse domain-specific data.\n\nHybrid These are systems developed for different purposes like social networking platforms and project management platforms that provide some support for analytics. A system that falls in this category and is worth mentioning is Graasp  4  . It provides virtual spaces for personal and collaborative activities and it is often used as a PLE. It supports the development of learning analytics dashboards from widgets that are fully compliant to open specifications for social data like the OpenSocial 2.0 specification  [21] ."
+    },
+    {
+      "title": "3. Methodology and Requirements",
+      "text": "As mentioned in the Introduction, this work is set in the context of the EU-funded M C Squared project that engages several designers across EU in Communities of Interest that design mathematical e-books. For the development of the dashboard, we are following a methodology the largely resembles the Learning Awareness Tools User eXperience (LATUX) workflow  [13] . Although that paper focuses mostly in the design and deployment of awareness tools in the classroom, the worflow applies in the case of targeting designers as it consists of an iterative process of five stages commonly found in software engineering and user experience approaches | problem definition, low-and higher-fidelity prototyping, pilot studies and validation in-thewild.\n\nDespite the fact that our focus of attention is e-book designers e.g. rather than teachers, through our iterative design process it has become clear that we need to also pay attention to the pedagogical requirements behind the design of the tools as they have potential for classroom use by teachers. Nevertheless, in this paper, we focus on the design, prototyping and early pilot studies targeting our main stakeholders | tech savvy designers (but not necessarily developers) and authors of e-books. The latter group are mostly teachers but are not necessarily the same teachers who end up using the resources.\n\nIn order to evaluate our work, we developed a framework that extends previous work  [22]  with criteria regarding usability and technical aspects. This paper focuses on our e orts to evaluate both the quality of the tools and the user experience vis-a-vis the requirements that emerged from earlier iterations through prototyping sessions.\n\nBefore we present the prototype evaluation, we first describe below the set of usage scenarios for the e-books as specified by the CoIs in the project and the initial high-level requirements that were identified.\n\nIn brief, we first need to take into account that digital resources like e-books are being used either directly in the classroom or in 'blended' learning scenarios (e.g. for practice exercises at home) or in a 'flipped' learning model where students read and interact with the e-book content online (e.g. at home) and complete other parts of the e-book in the classroom with the help of other students or the teacher. So, neither context can be excluded.\n\nBased on the above usage scenario, in early stages of our design cycle we identified the process of analysing e-book interaction as having similar characteristics as exploratory data analysis  [10] .\n\nWe also identified the following high-level requirements. Designers should be able to: 1. utilise the service at any time and from anywhere without any restrictions and dependencies on technologies and platforms.\n\n2. retrieve, process and analyse data about any chosen period of an e-book's lifetime, which can be changed as one is working the dashboard. 3. perform different types of analysis of the same data at different times throughout a session. 4. analyse an e-book at different levels of granularity (book, page, widget, user). 5. go back in time and inspect past data (flashback operations).\n\nIt is also worth clarifying that while, in principle, a dashboard like the one we are presenting here could be used by teachers to support their work in the classroom, our focus here is primarily authors (who could, of course, be teachers). For previous related work on dashboard for teachers we refer the reader to related work (e.g. [23, 24] ). So, an additional requirement is being able to monitor the usage of an ebook unit in real-time. In this paper, however, we are focusing on the use of the tool for reflection and redesign purposes.\n\nEarly iterations and feedback on low-fidelity prototypes from members of the CoIs helps us convert these requirements to a specification and eventually to a higherfidelity prototype that is the version we present in this paper. Section 7 presents in more detail the evaluation of this prototype with designers."
+    },
+    {
+      "title": "4. Architecture",
+      "text": "Although this system was developed as part of an existing project and there was an existing infrastructure that could be used, the decision was to make it platform independent and able to serve any learning application. The analytics platform is designed as an external pluggable application that can provide its full functionality in a totally service oriented manner through standardised interfaces. It comprises two main parts: The analytics data repository and the dashboard. These two parts are not physically or logically interdependent. The data repository comprises a dedicated DBMS instance and a set of RESTful web services that can receive, validate and process xAPI messages 5. The data services are optimised to handle different types of requests and decompose incoming data in case it is sent as a batch. That implies that the learning platform can optionally implement its own optimisers and take advantage of these optimisations. A simple scenario would be to perform temporary caching whenever possible and send user actions cumulatively as a batch. This is much more efficient than sending each individual action event separately. The following figure (Fig.  1a ) depicts the architecture for that part of the application: Interaction Design and Architecture(s) Journal -IxD&A, N.33, 2017, pp. 33-53\n\nOne thing that needs to be noted here is that it is not mandatory for an application to utilise this particular data repository. The system can be easily parameterised to utilise an alternative one as long as the supported data format for messaging is xAPI.\n\nThe dashboard communicates directly with the data repository. It constantly checks to see if there is new data recorded and discretely informs the user. It limits the number of data requests through caching and analysis services can process local data and construct visualisations ( Fig.  1b ).\n\nIntegration with the learning platform requires nothing more than a url to be passed along to a set of launch parameters for the dashboard. These parameters are needed so that the dashboard can construct dynamically the structure that represents the learning environment. The assumption here is that we always expect to have entities like users (students), widgets (activities) and webpages (containers for these activities). This structure has a dual purpose in the system. It can be used to dynamically create the necessary visualisations at the correct level and it can also be used by the authors to navigate themselves through these visualisations during the analysis. The information passed in these parameters is expected to match the identifiers in the user data that will be received from the repository."
+    },
+    {
+      "title": "4.1. Data Management",
+      "text": "As mentioned above this is a web-based application designed to process large volumes of data in real-time and deliver configurable analytics to authors and teachers. This is a service that may need to be utilised both in a synchronous and asynchronous manner. In any case it is not known in advance what will be requested by the user. That implies that data pre-processing in the server is not a viable option. Large datasets might have to be transferred, processed and delivered in real-time to the client-end of the application. When requirements like these apply, it is obvious that data management becomes a matter of crucial importance and therefore requires special attention.\n\nIn order to have the complete picture of what influenced the design decisions, we must also consider the constraints. The constraints follow:\n\n1. The service must be delivered in a distributed manner over the web. That satisfies the first requirement but imposes a problem of potential bandwidth limitations that may affect the ability to transfer large quantities of data in a timely fashion between tiers.\n\n2. The service must be communicated through a web browser without any dependencies on components that are not inherently supported. This is a consequence of 1 that satisfies the second part of the first requirement but imposes an additional problem. That is the potential memory limitations of the browser and its subsequent inability to store large quantities of data.\n\n3. Another problem related to 2 is the fact that JavaScript engines in browsers follow a single-threaded model. That means that concurrency and its respective performance gains are typically not possible. Fortunately, HTML5 offers the ability to distribute processing through web workers.\n\n4. The data processing cannot be performed on the server. All the requirements apart from 1 (especially 7) converge on that. Considering all the above, the decision was to create a web-based platform with a sophisticated data management sub-component that offers the following:\n\n1. It provides data caching capabilities. It maintains data in local JavaScript databases. Data is synchronised with the source in an asynchronous mode using Ajax. That guarantees that this operation is a non-blocking process in case it takes a remarkable time to complete.\n\n2. It provides the ability for incremental updates. If more data is needed (or less), it is not required to download the entire dataset again but only synchronise the missing parts.\n\n3. It is discreet enough to inform the author about the availability of new data without interrupting what is currently being processed.\n\n4. It offers a clear distinction between synchronisation, analysis and presentation. That helps the user operate the system in a more efficient way.\n\n5. It offers the option to process different time ranges within the range the cached data covers. That means that if all the required data has been downloaded, the rest of the session can be completed in a purely disconnected mode.\n\nIt is obvious that the main objectives here were to keep the amount of data to transfer and the number of round-trips to the server to the minimum so that we can utilise in the most efficient way the available bandwidth. The user is able to perform as many operations as needed on the local data without incurring additional network traffic and workload to the data services. This connection-less approach makes the application more scalable, since the data services are able to process more requests, and more responsive, since all the processing takes place at the client side. The authors are given full control over what is synchronised and processed. All that is needed is sensible decisions and careful handling. The application provides all the information about the amount of data that is available. It also provides the ability to select a time range that corresponds to the period that needs to be analysed. The authors must have a certain degree of IT literacy so that they can understand the limitations of the system and use it responsibly."
+    },
+    {
+      "title": "4.2. Distinguishing features",
+      "text": "In this project, the dashboard is very loosely coupled with the learning environment it relates to. Communication takes place through the standardised xAPI specification. The schema is similar to ActivityStreams but it allows more flexibility in the structure and the definition of verbs. It also allows the inclusion of widget-specific data that may follow totally different data models. That provides flexibility without compromising diversity. A learning platform is free to send any type of data to the analytics data store as long as the format conforms to the xAPI standard. Upon launching, the analytics dashboard receives information about the structure of the learning environment it is going to be used for and dynamically configures itself so that it can provide the necessary levels of speci city for the analyses that is about to follow. In our project, the typical scenario involves e-books, pages and widgets but different entities could be used for other systems. After that the dashboard is ready to start monitoring the learning platform for available data. The user can incrementally synchronise parts of the available data and selectively analyse and display the results. After the initial synchronisation all the operations that follow are performed locally in a disconnected fashion.\n\nAnother difference between existing dashboards and RDAP is that the latter is designed to be used by learning material authors and not students. The intention is not to provide formative support during the learning process. The primary focus is to enable the author of the material to revisit the initial design and use the feedback from the dashboard to verify the extent to which the objectives have been met. In this process, the author is expected to identify flaws in the design that had as an effect the appearance of unexpected patterns in students' behaviour. Finally, a distinguishing characteristic of RDAP is the ease with which the author can move between different levels of specificity during the analysis. The tree-like dynamic structure that represents the learning platform and the plethora of visualisations that are provided for every level provides the ability to easily navigate in a random manner between different levels of specificity and thus perform exploratory data analysis with minimal cognitive overhead."
+    },
+    {
+      "title": "5. The Dashboard",
+      "text": "The dashboard is initially empty. There is no data that can be used for analysis and visualisation. The only information that is available is the structure of the e-book and the timestamps that define the start and the end of the time period recorded in the analytics data repository. The available controls that can be used for parameterisation and execution of commands are organised in areas called ribbons. There are currently three ribbons available in the application (Toolbar, Configuration and Event Log). Fig.  2  displays the configuration ribbon. This ribbon hosts controls that can be used primarily for data-related settings and operations. The green area in the data range part is a special slider control that is equipped with two handles. The entire area covered by the control corresponds to the available data in the server. The two text fields above the slider display the starting and ending dates of this period and the text in the green area displays the duration. If at the same time the e-book under investigation is being used by students, the tool gets automatically updated with the changes. If the author wants to analyse a smaller period than that the handles can be used to adjust the starting and ending dates. As the user adjusts the data range period, the display range period gets automatically updated. The display range corresponds to the data that will eventually be analysed and display results. After the adjustments, the author can press the 'synchronise' button to start the data synchronisation process. After the completion of this operation the new data is stored in the local databases and becomes available. The next thing to do is to select which part of this data needs to be analysed using the display range slider and press 'display'. After the analysis is completed the visualisations are displayed in the dashboard. The tool bar ribbon can be used for further analysis of existing data. The inspection part of the ribbon hosts another slider that can be used for flashback operations. This slider is initially empty and inactive. The first time it gets activated is when the display button is pressed and a successful analysis completes. When that happens, it takes the time period of the currently selected display range. As the slider moves back and forth the author can see immediate changes in the visualisations. The changes are so fast that appear like animations to the human eye. If step-by-step flashback is needed then the dropdown list and the respective buttons in the inspection part must be used."
+    },
+    {
+      "title": "5.1. The Visualisations",
+      "text": "The available visualisations are categorised and presented in three tabs: Widgets, Users and Usage. The first tab focuses on the structure of the learning environment. On the left we can see the structure of the unit (Fig.  3 ). In this case the e-book consists of three pages each one of which contains two widgets. The nodes in the tree are selectable. The author can use them to navigate to different levels of the e-book and display the respective visualisations. The third tab focuses on widget usage but from a different perspective. It shows in the same graph how the users relate to widgets in terms of intensity of usage. A crosstabulation table is used to present this information. The intersection of a row and a column shows information about how intensely a particular widget is used by a particular user. The intensity of the colour in the box corresponds to the proportion of indicators generated by that user for this particular widget in relation to the total number of indicators for this widget. Widgets may be given different colors depending on how heavily they are used. If the total number of indicators for widget is greater than the average activity per widget then the respective column is displayed in hues of green. If it is more than 80% of the average it is displayed in hues of blue and if it is less than that it is displayed in hues of red. If there are no indicators at all the column is displayed in white color. These three tabs present data from different perspectives. There is often an overlap between them and two or more visualisations can complement each other and provide a view that is more representative of what really happens in the classroom. That implies that if there are ties between them wherever possible, that may support a more exploratory type of data analysis, which is desirable. An example of that approach can be seen on the way the 'Usage' tab is linked to the 'Widgets'. If the author identifies something in the former that requires further investigation, she can click on the header of the table column (widget) and move directly to the page that displays the set of more detailed visualisations that correspond to this particular widget."
+    },
+    {
+      "title": "6. A Use Case Scenario",
+      "text": "This section of the paper provides an illustrative use case in order to give a flavour of what interaction with the system involves and the expectations of the users that have led to the requirements we present in Section 3. To do so, we compile scenarios from different users in order to give a caricature of the situation through an imaginative user rather than analyse data from the proper evaluation of the system with designers as presented in Section 7. For the use case, we use one of the e-books created by the CoI. The e-book comprises three pages with the following structure: Every page contains two widgets. The first one is used to introduce the students to the concepts needed for the activity and the other one presents the activity and engages the student with it. The three activities A, B and C are related to each other. Every subsequent activity presupposes that the concepts involved in the previous one have been adequately understood.\n\nIt is important to realise that the structure the e-book was de ned during the discussion between the members of the community and its design is reflected in the discussion board documents they have shared and the realisations they had as a team (an example discussion is shown in Fig.  5 ). Once the book is constructed and the data it provides configured, access to the analytics platform is immediate i.e. it does not require any intervention with technical expertise to show its structure. The overall platform that hosts both the discussion and the learning analytics tools also acts as a gateway between the two, enabling users to seemingly go back and forth the actual ebook pages, the discussion environment where the design decisions were taken and the analytics dashboard.\n\nFor our use case scenario, imagine Laura, a member of the design team responsible for monitoring the usage of the e-book and making recommendations for improvements. After the first set of usage sessions Laura, uses the dashboard to see if the data concurs with the envisaged design.dashboard Laura in this case is not the teacher. The discussion environment posts help her reflect on the original design of the e-book. The expectation is that there is a gradual increase in the requirements for completing each activity both in terms of concepts and in terms of practical skills needed for the completion. It is, therefore, anticipated that it will take the students more time to complete an activity that comes later in the book than some other earlier activity. This e-book is designed to be completed in one session. It is expected that the distribution of time between activities A, B and C should be approximately 20%, 30% and 50% respectively. The distribution of time between the two complementary widgets in a page is not expected to be the same for every page. As the level of difficulty increases the proportion of the practical part is expected to be higher.\n\nLaura also knows that the e-book was going to be used in a classroom last week by students. She doesn't know when exactly the session took place. The dashboard conforms that there is available data for 3 days. Using the distribution and dataset details available from the tool she notices that a classroom session took place on the Interaction Design and Architecture(s) Journal -IxD&A, N.33, 2017, pp. 33-53 21st of October between 2 p.m. and 4 p.m. The author selects the period of interest for the analysis (Fig.  2 ).\n\nThe first visualisation 'Users per Page' (Fig.  3 ) shows that 2 of the students did not generate any events on page 3. That may be an indication that the activities were too di cult for them and there was no time to complete the previous ones. But is it the whole e-book that is di cult or just a particular activity in it? Or could it be that only 2 of the students had particular challenges? The second visualisation 'Actions per Page' shows that if we deselect page 3, the distribution of actions between page 1 and page 2 is 15% and 85% respectively (compare Fig.  3  with Fig.  7 ). That indicates that the students spent too much time on page 2. The designer expected these figures to be around 40% and 60%. The visualisation 'Users per Widget' (Fig.  7 ) reveals that 2 students did not generate any events at all on the activity widget of page 2. Most likely these are the ones that did not make it to page 3. For a more in-depth analysis the analyst moves down a level to page 2. The visualisation 'Actions per Widget' conforms that the intro widget has been heavily used in page 2. According to the design the expectation was that the distribution of actions between the two widgets would be 30%-70% but the actual values are approximately 63%-37%. A possible explanation is that the students, general, a difficulty under-standing the concepts or the technical requirements for the completion of the activity and they were trapped in a loop between the widgets. Two of them did not make an attempt to deal with the activity. The rest were going back and forth using the intro widget trying to understand the concepts and experimenting with the activity widget to conform their understanding. The four that achieved something on page 2 moved to page 3.\n\nGoing back to the book level analysis can continue with the visualisations 'Users &Activity' and 'Activity Areas' (Fig.  8 ). The visualisation on the left indicates that activity increases a lot in the first half of the session but drops towards the second half. It then increases again and drops towards the end of the session. Student numbers (shown with the green line at the bottom) remain the same for 6 quarters. Normal student activity within a session would be more of a bell shape. The current activity indicates some problems. The chart on the right of Fig.  8  shows clearly how activity is distributed over time during the session for every widget. In page 1 things seem to be normal. The students start with the intro activity in the first quarter and gradually shift to the main activity. Activities in page 1 seem to complete at the end of the first quarter. Page 1 seems to be relatively easy because activity on page 2 starts quite early. The correlation between the intro activity and the main activity in this case indicates that the latter is probably too difficult for the students. It takes a long time (more than two quarters) and effort for the students to interact with the intro activity. Then they seem to move fast to the main activity because they may be feeling like running out of time. During the 4th and 5th quarter they realise that they still cannot do the activity and they go back to the intro for one final attempt. Some of them achieve something and some fail but 4 of them decide to move to page 3 for the final activity after the 6th quarter. There is no time and there is a lot of tension. The students don't seem to be able to do this properly. They go back and forth between the two widgets trying to achieve one thing at a time so that they can complete something. Activity between the two widgets seem to covary at the same levels.\n\nOne finding that seems promising is that don't seem to activities. They first tried page 1, then page 2 and then page 3. That is an indication that the assumptions considered in the design regarding the level of concepts needed and their inter-dependencies were correct. What is probably incorrect is the design of page2. Additionally, there cannot be a safe conclusion as to whether the activity in page 3 is also more difficult that expected because this activity depends on the previous one. A safe evaluation will be possible only if the problem in page 2 is fixed.\n\nSo far Laura has been able to identify a potential problem with page 2. But is it only the activity that is the problem or is the issue related to student challenges as well? The cross-tab visualisation reveals which students did not try anything on page 3 (Fig.  9 ). The corresponding boxes are blank. According to the same visualisation these students do not show any activity on EW which is the main activity on page 2 but they do seem relatively active on page 1."
+    },
+    {
+      "title": "Fig. 9 Usage",
+      "text": "The 'User Activity' visualisation for the widgets of page 1 (Fig.  10 ) shows that these students were indeed relatively active in comparison with the rest of the group. Total activity is an indicator but is it enough to show how active the students were? A more careful look at the 'Timeline' visualisations show that there is pattern that indicates that these users were doing something meaningful with the widgets. The order of actions does not reveal an organised attempt to display or accomplish something in a systematic way. Most of the time they use randomly the tools available and they play with the widgets. The author examines the 'Timeline' visualisations for the rest of the students and sees patterns for page 1. She also sees patterns for page 2 but with difficulty. She goes up a level and examines the 'Timeline' visualisation at the page level. That conforms that the students spent most of the time struggling to understand how to do what was required.\n\nThe next question is what is the problem with the activity? A careful consideration of the 'Timeline' visualisations reveals that two action types are not executed in the correct order in the pattern. The students don't seem to use a meaningful sequence of actions when they develop the construction, but they do seem to understand what the concept is and what needs to be constructed. That indicates that they possibly don't understand how to use the tools provided by the widget. A possible first step is to either introduce another activity earlier that focuses on the use of tools or give a better explanation in the same page as to how these tools should be used."
+    },
+    {
+      "title": "7. Prototyping"
+    },
+    {
+      "title": "7.1. Procedure",
+      "text": "We discussed in Section 3 the role of prototyping in the evaluation of LA awareness tools and the challenges and opportunities of a data-oriented prototype that prioritises the validation of the information provided by the dashboard visualisations. Our particular aim here on the one hand, to investigate the usability and identify any user experience issues. On the other hand, we also want to evaluate the perceived usefulness of the visualisations and their potential in increasing designers' awareness of the use of e-books and provide analytical insights that could lead to their redesign.\n\nWe asked ten experienced designers to answer a set of questions derived from the use case scenario on Section 6. The dashboard was populated with data derived partially from a real e-book usage but on a hand-picked time period to allow for some interesting findings to be potentially discoverable. We expected that RDAP would support the participants to conduct an exploratory data analysis that would bring to the fore important aspects of the e-book usage and this way lead to re-design suggestions.\n\nIn one-hour sessions, participants were given access to the platform, were introduced through a video call to key dashboard features through a 2 mins presentation, and were given a questionnaire that provided a guided walkthrough of the platform and required them in key steps to answer open-ended questions about their observations in the data. This was followed by 5-point Likert questions on the perceived ease, usefulness and complexity of each key feature of the dashboard (the ones presented in Section 5). The last page of the questionnaire used the 10 questions of the System Usability Scale  [25] . In addition, participants were asked to talk aloud as they are working through the prototype and took part in a semi-structured interview that started with them reporting on a critical incident and their immediate thoughts for redesign.available"
+    },
+    {
+      "title": "7.2. Results",
+      "text": "From the 10 designers we approached, 9 were available and 1 had technical difficulties so did not complete all the questions. The rest were able to complete the 'walkthrough' and answer the questionnaire without any difficulty. Thinking aloud as they engaged in the inspection of the dashboard helped to identify some minor usability and user interface issues too specific to our case to report in this paper. Clarifications were given on the spot if they were not interfering with the task. Some more complex topics or ideas that they had were left for discussion at the end of the questionnaire.\n\nThe results of the SUS is approaching 76% and most answers from the Likertscale questions were very satisfactory. Indicative results from the different questions are shown in Fig.  12  with a word of caution due to the small sample and the fact that the participants are mathematics educators and have a particular role in their respective communities. As highly skilled 'brokers' between different communities they are exposed to different ideas and ideas and are generally more familiar with learning analytics. We touch on this issue below but we remind the reader that the aim of the evaluation was also to get feedback on our instruments to allow for a larger scale evaluation in the future.\n\nOverall the participants appreciated the design of the dashboard. The only item that had smaller score related to the date/display range functionality. The interviews revealed that 3 of the 8 participants could not see the need to first select the data they may want to analyse as they simply did not appreciate the complexity behind the to implement this. The magnitude of the the tool might have to retrieve and process combined with the fact that the actual processing has to be performed in a web browser constitutes a design decision that requires a level of awareness on architectural issues that is probably beyond the capacity of the average analyst. Given the overall advantages of the solution and the positive usability comments, the results suggest the need for the users to understand better the nature of the data involved. In our opinion, systems like this require developing an understanding of how they work. From the open questions, the thinking aloud and the subsequent interviews of the participants we note the following key issues, that should be interesting and transferable to other work in the area.\n\nInsight generation by zooming in and out. We mentioned already that one of our expectations is to enable the generation of insights in relation to the usage of the ebooks and the widgets they contain. In general, all participants answered the questions that related to the use case scenario correctly and quickly developed an understanding of the way the e-book was used, the difficulties with one of the central pages and the 'playful' interaction of two of the students in particular. Looking into the way the system was used we identified the need for switching between page-and widget-level visualisations very often. Thanks to the robust design of the system and the efficient data-handling this switching is seamless in terms of time. However, is seems that the switching process is rather demanding especially when looking into a complex pattern and when the insight that the user is developing requires them to scroll through multiple visualisations. This was cognitively demanding for some of the participants.\n\nOne approach to addressing this is to allow the user to pick the visualisations they are interested in seeing simultaneously. This can also help in comparisons between different historical versions of the e-book and a reflection on the modifications that are taking place.\n\nData granularity. Another issue brought up by the participants was the difficulty to identify patterns using the timeline visualisations at the widget level. The problem becomes noticeable when there are too many events of different types recorded for a short period of time. The solution, in this case, is to deselect the types that are not needed and perform the same analysis in a shorter period of time. That gives the ability to focus and distribute the data of interest more evenly in the available space. A useful suggestion given by one of the participants was the ability to select certain types and group them up. That would certainly make things less complicated in some cases without changing the required level of granularity. The ideal solution, of course, would be to employ algorithms for pattern recognition and identify these things automatically. In a fully automated solution we could perform this processing only for students that have achieved an acceptable result. That could also be detected in an automated fashion. Then, after the recognition of the patterns the system would be able to zoom in and present the data of interest at the optimum level of granularity.\n\nContext -from learning design to actual usage. Most of the participants are experienced educators and resource designers. Some, however, were challenged by not having been involved in the initial data-collection process. We anticipated that access to the original design discussions and the reflection documents would compensate the lack of context by providing a thorough description of the learning design decisions covering the objectives in relation to the specifics of the pages and the widgets that were used for the activities and the anticipated usage. However, what was missing was some record of the actual usage by the classroom teacher. As such, the system should be able to provide some support regarding the context of usage used by people that are not both designers/authors and teachers of the particular resources.\n\nFamiliarisation and data literacy. As mentioned, the participants in our study had a minimal introduction to the tool (5 minutes) and a fixed amount of time to go through the guided walkthrough and questionnaire (40 minutes). We expected that because of their familiarity with the project that would suffice. While in general that was the case, we could not help observing that different participants reacted differently to some of the visualisations. While we selected carefully the visualisations from the early low-fidelity prototype sessions, and despite the fact that most are commonly found in dashboards and normal descriptive statistical software, some familiarity with the exact information they provide is required. This is of course an issue of general data literacy and something that must be carefully taken into consideration in the future as we scale up the usage of the dashboard. We observed that participants had to go through a phase of familiarisation with the potential usefulness of the visualisation in relationship with the data vis-a-vis the rest of the available metrics. The availability of several visualisations led them sometimes to wonder where to focus their attention. We believe that this is something that will be overcome with familiarity with the dashboard but a possible solution is also to allow the configuration of the available or preferable visualisations for each user."
+    },
+    {
+      "title": "8. Conclusion",
+      "text": "This paper presented the Reflective Designer Analytics Platform (RDAP) that helps learning material authors reflect on their designs and improve them so that they can meet their original objectives. A prototype was designed and tested with the MC Squared learning platform that utilises interactive e-books include dynamic widgets aimed at enhancing students' mathematical problem solving and creativity. RDAP is designed to operate as a standalone, platform-independent application that communicates with partner systems through standardised interfaces and data formats. It features a highly efficient data management mechanism that enables incremental synchronisation of data and disconnected operation at the client side. This eliminates server bottlenecks, prevents excessive network load, increases the analytical capacity of the tool and delivers the results through a highly responsive user interface. A technical strength of the system is the seamless interoperability with other systems generating data as long as a standard format is used for data interchange in a looselycoupled fashion.\n\nIn the case of the M C Square platform, by providing a tighter integration between the authoring, discussion and analytics tools, analysts have access to the original learning design decisions emerging from the online discussions of the authors as also represented from the configuration they have provided about what data is logged. The automatic tree structure representation of the design in the analytics dashboard is a particular strength in that it does not require technical intervention but uses the e-book representation to extract the meaningful information and present the design to the analyst. From an analytical viewpoint, the strong points of the system are the ability to analyse data from diverse and dissimilar widgets (learning activities), the ability to switch between different levels of specificity with ease (shallow, deep analysis). The latter is especially advantageous in exploratory data analysis.\n\nThe system has been thoroughly tested and formally evaluated by designers in relation to its usability and analytic potential. The feedback we received is positive and feeds into discussions of new features and modifications. Reflecting on the challenges that even experienced participants had indicates that we still need to pay attention to cognitive overload and therefore allowing the configuration of the dashboard according to users' preference seems to be important. Similarly, enabling historical comparisons should enable even reflecting on the evolution of the e-book usage and subsequent design changes.\n\nAs mentioned, our focus here has been on designers conducting retrospective data analysis but, technically, the system can be used for real time monitoring, and therefore we plan to extend it with appropriate visualisations to support teachers as well. Finally, because of the extensibility of the system we can easily include new visualisations as and when they are needed and plan to include more advanced algorithms to help analysts identify important events or patterns that are worth exploring further."
+    },
+    {
+      "text": "Fig. 1: (a) Data Repository; (b) The Dashboard"
+    },
+    {
+      "text": "Fig. 2: Data Configuration"
+    },
+    {
+      "text": "Fig. 3 Multi-level Analysis. The structure of the e-book is shown on the left and the user can select nodes to see the corresponding data visualisations."
+    },
+    {
+      "text": "Fig. 4 Widget Usage"
+    },
+    {
+      "text": "Fig. 5 A snapshot of the online discussion environment of the MC Squared platform. This enables designers and teachers to collaborate and document the design of e-books."
+    },
+    {
+      "text": "Fig. 6 Users & Actions per Page"
+    },
+    {
+      "text": "Fig. 7 Users & Actions per Widget"
+    },
+    {
+      "text": "Fig. 8 User & Widget Activity"
+    },
+    {
+      "text": "Fig. 10 User Activity on Widget"
+    },
+    {
+      "text": "Fig. 11 Timelines per user and per action"
+    },
+    {
+      "text": "Fig. 12 Diverging Stacked Bar for RDAP features"
+    },
+    {
+      "text": "Acknowledgments. The `M C Squared' project has received funding from the  European Union   Seventh Framework Programme  ( FP7/2007-2013 ) under grant agreement No  610467 ."
+    }
+  ],
+  "references": [
+    {
+      "title": "The Oxford companion to the book. The electronic book",
+      "authors": [
+        "E Gardiner",
+        "R Musto"
+      ],
+      "year": 2010,
+      "doi": "10.1093/acref/9780198606536.001.0001",
+      "raw": "E Gardiner \n\t\t \n\t\t \n\t\t\t R Musto \n\t\t \n\t\t 10.1093/acref/9780198606536.001.0001 \n\t\t The Oxford companion to the book. The electronic book \n\t\t \n\t\t\t Oxford University Oxford \n\t\t\t 2010 \n\t\t \n\t \n\t E. Gardiner and R. Musto, The Oxford companion to the book. The electronic book. Oxford University Oxford, 2010."
+    },
+    {
+      "title": "The road ahead: ebooks, etextbooks and publishers' electronic resources",
+      "authors": [
+        "R Martin"
+      ],
+      "year": 2012,
+      "doi": "10.14742/apubs.2012.1624",
+      "raw": "The road ahead: ebooks, etextbooks and publishers' electronic resources \n\t\t \n\t\t\t R Martin \n\t\t \n\t\t 10.14742/apubs.2012.1624 \n\t \n\t \n\t\t Future Challenges, Sustainable futures: Proceedings ASCILITE 2012 \n\t\t \n\t\t\t M Brown \n\t\t \n\t\t \n\t\t\t M Hartnett \n\t\t \n\t\t \n\t\t\t T Stewart \n\t\t \n\t\t \n\t\t\t 2012 \n\t\t \n\t \n\t R. Martin, \"The road ahead: ebooks, etextbooks and publishers' electronic resources,in Future Challenges, Sustainable futures: Proceedings ASCILITE 2012 (M. Brown, M. Hart- nett, and T. Stewart, eds.), 2012."
+    },
+    {
+      "title": "Designing constructionist e-books: New mediations for creative mathematical thinking?",
+      "authors": [
+        "C Kynigos"
+      ],
+      "year": 2015,
+      "journal": "Constructivist Foundations",
+      "volume": "10",
+      "issue": "3",
+      "raw": "Designing constructionist e-books: New mediations for creative mathematical thinking? \n\t\t \n\t\t\t C Kynigos \n\t\t \n\t \n\t \n\t\t Constructivist Foundations \n\t\t \n\t\t\t 10 \n\t\t\t 3 \n\t\t\t \n\t\t\t 2015 \n\t\t \n\t \n\t C. Kynigos, \"Designing constructionist e-books: New mediations for creative mathematical thinking?,\" Constructivist Foundations, vol. 10, no. 3, pp. 305-313, 2015."
+    },
+    {
+      "title": "Towards teacher-led design inquiry of learning",
+      "authors": [
+        "V Emin-Martinez",
+        "H Cecilie",
+        "R Triana",
+        "M Jesus",
+        "W Barbara",
+        "M Yishay",
+        "D Mihai",
+        "F Rebecca",
+        "J.-P Pernin"
+      ],
+      "year": 2014,
+      "raw": "Towards teacher-led design inquiry of learning \n\t\t \n\t\t\t V Emin-Martinez \n\t\t \n\t\t \n\t\t\t H Cecilie \n\t\t \n\t\t \n\t\t\t R Triana \n\t\t \n\t\t \n\t\t\t M Jesus \n\t\t \n\t\t \n\t\t\t W Barbara \n\t\t \n\t\t \n\t\t\t M Yishay \n\t\t \n\t\t \n\t\t\t ; \n\t\t \n\t\t \n\t\t\t D Mihai \n\t\t \n\t\t \n\t\t\t F Rebecca \n\t\t \n\t\t \n\t\t\t J.-P Pernin \n\t\t \n\t\t \n\t\t\t 2014 \n\t\t \n\t \n\t V. Emin-Martinez, H. Cecilie, R. Triana, M. Jesus, W. Barbara, M. Yishay;, D. Mihai, F. Rebecca, and J.-P. Pernin, Towards teacher-led design inquiry of learning. 2014."
+    },
+    {
+      "title": "A method for teacher inquiry in crosscurricular projects: Lessons from a case study",
+      "authors": [
+        "K Avramides",
+        "J Hunter",
+        "M Oliver",
+        "R Luckin"
+      ],
+      "year": 2015,
+      "doi": "10.1111/bjet.12233",
+      "journal": "British Journal of Educational Technology",
+      "volume": "46",
+      "issue": "2",
+      "raw": "A method for teacher inquiry in crosscurricular projects: Lessons from a case study \n\t\t \n\t\t\t K Avramides \n\t\t \n\t\t \n\t\t\t J Hunter \n\t\t \n\t\t \n\t\t\t M Oliver \n\t\t \n\t\t \n\t\t\t R Luckin \n\t\t \n\t\t 10.1111/bjet.12233 \n\t \n\t \n\t\t British Journal of Educational Technology \n\t\t \n\t\t\t 46 \n\t\t\t 2 \n\t\t\t \n\t\t\t 2015 \n\t\t \n\t \n\t K. Avramides, J. Hunter, M. Oliver, and R. Luckin, \"A method for teacher inquiry in cross- curricular projects: Lessons from a case study,\" British Journal of Educational Technology, vol. 46, no. 2, pp. 249-264, 2015."
+    },
+    {
+      "title": "Informing learning design with learning analytics to improve teacher inquiry",
+      "authors": [
+        "D Persico",
+        "F Pozzi"
+      ],
+      "year": 2015,
+      "doi": "10.1111/bjet.12207",
+      "journal": "British Journal of Educational Technology",
+      "volume": "46",
+      "issue": "2",
+      "raw": "Informing learning design with learning analytics to improve teacher inquiry \n\t\t \n\t\t\t D Persico \n\t\t \n\t\t \n\t\t\t F Pozzi \n\t\t \n\t\t 10.1111/bjet.12207 \n\t \n\t \n\t\t British Journal of Educational Technology \n\t\t \n\t\t\t 46 \n\t\t\t 2 \n\t\t\t \n\t\t\t 2015 \n\t\t \n\t \n\t D. Persico and F. Pozzi, \"Informing learning design with learning analytics to improve teacher inquiry,\" British Journal of Educational Technology, vol. 46, no. 2, pp. 230-248, 2015."
+    },
+    {
+      "title": "A review of business analytics: A business enabler or another passing fad",
+      "authors": [
+        "T Bayrak"
+      ],
+      "year": 2015,
+      "doi": "10.1016/j.sbspro.2015.06.354",
+      "volume": "195",
+      "raw": "A review of business analytics: A business enabler or another passing fad \n\t\t \n\t\t\t T Bayrak \n\t\t \n\t\t 10.1016/j.sbspro.2015.06.354 \n\t \n\t \n\t\t World Conference on Technology, Innovation and Entrepreneurship \n\t\t \n\t\t\t 2015 \n\t\t\t 195 \n\t\t\t \n\t\t \n\t \n\t T. Bayrak, \"A review of business analytics: A business enabler or another passing fad,\" Procedia -Social and Behavioral Sciences, vol. 195, pp. 230-239, 2015. World Conference on Technology, Innovation and Entrepreneurship."
+    },
+    {
+      "title": "Game Data Mining",
+      "authors": [
+        "A Drachen",
+        "C Thurau",
+        "J Togelius",
+        "G Yannakakis",
+        "C Bauckhage"
+      ],
+      "year": 2013,
+      "doi": "10.1007/978-1-4471-4769-5_12",
+      "raw": "A Drachen \n\t\t \n\t\t \n\t\t\t C Thurau \n\t\t \n\t\t \n\t\t\t J Togelius \n\t\t \n\t\t \n\t\t\t G Yannakakis \n\t\t \n\t\t \n\t\t\t C Bauckhage \n\t\t \n\t\t 10.1007/978-1-4471-4769-5_12 \n\t\t Game Data Mining \n\t\t \n\t\t\t Springer-VS \n\t\t\t 2013 \n\t\t\t \n\t\t \n\t \n\t A. Drachen, C. Thurau, J. Togelius, G. Yannakakis, and C. Bauckhage, Game Data Min- ing, pp. 205-253. Springer-VS, 2013."
+    },
+    {
+      "title": "Understanding User Behavior Through Log Data and Analysis",
+      "authors": [
+        "S Dumais",
+        "R Jeffries",
+        "D Russell",
+        "D Tang",
+        "J Teevan"
+      ],
+      "year": 2014,
+      "doi": "10.1007/978-1-4939-0378-8_14",
+      "raw": "Understanding User Behavior Through Log Data and Analysis \n\t\t \n\t\t\t S Dumais \n\t\t \n\t\t \n\t\t\t R Jeffries \n\t\t \n\t\t \n\t\t\t D M Russell \n\t\t \n\t\t \n\t\t\t D Tang \n\t\t \n\t\t \n\t\t\t J Teevan \n\t\t \n\t\t 10.1007/978-1-4939-0378-8_14 \n\t\t \n\t\t\t 2014 \n\t\t\t Springer \n\t\t\t \n\t\t\t New York, NY; New York \n\t\t \n\t \n\t S. Dumais, R. Jeffries, D. M. Russell, D. Tang, and J. Teevan, Understanding User Behavior Through Log Data and Analysis, pp. 349-372. New York, NY: Springer New York, 2014."
+    },
+    {
+      "title": "Exploratory Data Analysis",
+      "authors": [
+        "J Tukey"
+      ],
+      "year": 1977,
+      "raw": "J W Tukey \n\t\t \n\t\t Exploratory Data Analysis \n\t\t \n\t\t\t Addison-Wesley \n\t\t\t 1977 \n\t\t \n\t \n\t J. W. Tukey, Exploratory Data Analysis. Addison-Wesley, 1977."
+    },
+    {
+      "title": "Principles of exploratory data analysis in problem solving: What can we learn from a well-known case?",
+      "authors": [
+        "J Mast",
+        "B Kemper"
+      ],
+      "year": 2009,
+      "journal": "Quality Engineering",
+      "volume": "21",
+      "issue": "4",
+      "raw": "Principles of exploratory data analysis in problem solving: What can we learn from a well-known case? \n\t\t \n\t\t\t J Mast \n\t\t \n\t\t \n\t\t\t B P H Kemper \n\t\t \n\t \n\t \n\t\t Quality Engineering \n\t\t \n\t\t\t 21 \n\t\t\t 4 \n\t\t\t \n\t\t\t 2009 \n\t\t \n\t \n\t J. de Mast and B. P. H. Kemper, \"Principles of exploratory data analysis in problem solving: What can we learn from a well-known case?,\" Quality Engineering, vol. 21, no. 4, pp. 366-375, 2009."
+    },
+    {
+      "title": "Learning dashboards: an overview and future research opportunities",
+      "authors": [
+        "K Verbert",
+        "S Govaerts",
+        "E Duval",
+        "J Santos",
+        "F Van Assche",
+        "G Parra",
+        "J Klerkx"
+      ],
+      "year": 2014,
+      "doi": "10.1007/s00779-013-0751-2",
+      "journal": "Personal and Ubiquitous Computing",
+      "volume": "18",
+      "issue": "6",
+      "raw": "Learning dashboards: an overview and future research opportunities \n\t\t \n\t\t\t K Verbert \n\t\t \n\t\t \n\t\t\t S Govaerts \n\t\t \n\t\t \n\t\t\t E Duval \n\t\t \n\t\t \n\t\t\t J L Santos \n\t\t \n\t\t \n\t\t\t F Van Assche \n\t\t \n\t\t \n\t\t\t G Parra \n\t\t \n\t\t \n\t\t\t J Klerkx \n\t\t \n\t\t 10.1007/s00779-013-0751-2 \n\t \n\t \n\t\t Personal and Ubiquitous Computing \n\t\t \n\t\t\t 18 \n\t\t\t 6 \n\t\t\t \n\t\t\t 2014 \n\t\t \n\t \n\t K. Verbert, S. Govaerts, E. Duval, J. L. Santos, F. Van Assche, G. Parra, and J. Klerkx, \"Learning dashboards: an overview and future research opportunities,\" Personal and Ubiquitous Computing, vol. 18, no. 6, pp. 1499-1514, 2014."
+    },
+    {
+      "title": "The latux workflow: designing and deploying awareness tools in technology-enabled learning settings",
+      "authors": [
+        "R Martinez-Maldonado",
+        "A Pardo",
+        "N Mirriahi",
+        "K Yacef",
+        "J Kay",
+        "A Clayphan"
+      ],
+      "year": 2015,
+      "doi": "10.1145/2723576.2723583",
+      "raw": "The latux workflow: designing and deploying awareness tools in technology-enabled learning settings \n\t\t \n\t\t\t R Martinez-Maldonado \n\t\t \n\t\t \n\t\t\t A Pardo \n\t\t \n\t\t \n\t\t\t N Mirriahi \n\t\t \n\t\t \n\t\t\t K Yacef \n\t\t \n\t\t \n\t\t\t J Kay \n\t\t \n\t\t \n\t\t\t A Clayphan \n\t\t \n\t\t 10.1145/2723576.2723583 \n\t \n\t \n\t\t Proceedings of the Fifth International Conference on Learning Analytics And Knowledge \n\t\t the Fifth International Conference on Learning Analytics And Knowledge \n\t\t \n\t\t\t ACM \n\t\t\t 2015 \n\t\t\t \n\t\t \n\t \n\t R. Martinez-Maldonado, A. Pardo, N. Mirriahi, K. Yacef, J. Kay, and A. Clayphan, \"The latux workflow: designing and deploying awareness tools in technology-enabled learning settings,\" in Proceedings of the Fifth International Conference on Learning Analytics And Knowledge, pp. 1-10, ACM, 2015."
+    },
+    {
+      "title": "Design of Teacher Assistance Tools in an Exploratory Learning Environment for Algebraic Generalization",
+      "authors": [
+        "S Gutierrez-Santos",
+        "E Geraniou",
+        "D Pearce-Lazard",
+        "A Poulovassilis"
+      ],
+      "year": 2012,
+      "doi": "10.1109/tlt.2012.19",
+      "journal": "IEEE Transactions on Learning Technologies",
+      "volume": "5",
+      "issue": "4",
+      "raw": "Design of Teacher Assistance Tools in an Exploratory Learning Environment for Algebraic Generalization \n\t\t \n\t\t\t S Gutierrez-Santos \n\t\t \n\t\t \n\t\t\t E Geraniou \n\t\t \n\t\t \n\t\t\t D Pearce-Lazard \n\t\t \n\t\t \n\t\t\t A Poulovassilis \n\t\t \n\t\t 10.1109/tlt.2012.19 \n\t \n\t \n\t\t IEEE Transactions on Learning Technologies \n\t\t \n\t\t\t 5 \n\t\t\t 4 \n\t\t\t \n\t\t\t 2012 \n\t\t \n\t \n\t S. Gutierrez-Santos, E. Geraniou, D. Pearce-Lazard, and A. Poulovassilis, \"Design of Teacher Assistance Tools in an Exploratory Learning Environment for Algebraic Generalization,\" IEEE Transactions on Learning Technologies, vol. 5, no. 4, pp. 366-376, 2012."
+    },
+    {
+      "title": "Glass: a learning analytics visualization tool",
+      "authors": [
+        "D Leony",
+        "A Pardo",
+        "L De La Fuente Valent N",
+        "D De Castro",
+        "C Kloos"
+      ],
+      "year": 2012,
+      "doi": "10.1145/2330601.2330642",
+      "raw": "Glass: a learning analytics visualization tool \n\t\t \n\t\t\t D Leony \n\t\t \n\t\t \n\t\t\t A Pardo \n\t\t \n\t\t \n\t\t\t L De La Fuente Valent N \n\t\t \n\t\t \n\t\t\t D S De Castro \n\t\t \n\t\t \n\t\t\t C D Kloos \n\t\t \n\t\t 10.1145/2330601.2330642 \n\t \n\t \n\t\t Proceedings of the 2nd international conference on learning analytics and knowledge \n\t\t the 2nd international conference on learning analytics and knowledge \n\t\t \n\t\t\t ACM \n\t\t\t 2012 \n\t\t\t \n\t\t \n\t \n\t D. Leony, A. Pardo, L. de la Fuente Valent n, D. S. de Castro, and C. D. Kloos, \"Glass: a learning analytics visualization tool,\" in Proceedings of the 2nd international conference on learning analytics and knowledge, pp. 162-163, ACM, 2012."
+    },
+    {
+      "title": "Tracking actual usage: the attention metadata approach",
+      "authors": [
+        "M Wolpers",
+        "J Najjar",
+        "K Verbert",
+        "E Duval"
+      ],
+      "year": 2007,
+      "journal": "Journal of Educational Technology & Society",
+      "volume": "10",
+      "issue": "3",
+      "raw": "Tracking actual usage: the attention metadata approach \n\t\t \n\t\t\t M Wolpers \n\t\t \n\t\t \n\t\t\t J Najjar \n\t\t \n\t\t \n\t\t\t K Verbert \n\t\t \n\t\t \n\t\t\t E Duval \n\t\t \n\t \n\t \n\t\t Journal of Educational Technology & Society \n\t\t \n\t\t\t 10 \n\t\t\t 3 \n\t\t\t \n\t\t\t 2007 \n\t\t \n\t \n\t M. Wolpers, J. Najjar, K. Verbert, and E. Duval, \"Tracking actual usage: the attention metadata approach,\" Journal of Educational Technology & Society, vol. 10, no. 3, pp. 106- 121, 2007."
+    },
+    {
+      "title": "Design and implementation of a learning analytics toolkit for teachers",
+      "authors": [
+        "A Dyckho",
+        "D Zielke",
+        "M Bultmann",
+        "M Chatti",
+        "U Schroeder"
+      ],
+      "year": 2012,
+      "journal": "Journal of Educational Technology & Society",
+      "volume": "15",
+      "issue": "3",
+      "raw": "Design and implementation of a learning analytics toolkit for teachers \n\t\t \n\t\t\t A L Dyckho \n\t\t \n\t\t \n\t\t\t D Zielke \n\t\t \n\t\t \n\t\t\t M Bultmann \n\t\t \n\t\t \n\t\t\t M A Chatti \n\t\t \n\t\t \n\t\t\t U Schroeder \n\t\t \n\t \n\t \n\t\t Journal of Educational Technology & Society \n\t\t \n\t\t\t 15 \n\t\t\t 3 \n\t\t\t \n\t\t\t 2012 \n\t\t \n\t \n\t A. L. Dyckho , D. Zielke, M. Bultmann, M. A. Chatti, and U. Schroeder, \"Design and implementation of a learning analytics toolkit for teachers,\" Journal of Educational Technology & Society, vol. 15, no. 3, pp. 58-76, 2012."
+    },
+    {
+      "title": "The blackboard learning system: The be all and end all in educational instrruction?",
+      "authors": [
+        "P Bradford",
+        "M Porciello",
+        "N Balkon",
+        "D Backus"
+      ],
+      "year": 2007,
+      "doi": "10.2190/x137-x73l-5261-5656",
+      "journal": "Journal of Educational Technology Systems",
+      "volume": "35",
+      "issue": "3",
+      "raw": "The blackboard learning system: The be all and end all in educational instrruction? \n\t\t \n\t\t\t P Bradford \n\t\t \n\t\t \n\t\t\t M Porciello \n\t\t \n\t\t \n\t\t\t N Balkon \n\t\t \n\t\t \n\t\t\t D Backus \n\t\t \n\t\t 10.2190/x137-x73l-5261-5656 \n\t \n\t \n\t\t Journal of Educational Technology Systems \n\t\t \n\t\t\t 35 \n\t\t\t 3 \n\t\t\t \n\t\t\t 2007 \n\t\t \n\t \n\t P. Bradford, M. Porciello, N. Balkon, and D. Backus, \"The blackboard learning system: The be all and end all in educational instrruction?,\" Journal of Educational Technology Systems, vol. 35, no. 3, pp. 301-314, 2007."
+    },
+    {
+      "title": "Alaska: A learning analytics extension for better understanding the learning process in the khan academy platform",
+      "authors": [
+        "J Ruiperez-Valiente",
+        "P Munoz-Merino",
+        "D Leony",
+        "C Kloos"
+      ],
+      "year": 2015,
+      "doi": "10.1016/j.chb.2014.07.002",
+      "journal": "Computers in Human Behavior",
+      "volume": "47",
+      "raw": "Alaska: A learning analytics extension for better understanding the learning process in the khan academy platform \n\t\t \n\t\t\t J A Ruiperez-Valiente \n\t\t \n\t\t \n\t\t\t P J Munoz-Merino \n\t\t \n\t\t \n\t\t\t D Leony \n\t\t \n\t\t \n\t\t\t C D Kloos \n\t\t \n\t\t 10.1016/j.chb.2014.07.002 \n\t \n\t \n\t\t Computers in Human Behavior \n\t\t \n\t\t\t 47 \n\t\t\t \n\t\t\t 2015 \n\t\t \n\t \n\t J. A. Ruiperez-Valiente, P. J. Munoz-Merino, D. Leony, and C. D. Kloos, \"Alaska: A learning analytics extension for better understanding the learning process in the khan academy platform,\" Computers in Human Behavior, vol. 47, pp. 139-148, 2015."
+    },
+    {
+      "title": "Moodog: Tracking students' learning activities",
+      "authors": [
+        "H Zhang",
+        "K Almeroth",
+        "A Knight",
+        "M Bulger",
+        "R Mayer"
+      ],
+      "year": 2007,
+      "raw": "Moodog: Tracking students' learning activities \n\t\t \n\t\t\t H Zhang \n\t\t \n\t\t \n\t\t\t K Almeroth \n\t\t \n\t\t \n\t\t\t A Knight \n\t\t \n\t\t \n\t\t\t M Bulger \n\t\t \n\t\t \n\t\t\t R Mayer \n\t\t \n\t \n\t \n\t\t World Conference on Educational Multimedia, Hypermedia and Telecommunications \n\t\t \n\t\t\t 2007. 2007 \n\t\t\t \n\t\t \n\t \n\t H. Zhang, K. Almeroth, A. Knight, M. Bulger, and R. Mayer, \"Moodog: Tracking students' learning activities,\" in World Conference on Educational Multimedia, Hypermedia and Telecommunications, vol. 2007, pp. 4415-4422, 2007."
+    },
+    {
+      "title": "Towards portable learning analytics dashboards",
+      "authors": [
+        "A Vozniuk",
+        "S Govaerts",
+        "D Gillet"
+      ],
+      "year": 2013,
+      "doi": "10.1109/icalt.2013.126",
+      "raw": "Towards portable learning analytics dashboards \n\t\t \n\t\t\t A Vozniuk \n\t\t \n\t\t \n\t\t\t S Govaerts \n\t\t \n\t\t \n\t\t\t D Gillet \n\t\t \n\t\t 10.1109/icalt.2013.126 \n\t \n\t \n\t\t Advanced Learning Technologies (ICALT), 2013 IEEE 13th International Conference on \n\t\t \n\t\t\t IEEE \n\t\t\t 2013 \n\t\t\t \n\t\t \n\t \n\t A. Vozniuk, S. Govaerts, and D. Gillet, \"Towards portable learning analytics dashboards,\" in Advanced Learning Technologies (ICALT), 2013 IEEE 13th International Conference on, pp. 412-416, IEEE, 2013."
+    },
+    {
+      "title": "Developing an evaluation framework of quality indicators for learning analytics",
+      "authors": [
+        "M Schefel",
+        "H Drachsler",
+        "M Specht"
+      ],
+      "year": 2015,
+      "doi": "10.1145/2723576.2723629",
+      "raw": "Developing an evaluation framework of quality indicators for learning analytics \n\t\t \n\t\t\t M Schefel \n\t\t \n\t\t \n\t\t\t H Drachsler \n\t\t \n\t\t \n\t\t\t M Specht \n\t\t \n\t\t 10.1145/2723576.2723629 \n\t \n\t \n\t\t Proceedings of the Fifth International Conference on Learning Analytics And Knowledge \n\t\t the Fifth International Conference on Learning Analytics And Knowledge \n\t\t \n\t\t\t ACM \n\t\t\t 2015 \n\t\t\t \n\t\t \n\t \n\t M. Schefel, H. Drachsler, and M. Specht, \"Developing an evaluation framework of quality indicators for learning analytics,\" in Proceedings of the Fifth International Conference on Learning Analytics And Knowledge, pp. 16-20, ACM, 2015."
+    },
+    {
+      "title": "The design of a system to support exploratory learning of algebraic generalisation",
+      "year": 2012,
+      "doi": "10.1016/j.compedu.2011.09.021",
+      "journal": "Computers & Education",
+      "volume": "59",
+      "issue": "1",
+      "raw": "The design of a system to support exploratory learning of algebraic generalisation \n\t\t \n\t\t\t Noss \n\t\t \n\t\t 10.1016/j.compedu.2011.09.021 \n\t \n\t \n\t\t Computers & Education \n\t\t \n\t\t\t 59 \n\t\t\t 1 \n\t\t\t \n\t\t\t 2012 \n\t\t \n\t \n\t Noss et al., \"The design of a system to support exploratory learning of algebraic generalisation,\" Computers & Education, vol. 59, no. 1, pp. 63-81, 2012."
+    },
+    {
+      "title": "Design and evaluation of teacher assistance tools for exploratory learning environments",
+      "authors": [
+        "M Mavrikis",
+        "S Gutierrez-Santos",
+        "A Poulovassilis"
+      ],
+      "year": 2016,
+      "doi": "10.1145/2883851.2883909",
+      "raw": "Design and evaluation of teacher assistance tools for exploratory learning environments \n\t\t \n\t\t\t M Mavrikis \n\t\t \n\t\t \n\t\t\t S Gutierrez-Santos \n\t\t \n\t\t \n\t\t\t A Poulovassilis \n\t\t \n\t\t 10.1145/2883851.2883909 \n\t \n\t \n\t\t Proceedings of the Sixth International Conference on Learning Analytics & Knowledge, LAK '16 \n\t\t the Sixth International Conference on Learning Analytics & Knowledge, LAK '16 New York, NY, USA \n\t\t \n\t\t\t ACM \n\t\t\t 2016 \n\t\t\t \n\t\t \n\t \n\t M. Mavrikis, S. Gutierrez-Santos, and A. Poulovassilis, \"Design and evaluation of teacher assistance tools for exploratory learning environments,\" in Proceedings of the Sixth International Conference on Learning Analytics & Knowledge, LAK '16, (New York, NY, USA), pp. 168-172, ACM, 2016."
+    },
+    {
+      "title": "Usability testing",
+      "authors": [
+        "J Lewis"
+      ],
+      "year": 2006,
+      "doi": "10.1002/0470048204.ch49",
+      "raw": "Usability testing \n\t\t \n\t\t\t J Lewis \n\t\t \n\t\t 10.1002/0470048204.ch49 \n\t \n\t \n\t\t Handbook of Human Factors and Ergonomics \n\t\t New York, NY \n\t\t \n\t\t\t John Wiley \n\t\t\t 2006 \n\t\t\t \n\t\t \n\t \n\t J. Lewis, \"Usability testing,\" in Handbook of Human Factors and Ergonomics, pp. 1275- 1316, John Wiley, New York, NY, 2006."
+    }
+  ],
+  "num_references": 25,
+  "figures": [
+    {
+      "caption": "Fig. 1 :",
+      "description": "Fig. 1: (a) Data Repository; (b) The Dashboard"
+    },
+    {
+      "caption": "Fig. 2 :",
+      "description": "Fig. 2: Data Configuration"
+    },
+    {
+      "caption": "Fig. 3",
+      "description": "Fig. 3 Multi-level Analysis. The structure of the e-book is shown on the left and the user can select nodes to see the corresponding data visualisations."
+    },
+    {
+      "caption": "Fig. 4",
+      "description": "Fig. 4 Widget Usage"
+    },
+    {
+      "caption": "Fig. 5 A",
+      "description": "Fig. 5 A snapshot of the online discussion environment of the MC Squared platform. This enables designers and teachers to collaborate and document the design of e-books."
+    },
+    {
+      "caption": "Fig. 6",
+      "description": "Fig. 6 Users & Actions per Page"
+    },
+    {
+      "caption": "Fig. 7",
+      "description": "Fig. 7 Users & Actions per Widget"
+    },
+    {
+      "caption": "Fig. 8",
+      "description": "Fig. 8 User & Widget Activity"
+    },
+    {
+      "caption": "Fig. 10",
+      "description": "Fig. 10 User Activity on Widget"
+    },
+    {
+      "caption": "Fig. 11",
+      "description": "Fig. 11 Timelines per user and per action"
+    },
+    {
+      "caption": "Fig. 12",
+      "description": "Fig. 12 Diverging Stacked Bar for RDAP features"
+    }
+  ],
+  "num_figures": 11,
+  "num_citations": 29,
+  "cited_references": [
+    "b3",
+    "b13",
+    "b18",
+    "b2",
+    "b14",
+    "b17",
+    "b9",
+    "b1",
+    "b20",
+    "b21",
+    "b12",
+    "b16",
+    "b15",
+    "b23",
+    "b5",
+    "b19",
+    "b10",
+    "b24",
+    "b4",
+    "b7",
+    "b11",
+    "b8",
+    "b22",
+    "b6",
+    "b0"
+  ],
+  "notes": [
+    "[raw_affiliation] UCL Knowledge Lab University College London",
+    "[raw_affiliation] UCL Knowledge Lab University College London",
+    "https://www.khanacademy.org/",
+    "https://www.google.com/analytics/web/",
+    "https://www.woopra.com/",
+    "http://graasp.eu/",
+    "[raw_reference] E. Gardiner and R. Musto, The Oxford companion to the book. The electronic book. Oxford University Oxford, 2010.",
+    "[raw_reference] R. Martin, \"The road ahead: ebooks, etextbooks and publishers' electronic resources,in Future Challenges, Sustainable futures: Proceedings ASCILITE 2012 (M. Brown, M. Hart- nett, and T. Stewart, eds.), 2012.",
+    "[raw_reference] C. Kynigos, \"Designing constructionist e-books: New mediations for creative mathematical thinking?,\" Constructivist Foundations, vol. 10, no. 3, pp. 305-313, 2015.",
+    "[raw_reference] V. Emin-Martinez, H. Cecilie, R. Triana, M. Jesus, W. Barbara, M. Yishay;, D. Mihai, F. Rebecca, and J.-P. Pernin, Towards teacher-led design inquiry of learning. 2014.",
+    "[raw_reference] K. Avramides, J. Hunter, M. Oliver, and R. Luckin, \"A method for teacher inquiry in cross- curricular projects: Lessons from a case study,\" British Journal of Educational Technology, vol. 46, no. 2, pp. 249-264, 2015.",
+    "[raw_reference] D. Persico and F. Pozzi, \"Informing learning design with learning analytics to improve teacher inquiry,\" British Journal of Educational Technology, vol. 46, no. 2, pp. 230-248, 2015.",
+    "[raw_reference] T. Bayrak, \"A review of business analytics: A business enabler or another passing fad,\" Procedia -Social and Behavioral Sciences, vol. 195, pp. 230-239, 2015. World Conference on Technology, Innovation and Entrepreneurship.",
+    "[raw_reference] A. Drachen, C. Thurau, J. Togelius, G. Yannakakis, and C. Bauckhage, Game Data Min- ing, pp. 205-253. Springer-VS, 2013.",
+    "[raw_reference] S. Dumais, R. Jeffries, D. M. Russell, D. Tang, and J. Teevan, Understanding User Behavior Through Log Data and Analysis, pp. 349-372. New York, NY: Springer New York, 2014.",
+    "[raw_reference] J. W. Tukey, Exploratory Data Analysis. Addison-Wesley, 1977.",
+    "[raw_reference] J. de Mast and B. P. H. Kemper, \"Principles of exploratory data analysis in problem solving: What can we learn from a well-known case?,\" Quality Engineering, vol. 21, no. 4, pp. 366-375, 2009.",
+    "[raw_reference] K. Verbert, S. Govaerts, E. Duval, J. L. Santos, F. Van Assche, G. Parra, and J. Klerkx, \"Learning dashboards: an overview and future research opportunities,\" Personal and Ubiquitous Computing, vol. 18, no. 6, pp. 1499-1514, 2014.",
+    "[raw_reference] R. Martinez-Maldonado, A. Pardo, N. Mirriahi, K. Yacef, J. Kay, and A. Clayphan, \"The latux workflow: designing and deploying awareness tools in technology-enabled learning settings,\" in Proceedings of the Fifth International Conference on Learning Analytics And Knowledge, pp. 1-10, ACM, 2015.",
+    "[raw_reference] S. Gutierrez-Santos, E. Geraniou, D. Pearce-Lazard, and A. Poulovassilis, \"Design of Teacher Assistance Tools in an Exploratory Learning Environment for Algebraic Generalization,\" IEEE Transactions on Learning Technologies, vol. 5, no. 4, pp. 366-376, 2012.",
+    "[raw_reference] D. Leony, A. Pardo, L. de la Fuente Valent n, D. S. de Castro, and C. D. Kloos, \"Glass: a learning analytics visualization tool,\" in Proceedings of the 2nd international conference on learning analytics and knowledge, pp. 162-163, ACM, 2012.",
+    "[raw_reference] M. Wolpers, J. Najjar, K. Verbert, and E. Duval, \"Tracking actual usage: the attention metadata approach,\" Journal of Educational Technology & Society, vol. 10, no. 3, pp. 106- 121, 2007.",
+    "[raw_reference] A. L. Dyckho , D. Zielke, M. Bultmann, M. A. Chatti, and U. Schroeder, \"Design and implementation of a learning analytics toolkit for teachers,\" Journal of Educational Technology & Society, vol. 15, no. 3, pp. 58-76, 2012.",
+    "[raw_reference] P. Bradford, M. Porciello, N. Balkon, and D. Backus, \"The blackboard learning system: The be all and end all in educational instrruction?,\" Journal of Educational Technology Systems, vol. 35, no. 3, pp. 301-314, 2007.",
+    "[raw_reference] J. A. Ruiperez-Valiente, P. J. Munoz-Merino, D. Leony, and C. D. Kloos, \"Alaska: A learning analytics extension for better understanding the learning process in the khan academy platform,\" Computers in Human Behavior, vol. 47, pp. 139-148, 2015.",
+    "[raw_reference] H. Zhang, K. Almeroth, A. Knight, M. Bulger, and R. Mayer, \"Moodog: Tracking students' learning activities,\" in World Conference on Educational Multimedia, Hypermedia and Telecommunications, vol. 2007, pp. 4415-4422, 2007.",
+    "[raw_reference] A. Vozniuk, S. Govaerts, and D. Gillet, \"Towards portable learning analytics dashboards,\" in Advanced Learning Technologies (ICALT), 2013 IEEE 13th International Conference on, pp. 412-416, IEEE, 2013.",
+    "[raw_reference] M. Schefel, H. Drachsler, and M. Specht, \"Developing an evaluation framework of quality indicators for learning analytics,\" in Proceedings of the Fifth International Conference on Learning Analytics And Knowledge, pp. 16-20, ACM, 2015.",
+    "[raw_reference] Noss et al., \"The design of a system to support exploratory learning of algebraic generalisation,\" Computers & Education, vol. 59, no. 1, pp. 63-81, 2012.",
+    "[raw_reference] M. Mavrikis, S. Gutierrez-Santos, and A. Poulovassilis, \"Design and evaluation of teacher assistance tools for exploratory learning environments,\" in Proceedings of the Sixth International Conference on Learning Analytics & Knowledge, LAK '16, (New York, NY, USA), pp. 168-172, ACM, 2016.",
+    "[raw_reference] J. Lewis, \"Usability testing,\" in Handbook of Human Factors and Ergonomics, pp. 1275- 1316, John Wiley, New York, NY, 2006."
+  ],
+  "editors": [
+    "M Brown",
+    "M Hartnett",
+    "T Stewart"
+  ],
+  "processing_software": {
+    "GROBID": "0.8.2"
+  }
+}

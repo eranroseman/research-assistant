@@ -1,0 +1,1096 @@
+{
+  "paper_id": "UNSKLN4R",
+  "title": "Large Language Models for Time Series: A Survey",
+  "abstract": "Large Language Models (LLMs) have seen significant use in domains such as natural language processing and computer vision. Going beyond text, image and graphics, LLMs present a significant potential for analysis of time series data, benefiting domains such as climate, IoT, healthcare, traffic, audio and finance. This survey paper provides an in-depth exploration and a detailed taxonomy of the various methodologies employed to harness the power of LLMs for time series analysis. We address the inherent challenge of bridging the gap between LLMs' original text data training and the numerical nature of time series data, and explore strategies for transferring and distilling knowledge from LLMs to numerical time series analysis. We detail various methodologies, including (1) direct prompting of LLMs, (2) time series quantization, (3) aligning techniques, (4) utilization of the vision modality as a bridging mechanism, and (5) the combination of LLMs with tools. Additionally, this survey offers a comprehensive overview of the existing multimodal time series and text datasets in diverse domains, and discusses the challenges and future opportunities of this emerging field.",
+  "year": 2023,
+  "date": "2023",
+  "authors": [
+    {
+      "name": "Xiyuan Zhang",
+      "email": "xiyuanzh@ucsd.edu",
+      "affiliation": {
+        "organization": "University of California",
+        "institution": "University of California",
+        "address": "San Diego"
+      }
+    },
+    {
+      "name": "Roy Chowdhury",
+      "affiliation": {
+        "organization": "University of California",
+        "institution": "University of California",
+        "address": "San Diego"
+      }
+    },
+    {
+      "name": "Rajesh Gupta",
+      "email": "rgupta@ucsd.edu",
+      "affiliation": {
+        "organization": "University of California",
+        "institution": "University of California",
+        "address": "San Diego"
+      }
+    },
+    {
+      "name": "Jingbo Shang",
+      "email": "jshang@ucsd.edu",
+      "affiliation": {
+        "organization": "University of California",
+        "institution": "University of California",
+        "address": "San Diego"
+      }
+    }
+  ],
+  "doi": "10.5194/tc-2020-91-rc1",
+  "md5": "1A4DAE015D25A3544ECA9652FAD61FA4",
+  "funding": [
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "Acknowledgements Our work is supported in part by  ACE , one of the seven centers in  JUMP 2.0 , a  Semiconductor Research Corporation  (SRC) program sponsored by  DARPA . Our work is also sponsored by  NSF CAREER  Award  2239440 ,  NSF   Proto-OKN  Award  2333790 ,  NIH   Bridge2AI Center Program  under award  1U54HG012510-01 ,  Cisco-UCSD Sponsored  Research Project, as well as generous gifts from  Google , Adobe, and Teradata. Any opinions, findings, and conclusions or recommendations expressed herein are those of the authors and should not be interpreted as necessarily representing the views, either expressed or implied, of the  U.S. Government.The U.S. Government  is authorized to reproduce and distribute reprints for government purposes not withstanding any copyright annotation hereon."
+  ],
+  "sections": [
+    {
+      "title": "1. Introduction",
+      "text": "Time series analysis plays a critical role in a variety of fields, including climate modeling, traffic management, healthcare monitoring and finance analytics. Time series analysis comprises a wide range of tasks such as classification  [Liu et al., 2023b] , forecasting  [Gruver et al., 2023] , anomaly detection, and imputation. Traditionally, these tasks have been tackled using classical signal processing techniques such as time-frequency analysis and decomposition-based approaches. More recently, deep learning approaches like Convolutional Neural Networks (CNNs), Long Short-Term Memory networks (LSTMs)  [Zhang et al., 2023a] , and Transformers  [Jin et al., 2023a]  have revolutionized this field and proved effective in extracting meaningful patterns from time series data, making them the primary approaches of time series analysis in various application domains.\n\nLLM Forecasting Classification Text Generation Anomaly Detection EEG Finance Traffic Audio Multiple Tasks Diverse Domains\n\nTable IoT Robotics ECG Interpolation Time Series Generation In recent years, Large Language Models (LLMs) have gained substantial attention particularly in the fields of Natural Language Processing (NLP) and Computer Vision (CV). Prominent models such as GPT-4 have transformed the landscape of text processing by offering unprecedented accuracy in tasks such as text generation, translation, sentiment analysis, question answering and summarization. In the CV domain, Large Multimodal Models (LMMs) have also facilitated advancements in image recognition, object detection, and generative tasks, leading to more intelligent and capable visual systems  [Girdhar et al., 2023] . Inspired by these successes, researchers are now exploring the potential of LLMs in the realm of time series analysis, expecting further breakthroughs, as shown in Figure  1 . While several surveys offer a broad perspective on large models for time series in general  [Jin et al., 2023b; Ma et al., 2023] , these do not specifically focus on LLMs or the key challenge of bridging modality gap, which stems from LLMs being originally trained on discrete textual data, in contrast to the continuous numerical nature of time series.\n\nOur survey uniquely contributes to the existing literature by emphasizing how to bridge such modality gap and transfer knowledge from LLMs for time series analysis. Our survey also covers more diverse application domains, ranging from climate, Internet of Things (IoT), to healthcare, traffic management, and finance. Moreover, certain intrinsic properties of time series, like continuity, auto-regressiveness, and dependency on the sampling rate, are also shared by audio, speech, and music data. Therefore, we also present representative LLM-based works from these domains to explore how we can use LLMs for other types of time series. We present a comprehensive taxonomy by categorizing these methodologies into five distinct groups, as shown in Figure 2. If we outline typical LLM-driven NLP pipelines in five stages -input text, tokenization, embedding, LLM, output -then each category of our taxonomy targets one specific stage in this pipeline. Specifically, (i) Prompting (input stage) treats time series data as raw text and directly prompts LLMs with time series; (ii) Time Series Quantization (tokenization stage) discretizes time series as special tokens for LLMs to process; (iii) Aligning (embedding stage) designs time series encoder to align time series embeddings with language space; (iv) Vision as Bridge (LLM stage) connects time series with Vision-Language Models (VLM) by employing visual representations as a bridge; (v) Tool Integration (output stage) adopts LLMs to output tools to benefit time series analysis. Beyond this taxonomy, our survey also compiles an extensive list of existing multimodal datasets that incorporate both time series and text. We conclude our paper by discussing future research directions in this emerging and promising field.\n\nWe maintain an up-to-date Github repository 1 which includes all the papers and datasets discussed in the survey."
+    },
+    {
+      "title": "2. Background and Problem Formulation",
+      "text": "Large language models are characterized by their vast number of parameters and extensive training data. They excel in understanding, generating, and interpreting human language, and recently represent a significant advancement in artificial intelligence. The inception of LLMs can be traced back to models like GPT-2, BERT, BART, and T5, which laid the foundational architecture. Over time, the evolution of these models has been marked by increasing complexity and capabilities, such as LLAMA-2, PaLM, and GPT-4. More recently, researchers have developed multimodal large language models to integrate and interpret multiple forms of data, such as text, images, and time series, to achieve a more comprehensive understanding of information.\n\n1  https://github.com/xiyuanzh/awesome-llm-time-series This survey focuses on how LLMs could benefit time series analysis. We first define the mathematical formulation for the input and output, which may contain time series or (and) text depending on the downstream tasks, as well as the models. Input. Denoted as x, composed of time series x s \u2208 R T \u00d7c and optional text data x t represented as strings, where T, c represent the sequence length and the number of features. Output. Denoted as y and may represent time series, text or numbers depending on the specific downstream task. For time series generation or forecasting task, y represents generated time series y s or predicted k-step future time series y T +1:T +k s . For text generation task, such as report generation, y represents text data y t . For time series classification or regression task, y represents numbers indicating the predicted classes or numerical values. Model. We use f \u03b8 parameterized by \u03b8, g \u03d5 parameterized by \u03d5, and h \u03c8 parameterized by \u03c8 to represent language, time series and vision models, where f \u03b8 is typically initialized from pre-trained large language models. We optimize parameters \u03b8, \u03d5 and \u03c8 through loss function L."
+    },
+    {
+      "title": "3. Taxonomy",
+      "text": "In this section, we detail our taxonomy of applying LLMs for time series analysis, categorized by five groups. We summarize the representative works, mathematical formulation, advantages and limitations of each category in Table  1 ."
+    },
+    {
+      "title": "3.1. Prompting",
+      "text": "Number-Agnostic Tokenization. The method treats numerical time series as raw textual data and directly prompts existing LLMs. For example, PromptCast  [Xue and Salim, 2022]  proposes prompt-based time series forecasting by converting numerical time series into text prompts and forecasting time series in a sentence-to-sentence manner. The input prompts are composed of context and questions following pre-defined templates, e.g., \"From {t 1 } to {t obs }, the average temperature of region {U m } was {x m t } degree on each\n\nTime Series Encoder 1 2 3 \u2026 K 2 i 3 K Time Series Decoder Codebook D D D Embedding (a) VQ-VAE based quantization method. Feature Extraction D Embedding 2 1 3 1 K-Means Masking Encoding (b) K-Means based quantization method. Figure 3: Two types of index-based quantization methods. day. What is the temperature going to be on {t obs }?\" Similar prompting methods have been applied to forecast Placeof-Interest (POI) customer flows (AuxMobLCast) and user's next location (LLM-Mob). Recent works also prompt PaLM-24B for health-related tasks such as activity recognition and daily stress estimate [Liu et al., 2023b]. For example, they prompt the model to \"classify the following accelerometer data in meters per second squared as either walking or running: 0.052, 0.052, 0.052, 0.051, 0.052, 0.055, 0.051, 0.056, 0.06, 0.064\". Other examples include extracting historical price features such as open, close, high, and low prices to prompt ChatGPT in a zero-shot fashion [Xie et al., 2023a].\n\nNumber-Specific Tokenization. More recently, LLM-Time  [Gruver et al., 2023]  pointed out that Byte Pair Encoding (BPE) tokenization has the limitation of breaking a single number into tokens that don't align with the digits, leading to inconsistent tokenization across different floating point numbers and complicating arithmetic operations. Therefore, following LLMs such as LLaMA and PaLM, they propose to insert spaces between digits to ensure distinct tokenization of each digit and use a comma (\",\") to separate each time step in a time series. They also scale time series to optimize token usage and keep fixed precision (e.g., two digits of precision) to efficiently manage context length. For example, they convert \"0.123, 1.23, 12.3, 123.0\" to \"1 2 , 1 2 3 , 1 2 3 0 , 1 2 3 0 0\". Meanwhile, BloomberGPT  [Wu et al., 2023]  trains on financial data with text and numerical data and places each digit in its own chunk to better handle numbers. Using similar space-prefixed tokenization, recent works also show that large language models are general pattern machines capable of sequence transformation, completion and improvement."
+    },
+    {
+      "title": "3.2. Quantization",
+      "text": "Quantization based method converts numerical data into discrete representations as input to LLMs. This approach can be further divided into two main categories based on the discretization technique employed.\n\nDiscrete Indices from VQ-VAE. The first type of quantization method transforms continuous time series into discrete indices as tokens. Among them one of the most popular methods is training a Vector Quantized-Variational AutoEncoder (VQ-VAE), which learns a codebook\n\nto capture the latent representations, as illustrated in Figure  3a . The method identifies the nearest neighbor k i of each step i of the encoded time series representation g \u03d5 (x s ) \u2208 R T S \u00d7D in the codebook (S denotes the cumulative stride of VQ-VAE encoder), and uses the corresponding indices k as the quantized input to language models:\n\nBased on VQ-VAE, Auto-TTE  [Chung et al., 2023]  quantizes ECGs into discrete formats and generates 12-lead ECG signals conditioned on text reports. DeWave  [Duan et al., 2023]  adapts VQ-VAE to derive discrete codex encoding and aligns it with pre-trained BART for open-vocabulary EEGto-text translation tasks. TOTEM  [Talukder and Gkioxari, 2023 ] also quantizes time series through VQ-VAE as input to Transformers for multiple downstream applications such as forecasting, classification, and translation. In the audio domain, UniAudio  [Yang et al., 2023]  tokenizes different types of target audio using Residual Vector Quantization (RVQ) (a hierarchy of multiple vector quantizers) and supports 11 audio generation tasks. VioLA unifies various crossmodal tasks involving speech and text by converting speech utterances to discrete tokens through RVQ. AudioGen learns discrete audio representations using vector quantization layers and generates audio samples conditioned on text inputs. Discrete Indices from K-Means. Apart from employing VQ-VAE, researchers have also explored K-Means clustering for index-based tokenization, which uses the centroid indices as discretized tokens, as shown in Figure  3b . Such methods are mostly applied in the audio domain. For example, SpeechGPT shows capability to perceive and generate multimodal contents using K-Means based discrete unit extractor. AudioLM discretizes codes produced by a neural audio codec using K-means clustering to achieve high-quality synthesis. It also combines discretized activations of language models pre-trained on audio using RVQ to capture long-term structure. Following the same quantization procedure, Au-dioPaLM  [Rubenstein et al., 2023]  aligns PaLM-2 and Au-dioLM with a joint vocabulary that can represent speech and text with discrete tokens. Discrete Indices from Other Techniques. Apart from the VQ-VAE and K-Means based time-domain quantization, Fre-qTST  [Li et al., 2023]  utilizes frequency spectrum as a common dictionary to discretize time series into frequency units with weights for downstream forecasting task. Text Categories. The second type of quantization converts numerical data into pre-defined text categories, which is primarily adopted in financial domain. For example, TDML  [Yu et al., 2023]  categorizes the weekly price fluctuations into 12 bins represented as \"Di\" or \"Ui\", where \"D\" indicates a decrease in price and \"U\" means an increase, and i = 1, 2, 3, 4, 5, 5+ represents the level of price change."
+    },
+    {
+      "title": "3.3. Aligning",
+      "text": "The third type of works trains a separate encoder for time series, and aligns the encoded time series to the semantic space\n\nTime Series Encoder Text Encoder Similarity LLM Matching (a) Aligning by similarity matching (Type one). Time Series Embed Text Embed Encoder Decoder Time Series Output Text Output LLM Prompts\n\n(b) Aligning with large language models as backbones (Type two), where the output could be time series (e.g., forecasting) or text (e.g., EEG-to-text) depending on the downstream tasks. of language models. These works can be further categorized into two groups based on their specific aligning strategies, as illustrated in Figure  4 .\n\nSimilarity Matching through Contrastive Loss. The first type of method aligns the time series embeddings with text embeddings through similarity matching, such as minimizing the contrastive loss:\n\n(2) where B, \u03b3 represent batch size and temperature parameter that controls distribution concentrations, and sim represents similarity score, typically computed as inner product:\n\n(3)\n\nFor instance, ETP  [Liu et al., 2023a]  integrates contrastive learning based pre-training to align electrocardiography (ECG) signals with textual reports. Contrastive framework is also used to align 17 clinical measurements collected in Intensive Care Unit (ICU) to their corresponding clinical notes  [King et al., 2023] . TEST  [Sun et al., 2023]  uses contrastive learning to generate instance-wise, feature-wise, and text-prototype-aligned time series embeddings to align with text embeddings. TENT  [Zhou et al., 2023b ] aligns text embeddings with IoT sensor signals through a unified semantic space using contrastive learning. JoLT  [Cai et al., 2023]  utilizes Querying Transformer (Q-Former) optimized with contrastive loss to align time series and text representations.\n\nSimilarity Matching through Other Losses. Apart from contrastive loss, other loss functions are also employed to optimize similarity matching between time series embeddings and text embeddings. ECG-LLM  [Qiu et al., 2023]  aligns the distribution between ECG and language embedding from ECG statements with an Optimal Transport based loss function to train an ECG report generation model. MTAM  [Han et al., 2022]  uses various aligning techniques, such as Canonical Correlation Analysis and Wasserstein Distance, as loss functions to align electroencephalography (EEG) features with their corresponding language descriptions. LLMs as Backbones. The second type of aligning method directly uses large language models as backbones following time series embedding layers. EEG-to-Text [Wang and  Ji, 2022]  feeds EEG embeddings to pre-trained BART for open vocabulary EEG-To-Text decoding and EEG-based sentiment classification. GPT4TS  [Zhou et al., 2023a]  uses patching embeddings as input to frozen pre-trained GPT-2 where the positional embedding layers and self-attention blocks are retained during time series fine-tuning. The method provides a unified framework for seven time series tasks, including few-shot or zero-shot learning. Following GPT4TS, researchers further incorporated seasonal-trend decomposition (TEMPO  [Cao et al., 2023] ), two-stage finetuning (LLM4TS  [Chang et al., 2023] ), domain descriptions (UniTime), graph attention mechanism (GATGPT), and spatial-temporal embedding module (ST-LLM). Time-LLM  [Jin et al., 2023a]  reprograms time series data into text prototypes as input to LLaMA-7B. It also provides natural language prompts such as domain expert knowledge and task instructions to augment input context. Lag-Llama builds univariate probabilistic time series forecasting model based on LLaMA architecture. In the audio, speech and music domains, researchers have also designed dedicated encoders to embed speech (WavPrompt, Speech LLaMA), music (MU-LLaMA), and general audio inputs (LTU  [Gong et al., 2023] , SALMONN  [Tang et al., 2023] ), and feed the embeddings to large language models."
+    },
+    {
+      "title": "3.4. Vision as Bridge",
+      "text": "Time series data can be effectively interpreted or associated with visual representations, which align closer with textual data and have demonstrated successful integrations with large language models. Therefore, researchers have also leveraged vision modality as a bridge to connect time series with LLMs. Paired Data. ImageBind  [Girdhar et al., 2023]  uses imagepaired data to bind six modalities (images, text, audio, depth, thermal, and Inertial Measurement Unit (IMU) time series) and learn a joint embedding space, enabling new emergent alignments and capabilities. PandaGPT  [Su et al., 2023]  further combines the multimodal encoders from ImageBind and large language models to enable visual and auditory instruction-following capabilities. IMU2CLIP  [Moon et al., 2022]  aligns IMU time series with video and text, by projecting them into the joint representation space of Contrastive Language-Image Pre-training (CLIP). AnyMAL  [Moon et al., 2023]  builds upon IMU2CLIP by training a lightweight adapter to project the IMU embeddings into the text token embedding space of LLaMA-2-70B. It is also capable of transforming data from other modalities, such as images, videos, audio, into the same text embedding space. Physics Relationships. IMUGPT  [Leng et al., 2023]   Time Series Plots as Images. CLIP-LSTM  [Wimmer and Rekabsaz, 2023]  transforms stock market data into sequences of texts and images of price charts, and leverages pre-trained CLIP vision-language model to generate features for downstream forecasting. Insight Miner  [Zhang et al., 2023b]  converts time series windows into images using lineplot, and feeds images into vision language model LLaVA to generate time series trend descriptions."
+    },
+    {
+      "title": "3.5. Tool",
+      "text": "This type of method does not directly use large language models to process time series. Instead, it applies large language models to generate indirect tools z(\u2022), such as code and API calls, to benefit time series related tasks.\n\nCode. CTG++  [Zhong et al., 2023]  applies GPT-4 to generate differentiable loss functions in a code format from text descriptions to guide the diffusion model to generate traffic trajectories. With this two-step translation, the large language model and diffusion model efficiently bridge the gap between user intent and traffic simulation. API Call. ToolLLM  [Qin et al., 2023]  introduces a general tool-use framework composed of data construction, model training, and evaluation. This framework includes API calls for time series tasks such as weather and stock forecasting. Text Domain Knowledge. SHARE [Zhang et al., 2023a] exploits the shared structures in human activity label names and proposes a sequence-to-sequence structure to generate label names as token sequences to preserve the shared label structures. It applies GPT-4 to augment semantics of label names. GG-LLM [Graule and Isler, 2023] leverages LLaMA-2 to encode world knowledge of common human behavioral patterns to predict human actions without further training. SCRL-LG [Ding et al., 2023] leverages LLaMA-7B as stock feature selectors to extract meaningful representations from news headlines, which are subsequently employed in reinforcement learning for precise feature alignments."
+    },
+    {
+      "title": "4. Comparison within the Taxonomy",
+      "text": "We compare the five categories of our taxonomy and provide general guidelines for which category to choose based on considerations of data, model, efficiency and optimization.\n\nData. When no training data is available and the objective is to apply LLM for time series in an zero-shot fashion, it is preferable to use prompting-based methods. This is because direct prompting enables the utilization of pre-trained language models' inherent capabilities without fine-tuning. However, representing numbers as strings can diminish the semantic value intrinsically tied to numerical data. Therefore, with adequate training data, quantization or aligningbased methods become more advantageous. As shown in Figure  2 , these two categories are the most extensively studied ones in existing literature. Furthermore, if time series data can be interpreted or associated with visual representations, these representations can be incorporated to utilize the intrinsic knowledge embedded in the vision modality or pre-trained vision-language models.\n\nModel. Prompting and tool integration methods tend to apply billion-parameter models as they often apply off-theself LLMs without architectural modifications. By contrast, aligning and quantization methods vary from million to billion-parameter models, depending on the specific application requirements and available computational resources.\n\nEfficiency. Prompting-based methods are not efficient for numerical data with high precision, as well as multivariate time series as it requires transforming each dimension into separate univariate time series, resulting in extremely long input. They are also less efficient for long-term predictions due to the computational demands of generating long sequences. These methods are more effective when dealing with simple numerical data that is richly interwoven with textual information, such as opening and closing stock prices in financial news articles. By contrast, quantization and aligning meth- ods are more efficient to handle long sequences, as time series are typically down-sampled or segmented into patches before feeding into large language models.\n\nOptimization. Depending on the specific discretization technique, quantization based method may require a twostage training process (such as first training the VQ-VAE model), which may result in sub-optimal performance compared with that achieved through end-to-end training in aligning methods. Using large language models as indirect tools empowers LLMs with more capabilities to manage numerical data, but also raises the level of complexity to optimize both LLMs and other components in an end-to-end fashion. Therefore, existing works of tool integration typically employ off-the-shelf LLMs without further fine-tuning."
+    },
+    {
+      "title": "5. Multimodal Datasets",
+      "text": "Applying LLMs for time series benefits from the availability of multimodal time series and text data. In this section, we introduce representative multimodal datasets organized by their respective domains (Table  2 ). Due to space limit, additional datasets are listed in our Github repository foot_11  .\n\nInternet of Things (IoT). Human activity recognition is an important task in IoT domain, which identifies human activities given time series collected with IoT devices (such as IMU sensors). The corresponding text data are the labels or text descriptions of these activities. Ego4D  [Grauman et al., 2022]  presents 3,670 hours of daily-life activity data with multiple modalities, including IMU time series, and dense temporallyaligned textual descriptions of the activities. Ego-Exo4D further offers three kinds of paired natural language datasets including expert commentary, narrate-and-act descriptions provided by the participants themselves, and atomic action descriptions similar as Ego4D. DeepSQA  [Xing et al., 2021]  presents a generalized Sensory Question Answering (SQA) framework to facilitate querying raw sensory data related to human activities using natural language.\n\nFinance. PIXIU  [Xie et al., 2023b]  presents multi-task and multi-modal instruction tuning data in the financial domain with 136K data samples. It contains both financial natural language understanding and prediction tasks, and covers 9 datasets of multiple modalities such as text and time series. MoAT  [Lee et al., 2023]  constructs multimodal datasets with textual information paired with time series for each timestep, such as news articles extracted with relevant keywords, mostly covering finance related domains such as fuel, metal, stock and bitcoin.\n\nHealthcare. Zuco datasets  [Hollenstein et al., 2019]  contain simultaneous eye-tracking and EEG during natural reading and during annotation. PTB-XL  [Wagner et al., 2020]  offers comprehensive metadata regarding ECG annotated by expert cardiologists, covering information such as ECG reports, diagnostic statements, diagnosis likelihoods, and signal-specific properties. Based on PTB-XL, ECG-QA  [Oh et al., 2023]  introduces the first Question Answering dataset for ECG analysis, containing 70 question templates that cover a wide range of clinically relevant ECG topics.\n\nAudio/Music/Speech. AudioSet is a collection of 2 million 10-second audio clips excised from YouTube videos and labeled with the sounds that the clip contains from a set of 527 labels. OpenAQA-5M  [Gong et al., 2023]  dataset consists of 1.9 million closed-ended and 3.7 million open-ended, diverse (audio, question, answer) tuples. MusicCaps  [Agostinelli et al., 2023]  is a high-quality music caption dataset, including 5.5K music clips. MTG-Jamendo is a dataset with 55,000 audio songs in various languages. Libri-Light is an English dataset encompassing 60,000 hours of speech data. Common-Voice  [Ardila et al., 2019]  is a multilingual speech dataset consisting of 7,335 validated hours in 60 languages. These datasets offer valuable benchmarks for multimodal time series and text analysis. These contain both time series focused tasks, including classification, which is evaluated using accuracy and macro-F1 scores, and forecasting, which utilizes metrics such as MSE, MAE, RMSE, and MAPE, as well as NLP focused tasks such as captioning, question answering, and translation, assessed through BLEU, ROUGE, METEOR, and EM scores, among others.\n\n6 Challenges and Future Directions"
+    },
+    {
+      "title": "6.1. Theoretical Understanding",
+      "text": "Existing works empirically show the benefits of applying LLMs for time series analysis. For example, recent works have empirically shown that large language models learn linear representations of space and time across multiple scales that are robust to prompting variations. Despite these empirical findings, there remains a gap in theoretical understanding of how models, primarily trained on textual data, can effectively interpret numerical time series. As a preliminary theoretical analysis, it is proved that Transformer models can universally approximate arbitrary continuous sequenceto-sequence functions on a compact domain  [Yun et al., 2019] . Additionally, GPT4TS  [Zhou et al., 2023a]  theoretically shows that such generic capability of large language models can be related to Principal Component Analysis (PCA), as minimizing the gradient with respect to the self-attention layer shares similarities with PCA. Further investigations on the generalizability of large language models on numerical data is essential to establish solid understanding of the synergy between LLMs and time series analysis."
+    },
+    {
+      "title": "6.2. Multimodal and Multitask Analysis",
+      "text": "Existing papers that apply LLMs for time series analysis mostly focus on single modality and single task at a time, such as forecasting, classification, text generation, and do not support simultaneous multimodal and multitask analysis. In computer vision and audio domains, models such as Unified-IO and UniAudio  [Yang et al., 2023]  have unified multiple input modalities into a sequence of discrete vocabulary tokens to support multiple tasks within a single transformer-based architecture. More research into leveraging LLMs for multimodal and multitask analysis would lead to more powerful time series foundation models."
+    },
+    {
+      "title": "6.3. Efficient Algorithms",
+      "text": "Time series, especially those that are multivariate or possess long history information may increase the computational complexity for existing large language models. Patching (treating each segmented patch as a token) has been a widely adopted strategy to improve performance as well as reduce complexity, but large patches may obscure the semantic information of time series and negatively impact the performance. Therefore, developing more efficient algorithms is especially crucial for facilitating large-scale time series analysis with LLMs and enhancing interactions with end users."
+    },
+    {
+      "title": "6.4. Combining Domain Knowledge",
+      "text": "Combining existing statistical domain knowledge with LLMs may further boost the model's capability for time series analysis. For example, TEMPO  [Cao et al., 2023]  applies time series seasonal-trend decomposition and treats decomposed components as different semantic inductive biases as input to the pre-trained transformer. FreqTST  [Li et al., 2023]  leverages insights from the frequency domain by tokenizing single time series into frequency units with weights for downstream forecasting. Further incorporating domain knowledge, such as wavelet decomposition, auto-correlation analysis, and empirical mode decomposition may augment LLMs' capabilities in analyzing time series data."
+    },
+    {
+      "title": "6.5. Customization and Privacy",
+      "text": "Existing works on large language models and time series analysis typically train a global model for all end users. Training customized models for different users based on the global model may bring further benefits and flexibility. Another important consideration is privacy, especially as many time series data are collected in private settings for clinical purposes or smart home applications. Federated learning offers a solution by enabling the training of machine learning models across multiple decentralized devices holding local data samples. Advancing research into model customization and user privacy preservation like federated learning would broaden the utility of LLM-empowered time series analysis."
+    },
+    {
+      "title": "7. Conclusion",
+      "text": "We present the first survey that systematically analyzes the categorization of transferring knowledge from large language models for numerical time series analysis: direct prompting, time series quantization, aligning, the use of the vision modality to connect text and time series, and the integration of large language models with other analytical tools. For each category, we introduce their mathematical formulation, representative works, and compare their advantages and limitations. We also introduce representative multimodal text and time series datasets in various domains such as healthcare, IoT, finance, and audio. Concluding the paper, we outline the challenges and emerging directions for potential future research of LLM-empowered time series analysis."
+    },
+    {
+      "text": "Figure1: Large language models have recently been applied for various time series tasks in diverse application domains."
+    },
+    {
+      "text": "Figure 2: Left: Taxonomy of LLMs for time series analysis (prompting, quantization, aligning which is further categorized into two groups as detailed in Figure 4, vision as bridge, tool integration). For each category, key distinctions are drawn in comparison to the standard LLM pipeline shown at the top of the figure. Right: We present representative works for each category, sorted by their publication dates. The use of arrows indicates that later works build upon earlier studies. Dark(light)-colored boxes represent billion(million)-parameter models. Icons to the left of the text boxes represent the application domains of domain-specific models, with icons' meanings illustrated in Figure 1."
+    },
+    {
+      "text": "Figure 4: Two types of aligning based methods."
+    },
+    {
+      "text": "generates IMU data from ChatGPT-augmented text descriptions.It first generates 3D human motion from text using pretrained motion synthesis model, and derives IMU data from 3D motion based on physics relationships of motion kinetics.Summary of five major categories of applying LLMs for time series analysis, including their respective subcategories, representative works, mathematical formulations, advantages and limitations. q and xv represent text-based quantization process and image data."
+    },
+    {
+      "text": "Summary of representative time series and text multimodal datasets."
+    },
+    {
+      "title": "Acknowledgements",
+      "text": "Our work is supported in part by  ACE , one of the seven centers in  JUMP 2.0 , a  Semiconductor Research Corporation  (SRC) program sponsored by  DARPA . Our work is also sponsored by  NSF CAREER  Award  2239440 ,  NSF   Proto-OKN  Award  2333790 ,  NIH   Bridge2AI Center Program  under award  1U54HG012510-01 ,  Cisco-UCSD Sponsored  Research Project, as well as generous gifts from  Google , Adobe, and Teradata. Any opinions, findings, and conclusions or recommendations expressed herein are those of the authors and should not be interpreted as necessarily representing the views, either expressed or implied, of the  U.S. Government.The U.S. Government  is authorized to reproduce and distribute reprints for government purposes not withstanding any copyright annotation hereon."
+    }
+  ],
+  "references": [
+    {
+      "year": 2023,
+      "raw": "Agostinelli \n\t\t \n\t\t \n\t\t\t 2023 \n\t\t \n\t \n\t Agostinelli et al., 2023]"
+    },
+    {
+      "title": "Musiclm: Generating music from text",
+      "authors": [
+        "Andrea Agostinelli",
+        "I Timo",
+        "Zal\u00e1n Denk",
+        "Jesse Borsos",
+        "Mauro Engel",
+        "Antoine Verzetti",
+        "Qingqing Caillon",
+        "Aren Huang",
+        "Adam Jansen",
+        "Marco Roberts"
+      ],
+      "year": 2023,
+      "raw": "Musiclm: Generating music from text \n\t\t \n\t\t\t Andrea Agostinelli \n\t\t \n\t\t \n\t\t\t I Timo \n\t\t \n\t\t \n\t\t\t Zal\u00e1n Denk \n\t\t \n\t\t \n\t\t\t Jesse Borsos \n\t\t \n\t\t \n\t\t\t Mauro Engel \n\t\t \n\t\t \n\t\t\t Antoine Verzetti \n\t\t \n\t\t \n\t\t\t Qingqing Caillon \n\t\t \n\t\t \n\t\t\t Aren Huang \n\t\t \n\t\t \n\t\t\t Adam Jansen \n\t\t \n\t\t \n\t\t\t Marco Roberts \n\t\t \n\t\t \n\t\t\t Tagliasacchi \n\t\t \n\t\t arXiv:2301.11325 \n\t\t \n\t\t\t 2023 \n\t\t \n\t \n\t Andrea Agostinelli, Timo I Denk, Zal\u00e1n Borsos, Jesse Engel, Mauro Verzetti, Antoine Cail- lon, Qingqing Huang, Aren Jansen, Adam Roberts, Marco Tagliasacchi, et al. Musiclm: Generating music from text. arXiv:2301.11325, 2023."
+    },
+    {
+      "year": 2019,
+      "raw": "Ardila \n\t\t \n\t\t \n\t\t\t 2019 \n\t\t \n\t \n\t Ardila et al., 2019]"
+    },
+    {
+      "title": "Common voice: A massively-multilingual speech corpus",
+      "authors": [
+        "Rosana Ardila",
+        "Megan Branson",
+        "Kelly Davis",
+        "Michael Henretty",
+        "Michael Kohler",
+        "Josh Meyer",
+        "Reuben Morais",
+        "Lindsay Saunders",
+        "Francis Tyers",
+        "Gregor Weber"
+      ],
+      "year": 2019,
+      "raw": "Common voice: A massively-multilingual speech corpus \n\t\t \n\t\t\t Rosana Ardila \n\t\t \n\t\t \n\t\t\t Megan Branson \n\t\t \n\t\t \n\t\t\t Kelly Davis \n\t\t \n\t\t \n\t\t\t Michael Henretty \n\t\t \n\t\t \n\t\t\t Michael Kohler \n\t\t \n\t\t \n\t\t\t Josh Meyer \n\t\t \n\t\t \n\t\t\t Reuben Morais \n\t\t \n\t\t \n\t\t\t Lindsay Saunders \n\t\t \n\t\t \n\t\t\t Francis M Tyers \n\t\t \n\t\t \n\t\t\t Gregor Weber \n\t\t \n\t\t arXiv:1912.06670 \n\t\t \n\t\t\t 2019 \n\t\t \n\t \n\t Rosana Ardila, Megan Branson, Kelly Davis, Michael Henretty, Michael Kohler, Josh Meyer, Reuben Morais, Lindsay Saunders, Francis M Tyers, and Gregor Weber. Common voice: A massively-multilingual speech corpus. arXiv:1912.06670, 2019."
+    },
+    {
+      "year": 2023,
+      "doi": "10.5194/tc-2020-91-rc1",
+      "raw": "Cai \n\t\t \n\t\t 10.5194/tc-2020-91-rc1 \n\t\t \n\t\t\t 2023 \n\t\t \n\t \n\t Cai et al., 2023]"
+    },
+    {
+      "title": "Jolt: Jointly learned representations of language and timeseries",
+      "authors": [
+        "Yifu Cai",
+        "Mononito Goswami",
+        "Arjun Choudhry",
+        "Arvind Srinivasan",
+        "Artur Dubrawski"
+      ],
+      "year": 2023,
+      "doi": "10.1609/aaai.v38i21.30423",
+      "raw": "Jolt: Jointly learned representations of language and timeseries \n\t\t \n\t\t\t Yifu Cai \n\t\t \n\t\t \n\t\t\t Mononito Goswami \n\t\t \n\t\t \n\t\t\t Arjun Choudhry \n\t\t \n\t\t \n\t\t\t Arvind Srinivasan \n\t\t \n\t\t \n\t\t\t Artur Dubrawski \n\t\t \n\t\t 10.1609/aaai.v38i21.30423 \n\t \n\t \n\t\t NeurIPS Deep Generative Models for Health Workshop \n\t\t \n\t\t\t 2023 \n\t\t \n\t \n\t Yifu Cai, Mononito Goswami, Arjun Choudhry, Arvind Srinivasan, and Artur Dubrawski. Jolt: Jointly learned representations of language and time- series. In NeurIPS Deep Generative Models for Health Workshop, 2023."
+    },
+    {
+      "year": 2023,
+      "doi": "10.5194/acp-2016-553-rc2",
+      "raw": "Cao \n\t\t \n\t\t 10.5194/acp-2016-553-rc2 \n\t\t \n\t\t\t 2023 \n\t\t \n\t \n\t Cao et al., 2023]"
+    },
+    {
+      "title": "Tempo: Prompt-based generative pre-trained transformer for time series forecasting",
+      "authors": [
+        "Defu Cao",
+        "Furong Jia",
+        "O Sercan",
+        "Tomas Arik",
+        "Yixiang Pfister",
+        "Wen Zheng",
+        "Yan Ye"
+      ],
+      "year": 2023,
+      "raw": "Tempo: Prompt-based generative pre-trained transformer for time series forecasting \n\t\t \n\t\t\t Defu Cao \n\t\t \n\t\t \n\t\t\t Furong Jia \n\t\t \n\t\t \n\t\t\t O Sercan \n\t\t \n\t\t \n\t\t\t Tomas Arik \n\t\t \n\t\t \n\t\t\t Yixiang Pfister \n\t\t \n\t\t \n\t\t\t Wen Zheng \n\t\t \n\t\t \n\t\t\t Yan Ye \n\t\t \n\t\t \n\t\t\t Liu \n\t\t \n\t\t arXiv:2310.04948 \n\t\t \n\t\t\t 2023 \n\t\t \n\t \n\t Defu Cao, Furong Jia, Sercan O Arik, Tomas Pfister, Yixiang Zheng, Wen Ye, and Yan Liu. Tempo: Prompt-based generative pre-trained transformer for time series forecasting. arXiv:2310.04948, 2023."
+    },
+    {
+      "year": 2023,
+      "raw": "Chang \n\t\t \n\t\t \n\t\t\t 2023 \n\t\t \n\t \n\t Chang et al., 2023]"
+    },
+    {
+      "title": "Llm4ts: Two-stage fine-tuning for time-series forecasting with pre-trained llms",
+      "authors": [
+        "Ching Chang",
+        "Wen-Chih Peng",
+        "Tien-Fu Chen"
+      ],
+      "year": 2023,
+      "doi": "10.1145/3719207",
+      "raw": "Ching Chang \n\t\t \n\t\t \n\t\t\t Wen-Chih Peng \n\t\t \n\t\t \n\t\t\t Tien-Fu Chen \n\t\t \n\t\t 10.1145/3719207 \n\t\t arXiv:2308.08469 \n\t\t Llm4ts: Two-stage fine-tuning for time-series forecasting with pre-trained llms \n\t\t \n\t\t\t 2023 \n\t\t \n\t \n\t Ching Chang, Wen-Chih Peng, and Tien-Fu Chen. Llm4ts: Two-stage fine-tuning for time-series forecasting with pre-trained llms. arXiv:2308.08469, 2023."
+    },
+    {
+      "year": 2023,
+      "raw": "Chung \n\t\t \n\t\t \n\t\t\t 2023 \n\t\t \n\t \n\t Chung et al., 2023]"
+    },
+    {
+      "title": "Text-to-ecg: 12-lead electrocardiogram synthesis conditioned on clinical text reports",
+      "authors": [
+        "Hyunseung Chung",
+        "Jiho Kim",
+        "Joonmyoung Kwon",
+        "Ki-Hyun Jeon",
+        "Min Lee",
+        "Edward Choi"
+      ],
+      "year": 2023,
+      "raw": "Text-to-ecg: 12-lead electrocardiogram synthesis conditioned on clinical text reports \n\t\t \n\t\t\t Hyunseung Chung \n\t\t \n\t\t \n\t\t\t Jiho Kim \n\t\t \n\t\t \n\t\t\t Joonmyoung Kwon \n\t\t \n\t\t \n\t\t\t Ki-Hyun Jeon \n\t\t \n\t\t \n\t\t\t Min Sung Lee \n\t\t \n\t\t \n\t\t\t Edward Choi \n\t\t \n\t \n\t \n\t\t ICASSP \n\t\t \n\t\t\t IEEE \n\t\t\t 2023 \n\t\t\t \n\t\t \n\t \n\t Hyunseung Chung, Jiho Kim, Joon- myoung Kwon, Ki-Hyun Jeon, Min Sung Lee, and Edward Choi. Text-to-ecg: 12-lead electrocardiogram synthesis conditioned on clinical text reports. In ICASSP, pages 1- 5. IEEE, 2023."
+    },
+    {
+      "year": 2023,
+      "raw": "Ding \n\t\t \n\t\t \n\t\t\t 2023 \n\t\t \n\t \n\t Ding et al., 2023]"
+    },
+    {
+      "title": "Integrating stock features and global information via large language models for enhanced stock return prediction",
+      "authors": [
+        "Yujie Ding",
+        "Shuai Jia",
+        "Tianyi Ma",
+        "Bingcheng Mao",
+        "Xiuze Zhou",
+        "Liuliu Li",
+        "Dongming Han"
+      ],
+      "year": 2023,
+      "raw": "Integrating stock features and global information via large language models for enhanced stock return prediction \n\t\t \n\t\t\t Yujie Ding \n\t\t \n\t\t \n\t\t\t Shuai Jia \n\t\t \n\t\t \n\t\t\t Tianyi Ma \n\t\t \n\t\t \n\t\t\t Bingcheng Mao \n\t\t \n\t\t \n\t\t\t Xiuze Zhou \n\t\t \n\t\t \n\t\t\t Liuliu Li \n\t\t \n\t\t \n\t\t\t Dongming Han \n\t\t \n\t\t arXiv:2310.05627 \n\t\t \n\t\t\t 2023 \n\t\t \n\t \n\t Yujie Ding, Shuai Jia, Tianyi Ma, Bingcheng Mao, Xiuze Zhou, Liuliu Li, and Dongming Han. Integrating stock features and global information via large language models for enhanced stock return predic- tion. arXiv:2310.05627, 2023."
+    },
+    {
+      "year": 2023,
+      "raw": "Duan \n\t\t \n\t\t \n\t\t\t 2023 \n\t\t \n\t \n\t Duan et al., 2023]"
+    },
+    {
+      "title": "Dewave: Discrete encoding of eeg waves for eeg to text translation",
+      "authors": [
+        "Yiqun Duan",
+        "Charles Zhou",
+        "Zhen Wang",
+        "Yu-Kai Wang",
+        "Chin-Teng Lin"
+      ],
+      "year": 2023,
+      "raw": "Dewave: Discrete encoding of eeg waves for eeg to text translation \n\t\t \n\t\t\t Yiqun Duan \n\t\t \n\t\t \n\t\t\t Charles Zhou \n\t\t \n\t\t \n\t\t\t Zhen Wang \n\t\t \n\t\t \n\t\t\t Yu-Kai Wang \n\t\t \n\t\t \n\t\t\t Chin-Teng Lin \n\t\t \n\t \n\t \n\t\t NeurIPS \n\t\t \n\t\t\t 2023 \n\t\t \n\t \n\t Yiqun Duan, Charles Zhou, Zhen Wang, Yu-Kai Wang, and Chin-teng Lin. Dewave: Discrete en- coding of eeg waves for eeg to text translation. In NeurIPS, 2023."
+    },
+    {
+      "year": 2023,
+      "raw": "Girdhar \n\t\t \n\t\t \n\t\t\t 2023 \n\t\t \n\t \n\t Girdhar et al., 2023]"
+    },
+    {
+      "title": "Imagebind: One embedding space to bind them all",
+      "authors": [
+        "Rohit Girdhar",
+        "Alaaeldin El-Nouby",
+        "Zhuang Liu",
+        "Mannat Singh",
+        "Kalyan Vasudev Alwala",
+        "Armand Joulin",
+        "Ishan Misra"
+      ],
+      "year": 2023,
+      "doi": "10.1109/cvpr52729.2023.01457",
+      "raw": "Imagebind: One embedding space to bind them all \n\t\t \n\t\t\t Rohit Girdhar \n\t\t \n\t\t \n\t\t\t Alaaeldin El-Nouby \n\t\t \n\t\t \n\t\t\t Zhuang Liu \n\t\t \n\t\t \n\t\t\t Mannat Singh \n\t\t \n\t\t \n\t\t\t Kalyan Vasudev Alwala \n\t\t \n\t\t \n\t\t\t Armand Joulin \n\t\t \n\t\t \n\t\t\t Ishan Misra \n\t\t \n\t\t 10.1109/cvpr52729.2023.01457 \n\t \n\t \n\t\t CVPR \n\t\t \n\t\t\t 2023 \n\t\t\t \n\t\t \n\t \n\t Rohit Girdhar, Alaaeldin El-Nouby, Zhuang Liu, Mannat Singh, Kalyan Vasudev Alwala, Ar- mand Joulin, and Ishan Misra. Imagebind: One embed- ding space to bind them all. In CVPR, pages 15180-15190, 2023."
+    },
+    {
+      "year": 2023,
+      "doi": "10.5194/acp-2018-376-rc1",
+      "raw": "Gong \n\t\t \n\t\t 10.5194/acp-2018-376-rc1 \n\t\t \n\t\t\t 2023 \n\t\t \n\t \n\t Gong et al., 2023]"
+    },
+    {
+      "title": "Listen, think, and understand",
+      "authors": [
+        "Yuan Gong",
+        "Hongyin Luo",
+        "Alexander Liu",
+        "Leonid Karlinsky",
+        "James Glass"
+      ],
+      "year": 2023,
+      "doi": "10.1109/asru57964.2023.10389742",
+      "raw": "Listen, think, and understand \n\t\t \n\t\t\t Yuan Gong \n\t\t \n\t\t \n\t\t\t Hongyin Luo \n\t\t \n\t\t \n\t\t\t Alexander H Liu \n\t\t \n\t\t \n\t\t\t Leonid Karlinsky \n\t\t \n\t\t \n\t\t\t James Glass \n\t\t \n\t\t 10.1109/asru57964.2023.10389742 \n\t\t arXiv:2305.10790 \n\t\t \n\t\t\t 2023 \n\t\t \n\t \n\t Yuan Gong, Hongyin Luo, Alexander H Liu, Leonid Karlinsky, and James Glass. Listen, think, and understand. arXiv:2305.10790, 2023."
+    },
+    {
+      "authors": [
+        "Isler Graule"
+      ],
+      "year": 2023,
+      "raw": "Isler Graule \n\t\t \n\t\t \n\t\t\t 2023 \n\t\t \n\t \n\t Graule and Isler, 2023]"
+    },
+    {
+      "title": "Gg-llm: Geometrically grounding large language models for zero-shot human activity forecasting in human-aware task planning",
+      "authors": [
+        "A Moritz",
+        "Volkan Graule"
+      ],
+      "year": 2023,
+      "raw": "A Moritz \n\t\t \n\t\t \n\t\t\t Volkan Graule \n\t\t \n\t\t \n\t\t\t Isler \n\t\t \n\t\t arXiv:2310.20034 \n\t\t Gg-llm: Geometrically grounding large language models for zero-shot human activity forecasting in human-aware task planning \n\t\t \n\t\t\t 2023 \n\t\t \n\t \n\t Moritz A Graule and Volkan Isler. Gg-llm: Geometrically grounding large language models for zero-shot human activity forecasting in human-aware task planning. arXiv:2310.20034, 2023."
+    },
+    {
+      "year": 2022,
+      "doi": "10.7717/peerj.19588/fig-2",
+      "raw": "Grauman \n\t\t \n\t\t 10.7717/peerj.19588/fig-2 \n\t\t \n\t\t\t 2022 \n\t\t \n\t \n\t Grauman et al., 2022]"
+    },
+    {
+      "title": "Ego4d: Around the world in 3,000 hours of egocentric video",
+      "authors": [
+        "Kristen Grauman",
+        "Andrew Westbury",
+        "Eugene Byrne",
+        "Zachary Chavis",
+        "Antonino Furnari",
+        "Rohit Girdhar",
+        "Jackson Hamburger",
+        "Hao Jiang",
+        "Miao Liu",
+        "Xingyu Liu"
+      ],
+      "year": 2022,
+      "raw": "Ego4d: Around the world in 3,000 hours of egocentric video \n\t\t \n\t\t\t Kristen Grauman \n\t\t \n\t\t \n\t\t\t Andrew Westbury \n\t\t \n\t\t \n\t\t\t Eugene Byrne \n\t\t \n\t\t \n\t\t\t Zachary Chavis \n\t\t \n\t\t \n\t\t\t Antonino Furnari \n\t\t \n\t\t \n\t\t\t Rohit Girdhar \n\t\t \n\t\t \n\t\t\t Jackson Hamburger \n\t\t \n\t\t \n\t\t\t Hao Jiang \n\t\t \n\t\t \n\t\t\t Miao Liu \n\t\t \n\t\t \n\t\t\t Xingyu Liu \n\t\t \n\t \n\t \n\t\t CVPR \n\t\t \n\t\t\t 2022 \n\t\t\t \n\t\t \n\t \n\t Kristen Grauman, Andrew Westbury, Eugene Byrne, Zachary Chavis, Antonino Furnari, Ro- hit Girdhar, Jackson Hamburger, Hao Jiang, Miao Liu, Xingyu Liu, et al. Ego4d: Around the world in 3,000 hours of egocentric video. In CVPR, pages 18995-19012, 2022."
+    },
+    {
+      "year": 2023,
+      "raw": "Gruver \n\t\t \n\t\t \n\t\t\t 2023 \n\t\t \n\t \n\t Gruver et al., 2023]"
+    },
+    {
+      "title": "Large language models are zero-shot time series forecasters",
+      "authors": [
+        "Nate Gruver",
+        "Marc Finzi",
+        "Shikai Qiu",
+        "Andrew Gordon"
+      ],
+      "year": 2023,
+      "raw": "Large language models are zero-shot time series forecasters \n\t\t \n\t\t\t Nate Gruver \n\t\t \n\t\t \n\t\t\t Marc Finzi \n\t\t \n\t\t \n\t\t\t Shikai Qiu \n\t\t \n\t\t \n\t\t\t Andrew Gordon \n\t\t \n\t\t \n\t\t\t Wilson \n\t\t \n\t\t arXiv:2310.07820 \n\t\t \n\t\t\t 2023 \n\t\t \n\t \n\t Nate Gruver, Marc Finzi, Shikai Qiu, and Andrew Gordon Wilson. Large language models are zero-shot time series forecasters. arXiv:2310.07820, 2023."
+    },
+    {
+      "year": 2022,
+      "doi": "10.1016/s1369-7021(22)00193-6",
+      "raw": "Han \n\t\t \n\t\t 10.1016/s1369-7021(22)00193-6 \n\t\t \n\t\t\t 2022 \n\t\t \n\t \n\t Han et al., 2022]"
+    },
+    {
+      "title": "An empirical exploration of cross-domain alignment between language and electroencephalogram",
+      "authors": [
+        "William Han",
+        "Jielin Qiu",
+        "Jiacheng Zhu",
+        "Mengdi Xu",
+        "Douglas Weber",
+        "Bo Li",
+        "Ding Zhao"
+      ],
+      "year": 2022,
+      "raw": "An empirical exploration of cross-domain alignment between language and electroencephalogram \n\t\t \n\t\t\t William Han \n\t\t \n\t\t \n\t\t\t Jielin Qiu \n\t\t \n\t\t \n\t\t\t Jiacheng Zhu \n\t\t \n\t\t \n\t\t\t Mengdi Xu \n\t\t \n\t\t \n\t\t\t Douglas Weber \n\t\t \n\t\t \n\t\t\t Bo Li \n\t\t \n\t\t \n\t\t\t Ding Zhao \n\t\t \n\t\t arXiv:2208.06348 \n\t\t \n\t\t\t 2022 \n\t\t \n\t \n\t William Han, Jielin Qiu, Jiacheng Zhu, Mengdi Xu, Douglas Weber, Bo Li, and Ding Zhao. An empirical exploration of cross-domain alignment between language and electroencephalogram. arXiv:2208.06348, 2022."
+    },
+    {
+      "year": 2019,
+      "doi": "10.7717/peerj.19053/fig-3",
+      "raw": "Hollenstein \n\t\t \n\t\t 10.7717/peerj.19053/fig-3 \n\t\t \n\t\t\t 2019 \n\t\t \n\t \n\t Hollenstein et al., 2019]"
+    },
+    {
+      "title": "Zuco 2.0: A dataset of physiological recordings during natural reading and annotation",
+      "authors": [
+        "Nora Hollenstein",
+        "Marius Troendle",
+        "Ce Zhang",
+        "Nicolas Langer"
+      ],
+      "year": 2019,
+      "raw": "Nora Hollenstein \n\t\t \n\t\t \n\t\t\t Marius Troendle \n\t\t \n\t\t \n\t\t\t Ce Zhang \n\t\t \n\t\t \n\t\t\t Nicolas Langer \n\t\t \n\t\t arXiv:1912.00903 \n\t\t Zuco 2.0: A dataset of physiological recordings during natural reading and annotation \n\t\t \n\t\t\t 2019 \n\t\t \n\t \n\t Nora Hollenstein, Marius Troen- dle, Ce Zhang, and Nicolas Langer. Zuco 2.0: A dataset of physiological recordings during natural reading and an- notation. arXiv:1912.00903, 2019."
+    },
+    {
+      "title": "Time-llm: Time series forecasting by reprogramming large language models",
+      "year": 2023,
+      "raw": "Time-llm: Time series forecasting by reprogramming large language models \n\t\t \n\t\t\t Jin \n\t\t \n\t\t arXiv:2310.01728 \n\t\t \n\t\t\t 2023. 2023 \n\t\t \n\t \n\t Jin et al., 2023a] Ming Jin, Shiyu Wang, Lintao Ma, Zhix- uan Chu, James Y Zhang, Xiaoming Shi, Pin-Yu Chen, Yuxuan Liang, Yuan-Fang Li, Shirui Pan, et al. Time-llm: Time series forecasting by reprogramming large language models. arXiv:2310.01728, 2023."
+    },
+    {
+      "title": "Large models for time series and spatio-temporal data: A survey and outlook",
+      "year": 2023,
+      "raw": "Large models for time series and spatio-temporal data: A survey and outlook \n\t\t \n\t\t\t Jin \n\t\t \n\t\t arXiv:2310.10196 \n\t\t \n\t\t\t 2023. 2023 \n\t\t \n\t \n\t Jin et al., 2023b] Ming Jin, Qingsong Wen, Yuxuan Liang, Chaoli Zhang, Siqiao Xue, Xue Wang, James Zhang, Yi Wang, Haifeng Chen, Xiaoli Li, et al. Large models for time series and spatio-temporal data: A survey and out- look. arXiv:2310.10196, 2023."
+    },
+    {
+      "year": 2023,
+      "raw": "King \n\t\t \n\t\t \n\t\t\t 2023 \n\t\t \n\t \n\t King et al., 2023]"
+    },
+    {
+      "title": "Multimodal pretraining of medical time series and notes",
+      "authors": [
+        "Ryan King",
+        "Tianbao Yang",
+        "Bobak Mortazavi"
+      ],
+      "year": 2023,
+      "raw": "Multimodal pretraining of medical time series and notes \n\t\t \n\t\t\t Ryan King \n\t\t \n\t\t \n\t\t\t Tianbao Yang \n\t\t \n\t\t \n\t\t\t Bobak J Mortazavi \n\t\t \n\t \n\t \n\t\t ML4H \n\t\t \n\t\t\t PMLR \n\t\t\t 2023 \n\t\t\t \n\t\t \n\t \n\t Ryan King, Tianbao Yang, and Bobak J Mortazavi. Multimodal pretraining of medical time series and notes. In ML4H, pages 244-255. PMLR, 2023."
+    },
+    {
+      "year": 2023,
+      "raw": "Lee \n\t\t \n\t\t \n\t\t\t 2023 \n\t\t \n\t \n\t Lee et al., 2023]"
+    },
+    {
+      "title": "Moat: Multi-modal augmented time series forecasting",
+      "authors": [
+        "Geon Lee",
+        "Wenchao Yu",
+        "Wei Cheng",
+        "Haifeng Chen"
+      ],
+      "year": 2023,
+      "raw": "Moat: Multi-modal augmented time series forecasting \n\t\t \n\t\t\t Geon Lee \n\t\t \n\t\t \n\t\t\t Wenchao Yu \n\t\t \n\t\t \n\t\t\t Wei Cheng \n\t\t \n\t\t \n\t\t\t Haifeng Chen \n\t\t \n\t\t \n\t\t\t 2023 \n\t\t \n\t \n\t Geon Lee, Wenchao Yu, Wei Cheng, and Haifeng Chen. Moat: Multi-modal augmented time series forecasting. 2023."
+    },
+    {
+      "title": "Generating virtual on-body accelerometer data from virtual textual descriptions for human activity recognition",
+      "year": 2023,
+      "raw": "Generating virtual on-body accelerometer data from virtual textual descriptions for human activity recognition \n\t\t \n\t\t\t Leng \n\t\t \n\t\t arXiv:2305.03187 \n\t\t \n\t\t\t 2023. 2023 \n\t\t \n\t \n\t Leng et al., 2023] Zikang Leng, Hyeokhyen Kwon, and Thomas Pl\u00f6tz. Generating virtual on-body accelerometer data from virtual textual descriptions for human activity recognition. arXiv:2305.03187, 2023."
+    },
+    {
+      "year": 2023,
+      "raw": "Li \n\t\t \n\t\t \n\t\t\t 2023 \n\t\t \n\t \n\t Li et al., 2023]"
+    },
+    {
+      "title": "Modeling time series as text sequence a frequencyvectorization transformer for time series forecasting",
+      "authors": [
+        "Junkai Li",
+        "Weizhi Ma",
+        "Yang Liu"
+      ],
+      "year": 2023,
+      "raw": "Modeling time series as text sequence a frequencyvectorization transformer for time series forecasting \n\t\t \n\t\t\t Junkai Li \n\t\t \n\t\t \n\t\t\t Weizhi Ma \n\t\t \n\t\t \n\t\t\t Yang Liu \n\t\t \n\t\t \n\t\t\t 2023 \n\t\t \n\t \n\t Junkai Li, Weizhi Ma, and Yang Liu. Modeling time series as text sequence a frequency- vectorization transformer for time series forecasting. 2023."
+    },
+    {
+      "title": "Etp: Learning transferable ecg representations via ecg-text pre-training",
+      "year": 2023,
+      "raw": "Liu \n\t\t \n\t\t arXiv:2309.07145 \n\t\t Etp: Learning transferable ecg representations via ecg-text pre-training \n\t\t \n\t\t\t 2023. 2023 \n\t\t \n\t \n\t Liu et al., 2023a] Che Liu, Zhongwei Wan, Sibo Cheng, Mi Zhang, and Rossella Arcucci. Etp: Learning transferable ecg representations via ecg-text pre-training. arXiv:2309.07145, 2023."
+    },
+    {
+      "title": "Large language models are few-shot health learners",
+      "year": 2023,
+      "raw": "Large language models are few-shot health learners \n\t\t \n\t\t\t Liu \n\t\t \n\t\t arXiv:2305.15525 \n\t\t \n\t\t\t 2023. 2023 \n\t\t \n\t \n\t Liu et al., 2023b] Xin Liu, Daniel McDuff, Geza Kovacs, Isaac Galatzer-Levy, Jacob Sunshine, Jiening Zhan, Ming- Zher Poh, Shun Liao, Paolo Di Achille, and Shwetak Pa- tel. Large language models are few-shot health learners. arXiv:2305.15525, 2023."
+    },
+    {
+      "year": 2023,
+      "raw": "Ma \n\t\t \n\t\t \n\t\t\t 2023 \n\t\t \n\t \n\t Ma et al., 2023]"
+    },
+    {
+      "title": "A survey on time-series pre-trained models",
+      "authors": [
+        "Qianli Ma",
+        "Zhen Liu",
+        "Zhenjing Zheng",
+        "Ziyang Huang",
+        "Siying Zhu",
+        "Zhongzhong Yu",
+        "James Kwok"
+      ],
+      "year": 2023,
+      "raw": "Qianli Ma \n\t\t \n\t\t \n\t\t\t Zhen Liu \n\t\t \n\t\t \n\t\t\t Zhenjing Zheng \n\t\t \n\t\t \n\t\t\t Ziyang Huang \n\t\t \n\t\t \n\t\t\t Siying Zhu \n\t\t \n\t\t \n\t\t\t Zhongzhong Yu \n\t\t \n\t\t \n\t\t\t James T Kwok \n\t\t \n\t\t arXiv:2305.10716 \n\t\t A survey on time-series pre-trained models \n\t\t \n\t\t\t 2023 \n\t\t \n\t \n\t Qianli Ma, Zhen Liu, Zhenjing Zheng, Ziyang Huang, Siying Zhu, Zhongzhong Yu, and James T Kwok. A survey on time-series pre-trained models. arXiv:2305.10716, 2023."
+    },
+    {
+      "year": 2022,
+      "raw": "Moon \n\t\t \n\t\t \n\t\t\t 2022 \n\t\t \n\t \n\t Moon et al., 2022]"
+    },
+    {
+      "title": "Imu2clip: Multimodal contrastive learning for imu motion sensors from egocentric videos and text",
+      "authors": [
+        "Seungwhan Moon",
+        "Andrea Madotto",
+        "Zhaojiang Lin",
+        "Alireza Dirafzoon",
+        "Aparajita Saraf",
+        "Amy Bearman",
+        "Babak Damavandi"
+      ],
+      "year": 2022,
+      "raw": "Imu2clip: Multimodal contrastive learning for imu motion sensors from egocentric videos and text \n\t\t \n\t\t\t Seungwhan Moon \n\t\t \n\t\t \n\t\t\t Andrea Madotto \n\t\t \n\t\t \n\t\t\t Zhaojiang Lin \n\t\t \n\t\t \n\t\t\t Alireza Dirafzoon \n\t\t \n\t\t \n\t\t\t Aparajita Saraf \n\t\t \n\t\t \n\t\t\t Amy Bearman \n\t\t \n\t\t \n\t\t\t Babak Damavandi \n\t\t \n\t\t arXiv:2210.14395 \n\t\t \n\t\t\t 2022 \n\t\t \n\t \n\t Seungwhan Moon, Andrea Madotto, Zhaojiang Lin, Alireza Dirafzoon, Aparajita Saraf, Amy Bearman, and Babak Damavandi. Imu2clip: Multimodal contrastive learning for imu motion sensors from egocen- tric videos and text. arXiv:2210.14395, 2022."
+    },
+    {
+      "year": 2023,
+      "raw": "Moon \n\t\t \n\t\t \n\t\t\t 2023 \n\t\t \n\t \n\t Moon et al., 2023]"
+    },
+    {
+      "title": "Anymal: An efficient and scalable anymodality augmented language model",
+      "authors": [
+        "Seungwhan Moon",
+        "Andrea Madotto",
+        "Zhaojiang Lin",
+        "Tushar Nagarajan",
+        "Matt Smith",
+        "Shashank Jain",
+        "Chun-Fu Yeh",
+        "Prakash Murugesan",
+        "Peyman Heidari",
+        "Yue Liu"
+      ],
+      "year": 2023,
+      "raw": "Anymal: An efficient and scalable anymodality augmented language model \n\t\t \n\t\t\t Seungwhan Moon \n\t\t \n\t\t \n\t\t\t Andrea Madotto \n\t\t \n\t\t \n\t\t\t Zhaojiang Lin \n\t\t \n\t\t \n\t\t\t Tushar Nagarajan \n\t\t \n\t\t \n\t\t\t Matt Smith \n\t\t \n\t\t \n\t\t\t Shashank Jain \n\t\t \n\t\t \n\t\t\t Chun-Fu Yeh \n\t\t \n\t\t \n\t\t\t Prakash Murugesan \n\t\t \n\t\t \n\t\t\t Peyman Heidari \n\t\t \n\t\t \n\t\t\t Yue Liu \n\t\t \n\t\t arXiv:2309.16058 \n\t\t \n\t\t\t 2023 \n\t\t \n\t \n\t Seungwhan Moon, Andrea Madotto, Zhaojiang Lin, Tushar Nagarajan, Matt Smith, Shashank Jain, Chun-Fu Yeh, Prakash Murugesan, Peyman Heidari, Yue Liu, et al. Anymal: An efficient and scalable any- modality augmented language model. arXiv:2309.16058, 2023."
+    },
+    {
+      "year": 2023,
+      "doi": "10.7717/peerj.18888/fig-2",
+      "raw": "Oh \n\t\t \n\t\t 10.7717/peerj.18888/fig-2 \n\t\t \n\t\t\t 2023 \n\t\t \n\t \n\t Oh et al., 2023]"
+    },
+    {
+      "title": "Ecg-qa: A comprehensive question answering dataset combined with electrocardiogram",
+      "authors": [
+        "Jungwoo Oh",
+        "Seongsu Bae",
+        "Gyubok Lee",
+        "Joon-Myoung Kwon",
+        "Edward Choi"
+      ],
+      "year": 2023,
+      "raw": "Jungwoo Oh \n\t\t \n\t\t \n\t\t\t Seongsu Bae \n\t\t \n\t\t \n\t\t\t Gyubok Lee \n\t\t \n\t\t \n\t\t\t Joon-Myoung Kwon \n\t\t \n\t\t \n\t\t\t Edward Choi \n\t\t \n\t\t arXiv:2306.15681 \n\t\t Ecg-qa: A comprehensive question answering dataset combined with electrocardiogram \n\t\t \n\t\t\t 2023 \n\t\t \n\t \n\t Jungwoo Oh, Seongsu Bae, Gyubok Lee, Joon-myoung Kwon, and Edward Choi. Ecg-qa: A comprehensive question answering dataset combined with electrocardiogram. arXiv:2306.15681, 2023."
+    },
+    {
+      "year": 2023,
+      "raw": "Qin \n\t\t \n\t\t \n\t\t\t 2023 \n\t\t \n\t \n\t Qin et al., 2023]"
+    },
+    {
+      "title": "Toolllm: Facilitating large language models to master 16000+ real-world apis",
+      "authors": [
+        "Yujia Qin",
+        "Shihao Liang",
+        "Yining Ye",
+        "Kunlun Zhu",
+        "Lan Yan",
+        "Yaxi Lu",
+        "Yankai Lin",
+        "Xin Cong",
+        "Xiangru Tang",
+        "Bill Qian"
+      ],
+      "year": 2023,
+      "raw": "Toolllm: Facilitating large language models to master 16000+ real-world apis \n\t\t \n\t\t\t Yujia Qin \n\t\t \n\t\t \n\t\t\t Shihao Liang \n\t\t \n\t\t \n\t\t\t Yining Ye \n\t\t \n\t\t \n\t\t\t Kunlun Zhu \n\t\t \n\t\t \n\t\t\t Lan Yan \n\t\t \n\t\t \n\t\t\t Yaxi Lu \n\t\t \n\t\t \n\t\t\t Yankai Lin \n\t\t \n\t\t \n\t\t\t Xin Cong \n\t\t \n\t\t \n\t\t\t Xiangru Tang \n\t\t \n\t\t \n\t\t\t Bill Qian \n\t\t \n\t\t arXiv:2307.16789 \n\t\t \n\t\t\t 2023 \n\t\t \n\t \n\t Yujia Qin, Shihao Liang, Yining Ye, Kun- lun Zhu, Lan Yan, Yaxi Lu, Yankai Lin, Xin Cong, Xiangru Tang, Bill Qian, et al. Toolllm: Facilitating large language models to master 16000+ real-world apis. arXiv:2307.16789, 2023."
+    },
+    {
+      "year": 2023,
+      "doi": "10.5194/gmd-2018-256-rc2",
+      "raw": "Qiu \n\t\t \n\t\t 10.5194/gmd-2018-256-rc2 \n\t\t \n\t\t\t 2023 \n\t\t \n\t \n\t Qiu et al., 2023]"
+    },
+    {
+      "title": "Transfer knowledge from natural language to electrocardiography: Can we detect cardiovascular disease through language models?",
+      "authors": [
+        "Jielin Qiu",
+        "William Han",
+        "Jiacheng Zhu",
+        "Mengdi Xu",
+        "Michael Rosenberg",
+        "Emerson Liu",
+        "Douglas Weber",
+        "Ding Zhao"
+      ],
+      "year": 2023,
+      "raw": "Transfer knowledge from natural language to electrocardiography: Can we detect cardiovascular disease through language models? \n\t\t \n\t\t\t Jielin Qiu \n\t\t \n\t\t \n\t\t\t William Han \n\t\t \n\t\t \n\t\t\t Jiacheng Zhu \n\t\t \n\t\t \n\t\t\t Mengdi Xu \n\t\t \n\t\t \n\t\t\t Michael Rosenberg \n\t\t \n\t\t \n\t\t\t Emerson Liu \n\t\t \n\t\t \n\t\t\t Douglas Weber \n\t\t \n\t\t \n\t\t\t Ding Zhao \n\t\t \n\t\t arXiv:2301.09017 \n\t\t \n\t\t\t 2023 \n\t\t \n\t \n\t Jielin Qiu, William Han, Jiacheng Zhu, Mengdi Xu, Michael Rosenberg, Emerson Liu, Dou- glas Weber, and Ding Zhao. Transfer knowledge from natural language to electrocardiography: Can we de- tect cardiovascular disease through language models? arXiv:2301.09017, 2023."
+    },
+    {
+      "year": 2023,
+      "doi": "10.7717/peerj-cs.2869/table-1",
+      "raw": "Rubenstein \n\t\t \n\t\t 10.7717/peerj-cs.2869/table-1 \n\t\t \n\t\t\t 2023 \n\t\t \n\t \n\t Rubenstein et al., 2023]"
+    },
+    {
+      "title": "Audiopalm: A large language model that can speak and listen",
+      "authors": [
+        "Chulayuth Paul K Rubenstein",
+        "Dung Duc",
+        "Ankur Nguyen",
+        "Zal\u00e1n Bapna",
+        "F\u00e9lix Borsos",
+        "Peter Quitry",
+        "Dalia Chen",
+        "Wei Badawy",
+        "Eugene Han"
+      ],
+      "year": 2023,
+      "raw": "Audiopalm: A large language model that can speak and listen \n\t\t \n\t\t\t Chulayuth Paul K Rubenstein \n\t\t \n\t\t \n\t\t\t Asawaroengchai \n\t\t \n\t\t \n\t\t\t Dung Duc \n\t\t \n\t\t \n\t\t\t Ankur Nguyen \n\t\t \n\t\t \n\t\t\t Zal\u00e1n Bapna \n\t\t \n\t\t \n\t\t\t F\u00e9lix Borsos \n\t\t \n\t\t \n\t\t\t De Chaumont \n\t\t \n\t\t \n\t\t\t Peter Quitry \n\t\t \n\t\t \n\t\t\t Dalia El Chen \n\t\t \n\t\t \n\t\t\t Wei Badawy \n\t\t \n\t\t \n\t\t\t Eugene Han \n\t\t \n\t\t \n\t\t\t Kharitonov \n\t\t \n\t\t arXiv:2306.12925 \n\t\t \n\t\t\t 2023 \n\t\t \n\t \n\t Paul K Rubenstein, Chulayuth Asawaroengchai, Duc Dung Nguyen, Ankur Bapna, Zal\u00e1n Borsos, F\u00e9lix de Chaumont Quitry, Peter Chen, Dalia El Badawy, Wei Han, Eugene Kharitonov, et al. Au- diopalm: A large language model that can speak and listen. arXiv:2306.12925, 2023."
+    },
+    {
+      "year": 2023,
+      "raw": "Su \n\t\t \n\t\t \n\t\t\t 2023 \n\t\t \n\t \n\t Su et al., 2023]"
+    },
+    {
+      "title": "Pandagpt: One model to instruction-follow them all",
+      "authors": [
+        "Yixuan Su",
+        "Tian Lan",
+        "Huayang Li",
+        "Jialu Xu",
+        "Yan Wang",
+        "Deng Cai"
+      ],
+      "year": 2023,
+      "raw": "Pandagpt: One model to instruction-follow them all \n\t\t \n\t\t\t Yixuan Su \n\t\t \n\t\t \n\t\t\t Tian Lan \n\t\t \n\t\t \n\t\t\t Huayang Li \n\t\t \n\t\t \n\t\t\t Jialu Xu \n\t\t \n\t\t \n\t\t\t Yan Wang \n\t\t \n\t\t \n\t\t\t Deng Cai \n\t\t \n\t\t arXiv:2305.16355 \n\t\t \n\t\t\t 2023 \n\t\t \n\t \n\t Yixuan Su, Tian Lan, Huayang Li, Jialu Xu, Yan Wang, and Deng Cai. Pandagpt: One model to instruction-follow them all. arXiv:2305.16355, 2023."
+    },
+    {
+      "year": 2023,
+      "doi": "10.7717/peerj.19824/fig-8",
+      "raw": "Sun \n\t\t \n\t\t 10.7717/peerj.19824/fig-8 \n\t\t \n\t\t\t 2023 \n\t\t \n\t \n\t Sun et al., 2023]"
+    },
+    {
+      "title": "Test: Text prototype aligned embedding to activate llm's ability for time series",
+      "authors": [
+        "Chenxi Sun",
+        "Yaliang Li",
+        "Hongyan Li",
+        "Shenda Hong"
+      ],
+      "year": 2023,
+      "doi": "10.2139/ssrn.4460608",
+      "raw": "Chenxi Sun \n\t\t \n\t\t \n\t\t\t Yaliang Li \n\t\t \n\t\t \n\t\t\t Hongyan Li \n\t\t \n\t\t \n\t\t\t Shenda Hong \n\t\t \n\t\t 10.2139/ssrn.4460608 \n\t\t arXiv:2308.08241 \n\t\t Test: Text prototype aligned embedding to activate llm's ability for time series \n\t\t \n\t\t\t 2023 \n\t\t \n\t \n\t Chenxi Sun, Yaliang Li, Hongyan Li, and Shenda Hong. Test: Text prototype aligned embedding to activate llm's ability for time series. arXiv:2308.08241, 2023."
+    },
+    {
+      "authors": [
+        "Gkioxari Talukder"
+      ],
+      "year": 2023,
+      "raw": "Gkioxari Talukder \n\t\t \n\t\t \n\t\t\t 2023 \n\t\t \n\t \n\t Talukder and Gkioxari, 2023]"
+    },
+    {
+      "title": "Time series modeling at scale: A universal representation across tasks and domains",
+      "authors": [
+        "J Sabera",
+        "Georgia Talukder"
+      ],
+      "year": 2023,
+      "raw": "Time series modeling at scale: A universal representation across tasks and domains \n\t\t \n\t\t\t J Sabera \n\t\t \n\t\t \n\t\t\t Georgia Talukder \n\t\t \n\t\t \n\t\t\t Gkioxari \n\t\t \n\t\t \n\t\t\t 2023 \n\t\t \n\t \n\t Sabera J Talukder and Geor- gia Gkioxari. Time series modeling at scale: A universal representation across tasks and domains. 2023."
+    },
+    {
+      "year": 2023,
+      "doi": "10.5194/bg-2016-113-ac3",
+      "raw": "Tang \n\t\t \n\t\t 10.5194/bg-2016-113-ac3 \n\t\t \n\t\t\t 2023 \n\t\t \n\t \n\t Tang et al., 2023]"
+    },
+    {
+      "title": "Salmonn: Towards generic hearing abilities for large language models",
+      "authors": [
+        "Changli Tang",
+        "Wenyi Yu",
+        "Guangzhi Sun",
+        "Xianzhao Chen",
+        "Tian Tan",
+        "Wei Li",
+        "Lu Lu",
+        "Zejun Ma",
+        "Chao Zhang"
+      ],
+      "year": 2023,
+      "raw": "Salmonn: Towards generic hearing abilities for large language models \n\t\t \n\t\t\t Changli Tang \n\t\t \n\t\t \n\t\t\t Wenyi Yu \n\t\t \n\t\t \n\t\t\t Guangzhi Sun \n\t\t \n\t\t \n\t\t\t Xianzhao Chen \n\t\t \n\t\t \n\t\t\t Tian Tan \n\t\t \n\t\t \n\t\t\t Wei Li \n\t\t \n\t\t \n\t\t\t Lu Lu \n\t\t \n\t\t \n\t\t\t Zejun Ma \n\t\t \n\t\t \n\t\t\t Chao Zhang \n\t\t \n\t\t arXiv:2310.13289 \n\t\t \n\t\t\t 2023 \n\t\t \n\t \n\t Changli Tang, Wenyi Yu, Guangzhi Sun, Xianzhao Chen, Tian Tan, Wei Li, Lu Lu, Zejun Ma, and Chao Zhang. Salmonn: Towards generic hearing abilities for large language models. arXiv:2310.13289, 2023."
+    },
+    {
+      "year": 2020,
+      "raw": "Wagner \n\t\t \n\t\t \n\t\t\t 2020 \n\t\t \n\t \n\t Wagner et al., 2020]"
+    },
+    {
+      "title": "Ptb-xl, a large publicly available electrocardiography dataset",
+      "authors": [
+        "Patrick Wagner",
+        "Nils Strodthoff",
+        "Ralf-Dieter Bousseljot",
+        "Dieter Kreiseler",
+        "Fatima Lunze",
+        "Wojciech Samek",
+        "Tobias Schaeffter"
+      ],
+      "year": 2020,
+      "journal": "Scientific data",
+      "volume": "7",
+      "issue": "1",
+      "pages": "154",
+      "raw": "Ptb-xl, a large publicly available electrocardiography dataset \n\t\t \n\t\t\t Patrick Wagner \n\t\t \n\t\t \n\t\t\t Nils Strodthoff \n\t\t \n\t\t \n\t\t\t Ralf-Dieter Bousseljot \n\t\t \n\t\t \n\t\t\t Dieter Kreiseler \n\t\t \n\t\t \n\t\t\t Fatima I Lunze \n\t\t \n\t\t \n\t\t\t Wojciech Samek \n\t\t \n\t\t \n\t\t\t Tobias Schaeffter \n\t\t \n\t \n\t \n\t\t Scientific data \n\t\t \n\t\t\t 7 \n\t\t\t 1 \n\t\t\t 154 \n\t\t\t 2020 \n\t\t \n\t \n\t Patrick Wagner, Nils Strodthoff, Ralf- Dieter Bousseljot, Dieter Kreiseler, Fatima I Lunze, Woj- ciech Samek, and Tobias Schaeffter. Ptb-xl, a large pub- licly available electrocardiography dataset. Scientific data, 7(1):154, 2020."
+    },
+    {
+      "title": "Open vocabulary electroencephalography-to-text decoding and zero-shot sentiment classification",
+      "authors": [
+        "Zhenhailong Wang",
+        "Heng Ji"
+      ],
+      "year": 2022,
+      "raw": "Open vocabulary electroencephalography-to-text decoding and zero-shot sentiment classification \n\t\t \n\t\t\t Wang \n\t\t \n\t\t \n\t\t\t Ji ; \n\t\t \n\t\t \n\t\t\t Zhenhailong Wang \n\t\t \n\t\t \n\t\t\t Heng Ji \n\t\t \n\t \n\t \n\t\t AAAI \n\t\t \n\t\t\t 2022. 2022 \n\t\t \n\t \n\t Wang and Ji, 2022] Zhenhailong Wang and Heng Ji. Open vocabulary electroencephalography-to-text decoding and zero-shot sentiment classification. In AAAI, 2022."
+    },
+    {
+      "authors": [
+        "Rekabsaz Wimmer"
+      ],
+      "year": 2023,
+      "raw": "Rekabsaz Wimmer \n\t\t \n\t\t \n\t\t\t 2023 \n\t\t \n\t \n\t Wimmer and Rekabsaz, 2023]"
+    },
+    {
+      "title": "Leveraging vision-language models for granular market change prediction",
+      "authors": [
+        "Christopher Wimmer",
+        "Navid Rekabsaz"
+      ],
+      "year": 2023,
+      "raw": "Leveraging vision-language models for granular market change prediction \n\t\t \n\t\t\t Christopher Wimmer \n\t\t \n\t\t \n\t\t\t Navid Rekabsaz \n\t\t \n\t\t arXiv:2301.10166 \n\t\t \n\t\t\t 2023 \n\t\t \n\t \n\t Christopher Wimmer and Navid Rekabsaz. Leveraging vision-language models for granular market change prediction. arXiv:2301.10166, 2023."
+    },
+    {
+      "year": 2023,
+      "doi": "10.5194/gmd-2017-220-rc2",
+      "raw": "Wu \n\t\t \n\t\t 10.5194/gmd-2017-220-rc2 \n\t\t \n\t\t\t 2023 \n\t\t \n\t \n\t Wu et al., 2023]"
+    },
+    {
+      "title": "Bloomberggpt: A large language model for finance",
+      "authors": [
+        "Shijie Wu",
+        "Ozan Irsoy",
+        "Steven Lu",
+        "Vadim Dabravolski",
+        "Mark Dredze",
+        "Sebastian Gehrmann",
+        "Prabhanjan Kambadur",
+        "David Rosenberg",
+        "Gideon Mann"
+      ],
+      "year": 2023,
+      "raw": "Bloomberggpt: A large language model for finance \n\t\t \n\t\t\t Shijie Wu \n\t\t \n\t\t \n\t\t\t Ozan Irsoy \n\t\t \n\t\t \n\t\t\t Steven Lu \n\t\t \n\t\t \n\t\t\t Vadim Dabravolski \n\t\t \n\t\t \n\t\t\t Mark Dredze \n\t\t \n\t\t \n\t\t\t Sebastian Gehrmann \n\t\t \n\t\t \n\t\t\t Prabhanjan Kambadur \n\t\t \n\t\t \n\t\t\t David Rosenberg \n\t\t \n\t\t \n\t\t\t Gideon Mann \n\t\t \n\t\t arXiv:2303.17564 \n\t\t \n\t\t\t 2023 \n\t\t \n\t \n\t Shijie Wu, Ozan Irsoy, Steven Lu, Vadim Dabravolski, Mark Dredze, Sebastian Gehrmann, Prab- hanjan Kambadur, David Rosenberg, and Gideon Mann. Bloomberggpt: A large language model for finance. arXiv:2303.17564, 2023."
+    },
+    {
+      "title": "The wall street neophyte: A zero-shot analysis of chatgpt over multimodal stock movement prediction challenges",
+      "year": 2023,
+      "raw": "The wall street neophyte: A zero-shot analysis of chatgpt over multimodal stock movement prediction challenges \n\t\t \n\t\t\t Xie \n\t\t \n\t\t arXiv:2304.05351 \n\t\t \n\t\t\t 2023. 2023 \n\t\t \n\t \n\t Xie et al., 2023a] Qianqian Xie, Weiguang Han, Yanzhao Lai, Min Peng, and Jimin Huang. The wall street neo- phyte: A zero-shot analysis of chatgpt over multimodal stock movement prediction challenges. arXiv:2304.05351, 2023."
+    },
+    {
+      "title": "Pixiu: A large language model, instruction data and evaluation benchmark for finance",
+      "year": 2023,
+      "raw": "Pixiu: A large language model, instruction data and evaluation benchmark for finance \n\t\t \n\t\t\t Xie \n\t\t \n\t\t arXiv:2306.05443 \n\t\t \n\t\t\t 2023. 2023 \n\t\t \n\t \n\t Xie et al., 2023b] Qianqian Xie, Weiguang Han, Xiao Zhang, Yanzhao Lai, Min Peng, Alejandro Lopez-Lira, and Jimin Huang. Pixiu: A large language model, instruction data and evaluation benchmark for finance. arXiv:2306.05443, 2023."
+    },
+    {
+      "year": 2021,
+      "raw": "Xing \n\t\t \n\t\t \n\t\t\t 2021 \n\t\t \n\t \n\t Xing et al., 2021]"
+    },
+    {
+      "title": "Deepsqa: Understanding sensor data via question answering",
+      "authors": [
+        "Tianwei Xing",
+        "Luis Garcia",
+        "Federico Cerutti",
+        "Lance Kaplan",
+        "Alun Preece",
+        "Mani Srivastava"
+      ],
+      "year": 2021,
+      "raw": "Deepsqa: Understanding sensor data via question answering \n\t\t \n\t\t\t Tianwei Xing \n\t\t \n\t\t \n\t\t\t Luis Garcia \n\t\t \n\t\t \n\t\t\t Federico Cerutti \n\t\t \n\t\t \n\t\t\t Lance Kaplan \n\t\t \n\t\t \n\t\t\t Alun Preece \n\t\t \n\t\t \n\t\t\t Mani Srivastava \n\t\t \n\t \n\t \n\t\t IoTDI \n\t\t \n\t\t\t 2021 \n\t\t \n\t \n\t Tianwei Xing, Luis Garcia, Federico Cerutti, Lance Kaplan, Alun Preece, and Mani Srivastava. Deepsqa: Understanding sensor data via question answer- ing. In IoTDI, 2021."
+    },
+    {
+      "authors": [
+        "Salim Xue"
+      ],
+      "year": 2022,
+      "raw": "Salim Xue \n\t\t \n\t\t \n\t\t\t 2022 \n\t\t \n\t \n\t Xue and Salim, 2022]"
+    },
+    {
+      "title": "Promptcast: A new prompt-based learning paradigm for time series forecasting",
+      "authors": [
+        "Hao Xue",
+        "Flora Salim"
+      ],
+      "year": 2022,
+      "raw": "Promptcast: A new prompt-based learning paradigm for time series forecasting \n\t\t \n\t\t\t Hao Xue \n\t\t \n\t\t \n\t\t\t Flora D Salim \n\t\t \n\t\t \n\t\t\t 2022 \n\t\t \n\t \n\t Hao Xue and Flora D Salim. Prompt- cast: A new prompt-based learning paradigm for time se- ries forecasting. 2022."
+    },
+    {
+      "year": 2023,
+      "raw": "Yang \n\t\t \n\t\t \n\t\t\t 2023 \n\t\t \n\t \n\t Yang et al., 2023]"
+    },
+    {
+      "title": "Uniaudio: An audio foundation model toward universal audio generation",
+      "authors": [
+        "Dongchao Yang",
+        "Jinchuan Tian",
+        "Xu Tan",
+        "Rongjie Huang",
+        "Songxiang Liu",
+        "Xuankai Chang",
+        "Jiatong Shi",
+        "Sheng Zhao",
+        "Jiang Bian",
+        "Xixin Wu"
+      ],
+      "year": 2023,
+      "raw": "Uniaudio: An audio foundation model toward universal audio generation \n\t\t \n\t\t\t Dongchao Yang \n\t\t \n\t\t \n\t\t\t Jinchuan Tian \n\t\t \n\t\t \n\t\t\t Xu Tan \n\t\t \n\t\t \n\t\t\t Rongjie Huang \n\t\t \n\t\t \n\t\t\t Songxiang Liu \n\t\t \n\t\t \n\t\t\t Xuankai Chang \n\t\t \n\t\t \n\t\t\t Jiatong Shi \n\t\t \n\t\t \n\t\t\t Sheng Zhao \n\t\t \n\t\t \n\t\t\t Jiang Bian \n\t\t \n\t\t \n\t\t\t Xixin Wu \n\t\t \n\t\t arXiv:2310.00704 \n\t\t \n\t\t\t 2023 \n\t\t \n\t \n\t Dongchao Yang, Jinchuan Tian, Xu Tan, Rongjie Huang, Songxiang Liu, Xuankai Chang, Jiatong Shi, Sheng Zhao, Jiang Bian, Xixin Wu, et al. Uniaudio: An audio foundation model toward universal audio gener- ation. arXiv:2310.00704, 2023."
+    },
+    {
+      "year": 2023,
+      "raw": "Yu \n\t\t \n\t\t \n\t\t\t 2023 \n\t\t \n\t \n\t Yu et al., 2023]"
+    },
+    {
+      "title": "Temporal data meets llm-explainable financial time series forecasting",
+      "authors": [
+        "Xinli Yu",
+        "Zheng Chen",
+        "Yuan Ling",
+        "Shujing Dong",
+        "Zongyi Liu",
+        "Yanbin Lu"
+      ],
+      "year": 2023,
+      "raw": "Temporal data meets llm-explainable financial time series forecasting \n\t\t \n\t\t\t Xinli Yu \n\t\t \n\t\t \n\t\t\t Zheng Chen \n\t\t \n\t\t \n\t\t\t Yuan Ling \n\t\t \n\t\t \n\t\t\t Shujing Dong \n\t\t \n\t\t \n\t\t\t Zongyi Liu \n\t\t \n\t\t \n\t\t\t Yanbin Lu \n\t\t \n\t\t arXiv:2306.11025 \n\t\t \n\t\t\t 2023 \n\t\t \n\t \n\t Xinli Yu, Zheng Chen, Yuan Ling, Shu- jing Dong, Zongyi Liu, and Yanbin Lu. Temporal data meets llm-explainable financial time series forecasting. arXiv:2306.11025, 2023."
+    },
+    {
+      "year": 2019,
+      "raw": "Yun \n\t\t \n\t\t \n\t\t\t 2019 \n\t\t \n\t \n\t Yun et al., 2019]"
+    },
+    {
+      "title": "Are transformers universal approximators of sequence-to-sequence functions?",
+      "authors": [
+        "Chulhee Yun",
+        "Srinadh Bhojanapalli",
+        "Ankit Singh Rawat",
+        "Sashank Reddi",
+        "Sanjiv Kumar"
+      ],
+      "year": 2019,
+      "raw": "Are transformers universal approximators of sequence-to-sequence functions? \n\t\t \n\t\t\t Chulhee Yun \n\t\t \n\t\t \n\t\t\t Srinadh Bhojanapalli \n\t\t \n\t\t \n\t\t\t Ankit Singh Rawat \n\t\t \n\t\t \n\t\t\t Sashank J Reddi \n\t\t \n\t\t \n\t\t\t Sanjiv Kumar \n\t\t \n\t\t arXiv:1912.10077 \n\t\t \n\t\t\t 2019 \n\t\t \n\t \n\t Chulhee Yun, Srinadh Bhojanapalli, Ankit Singh Rawat, Sashank J Reddi, and Sanjiv Ku- mar. Are transformers universal approximators of sequence-to-sequence functions? arXiv:1912.10077, 2019."
+    },
+    {
+      "title": "Unleashing the power of shared label structures for human activity recognition",
+      "year": 2023,
+      "doi": "10.1145/3583780.3615101",
+      "raw": "Unleashing the power of shared label structures for human activity recognition \n\t\t \n\t\t\t Zhang \n\t\t \n\t\t 10.1145/3583780.3615101 \n\t \n\t \n\t\t CIKM \n\t\t \n\t\t\t 2023. 2023 \n\t\t\t \n\t\t \n\t \n\t Zhang et al., 2023a] Xiyuan Zhang, Ranak Roy Chowd- hury, Jiayun Zhang, Dezhi Hong, Rajesh K Gupta, and Jingbo Shang. Unleashing the power of shared label struc- tures for human activity recognition. In CIKM, pages 3340-3350, 2023."
+    },
+    {
+      "title": "Insight miner: A time series analysis dataset for crossdomain alignment with natural language",
+      "year": 2023,
+      "doi": "10.7717/peerj.19814/fig-2",
+      "raw": "Insight miner: A time series analysis dataset for crossdomain alignment with natural language \n\t\t \n\t\t\t Zhang \n\t\t \n\t\t 10.7717/peerj.19814/fig-2 \n\t \n\t \n\t\t NeurIPS AI4Science \n\t\t \n\t\t\t 2023. 2023 \n\t\t \n\t \n\t Zhang et al., 2023b] Yunkai Zhang, Yawen Zhang, Ming Zheng, Kezhen Chen, Chongyang Gao, Ruian Ge, Siyuan Teng, Amine Jelloul, Jinmeng Rao, Xiaoyuan Guo, et al. Insight miner: A time series analysis dataset for cross- domain alignment with natural language. In NeurIPS AI4Science, 2023."
+    },
+    {
+      "year": 2023,
+      "raw": "Zhong \n\t\t \n\t\t \n\t\t\t 2023 \n\t\t \n\t \n\t Zhong et al., 2023]"
+    },
+    {
+      "title": "Language-guided traffic simulation via scene-level diffusion",
+      "authors": [
+        "Ziyuan Zhong",
+        "Davis Rempe",
+        "Yuxiao Chen",
+        "Boris Ivanovic",
+        "Yulong Cao",
+        "Danfei Xu",
+        "Marco Pavone",
+        "Baishakhi Ray"
+      ],
+      "year": 2023,
+      "doi": "10.1109/icra48891.2023.10161463",
+      "raw": "Ziyuan Zhong \n\t\t \n\t\t \n\t\t\t Davis Rempe \n\t\t \n\t\t \n\t\t\t Yuxiao Chen \n\t\t \n\t\t \n\t\t\t Boris Ivanovic \n\t\t \n\t\t \n\t\t\t Yulong Cao \n\t\t \n\t\t \n\t\t\t Danfei Xu \n\t\t \n\t\t \n\t\t\t Marco Pavone \n\t\t \n\t\t \n\t\t\t Baishakhi Ray \n\t\t \n\t\t 10.1109/icra48891.2023.10161463 \n\t\t arXiv:2306.06344 \n\t\t Language-guided traffic simulation via scene-level diffusion \n\t\t \n\t\t\t 2023 \n\t\t \n\t \n\t Ziyuan Zhong, Davis Rempe, Yuxiao Chen, Boris Ivanovic, Yulong Cao, Danfei Xu, Marco Pavone, and Baishakhi Ray. Language-guided traffic sim- ulation via scene-level diffusion. arXiv:2306.06344, 2023."
+    },
+    {
+      "title": "One fits all: Power general time series analysis by pretrained lm",
+      "year": 2023,
+      "raw": "One fits all: Power general time series analysis by pretrained lm \n\t\t \n\t\t\t Zhou \n\t\t \n\t\t arXiv:2302.11939 \n\t\t \n\t\t\t 2023. 2023 \n\t\t \n\t \n\t Zhou et al., 2023a] Tian Zhou, Peisong Niu, Xue Wang, Liang Sun, and Rong Jin. One fits all: Power general time series analysis by pretrained lm. arXiv:2302.11939, 2023."
+    },
+    {
+      "title": "Tent: Connect language models with iot sensors for zero-shot activity recognition",
+      "year": 2023,
+      "raw": "Tent: Connect language models with iot sensors for zero-shot activity recognition \n\t\t \n\t\t\t Zhou \n\t\t \n\t\t arXiv:2311.08245 \n\t\t \n\t\t\t 2023. 2023 \n\t\t \n\t \n\t Zhou et al., 2023b] Yunjiao Zhou, Jianfei Yang, Han Zou, and Lihua Xie. Tent: Connect language mod- els with iot sensors for zero-shot activity recognition. arXiv:2311.08245, 2023."
+    }
+  ],
+  "num_references": 88,
+  "figures": [
+    {
+      "caption": "Figure 1 :",
+      "description": "Figure1: Large language models have recently been applied for various time series tasks in diverse application domains."
+    },
+    {
+      "caption": "Figure 2 :",
+      "description": "Figure 2: Left: Taxonomy of LLMs for time series analysis (prompting, quantization, aligning which is further categorized into two groups as detailed in Figure 4, vision as bridge, tool integration). For each category, key distinctions are drawn in comparison to the standard LLM pipeline shown at the top of the figure. Right: We present representative works for each category, sorted by their publication dates. The use of arrows indicates that later works build upon earlier studies. Dark(light)-colored boxes represent billion(million)-parameter models. Icons to the left of the text boxes represent the application domains of domain-specific models, with icons' meanings illustrated in Figure 1."
+    },
+    {
+      "caption": "Figure 4 :",
+      "description": "Figure 4: Two types of aligning based methods."
+    },
+    {
+      "type": "table",
+      "caption": "Table 1 :",
+      "description": "generates IMU data from ChatGPT-augmented text descriptions.It first generates 3D human motion from text using pretrained motion synthesis model, and derives IMU data from 3D motion based on physics relationships of motion kinetics.Summary of five major categories of applying LLMs for time series analysis, including their respective subcategories, representative works, mathematical formulations, advantages and limitations. q and xv represent text-based quantization process and image data."
+    },
+    {
+      "type": "table",
+      "caption": "Table 2 :",
+      "description": "Summary of representative time series and text multimodal datasets."
+    }
+  ],
+  "num_figures": 5,
+  "tables": [
+    {
+      "content": "Method Subcategory Representative Works Equations Advantages Limitations Prompting Number-Agnostic PromptCast [Xue and Salim, 2022] Number-Specific LLMTime [Gruver et al., 2023] y = f \u03b8 (xs, xt) easy to implement; lose semantics; zero-shot capability not efficient VQ-VAE DeWave [Duan et al., 2023] ki = arg minj \u2225g \u03d5 (xs)i -cj\u22252 flexibility of may require Quantization K-Means AudioPaLM [Rubenstein et al., 2023] k = [ki] T S i=1 , y = f \u03b8 (k, xt) index and time two-stage Text Categories TDML [Yu et al., 2023] y = f \u03b8 (q(xs), xt) series conversion training Aligning Similarity Match ETP [Liu et al., 2023a] MATM [Han et al., 2022] y = g \u03d5 (xs) L = sim(g \u03d5 (xs), f \u03b8 (xt)) align semantics of different modalities; complicated design and LLM Backbone GPT4TS [Zhou et al., 2023a] y = f \u03b8 (g \u03d5 (xs), xt) end-to-end training fine-tuning Vision as Paired Data ImageBind [Girdhar et al., 2023] L = sim(g \u03d5 (xs), h \u03c8 (xv)) additional visual not hold Bridge TS Plots [Wimmer and Rekabsaz, 2023] y = h \u03c8 (xs) knowledge for all data Tool Code API CTG++ [Zhong et al., 2023] ToolLLM [Qin et al., 2023] z = f \u03b8 (xt) y = z(xs) empower LLM with more abilities not end-to-end optimization"
+    },
+    {
+      "content": "Domain Dataset Size Major Modalities Task IoT Ego4D 2 [Grauman et al., 2022] DeepSQA 3 [Xing et al., 2021] 3, 670h data, 3.85M narrations text, IMU, video, audio, 3D classification, forecasting 25h data, 91K questions text, imu classification, QA Finance PIXIU 4 [Xie et al., 2023b] MoAT 5 [Lee et al., 2023] 136K instruction data 6 datasets, 2K timesteps text, tables text, time series 5 NLP tasks, forecasting forecasting Zuco 2.0 6 [Hollenstein et al., 2019] 739 sentences text, eye-tracking, EEG classification, text generation Healthcare PTB-XL 7 [Wagner et al., 2020] 60h data, 71 unique statements text, ECG classification ECG-QA 8 [Oh et al., 2023] 70 question templates text, ECG classification, QA Audio OpenAQA-5M 9 [Gong et al., 2023] 5.6M (audio, QA) tuples text, audio tagging, classification Music MusicCaps 10 [Agostinelli et al., 2023] 5.5K music clips text, music captioning, generation Speech CommonVoice 11 [Ardila et al., 2019] 7, 335h in 60 languages text, speech ASR, translation"
+    }
+  ],
+  "num_tables": 2,
+  "formulas": [
+    {
+      "text": "C = {c i } K i=1 of K D-dimensional codewords c i \u2208 R D"
+    },
+    {
+      "text": "q i = c ki , k i = arg min j \u2225g \u03d5 (x s ) i -c j \u2225 2 , k = [k i ] T S i=1 . (1)"
+    },
+    {
+      "text": "L = - 1 B B i=1 log exp(sim(g \u03d5 (x si ), f \u03b8 (x ti ))) 1 \u03b3 B k=1 exp(sim(g \u03d5 (x si ), f \u03b8 (x tk ))) 1 \u03b3 ,"
+    },
+    {
+      "text": "sim(g \u03d5 (x si ), f \u03b8 (x ti )) = \u27e8g \u03d5 (x si ), f \u03b8 (x ti )\u27e9."
+    }
+  ],
+  "num_formulas": 4,
+  "num_citations": 55,
+  "cited_references": [
+    "b57",
+    "b65",
+    "b72",
+    "b41",
+    "b18",
+    "b49",
+    "b2",
+    "b14",
+    "b36",
+    "b59",
+    "b74",
+    "b43",
+    "b51",
+    "b66",
+    "b47",
+    "b68",
+    "b78",
+    "b61",
+    "b16",
+    "b37",
+    "b32",
+    "b28",
+    "b45",
+    "b10",
+    "b24",
+    "b84",
+    "b4",
+    "b55",
+    "b8",
+    "b53",
+    "b22",
+    "b63",
+    "b80",
+    "b34",
+    "b6",
+    "b0",
+    "b76",
+    "b26"
+  ],
+  "notes": [
+    "[raw_affiliation] University of California , San Diego",
+    "[raw_affiliation] University of California , San Diego",
+    "[raw_affiliation] University of California , San Diego",
+    "[raw_affiliation] University of California , San Diego",
+    "Proceedings of the Thirty-Third International Joint Conference on Artificial Intelligence Survey Track",
+    "https://ego4d-data.org/",
+    "https://github.com/nesl/DeepSQA",
+    "https://github.com/chancefocus/PIXIU",
+    "https://openreview.net/pdf?id=uRXxnoqDHH",
+    "https://osf.io/2urht/",
+    "https://physionet.org/content/ptb-xl/1.0.3/",
+    "https://github.com/Jwoo5/ecg-qa",
+    "https://github.com/YuanGongND/ltu",
+    "https://www.kaggle.com/datasets/googleai/musiccaps",
+    "https://commonvoice.mozilla.org/en/datasets",
+    "https://github.com/xiyuanzh/awesome-llm-time-series",
+    "[raw_reference] Agostinelli et al., 2023]",
+    "[raw_reference] Andrea Agostinelli, Timo I Denk, Zal\u00e1n Borsos, Jesse Engel, Mauro Verzetti, Antoine Cail- lon, Qingqing Huang, Aren Jansen, Adam Roberts, Marco Tagliasacchi, et al. Musiclm: Generating music from text. arXiv:2301.11325, 2023.",
+    "[raw_reference] Ardila et al., 2019]",
+    "[raw_reference] Rosana Ardila, Megan Branson, Kelly Davis, Michael Henretty, Michael Kohler, Josh Meyer, Reuben Morais, Lindsay Saunders, Francis M Tyers, and Gregor Weber. Common voice: A massively-multilingual speech corpus. arXiv:1912.06670, 2019.",
+    "[raw_reference] Cai et al., 2023]",
+    "[raw_reference] Yifu Cai, Mononito Goswami, Arjun Choudhry, Arvind Srinivasan, and Artur Dubrawski. Jolt: Jointly learned representations of language and time- series. In NeurIPS Deep Generative Models for Health Workshop, 2023.",
+    "[raw_reference] Cao et al., 2023]",
+    "[raw_reference] Defu Cao, Furong Jia, Sercan O Arik, Tomas Pfister, Yixiang Zheng, Wen Ye, and Yan Liu. Tempo: Prompt-based generative pre-trained transformer for time series forecasting. arXiv:2310.04948, 2023.",
+    "[raw_reference] Chang et al., 2023]",
+    "[raw_reference] Ching Chang, Wen-Chih Peng, and Tien-Fu Chen. Llm4ts: Two-stage fine-tuning for time-series forecasting with pre-trained llms. arXiv:2308.08469, 2023.",
+    "[raw_reference] Chung et al., 2023]",
+    "[raw_reference] Hyunseung Chung, Jiho Kim, Joon- myoung Kwon, Ki-Hyun Jeon, Min Sung Lee, and Edward Choi. Text-to-ecg: 12-lead electrocardiogram synthesis conditioned on clinical text reports. In ICASSP, pages 1- 5. IEEE, 2023.",
+    "[raw_reference] Ding et al., 2023]",
+    "[raw_reference] Yujie Ding, Shuai Jia, Tianyi Ma, Bingcheng Mao, Xiuze Zhou, Liuliu Li, and Dongming Han. Integrating stock features and global information via large language models for enhanced stock return predic- tion. arXiv:2310.05627, 2023.",
+    "[raw_reference] Duan et al., 2023]",
+    "[raw_reference] Yiqun Duan, Charles Zhou, Zhen Wang, Yu-Kai Wang, and Chin-teng Lin. Dewave: Discrete en- coding of eeg waves for eeg to text translation. In NeurIPS, 2023.",
+    "[raw_reference] Girdhar et al., 2023]",
+    "[raw_reference] Rohit Girdhar, Alaaeldin El-Nouby, Zhuang Liu, Mannat Singh, Kalyan Vasudev Alwala, Ar- mand Joulin, and Ishan Misra. Imagebind: One embed- ding space to bind them all. In CVPR, pages 15180-15190, 2023.",
+    "[raw_reference] Gong et al., 2023]",
+    "[raw_reference] Yuan Gong, Hongyin Luo, Alexander H Liu, Leonid Karlinsky, and James Glass. Listen, think, and understand. arXiv:2305.10790, 2023.",
+    "[raw_reference] Graule and Isler, 2023]",
+    "[raw_reference] Moritz A Graule and Volkan Isler. Gg-llm: Geometrically grounding large language models for zero-shot human activity forecasting in human-aware task planning. arXiv:2310.20034, 2023.",
+    "[raw_reference] Grauman et al., 2022]",
+    "[raw_reference] Kristen Grauman, Andrew Westbury, Eugene Byrne, Zachary Chavis, Antonino Furnari, Ro- hit Girdhar, Jackson Hamburger, Hao Jiang, Miao Liu, Xingyu Liu, et al. Ego4d: Around the world in 3,000 hours of egocentric video. In CVPR, pages 18995-19012, 2022.",
+    "[raw_reference] Gruver et al., 2023]",
+    "[raw_reference] Nate Gruver, Marc Finzi, Shikai Qiu, and Andrew Gordon Wilson. Large language models are zero-shot time series forecasters. arXiv:2310.07820, 2023.",
+    "[raw_reference] Han et al., 2022]",
+    "[raw_reference] William Han, Jielin Qiu, Jiacheng Zhu, Mengdi Xu, Douglas Weber, Bo Li, and Ding Zhao. An empirical exploration of cross-domain alignment between language and electroencephalogram. arXiv:2208.06348, 2022.",
+    "[raw_reference] Hollenstein et al., 2019]",
+    "[raw_reference] Nora Hollenstein, Marius Troen- dle, Ce Zhang, and Nicolas Langer. Zuco 2.0: A dataset of physiological recordings during natural reading and an- notation. arXiv:1912.00903, 2019.",
+    "[raw_reference] Jin et al., 2023a] Ming Jin, Shiyu Wang, Lintao Ma, Zhix- uan Chu, James Y Zhang, Xiaoming Shi, Pin-Yu Chen, Yuxuan Liang, Yuan-Fang Li, Shirui Pan, et al. Time-llm: Time series forecasting by reprogramming large language models. arXiv:2310.01728, 2023.",
+    "[raw_reference] Jin et al., 2023b] Ming Jin, Qingsong Wen, Yuxuan Liang, Chaoli Zhang, Siqiao Xue, Xue Wang, James Zhang, Yi Wang, Haifeng Chen, Xiaoli Li, et al. Large models for time series and spatio-temporal data: A survey and out- look. arXiv:2310.10196, 2023.",
+    "[raw_reference] King et al., 2023]",
+    "[raw_reference] Ryan King, Tianbao Yang, and Bobak J Mortazavi. Multimodal pretraining of medical time series and notes. In ML4H, pages 244-255. PMLR, 2023.",
+    "[raw_reference] Lee et al., 2023]",
+    "[raw_reference] Geon Lee, Wenchao Yu, Wei Cheng, and Haifeng Chen. Moat: Multi-modal augmented time series forecasting. 2023.",
+    "[raw_reference] Leng et al., 2023] Zikang Leng, Hyeokhyen Kwon, and Thomas Pl\u00f6tz. Generating virtual on-body accelerometer data from virtual textual descriptions for human activity recognition. arXiv:2305.03187, 2023.",
+    "[raw_reference] Li et al., 2023]",
+    "[raw_reference] Junkai Li, Weizhi Ma, and Yang Liu. Modeling time series as text sequence a frequency- vectorization transformer for time series forecasting. 2023.",
+    "[raw_reference] Liu et al., 2023a] Che Liu, Zhongwei Wan, Sibo Cheng, Mi Zhang, and Rossella Arcucci. Etp: Learning transferable ecg representations via ecg-text pre-training. arXiv:2309.07145, 2023.",
+    "[raw_reference] Liu et al., 2023b] Xin Liu, Daniel McDuff, Geza Kovacs, Isaac Galatzer-Levy, Jacob Sunshine, Jiening Zhan, Ming- Zher Poh, Shun Liao, Paolo Di Achille, and Shwetak Pa- tel. Large language models are few-shot health learners. arXiv:2305.15525, 2023.",
+    "[raw_reference] Ma et al., 2023]",
+    "[raw_reference] Qianli Ma, Zhen Liu, Zhenjing Zheng, Ziyang Huang, Siying Zhu, Zhongzhong Yu, and James T Kwok. A survey on time-series pre-trained models. arXiv:2305.10716, 2023.",
+    "[raw_reference] Moon et al., 2022]",
+    "[raw_reference] Seungwhan Moon, Andrea Madotto, Zhaojiang Lin, Alireza Dirafzoon, Aparajita Saraf, Amy Bearman, and Babak Damavandi. Imu2clip: Multimodal contrastive learning for imu motion sensors from egocen- tric videos and text. arXiv:2210.14395, 2022.",
+    "[raw_reference] Moon et al., 2023]",
+    "[raw_reference] Seungwhan Moon, Andrea Madotto, Zhaojiang Lin, Tushar Nagarajan, Matt Smith, Shashank Jain, Chun-Fu Yeh, Prakash Murugesan, Peyman Heidari, Yue Liu, et al. Anymal: An efficient and scalable any- modality augmented language model. arXiv:2309.16058, 2023.",
+    "[raw_reference] Oh et al., 2023]",
+    "[raw_reference] Jungwoo Oh, Seongsu Bae, Gyubok Lee, Joon-myoung Kwon, and Edward Choi. Ecg-qa: A comprehensive question answering dataset combined with electrocardiogram. arXiv:2306.15681, 2023.",
+    "[raw_reference] Qin et al., 2023]",
+    "[raw_reference] Yujia Qin, Shihao Liang, Yining Ye, Kun- lun Zhu, Lan Yan, Yaxi Lu, Yankai Lin, Xin Cong, Xiangru Tang, Bill Qian, et al. Toolllm: Facilitating large language models to master 16000+ real-world apis. arXiv:2307.16789, 2023.",
+    "[raw_reference] Qiu et al., 2023]",
+    "[raw_reference] Jielin Qiu, William Han, Jiacheng Zhu, Mengdi Xu, Michael Rosenberg, Emerson Liu, Dou- glas Weber, and Ding Zhao. Transfer knowledge from natural language to electrocardiography: Can we de- tect cardiovascular disease through language models? arXiv:2301.09017, 2023.",
+    "[raw_reference] Rubenstein et al., 2023]",
+    "[raw_reference] Paul K Rubenstein, Chulayuth Asawaroengchai, Duc Dung Nguyen, Ankur Bapna, Zal\u00e1n Borsos, F\u00e9lix de Chaumont Quitry, Peter Chen, Dalia El Badawy, Wei Han, Eugene Kharitonov, et al. Au- diopalm: A large language model that can speak and listen. arXiv:2306.12925, 2023.",
+    "[raw_reference] Su et al., 2023]",
+    "[raw_reference] Yixuan Su, Tian Lan, Huayang Li, Jialu Xu, Yan Wang, and Deng Cai. Pandagpt: One model to instruction-follow them all. arXiv:2305.16355, 2023.",
+    "[raw_reference] Sun et al., 2023]",
+    "[raw_reference] Chenxi Sun, Yaliang Li, Hongyan Li, and Shenda Hong. Test: Text prototype aligned embedding to activate llm's ability for time series. arXiv:2308.08241, 2023.",
+    "[raw_reference] Talukder and Gkioxari, 2023]",
+    "[raw_reference] Sabera J Talukder and Geor- gia Gkioxari. Time series modeling at scale: A universal representation across tasks and domains. 2023.",
+    "[raw_reference] Tang et al., 2023]",
+    "[raw_reference] Changli Tang, Wenyi Yu, Guangzhi Sun, Xianzhao Chen, Tian Tan, Wei Li, Lu Lu, Zejun Ma, and Chao Zhang. Salmonn: Towards generic hearing abilities for large language models. arXiv:2310.13289, 2023.",
+    "[raw_reference] Wagner et al., 2020]",
+    "[raw_reference] Patrick Wagner, Nils Strodthoff, Ralf- Dieter Bousseljot, Dieter Kreiseler, Fatima I Lunze, Woj- ciech Samek, and Tobias Schaeffter. Ptb-xl, a large pub- licly available electrocardiography dataset. Scientific data, 7(1):154, 2020.",
+    "[raw_reference] Wang and Ji, 2022] Zhenhailong Wang and Heng Ji. Open vocabulary electroencephalography-to-text decoding and zero-shot sentiment classification. In AAAI, 2022.",
+    "[raw_reference] Wimmer and Rekabsaz, 2023]",
+    "[raw_reference] Christopher Wimmer and Navid Rekabsaz. Leveraging vision-language models for granular market change prediction. arXiv:2301.10166, 2023.",
+    "[raw_reference] Wu et al., 2023]",
+    "[raw_reference] Shijie Wu, Ozan Irsoy, Steven Lu, Vadim Dabravolski, Mark Dredze, Sebastian Gehrmann, Prab- hanjan Kambadur, David Rosenberg, and Gideon Mann. Bloomberggpt: A large language model for finance. arXiv:2303.17564, 2023.",
+    "[raw_reference] Xie et al., 2023a] Qianqian Xie, Weiguang Han, Yanzhao Lai, Min Peng, and Jimin Huang. The wall street neo- phyte: A zero-shot analysis of chatgpt over multimodal stock movement prediction challenges. arXiv:2304.05351, 2023.",
+    "[raw_reference] Xie et al., 2023b] Qianqian Xie, Weiguang Han, Xiao Zhang, Yanzhao Lai, Min Peng, Alejandro Lopez-Lira, and Jimin Huang. Pixiu: A large language model, instruction data and evaluation benchmark for finance. arXiv:2306.05443, 2023.",
+    "[raw_reference] Xing et al., 2021]",
+    "[raw_reference] Tianwei Xing, Luis Garcia, Federico Cerutti, Lance Kaplan, Alun Preece, and Mani Srivastava. Deepsqa: Understanding sensor data via question answer- ing. In IoTDI, 2021.",
+    "[raw_reference] Xue and Salim, 2022]",
+    "[raw_reference] Hao Xue and Flora D Salim. Prompt- cast: A new prompt-based learning paradigm for time se- ries forecasting. 2022.",
+    "[raw_reference] Yang et al., 2023]",
+    "[raw_reference] Dongchao Yang, Jinchuan Tian, Xu Tan, Rongjie Huang, Songxiang Liu, Xuankai Chang, Jiatong Shi, Sheng Zhao, Jiang Bian, Xixin Wu, et al. Uniaudio: An audio foundation model toward universal audio gener- ation. arXiv:2310.00704, 2023.",
+    "[raw_reference] Yu et al., 2023]",
+    "[raw_reference] Xinli Yu, Zheng Chen, Yuan Ling, Shu- jing Dong, Zongyi Liu, and Yanbin Lu. Temporal data meets llm-explainable financial time series forecasting. arXiv:2306.11025, 2023.",
+    "[raw_reference] Yun et al., 2019]",
+    "[raw_reference] Chulhee Yun, Srinadh Bhojanapalli, Ankit Singh Rawat, Sashank J Reddi, and Sanjiv Ku- mar. Are transformers universal approximators of sequence-to-sequence functions? arXiv:1912.10077, 2019.",
+    "[raw_reference] Zhang et al., 2023a] Xiyuan Zhang, Ranak Roy Chowd- hury, Jiayun Zhang, Dezhi Hong, Rajesh K Gupta, and Jingbo Shang. Unleashing the power of shared label struc- tures for human activity recognition. In CIKM, pages 3340-3350, 2023.",
+    "[raw_reference] Zhang et al., 2023b] Yunkai Zhang, Yawen Zhang, Ming Zheng, Kezhen Chen, Chongyang Gao, Ruian Ge, Siyuan Teng, Amine Jelloul, Jinmeng Rao, Xiaoyuan Guo, et al. Insight miner: A time series analysis dataset for cross- domain alignment with natural language. In NeurIPS AI4Science, 2023.",
+    "[raw_reference] Zhong et al., 2023]",
+    "[raw_reference] Ziyuan Zhong, Davis Rempe, Yuxiao Chen, Boris Ivanovic, Yulong Cao, Danfei Xu, Marco Pavone, and Baishakhi Ray. Language-guided traffic sim- ulation via scene-level diffusion. arXiv:2306.06344, 2023.",
+    "[raw_reference] Zhou et al., 2023a] Tian Zhou, Peisong Niu, Xue Wang, Liang Sun, and Rong Jin. One fits all: Power general time series analysis by pretrained lm. arXiv:2302.11939, 2023.",
+    "[raw_reference] Zhou et al., 2023b] Yunjiao Zhou, Jianfei Yang, Han Zou, and Lihua Xie. Tent: Connect language mod- els with iot sensors for zero-shot activity recognition. arXiv:2311.08245, 2023."
+  ],
+  "processing_software": {
+    "GROBID": "0.8.2"
+  }
+}

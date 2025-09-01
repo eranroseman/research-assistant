@@ -1,0 +1,908 @@
+{
+  "paper_id": "PQW4TKGT",
+  "title": "Deep Patient: An Unsupervised Representation to Predict the Future of Patients from the Electronic Health Records",
+  "abstract": "Secondary use of electronic health records (EHRs) promises to advance clinical research and better inform clinical decision making. Challenges in summarizing and representing patient data prevent widespread practice of predictive modeling using EHRs. Here we present a novel unsupervised deep feature learning method to derive a general-purpose patient representation from EHR data that facilitates clinical predictive modeling. In particular, a three-layer stack of denoising autoencoders was used to capture hierarchical regularities and dependencies in the aggregated EHRs of about 700,000 patients from the Mount Sinai data warehouse. The result is a representation we name \"deep patient\". We evaluated this representation as broadly predictive of health states by assessing the probability of patients to develop various diseases. We performed evaluation using 76,214 test patients comprising 78 diseases from diverse clinical domains and temporal windows. Our results significantly outperformed those achieved using representations based on raw EHR data and alternative feature learning strategies. Prediction performance for severe diabetes, schizophrenia, and various cancers were among the top performing. These findings indicate that deep learning applied to EHRs can derive patient representations that offer improved clinical predictions, and could provide a machine learning framework for augmenting clinical decision systems. A primary goal of precision medicine is to develop quantitative models for patients that can be used to predict health status, as well as to help prevent disease or disability. In this context, electronic health records (EHRs) offer great promise for accelerating clinical research and predictive analysis 1 . Recent studies have shown that secondary use of EHRs has enabled data-driven prediction of drug effects and interactions 2 , identification of type 2 diabetes subgroups 3 , discovery of comorbidity clusters in autism spectrum disorders 4 , and improvements in recruiting patients for clinical trials 5 . However, predictive models and tools based on modern machine learning techniques have not been widely and reliably used in clinical decision support systems or workflows  [6] [7] [8] [9]  . EHR data is challenging to represent and model due to its high dimensionality, noise, heterogeneity, sparseness, incompleteness, random errors, and systematic biases  7, 10, 11  . Moreover, the same clinical phenotype can be expressed using different codes and terminologies. For example, a patient diagnosed with \"type 2 diabetes mellitus\" can be identified by laboratory values of hemoglobin A1C greater than 7.0, presence of 250.00 ICD-9 code, \"type 2 diabetes mellitus\" mentioned in the free-text clinical notes, and so on. These challenges have made it difficult for machine learning methods to identify patterns that produce predictive clinical models for real-world applications  12  . The success of predictive algorithms largely depends on feature selection and data representation  12, 13  . A common approach with EHRs is to have a domain expert designate the patterns to look for (i.e., the learning task and the targets) and to specify clinical variables in an ad-hoc manner 7 . Although appropriate in some situations, supervised definition of the feature space scales poorly, does not generalize well, and misses opportunities to discover novel patterns and features. To address these shortcomings, data-driven approaches for feature selection in EHRs have been proposed  [14] [15] [16]  . A limitation of these methods is that patients are often represented as",
+  "year": 2016,
+  "date": "2016-05-17",
+  "authors": [
+    {
+      "name": "Riccardo Miotto",
+      "affiliation": {
+        "organization": "Department of Genetics and Genomic Sciences",
+        "department": "Department of Genetics and Genomic Sciences",
+        "institution": "Icahn School of Medicine at Mount Sinai",
+        "address": "New York, NY, USA"
+      }
+    },
+    {
+      "name": "Li Li",
+      "affiliation": {
+        "organization": "Department of Genetics and Genomic Sciences",
+        "department": "Department of Genetics and Genomic Sciences",
+        "institution": "Icahn School of Medicine at Mount Sinai",
+        "address": "New York, NY, USA"
+      }
+    },
+    {
+      "name": "Brian Kidd",
+      "affiliation": {
+        "organization": "Department of Genetics and Genomic Sciences",
+        "department": "Department of Genetics and Genomic Sciences",
+        "institution": "Icahn School of Medicine at Mount Sinai",
+        "address": "New York, NY, USA"
+      }
+    },
+    {
+      "name": "Joel Dudley",
+      "email": "joel.dudley@mssm.edu",
+      "affiliation": {
+        "organization": "Department of Genetics and Genomic Sciences",
+        "department": "Department of Genetics and Genomic Sciences",
+        "institution": "Icahn School of Medicine at Mount Sinai",
+        "address": "New York, NY, USA"
+      }
+    }
+  ],
+  "doi": "10.1038/srep26094",
+  "md5": "271EC7DB95C1C26CB171119D8AC2E2DF",
+  "publication": {
+    "journal": "J. Am. Med. Inform. Assoc",
+    "journal_inferred": true
+  },
+  "funding": [
+    "",
+    "",
+    "",
+    "Acknowledgements This work is supported by funding from the  NIH National Center for Advancing Translational Sciences (NCATS) Clinical and Translational Science Awards  ( UL1TR001433 ),  National Cancer Institute (NCI)  ( U54CA189201 ), and  National Institute of Diabetes and Digestive and Kidney Diseases (NIDDK)  ( R01DK098242 ) to J.T.D."
+  ],
+  "sections": [
+    {
+      "text": "a 2-dimensional vector composed by all the data descriptors available in the clinical data warehouse. This representation is sparse, noisy, and repetitive, which makes it not suitable for modeling the hierarchical information embedded or latent in EHRs.\n\nUnsupervised feature learning attempts to overcome limitations of supervised feature space definition by automatically identifying patterns and dependencies in the data to learn a compact and general representation that make it easier to automatically extract useful information when building classifiers or other predictors. Despite the success of feature learning with text, multimedia, and marketing  12  , as well as the rising popularity of deep learning  17  (i.e., learning based on hierarchies of neural networks), these techniques have not been used broadly with EHR data. Here we show that unsupervised deep feature learning applied to pre-process patient-level aggregated EHR data results in representations that are better understood by the machine and significantly improve predictive clinical models for a diverse array of clinical conditions. This paper presents a novel framework we call \"deep patient\" to represent patients by a set of general features, which are inferred automatically from a large-scale EHR database through a deep learning approach. Specifically, a deep neural network composed of a stack of denoising autoencoders was used to process EHRs in an unsupervised manner that captured stable structures and regular patterns in the data, which, grouped together, compose the deep patient representation. Deep patient is domain free (i.e., not related to any specific task since learned over a large multi-domain dataset), does not require any additional human effort, and can be easily applied to different predictive applications, both supervised and unsupervised. To prove the effectiveness of the proposed representation we apply deep patient to predict patient future diseases and show that the deep patient consistently outperforms original EHR representations as well as common (shallow) feature learning models in a large-scale real world data experiment."
+    },
+    {
+      "title": "Material and Methods",
+      "text": "This section presents the deep patient method and describes the pipeline implemented to evaluate the benefits of this representation in the task of predicting future diseases."
+    },
+    {
+      "title": "Deep Patient Representation.",
+      "text": "Figure  1  shows the high-level conceptual framework to derive the deep patient representation. EHRs are first extracted from the clinical data warehouse, pre-processed to identify and normalize clinically relevant phenotypes, and grouped in patient vectors (i.e., raw representation, Fig.  1A ). Each patient can be described by just a single vector or by a sequence of vectors computed in, e.g., predefined temporal windows. The collection of vectors obtained from all the patients is used as input of the feature learning algorithm to discover a set of high level general descriptors (Fig.  1B ). Every patient in the data warehouse is then represented using these features and such deep representation can be applied to different clinical tasks (Fig.  1C ).\n\nWe derived the patient representation using a multi-layer neural network in a deep learning architecture (i.e., deep patient). Each layer of the network is trained to produce a higher-level representation of the observed patterns, based on the data it receives as input from the layer below, by optimizing a local unsupervised criterion (Fig.  2 ). Every level produces a representation of the input pattern that is more abstract than the previous level because it is obtained by composing more non-linear operations. This process is loosely analogous to neuroscience models of cognition that hierarchically combine lower-level features to a unified and compact representation. The last network of the chain outputs the final patient representation.\n\nDenoising Autoencoders. We implemented our framework using a stack of denoising autoencoders (SDA), which are independently trained layer by layer; all the autoencoders in the architecture share the same structure and functionalities  18  . Briefly, an autoencoder takes an input \u2208 x [0, 1] d and first transforms it (with an encoder) to a hidden representation \u2208 \u2032 y [0, 1] d through a deterministic mapping:\n\nparameterized by \u03b8 = W b { , }, where \u22c5 s ( ) is a non-linear transformation (e.g., sigmoid, tangent) named \"activation function\", W is a weight coefficient matrix, and b is a bias vector. The latent representation y is then mapped back (with a decoder) to a reconstructed vector \u2208 z [0, 1] d , such as:\n\n, tied weights). The hope is that the code y is a distributed representation that captures the coordinates along the main factors of variation in the data. When training the model, the algorithm searches the parameters that minimize the difference between x and z (i.e., the reconstruction error\n\nAutoencoders are often trained to reconstruct the input from a noisy version of the initial data (i.e., denoising) in order to prevent overfitting. This is done by first corrupting the initial input x to get a partially destroyed version \uf0b0 x through a stochastic mapping\n\n. The corrupted input \uf0b0 x is then mapped, as with the basic autoencoder, to a hidden code = \u03b8 \uf0b0 y x f ( ) and then to the decoded representation z (see the Supplementary Appendix A online for a graphical representation). We implemented input corruption using the masking noise algorithm  18  , in which a fraction y of the elements of x chosen at random is turned to zero. This can be viewed as simulating the presence of missed components in the EHRs (e.g., medications or diagnoses not recorded in the patient records), thus assuming that the input clinical data is a degraded or \"noisy\" version of the actual clinical situation. All information about those masked components is then removed from that input pattern, and denoising autoencoders can be seen as trained to fill-in these artificially introduced blanks. The parameters of the model \u03b8 and \u03b8\u2032 are optimized over the training dataset to minimize the average reconstruction error,\n\nwhere \u22c5 L ( ) is a loss function and N is the number of patients in the training set. We used the reconstruction cross-entropy function as loss function, i.e.,\n\n)log(  1 )] (4)\n\nOptimization is carried out by mini-batch stochastic gradient descent, which iterates through small subsets of the training patients and modifies the parameters in the opposite direction of the gradient of the loss function to minimize the reconstruction error. The learned encoding function \u22c5 \u03b8 f ( ) is then applied to the clean input x and the resulting code y is the distributed representation (i.e., the input of the following autoencoder in the SDA architecture or the final deep patient representation).\n\nEvaluation Design. Feature learning algorithms are usually evaluated in supervised applications to take advantage of the available manually annotated labels. Here we used the Mount Sinai data warehouse to learn the deep features and we evaluated them in predicting patient future diseases. The Mount Sinai Health System generates a high volume of structured, semi-structured and unstructured data as part of its healthcare and clinical operations, which include inpatient, outpatient and emergency room visits. Patients in the system can have as long as 12 years of follow up unless they moved or changed insurance. Electronic records were completely implemented by our health system starting in 2003. The data related to patients who visited the hospital prior to 2003 was migrated to the electronic format as well but we may lack certain details of hospital visits (i.e., some diagnoses or medications may not have been recorded or transferred). The entire EHR dataset contains approximately 4.2 million de-identified patients as of March 2015, and it was made available for use under IRB approval following HIPAA guidelines. We retained all patients with at least one diagnosed disease expressed as numerical ICD-9 between 1980 and 2014, inclusive. This led to a dataset of about 1.2 million patients, with every patient having an average of 88.9 records. Then, we considered all records up to December 31, 2013 (i.e., \"split-point\") as training data (i.e., 34 years of training information) and all the diagnoses in 2014 as testing data."
+    },
+    {
+      "title": "EHR Processing.",
+      "text": "For each patient in the dataset, we retained some general demographic details (i.e., age, gender and race), and common clinical descriptors available in a structured format such as diagnoses (ICD-9 codes), medications, procedures, and lab tests, as well as free-text clinical notes recorded before the split-point. All the clinical records were pre-processed using the Open Biomedical Annotator to obtain harmonized codes for procedures and lab tests, normalized medications based on brand name and dosages, and to extract clinical concepts from the free-text notes  19  . In particular, the Open Biomedical Annotator and its RESTful API leverages the National Center for Biomedical Ontology (NCBO) BioPortal  20  , which provides a large set of ontologies, including SNOMED-CT, UMLS and RxNorm, to extract biomedical concepts from text and to provide their normalized and standard versions  21  .\n\nThe handling of the normalized records differed by data type. For diagnoses, medications, procedures and lab tests, we simply counted the presence of each normalized code in the patient EHRs, aiming to facilitate the modeling of related clinical events. Free-text clinical notes required more sophisticated processing. We applied the tool described in LePendu et al.  22  , which allowed identifying the negated tags and those related to family history. A tag that appeared as negated in the note was considered not relevant and discarded  5  . Negated tags were identified using NegEx, a regular expression algorithm that implements several phrases indicating negation, filters out sentences containing phrases that falsely appear to be negation phrases, and limits the scope of the negation phrases  23  . A tag that was related to family history was just flagged as such and differentiated from the directly patient-related tags. We then analyzed similarities in the representation of temporally consecutive notes to remove duplicated information (e.g., notes recorded twice by mistake)  24  .\n\nThe parsed notes were further processed to reduce the sparseness of the representation (about 2 million normalized tags were extracted) and to obtain a semantic abstraction of the embedded clinical information. To this aim we modeled the parsed notes using topic modeling  25  , an unsupervised inference process that captures patterns of word co-occurrences within documents to define topics and represent a document as a multinomial over these topics. Topic modeling has been applied to generalize clinical notes and improve automatic processing of patients data in several studies (e.g., see  5, [26] [27] [28]  ). We used latent Dirichlet allocation as our implementation of topic modeling  29  and we estimated the number of topics through perplexity analysis over one million random notes. We found that 300 topics obtained the best mathematical generalization; therefore, each note was eventually summarized as a multinomial of 300 topic probabilities. For each patient, we eventually retained one single topic-based representation averaged over all the notes available before the split-point."
+    },
+    {
+      "title": "Dataset.",
+      "text": "All patients with at least one recorded ICD-9 code were split in three independent datasets for evaluation purposes (i.e., every patient appeared in only one dataset). First, we held back 81,214 patients having at least one new ICD-9 diagnosis assigned in 2014 and at least ten records before that. These patients composed validation (i.e., 5,000 patients) and test (i.e., 76,214 patients) sets for the supervised evaluation (i.e., future disease prediction). In particular, all the diagnoses in 2014 were used to evaluate the predictions computed using the patient data recorded before the split-point (i.e., prediction from the patient clinical status). The requirement of having at least ten records per patient was set to ensure that each test case had some minimum of clinical history that could lead to reasonable predictions. We then randomly sampled a subset of 200,000 different patients with at least five records before the split-point to use as training set for the disease prediction experiment.\n\nWe used ICD-9 codes to state the diagnosis of a disease to a patient. However, since different codes can refer to the same disease, we mapped the codes to a disease categorization structure used at Mount Sinai, which groups ICD-9s into a vocabulary of 231 general disease definitions  30  . This list was filtered to retain only diseases that had at least 10 training patients and manually polished by a practicing physician to remove all the diseases that could not be predicted from the considered EHR labels alone because related to social behaviors (e.g., HIV) and external life events (e.g., injuries, poisoning), or that were too general (e.g., \"other form of cancers\"). The final vocabulary included 78 diseases, which are reported in the Supplementary Appendix B online.\n\nFinally, we created the training set for the feature learning algorithms using the remaining patients having at least five records by December 2013. The choice of having at least five records per patient was done to remove some uninformative cases and to decrease the training set size and, consequently, the time of computation. This lead to a dataset composed of 704,587 patients and 60,238 clinical descriptors. Descriptors appearing in more than 80% of patients or present in fewer than five patients were removed from the dataset to avoid biases and noise in the learning process leading to a final vocabulary of 41,072 descriptors. Overall, the raw patient dataset used for feature learning was composed by 200 million non-zero entries (i.e., about 1% of all the entries in the patient-descriptor matrix).\n\nPatient Representation Learning. SDAs were applied to the dataset of 704,857 patients to derive the deep patient representation. All the feature values in the dataset were first normalized to lie between zero and one to reduce the variance of the data while preserving zero entries. We used the same parameters in all the autoencoders of the deep architecture (regardless the layer) since this configuration usually leads to similar performances as having different parameters for each layer and is easier to evaluate  18, 31  . In particular, we found that using 500 hidden units per layer and a noise corruption factor \u03bd = 5% lead to a good generalization error and consistent predictions when tuning the model using the validation data set. We used a deep architecture composed by three layers of autoencoders and sigmoid activation functions (i.e., \"DeepPatient\"). Preliminary results on disease prediction using a different number of layers are reported in the Supplementary Appendix C online. The deep feature model was then applied to train and test sets for supervised evaluation; hence each patient in these datasets was represented by a dense vector of 500 features.\n\nWe compared the deep patient representation with other well-known feature learning algorithms having demonstrated utility in various domains including medicine  12  . All of these algorithms were applied to the scaled dataset as well and performed only one transformation to the original data (i.e., shallow feature learning). In particular, we considered principal component analysis (i.e., \"PCA\" with 100 principal components), k-means clustering (i.e., \"K-Means\" with 500 clusters), Gaussian mixture model (i.e., \"GMM\" with 200 mixtures and full covariance matrix), and independent component analysis (i.e., \"ICA\" with 100 principal components). In particular, PCA uses an orthogonal transformation to convert a set of observations of possibly correlated variables into a set of linearly uncorrelated variables called principal components, which are less than or equal to the number of original variables. The first principal component accounts for the greatest possible variability in the data, and each succeeding component in turn has the highest variance possible under the constraint that it is orthogonal to the preceding components. K-means groups unlabeled data into k clusters, in such a way that each data point belongs to the cluster with the closest mean. In feature learning, the centroids of the cluster are used to produce features, i.e., each feature value is the distance of the data point from each cluster centroid. GMM is a probabilistic model that assumes all the data points are generated from a mixture of a finite number of Gaussian distributions with unknown parameters. ICA represents data using a weighted sum of independent non-Gaussian components, which are learned from the data using signal separation algorithms. As done for DeepPatient, the number of latent variables of each model was identified through preliminary experiments by optimizing learning errors or expectations as well as prediction results obtained in the validation set. We also included in the comparison the patient representation based on the original descriptors after removal of the frequent and rare variables (i.e., \"RawFeat\" with 41,072 entries)."
+    },
+    {
+      "title": "Future Disease Prediction.",
+      "text": "To predict the probability that patients might develop a certain disease given their current clinical status, we implemented random forest classifiers trained over each disease using a dataset of 200,000 patients (one-vs.-all learning). We used random forests because they often demonstrate better performances than other standard classifiers, are easy to tune, and are robust to overfitting  32, 33  . By preliminary experiments on the validation dataset we tuned every disease classifier to have 100 trees. For each patient in the test set (and for all the different representations), we computed the probability to develop every disease in the vocabulary (i.e., each patient was represented by a vector of disease probabilities)."
+    },
+    {
+      "title": "Results",
+      "text": "We evaluated the disease predictions in two applicative clinical tasks: disease classification (i.e., evaluation by disease) and patient disease tagging (i.e., evaluation by patient). For each patient we considered only the prediction of novel diseases, discarding the re-diagnosis of a disease. If not reported otherwise, all the metrics used in the experiments were upper-bounded by one."
+    },
+    {
+      "title": "Evaluation by Disease.",
+      "text": "To measure how well the deep patient representation performed at predicting whether a patient developed new diseases, we evaluated the ability of the classifier to determine if test patients were likely to be diagnosed with a certain disease within a one-year interval. For each disease, we took the scores obtained by all patients in the test set (i.e., 76,214 patients) and measured the area under the receiver operating characteristic curve (i.e., AUC-ROC), accuracy, and F-score  34  . The ROC curve is a plot of true positive rate versus false positive rate found over the set of predictions. AUC is computed by integrating the ROC curve and it is lower bounded by 0.5. Accuracy is the proportion of true results (both true positives and true negative) among the total number of cases examined. F-score is the harmonic mean of classification precision and recall, where precision is the number of correct positive results divided by the number of all positive results, and recall is the number of correct positive results divided by the number of positive results that should have been returned. Accuracy and F-score require a threshold to discriminate between positive and negative predictions; we set that threshold to 0.6, with this value optimizing the tradeoff between precision and recall for all representations in the validation set by reducing the number of false positive predictions.\n\nThe results for all the different data representations are reported in Table  1 . The performance metrics of DeepPatient are superior to those obtained by RawFeat (i.e., no feature learning applied to EHR data). In particular, DeepPatient achieved an average AUC-ROC of 0.773, while RawFeat just got 0.659 (i.e., 15% improvement). Accuracy and F-score improved by 15% and 54% respectively, showing that the quality of the positive predictions (i.e., the patients that actually develop that disease) is improved by pre-processing EHRs with a deep architecture. Moreover, DeepPatient consistently and significantly outperforms all other feature learning methods. Table  2  compares the AUC-ROC obtained by RawFeat, PCA and DeepPatient for a subset of 10 diseases (see the Supplementary Appendix D online for the results on the entire vocabulary of diseases). While DeepPatient always outperforms RawFeat, PCA does not lead to any improvement for several diseases (e.g., \"Schizophrenia\", \"Multiple Myeloma\"). Overall, DeepPatient reported the highest AUC-ROC score on every disease but \"Cancer of brain and nervous system\", where PCA performed slightly better (AUC-ROC of 0.757 vs. 0.742). Remarkably large improvements in the AUC-ROC score (i.e., more than 60%) were obtained for several diseases, such as \"Cancer of testis\", \"Attention-deficit and disruptive behavior disorders\", \"Sickle cell anemia\", and \"Cancer of prostate\". In contrast, some diseases (e.g., \"Hypertension\", \"Diabetes mellitus without complications\", \"Disorders of lipid metabolism\") were difficult to classify and resulted in AUC-ROC scores lower than 0.600 for all representations."
+    },
+    {
+      "title": "Evaluation by Patient.",
+      "text": "In this experiment we examined how well DeepPatient performed at the patient-specific level. To this aim we retained again only the disease predictions with score greater than 0.6 (i.e., tags) and measured the quality of these annotations over different temporal windows for all the patients having true diagnoses in that period. In particular, we considered diagnoses assigned within 30 (i.e., 16,374 patients),\n\nTime Interval = 1 year (76,214 patients) Patient Representation AUC-ROC Classification Threshold = 0.6 Accuracy F-Score RawFeat 0.659 0.805 0.084 PCA 0.696 0.879 0.104 GMM 0.632 0.891 0.072 K-Means 0.672 0.887 0.093 ICA 0.695 0.882 0.101 DeepPatient 0.773 * 0.929 * 0.181 *   2 . Area under the ROC curve obtained in the disease classification experiment using patient data represented with original descriptors (\"RawFeat\") and pre-processed by principal component analysis (\"PCA\") and three-layer stacked denoising autoencoders (\"DeepPatient\").\n\n60 (i.e., 21,924 patients), 90 (i.e., 25,220 patients), and 180 (i.e., 33,607 patients) days. Overall, we found that DeepPatient consistently out-performed other methods across all time intervals examined (Table  3  and Fig.  3 ).\n\nIn particular, we first measured precision-at-k (Prec@k, with k equal to 1, 3, and 5), which averages the ratio of correct diseases assigned to each patients in each time window within the greatest k disease scores (Table  3 ). In each comparison, we included the model of theoretical upper bound (i.e., \"UppBnd\"), which reports the best results possible (i.e., all the correct diseases are assigned to each patients). As can be seen, DeepPatient obtained about 55% corrected predictions when suggesting three or more diseases per patient, regardless the time interval. Moreover, when we contrasted DeepPatient with the upper bound, we found a 5-15% improvement over every other method across all times. Last, we report R-precision, which is the precision-at-R of the assigned diseases, where R is the number of patient diagnoses in the ground truth for the considered time interval  34  (Fig.  3 ). Also in this case DeepPatient obtained significant improvements ranging from 5% to 12% over the other models (with ICA obtaining the second best results)."
+    },
+    {
+      "title": "Discussion",
+      "text": "We present a novel application of deep learning to derive predictive patient descriptors from EHRs that we call \"deep patient\". This method captures hierarchical regularities and dependencies in the data to create a compact, general-purpose set of patient features that can be effectively used in predictive clinical applications. Results  obtained on future disease prediction, in fact, were consistently better than those obtained by other feature learning models as well as than just using the raw EHR data (i.e., the common approach when applying machine learning to EHRs). This shows that pre-processing patient data using a deep sequence of non-linear transformations helps the machine to better understand the information embedded in the EHRs and to effectively make inference out of it. This opens new possibilities for clinical predictive modeling because pre-processing EHR data with deep learning can help improving also ad-hoc frameworks previously proposed in literature towards more effective predictions. In addition, the deep patient leads to more compact and lower dimensional representations than the original EHRs, allowing clinical analytics engines to scale better with the continuous growth of hospital data warehouses."
+    },
+    {
+      "title": "Time Interval"
+    },
+    {
+      "title": "Context and Significance.",
+      "text": "Deep learning was recently applied to medicine and genomics to reconstruct brain circuits  35  and to predict the activity of potential drug molecules  36  , the effects of mutations in non-coding DNA on gene expressions  37, 38  , and the sequence specificities of DNA and RNA-binding proteins  39  . To the best of our knowledge, deep feature learning is not yet applied to derive a general-purpose representation of patients from aggregated EHR data. Deep belief networks were recently applied to a small clinical dataset of Chinese patients to recommend acupuncture treatments, with features that were supervised optimized for the specific task  40  . Differently, we applied deep learning to derive patient representations from a large-scale dataset that are not optimized for any specific task and can fit different clinical applications. We used stacked denoising autoencoders (SDAs) to process EHR data and learn the deep patient representation. SDAs are sequences of three-layer neural networks with a central layer to reconstruct high-dimensional input vectors  12, 17, 18, 41  . To the best of our knowledge, SDAs have never been applied in the clinical domain. A two-layer stacked autoencoder without the denoising component was applied to EHRs to model longitudinal sequences of serum uric acid measurements in order to suggest multiple population subtypes and to distinguish the uric-acid signatures of gout vs. acute leukemia despite not being optimized for the task  42  . Here we apply SDAs and feature learning to derive a general representation of the patients, without focusing on a particular clinical descriptor or domain.\n\nThe deep patient representation was evaluated by predicting patient's future diseases-modeling a practical task in clinical decision making. Previous studies investigated disease prediction in several specific domains, including cardiovascular disease  43  , heart failure  9  , bone diseases  44  , chronic kidney disease  45  , as well as for diagnosis code assignment  46, 47  . However, the previous efforts generally develop approaches that are highly tuned to a specific disease or phenotype. In contrast, we focused the evaluation of our method on different diseases to show that the deep patient framework learns descriptors that are not domain specific."
+    },
+    {
+      "title": "Potential Applications. The deep patient representation improved predictions for different categories of",
+      "text": "diseases. This demonstrates that the learned features describe patients in a way that is general and effective to be processed by automated methods in different domains. We believe that a deep patient representation inferred from EHRs could benefit other tasks as well, such as personalized prescriptions, treatment recommendations, and clinical trial recruitment. In contrast to representations that are supervised optimized for a specific task  48  , a completely unsupervised vector-oriented representation can be applied to other unsupervised tasks as well, such as patient clustering and similarity. This work represents a first step towards the next generation of predictive clinical systems that can (i) scale to include many millions to billions of patient records and (ii) use a single, distributed patient representation to effectively support clinicians in their daily activities-rather than multiple systems working with different patient representations. In this scenario, the deep learning framework would be deployed to the EHR system and models would be constantly updated to follow the changes in the patient population. However, given that the feature learned by neural networks are not easily interpretable, the framework would be paired with a feature selection tools to help the clinicians understanding what drove the different predictions.\n\nHigher-level descriptors derived from a large-scale patient data warehouse can also enhance the sharing of information between hospitals. In fact, deep features can abstract patient data to a higher level that cannot be fully reconstructed, which facilitates the safe exchange of data between institutions to derive additional representations based on different population distributions (provided with the same underlying EHR representation). As an example, a patient having a clinical status not common for the area where he resides could benefit from being represented using features learned from other hospital data warehouses, where his conditions might be more common. In addition, collaboration between hospitals towards a joint feature learning effort would lead to even better deep representations that would likely improve the design and the performances of a large number of healthcare analytics platforms.\n\nThe disease prediction application that was evaluated in this study can be used in a number of clinical tasks towards personalized medicine, such as data-driven assessment of individual patient risk. In fact, clinicians could benefit from a healthcare platform that learns optimal care pathways from the historical patient data, which is a natural extension of the deep patient approach. For example, physicians could monitor their patients, check if any disease is likely to occur in the near future given the clinical status, and preempt the trajectory through data driven selection of interventions. Similarly, the platform could automatically detect patients of the hospital with high probability to develop certain diseases and alert the appropriate care providers.\n\nLimitations and Future Works. We note some limitations of the current study that highlight opportunities for future method enhancement. As already mentioned, some diseases did not show high predictive power. This was partially related to the fact that we only included the frequency of a laboratory test and we relied on test co-occurrences to determine patient patterns, but we did not considered the test result. Yet, lab test results are not easy to process at this large scale, since they can be available as text flags, values with different unit of measure, ranges, and so on. However, we found that some of the diseases with low performance metrics (e.g., \"Diabetes mellitus without complications\", \"Hypertension\") are usually screened by laboratory tests collected during routine checkups, making the frequency of those tests not valid discriminant factors. Future work will explore how to include the lab test values to improve the performance of the deep patient representation (i.e., better raw representations are likely to lead to better deep models). Similarly, describing a patient with a temporal sequence of vectors covering predefined consecutive time intervals instead of summarizing all data in one vector is expected to improve the final result as well. The addition of other categories of EHR data, such as insurance details, family history and social behaviors, might also lead to better representations that should obtain reliable prediction models in a larger number of clinical domains. Moreover, the SDA model is likely to take benefit of additional data pre-processing. A common extension is to pre-process the data using PCA to remove irrelevant factors before deep modeling  31  . This approach improved both accuracy and efficiency with other media and should benefit the clinical domain as well.\n\nIn future work we plan to investigate the application of the deep representations to other clinical tasks involving automatic prediction, such as personalized prescriptions, therapy recommendation, and clinical trial recruitment. We also plan to investigate thoroughly the application of the deep patient to a specific clinical domain and task to qualitatively evaluate its outcomes (e.g., what are the rules the algorithm discovers and that improve the predictions, how they can be visualized, if they are novel). Further, we aim to evaluate the methodology on the EHR data warehouse of other institutions to consolidate the results as well as to improve the learned features that will benefit from being estimated over a larger number of patients."
+    },
+    {
+      "text": "Figure 1. Conceptual framework used to derive the deep patient representation through unsupervised deep learning of a large EHR data warehouse. (A) Pre-processing stage to obtain raw patient representations from the EHRs. (B) The raw representations are modeled by the unsupervised deep architecture leading to a set of general and robust features. (C) The deep features are applied to the entire hospital database to derive patient representations that can be applied to a number of clinical tasks."
+    },
+    {
+      "text": "Figure 2. Diagram of the unsupervised deep feature learning pipeline to transform a raw dataset into the deep patient representation through multiple layers of neural networks. Each layer of the neural network is trained to produce a higher-level representation from the result of the previous layer."
+    },
+    {
+      "text": "Figure 3. R-precision obtained in the disease tagging experiment by the different patient representations over several prediction time intervals (expressed as number of days).We reports results for patients represented with original descriptors (RawFeat) and pre-processed by principal component analysis (PCA), independent component analysis (ICA), Gaussian mixture model (GMM), k-means clustering (K-Means), and three-layer stacked denoising autoencoders (DeepPatient)."
+    },
+    {
+      "text": ". (*) The difference with the corresponding second best measurement is statistically significant (p < 0.05, t-test)."
+    },
+    {
+      "text": "). (*) The difference with the corresponding second best measurement is statistically significant (p < 0.05, t-test)."
+    },
+    {
+      "title": "Acknowledgements",
+      "text": "This work is supported by funding from the  NIH National Center for Advancing Translational Sciences (NCATS) Clinical and Translational Science Awards  ( UL1TR001433 ),  National Cancer Institute (NCI)  ( U54CA189201 ), and  National Institute of Diabetes and Digestive and Kidney Diseases (NIDDK)  ( R01DK098242 ) to J.T.D."
+    },
+    {
+      "title": "Author Contributions",
+      "text": "R.M. initiated the idea, conducted the research, and wrote the article; L.L. helped collecting the data; B.A.K. refined the article; J.T.D. supervised and supported the research. All the authors edited and reviewed the manuscript."
+    },
+    {
+      "title": "Additional Information",
+      "text": "Supplementary information accompanies this paper at  http://www.nature.com/srep Competing financial interests: The authors declare no competing financial interests."
+    }
+  ],
+  "references": [
+    {
+      "title": "Adding value to the electronic health record through secondary use of data for quality assurance, research, and surveillance",
+      "authors": [
+        "W Hersh"
+      ],
+      "year": 2007,
+      "doi": "10.37765/ajmc.2020.42147",
+      "journal": "Am. J. Manag. Care",
+      "volume": "13",
+      "raw": "Adding value to the electronic health record through secondary use of data for quality assurance, research, and surveillance \n\t\t \n\t\t\t W R Hersh \n\t\t \n\t\t 10.37765/ajmc.2020.42147 \n\t \n\t \n\t\t Am. J. Manag. Care \n\t\t \n\t\t\t 13 \n\t\t\t \n\t\t\t 2007 \n\t\t \n\t \n\t Hersh, W. R. Adding value to the electronic health record through secondary use of data for quality assurance, research, and surveillance. Am. J. Manag. Care 13, 277-278 (2007)."
+    },
+    {
+      "title": "Data-driven prediction of drug effects and interactions",
+      "authors": [
+        "N Tatonetti",
+        "P Ye",
+        "R Daneshjou",
+        "R Altman"
+      ],
+      "year": 2012,
+      "doi": "10.1126/scitranslmed.3003377",
+      "journal": "Sci. Transl. Med",
+      "volume": "4",
+      "raw": "Data-driven prediction of drug effects and interactions \n\t\t \n\t\t\t N P Tatonetti \n\t\t \n\t\t \n\t\t\t P P Ye \n\t\t \n\t\t \n\t\t\t R Daneshjou \n\t\t \n\t\t \n\t\t\t R B Altman \n\t\t \n\t\t 10.1126/scitranslmed.3003377 \n\t \n\t \n\t\t Sci. Transl. Med \n\t\t \n\t\t\t 4 \n\t\t\t \n\t\t\t 2012 \n\t\t \n\t \n\t Tatonetti, N. P., Ye, P. P., Daneshjou, R. & Altman, R. B. Data-driven prediction of drug effects and interactions. Sci. Transl. Med. 4, 125ra131 (2012)."
+    },
+    {
+      "title": "Identification of type 2 diabetes subgroups through topological analysis of patient similarity",
+      "authors": [
+        "L Li"
+      ],
+      "year": 2015,
+      "doi": "10.1126/scitranslmed.aaa9364",
+      "journal": "Sci. Transl. Med",
+      "volume": "7",
+      "raw": "Identification of type 2 diabetes subgroups through topological analysis of patient similarity \n\t\t \n\t\t\t L Li \n\t\t \n\t\t 10.1126/scitranslmed.aaa9364 \n\t \n\t \n\t\t Sci. Transl. Med \n\t\t \n\t\t\t 7 \n\t\t\t \n\t\t\t 2015 \n\t\t \n\t \n\t Li, L. et al. Identification of type 2 diabetes subgroups through topological analysis of patient similarity. Sci. Transl. Med. 7, 311ra174 (2015)."
+    },
+    {
+      "title": "Comorbidity clusters in autism spectrum disorders: an electronic health record time-series analysis",
+      "authors": [
+        "F Doshi-Velez",
+        "Y Ge",
+        "I Kohane"
+      ],
+      "year": 2014,
+      "doi": "10.1542/peds.2013-0819",
+      "journal": "Pediatrics",
+      "volume": "133",
+      "raw": "Comorbidity clusters in autism spectrum disorders: an electronic health record time-series analysis \n\t\t \n\t\t\t F Doshi-Velez \n\t\t \n\t\t \n\t\t\t Y Ge \n\t\t \n\t\t \n\t\t\t I Kohane \n\t\t \n\t\t 10.1542/peds.2013-0819 \n\t \n\t \n\t\t Pediatrics \n\t\t \n\t\t\t 133 \n\t\t\t \n\t\t\t 2014 \n\t\t \n\t \n\t Doshi-Velez, F., Ge, Y. & Kohane, I. Comorbidity clusters in autism spectrum disorders: an electronic health record time-series analysis. Pediatrics 133, e54-63 (2014)."
+    },
+    {
+      "title": "Case-based reasoning using electronic health records efficiently identifies eligible patients for clinical trials",
+      "authors": [
+        "R Miotto",
+        "C Weng"
+      ],
+      "year": 2015,
+      "doi": "10.1093/jamia/ocu050",
+      "journal": "J. Am. Med. Inform. Assoc",
+      "volume": "22",
+      "raw": "Case-based reasoning using electronic health records efficiently identifies eligible patients for clinical trials \n\t\t \n\t\t\t R Miotto \n\t\t \n\t\t \n\t\t\t C Weng \n\t\t \n\t\t 10.1093/jamia/ocu050 \n\t \n\t \n\t\t J. Am. Med. Inform. Assoc \n\t\t \n\t\t\t 22 \n\t\t\t \n\t\t\t 2015 \n\t\t \n\t \n\t Miotto, R. & Weng, C. Case-based reasoning using electronic health records efficiently identifies eligible patients for clinical trials. J. Am. Med. Inform. Assoc. 22, E141-E150 (2015)."
+    },
+    {
+      "title": "Predictive data mining in clinical medicine: current issues and guidelines",
+      "authors": [
+        "R Bellazzi",
+        "B Zupan"
+      ],
+      "year": 2008,
+      "doi": "10.1016/j.ijmedinf.2006.11.006",
+      "journal": "Int. J. Med. Inform",
+      "volume": "77",
+      "raw": "Predictive data mining in clinical medicine: current issues and guidelines \n\t\t \n\t\t\t R Bellazzi \n\t\t \n\t\t \n\t\t\t B Zupan \n\t\t \n\t\t 10.1016/j.ijmedinf.2006.11.006 \n\t \n\t \n\t\t Int. J. Med. Inform \n\t\t \n\t\t\t 77 \n\t\t\t \n\t\t\t 2008 \n\t\t \n\t \n\t Bellazzi, R. & Zupan, B. Predictive data mining in clinical medicine: current issues and guidelines. Int. J. Med. Inform. 77, 81-97 (2008)."
+    },
+    {
+      "title": "Mining electronic health records: towards better research applications and clinical care",
+      "authors": [
+        "P Jensen",
+        "L Jensen",
+        "S Brunak"
+      ],
+      "year": 2012,
+      "journal": "Nat. Rev. Genet",
+      "volume": "13",
+      "raw": "Mining electronic health records: towards better research applications and clinical care \n\t\t \n\t\t\t P B Jensen \n\t\t \n\t\t \n\t\t\t L J Jensen \n\t\t \n\t\t \n\t\t\t S Brunak \n\t\t \n\t \n\t \n\t\t Nat. Rev. Genet \n\t\t \n\t\t\t 13 \n\t\t\t \n\t\t\t 2012 \n\t\t \n\t \n\t Jensen, P. B., Jensen, L. J. & Brunak, S. Mining electronic health records: towards better research applications and clinical care. Nat. Rev. Genet. 13, 395-405 (2012)."
+    },
+    {
+      "title": "Predictability bounds of electronic health records",
+      "authors": [
+        "D Dahlem",
+        "D Maniloff",
+        "C Ratti"
+      ],
+      "year": 2015,
+      "doi": "10.1038/srep11865",
+      "journal": "Sci. Rep",
+      "volume": "5",
+      "pages": "11865",
+      "raw": "Predictability bounds of electronic health records \n\t\t \n\t\t\t D Dahlem \n\t\t \n\t\t \n\t\t\t D Maniloff \n\t\t \n\t\t \n\t\t\t C Ratti \n\t\t \n\t\t 10.1038/srep11865 \n\t \n\t \n\t\t Sci. Rep \n\t\t \n\t\t\t 5 \n\t\t\t 11865 \n\t\t\t 2015 \n\t\t \n\t \n\t Dahlem, D., Maniloff, D. & Ratti, C. Predictability bounds of electronic health records. Sci. Rep. 5, 11865 (2015)."
+    },
+    {
+      "title": "Prediction modeling using EHR data: challenges, strategies, and a comparison of machine learning approaches",
+      "authors": [
+        "J Wu",
+        "J Roy",
+        "W Stewart"
+      ],
+      "year": 2010,
+      "doi": "10.1097/mlr.0b013e3181de9e17",
+      "journal": "Med. Care",
+      "volume": "48",
+      "raw": "Prediction modeling using EHR data: challenges, strategies, and a comparison of machine learning approaches \n\t\t \n\t\t\t J L Wu \n\t\t \n\t\t \n\t\t\t J Roy \n\t\t \n\t\t \n\t\t\t W F Stewart \n\t\t \n\t\t 10.1097/mlr.0b013e3181de9e17 \n\t \n\t \n\t\t Med. Care \n\t\t \n\t\t\t 48 \n\t\t\t \n\t\t\t 2010 \n\t\t \n\t \n\t Wu, J. L., Roy, J. & Stewart, W. F. Prediction modeling using EHR data: challenges, strategies, and a comparison of machine learning approaches. Med. Care 48, S106-S113 (2010)."
+    },
+    {
+      "title": "Defining and measuring completeness of electronic health records for secondary use",
+      "authors": [
+        "N Weiskopf",
+        "G Hripcsak",
+        "S Swaminathan",
+        "C Weng"
+      ],
+      "year": 2013,
+      "doi": "10.1016/j.jbi.2013.06.010",
+      "journal": "J. Biomed. Inform",
+      "volume": "46",
+      "raw": "Defining and measuring completeness of electronic health records for secondary use \n\t\t \n\t\t\t N G Weiskopf \n\t\t \n\t\t \n\t\t\t G Hripcsak \n\t\t \n\t\t \n\t\t\t S Swaminathan \n\t\t \n\t\t \n\t\t\t C Weng \n\t\t \n\t\t 10.1016/j.jbi.2013.06.010 \n\t \n\t \n\t\t J. Biomed. Inform \n\t\t \n\t\t\t 46 \n\t\t\t \n\t\t\t 2013 \n\t\t \n\t \n\t Weiskopf, N. G., Hripcsak, G., Swaminathan, S. & Weng, C. Defining and measuring completeness of electronic health records for secondary use. J. Biomed. Inform. 46, 830-836 (2013)."
+    },
+    {
+      "title": "Methods and dimensions of electronic health record data quality assessment: enabling reuse for clinical research",
+      "authors": [
+        "N Weiskopf",
+        "C Weng"
+      ],
+      "year": 2013,
+      "doi": "10.1136/amiajnl-2011-000681",
+      "journal": "J. Am. Med. Inform. Assoc",
+      "volume": "20",
+      "raw": "Methods and dimensions of electronic health record data quality assessment: enabling reuse for clinical research \n\t\t \n\t\t\t N G Weiskopf \n\t\t \n\t\t \n\t\t\t C Weng \n\t\t \n\t\t 10.1136/amiajnl-2011-000681 \n\t \n\t \n\t\t J. Am. Med. Inform. Assoc \n\t\t \n\t\t\t 20 \n\t\t\t \n\t\t\t 2013 \n\t\t \n\t \n\t Weiskopf, N. G. & Weng, C. Methods and dimensions of electronic health record data quality assessment: enabling reuse for clinical research. J. Am. Med. Inform. Assoc. 20, 144-151 (2013)."
+    },
+    {
+      "title": "Representation learning: a review and new perspectives",
+      "authors": [
+        "Y Bengio",
+        "A Courville",
+        "P Vincent"
+      ],
+      "year": 2013,
+      "doi": "10.1109/tpami.2013.50",
+      "journal": "IEEE T. Pattern Anal. Mach. Intell",
+      "volume": "35",
+      "raw": "Representation learning: a review and new perspectives \n\t\t \n\t\t\t Y Bengio \n\t\t \n\t\t \n\t\t\t A Courville \n\t\t \n\t\t \n\t\t\t P Vincent \n\t\t \n\t\t 10.1109/tpami.2013.50 \n\t \n\t \n\t\t IEEE T. Pattern Anal. Mach. Intell \n\t\t \n\t\t\t 35 \n\t\t\t \n\t\t\t 2013 \n\t\t \n\t \n\t Bengio, Y., Courville, A. & Vincent, P. Representation learning: a review and new perspectives. IEEE T. Pattern Anal. Mach. Intell. 35, 1798-1828 (2013)."
+    },
+    {
+      "title": "Machine learning: trends, perspectives, and prospects",
+      "authors": [
+        "M Jordan",
+        "T Mitchell"
+      ],
+      "year": 2015,
+      "doi": "10.1126/science.aaa8415",
+      "journal": "Science",
+      "volume": "349",
+      "raw": "Machine learning: trends, perspectives, and prospects \n\t\t \n\t\t\t M I Jordan \n\t\t \n\t\t \n\t\t\t T M Mitchell \n\t\t \n\t\t 10.1126/science.aaa8415 \n\t \n\t \n\t\t Science \n\t\t \n\t\t\t 349 \n\t\t\t \n\t\t\t 2015 \n\t\t \n\t \n\t Jordan, M. I. & Mitchell, T. M. Machine learning: trends, perspectives, and prospects. Science 349, 255-260 (2015)."
+    },
+    {
+      "title": "Toward personalizing treatment for depression: predicting diagnosis and severity",
+      "authors": [
+        "S Huang"
+      ],
+      "year": 2014,
+      "journal": "J. Am. Med. Inform. Assoc",
+      "volume": "21",
+      "raw": "Toward personalizing treatment for depression: predicting diagnosis and severity \n\t\t \n\t\t\t S H Huang \n\t\t \n\t \n\t \n\t\t J. Am. Med. Inform. Assoc \n\t\t \n\t\t\t 21 \n\t\t\t \n\t\t\t 2014 \n\t\t \n\t \n\t Huang, S. H. et al. Toward personalizing treatment for depression: predicting diagnosis and severity. J. Am. Med. Inform. Assoc. 21, 1069-1075 (2014)."
+    },
+    {
+      "title": "Identifying phenotypic signatures of neuropsychiatric disorders from electronic medical records",
+      "authors": [
+        "S Lyalina"
+      ],
+      "year": 2013,
+      "doi": "10.1136/amiajnl-2013-001933",
+      "journal": "J. Am. Med. Inform. Assoc",
+      "volume": "20",
+      "raw": "Identifying phenotypic signatures of neuropsychiatric disorders from electronic medical records \n\t\t \n\t\t\t S Lyalina \n\t\t \n\t\t 10.1136/amiajnl-2013-001933 \n\t \n\t \n\t\t J. Am. Med. Inform. Assoc \n\t\t \n\t\t\t 20 \n\t\t\t \n\t\t\t 2013 \n\t\t \n\t \n\t Lyalina, S. et al. Identifying phenotypic signatures of neuropsychiatric disorders from electronic medical records. J. Am. Med. Inform. Assoc. 20, e297-305 (2013)."
+    },
+    {
+      "title": "Unsupervised learning of disease progression models",
+      "authors": [
+        "X Wang",
+        "D Sontag",
+        "F Wang"
+      ],
+      "year": 2014,
+      "doi": "10.1145/2623330.2623754",
+      "raw": "Unsupervised learning of disease progression models \n\t\t \n\t\t\t X Wang \n\t\t \n\t\t \n\t\t\t D Sontag \n\t\t \n\t\t \n\t\t\t F Wang \n\t\t \n\t\t 10.1145/2623330.2623754 \n\t \n\t \n\t\t ACM SIGKDD \n\t\t \n\t\t\t 2014 \n\t\t\t \n\t\t \n\t \n\t Wang, X., Sontag, D. & Wang, F. Unsupervised learning of disease progression models. ACM SIGKDD, 85-94 (2014)."
+    },
+    {
+      "title": "Deep learning",
+      "authors": [
+        "Y Lecun",
+        "Y Bengio",
+        "G Hinton"
+      ],
+      "year": 2015,
+      "doi": "10.1038/nature14539",
+      "journal": "Nature",
+      "volume": "521",
+      "raw": "Deep learning \n\t\t \n\t\t\t Y Lecun \n\t\t \n\t\t \n\t\t\t Y Bengio \n\t\t \n\t\t \n\t\t\t G Hinton \n\t\t \n\t\t 10.1038/nature14539 \n\t \n\t \n\t\t Nature \n\t\t \n\t\t\t 521 \n\t\t\t \n\t\t\t 2015 \n\t\t \n\t \n\t LeCun, Y., Bengio, Y. & Hinton, G. Deep learning. Nature 521, 436-444 (2015)."
+    },
+    {
+      "title": "Stacked denoising autoencoders: learning useful representations in a deep network with a local denoising criterion",
+      "authors": [
+        "P Vincent",
+        "H Larochelle",
+        "I Lajoie",
+        "Y Bengio",
+        "P Manzagol"
+      ],
+      "year": 2010,
+      "journal": "J. Mach. Learn. Res",
+      "volume": "11",
+      "raw": "Stacked denoising autoencoders: learning useful representations in a deep network with a local denoising criterion \n\t\t \n\t\t\t P Vincent \n\t\t \n\t\t \n\t\t\t H Larochelle \n\t\t \n\t\t \n\t\t\t I Lajoie \n\t\t \n\t\t \n\t\t\t Y Bengio \n\t\t \n\t\t \n\t\t\t P A Manzagol \n\t\t \n\t \n\t \n\t\t J. Mach. Learn. Res \n\t\t \n\t\t\t 11 \n\t\t\t \n\t\t\t 2010 \n\t\t \n\t \n\t Vincent, P., Larochelle, H., Lajoie, I., Bengio, Y. & Manzagol, P. A. Stacked denoising autoencoders: learning useful representations in a deep network with a local denoising criterion. J. Mach. Learn. Res. 11, 3371-3408 (2010)."
+    },
+    {
+      "title": "Comparison of concept recognizers for building the Open Biomedical Annotator",
+      "authors": [
+        "N Shah"
+      ],
+      "year": 2009,
+      "doi": "10.1186/1471-2105-10-s9-s14",
+      "journal": "BMC Bioinformatics",
+      "volume": "10",
+      "pages": "14",
+      "raw": "Comparison of concept recognizers for building the Open Biomedical Annotator \n\t\t \n\t\t\t N H Shah \n\t\t \n\t\t 10.1186/1471-2105-10-s9-s14 \n\t \n\t \n\t\t BMC Bioinformatics \n\t\t \n\t\t\t 10 \n\t\t\t 14 \n\t\t\t 2009 \n\t\t \n\t \n\t Shah, N. H. et al. Comparison of concept recognizers for building the Open Biomedical Annotator. BMC Bioinformatics 10, S14 (2009)."
+    },
+    {
+      "title": "The National Center for Biomedical Ontology",
+      "authors": [
+        "M Musen"
+      ],
+      "year": 2012,
+      "journal": "J. Am. Med. Inform. Assoc",
+      "volume": "19",
+      "raw": "The National Center for Biomedical Ontology \n\t\t \n\t\t\t M A Musen \n\t\t \n\t \n\t \n\t\t J. Am. Med. Inform. Assoc \n\t\t \n\t\t\t 19 \n\t\t\t \n\t\t\t 2012 \n\t\t \n\t \n\t Musen, M. A. et al. The National Center for Biomedical Ontology. J. Am. Med. Inform. Assoc. 19, 190-195 (2012)."
+    },
+    {
+      "title": "The Open Biomedical Annotator",
+      "authors": [
+        "C Jonquet",
+        "N Shah",
+        "M Musen"
+      ],
+      "year": 2009,
+      "journal": "Summit on Translat. Bioinforma",
+      "raw": "The Open Biomedical Annotator \n\t\t \n\t\t\t C Jonquet \n\t\t \n\t\t \n\t\t\t N H Shah \n\t\t \n\t\t \n\t\t\t M A Musen \n\t\t \n\t \n\t \n\t\t Summit on Translat. Bioinforma \n\t\t \n\t\t\t \n\t\t\t 2009. 2009 \n\t\t \n\t \n\t Jonquet, C., Shah, N. H. & Musen, M. A. The Open Biomedical Annotator. Summit on Translat. Bioinforma. 2009, 56-60 (2009)."
+    },
+    {
+      "title": "Annotation analysis for testing drug safety signals using unstructured clinical notes",
+      "authors": [
+        "P Lependu",
+        "S Iyer",
+        "C Fairon",
+        "N Shah"
+      ],
+      "year": 2012,
+      "journal": "J. Biomed. Semantics",
+      "volume": "3",
+      "pages": "5",
+      "raw": "Annotation analysis for testing drug safety signals using unstructured clinical notes \n\t\t \n\t\t\t P Lependu \n\t\t \n\t\t \n\t\t\t S V Iyer \n\t\t \n\t\t \n\t\t\t C Fairon \n\t\t \n\t\t \n\t\t\t N H Shah \n\t\t \n\t \n\t \n\t\t J. Biomed. Semantics \n\t\t \n\t\t\t 3 \n\t\t\t 5 \n\t\t\t 2012 \n\t\t \n\t \n\t Lependu, P., Iyer, S. V., Fairon, C. & Shah, N. H. Annotation analysis for testing drug safety signals using unstructured clinical notes. J. Biomed. Semantics 3, S5 (2012)."
+    },
+    {
+      "title": "A simple algorithm for identifying negated findings and diseases in discharge summaries",
+      "authors": [
+        "W Chapman",
+        "W Bridewell",
+        "P Hanbury",
+        "G Cooper",
+        "B Buchanan"
+      ],
+      "year": 2001,
+      "doi": "10.1006/jbin.2001.1029",
+      "journal": "J. Biomed. Inform",
+      "volume": "34",
+      "raw": "A simple algorithm for identifying negated findings and diseases in discharge summaries \n\t\t \n\t\t\t W W Chapman \n\t\t \n\t\t \n\t\t\t W Bridewell \n\t\t \n\t\t \n\t\t\t P Hanbury \n\t\t \n\t\t \n\t\t\t G F Cooper \n\t\t \n\t\t \n\t\t\t B G Buchanan \n\t\t \n\t\t 10.1006/jbin.2001.1029 \n\t \n\t \n\t\t J. Biomed. Inform \n\t\t \n\t\t\t 34 \n\t\t\t \n\t\t\t 2001 \n\t\t \n\t \n\t Chapman, W. W., Bridewell, W., Hanbury, P., Cooper, G. F. & Buchanan, B. G. A simple algorithm for identifying negated findings and diseases in discharge summaries. J. Biomed. Inform. 34, 301-310 (2001)."
+    },
+    {
+      "title": "Redundancy in electronic health record corpora: analysis, impact on text mining performance and mitigation strategies",
+      "authors": [
+        "R Cohen",
+        "M Elhadad",
+        "N Elhadad"
+      ],
+      "year": 2013,
+      "doi": "10.1186/1471-2105-14-10",
+      "journal": "BMC Bioinformatics",
+      "volume": "14",
+      "pages": "10",
+      "raw": "Redundancy in electronic health record corpora: analysis, impact on text mining performance and mitigation strategies \n\t\t \n\t\t\t R Cohen \n\t\t \n\t\t \n\t\t\t M Elhadad \n\t\t \n\t\t \n\t\t\t N Elhadad \n\t\t \n\t\t 10.1186/1471-2105-14-10 \n\t \n\t \n\t\t BMC Bioinformatics \n\t\t \n\t\t\t 14 \n\t\t\t 10 \n\t\t\t 2013 \n\t\t \n\t \n\t Cohen, R., Elhadad, M. & Elhadad, N. Redundancy in electronic health record corpora: analysis, impact on text mining performance and mitigation strategies. BMC Bioinformatics 14, 10 (2013)."
+    },
+    {
+      "title": "Probabilistic topic models",
+      "authors": [
+        "D Blei"
+      ],
+      "year": 2012,
+      "doi": "10.1145/2133806.2133826",
+      "journal": "Commun. ACM",
+      "volume": "55",
+      "raw": "Probabilistic topic models \n\t\t \n\t\t\t D M Blei \n\t\t \n\t\t 10.1145/2133806.2133826 \n\t \n\t \n\t\t Commun. ACM \n\t\t \n\t\t\t 55 \n\t\t\t \n\t\t\t 2012 \n\t\t \n\t \n\t Blei, D. M. Probabilistic topic models. Commun. ACM 55, 77-84 (2012)."
+    },
+    {
+      "title": "Clinical case-based retrieval using latent topic analysis",
+      "authors": [
+        "C Arnold",
+        "S El-Saden",
+        "A Bui",
+        "R Taira"
+      ],
+      "year": 2010,
+      "journal": "AMIA Annu. Symp. Proc",
+      "raw": "Clinical case-based retrieval using latent topic analysis \n\t\t \n\t\t\t C W Arnold \n\t\t \n\t\t \n\t\t\t S M El-Saden \n\t\t \n\t\t \n\t\t\t A A Bui \n\t\t \n\t\t \n\t\t\t R Taira \n\t\t \n\t \n\t \n\t\t AMIA Annu. Symp. Proc \n\t\t \n\t\t\t \n\t\t\t 2010 \n\t\t \n\t \n\t Arnold, C. W., El-Saden, S. M., Bui, A. A. & Taira, R. Clinical case-based retrieval using latent topic analysis. AMIA Annu. Symp. Proc., 26-30 (2010)."
+    },
+    {
+      "title": "Hierarchically supervised latent dirichlet allocation",
+      "authors": [
+        "A Perotte",
+        "N Bartlett",
+        "N Elhadad",
+        "F Wood"
+      ],
+      "year": 2011,
+      "journal": "NIPS",
+      "raw": "Hierarchically supervised latent dirichlet allocation \n\t\t \n\t\t\t A Perotte \n\t\t \n\t\t \n\t\t\t N Bartlett \n\t\t \n\t\t \n\t\t\t N Elhadad \n\t\t \n\t\t \n\t\t\t F Wood \n\t\t \n\t \n\t \n\t\t NIPS \n\t\t \n\t\t\t \n\t\t\t 2011 \n\t\t \n\t \n\t Perotte, A., Bartlett, N., Elhadad, N. & Wood, F. Hierarchically supervised latent dirichlet allocation. NIPS, 2609-2617 (2011)."
+    },
+    {
+      "title": "Mining FDA drug labels using an unsupervised learning technique -topic modeling",
+      "authors": [
+        "H Bisgin",
+        "Z Liu",
+        "H Fang",
+        "X Xu",
+        "W Tong"
+      ],
+      "year": 2011,
+      "journal": "BMC Bioinformatics",
+      "volume": "12",
+      "pages": "11",
+      "raw": "Mining FDA drug labels using an unsupervised learning technique -topic modeling \n\t\t \n\t\t\t H Bisgin \n\t\t \n\t\t \n\t\t\t Z Liu \n\t\t \n\t\t \n\t\t\t H Fang \n\t\t \n\t\t \n\t\t\t X Xu \n\t\t \n\t\t \n\t\t\t W Tong \n\t\t \n\t \n\t \n\t\t BMC Bioinformatics \n\t\t \n\t\t\t 12 \n\t\t\t 11 \n\t\t\t 2011 \n\t\t \n\t \n\t Bisgin, H., Liu, Z., Fang, H., Xu, X. & Tong, W. Mining FDA drug labels using an unsupervised learning technique -topic modeling. BMC Bioinformatics 12, S11 (2011)."
+    },
+    {
+      "title": "Latent Dirichlet allocation",
+      "authors": [
+        "D Blei",
+        "A Ng",
+        "M Jordan"
+      ],
+      "year": 2003,
+      "doi": "10.7551/mitpress/1120.003.0082",
+      "journal": "J. Mach. Learn. Res",
+      "volume": "3",
+      "raw": "Latent Dirichlet allocation \n\t\t \n\t\t\t D M Blei \n\t\t \n\t\t \n\t\t\t A Y Ng \n\t\t \n\t\t \n\t\t\t M I Jordan \n\t\t \n\t\t 10.7551/mitpress/1120.003.0082 \n\t \n\t \n\t\t J. Mach. Learn. Res \n\t\t \n\t\t\t 3 \n\t\t\t \n\t\t\t 2003 \n\t\t \n\t \n\t Blei, D. M., Ng, A. Y. & Jordan, M. I. Latent Dirichlet allocation. J. Mach. Learn. Res. 3, 993-1022 (2003)."
+    },
+    {
+      "title": "Casemix adjustment of managed care claims data using the clinical classification for health policy research method",
+      "authors": [
+        "M Cowen"
+      ],
+      "year": 1998,
+      "journal": "Med. Care",
+      "volume": "36",
+      "raw": "Casemix adjustment of managed care claims data using the clinical classification for health policy research method \n\t\t \n\t\t\t M E Cowen \n\t\t \n\t \n\t \n\t\t Med. Care \n\t\t \n\t\t\t 36 \n\t\t\t \n\t\t\t 1998 \n\t\t \n\t \n\t Cowen, M. E. et al. Casemix adjustment of managed care claims data using the clinical classification for health policy research method. Med. Care 36, 1108-1113 (1998)."
+    },
+    {
+      "title": "Exploring strategies for training deep neural networks",
+      "authors": [
+        "H Larochelle",
+        "Y Bengio",
+        "J Louradour",
+        "P Lamblin"
+      ],
+      "year": 2009,
+      "journal": "J. Mach. Learn. Res",
+      "volume": "10",
+      "raw": "Exploring strategies for training deep neural networks \n\t\t \n\t\t\t H Larochelle \n\t\t \n\t\t \n\t\t\t Y Bengio \n\t\t \n\t\t \n\t\t\t J Louradour \n\t\t \n\t\t \n\t\t\t P Lamblin \n\t\t \n\t \n\t \n\t\t J. Mach. Learn. Res \n\t\t \n\t\t\t 10 \n\t\t\t \n\t\t\t 2009 \n\t\t \n\t \n\t Larochelle, H., Bengio, Y., Louradour, J. & Lamblin, P. Exploring strategies for training deep neural networks. J. Mach. Learn. Res. 10, 1-40 (2009)."
+    },
+    {
+      "title": "Random forests",
+      "authors": [
+        "L Breiman"
+      ],
+      "year": 2001,
+      "journal": "Mach. Learn",
+      "volume": "45",
+      "raw": "Random forests \n\t\t \n\t\t\t L Breiman \n\t\t \n\t \n\t \n\t\t Mach. Learn \n\t\t \n\t\t\t 45 \n\t\t\t \n\t\t\t 2001 \n\t\t \n\t \n\t Breiman, L. Random forests. Mach. Learn. 45, 5-32 (2001)."
+    },
+    {
+      "title": "Do we need hundreds of classifiers to solve real world classification problems?",
+      "authors": [
+        "M Fernandez-Delgado",
+        "E Cernadas",
+        "S Barro",
+        "D Amorim"
+      ],
+      "year": 2014,
+      "journal": "J. Mach. Learn. Res",
+      "volume": "15",
+      "raw": "Do we need hundreds of classifiers to solve real world classification problems? \n\t\t \n\t\t\t M Fernandez-Delgado \n\t\t \n\t\t \n\t\t\t E Cernadas \n\t\t \n\t\t \n\t\t\t S Barro \n\t\t \n\t\t \n\t\t\t D Amorim \n\t\t \n\t \n\t \n\t\t J. Mach. Learn. Res \n\t\t \n\t\t\t 15 \n\t\t\t \n\t\t\t 2014 \n\t\t \n\t \n\t Fernandez-Delgado, M., Cernadas, E., Barro, S. & Amorim, D. Do we need hundreds of classifiers to solve real world classification problems? J. Mach. Learn. Res. 15, 3133-3181 (2014)."
+    },
+    {
+      "title": "Introduction to Information Retrieval",
+      "authors": [
+        "C Manning",
+        "P Raghavan",
+        "H Sch\u00fctze"
+      ],
+      "year": 2008,
+      "raw": "Introduction to Information Retrieval \n\t\t \n\t\t\t C D Manning \n\t\t \n\t\t \n\t\t\t P Raghavan \n\t\t \n\t\t \n\t\t\t H Sch\u00fctze \n\t\t \n\t\t \n\t\t\t 2008 \n\t\t\t Cambridge University Press \n\t\t \n\t \n\t Manning, C. D., Raghavan, P. & Sch\u00fctze, H. Introduction to Information Retrieval. (Cambridge University Press, 2008)."
+    },
+    {
+      "title": "Connectomic reconstruction of the inner plexiform layer in the mouse retina",
+      "authors": [
+        "M Helmstaedter"
+      ],
+      "year": 2013,
+      "doi": "10.1038/nature12346",
+      "journal": "Nature",
+      "volume": "500",
+      "raw": "Connectomic reconstruction of the inner plexiform layer in the mouse retina \n\t\t \n\t\t\t M Helmstaedter \n\t\t \n\t\t 10.1038/nature12346 \n\t \n\t \n\t\t Nature \n\t\t \n\t\t\t 500 \n\t\t\t \n\t\t\t 2013 \n\t\t \n\t \n\t Helmstaedter, M. et al. Connectomic reconstruction of the inner plexiform layer in the mouse retina. Nature 500, 168-174 (2013)."
+    },
+    {
+      "title": "Deep neural nets as a method for quantitative structure-activity relationships",
+      "authors": [
+        "J Ma",
+        "R Sheridan",
+        "A Liaw",
+        "G Dahl",
+        "V Svetnik"
+      ],
+      "year": 2015,
+      "doi": "10.1021/ci500747n",
+      "journal": "J. Chem. Inf. Model",
+      "volume": "55",
+      "raw": "Deep neural nets as a method for quantitative structure-activity relationships \n\t\t \n\t\t\t J S Ma \n\t\t \n\t\t \n\t\t\t R P Sheridan \n\t\t \n\t\t \n\t\t\t A Liaw \n\t\t \n\t\t \n\t\t\t G E Dahl \n\t\t \n\t\t \n\t\t\t V Svetnik \n\t\t \n\t\t 10.1021/ci500747n \n\t \n\t \n\t\t J. Chem. Inf. Model \n\t\t \n\t\t\t 55 \n\t\t\t \n\t\t\t 2015 \n\t\t \n\t \n\t Ma, J. S., Sheridan, R. P., Liaw, A., Dahl, G. E. & Svetnik, V. Deep neural nets as a method for quantitative structure-activity relationships. J. Chem. Inf. Model 55, 263-274 (2015)."
+    },
+    {
+      "title": "Deep learning of the tissue-regulated splicing code",
+      "authors": [
+        "M Leung",
+        "H Xiong",
+        "L Lee",
+        "B Frey"
+      ],
+      "year": 2014,
+      "journal": "Bioinformatics",
+      "volume": "30",
+      "raw": "Deep learning of the tissue-regulated splicing code \n\t\t \n\t\t\t M K K Leung \n\t\t \n\t\t \n\t\t\t H Y Xiong \n\t\t \n\t\t \n\t\t\t L J Lee \n\t\t \n\t\t \n\t\t\t B J Frey \n\t\t \n\t \n\t \n\t\t Bioinformatics \n\t\t \n\t\t\t 30 \n\t\t\t \n\t\t\t 2014 \n\t\t \n\t \n\t Leung, M. K. K., Xiong, H. Y., Lee, L. J. & Frey, B. J. Deep learning of the tissue-regulated splicing code. Bioinformatics 30, 121-129 (2014)."
+    },
+    {
+      "title": "The human splicing code reveals new insights into the genetic determinants of disease",
+      "authors": [
+        "H Xiong"
+      ],
+      "year": 2015,
+      "journal": "Science",
+      "volume": "347",
+      "raw": "The human splicing code reveals new insights into the genetic determinants of disease \n\t\t \n\t\t\t H Y Xiong \n\t\t \n\t \n\t \n\t\t Science \n\t\t \n\t\t\t 347 \n\t\t\t \n\t\t\t 2015 \n\t\t \n\t \n\t Xiong, H. Y. et al. The human splicing code reveals new insights into the genetic determinants of disease. Science 347, 144-151 (2015)."
+    },
+    {
+      "title": "Predicting the sequence specificities of DNA-and RNA-binding proteins by deep learning",
+      "authors": [
+        "B Alipanahi",
+        "A Delong",
+        "M Weirauch",
+        "B Frey"
+      ],
+      "year": 2015,
+      "journal": "Nature Biotech",
+      "volume": "33",
+      "raw": "Predicting the sequence specificities of DNA-and RNA-binding proteins by deep learning \n\t\t \n\t\t\t B Alipanahi \n\t\t \n\t\t \n\t\t\t A Delong \n\t\t \n\t\t \n\t\t\t M T Weirauch \n\t\t \n\t\t \n\t\t\t B J Frey \n\t\t \n\t \n\t \n\t\t Nature Biotech \n\t\t \n\t\t\t 33 \n\t\t\t \n\t\t\t 2015 \n\t\t \n\t \n\t Alipanahi, B., Delong, A., Weirauch, M. T. & Frey, B. J. Predicting the sequence specificities of DNA-and RNA-binding proteins by deep learning. Nature Biotech. 33, 831-838 (2015)."
+    },
+    {
+      "title": "Deep learning for healthcare decision making with EMRs",
+      "authors": [
+        "Z Liang",
+        "G Zhang",
+        "J Huang",
+        "Q Hu"
+      ],
+      "year": 2014,
+      "journal": "IEEE BIBM",
+      "raw": "Deep learning for healthcare decision making with EMRs \n\t\t \n\t\t\t Z Liang \n\t\t \n\t\t \n\t\t\t G Zhang \n\t\t \n\t\t \n\t\t\t J X Huang \n\t\t \n\t\t \n\t\t\t Q V Hu \n\t\t \n\t \n\t \n\t\t IEEE BIBM \n\t\t \n\t\t\t \n\t\t\t 2014 \n\t\t \n\t \n\t Liang, Z., Zhang, G., Huang, J. X. & Hu, Q. V. Deep learning for healthcare decision making with EMRs. IEEE BIBM, 556-559 (2014)."
+    },
+    {
+      "title": "Reducing the dimensionality of data with neural networks",
+      "authors": [
+        "G Hinton",
+        "R Salakhutdinov"
+      ],
+      "year": 2006,
+      "journal": "Science",
+      "volume": "313",
+      "raw": "Reducing the dimensionality of data with neural networks \n\t\t \n\t\t\t G E Hinton \n\t\t \n\t\t \n\t\t\t R R Salakhutdinov \n\t\t \n\t \n\t \n\t\t Science \n\t\t \n\t\t\t 313 \n\t\t\t \n\t\t\t 2006 \n\t\t \n\t \n\t Hinton, G. E. & Salakhutdinov, R. R. Reducing the dimensionality of data with neural networks. Science 313, 504-507 (2006)."
+    },
+    {
+      "title": "Computational phenotype discovery using unsupervised feature learning over noisy, sparse, and irregular clinical data",
+      "authors": [
+        "T Lasko",
+        "J Denny",
+        "M Levy"
+      ],
+      "year": 2013,
+      "journal": "PLoS One",
+      "volume": "8",
+      "pages": "66341",
+      "raw": "Computational phenotype discovery using unsupervised feature learning over noisy, sparse, and irregular clinical data \n\t\t \n\t\t\t T A Lasko \n\t\t \n\t\t \n\t\t\t J C Denny \n\t\t \n\t\t \n\t\t\t M A Levy \n\t\t \n\t \n\t \n\t\t PLoS One \n\t\t \n\t\t\t 8 \n\t\t\t 66341 \n\t\t\t 2013 \n\t\t \n\t \n\t Lasko, T. A., Denny, J. C. & Levy, M. A. Computational phenotype discovery using unsupervised feature learning over noisy, sparse, and irregular clinical data. PLoS One 8, e66341 (2013)."
+    },
+    {
+      "title": "Improved cardiovascular risk prediction using non-parametric regression and electronic health record data",
+      "authors": [
+        "E Kennedy",
+        "W Wiitala",
+        "R Hayward",
+        "J Sussman"
+      ],
+      "year": 2013,
+      "doi": "10.1097/mlr.0b013e31827da594",
+      "journal": "Med. Care",
+      "volume": "51",
+      "raw": "Improved cardiovascular risk prediction using non-parametric regression and electronic health record data \n\t\t \n\t\t\t E H Kennedy \n\t\t \n\t\t \n\t\t\t W L Wiitala \n\t\t \n\t\t \n\t\t\t R A Hayward \n\t\t \n\t\t \n\t\t\t J B Sussman \n\t\t \n\t\t 10.1097/mlr.0b013e31827da594 \n\t \n\t \n\t\t Med. Care \n\t\t \n\t\t\t 51 \n\t\t\t \n\t\t\t 2013 \n\t\t \n\t \n\t Kennedy, E. H., Wiitala, W. L., Hayward, R. A. & Sussman, J. B. Improved cardiovascular risk prediction using non-parametric regression and electronic health record data. Med. Care 51, 251-258 (2013)."
+    },
+    {
+      "title": "Prediction and informative risk factor selection of bone diseases",
+      "authors": [
+        "L Hui",
+        "L Xiaoyi",
+        "M Ramanathan",
+        "Z Aidong"
+      ],
+      "year": 2015,
+      "journal": "IEEE/ACM T. Comput. Biol. Bioinform",
+      "volume": "12",
+      "raw": "Prediction and informative risk factor selection of bone diseases \n\t\t \n\t\t\t L Hui \n\t\t \n\t\t \n\t\t\t L Xiaoyi \n\t\t \n\t\t \n\t\t\t M Ramanathan \n\t\t \n\t\t \n\t\t\t Z Aidong \n\t\t \n\t \n\t \n\t\t IEEE/ACM T. Comput. Biol. Bioinform \n\t\t \n\t\t\t 12 \n\t\t\t \n\t\t\t 2015 \n\t\t \n\t \n\t Hui, L., Xiaoyi, L., Ramanathan, M. & Aidong, Z. Prediction and informative risk factor selection of bone diseases. IEEE/ACM T. Comput. Biol. Bioinform. 12, 79-91 (2015)."
+    },
+    {
+      "title": "Risk prediction for chronic kidney disease progression using heterogeneous electronic health record data and time series analysis",
+      "authors": [
+        "A Perotte",
+        "R Ranganath",
+        "J Hirsch",
+        "D Blei",
+        "N Elhadad"
+      ],
+      "year": 2015,
+      "journal": "J. Am. Med. Inform. Assoc",
+      "volume": "22",
+      "raw": "Risk prediction for chronic kidney disease progression using heterogeneous electronic health record data and time series analysis \n\t\t \n\t\t\t A Perotte \n\t\t \n\t\t \n\t\t\t R Ranganath \n\t\t \n\t\t \n\t\t\t J S Hirsch \n\t\t \n\t\t \n\t\t\t D Blei \n\t\t \n\t\t \n\t\t\t N Elhadad \n\t\t \n\t \n\t \n\t\t J. Am. Med. Inform. Assoc \n\t\t \n\t\t\t 22 \n\t\t\t \n\t\t\t 2015 \n\t\t \n\t \n\t Perotte, A., Ranganath, R., Hirsch, J. S., Blei, D. & Elhadad, N. Risk prediction for chronic kidney disease progression using heterogeneous electronic health record data and time series analysis. J. Am. Med. Inform. Assoc. 22, 872-880 (2015)."
+    },
+    {
+      "title": "Diagnosis code assignment: Models and evaluation metrics",
+      "authors": [
+        "A Perotte"
+      ],
+      "year": 2014,
+      "journal": "J. Am. Med. Inform. Assoc",
+      "volume": "21",
+      "raw": "Diagnosis code assignment: Models and evaluation metrics \n\t\t \n\t\t\t A Perotte \n\t\t \n\t \n\t \n\t\t J. Am. Med. Inform. Assoc \n\t\t \n\t\t\t 21 \n\t\t\t \n\t\t\t 2014 \n\t\t \n\t \n\t Perotte, A. et al. Diagnosis code assignment: Models and evaluation metrics. J. Am. Med. Inform. Assoc. 21, 231-237 (2014)."
+    },
+    {
+      "title": "A method for inferring medical diagnoses from patient similarities",
+      "authors": [
+        "A Gottlieb",
+        "G Stein",
+        "E Ruppin",
+        "R Altman",
+        "R Sharan"
+      ],
+      "year": 2013,
+      "doi": "10.1186/1741-7015-11-194",
+      "journal": "BMC Med",
+      "volume": "11",
+      "raw": "A method for inferring medical diagnoses from patient similarities \n\t\t \n\t\t\t A Gottlieb \n\t\t \n\t\t \n\t\t\t G Y Stein \n\t\t \n\t\t \n\t\t\t E Ruppin \n\t\t \n\t\t \n\t\t\t R B Altman \n\t\t \n\t\t \n\t\t\t R Sharan \n\t\t \n\t\t 10.1186/1741-7015-11-194 \n\t \n\t \n\t\t BMC Med \n\t\t \n\t\t\t 11 \n\t\t\t \n\t\t\t 2013 \n\t\t \n\t \n\t Gottlieb, A., Stein, G. Y., Ruppin, E., Altman, R. B. & Sharan, R. A method for inferring medical diagnoses from patient similarities. BMC Med. 11, 194-203 (2013)."
+    },
+    {
+      "title": "Electronic health records: Implications for drug discovery",
+      "authors": [
+        "L Yao",
+        "Y Zhang",
+        "Y Li",
+        "P Sanseau",
+        "P Agarwal"
+      ],
+      "year": 2011,
+      "doi": "10.1016/j.drudis.2011.05.009",
+      "journal": "Drug Discov. Today",
+      "volume": "16",
+      "raw": "Electronic health records: Implications for drug discovery \n\t\t \n\t\t\t L X Yao \n\t\t \n\t\t \n\t\t\t Y Y Zhang \n\t\t \n\t\t \n\t\t\t Y Li \n\t\t \n\t\t \n\t\t\t P Sanseau \n\t\t \n\t\t \n\t\t\t P Agarwal \n\t\t \n\t\t 10.1016/j.drudis.2011.05.009 \n\t \n\t \n\t\t Drug Discov. Today \n\t\t \n\t\t\t 16 \n\t\t\t \n\t\t\t 2011 \n\t\t \n\t \n\t Yao, L. X., Zhang, Y. Y., Li, Y., Sanseau, P. & Agarwal, P. Electronic health records: Implications for drug discovery. Drug Discov. Today 16, 594-599 (2011)."
+    }
+  ],
+  "num_references": 48,
+  "figures": [
+    {
+      "caption": "Figure 1 .",
+      "description": "Figure 1. Conceptual framework used to derive the deep patient representation through unsupervised deep learning of a large EHR data warehouse. (A) Pre-processing stage to obtain raw patient representations from the EHRs. (B) The raw representations are modeled by the unsupervised deep architecture leading to a set of general and robust features. (C) The deep features are applied to the entire hospital database to derive patient representations that can be applied to a number of clinical tasks."
+    },
+    {
+      "caption": "Figure 2 .",
+      "description": "Figure 2. Diagram of the unsupervised deep feature learning pipeline to transform a raw dataset into the deep patient representation through multiple layers of neural networks. Each layer of the neural network is trained to produce a higher-level representation from the result of the previous layer."
+    },
+    {
+      "caption": "Figure 3 .",
+      "description": "Figure 3. R-precision obtained in the disease tagging experiment by the different patient representations over several prediction time intervals (expressed as number of days).We reports results for patients represented with original descriptors (RawFeat) and pre-processed by principal component analysis (PCA), independent component analysis (ICA), Gaussian mixture model (GMM), k-means clustering (K-Means), and three-layer stacked denoising autoencoders (DeepPatient)."
+    },
+    {
+      "type": "table",
+      "caption": "Table 1 . Disease classification results in terms of area under the ROC curve (AUC-ROC), accuracy and F-score",
+      "description": ". (*) The difference with the corresponding second best measurement is statistically significant (p < 0.05, t-test)."
+    },
+    {
+      "type": "table",
+      "caption": "Table 3 . Patient disease tagging results for diagnoses assigned during different time intervals in terms of precision-at-k, with k = 1, 3, 5; UppBnd shows the best results achievable (i.e., all the correct diagnoses assigned to all the patients",
+      "description": "). (*) The difference with the corresponding second best measurement is statistically significant (p < 0.05, t-test)."
+    }
+  ],
+  "num_figures": 5,
+  "tables": [
+    {
+      "content": "Time Interval = 1 year (76,214 patients) Area under the ROC curve Disease RawFeat PCA DeepPatient Diabetes mellitus with complications 0.794 0.861 0.907 Cancer of rectum and anus 0.863 0.821 0.887 Cancer of liver and intrahepatic bile duct 0.830 0.867 0.886 Regional enteritis and ulcerative colitis 0.814 0.843 0.870 Congestive heart failure (non-hypertensive) 0.808 0.808 0.865 Attention-deficit and disruptive behavior disorders 0.730 0.797 0.863 Cancer of prostate 0.692 0.820 0.859 Schizophrenia 0.791 0.788 0.853 Multiple myeloma 0.783 0.739 0.849 Acute myocardial infarction 0.771 0.775 0.847 Table"
+    },
+    {
+      "content": "DeepPatient"
+    }
+  ],
+  "num_tables": 2,
+  "license": "(2016). This work is licensed under a Creative Commons Attribution 4.0 International License. The images or other third party material in this article are included in the article's Creative Commons license, unless indicated otherwise in the credit line; if the material is not included under the Creative Commons license, users will need to obtain permission from the license holder to reproduce the material. To view a copy of this license, visit http://creativecommons.org/licenses/by/4.0/",
+  "license_type": "unknown",
+  "formulas": [
+    {
+      "text": "= = + \u03b8 y x Wx b f s ( ) ( ), (1)"
+    },
+    {
+      "text": "= = + \u03b8 \u2032 \u2032 \u2032 z y W y b g s ( ) ( ) , (2)"
+    },
+    {
+      "text": "with \u03b8 = \u2032 \u2032 \u2032 W b { , } and = \u2032 W W T (i.e."
+    },
+    {
+      "text": "x L z ( , ) H )."
+    },
+    {
+      "text": "\uf0b0 \uf0b0 x x x q ( ) D"
+    },
+    {
+      "text": "\u2211 \u03b8 \u03b8\u2032 = = \u03b8 \u03b8 \u03b8 \u03b8 = \u2032 \u2032 \u204e x z x z arg min L a rg min N L , (, ) 1 ( , ), (3) i"
+    },
+    {
+      "text": "N i i , , 1 ( ) ( )"
+    },
+    {
+      "text": "\u2211 = - + - - . = x z L xlogz x z ( , ) [ (1"
+    },
+    {
+      "text": "H k d k k k k 1"
+    }
+  ],
+  "num_formulas": 9,
+  "num_citations": 44,
+  "cited_references": [
+    "b39",
+    "b41",
+    "b18",
+    "b44",
+    "b17",
+    "b36",
+    "b25",
+    "b35",
+    "b20",
+    "b43",
+    "b21",
+    "b47",
+    "b40",
+    "b42",
+    "b30",
+    "b31",
+    "b29",
+    "b16",
+    "b37",
+    "b46",
+    "b23",
+    "b32",
+    "b19",
+    "b28",
+    "b45",
+    "b38",
+    "b24",
+    "b4",
+    "b33",
+    "b11",
+    "b8",
+    "b22",
+    "b34",
+    "b27",
+    "b26"
+  ],
+  "notes": [
+    "[raw_affiliation] 1  Department of Genetics and Genomic Sciences , Icahn School of Medicine at Mount Sinai , New York , NY , USA.",
+    "[raw_affiliation] 2  Harris Center for Precision Wellness , Icahn School of Medicine at Mount Sinai , New York , NY , USA.",
+    "[raw_affiliation] 3  Icahn Institute for Genomics and Multiscale Biology , Icahn School of Medicine at Mount Sinai , New York , NY , USA.",
+    "[raw_affiliation] 1  Department of Genetics and Genomic Sciences , Icahn School of Medicine at Mount Sinai , New York , NY , USA.",
+    "[raw_affiliation] 2  Harris Center for Precision Wellness , Icahn School of Medicine at Mount Sinai , New York , NY , USA.",
+    "[raw_affiliation] 3  Icahn Institute for Genomics and Multiscale Biology , Icahn School of Medicine at Mount Sinai , New York , NY , USA.",
+    "[raw_affiliation] 1  Department of Genetics and Genomic Sciences , Icahn School of Medicine at Mount Sinai , New York , NY , USA.",
+    "[raw_affiliation] 2  Harris Center for Precision Wellness , Icahn School of Medicine at Mount Sinai , New York , NY , USA.",
+    "[raw_affiliation] 3  Icahn Institute for Genomics and Multiscale Biology , Icahn School of Medicine at Mount Sinai , New York , NY , USA.",
+    "[raw_affiliation] 1  Department of Genetics and Genomic Sciences , Icahn School of Medicine at Mount Sinai , New York , NY , USA.",
+    "[raw_affiliation] 2  Harris Center for Precision Wellness , Icahn School of Medicine at Mount Sinai , New York , NY , USA.",
+    "[raw_affiliation] 3  Icahn Institute for Genomics and Multiscale Biology , Icahn School of Medicine at Mount Sinai , New York , NY , USA.",
+    "[submission] received: 28 January 2016 Accepted: 27 April 2016",
+    "[other] Metrics UppBnd Patient Representation RawFeat PCA ICA",
+    "Scientific RepoRts | 6:26094 | DOI: 10.1038/srep26094",
+    "[raw_reference] Hersh, W. R. Adding value to the electronic health record through secondary use of data for quality assurance, research, and surveillance. Am. J. Manag. Care 13, 277-278 (2007).",
+    "[raw_reference] Tatonetti, N. P., Ye, P. P., Daneshjou, R. & Altman, R. B. Data-driven prediction of drug effects and interactions. Sci. Transl. Med. 4, 125ra131 (2012).",
+    "[raw_reference] Li, L. et al. Identification of type 2 diabetes subgroups through topological analysis of patient similarity. Sci. Transl. Med. 7, 311ra174 (2015).",
+    "[raw_reference] Doshi-Velez, F., Ge, Y. & Kohane, I. Comorbidity clusters in autism spectrum disorders: an electronic health record time-series analysis. Pediatrics 133, e54-63 (2014).",
+    "[raw_reference] Miotto, R. & Weng, C. Case-based reasoning using electronic health records efficiently identifies eligible patients for clinical trials. J. Am. Med. Inform. Assoc. 22, E141-E150 (2015).",
+    "[raw_reference] Bellazzi, R. & Zupan, B. Predictive data mining in clinical medicine: current issues and guidelines. Int. J. Med. Inform. 77, 81-97 (2008).",
+    "[raw_reference] Jensen, P. B., Jensen, L. J. & Brunak, S. Mining electronic health records: towards better research applications and clinical care. Nat. Rev. Genet. 13, 395-405 (2012).",
+    "[raw_reference] Dahlem, D., Maniloff, D. & Ratti, C. Predictability bounds of electronic health records. Sci. Rep. 5, 11865 (2015).",
+    "[raw_reference] Wu, J. L., Roy, J. & Stewart, W. F. Prediction modeling using EHR data: challenges, strategies, and a comparison of machine learning approaches. Med. Care 48, S106-S113 (2010).",
+    "[raw_reference] Weiskopf, N. G., Hripcsak, G., Swaminathan, S. & Weng, C. Defining and measuring completeness of electronic health records for secondary use. J. Biomed. Inform. 46, 830-836 (2013).",
+    "[raw_reference] Weiskopf, N. G. & Weng, C. Methods and dimensions of electronic health record data quality assessment: enabling reuse for clinical research. J. Am. Med. Inform. Assoc. 20, 144-151 (2013).",
+    "[raw_reference] Bengio, Y., Courville, A. & Vincent, P. Representation learning: a review and new perspectives. IEEE T. Pattern Anal. Mach. Intell. 35, 1798-1828 (2013).",
+    "[raw_reference] Jordan, M. I. & Mitchell, T. M. Machine learning: trends, perspectives, and prospects. Science 349, 255-260 (2015).",
+    "[raw_reference] Huang, S. H. et al. Toward personalizing treatment for depression: predicting diagnosis and severity. J. Am. Med. Inform. Assoc. 21, 1069-1075 (2014).",
+    "[raw_reference] Lyalina, S. et al. Identifying phenotypic signatures of neuropsychiatric disorders from electronic medical records. J. Am. Med. Inform. Assoc. 20, e297-305 (2013).",
+    "[raw_reference] Wang, X., Sontag, D. & Wang, F. Unsupervised learning of disease progression models. ACM SIGKDD, 85-94 (2014).",
+    "[raw_reference] LeCun, Y., Bengio, Y. & Hinton, G. Deep learning. Nature 521, 436-444 (2015).",
+    "[raw_reference] Vincent, P., Larochelle, H., Lajoie, I., Bengio, Y. & Manzagol, P. A. Stacked denoising autoencoders: learning useful representations in a deep network with a local denoising criterion. J. Mach. Learn. Res. 11, 3371-3408 (2010).",
+    "[raw_reference] Shah, N. H. et al. Comparison of concept recognizers for building the Open Biomedical Annotator. BMC Bioinformatics 10, S14 (2009).",
+    "[raw_reference] Musen, M. A. et al. The National Center for Biomedical Ontology. J. Am. Med. Inform. Assoc. 19, 190-195 (2012).",
+    "[raw_reference] Jonquet, C., Shah, N. H. & Musen, M. A. The Open Biomedical Annotator. Summit on Translat. Bioinforma. 2009, 56-60 (2009).",
+    "[raw_reference] Lependu, P., Iyer, S. V., Fairon, C. & Shah, N. H. Annotation analysis for testing drug safety signals using unstructured clinical notes. J. Biomed. Semantics 3, S5 (2012).",
+    "[raw_reference] Chapman, W. W., Bridewell, W., Hanbury, P., Cooper, G. F. & Buchanan, B. G. A simple algorithm for identifying negated findings and diseases in discharge summaries. J. Biomed. Inform. 34, 301-310 (2001).",
+    "[raw_reference] Cohen, R., Elhadad, M. & Elhadad, N. Redundancy in electronic health record corpora: analysis, impact on text mining performance and mitigation strategies. BMC Bioinformatics 14, 10 (2013).",
+    "[raw_reference] Blei, D. M. Probabilistic topic models. Commun. ACM 55, 77-84 (2012).",
+    "[raw_reference] Arnold, C. W., El-Saden, S. M., Bui, A. A. & Taira, R. Clinical case-based retrieval using latent topic analysis. AMIA Annu. Symp. Proc., 26-30 (2010).",
+    "[raw_reference] Perotte, A., Bartlett, N., Elhadad, N. & Wood, F. Hierarchically supervised latent dirichlet allocation. NIPS, 2609-2617 (2011).",
+    "[raw_reference] Bisgin, H., Liu, Z., Fang, H., Xu, X. & Tong, W. Mining FDA drug labels using an unsupervised learning technique -topic modeling. BMC Bioinformatics 12, S11 (2011).",
+    "[raw_reference] Blei, D. M., Ng, A. Y. & Jordan, M. I. Latent Dirichlet allocation. J. Mach. Learn. Res. 3, 993-1022 (2003).",
+    "[raw_reference] Cowen, M. E. et al. Casemix adjustment of managed care claims data using the clinical classification for health policy research method. Med. Care 36, 1108-1113 (1998).",
+    "[raw_reference] Larochelle, H., Bengio, Y., Louradour, J. & Lamblin, P. Exploring strategies for training deep neural networks. J. Mach. Learn. Res. 10, 1-40 (2009).",
+    "[raw_reference] Breiman, L. Random forests. Mach. Learn. 45, 5-32 (2001).",
+    "[raw_reference] Fernandez-Delgado, M., Cernadas, E., Barro, S. & Amorim, D. Do we need hundreds of classifiers to solve real world classification problems? J. Mach. Learn. Res. 15, 3133-3181 (2014).",
+    "[raw_reference] Manning, C. D., Raghavan, P. & Sch\u00fctze, H. Introduction to Information Retrieval. (Cambridge University Press, 2008).",
+    "[raw_reference] Helmstaedter, M. et al. Connectomic reconstruction of the inner plexiform layer in the mouse retina. Nature 500, 168-174 (2013).",
+    "[raw_reference] Ma, J. S., Sheridan, R. P., Liaw, A., Dahl, G. E. & Svetnik, V. Deep neural nets as a method for quantitative structure-activity relationships. J. Chem. Inf. Model 55, 263-274 (2015).",
+    "[raw_reference] Leung, M. K. K., Xiong, H. Y., Lee, L. J. & Frey, B. J. Deep learning of the tissue-regulated splicing code. Bioinformatics 30, 121-129 (2014).",
+    "[raw_reference] Xiong, H. Y. et al. The human splicing code reveals new insights into the genetic determinants of disease. Science 347, 144-151 (2015).",
+    "[raw_reference] Alipanahi, B., Delong, A., Weirauch, M. T. & Frey, B. J. Predicting the sequence specificities of DNA-and RNA-binding proteins by deep learning. Nature Biotech. 33, 831-838 (2015).",
+    "[raw_reference] Liang, Z., Zhang, G., Huang, J. X. & Hu, Q. V. Deep learning for healthcare decision making with EMRs. IEEE BIBM, 556-559 (2014).",
+    "[raw_reference] Hinton, G. E. & Salakhutdinov, R. R. Reducing the dimensionality of data with neural networks. Science 313, 504-507 (2006).",
+    "[raw_reference] Lasko, T. A., Denny, J. C. & Levy, M. A. Computational phenotype discovery using unsupervised feature learning over noisy, sparse, and irregular clinical data. PLoS One 8, e66341 (2013).",
+    "[raw_reference] Kennedy, E. H., Wiitala, W. L., Hayward, R. A. & Sussman, J. B. Improved cardiovascular risk prediction using non-parametric regression and electronic health record data. Med. Care 51, 251-258 (2013).",
+    "[raw_reference] Hui, L., Xiaoyi, L., Ramanathan, M. & Aidong, Z. Prediction and informative risk factor selection of bone diseases. IEEE/ACM T. Comput. Biol. Bioinform. 12, 79-91 (2015).",
+    "[raw_reference] Perotte, A., Ranganath, R., Hirsch, J. S., Blei, D. & Elhadad, N. Risk prediction for chronic kidney disease progression using heterogeneous electronic health record data and time series analysis. J. Am. Med. Inform. Assoc. 22, 872-880 (2015).",
+    "[raw_reference] Perotte, A. et al. Diagnosis code assignment: Models and evaluation metrics. J. Am. Med. Inform. Assoc. 21, 231-237 (2014).",
+    "[raw_reference] Gottlieb, A., Stein, G. Y., Ruppin, E., Altman, R. B. & Sharan, R. A method for inferring medical diagnoses from patient similarities. BMC Med. 11, 194-203 (2013).",
+    "[raw_reference] Yao, L. X., Zhang, Y. Y., Li, Y., Sanseau, P. & Agarwal, P. Electronic health records: Implications for drug discovery. Drug Discov. Today 16, 594-599 (2011)."
+  ],
+  "processing_software": {
+    "GROBID": "0.8.2"
+  }
+}

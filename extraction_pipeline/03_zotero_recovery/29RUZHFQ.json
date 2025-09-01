@@ -1,0 +1,2152 @@
+{
+  "paper_id": "29RUZHFQ",
+  "title": "Pareto optimization to accelerate multi-objective virtual screening \u2020",
+  "abstract": "The discovery of therapeutic molecules is fundamentally a multi-objective optimization problem. One formulation of the problem is to identify molecules that simultaneously exhibit strong binding affinity for a target protein, minimal off-target interactions, and suitable pharmacokinetic properties. Inspired by prior work that uses active learning to accelerate the identification of strong binders, we implement multi-objective Bayesian optimization to reduce the computational cost of multi-property virtual screening and apply it to the identification of ligands predicted to be selective based on docking scores to on-and off-targets. We demonstrate the superiority of Pareto optimization over scalarization across three case studies. Further, we use the developed optimization tool to search a virtual library of over 4M molecules for those predicted to be selective dual inhibitors of EGFR and IGF1R, acquiring 100% of the molecules that form the library's Pareto front after exploring only 8% of the library. This workflow and associated open source software can reduce the screening burden of molecular design projects and is complementary to research aiming to improve the accuracy of binding predictions and other molecular properties.",
+  "year": 2024,
+  "date": "2024-01-15",
+  "authors": [
+    {
+      "name": "Jenna Fromer",
+      "affiliation": {
+        "organization": "Department of Chemical Engineering",
+        "department": "Department of Chemical Engineering",
+        "institution": "MIT",
+        "address": "02139, Cambridge, MA, USA"
+      }
+    },
+    {
+      "name": "David Graff"
+    },
+    {
+      "name": "Connor Coley",
+      "email": "ccoley@mit.edu"
+    },
+    {
+      "affiliation": {
+        "organization": "Department of Chemistry and Chemical Biology",
+        "department": "Department of Chemistry and Chemical Biology",
+        "institution": "Harvard University",
+        "address": "02138, Cambridge, MA, USA"
+      }
+    },
+    {
+      "affiliation": {
+        "organization": "Department of Electrical Engineering and Computer Science",
+        "department": "Department of Electrical Engineering and Computer Science",
+        "institution": "MIT",
+        "address": "02139, Cambridge, MA, USA"
+      }
+    }
+  ],
+  "doi": "10.1039/d3dd00227f",
+  "md5": "3479E33460EE87F7F258735B6AFD3288",
+  "publication": {
+    "journal": "J. Chem. Inf. Model",
+    "journal_inferred": true
+  },
+  "funding": [
+    "",
+    "",
+    "Acknowledgements This work was funded by the  DARPA Accelerated Molecular Discovery program  under contract number  HR00111920025 . J. C. F. received additional support from the  National Science Foundation Graduate Research Fellowship  under Grant No.  2141064 . The authors acknowledge the MIT SuperCloud,  123  Lincoln Laboratory Supercomputing Center, and the  MIT Engaging Cluster  for providing HPC resources that have contributed to the research results reported within this paper. The authors thank  Samuel Goldman  for helpful discussions about the content of this manuscript."
+  ],
+  "sections": [
+    {
+      "title": "1. Introduction",
+      "text": "Molecular discovery aims to identify molecules that balance multiple, o\ue09den competing, properties. The need to simultaneously optimize multiple properties is especially notable in drug discovery work\ue104ows. Small molecule drugs operating through direct single-target binding interactions must exhibit not only strong binding affinity for the target protein but also minimal off-target interactions and suitable pharmacokinetic properties.  [1] [2] 2] [3]  One formulation of small molecule drug discovery is to identify compounds that bind strongly to a protein of interest and subsequently modify them to ful\ue103ll remaining property constraints.  1, 4, 5 A candidate molecule with high activity but a poor pharmacokinetic pro\ue103le may ultimately be abandoned, resulting in wasted time and resources.  3, 6 electivity is one property that is o\ue09den considered only a\ue09der a hit with promising primary activity is identi\ue103ed.  1 Selectivity may be measured with binding assays against off-targets that are structurally similar to the primary target or known to be associated with adverse side effects (e.g., cytochromes P450 and the hERG channel).  3, 7 Non-speci\ue103c ligands that bind to many proteins in addition to the target may require additional optimization steps when compared to their selective counterparts.  2, 8 onsideration of promiscuity early in a drug discovery project may aid in deprioritizing chemical series that are inherently nonselective.  9, 10 In other settings, binding interactions with multiple targets can be advantageous.  11 Therapeutics for Alzheimer's disease  12, 13  and thyroid cancer  14, 15  have exhibited improved efficacy through affinity for multiple protein targets. Optimizing affinity to multiple targets is another goal that can be brought into earlier stages of hit discovery.  16, 17 nticipating protein-ligand interactions that contribute to potency and selectivity is possible, albeit imperfectly, with structure-based drug design techniques that employ scoring functions to estimate energetic favorability. Docking to offtargets has been applied to improve the selectivity pro\ue103les of identi\ue103ed compounds.  [18] [19] 9] [20]  These demonstrations have revealed that falsely predicted non-binders may incorrectly be categorized as selective because scoring functions designed for hit-\ue103nding typically aim to minimize the false positive rate (i.e., weak binders predicted to bind strongly), not the false negative rate (i.e., binders predicted not to bind).  20, 21 Although structurebased methods like docking are limited in their predictive accuracy,  [22] [23] [24] [25] [26] [27]  docking-based virtual screens can still effectively enrich a virtual library for molecules that are more likely to exhibit target activity.  [28] [29] ] [30] [31] [32]  The computational cost of virtual screening  33  has motivated the development of model-guided optimization methods that reduce the total number of docking calculations required to recover top-performing molecules.  [34] [35] 5] [36] [37] [38] [39] [40]  As one example, Graff et al.  37  only require the docking scores of 2.4% of a 100M member virtual library to identify over 90% of the library's top-50 000 ligands. Similar principles apply when using more expensive evaluations such as relative binding free energy calculations,  41  where a reduction of computational cost can be particularly bene\ue103cial. These methods are designed to optimize a single property and are inherently single-objective optimizations.\n\nThe need for model-guided optimization methods in virtual screening is heightened when multiple properties are screened. The resources required for a multi-objective virtual screen scale linearly with the number of screened properties (\"objectives\") and library size. In some settings, exhaustive screens of large virtual libraries (millions to billions) may be infeasible. Modelguided multi-objective optimization has the potential to reduce the computational cost of a multi-objective virtual screen without sacri\ue103cing performance. Mehta et al.  42  have previously applied Bayesian optimization to identify molecules that simultaneously optimize the docking score to Tau Tubulin Kinase 1, calculated octanol-water partition coefficient (clogP),  43  and synthetic accessibility score (SA_Score).  44 Their implemented acquisition function is a product of acquisition scores for individual objectives,  42  leading to the recovery of over 90% of the most desirable molecules a\ue09der scoring only 6% of the virtual library. Multi-objective virtual screens involve multiple design choices primarily related to the acquisition strategy, which have not yet been compared in the context of virtual screening. Further, existing methods for multi-objective virtual screening do not implement Pareto optimization. Pareto optimization aims to identify the molecules that form or are close to the Pareto front, for which an improvement in one objective necessitates a detriment to another. Molecules that form the Pareto front optimally balance multiple desired properties, illustrate which combinations of objective values are possible, and reveal trade-offs in the objective space; this is not possible with scalarization.\n\nIn this work, we extend the molecular pool-based active learning tool MolPAL 37 to this setting of multi-objective virtual screening. MolPAL is publicly available, open source, and can be adopted for multi-objective virtual screening with any desired set of objective functions, including those beyond structure-based drug design. We demonstrate through three retrospective case studies that MolPAL can efficiently search a virtual library for putative selective binders. We compare optimization performance across multi-objective acquisition functions and demonstrate the superiority of Pareto-based acquisition functions over scalarization ones. We also implement a diversity-enhanced acquisition strategy that increases the number of acquired scaffolds by 33% with only a minor impact on optimization performance. Finally, we apply MolPAL to efficiently search the Enamine Screening Collection 45 of over 4 million molecules for selective dual inhibitors of EGFR and IGF1R as an exemplary 3-objective optimization. A\ue09der exploration of only 8% of the virtual library, 100% of the library's nondominated points and over 60% of the library's top \u223c0.1%, de\ue103ned by non-dominated sorting, are identi\ue103ed by MolPAL."
+    },
+    {
+      "title": "2. Multi-objective virtual screening with MolPAL",
+      "text": "MolPAL applies the multi-objective pool-based work\ue104ow described in ref. 46, combining multi-objective Bayesian optimization and surrogate models to efficiently explore a virtual library for molecules that simultaneously optimize multiple properties (Fig.  1 ). Similar work\ue104ows have been demonstrated for the design of battery materials  [47] [48] [49]  and other functional materials.  [50] [51] 1] [52]  As summarized in Algorithm S2, \u2020 objective values are \ue103rst calculated for a subset of the library, and surrogate models that predict each objective are trained on these initial observations. A\ue09der objective values are predicted for all candidate molecules, an acquisition function selects a set of promising molecules for objective function evaluation. The surrogate models are then retrained with new observations, and the iterative loop repeats until a stopping criterion is met.\n\nRelative to its initial release in ref. 37, MolPAL was extended primarily through modi\ue103cation of the acquisition strategy and handling of multiple surrogate models. The multi-objective extension of MolPAL allows users to select between Pareto optimization and scalarization strategies.\n\nScalarization reduces a multi-objective optimization problem into a single-objective problem, o\ue09den through a weighted sum:\n\nwith each l i denoting the relative importance of objective f i . Weighted sum scalarization requires the relative importance of objectives to be known before the optimization in order to assign weighting factors l. Alternative scalarization strategies beyond a weighted sum include random scalarization  54, 55  and Chebyshev scalarization,  56, 57  but these are not yet implemented in MolPAL. Scalarization enables the use of single-objective acquisition functions, which include probability of improvement (PI)  58  or expected improvement (EI)  59  (Fig.  2A ), greedy, and upper con\ue103dence bound (UCB)  60  (Table  1 ). Scalarization is implemented prior to surrogate model training, i.e., only one single-task surrogate model is necessary. Algorithm S1 \u2020 summarizes MolPAL's implementation of scalarized multi-objective optimization.\n\nPareto optimization is a multi-objective optimization strategy that reveals the trade-offs between objectives and does not require any measure of the relative importance of objectives. Further, Pareto optimization aims to identify the entire Pareto front, a feature not guaranteed by single-objective methods such as weighted sum scalarization.  61, 62 Common multi-objective acquisition functions include the probability of hypervolume improvement (PHI),  53  expected hypervolume improvement (EHI),  53  non-dominated sorting (NDS),  63, 64  and Pareto upper con\ue103dence bound (P-UCB).  65 These are natural extensions of single-objective acquisition functions (Table  1 ) that instead aim to increase the region, or hypervolume, dominated by the acquired points (Fig.  2 ). P-UCB and its single-objective analog UCB are not considered in this work.    extend the principles of PI and EI to multiple dimensions using the observed Pareto front (grey dashed line) rather than f*. Probability of hypervolume improvement (PHI) represents the likelihood that acquisition of an unobserved point would increase the hypervolume by any amount. Expected hypervolume improvement (EHI) estimates the increase in hypervolume if the objective function value of such a point is scored.  53 Objectives are defined so that optimization corresponds to maximization.\n\nTable  1  Common single-objective acquisition functions and their multi-objective analogs. \u2119 and E represent probability and expected value, respectively. f* is the current best objective value, HV is hypervolume, and rank is the Pareto rank. Surrogate models provide prediction means m and standard deviations s for the objective value f of candidate point x. X acq is the set of points acquired in previous iterations. Bold variables are vectors. N \u00f0m; s\u00de implies that the covariance matrix is treated as diagonal with entries s i 2 , i.e., uncertainty is uncorrelated across objective functions"
+    },
+    {
+      "title": "Single-objective",
+      "text": "Multi-objective PI  58  \u2119 f \u00f0x\u00de$N \u00f0m\u00f0x\u00de;s\u00f0x\u00de\u00de \u00bdf \u00f0x\u00de . f * PHI  53  \u2119 f\u00f0x\u00de$N \u00f0m\u00f0x\u00de;s\u00f0x\u00de\u00de \u00bdHV\u00f0X acq Wx\u00de . HV\u00f0X acq \u00de EI  59  E f \u00f0x\u00de$N \u00f0m\u00f0x\u00de;s\u00f0x\u00de\u00de \u00bdmaxff \u00f0x\u00de \u00c0 f *; 0g EHI  53  E f\u00f0x\u00de$N \u00f0m\u00f0x\u00de;s\u00f0x\u00de\u00de \u00bdHV\u00f0X acq Wx\u00de \u00c0 HV\u00f0X acq \u00de Greedy m(x) NDS  63, 64  rank(m(x)) UCB  60  m(x) + bs(x) P-UCB 65 rank(m(x) + bs(x))\n\nAcquiring a batch of k points in a single iteration may be more efficient than sequential acquisition when objectives functions can be calculated in parallel. \"Top-k batching\" naively selects the k points with the highest acquisition scores.  67 More sophisticated batch acquisition strategies iteratively construct optimal batches one point at a time by hallucinating objective function values.  [68] [69] 9] [70] [71] [72] [73]  Other strategies use heuristics to select batches that are diverse in the design space or objective space in order to improve the utility of a batch.  [74] [75] 5] [76] [77] [78] [79]  MolPAL implements both naive top-k batching and diversity-enhanced acquisition strategies that apply clustering in both the design space and in the objective space (Section 5.5)."
+    },
+    {
+      "title": "3. Results and discussion"
+    },
+    {
+      "title": "3.1. Description of case studies",
+      "text": "We test MolPAL with three retrospective case studies with an emphasis on docking-predicted binding selectivity to compare optimization performance across acquisition functions. The pairs of objectives used in these case studies are exclusively docking scores even though the framework of MolPAL is more general. For example, this work\ue104ow may be used to optimize docking scores to an ensemble of protein structures  80  (\"ensemble docking\") or optimize multiple docking scoring functions provided with a single target.  [81] [82] ] [83]  Each case explores a virtual library of approximately 260k molecules and optimizes two competing docking score objectives from the DOCKSTRING benchmark.  84 Case 1's goal is modeled a\ue09der identifying antagonists of dopamine receptor D 3 (DRD3) that are selective over dopamine receptor D 2 (DRD2), which may enable effective treatment of various conditions without the side effects triggered by DRD2 antagonists.  [85] [86] 6] [87]  Case 2 treats Janus Kinase 2 (JAK2), a lukemia target, as the on-target and lymphocyte-speci\ue103c protein tyrosine kinase (LCK) as the off-target.  88, 89 Finally, case 3 aims to identify selective inhibitors of insulin-like growth factor 1 receptor (IGF1R)  90, 91  that do not bind to cytochrome P450 3A4 (CYP3A4),  92, 93  an off-target known to impact the pharmacokinetic properties of drugs though metabolism.  [94] [95] 5] [96]  The property tradeoffs for each case are shown in Fig.  3 . Because both positive docking scores and scores of 0 should be interpreted as nonbinders, we clip docking scores to 0.\n\nWe employ single-task directed message-passing neural networks  97, 98  for each objective as surrogate models (Section 5.4). An initial set of 2602 molecules is randomly sampled at the zeroth iteration, and 1% of the library (2602 molecules) is acquired in each subsequent iteration. Scalarization weighting factors (l 1 and l 2 in eqn (1)) were set to 0.5. Five trials with distinct initialization seeds were completed for each acquisition function. Section 5 contains full implementation details."
+    },
+    {
+      "title": "3.2. Pareto acquisition functions outperform scalarization",
+      "text": "We characterize optimization performance with three metrics: fraction of the top \u223c1% acquired, hypervolume (HV), and fraction of non-dominated points acquired. We motivate the selection of these metrics and describe their implementation in Section 5.6.\n\nAll Pareto optimization acquisition functions show substantial improvement over random acquisition according to the top \u223c1% metric, with PHI performing most consistently across cases (Fig.  4A-F ). Analyzing the same metric, greedy is clearly the best scalarized acquisition function despite its poor performance in case 3 relative to PHI and EHI. Only in case 1 does the best scalarization acquisition function outperform the best Pareto acquisition function. Performance metrics using the acquisition function described by Mehta et al.  42  (MO-MEMES) are included as an additional baseline in Tables  S1-S3 . \u2020 Pareto optimization acquisition functions consistently outperform MO-MEMES.\n\nWhen performance is measured by the fraction of nondominated points acquired, EHI and PHI outperform scalarization acquisition functions (Fig.  5 ) even though the degree of improvement varies across cases. The sensitivity of the hypervolume metric to outliers on the Pareto front leads to noisy hypervolume pro\ue103les (Fig.  S2 \u2020 ). Similar trends are observed when measuring the inverted generational distance metric (Fig.  S3 \u2020 ). Overall, Pareto optimization acquisition functions strongly outperform or match the performance of scalarization for the pairs of objectives and virtual library considered.\n\nThe variation in relative performance of different acquisition functions across evaluation metrics is noteworthy. For example, greedy scalarization performs quite well in the top \u223c1% metric for all cases but worse than random acquisition according to hypervolume and fraction of non-dominated points in case 3. The results shown here highlight the importance of assessing the performance across different sets of objectives. Despite the variation across cases and metrics, EHI and PHI consistently perform as well as scalarization or substantially better than scalarization. These acquisition functions are suitable choices for new sets of objectives. Alternatively, when a previously unexplored set of objectives is to be optimized, a retrospective study on a scored subset of the library can inform the selection of a suitable acquisition strategy. Each reported metric corresponds to distinct optimization goals (Section 5.6); the primary application of a multi-objective virtual screen should inform which metric to use for acquisition function comparison and selection."
+    },
+    {
+      "title": "3.3. Clustering-based acquisition improves molecular diversity",
+      "text": "Scoring functions used in structure-based virtual screening can exhibit systematic errors that bias selection toward speci\ue103c interactions.  99 This poses a risk for experimental validation if speci\ue103c scaffolds are overrepresented in the top-scoring molecules. Selecting a structurally diverse set of candidates is one strategy to mitigate this risk and can be achieved via a diversity-enhanced acquisition strategy (Section 5.5). First, a set of molecules larger than the target batch size is selected according to the acquisition function and is then partitioned into a number of clusters equal to the batch size in feature (e.g., molecular \ue103ngerprint) space. The molecule with the best acquisition score in each cluster is acquired. We analyzed the performance of diversity-enhanced acquisition for case 3, using PHI as the acquisition function. All hyperparameters were the same as those used for previous experiments (Section 5).\n\nFeature space clustering slightly hinders optimization performance according to all four performance metrics (Fig.  6A-E ), but it also increases the number of graph-based Bemis-Murcko scaffolds 100 acquired by 33% when compared to a na\u00efve batch construction strategy. This degradation in measured performance is expected given that the performance metrics do not consider the overall diversity of the selected molecules. The increased structural diversity of the selected molecules can be qualitatively visualized via dimensionality reduction through UMAP 101 (Fig.  S4 \u2020 ). Certain multi-objective optimization methods such as NSGA-II 64 also incorporate objective space diversity, i.e., the selection of points better distributed along the Pareto front.  46 We \ue103nd that clustering in the objective space during acquisition (Section 5.5) mildly hinders performance in all optimization metrics (Fig.  6A-E ). An acquisition strategy that considers diversity in both the objective space and feature space (Section 5.5) performs similarly to the standard acquisition strategy across most optimization metrics (Fig.  6A-D ) while acquiring a more structurally diverse set of molecules when compared to standard acquisition (Fig.  6F  and  S4 \u2020 ). Overall, we recommend the use of feature space clustering if having structurally distinct candidates is a priority for experimental validation."
+    },
+    {
+      "title": "3.4. MolPAL scales to 3 objectives and larger libraries",
+      "text": "As a \ue103nal demonstration, we show that MolPAL scales well to larger virtual libraries and more than two objectives by searching the Enamine Screening Collection 45 of over 4 million molecules for those that optimize three docking objectives. The objectives were de\ue103ned to identify putative dual inhibitors of IGF1R and EGFR 102-104 with selectivity over CYP3A4  [94] [95] [96] 105  which could in principle serve as starting points for esophageal cancer  \u00a9 2024 The Author(s). Publ shed by the Royal Society of Chemistry Digital Discovery, 2024, 3, 467-481 | 473 Paper Digital Discovery Open Access Article. Published on 15 January 2024. Downloaded on 8/5/2025 1:00:38 AM. This article is licensed under a Creative Commons Attribution-NonCommercial 3.0 Unported Licence.\n\ntherapeutics. To analyze performance according to the four considered evaluation metrics, we perform this search retrospectively a\ue09der docking the entire library using DOCKSTRING's protocol for each target 84 (Section 5.1). The distributions of individual objectives for the entire library are shown in Fig.  7 .\n\nWe use PHI acquisition without clustering and acquire 1% of the library at each iteration, repeating each experiment three times.\n\nMolPAL succeeds in acquiring 100% of the library's nondominated points in all three replicates a\ue09der exploring only 8% of the search space (Fig.  8C ), a 9X improvement of in the fraction of acquired non-dominated points over random acquisition. At this same degree of exploration (8% of the library), over 60% of the library's top \u223c0.1% molecules have been identi\ue103ed (Fig.  8A ). Improvements in IGD and hypervolume with MolPAL over random acquisition are also notable (Fig.  8  and Table  2 ). The results of this retrospective run indicate that MolPAL can substantially reduce the computational resources required to identify molecules that simultaneously optimize multiple properties from a virtual library of millions of molecules.\n\nThe virtual library's true Pareto front of 39 molecules, all of which were recovered by MolPAL, is visualized in Fig.  9 . The structures of all non-dominated molecules are shown in Fig.  S6-S8 . \u2020 The structures of these molecules, several of which look more like dye molecules than drug-like molecules, expose some remaining challenges of docking for selectivity prediction. Molecules predicted to be non-binders to CYP3A4, such as M4 and M20 in Fig.  9 , are relatively large molecules that do not \ue103t inside the pocket of CYP3A4, leading to steric clashes and less favorable binding energetics. The ability for such molecules to score well against the IGF1R and EGFR but poorly against CYP3A4 is exempli\ue103ed by the computed docking poses and protein-ligand interactions of M4 (Fig.  S5 \u2020 ). Although steric clashes may be a valid reason for hypothetical selectivity towards EGFR/IGF1R over CYP3A4, the molecules predicted to be most selective (e.g., M4 and M20) are not attractive candidates for experimental validation. In practice, dominated molecules that are close to the identi\ue103ed Pareto front should  also be considered for experimental validation or follow-up studies. Molecules that are obviously not suitable starting points for a drug discovery campaign, including those in Fig.  9 , should be deprioritized for experimental testing. A ligand efficiency score may also be used as an objective function to penalize very large molecules. 106 Nevertheless, given the imperfections of docking as an oracle function, MolPAL perfectly identi\ue103es the Pareto front at a reduced computational cost and scores well in terms of all evaluation metrics. We do not intend to nominate the visualized molecules as starting points for a drug discovery project but instead aim to demonstrate the ability for MolPAL to efficiently molecules that optimize any set of oracles such as those that predict binding affinity."
+    },
+    {
+      "title": "4. Conclusion",
+      "text": "We have introduced an open source multi-objective extension of the pool-based optimization tool MolPAL 37 and demonstrated its ability to accelerate docking-based multi-objective virtual screening. MolPAL provides a \ue104exible Pareto optimization framework that allows users to systematically vary key design choices like acquisition strategy. MolPAL is most appropriate for optimizing objectives that are more expensive to calculate than surrogate molecular property prediction models. Beyond docking, these include objectives that require binding free energy calculations, quantum mechanical simulations, or experiments to measure. Objectives that are calculable in CPU milliseconds, such as SA_Score or clogP, can be screened exhaustively and do not warrant model-guided optimization tools. MolPAL could also be applied to consensus docking by optimizing multiple scoring functions that predict binding affinity to the same target.  [81] [82] 2] [83]  MolPAL is designed to \ue104exibly accommodate custom objectives and facilitate the optimization of other property predictions relevant to molecular design. We \ue103rst assessed MolPAL on three two-objective case studies that aim to identify putative selective binders. We found that expected hypervolume improvement and probability of hypervolume improvement, both Pareto optimization acquisition functions, consistently performed as well as or better than scalarization. A diversity-enhanced acquisition strategy that applies clustering in molecular \ue103ngerprint space was found to increase the number of Bemis-Murcko scaffolds observed by 33% when compared to standard acquisition. Finally, we demonstrated that MolPAL can efficiently search large virtual libraries and optimize three objectives simultaneously through a case study aiming to identify putative selective dual inhibitors from the Enamine Screening Collection of over 4 million molecules; MolPAL acquired all of the library's non-dominated molecules a\ue09der exploring only 8% of the library in all three replicates.\n\nExploration of other multi-objective optimization approaches, such as random scalarization and Chebyshev scalarization, in the context of molecular optimization could expose bene\ue103ts of strategies not explored in this work. Other published diversity-enhanced acquisition strategies  79, 107  may have the potential to improve both molecular diversity and optimization performance.\n\nWhile the use of docking to off-targets as a proxy for selectivity is well precedented,  [18] [19] [20]  the high false negative rates of docking screens (i.e., binders predicted to be nonbinding) pose a risk for experimental validation of molecules predicted to be selective.  20, 21, 108 Pharmacophore models and scoring functions that are designed for off-target activity 9,19,109 could be more appropriate for cross-docking for selectivity in the future. Because MolPAL is a general multi-objective optimization strategy that can be applied to any combination of oracle functions, it will maintain its relevance as these oracle functions improve in time. Future efforts applying MolPAL to hit discovery and early-stage molecular design are necessary to validate the bene\ue103ts of considering multiple objectives at early stages of molecular discovery."
+    },
+    {
+      "title": "5. Methods",
+      "text": "All code required to reproduce the reported results can be found in the branch of MolPAL at  https://github.com/coleygroup/  molpal/tree/multiobj ."
+    },
+    {
+      "title": "5.1. Data collection",
+      "text": "All docking scores used in Sections 3.2 and 3.3 were used without reprocessing from the DOCKSTRING benchmark  84  (downloaded June 2023). For the larger scale study in Section 3.4, the Enamine Screening Collection of over 4 million compounds  45  (downloaded May 2023) was docked against IGF1R, EGFR, and CYP3A4 using DOCKSTRING  84  with default settings for each target. Before docking, molecules were stripped of salts using RDKit's SaltRemover module.  110 Of the 4 032 152 in the library, 4 010 199 were docked successfully to CYP3A4, 4 010 191 to IGF1R, and 4 010 187 to EGFR. Unsuccessful docking calculations resulted primarily from failures during the ligand preparation process. The full set of docking scores are available at https://\ue103gshare.com/articles/dataset/ Enamine_screen_CYP3A4_EGFR_IGF1R_zip/23978547."
+    },
+    {
+      "title": "5.2. Objectives",
+      "text": "Docking scores to on-targets were minimized objectives, and scores to off-targets were maximized objectives. A positive docking score is not meaningfully different from a docking score of zero. We therefore adjust docking objectives to be:\n\nwhere f(x) is the raw docking score and f dock (x) is the minimized (for on-targets) or maximized (for off-targets) objective. Clipping docking scores in this manner also mitigates the effect of outliers on Pareto optimization metrics like hypervolume."
+    },
+    {
+      "title": "5.3. Acquisition functions",
+      "text": "We modify PHYSBO's implementation 111 of expected hypervolume improvement and probability of hypervolume improvement, which applies the algorithm proposed\n\nMolPAL uses the utility in pygmo 113 for nondominated sorting in two dimensions. In more than three dimensions, MolPAL iteratively identi\ue103es non-dominated points using the Pareto class in PHYSBO 111 and removes those points from the unranked set until enough points have been ranked.\n\nIn the scalarization runs, f was calculated according to eqn (1) with l 1 = l 2 = 0.5. For prediction mean m, prediction standard deviation s, and current maximum value f*, expected improvement and probability of improvement in the scalarization runs were calculated as:\n\nwhere F is the cumulative distribution function of the standard normal distribution and f is the probability density function of the standard normal distribution function.\n\nx is a hyperparameter that controls the competitiveness of the sampling,  58  which we set to 0.01. Higher values of x encourages exploration of uncertain points, while low values prioritize prediction means.  58"
+    },
+    {
+      "title": "5.4. Surrogate model",
+      "text": "Because the optimization campaigns explored in this study comprise batches of thousands of molecules, we elect to use a directed message-passing neural network architecture  97  as the surrogate model for all runs. MolPAL contains a PyTorch 114 implementation of ChemProp  97, 98  as in the original publication.  37 We use an encoder depth of 3, directed edge messages only (no atom messages), a hidden size of 300, ReLU activation, and two layers in the feed-forward neural network as default parameters. The model was trained with an initial learning rate of 10 -4 using a Noam learning rate scheduler and an Adam optimizer. In each iteration, the model is retrained from scratch, as this was found to provide a bene\ue103t over \ue103ne-tuning.  37 e use mean-variance estimation 115,116 for surrogate model uncertainty quanti\ue103cation. The surrogate model is trained to predict both the mean f(x) and the variance of the estimation s 2 (x) via a negative log likelihood loss function:\n\nwhere f(x) is the true objective value, m is the predicted mean, and s 2 (x) is the predicted variance."
+    },
+    {
+      "title": "5.5. Clustering",
+      "text": "We implement three diversity-enhancing acquisition strategies using clustering: in the feature space, in the objective space, and in both (Section 3.3). Feature space clustering is performed according to 2048-bit atom-pair \ue103ngerprints 117 calculated using the function in RDKit 110 with the minimum length and maximum length of paths between pairs to 1 and 3, respectively. Atom pair \ue103ngerprints have been shown to outperform other extended connectivity \ue103ngerprints in recovering 3D-shape analogs 118 and ranking close analogs by structural similarity.  119 The predicted objective means were used for clustering in the objective space.\n\nThe acquisition strategy \ue103rst selects a superset of molecules according to the acquisition scores as in a standard acquisition strategy. In our trials, the size of the superset is 10X the batch size, b. Then, the superset is clustered according to molecular \ue103ngerprints or predicted objective values. We use the implementation of 120 in scikit-learn 121 with b clusters, 10 random initializations, an initialization size of 3b, and a reassignment ratio of 0 for batch size b. Although b clusters are speci\ue103ed, some clusters may be returned as empty in the case of a low-dimensional cluster basis. We ensure that b points are acquired by iteratively looping through all clusters, beginning with the largest clusters, and acquiring the molecule in the cluster with the highest acquisition score. This process is continued until b molecules are acquired.\n\nWhen clustering in both the feature and objective spaces, the superset is \ue103rst clustered in the objective space into (b/2) clusters, and (b/2) points are acquired by iterating through the clusters and selecting the molecule with the highest acquisition score. The superset is then supplemented with the b/2 unacquired candidate points that have the highest acquisition scores. Then, the superset is clustered in the atom-pair \ue103ngerprint space into b -(b/2) clusters, and the point with the highest acquisition score in each cluster is acquired. Thus, when both forms of clustering are used, effectively b/2 points are selected to improve objective space diversity, and b/2 points are selected to improve feature space diversity."
+    },
+    {
+      "title": "5.6. Performance metrics",
+      "text": "Four performance metrics designed for Pareto optimization were measured to holistically assess the performance of Mol-PAL. The underlying goal of a multi-property virtual screen (e.g., understanding the trade-offs between objectives, identifying a set of potentially promising selective inhibitors) can guide which evaluation metric to be deemed most important. Reported metrics and the motivation for selecting each is described below.\n\n5.6.1 Fraction of top \u223ck%. Virtual screening work\ue104ows based on active learning are o\ue09den evaluated using a top-k metric: the fraction of the true top-k molecules that have been acquired. Using a top-k metric captures the goal of separating promising molecules from the bulk while acknowledging that docking scores are imperfect and imprecise predictors of binding affinity. The best observed performance of a single compound is a less useful metric in this context, as there is a high likelihood it would not validate as a binder experimentally.\n\nFor multi-property virtual screening, the set of top-k molecules is not well-de\ue103ned. We opt to de\ue103ne the top \u223ck% through non-dominated sorting of the library (Fig.  S1 \u2020 ). The nondominated points in the library are iteratively selected and removed from the candidate pool until $k% of the library has been selected. These points then serve as the top \u223ck%. Because multiple points are selected as part of the top \u223ck% in each iteration (i.e., all points of a certain Pareto rank), the fraction is slightly larger than k%.\n\nThe top \u223ck% metric best describes virtual screens aiming to identify many molecules roughly close to the Pareto front. Compared to other metrics that consider points on or much closer to the Pareto front, it best captures the expectation that not all top-performing molecules will validate experimentally.\n\n5.6.2 Fraction of non-dominated points. In some multiproperty screens, the aim may be to elucidate as many points on the true Pareto front as possible. This enables the shape of the Pareto front and the inherent trade-off between objectives to be well-understood. A metric related to only the true nondominated points is most appropriate in these cases. The library's non-dominated points are identi\ue103ed using nondominated sorting (Section 5.3), and this metric is simply the fraction of the non-dominated molecules that were acquired.\n\n5.6.3 Hypervolume. Hypervolume is a common metric used to assess the performance of multi-objective optimization methods. 122 It measures the size of the region dominated by the Pareto front; in a bi-objective optimization, the hypervolume is the area dominated by the acquired points (Fig.  S1B \u2020 ). Importantly, the hypervolume can be very sensitive to outliers, leading to high variability across repeat experiments. Because outliers may fail to be experimentally validated, the strong sensitivity of hypervolume to speci\ue103c points makes it slightly misleading. We use the python package pygmo 113 to calculate hypervolume and report it as the fraction of the virtual library's total hypervolume. In contrast to the other evaluated metrics, the absolute hypervolume can be measured in prospective studies."
+    },
+    {
+      "title": "5.7. Scaffold analysis",
+      "text": "To quantify the improvement in molecular diversity using diversity-enhanced acquisition, we count the number of observed Bemis-Murcko scaffolds 100 using RDKit's and functions."
+    },
+    {
+      "text": "For model-guided Pareto optimization, either a multi-task surrogate model, multiple single-task surrogate models, or a combination thereof is needed to predict the set of objective function values. As outlined in Algorithm S2, \u2020 MolPAL trains N single-task surrogate models to predict N objectives to circumvent the challenge of loss function weighting in multitask learning. 66"
+    },
+    {
+      "text": "Fig. 1 Overview of MolPAL's workflow for multi-objective optimization. A surrogate model is first trained with an initial training set of randomly sampled molecules. Predictions and uncertainties from each surrogate model inform which molecules in the library to score next. After these acquired molecules are scored, each surrogate model is retrained, and the iterative loop continues. Once a stopping criterion is met, the set of observed points and their objective values can be analyzed."
+    },
+    {
+      "text": "Fig. 2 Depiction of acquisition functions in Bayesian optimization. (A) Probability of improvement (PI) estimates the likelihood that an as-yet unobserved objective function value exceeds the current maximum value f*. Expected improvement (EI) estimates the amount that f* would increase if an unobserved point is acquired. 53 (B) Non-dominated sorting assigns integer \"Pareto ranks\" to each candidate. (C) Hypervolumebased acquisition functions 53  extend the principles of PI and EI to multiple dimensions using the observed Pareto front (grey dashed line) rather than f*. Probability of hypervolume improvement (PHI) represents the likelihood that acquisition of an unobserved point would increase the hypervolume by any amount. Expected hypervolume improvement (EHI) estimates the increase in hypervolume if the objective function value of such a point is scored. 53 Objectives are defined so that optimization corresponds to maximization."
+    },
+    {
+      "text": "Fig. 3 Docking scores in the DOCKSTRING dataset 84 for (A) case 1, (B) case 2, and (C) case 3. All molecules considered in the top \u223c1%, as determined by NDS rank (Section 5.6), are shown as magenta points, with the remaining data in grey. There are 2986 (1.15%), 2651 (1.02%), and 3261 (1.25%) molecules in the top \u223c1% for cases 1, 2, and 3, respectively."
+    },
+    {
+      "text": "Fig. 4 Fraction of the top \u223c1% acquired and inverted generational distance (IGD) for case 1, 2, and 3. (A, C and E) Fraction of top \u223c1% using Pareto optimization acquisition functions (left) and scalarized acquisition functions (right). (B, D and F) Fraction of the top \u223c1% acquired after 6 iterations. (G-I) IGD after 6 iterations for case 1 (G), case 2 (H), and case 3 (I). Error bars (B, D, F, G-I) and shaded regions (A, C and E) denote \u00b1 one standard deviation across five runs."
+    },
+    {
+      "text": "Fig. 5 Identification of molecules on the true Pareto front. (A) Fraction of non-dominated points acquired for cases 1, 2, and 3. (B) Final Pareto front acquired in case 3 using probability of greedy, expected hypervolume improvement (EHI), expected improvement (EI), and hypervolume improvement (PHI) acquisition, with the true Pareto front shown in grey. The Pareto front identified with greedy acquisition poorly reflects the shape of the true Pareto front, a discrepancy captured well by the fraction of non-dominated points metric. Each plot represents individual runs, all initialized with the same model seed and starting acquired set. Error bars denote \u00b1 one standard deviation across five runs."
+    },
+    {
+      "text": "Fig. 6 Impact of clustering in fingerprint and objective space on optimization performance. (A) Fraction of top \u223c1% acquired. (B) Fraction of top \u223c1% acquired acquired after 6 iterations. (C) Inverted generational distance (IGD) after 6 iterations. (D) Hypervolume profiles. (E) Fraction of the library's non-dominated points acquired after 6 iterations. (F) Number of distinct graph-based Bemis-Murcko scaffolds acquired. Error bars (B, C and E) and shaded regions (A, D and F) denote \u00b1 one standard deviation across five runs."
+    },
+    {
+      "text": "Fig. 7 Distributions of objective function values to be maximized for a retrospective 3-objective virtual screen. (A and B) Docking scores for targets IGF1R and EGFR, respectively. (C) Docking scores for off-target CYP3A4."
+    },
+    {
+      "text": "Fig. 8 Performance of MolPAL for the identification of selective dual IGF1R/EGFR inhibitors from the 4M-member Enamine screening library as an exemplary three-objective optimization. Profiles are depicted for the fraction of (A) top \u223c0.1%, (B) top \u223c0.5%, and (C) non-dominated points acquired, as well as the (D) hypervolume."
+    },
+    {
+      "text": "Fig.9Visualization of the Pareto front for the 3-objective optimization for the identification of putative selective dual inhibitors. All nondominated points depicted were acquired by MolPAL after scoring only 8% of the virtual library. Structures for some molecules on the Pareto front are shown. Many of these molecules (e.g., M4 and M20) would not be suitable starting points for a drug discovery campaign, highlighting the imperfections of docking as a sole oracle function. Docking scores to targets EGFR and IGF1R and off-target CYP3A4 were calculated with the AutoDock Vina wrapper DOCKSTRING. 84"
+    },
+    {
+      "text": "Performance metrics after acquisition of 10% of the library. Means and standard deviation across three trials are shown. Metrics include hypervolume (HV) and inverted generational distance (IGD), as well as the fraction of the library's top 0.12% (4829 molecules), top 0.524% (21 015 molecules), and Pareto front points (39 molecules) acquired"
+    },
+    {
+      "title": "Acknowledgements",
+      "text": "This work was funded by the  DARPA Accelerated Molecular Discovery program  under contract number  HR00111920025 . J. C. F. received additional support from the  National Science Foundation Graduate Research Fellowship  under Grant No.  2141064 . The authors acknowledge the MIT SuperCloud,  123  Lincoln Laboratory Supercomputing Center, and the  MIT Engaging Cluster  for providing HPC resources that have contributed to the research results reported within this paper. The authors thank  Samuel Goldman  for helpful discussions about the content of this manuscript."
+    },
+    {
+      "title": "Data availability",
+      "text": "The developed open source tool and all code required to reproduce the reported results can be found in the branch of MolPAL at  https://github.com/coleygroup/molpal/tree/multiobj . Docking scores from the DOCKSTRING benchmark are available at https://\ue103gshare.com/articles/dataset/dockstring_dataset/ 16511577. Docking scores for IGF1R, EGFR, and CYP3A4 computed as a part of this work can be found at https:// \ue103gshare.com/articles/dataset/ Enamine_screen_CYP3A4_EGFR_IGF1R_zip/23978547."
+    },
+    {
+      "title": "Author contributions"
+    },
+    {
+      "title": "Conflicts of interest",
+      "text": "There are no con\ue104icts to declare."
+    }
+  ],
+  "references": [
+    {
+      "title": "Principles of Early Drug Discovery",
+      "authors": [
+        "J Hughes",
+        "S Rees",
+        "S Kalindjian",
+        "K Philpott"
+      ],
+      "year": 2011,
+      "doi": "10.1111/j.1476-5381.2010.01127.x",
+      "journal": "Br. J. Pharmacol",
+      "volume": "162",
+      "raw": "Principles of Early Drug Discovery \n\t\t \n\t\t\t J Hughes \n\t\t \n\t\t \n\t\t\t S Rees \n\t\t \n\t\t \n\t\t\t S Kalindjian \n\t\t \n\t\t \n\t\t\t K Philpott \n\t\t \n\t\t 10.1111/j.1476-5381.2010.01127.x \n\t \n\t \n\t\t Br. J. Pharmacol \n\t\t \n\t\t\t 162 \n\t\t\t \n\t\t\t 2011 \n\t\t \n\t \n\t J. Hughes, S. Rees, S. Kalindjian and K. Philpott, Principles of Early Drug Discovery, Br. J. Pharmacol., 2011, 162, 1239- 1249."
+    },
+    {
+      "title": "Standing on the Shoulders of Giants: A Retrospective Analysis of Kinase Drug Discovery at Astrazeneca",
+      "authors": [
+        "J Kettle",
+        "D Wilson"
+      ],
+      "year": 2016,
+      "journal": "Drug Discovery Today",
+      "volume": "21",
+      "raw": "Standing on the Shoulders of Giants: A Retrospective Analysis of Kinase Drug Discovery at Astrazeneca \n\t\t \n\t\t\t J G Kettle \n\t\t \n\t\t \n\t\t\t D M Wilson \n\t\t \n\t \n\t \n\t\t Drug Discovery Today \n\t\t \n\t\t\t 21 \n\t\t\t \n\t\t\t 2016 \n\t\t \n\t \n\t J. G. Kettle and D. M. Wilson, Standing on the Shoulders of Giants: A Retrospective Analysis of Kinase Drug Discovery at Astrazeneca, Drug Discovery Today, 2016, 21, 1596-1608."
+    },
+    {
+      "title": "25 Years of Small-Molecule Optimization at Novartis: A Retrospective Analysis of Chemical Series Evolution",
+      "authors": [
+        "M Beckers",
+        "N Fechner",
+        "N Stie\ue104"
+      ],
+      "year": 2022,
+      "journal": "J. Chem. Inf. Model",
+      "volume": "62",
+      "raw": "25 Years of Small-Molecule Optimization at Novartis: A Retrospective Analysis of Chemical Series Evolution \n\t\t \n\t\t\t M Beckers \n\t\t \n\t\t \n\t\t\t N Fechner \n\t\t \n\t\t \n\t\t\t N Stie\ue104 \n\t\t \n\t \n\t \n\t\t J. Chem. Inf. Model \n\t\t \n\t\t\t 62 \n\t\t\t \n\t\t\t 2022 \n\t\t \n\t \n\t M. Beckers, N. Fechner and N. Stie\ue104, 25 Years of Small- Molecule Optimization at Novartis: A Retrospective Analysis of Chemical Series Evolution, J. Chem. Inf. Model., 2022, 62, 6002-6021."
+    },
+    {
+      "title": "Hit Discovery and Hit-to-Lead Approaches",
+      "authors": [
+        "G Keser}",
+        "G Makara"
+      ],
+      "year": 2006,
+      "doi": "10.1016/j.drudis.2006.06.016",
+      "journal": "Drug Discovery Today",
+      "volume": "11",
+      "raw": "Hit Discovery and Hit-to-Lead Approaches \n\t\t \n\t\t\t G M Keser} \n\t\t \n\t\t \n\t\t\t G M Makara \n\t\t \n\t\t 10.1016/j.drudis.2006.06.016 \n\t \n\t \n\t\t Drug Discovery Today \n\t\t \n\t\t\t 11 \n\t\t\t \n\t\t\t 2006 \n\t\t \n\t \n\t G. M. Keser} u and G. M. Makara, Hit Discovery and Hit-to- Lead Approaches, Drug Discovery Today, 2006, 11, 741-748."
+    },
+    {
+      "title": "Why 90% of Clinical Drug Development Fails and How to Improve It?",
+      "authors": [
+        "D Sun",
+        "W Gao",
+        "H Hu",
+        "S Zhou"
+      ],
+      "year": 2022,
+      "doi": "10.1016/j.apsb.2022.02.002",
+      "journal": "Acta Pharm. Sin. B",
+      "volume": "12",
+      "raw": "Why 90% of Clinical Drug Development Fails and How to Improve It? \n\t\t \n\t\t\t D Sun \n\t\t \n\t\t \n\t\t\t W Gao \n\t\t \n\t\t \n\t\t\t H Hu \n\t\t \n\t\t \n\t\t\t S Zhou \n\t\t \n\t\t 10.1016/j.apsb.2022.02.002 \n\t \n\t \n\t\t Acta Pharm. Sin. B \n\t\t \n\t\t\t 12 \n\t\t\t \n\t\t\t 2022 \n\t\t \n\t \n\t D. Sun, W. Gao, H. Hu and S. Zhou, Why 90% of Clinical Drug Development Fails and How to Improve It?, Acta Pharm. Sin. B, 2022, 12, 3049-3062."
+    },
+    {
+      "title": "Addressing Toxicity Risk When Designing and Selecting Compounds in Early Drug Discovery",
+      "authors": [
+        "M Segall",
+        "C Barber"
+      ],
+      "year": 2014,
+      "journal": "Drug Discovery Today",
+      "volume": "19",
+      "raw": "Addressing Toxicity Risk When Designing and Selecting Compounds in Early Drug Discovery \n\t\t \n\t\t\t M D Segall \n\t\t \n\t\t \n\t\t\t C Barber \n\t\t \n\t \n\t \n\t\t Drug Discovery Today \n\t\t \n\t\t\t 19 \n\t\t\t \n\t\t\t 2014 \n\t\t \n\t \n\t M. D. Segall and C. Barber, Addressing Toxicity Risk When Designing and Selecting Compounds in Early Drug Discovery, Drug Discovery Today, 2014, 19, 688-693."
+    },
+    {
+      "title": "Screening Strategies and Methods for Better Off-Target Liability Prediction and Identi\ue103cation of Small-Molecule Pharmaceuticals",
+      "authors": [
+        "T Van Vleet",
+        "M Liguori",
+        "I Lynch",
+        "J James",
+        "M Rao",
+        "S Warder"
+      ],
+      "year": 2019,
+      "journal": "SLAS Discovery",
+      "volume": "24",
+      "raw": "Screening Strategies and Methods for Better Off-Target Liability Prediction and Identi\ue103cation of Small-Molecule Pharmaceuticals \n\t\t \n\t\t\t T R Van Vleet \n\t\t \n\t\t \n\t\t\t M J Liguori \n\t\t \n\t\t \n\t\t\t I Lynch \n\t\t \n\t\t \n\t\t\t J James \n\t\t \n\t\t \n\t\t\t M Rao \n\t\t \n\t\t \n\t\t\t S Warder \n\t\t \n\t \n\t \n\t\t SLAS Discovery \n\t\t \n\t\t\t 24 \n\t\t\t \n\t\t\t 2019 \n\t\t \n\t \n\t T. R. Van Vleet, M. J. Liguori, I. Lynch, J. James, M. Rao and S. Warder, Screening Strategies and Methods for Better Off- Target Liability Prediction and Identi\ue103cation of Small- Molecule Pharmaceuticals, SLAS Discovery, 2019, 24, 1-24."
+    },
+    {
+      "title": "Hit and Lead Generation: Beyond High-Throughput Screening",
+      "authors": [
+        "K Bleicher",
+        "H.-J B\u00f6hm",
+        "K M\u00fcller",
+        "A Alanine"
+      ],
+      "year": 2003,
+      "journal": "Nat. Rev. Drug Discovery",
+      "volume": "2",
+      "raw": "Hit and Lead Generation: Beyond High-Throughput Screening \n\t\t \n\t\t\t K H Bleicher \n\t\t \n\t\t \n\t\t\t H.-J B\u00f6hm \n\t\t \n\t\t \n\t\t\t K M\u00fcller \n\t\t \n\t\t \n\t\t\t A I Alanine \n\t\t \n\t \n\t \n\t\t Nat. Rev. Drug Discovery \n\t\t \n\t\t\t 2 \n\t\t\t \n\t\t\t 2003 \n\t\t \n\t \n\t K. H. Bleicher, H.-J. B\u00f6hm, K. M\u00fcller and A. I. Alanine, Hit and Lead Generation: Beyond High-Throughput Screening, Nat. Rev. Drug Discovery, 2003, 2, 369-378."
+    },
+    {
+      "title": "Silico Antitarget Screening",
+      "authors": [
+        "M Recanatini",
+        "G Bottegoni",
+        "A Cavalli"
+      ],
+      "year": 2004,
+      "doi": "10.1016/j.ddtec.2004.10.004",
+      "journal": "Drug Discovery Today: Technol",
+      "volume": "1",
+      "raw": "Silico Antitarget Screening \n\t\t \n\t\t\t M Recanatini \n\t\t \n\t\t \n\t\t\t G Bottegoni \n\t\t \n\t\t \n\t\t\t A Cavalli \n\t\t \n\t\t 10.1016/j.ddtec.2004.10.004 \n\t \n\t \n\t\t Drug Discovery Today: Technol \n\t\t \n\t\t\t 1 \n\t\t\t \n\t\t\t 2004 \n\t\t \n\t \n\t M. Recanatini, G. Bottegoni and A. Cavalli, Silico Antitarget Screening, Drug Discovery Today: Technol., 2004, 1, 209-215."
+    },
+    {
+      "title": "Ligand Selectivity and Competition Between Enzymes in Silico",
+      "authors": [
+        "A Macchiarulo",
+        "I Nobeli",
+        "J Thornton"
+      ],
+      "year": 2004,
+      "doi": "10.1038/nbt999",
+      "journal": "Nat. Biotechnol",
+      "volume": "22",
+      "raw": "Ligand Selectivity and Competition Between Enzymes in Silico \n\t\t \n\t\t\t A Macchiarulo \n\t\t \n\t\t \n\t\t\t I Nobeli \n\t\t \n\t\t \n\t\t\t J M Thornton \n\t\t \n\t\t 10.1038/nbt999 \n\t \n\t \n\t\t Nat. Biotechnol \n\t\t \n\t\t\t 22 \n\t\t\t \n\t\t\t 2004 \n\t\t \n\t \n\t A. Macchiarulo, I. Nobeli and J. M. Thornton, Ligand Selectivity and Competition Between Enzymes in Silico, Nat. Biotechnol., 2004, 22, 1039-1045."
+    },
+    {
+      "title": "Dual or Multi-Targeting Inhibitors: The Next Generation Anticancer Agents",
+      "authors": [
+        "N Raghavendra",
+        "D Pingili",
+        "S Kadasi",
+        "A Mettu",
+        "S Prasad"
+      ],
+      "year": 2018,
+      "journal": "Eur. J. Med. Chem",
+      "volume": "143",
+      "raw": "Dual or Multi-Targeting Inhibitors: The Next Generation Anticancer Agents \n\t\t \n\t\t\t N M Raghavendra \n\t\t \n\t\t \n\t\t\t D Pingili \n\t\t \n\t\t \n\t\t\t S Kadasi \n\t\t \n\t\t \n\t\t\t A Mettu \n\t\t \n\t\t \n\t\t\t S V U M Prasad \n\t\t \n\t \n\t \n\t\t Eur. J. Med. Chem \n\t\t \n\t\t\t 143 \n\t\t\t \n\t\t\t 2018 \n\t\t \n\t \n\t N. M. Raghavendra, D. Pingili, S. Kadasi, A. Mettu and S. V. U. M. Prasad, Dual or Multi-Targeting Inhibitors: The Next Generation Anticancer Agents, Eur. J. Med. Chem., 2018, 143, 1277-1300."
+    },
+    {
+      "title": "Multitarget Therapeutic Strategies for Alzheimer's Disease",
+      "authors": [
+        "M Ibrahim",
+        "M Gabr"
+      ],
+      "year": 2019,
+      "journal": "Neural Regener. Res",
+      "volume": "14",
+      "raw": "Multitarget Therapeutic Strategies for Alzheimer's Disease \n\t\t \n\t\t\t M M Ibrahim \n\t\t \n\t\t \n\t\t\t M T Gabr \n\t\t \n\t \n\t \n\t\t Neural Regener. Res \n\t\t \n\t\t\t 14 \n\t\t\t \n\t\t\t 2019 \n\t\t \n\t \n\t M. M. Ibrahim and M. T. Gabr, Multitarget Therapeutic Strategies for Alzheimer's Disease, Neural Regener. Res., 2019, 14, 437-440."
+    },
+    {
+      "title": "A Perspective on Multi-target Drugs for Alzheimer's Disease",
+      "authors": [
+        "O Benek",
+        "J Korabecny",
+        "O Soukup"
+      ],
+      "year": 2020,
+      "journal": "Trends Pharmacol. Sci",
+      "volume": "41",
+      "raw": "A Perspective on Multi-target Drugs for Alzheimer's Disease \n\t\t \n\t\t\t O Benek \n\t\t \n\t\t \n\t\t\t J Korabecny \n\t\t \n\t\t \n\t\t\t O Soukup \n\t\t \n\t \n\t \n\t\t Trends Pharmacol. Sci \n\t\t \n\t\t\t 41 \n\t\t\t \n\t\t\t 2020 \n\t\t \n\t \n\t O. Benek, J. Korabecny and O. Soukup, A Perspective on Multi-target Drugs for Alzheimer's Disease, Trends Pharmacol. Sci., 2020, 41, 434-445."
+    },
+    {
+      "title": "Role of Vandetanib in the Management of Medullary Thyroid Cancer",
+      "authors": [
+        "M Brassard",
+        "G Rondeau"
+      ],
+      "year": 2012,
+      "doi": "10.2147/btt.s24220",
+      "journal": "Biol.: Targets Ther",
+      "volume": "6",
+      "raw": "Role of Vandetanib in the Management of Medullary Thyroid Cancer \n\t\t \n\t\t\t M Brassard \n\t\t \n\t\t \n\t\t\t G Rondeau \n\t\t \n\t\t 10.2147/btt.s24220 \n\t \n\t \n\t\t Biol.: Targets Ther \n\t\t \n\t\t\t 6 \n\t\t\t \n\t\t\t 2012 \n\t\t \n\t \n\t M. Brassard and G. Rondeau, Role of Vandetanib in the Management of Medullary Thyroid Cancer, Biol.: Targets Ther., 2012, 6, 59-66."
+    },
+    {
+      "title": "Distinct Binding Mode of Multikinase Inhibitor Lenvatinib Revealed by Biochemical Characterization",
+      "authors": [
+        "K Okamoto",
+        "M Ikemori-Kawada",
+        "A Jestel",
+        "K K\u00f6nig",
+        "Y Funahashi",
+        "T Matsushima",
+        "A Tsuruoka",
+        "A Inoue",
+        "J Matsui"
+      ],
+      "year": 2015,
+      "doi": "10.1021/ml500394m",
+      "journal": "ACS Med. Chem. Lett",
+      "volume": "6",
+      "raw": "Distinct Binding Mode of Multikinase Inhibitor Lenvatinib Revealed by Biochemical Characterization \n\t\t \n\t\t\t K Okamoto \n\t\t \n\t\t \n\t\t\t M Ikemori-Kawada \n\t\t \n\t\t \n\t\t\t A Jestel \n\t\t \n\t\t \n\t\t\t K K\u00f6nig \n\t\t \n\t\t \n\t\t\t Y Funahashi \n\t\t \n\t\t \n\t\t\t T Matsushima \n\t\t \n\t\t \n\t\t\t A Tsuruoka \n\t\t \n\t\t \n\t\t\t A Inoue \n\t\t \n\t\t \n\t\t\t J Matsui \n\t\t \n\t\t 10.1021/ml500394m \n\t \n\t \n\t\t ACS Med. Chem. Lett \n\t\t \n\t\t\t 6 \n\t\t\t \n\t\t\t 2015 \n\t\t \n\t \n\t K. Okamoto, M. Ikemori-Kawada, A. Jestel, K. von K\u00f6nig, Y. Funahashi, T. Matsushima, A. Tsuruoka, A. Inoue and J. Matsui, Distinct Binding Mode of Multikinase Inhibitor Lenvatinib Revealed by Biochemical Characterization, ACS Med. Chem. Lett., 2015, 6, 89-94."
+    },
+    {
+      "title": "In-Silico Approaches to Multi-target Drug Discovery",
+      "authors": [
+        "X Ma",
+        "Z Shi",
+        "C Tan",
+        "Y Jiang",
+        "M Go",
+        "B Low",
+        "Y Chen"
+      ],
+      "year": 2010,
+      "doi": "10.1007/s11095-010-0065-2",
+      "journal": "Pharm. Res",
+      "volume": "27",
+      "raw": "In-Silico Approaches to Multi-target Drug Discovery \n\t\t \n\t\t\t X H Ma \n\t\t \n\t\t \n\t\t\t Z Shi \n\t\t \n\t\t \n\t\t\t C Tan \n\t\t \n\t\t \n\t\t\t Y Jiang \n\t\t \n\t\t \n\t\t\t M L Go \n\t\t \n\t\t \n\t\t\t B C Low \n\t\t \n\t\t \n\t\t\t Y Z Chen \n\t\t \n\t\t 10.1007/s11095-010-0065-2 \n\t \n\t \n\t\t Pharm. Res \n\t\t \n\t\t\t 27 \n\t\t\t \n\t\t\t 2010 \n\t\t \n\t \n\t X. H. Ma, Z. Shi, C. Tan, Y. Jiang, M. L. Go, B. C. Low and Y. Z. Chen, In-Silico Approaches to Multi-target Drug Discovery, Pharm. Res., 2010, 27, 739-749."
+    },
+    {
+      "title": "Structure-Based Virtual Screening and Molecular Docking for the Identi\ue103cation of Potential Multi-Targeted Inhibitors Against Breast Cancer",
+      "authors": [
+        "Z Yousuf",
+        "K Iman",
+        "N I\ue09dikhar",
+        "M Mirza"
+      ],
+      "year": 2017,
+      "journal": "Breast Cancer: Targets Ther",
+      "volume": "9",
+      "raw": "Structure-Based Virtual Screening and Molecular Docking for the Identi\ue103cation of Potential Multi-Targeted Inhibitors Against Breast Cancer \n\t\t \n\t\t\t Z Yousuf \n\t\t \n\t\t \n\t\t\t K Iman \n\t\t \n\t\t \n\t\t\t N I\ue09dikhar \n\t\t \n\t\t \n\t\t\t M U Mirza \n\t\t \n\t \n\t \n\t\t Breast Cancer: Targets Ther \n\t\t \n\t\t\t 9 \n\t\t\t \n\t\t\t 2017 \n\t\t \n\t \n\t Z. Yousuf, K. Iman, N. I\ue09dikhar and M. U. Mirza, Structure- Based Virtual Screening and Molecular Docking for the Identi\ue103cation of Potential Multi-Targeted Inhibitors Against Breast Cancer, Breast Cancer: Targets Ther., 2017, 9, 447-459."
+    },
+    {
+      "title": "A Combination Strategy of Structure-Based Virtual Screening, MM-GBSA, Cross Docking, Molecular Dynamics and Metadynamics Simulations Used to Investigate Natural Compounds as Potent and Speci\ue103c Inhibitors of Tumor Linked Human Carbonic Anhydrase Ix",
+      "authors": [
+        "V Chahal",
+        "R Kakkar"
+      ],
+      "year": 2023,
+      "doi": "10.1080/07391102.2022.2087736",
+      "journal": "J. Biomol. Struct. Dyn",
+      "volume": "41",
+      "raw": "A Combination Strategy of Structure-Based Virtual Screening, MM-GBSA, Cross Docking, Molecular Dynamics and Metadynamics Simulations Used to Investigate Natural Compounds as Potent and Speci\ue103c Inhibitors of Tumor Linked Human Carbonic Anhydrase Ix \n\t\t \n\t\t\t V Chahal \n\t\t \n\t\t \n\t\t\t R Kakkar \n\t\t \n\t\t 10.1080/07391102.2022.2087736 \n\t \n\t \n\t\t J. Biomol. Struct. Dyn \n\t\t \n\t\t\t 41 \n\t\t\t \n\t\t\t 2023 \n\t\t \n\t \n\t V. Chahal and R. Kakkar, A Combination Strategy of Structure-Based Virtual Screening, MM-GBSA, Cross Docking, Molecular Dynamics and Metadynamics Simulations Used to Investigate Natural Compounds as Potent and Speci\ue103c Inhibitors of Tumor Linked Human Carbonic Anhydrase Ix, J. Biomol. Struct. Dyn., 2023, 41, 5465-5480."
+    },
+    {
+      "title": "Development of Pharmacophore Models for the Important Off-Target 5-HT2B Receptor",
+      "authors": [
+        "S Schieferdecker",
+        "E Vock"
+      ],
+      "year": 2023,
+      "journal": "J. Med. Chem",
+      "volume": "66",
+      "raw": "Development of Pharmacophore Models for the Important Off-Target 5-HT2B Receptor \n\t\t \n\t\t\t S Schieferdecker \n\t\t \n\t\t \n\t\t\t E Vock \n\t\t \n\t \n\t \n\t\t J. Med. Chem \n\t\t \n\t\t\t 66 \n\t\t\t \n\t\t\t 2023 \n\t\t \n\t \n\t S. Schieferdecker and E. Vock, Development of Pharmacophore Models for the Important Off-Target 5- HT2B Receptor, J. Med. Chem., 2023, 66, 1509-1521."
+    },
+    {
+      "title": "Structure-Based Virtual Screening Discovers Potent and Selective Adenosine A1 Receptor Antagonists",
+      "authors": [
+        "P Matricon",
+        "A Nguyen",
+        "D Vo",
+        "J.-A Baltos",
+        "M Jaiteh",
+        "A Luttens",
+        "S Kampen",
+        "A Christopoulos",
+        "J Kihlberg",
+        "L May",
+        "J Carlsson"
+      ],
+      "year": 2023,
+      "doi": "10.1016/j.ejmech.2023.115419",
+      "journal": "Eur. J. Med. Chem",
+      "volume": "257",
+      "pages": "115419",
+      "raw": "Structure-Based Virtual Screening Discovers Potent and Selective Adenosine A1 Receptor Antagonists \n\t\t \n\t\t\t P Matricon \n\t\t \n\t\t \n\t\t\t A T Nguyen \n\t\t \n\t\t \n\t\t\t D D Vo \n\t\t \n\t\t \n\t\t\t J.-A Baltos \n\t\t \n\t\t \n\t\t\t M Jaiteh \n\t\t \n\t\t \n\t\t\t A Luttens \n\t\t \n\t\t \n\t\t\t S Kampen \n\t\t \n\t\t \n\t\t\t A Christopoulos \n\t\t \n\t\t \n\t\t\t J Kihlberg \n\t\t \n\t\t \n\t\t\t L T May \n\t\t \n\t\t \n\t\t\t J Carlsson \n\t\t \n\t\t 10.1016/j.ejmech.2023.115419 \n\t \n\t \n\t\t Eur. J. Med. Chem \n\t\t \n\t\t\t 257 \n\t\t\t 115419 \n\t\t\t 2023 \n\t\t \n\t \n\t P. Matricon, A. T. Nguyen, D. D. Vo, J.-A. Baltos, M. Jaiteh, A. Luttens, S. Kampen, A. Christopoulos, J. Kihlberg, L. T. May and J. Carlsson, Structure-Based Virtual Screening Discovers Potent and Selective Adenosine A1 Receptor Antagonists, Eur. J. Med. Chem., 2023, 257, 115419."
+    },
+    {
+      "title": "Selectivity Challenges in Docking Screens for GPCR Targets and Antitargets",
+      "authors": [
+        "D Weiss",
+        "J Karpiak",
+        "X.-P Huang",
+        "M Sassano",
+        "J Lyu",
+        "B Roth",
+        "B Shoichet"
+      ],
+      "year": 2018,
+      "doi": "10.1021/acs.jmedchem.8b00718",
+      "journal": "J. Med. Chem",
+      "volume": "61",
+      "raw": "Selectivity Challenges in Docking Screens for GPCR Targets and Antitargets \n\t\t \n\t\t\t D R Weiss \n\t\t \n\t\t \n\t\t\t J Karpiak \n\t\t \n\t\t \n\t\t\t X.-P Huang \n\t\t \n\t\t \n\t\t\t M F Sassano \n\t\t \n\t\t \n\t\t\t J Lyu \n\t\t \n\t\t \n\t\t\t B L Roth \n\t\t \n\t\t \n\t\t\t B K Shoichet \n\t\t \n\t\t 10.1021/acs.jmedchem.8b00718 \n\t \n\t \n\t\t J. Med. Chem \n\t\t \n\t\t\t 61 \n\t\t\t \n\t\t\t 2018 \n\t\t \n\t \n\t D. R. Weiss, J. Karpiak, X.-P. Huang, M. F. Sassano, J. Lyu, B. L. Roth and B. K. Shoichet, Selectivity Challenges in Docking Screens for GPCR Targets and Antitargets, J. Med. Chem., 2018, 61, 6830-6845."
+    },
+    {
+      "title": "On Evaluating Molecular-Docking Methods for Pose Prediction and Enrichment Factors",
+      "authors": [
+        "H Chen",
+        "P Lyne",
+        "F Giordanetto",
+        "T Lovell",
+        "J Li"
+      ],
+      "year": 2006,
+      "journal": "J. Chem. Inf. Model",
+      "volume": "46",
+      "raw": "On Evaluating Molecular-Docking Methods for Pose Prediction and Enrichment Factors \n\t\t \n\t\t\t H Chen \n\t\t \n\t\t \n\t\t\t P D Lyne \n\t\t \n\t\t \n\t\t\t F Giordanetto \n\t\t \n\t\t \n\t\t\t T Lovell \n\t\t \n\t\t \n\t\t\t J Li \n\t\t \n\t \n\t \n\t\t J. Chem. Inf. Model \n\t\t \n\t\t\t 46 \n\t\t\t \n\t\t\t 2006 \n\t\t \n\t \n\t H. Chen, P. D. Lyne, F. Giordanetto, T. Lovell and J. Li, On Evaluating Molecular-Docking Methods for Pose Prediction and Enrichment Factors, J. Chem. Inf. Model., 2006, 46, 401- 415."
+    },
+    {
+      "title": "Bias, Reporting, and Sharing: Computational Evaluations of Docking Methods",
+      "authors": [
+        "A Jain"
+      ],
+      "year": 2008,
+      "doi": "10.1007/s10822-007-9151-x",
+      "journal": "J. Comput.-Aided Mol. Des",
+      "volume": "22",
+      "raw": "Bias, Reporting, and Sharing: Computational Evaluations of Docking Methods \n\t\t \n\t\t\t A N Jain \n\t\t \n\t\t 10.1007/s10822-007-9151-x \n\t \n\t \n\t\t J. Comput.-Aided Mol. Des \n\t\t \n\t\t\t 22 \n\t\t\t \n\t\t\t 2008 \n\t\t \n\t \n\t A. N. Jain, Bias, Reporting, and Sharing: Computational Evaluations of Docking Methods, J. Comput.-Aided Mol. Des., 2008, 22, 201-212."
+    },
+    {
+      "title": "Comparison of Several Molecular Docking Programs: Pose Prediction and Virtual Screening Accuracy",
+      "authors": [
+        "J Cross",
+        "D Thompson",
+        "B Rai",
+        "J Baber",
+        "K Fan",
+        "Y Hu",
+        "C Humblet"
+      ],
+      "year": 2009,
+      "journal": "J. Chem. Inf. Model",
+      "volume": "49",
+      "raw": "Comparison of Several Molecular Docking Programs: Pose Prediction and Virtual Screening Accuracy \n\t\t \n\t\t\t J B Cross \n\t\t \n\t\t \n\t\t\t D C Thompson \n\t\t \n\t\t \n\t\t\t B K Rai \n\t\t \n\t\t \n\t\t\t J C Baber \n\t\t \n\t\t \n\t\t\t K Y Fan \n\t\t \n\t\t \n\t\t\t Y Hu \n\t\t \n\t\t \n\t\t\t C Humblet \n\t\t \n\t \n\t \n\t\t J. Chem. Inf. Model \n\t\t \n\t\t\t 49 \n\t\t\t \n\t\t\t 2009 \n\t\t \n\t \n\t J. B. Cross, D. C. Thompson, B. K. Rai, J. C. Baber, K. Y. Fan, Y. Hu and C. Humblet, Comparison of Several Molecular Docking Programs: Pose Prediction and Virtual Screening Accuracy, J. Chem. Inf. Model., 2009, 49, 1455-1474."
+    },
+    {
+      "title": "Docking Screens for Novel Ligands Conferring New Biology",
+      "authors": [
+        "J Irwin",
+        "B Shoichet"
+      ],
+      "year": 2016,
+      "journal": "J. Med. Chem",
+      "volume": "59",
+      "raw": "Docking Screens for Novel Ligands Conferring New Biology \n\t\t \n\t\t\t J J Irwin \n\t\t \n\t\t \n\t\t\t B K Shoichet \n\t\t \n\t \n\t \n\t\t J. Med. Chem \n\t\t \n\t\t\t 59 \n\t\t\t \n\t\t\t 2016 \n\t\t \n\t \n\t J. J. Irwin and B. K. Shoichet, Docking Screens for Novel Ligands Conferring New Biology, J. Med. Chem., 2016, 59, 4103-4120."
+    },
+    {
+      "title": "Assessing Molecular Docking Tools to Guide Targeted Drug Discovery of CD38 Inhibitors",
+      "authors": [
+        "E Boittier",
+        "Y Tang",
+        "M Buckley",
+        "Z Schuurs",
+        "D Richard",
+        "N Gandhi"
+      ],
+      "year": 2020,
+      "doi": "10.3390/ijms21155183",
+      "journal": "Int. J. Mol. Sci",
+      "volume": "21",
+      "pages": "5183",
+      "raw": "Assessing Molecular Docking Tools to Guide Targeted Drug Discovery of CD38 Inhibitors \n\t\t \n\t\t\t E D Boittier \n\t\t \n\t\t \n\t\t\t Y Y Tang \n\t\t \n\t\t \n\t\t\t M E Buckley \n\t\t \n\t\t \n\t\t\t Z P Schuurs \n\t\t \n\t\t \n\t\t\t D J Richard \n\t\t \n\t\t \n\t\t\t N S Gandhi \n\t\t \n\t\t 10.3390/ijms21155183 \n\t \n\t \n\t\t Int. J. Mol. Sci \n\t\t \n\t\t\t 21 \n\t\t\t 5183 \n\t\t\t 2020 \n\t\t \n\t \n\t E. D. Boittier, Y. Y. Tang, M. E. Buckley, Z. P. Schuurs, D. J. Richard and N. S. Gandhi, Assessing Molecular Docking Tools to Guide Targeted Drug Discovery of CD38 Inhibitors, Int. J. Mol. Sci., 2020, 21, 5183."
+    },
+    {
+      "title": "Progress in Medicinal Chemistry",
+      "authors": [
+        "F Stanzione",
+        "I Giangreco",
+        "J Cole"
+      ],
+      "year": 2021,
+      "volume": "60",
+      "raw": "F Stanzione \n\t\t \n\t\t \n\t\t\t I Giangreco \n\t\t \n\t\t \n\t\t\t J C Cole \n\t\t \n\t\t Progress in Medicinal Chemistry \n\t\t \n\t\t\t D R Witty \n\t\t \n\t\t \n\t\t\t B Cox \n\t\t \n\t\t \n\t\t\t Elsevier \n\t\t\t 2021 \n\t\t\t 60 \n\t\t\t \n\t\t \n\t \n\t F. Stanzione, I. Giangreco and J. C. Cole, Progress in Medicinal Chemistry, ed. D. R. Witty and B. Cox, Elsevier, 2021, vol. 60, pp. 273-343."
+    },
+    {
+      "title": "Transforming Growth Factor-b in Cancer Therapy, Volume II: Cancer Treatment and Therapy",
+      "authors": [
+        "L Ling"
+      ],
+      "year": 2008,
+      "raw": "Transforming Growth Factor-b in Cancer Therapy, Volume II: Cancer Treatment and Therapy \n\t\t \n\t\t\t L E Ling \n\t\t \n\t \n\t \n\t\t Cancer Drug Discovery and Development \n\t\t \n\t\t\t S B Jakowlew \n\t\t \n\t\t Totowa, NJ \n\t\t \n\t\t\t Humana Press \n\t\t\t 2008 \n\t\t\t \n\t\t \n\t \n\t L. E. Ling and et al., Transforming Growth Factor-b in Cancer Therapy, Volume II: Cancer Treatment and Therapy, ed. S. B. Jakowlew, Cancer Drug Discovery and Development, Humana Press, Totowa, NJ, 2008, pp. 685-696."
+    },
+    {
+      "title": "Discovery of Subtype Selective Janus Kinase (JAK) Inhibitors by Structure-Based Virtual Screening",
+      "authors": [
+        "D Bajusz",
+        "G Ferenczy",
+        "G Keser}"
+      ],
+      "year": 2016,
+      "journal": "J. Chem. Inf. Model",
+      "volume": "56",
+      "raw": "Discovery of Subtype Selective Janus Kinase (JAK) Inhibitors by Structure-Based Virtual Screening \n\t\t \n\t\t\t D Bajusz \n\t\t \n\t\t \n\t\t\t G G Ferenczy \n\t\t \n\t\t \n\t\t\t G M Keser} \n\t\t \n\t \n\t \n\t\t J. Chem. Inf. Model \n\t\t \n\t\t\t 56 \n\t\t\t \n\t\t\t 2016 \n\t\t \n\t \n\t D. Bajusz, G. G. Ferenczy and G. M. Keser} u, Discovery of Subtype Selective Janus Kinase (JAK) Inhibitors by Structure-Based Virtual Screening, J. Chem. Inf. Model., 2016, 56, 234-247."
+    },
+    {
+      "title": "Ultra-Large Library Docking for Discovering New Chemotypes",
+      "authors": [
+        "J Lyu",
+        "S Wang",
+        "T Balius",
+        "I Singh",
+        "A Levit",
+        "Y Moroz",
+        "M O'meara",
+        "T Che",
+        "E Algaa",
+        "K Tolmachova",
+        "A Tolmachev",
+        "B Shoichet",
+        "B Roth",
+        "J Irwin"
+      ],
+      "year": 2019,
+      "doi": "10.1038/s41586-019-0917-9",
+      "journal": "Nature",
+      "volume": "566",
+      "raw": "Ultra-Large Library Docking for Discovering New Chemotypes \n\t\t \n\t\t\t J Lyu \n\t\t \n\t\t \n\t\t\t S Wang \n\t\t \n\t\t \n\t\t\t T E Balius \n\t\t \n\t\t \n\t\t\t I Singh \n\t\t \n\t\t \n\t\t\t A Levit \n\t\t \n\t\t \n\t\t\t Y S Moroz \n\t\t \n\t\t \n\t\t\t M J O'meara \n\t\t \n\t\t \n\t\t\t T Che \n\t\t \n\t\t \n\t\t\t E Algaa \n\t\t \n\t\t \n\t\t\t K Tolmachova \n\t\t \n\t\t \n\t\t\t A A Tolmachev \n\t\t \n\t\t \n\t\t\t B K Shoichet \n\t\t \n\t\t \n\t\t\t B L Roth \n\t\t \n\t\t \n\t\t\t J J Irwin \n\t\t \n\t\t 10.1038/s41586-019-0917-9 \n\t \n\t \n\t\t Nature \n\t\t \n\t\t\t 566 \n\t\t\t \n\t\t\t 2019 \n\t\t \n\t \n\t J. Lyu, S. Wang, T. E. Balius, I. Singh, A. Levit, Y. S. Moroz, M. J. O'Meara, T. Che, E. Algaa, K. Tolmachova, A. A. Tolmachev, B. K. Shoichet, B. L. Roth and J. J. Irwin, Ultra-Large Library Docking for Discovering New Chemotypes, Nature, 2019, 566, 224-229."
+    },
+    {
+      "title": "Automated Discovery of Noncovalent Inhibitors of Sars-Cov-2 Main Protease by Consensus Deep Docking of 40 Billion Small Molecules",
+      "authors": [
+        "F Gentile",
+        "M Fernandez",
+        "F Ban",
+        "A.-T Ton",
+        "H Mslati",
+        "C Perez",
+        "E Leblanc",
+        "J Yaacoub",
+        "J Gleave",
+        "A Stern",
+        "B Wong",
+        "F Jean",
+        "N Strynadka",
+        "A Cherkasov"
+      ],
+      "year": 2021,
+      "journal": "Chem. Sci",
+      "volume": "12",
+      "raw": "Automated Discovery of Noncovalent Inhibitors of Sars-Cov-2 Main Protease by Consensus Deep Docking of 40 Billion Small Molecules \n\t\t \n\t\t\t F Gentile \n\t\t \n\t\t \n\t\t\t M Fernandez \n\t\t \n\t\t \n\t\t\t F Ban \n\t\t \n\t\t \n\t\t\t A.-T Ton \n\t\t \n\t\t \n\t\t\t H Mslati \n\t\t \n\t\t \n\t\t\t C F Perez \n\t\t \n\t\t \n\t\t\t E Leblanc \n\t\t \n\t\t \n\t\t\t J C Yaacoub \n\t\t \n\t\t \n\t\t\t J Gleave \n\t\t \n\t\t \n\t\t\t A Stern \n\t\t \n\t\t \n\t\t\t B Wong \n\t\t \n\t\t \n\t\t\t F Jean \n\t\t \n\t\t \n\t\t\t N Strynadka \n\t\t \n\t\t \n\t\t\t A Cherkasov \n\t\t \n\t \n\t \n\t\t Chem. Sci \n\t\t \n\t\t\t 12 \n\t\t\t \n\t\t\t 2021 \n\t\t \n\t \n\t F. Gentile, M. Fernandez, F. Ban, A.-T. Ton, H. Mslati, C. F. Perez, E. Leblanc, J. C. Yaacoub, J. Gleave, A. Stern, B. Wong, F. Jean, N. Strynadka and A. Cherkasov, Automated Discovery of Noncovalent Inhibitors of Sars- Cov-2 Main Protease by Consensus Deep Docking of 40 Billion Small Molecules, Chem. Sci., 2021, 12, 15960-15974."
+    },
+    {
+      "title": "Structures of the s 2 Receptor Enable Docking for Bioactive Ligand Discovery",
+      "authors": [
+        "A Alon"
+      ],
+      "year": 2021,
+      "journal": "Nature",
+      "volume": "600",
+      "raw": "Structures of the s 2 Receptor Enable Docking for Bioactive Ligand Discovery \n\t\t \n\t\t\t A Alon \n\t\t \n\t \n\t \n\t\t Nature \n\t\t \n\t\t\t 600 \n\t\t\t \n\t\t\t 2021 \n\t\t \n\t \n\t A. Alon, et al., Structures of the s 2 Receptor Enable Docking for Bioactive Ligand Discovery, Nature, 2021, 600, 759-764."
+    },
+    {
+      "title": "Large-Scale Docking in the Cloud",
+      "authors": [
+        "B Tingle",
+        "J Irwin"
+      ],
+      "year": 2023,
+      "doi": "10.1021/acs.jcim.3c00031",
+      "journal": "J. Chem. Inf. Model",
+      "volume": "63",
+      "raw": "Large-Scale Docking in the Cloud \n\t\t \n\t\t\t B I Tingle \n\t\t \n\t\t \n\t\t\t J J Irwin \n\t\t \n\t\t 10.1021/acs.jcim.3c00031 \n\t \n\t \n\t\t J. Chem. Inf. Model \n\t\t \n\t\t\t 63 \n\t\t\t \n\t\t\t 2023 \n\t\t \n\t \n\t B. I. Tingle and J. J. Irwin, Large-Scale Docking in the Cloud, J. Chem. Inf. Model., 2023, 63, 2735-2741."
+    },
+    {
+      "title": "Introducing the 'Active Search' Method for Iterative Virtual Screening",
+      "authors": [
+        "R Garnett",
+        "T G\u00e4rtner",
+        "M Vogt",
+        "J Bajorath"
+      ],
+      "year": 2015,
+      "journal": "J. Comput.-Aided Mol. Des",
+      "volume": "29",
+      "raw": "Introducing the 'Active Search' Method for Iterative Virtual Screening \n\t\t \n\t\t\t R Garnett \n\t\t \n\t\t \n\t\t\t T G\u00e4rtner \n\t\t \n\t\t \n\t\t\t M Vogt \n\t\t \n\t\t \n\t\t\t J Bajorath \n\t\t \n\t \n\t \n\t\t J. Comput.-Aided Mol. Des \n\t\t \n\t\t\t 29 \n\t\t\t \n\t\t\t 2015 \n\t\t \n\t \n\t R. Garnett, T. G\u00e4rtner, M. Vogt and J. Bajorath, Introducing the 'Active Search' Method for Iterative Virtual Screening, J. Comput.-Aided Mol. Des., 2015, 29, 305-314."
+    },
+    {
+      "title": "Less Is More: Sampling Chemical Space with Active Learning",
+      "authors": [
+        "J Smith",
+        "B Nebgen",
+        "N Lubbers",
+        "O Isayev",
+        "A Roitberg"
+      ],
+      "year": 2018,
+      "doi": "10.1063/1.5023802",
+      "journal": "J. Chem. Phys",
+      "volume": "148",
+      "pages": "241733",
+      "raw": "Less Is More: Sampling Chemical Space with Active Learning \n\t\t \n\t\t\t J S Smith \n\t\t \n\t\t \n\t\t\t B Nebgen \n\t\t \n\t\t \n\t\t\t N Lubbers \n\t\t \n\t\t \n\t\t\t O Isayev \n\t\t \n\t\t \n\t\t\t A E Roitberg \n\t\t \n\t\t 10.1063/1.5023802 \n\t \n\t \n\t\t J. Chem. Phys \n\t\t \n\t\t\t 148 \n\t\t\t 241733 \n\t\t\t 2018 \n\t\t \n\t \n\t J. S. Smith, B. Nebgen, N. Lubbers, O. Isayev and A. E. Roitberg, Less Is More: Sampling Chemical Space with Active Learning, J. Chem. Phys., 2018, 148, 241733."
+    },
+    {
+      "title": "Deep Docking: A Deep Learning Platform for Augmentation of Structure Based Drug Discovery",
+      "authors": [
+        "F Gentile",
+        "V Agrawal",
+        "M Hsing",
+        "A.-T Ton",
+        "F Ban",
+        "U Norinder",
+        "M Gleave",
+        "A Cherkasov"
+      ],
+      "year": 2020,
+      "journal": "ACS Cent. Sci",
+      "volume": "6",
+      "raw": "Deep Docking: A Deep Learning Platform for Augmentation of Structure Based Drug Discovery \n\t\t \n\t\t\t F Gentile \n\t\t \n\t\t \n\t\t\t V Agrawal \n\t\t \n\t\t \n\t\t\t M Hsing \n\t\t \n\t\t \n\t\t\t A.-T Ton \n\t\t \n\t\t \n\t\t\t F Ban \n\t\t \n\t\t \n\t\t\t U Norinder \n\t\t \n\t\t \n\t\t\t M E Gleave \n\t\t \n\t\t \n\t\t\t A Cherkasov \n\t\t \n\t \n\t \n\t\t ACS Cent. Sci \n\t\t \n\t\t\t 6 \n\t\t\t \n\t\t\t 2020 \n\t\t \n\t \n\t F. Gentile, V. Agrawal, M. Hsing, A.-T. Ton, F. Ban, U. Norinder, M. E. Gleave and A. Cherkasov, Deep Docking: A Deep Learning Platform for Augmentation of Structure Based Drug Discovery, ACS Cent. Sci., 2020, 6, 939-949."
+    },
+    {
+      "title": "Accelerating High-Throughput Virtual Screening Through Molecular Pool-Based Active Learning",
+      "authors": [
+        "D Graff",
+        "E Shakhnovich",
+        "C Coley"
+      ],
+      "year": 2021,
+      "journal": "Chem. Sci",
+      "volume": "12",
+      "raw": "Accelerating High-Throughput Virtual Screening Through Molecular Pool-Based Active Learning \n\t\t \n\t\t\t D E Graff \n\t\t \n\t\t \n\t\t\t E I Shakhnovich \n\t\t \n\t\t \n\t\t\t C W Coley \n\t\t \n\t \n\t \n\t\t Chem. Sci \n\t\t \n\t\t\t 12 \n\t\t\t \n\t\t\t 2021 \n\t\t \n\t \n\t D. E. Graff, E. I. Shakhnovich and C. W. Coley, Accelerating High-Throughput Virtual Screening Through Molecular Pool-Based Active Learning, Chem. Sci., 2021, 12, 7866- 7881."
+    },
+    {
+      "title": "Efficient Exploration of Chemical Space with Docking and Deep Learning",
+      "authors": [
+        "Y Yang",
+        "K Yao",
+        "M Repasky",
+        "K Leswing",
+        "R Abel",
+        "B Shoichet",
+        "S Jerome"
+      ],
+      "year": 2021,
+      "doi": "10.1021/acs.jctc.1c00810",
+      "journal": "J. Chem. Theory Comput",
+      "volume": "17",
+      "raw": "Efficient Exploration of Chemical Space with Docking and Deep Learning \n\t\t \n\t\t\t Y Yang \n\t\t \n\t\t \n\t\t\t K Yao \n\t\t \n\t\t \n\t\t\t M P Repasky \n\t\t \n\t\t \n\t\t\t K Leswing \n\t\t \n\t\t \n\t\t\t R Abel \n\t\t \n\t\t \n\t\t\t B K Shoichet \n\t\t \n\t\t \n\t\t\t S V Jerome \n\t\t \n\t\t 10.1021/acs.jctc.1c00810 \n\t \n\t \n\t\t J. Chem. Theory Comput \n\t\t \n\t\t\t 17 \n\t\t\t \n\t\t\t 2021 \n\t\t \n\t \n\t Y. Yang, K. Yao, M. P. Repasky, K. Leswing, R. Abel, B. K. Shoichet and S. V. Jerome, Efficient Exploration of Chemical Space with Docking and Deep Learning, J. Chem. Theory Comput., 2021, 17, 7106-7119."
+    },
+    {
+      "title": "MEMES: Machine Learning Framework for Enhanced Molecular Screening",
+      "authors": [
+        "S Mehta",
+        "S Laghuvarapu",
+        "Y Pathak",
+        "A Sethi",
+        "M Alvala",
+        "U Priyakumar"
+      ],
+      "year": 2021,
+      "doi": "10.1039/d1sc02783b",
+      "journal": "Chem. Sci",
+      "volume": "12",
+      "raw": "MEMES: Machine Learning Framework for Enhanced Molecular Screening \n\t\t \n\t\t\t S Mehta \n\t\t \n\t\t \n\t\t\t S Laghuvarapu \n\t\t \n\t\t \n\t\t\t Y Pathak \n\t\t \n\t\t \n\t\t\t A Sethi \n\t\t \n\t\t \n\t\t\t M Alvala \n\t\t \n\t\t \n\t\t\t U D Priyakumar \n\t\t \n\t\t 10.1039/d1sc02783b \n\t \n\t \n\t\t Chem. Sci \n\t\t \n\t\t\t 12 \n\t\t\t \n\t\t\t 2021 \n\t\t \n\t \n\t S. Mehta, S. Laghuvarapu, Y. Pathak, A. Sethi, M. Alvala and U. D. Priyakumar, MEMES: Machine Learning Framework for Enhanced Molecular Screening, Chem. Sci., 2021, 12, 11710-11721."
+    },
+    {
+      "title": "Self-Focusing Virtual Screening with Active Design Space Pruning",
+      "authors": [
+        "D Graff",
+        "M Aldeghi",
+        "J Morrone",
+        "K Jordan",
+        "E Pyzer-Knapp",
+        "C Coley"
+      ],
+      "year": 2022,
+      "journal": "J. Chem. Inf. Model",
+      "volume": "62",
+      "raw": "Self-Focusing Virtual Screening with Active Design Space Pruning \n\t\t \n\t\t\t D E Graff \n\t\t \n\t\t \n\t\t\t M Aldeghi \n\t\t \n\t\t \n\t\t\t J A Morrone \n\t\t \n\t\t \n\t\t\t K E Jordan \n\t\t \n\t\t \n\t\t\t E O Pyzer-Knapp \n\t\t \n\t\t \n\t\t\t C W Coley \n\t\t \n\t \n\t \n\t\t J. Chem. Inf. Model \n\t\t \n\t\t\t 62 \n\t\t\t \n\t\t\t 2022 \n\t\t \n\t \n\t D. E. Graff, M. Aldeghi, J. A. Morrone, K. E. Jordan, E. O. Pyzer-Knapp and C. W. Coley, Self-Focusing Virtual Screening with Active Design Space Pruning, J. Chem. Inf. Model., 2022, 62, 3854-3862."
+    },
+    {
+      "title": "Optimizing Active Learning for Free Energy Calculations",
+      "authors": [
+        "J Thompson",
+        "W Walters",
+        "J Feng",
+        "N Pabon",
+        "H Xu",
+        "M Maser",
+        "B Goldman",
+        "D Moustakas",
+        "M Schmidt",
+        "F York"
+      ],
+      "year": 2022,
+      "journal": "Artif. Intell. Life Sci",
+      "volume": "2",
+      "pages": "100050",
+      "raw": "Optimizing Active Learning for Free Energy Calculations \n\t\t \n\t\t\t J Thompson \n\t\t \n\t\t \n\t\t\t W P Walters \n\t\t \n\t\t \n\t\t\t J A Feng \n\t\t \n\t\t \n\t\t\t N A Pabon \n\t\t \n\t\t \n\t\t\t H Xu \n\t\t \n\t\t \n\t\t\t M Maser \n\t\t \n\t\t \n\t\t\t B B Goldman \n\t\t \n\t\t \n\t\t\t D Moustakas \n\t\t \n\t\t \n\t\t\t M Schmidt \n\t\t \n\t\t \n\t\t\t F York \n\t\t \n\t \n\t \n\t\t Artif. Intell. Life Sci \n\t\t \n\t\t\t 2 \n\t\t\t 100050 \n\t\t\t 2022 \n\t\t \n\t \n\t J. Thompson, W. P. Walters, J. A. Feng, N. A. Pabon, H. Xu, M. Maser, B. B. Goldman, D. Moustakas, M. Schmidt and F. York, Optimizing Active Learning for Free Energy Calculations, Artif. Intell. Life Sci., 2022, 2, 100050."
+    },
+    {
+      "title": "MO-MEMES: A Method for Accelerating Virtual Screening Using Multi-Objective Bayesian Optimization",
+      "authors": [
+        "S Mehta",
+        "M Goel",
+        "U Priyakumar"
+      ],
+      "year": 2022,
+      "doi": "10.3389/fmed.2022.916481",
+      "journal": "Front. Med",
+      "volume": "9",
+      "raw": "MO-MEMES: A Method for Accelerating Virtual Screening Using Multi-Objective Bayesian Optimization \n\t\t \n\t\t\t S Mehta \n\t\t \n\t\t \n\t\t\t M Goel \n\t\t \n\t\t \n\t\t\t U D Priyakumar \n\t\t \n\t\t 10.3389/fmed.2022.916481 \n\t \n\t \n\t\t Front. Med \n\t\t \n\t\t\t 9 \n\t\t\t 2022 \n\t\t \n\t \n\t S. Mehta, M. Goel and U. D. Priyakumar, MO-MEMES: A Method for Accelerating Virtual Screening Using Multi- Objective Bayesian Optimization, Front. Med., 2022, 9, DOI: 10.3389/fmed.2022.916481."
+    },
+    {
+      "title": "Prediction of Physicochemical Parameters by Atomic Contributions",
+      "authors": [
+        "S Wildman",
+        "G Crippen"
+      ],
+      "year": 1999,
+      "journal": "J. Chem. Inf. Comput. Sci",
+      "volume": "39",
+      "raw": "Prediction of Physicochemical Parameters by Atomic Contributions \n\t\t \n\t\t\t S A Wildman \n\t\t \n\t\t \n\t\t\t G M Crippen \n\t\t \n\t \n\t \n\t\t J. Chem. Inf. Comput. Sci \n\t\t \n\t\t\t 39 \n\t\t\t \n\t\t\t 1999 \n\t\t \n\t \n\t S. A. Wildman and G. M. Crippen, Prediction of Physicochemical Parameters by Atomic Contributions, J. Chem. Inf. Comput. Sci., 1999, 39, 868-873."
+    },
+    {
+      "title": "Estimation of Synthetic Accessibility Score of Drug-like Molecules Based on Molecular Complexity and Fragment Contributions",
+      "authors": [
+        "P Ertl",
+        "A Schuffenhauer"
+      ],
+      "year": 2009,
+      "journal": "J. Cheminf",
+      "volume": "1",
+      "pages": "8",
+      "raw": "Estimation of Synthetic Accessibility Score of Drug-like Molecules Based on Molecular Complexity and Fragment Contributions \n\t\t \n\t\t\t P Ertl \n\t\t \n\t\t \n\t\t\t A Schuffenhauer \n\t\t \n\t \n\t \n\t\t J. Cheminf \n\t\t \n\t\t\t 1 \n\t\t\t 8 \n\t\t\t 2009 \n\t\t \n\t \n\t P. Ertl and A. Schuffenhauer, Estimation of Synthetic Accessibility Score of Drug-like Molecules Based on Molecular Complexity and Fragment Contributions, J. Cheminf., 2009, 1, 8."
+    },
+    {
+      "title": "Enamine Screening Collections",
+      "year": 2023,
+      "raw": "Enamine Screening Collections \n\t\t \n\t\t\t May 2023 \n\t\t \n\t \n\t Enamine Screening Collections, https://enamine.net/ compound-collections/screening-collection, downloaded May 2023."
+    },
+    {
+      "title": "Computer-Aided Multi-Objective Optimization in Small Molecule Discovery",
+      "authors": [
+        "J Fromer",
+        "C Coley"
+      ],
+      "year": 2023,
+      "doi": "10.1016/j.patter.2023.100678",
+      "journal": "Patterns",
+      "volume": "4",
+      "pages": "100678",
+      "raw": "Computer-Aided Multi-Objective Optimization in Small Molecule Discovery \n\t\t \n\t\t\t J C Fromer \n\t\t \n\t\t \n\t\t\t C W Coley \n\t\t \n\t\t 10.1016/j.patter.2023.100678 \n\t \n\t \n\t\t Patterns \n\t\t \n\t\t\t 4 \n\t\t\t 100678 \n\t\t\t 2023 \n\t\t \n\t \n\t J. C. Fromer and C. W. Coley, Computer-Aided Multi- Objective Optimization in Small Molecule Discovery, Patterns, 2023, 4, 100678."
+    },
+    {
+      "title": "Accurate Multiobjective Design in a Space of Millions of Transition Metal Complexes with Neural-Network-Driven Efficient Global Optimization",
+      "authors": [
+        "J Janet",
+        "S Ramesh",
+        "C Duan",
+        "H Kulik"
+      ],
+      "year": 2020,
+      "doi": "10.1021/acscentsci.0c00026",
+      "journal": "ACS Cent. Sci",
+      "volume": "6",
+      "raw": "Accurate Multiobjective Design in a Space of Millions of Transition Metal Complexes with Neural-Network-Driven Efficient Global Optimization \n\t\t \n\t\t\t J P Janet \n\t\t \n\t\t \n\t\t\t S Ramesh \n\t\t \n\t\t \n\t\t\t C Duan \n\t\t \n\t\t \n\t\t\t H J Kulik \n\t\t \n\t\t 10.1021/acscentsci.0c00026 \n\t \n\t \n\t\t ACS Cent. Sci \n\t\t \n\t\t\t 6 \n\t\t\t \n\t\t\t 2020 \n\t\t \n\t \n\t J. P. Janet, S. Ramesh, C. Duan and H. J. Kulik, Accurate Multiobjective Design in a Space of Millions of Transition Metal Complexes with Neural-Network-Driven Efficient Global Optimization, ACS Cent. Sci., 2020, 6, 513-524."
+    },
+    {
+      "title": "Discovery of Energy Storage Molecular Materials Using Quantum Chemistry-Guided Multiobjective Bayesian Optimization",
+      "authors": [
+        "G Agarwal",
+        "H Doan",
+        "L Robertson",
+        "L Zhang",
+        "R Assary"
+      ],
+      "year": 2021,
+      "journal": "Chem. Mater",
+      "volume": "33",
+      "raw": "Discovery of Energy Storage Molecular Materials Using Quantum Chemistry-Guided Multiobjective Bayesian Optimization \n\t\t \n\t\t\t G Agarwal \n\t\t \n\t\t \n\t\t\t H A Doan \n\t\t \n\t\t \n\t\t\t L A Robertson \n\t\t \n\t\t \n\t\t\t L Zhang \n\t\t \n\t\t \n\t\t\t R S Assary \n\t\t \n\t \n\t \n\t\t Chem. Mater \n\t\t \n\t\t\t 33 \n\t\t\t \n\t\t\t 2021 \n\t\t \n\t \n\t G. Agarwal, H. A. Doan, L. A. Robertson, L. Zhang and R. S. Assary, Discovery of Energy Storage Molecular Materials Using Quantum Chemistry-Guided Multiobjective Bayesian Optimization, Chem. Mater., 2021, 33, 8133-8144."
+    },
+    {
+      "title": "Multiobjective Solid Electrolyte Design of Tetragonal and Cubic Inverse-Perovskites for All-Solid-State Lithium-Ion Batteries by High-Throughput Density Functional Theory Calculations and AI-Driven Methods",
+      "authors": [
+        "R Jalem",
+        "Y Tateyama",
+        "K Takada",
+        "S.-H Jang"
+      ],
+      "year": 2023,
+      "journal": "J. Phys. Chem. C",
+      "volume": "127",
+      "raw": "Multiobjective Solid Electrolyte Design of Tetragonal and Cubic Inverse-Perovskites for All-Solid-State Lithium-Ion Batteries by High-Throughput Density Functional Theory Calculations and AI-Driven Methods \n\t\t \n\t\t\t R Jalem \n\t\t \n\t\t \n\t\t\t Y Tateyama \n\t\t \n\t\t \n\t\t\t K Takada \n\t\t \n\t\t \n\t\t\t S.-H Jang \n\t\t \n\t \n\t \n\t\t J. Phys. Chem. C \n\t\t \n\t\t\t 127 \n\t\t\t \n\t\t\t 2023 \n\t\t \n\t \n\t R. Jalem, Y. Tateyama, K. Takada and S.-H. Jang, Multiobjective Solid Electrolyte Design of Tetragonal and Cubic Inverse-Perovskites for All-Solid-State Lithium-Ion Batteries by High-Throughput Density Functional Theory Calculations and AI-Driven Methods, J. Phys. Chem. C, 2023, 127, 17307-17323."
+    },
+    {
+      "title": "Multi-objective Optimization for Materials Discovery via Adaptive Design",
+      "authors": [
+        "A Gopakumar",
+        "P Balachandran",
+        "D Xue",
+        "J Gubernatis",
+        "T Lookman"
+      ],
+      "year": 2018,
+      "journal": "Sci. Rep",
+      "volume": "8",
+      "pages": "3738",
+      "raw": "Multi-objective Optimization for Materials Discovery via Adaptive Design \n\t\t \n\t\t\t A M Gopakumar \n\t\t \n\t\t \n\t\t\t P V Balachandran \n\t\t \n\t\t \n\t\t\t D Xue \n\t\t \n\t\t \n\t\t\t J E Gubernatis \n\t\t \n\t\t \n\t\t\t T Lookman \n\t\t \n\t \n\t \n\t\t Sci. Rep \n\t\t \n\t\t\t 8 \n\t\t\t 3738 \n\t\t\t 2018 \n\t\t \n\t \n\t A. M. Gopakumar, P. V. Balachandran, D. Xue, J. E. Gubernatis and T. Lookman, Multi-objective Optimization for Materials Discovery via Adaptive Design, Sci. Rep., 2018, 8, 3738."
+    },
+    {
+      "title": "Assessing the Frontier: Active Learning, Model Accuracy, and Multi-Objective Candidate Discovery and Optimization",
+      "authors": [
+        "Z Del Rosario",
+        "M Rupp",
+        "Y Kim",
+        "E Antono",
+        "J Ling"
+      ],
+      "year": 2020,
+      "doi": "10.1063/5.0006124",
+      "journal": "J. Chem. Phys",
+      "volume": "153",
+      "pages": "24112",
+      "raw": "Assessing the Frontier: Active Learning, Model Accuracy, and Multi-Objective Candidate Discovery and Optimization \n\t\t \n\t\t\t Z Del Rosario \n\t\t \n\t\t \n\t\t\t M Rupp \n\t\t \n\t\t \n\t\t\t Y Kim \n\t\t \n\t\t \n\t\t\t E Antono \n\t\t \n\t\t \n\t\t\t J Ling \n\t\t \n\t\t 10.1063/5.0006124 \n\t \n\t \n\t\t J. Chem. Phys \n\t\t \n\t\t\t 153 \n\t\t\t 24112 \n\t\t\t 2020 \n\t\t \n\t \n\t Z. del Rosario, M. Rupp, Y. Kim, E. Antono and J. Ling, Assessing the Frontier: Active Learning, Model Accuracy, and Multi-Objective Candidate Discovery and Optimization, J. Chem. Phys., 2020, 153, 024112."
+    },
+    {
+      "title": "Design of Antimicrobial Peptides Containing Non-Proteinogenic Amino Acids Using Multi-Objective Bayesian Optimisation",
+      "authors": [
+        "Y Murakami",
+        "S Ishida",
+        "Y Demizu",
+        "K Terayama"
+      ],
+      "year": 2023,
+      "doi": "10.1039/d3dd00090g",
+      "journal": "Digital Discovery",
+      "volume": "2",
+      "raw": "Design of Antimicrobial Peptides Containing Non-Proteinogenic Amino Acids Using Multi-Objective Bayesian Optimisation \n\t\t \n\t\t\t Y Murakami \n\t\t \n\t\t \n\t\t\t S Ishida \n\t\t \n\t\t \n\t\t\t Y Demizu \n\t\t \n\t\t \n\t\t\t K Terayama \n\t\t \n\t\t 10.1039/d3dd00090g \n\t \n\t \n\t\t Digital Discovery \n\t\t \n\t\t\t 2 \n\t\t\t \n\t\t\t 2023 \n\t\t \n\t \n\t Y. Murakami, S. Ishida, Y. Demizu and K. Terayama, Design of Antimicrobial Peptides Containing Non-Proteinogenic Amino Acids Using Multi-Objective Bayesian Optimisation, Digital Discovery, 2023, 2, 1347-1353."
+    },
+    {
+      "title": "Improvement Criteria for Use in Multiobjective Design Optimization",
+      "authors": [
+        "A Keane"
+      ],
+      "year": 2006,
+      "journal": "AIAA J",
+      "volume": "44",
+      "raw": "Improvement Criteria for Use in Multiobjective Design Optimization \n\t\t \n\t\t\t A J S Keane \n\t\t \n\t \n\t \n\t\t AIAA J \n\t\t \n\t\t\t 44 \n\t\t\t \n\t\t\t 2006 \n\t\t \n\t \n\t A. J. S. Keane, Improvement Criteria for Use in Multiobjective Design Optimization, AIAA J., 2006, 44, 879-891."
+    },
+    {
+      "title": "A Flexible Framework for Multi-Objective Bayesian Optimization using Random Scalarizations",
+      "authors": [
+        "B Paria",
+        "K Kandasamy",
+        "B P\u00f3czos"
+      ],
+      "year": 2020,
+      "raw": "A Flexible Framework for Multi-Objective Bayesian Optimization using Random Scalarizations \n\t\t \n\t\t\t B Paria \n\t\t \n\t\t \n\t\t\t K Kandasamy \n\t\t \n\t\t \n\t\t\t B P\u00f3czos \n\t\t \n\t \n\t \n\t\t Proceedings of The 35th Uncertainty in Arti\ue103cial Intelligence Conference \n\t\t The 35th Uncertainty in Arti\ue103cial Intelligence Conference \n\t\t \n\t\t\t 2020 \n\t\t\t \n\t\t \n\t \n\t B. Paria, K. Kandasamy and B. P\u00f3czos, A Flexible Framework for Multi-Objective Bayesian Optimization using Random Scalarizations, Proceedings of The 35th Uncertainty in Arti\ue103cial Intelligence Conference. 2020, pp. 766-776."
+    },
+    {
+      "title": "Random Hypervolume Scalarizations for Provable Multi-Objective Black Box Optimization",
+      "authors": [
+        "R Zhang",
+        "D Golovin"
+      ],
+      "year": 2020,
+      "raw": "Random Hypervolume Scalarizations for Provable Multi-Objective Black Box Optimization \n\t\t \n\t\t\t R Zhang \n\t\t \n\t\t \n\t\t\t D Golovin \n\t\t \n\t \n\t \n\t\t Proceedings of the 37th International Conference on Machine Learning \n\t\t the 37th International Conference on Machine Learning \n\t\t \n\t\t\t 2020 \n\t\t\t \n\t\t \n\t \n\t R. Zhang and D. Golovin, Random Hypervolume Scalarizations for Provable Multi-Objective Black Box Optimization, Proceedings of the 37th International Conference on Machine Learning, 2020, pp. 11096-11105."
+    },
+    {
+      "title": "An Interactive Weighted Tchebycheff Procedure for Multiple Objective Programming",
+      "authors": [
+        "R Steuer",
+        "E.-U Choo"
+      ],
+      "year": 1983,
+      "doi": "10.1007/bf02591870",
+      "journal": "Math. Program",
+      "volume": "26",
+      "raw": "An Interactive Weighted Tchebycheff Procedure for Multiple Objective Programming \n\t\t \n\t\t\t R E Steuer \n\t\t \n\t\t \n\t\t\t E.-U Choo \n\t\t \n\t\t 10.1007/bf02591870 \n\t \n\t \n\t\t Math. Program \n\t\t \n\t\t\t 26 \n\t\t\t \n\t\t\t 1983 \n\t\t \n\t \n\t R. E. Steuer and E.-U. Choo, An Interactive Weighted Tchebycheff Procedure for Multiple Objective Programming, Math. Program., 1983, 26, 326-344."
+    },
+    {
+      "title": "Methods for Multi-Objective Optimization: An Analysis",
+      "authors": [
+        "I Giagkiozis",
+        "P Fleming"
+      ],
+      "year": 2015,
+      "doi": "10.1016/j.ins.2014.08.071",
+      "journal": "Inf. Sci",
+      "volume": "293",
+      "raw": "Methods for Multi-Objective Optimization: An Analysis \n\t\t \n\t\t\t I Giagkiozis \n\t\t \n\t\t \n\t\t\t P J Fleming \n\t\t \n\t\t 10.1016/j.ins.2014.08.071 \n\t \n\t \n\t\t Inf. Sci \n\t\t \n\t\t\t 293 \n\t\t\t \n\t\t\t 2015 \n\t\t \n\t \n\t I. Giagkiozis and P. J. Fleming, Methods for Multi-Objective Optimization: An Analysis, Inf. Sci., 2015, 293, 338-350."
+    },
+    {
+      "title": "New Method of Locating the Maximum Point of an Arbitrary Multipeak Curve in the Presence of Noise",
+      "authors": [
+        "H Kushner"
+      ],
+      "year": 1964,
+      "journal": "J. Basic Eng",
+      "volume": "86",
+      "raw": "New Method of Locating the Maximum Point of an Arbitrary Multipeak Curve in the Presence of Noise \n\t\t \n\t\t\t H J A Kushner \n\t\t \n\t \n\t \n\t\t J. Basic Eng \n\t\t \n\t\t\t 86 \n\t\t\t \n\t\t\t 1964 \n\t\t \n\t \n\t H. J. A. Kushner, New Method of Locating the Maximum Point of an Arbitrary Multipeak Curve in the Presence of Noise, J. Basic Eng., 1964, 86, 97-106."
+    },
+    {
+      "title": "On Bayesian Methods for Seeking the Extremum",
+      "authors": [
+        "J Mo\u010dkus"
+      ],
+      "year": 1974,
+      "raw": "On Bayesian Methods for Seeking the Extremum \n\t\t \n\t\t\t J Mo\u010dkus \n\t\t \n\t \n\t \n\t\t Optimization Techniques IFIP Technical Conference Novosibirsk \n\t\t Berlin, Heidelberg \n\t\t \n\t\t\t July 1-7, 1974. 1975 \n\t\t\t \n\t\t \n\t \n\t J. Mo\u010dkus, On Bayesian Methods for Seeking the Extremum. Optimization Techniques IFIP Technical Conference Novosibirsk, July 1-7, 1974, Berlin, Heidelberg, 1975, pp. 400-404."
+    },
+    {
+      "title": "Information-Theoretic Regret Bounds for Gaussian Process Optimization in the Bandit Setting",
+      "authors": [
+        "N Srinivas",
+        "A Krause",
+        "S Kakade",
+        "M Seeger"
+      ],
+      "year": 2012,
+      "journal": "IEEE Trans. Inf. Theory",
+      "volume": "58",
+      "raw": "Information-Theoretic Regret Bounds for Gaussian Process Optimization in the Bandit Setting \n\t\t \n\t\t\t N Srinivas \n\t\t \n\t\t \n\t\t\t A Krause \n\t\t \n\t\t \n\t\t\t S M Kakade \n\t\t \n\t\t \n\t\t\t M W Seeger \n\t\t \n\t \n\t \n\t\t IEEE Trans. Inf. Theory \n\t\t \n\t\t\t 58 \n\t\t\t \n\t\t\t 2012 \n\t\t \n\t \n\t N. Srinivas, A. Krause, S. M. Kakade and M. W. Seeger, Information-Theoretic Regret Bounds for Gaussian Process Optimization in the Bandit Setting, IEEE Trans. Inf. Theory, 2012, 58, 3250-3265."
+    },
+    {
+      "title": "Directions in Large-Scale Systems: Many-Person Optimization and Decentralized Control",
+      "authors": [
+        "J Lin"
+      ],
+      "year": 1976,
+      "raw": "Directions in Large-Scale Systems: Many-Person Optimization and Decentralized Control \n\t\t \n\t\t\t J G Lin \n\t\t \n\t\t Y. C. Ho and S. K. Mitter \n\t\t \n\t\t\t 1976 \n\t\t\t Springer US \n\t\t\t \n\t\t\t Boston, MA \n\t\t \n\t \n\t J. G. Lin, Directions in Large-Scale Systems: Many-Person Optimization and Decentralized Control, ed. Y. C. Ho and S. K. Mitter, Springer US, Boston, MA, 1976, pp. 117-138."
+    },
+    {
+      "title": "Revisiting Scalarization in Multi-Task Learning: A Theoretical Perspective",
+      "authors": [
+        "Y Hu",
+        "R Xian",
+        "Q Wu",
+        "Q Fan",
+        "L Yin",
+        "H Zhao"
+      ],
+      "year": 2023,
+      "raw": "Revisiting Scalarization in Multi-Task Learning: A Theoretical Perspective \n\t\t \n\t\t\t Y Hu \n\t\t \n\t\t \n\t\t\t R Xian \n\t\t \n\t\t \n\t\t\t Q Wu \n\t\t \n\t\t \n\t\t\t Q Fan \n\t\t \n\t\t \n\t\t\t L Yin \n\t\t \n\t\t \n\t\t\t H Zhao \n\t\t \n\t\t \n\t\t \n\t\t\t 2023 \n\t\t \n\t \n\t Y. Hu, R. Xian, Q. Wu, Q. Fan, L. Yin and H. Zhao, Revisiting Scalarization in Multi-Task Learning: A Theoretical Perspective, 2023, http://arxiv.org/abs/2308.13985."
+    },
+    {
+      "title": "Muiltiobjective Optimization Using Nondominated Sorting in Genetic Algorithms",
+      "authors": [
+        "N Srinivas",
+        "K Deb"
+      ],
+      "year": 1994,
+      "journal": "Evol Comput",
+      "volume": "2",
+      "raw": "Muiltiobjective Optimization Using Nondominated Sorting in Genetic Algorithms \n\t\t \n\t\t\t N Srinivas \n\t\t \n\t\t \n\t\t\t K Deb \n\t\t \n\t \n\t \n\t\t Evol Comput \n\t\t \n\t\t\t 2 \n\t\t\t \n\t\t\t 1994 \n\t\t \n\t \n\t N. Srinivas and K. Deb, Muiltiobjective Optimization Using Nondominated Sorting in Genetic Algorithms, Evol Comput., 1994, 2, 221-248."
+    },
+    {
+      "title": "A Fast and Elitist Multiobjective Genetic Algorithm: NSGA-II",
+      "authors": [
+        "K Deb",
+        "A Pratap",
+        "S Agarwal",
+        "T Meyarivan"
+      ],
+      "year": 2002,
+      "doi": "10.1109/4235.996017",
+      "journal": "IEEE Trans. Evol. Comput",
+      "volume": "6",
+      "raw": "A Fast and Elitist Multiobjective Genetic Algorithm: NSGA-II \n\t\t \n\t\t\t K Deb \n\t\t \n\t\t \n\t\t\t A Pratap \n\t\t \n\t\t \n\t\t\t S Agarwal \n\t\t \n\t\t \n\t\t\t T Meyarivan \n\t\t \n\t\t 10.1109/4235.996017 \n\t \n\t \n\t\t IEEE Trans. Evol. Comput \n\t\t \n\t\t\t 6 \n\t\t\t \n\t\t\t 2002 \n\t\t \n\t \n\t K. Deb, A. Pratap, S. Agarwal and T. Meyarivan, A Fast and Elitist Multiobjective Genetic Algorithm: NSGA-II, IEEE Trans. Evol. Comput., 2002, 6, 182-197."
+    },
+    {
+      "title": "Designing Multi-Objective Multi-Armed Bandits Algorithms: A Study",
+      "authors": [
+        "M Drugan",
+        "A Nowe"
+      ],
+      "year": 2013,
+      "raw": "Designing Multi-Objective Multi-Armed Bandits Algorithms: A Study \n\t\t \n\t\t\t M M Drugan \n\t\t \n\t\t \n\t\t\t A Nowe \n\t\t \n\t \n\t \n\t\t The 2013 International Joint Conference on Neural Networks, IJCNN \n\t\t \n\t\t\t 2013 \n\t\t\t \n\t\t \n\t \n\t M. M. Drugan and A. Nowe, Designing Multi-Objective Multi- Armed Bandits Algorithms: A Study. The 2013 International Joint Conference on Neural Networks, IJCNN, 2013, pp. 1-8."
+    },
+    {
+      "title": "A Comparison of Loss Weighting Strategies for Multi task Learning in Deep Neural Networks",
+      "authors": [
+        "T Gong",
+        "T Lee",
+        "C Stephenson",
+        "V Renduchintala",
+        "S Padhy",
+        "A Ndirango",
+        "G Keskin",
+        "O Elibol"
+      ],
+      "year": 2019,
+      "journal": "IEEE Access",
+      "volume": "7",
+      "raw": "A Comparison of Loss Weighting Strategies for Multi task Learning in Deep Neural Networks \n\t\t \n\t\t\t T Gong \n\t\t \n\t\t \n\t\t\t T Lee \n\t\t \n\t\t \n\t\t\t C Stephenson \n\t\t \n\t\t \n\t\t\t V Renduchintala \n\t\t \n\t\t \n\t\t\t S Padhy \n\t\t \n\t\t \n\t\t\t A Ndirango \n\t\t \n\t\t \n\t\t\t G Keskin \n\t\t \n\t\t \n\t\t\t O H Elibol \n\t\t \n\t \n\t \n\t\t IEEE Access \n\t\t \n\t\t\t 7 \n\t\t\t \n\t\t\t 2019 \n\t\t \n\t \n\t T. Gong, T. Lee, C. Stephenson, V. Renduchintala, S. Padhy, A. Ndirango, G. Keskin and O. H. Elibol, A Comparison of Loss Weighting Strategies for Multi task Learning in Deep Neural Networks, IEEE Access, 2019, 7, 141627-141632."
+    },
+    {
+      "title": "Batched Bayesian Optimization for Drug Design in Noisy Environments",
+      "authors": [
+        "H Bellamy",
+        "A Rehim",
+        "O Orhobor",
+        "R King"
+      ],
+      "year": 2022,
+      "journal": "J. Chem. Inf. Model",
+      "volume": "62",
+      "raw": "Batched Bayesian Optimization for Drug Design in Noisy Environments \n\t\t \n\t\t\t H Bellamy \n\t\t \n\t\t \n\t\t\t A A Rehim \n\t\t \n\t\t \n\t\t\t O I Orhobor \n\t\t \n\t\t \n\t\t\t R King \n\t\t \n\t \n\t \n\t\t J. Chem. Inf. Model \n\t\t \n\t\t\t 62 \n\t\t\t \n\t\t\t 2022 \n\t\t \n\t \n\t H. Bellamy, A. A. Rehim, O. I. Orhobor and R. King, Batched Bayesian Optimization for Drug Design in Noisy Environments, J. Chem. Inf. Model., 2022, 62, 3970-3981."
+    },
+    {
+      "title": "Computational Intelligence in Expensive Optimization Problems",
+      "authors": [
+        "D Ginsbourger",
+        "R Le Riche",
+        "L Carraro"
+      ],
+      "year": 2010,
+      "raw": "Computational Intelligence in Expensive Optimization Problems \n\t\t \n\t\t\t D Ginsbourger \n\t\t \n\t\t \n\t\t\t R Le Riche \n\t\t \n\t\t \n\t\t\t L Carraro \n\t\t \n\t \n\t \n\t\t Adaptation Learning and Optimization \n\t\t \n\t\t\t Y Tenne \n\t\t \n\t\t \n\t\t\t C.-K Goh \n\t\t \n\t\t Berlin, Heidelberg \n\t\t \n\t\t\t Springer \n\t\t\t 2010 \n\t\t\t \n\t\t \n\t \n\t D. Ginsbourger, R. Le Riche and L. Carraro, Computational Intelligence in Expensive Optimization Problems, ed. Y. Tenne and C.-K. Goh, Adaptation Learning and Optimization, Springer, Berlin, Heidelberg, 2010, pp. 131-162."
+    },
+    {
+      "title": "Practical Bayesian Optimization of Machine Learning Algorithms",
+      "authors": [
+        "J Snoek",
+        "H Larochelle",
+        "R Adams"
+      ],
+      "year": 2012,
+      "raw": "Practical Bayesian Optimization of Machine Learning Algorithms \n\t\t \n\t\t\t J Snoek \n\t\t \n\t\t \n\t\t\t H Larochelle \n\t\t \n\t\t \n\t\t\t R P Adams \n\t\t \n\t \n\t \n\t\t Advances in Neural Information Processing Systems \n\t\t \n\t\t\t 2012 \n\t\t \n\t \n\t J. Snoek, H. Larochelle and R. P. Adams, Practical Bayesian Optimization of Machine Learning Algorithms, Advances in Neural Information Processing Systems, 2012."
+    },
+    {
+      "title": "Expected Improvements for the Asynchronous Parallel Global Optimization of Expensive Functions: Potentials and Challenges",
+      "authors": [
+        "J Janusevskis",
+        "R Le Riche",
+        "D Ginsbourger",
+        "R Girdziusas"
+      ],
+      "year": 2012,
+      "raw": "Expected Improvements for the Asynchronous Parallel Global Optimization of Expensive Functions: Potentials and Challenges \n\t\t \n\t\t\t J Janusevskis \n\t\t \n\t\t \n\t\t\t R Le Riche \n\t\t \n\t\t \n\t\t\t D Ginsbourger \n\t\t \n\t\t \n\t\t\t R Girdziusas \n\t\t \n\t \n\t \n\t\t Learning and Intelligent Optimization \n\t\t Berlin, Heidelberg \n\t\t \n\t\t\t 2012 \n\t\t\t \n\t\t \n\t \n\t J. Janusevskis, R. Le Riche, D. Ginsbourger and R. Girdziusas, Expected Improvements for the Asynchronous Parallel Global Optimization of Expensive Functions: Potentials and Challenges. Learning and Intelligent Optimization, Berlin, Heidelberg, 2012, pp. 413-418."
+    },
+    {
+      "title": "Fast Computation of the Multi-Points Expected Improvement with Applications in Batch Selection, Learning and Intelligent Optimization",
+      "authors": [
+        "C Chevalier",
+        "D Ginsbourger"
+      ],
+      "year": 2013,
+      "raw": "Fast Computation of the Multi-Points Expected Improvement with Applications in Batch Selection, Learning and Intelligent Optimization \n\t\t \n\t\t\t C Chevalier \n\t\t \n\t\t \n\t\t\t D Ginsbourger \n\t\t \n\t\t \n\t\t\t 2013 \n\t\t\t \n\t\t\t Berlin, Heidelberg \n\t\t \n\t \n\t C. Chevalier and D. Ginsbourger, Fast Computation of the Multi-Points Expected Improvement with Applications in Batch Selection, Learning and Intelligent Optimization, Berlin, Heidelberg, 2013, pp. 59-69."
+    },
+    {
+      "title": "Efficient Nonmyopic Active Search",
+      "authors": [
+        "S Jiang",
+        "G Malkomes",
+        "G Converse",
+        "A Shofner",
+        "B Moseley",
+        "R Garnett"
+      ],
+      "year": 2017,
+      "raw": "Efficient Nonmyopic Active Search \n\t\t \n\t\t\t S Jiang \n\t\t \n\t\t \n\t\t\t G Malkomes \n\t\t \n\t\t \n\t\t\t G Converse \n\t\t \n\t\t \n\t\t\t A Shofner \n\t\t \n\t\t \n\t\t\t B Moseley \n\t\t \n\t\t \n\t\t\t R Garnett \n\t\t \n\t \n\t \n\t\t Proceedings of the 34th International Conference on Machine Learning \n\t\t the 34th International Conference on Machine Learning \n\t\t \n\t\t\t 2017 \n\t\t\t \n\t\t \n\t \n\t S. Jiang, G. Malkomes, G. Converse, A. Shofner, B. Moseley and R. Garnett, Efficient Nonmyopic Active Search, Proceedings of the 34th International Conference on Machine Learning, 2017, pp. 1714-1723."
+    },
+    {
+      "title": "pBO-2GP-3B: A Batch Parallel Known/Unknown Constrained Bayesian Optimization with Feasibility Classi\ue103cation and Its Applications in Computational Fluid Dynamics",
+      "authors": [
+        "A Tran",
+        "J Sun",
+        "J Furlan",
+        "K Pagalthivarthi",
+        "R Visintainer",
+        "Y Wang"
+      ],
+      "year": 2019,
+      "journal": "Comput. Methods Appl. Mech. Eng",
+      "volume": "347",
+      "raw": "pBO-2GP-3B: A Batch Parallel Known/Unknown Constrained Bayesian Optimization with Feasibility Classi\ue103cation and Its Applications in Computational Fluid Dynamics \n\t\t \n\t\t\t A Tran \n\t\t \n\t\t \n\t\t\t J Sun \n\t\t \n\t\t \n\t\t\t J M Furlan \n\t\t \n\t\t \n\t\t\t K V Pagalthivarthi \n\t\t \n\t\t \n\t\t\t R J Visintainer \n\t\t \n\t\t \n\t\t\t Y Wang \n\t\t \n\t \n\t \n\t\t Comput. Methods Appl. Mech. Eng \n\t\t \n\t\t\t 347 \n\t\t\t \n\t\t\t 2019 \n\t\t \n\t \n\t A. Tran, J. Sun, J. M. Furlan, K. V. Pagalthivarthi, R. J. Visintainer and Y. Wang, pBO-2GP-3B: A Batch Parallel Known/Unknown Constrained Bayesian Optimization with Feasibility Classi\ue103cation and Its Applications in Computational Fluid Dynamics, Comput. Methods Appl. Mech. Eng., 2019, 347, 827-852."
+    },
+    {
+      "title": "Batch Bayesian Optimization via Simulation Matching",
+      "authors": [
+        "J Azimi",
+        "A Fern",
+        "X Fern"
+      ],
+      "year": 2010,
+      "raw": "Batch Bayesian Optimization via Simulation Matching \n\t\t \n\t\t\t J Azimi \n\t\t \n\t\t \n\t\t\t A Fern \n\t\t \n\t\t \n\t\t\t X Fern \n\t\t \n\t \n\t \n\t\t Advances in Neural Information Processing Systems \n\t\t \n\t\t\t 2010 \n\t\t \n\t \n\t J. Azimi, A. Fern and X. Fern, Batch Bayesian Optimization via Simulation Matching, Advances in Neural Information Processing Systems, 2010."
+    },
+    {
+      "title": "Batch Bayesian Optimization via Local Penalization",
+      "authors": [
+        "J Gonzalez",
+        "Z Dai",
+        "P Hennig",
+        "N Lawrence"
+      ],
+      "year": 2016,
+      "raw": "Batch Bayesian Optimization via Local Penalization \n\t\t \n\t\t\t J Gonzalez \n\t\t \n\t\t \n\t\t\t Z Dai \n\t\t \n\t\t \n\t\t\t P Hennig \n\t\t \n\t\t \n\t\t\t N Lawrence \n\t\t \n\t \n\t \n\t\t Proceedings of the 19th International Conference on Arti\ue103cial Intelligence and Statistics \n\t\t the 19th International Conference on Arti\ue103cial Intelligence and Statistics \n\t\t \n\t\t\t 2016 \n\t\t\t \n\t\t \n\t \n\t J. Gonzalez, Z. Dai, P. Hennig and N. Lawrence, Batch Bayesian Optimization via Local Penalization, Proceedings of the 19th International Conference on Arti\ue103cial Intelligence and Statistics, 2016, pp. 648-657."
+    },
+    {
+      "title": "Diversity-Guided Multi-Objective Bayesian Optimization With Batch Evaluations",
+      "authors": [
+        "M Konakovic Lukovic",
+        "Y Tian",
+        "W Matusik"
+      ],
+      "year": 2020,
+      "doi": "10.2514/6.2021-1482.vid",
+      "journal": "Adv. Neural Inf. Process",
+      "raw": "Diversity-Guided Multi-Objective Bayesian Optimization With Batch Evaluations \n\t\t \n\t\t\t M Konakovic Lukovic \n\t\t \n\t\t \n\t\t\t Y Tian \n\t\t \n\t\t \n\t\t\t W Matusik \n\t\t \n\t\t 10.2514/6.2021-1482.vid \n\t \n\t \n\t\t Adv. Neural Inf. Process \n\t\t \n\t\t\t \n\t\t\t 2020 \n\t\t \n\t \n\t M. Konakovic Lukovic, Y. Tian and W. Matusik, Diversity- Guided Multi-Objective Bayesian Optimization With Batch Evaluations, Adv. Neural Inf. Process., 2020, 17708-17720."
+    },
+    {
+      "title": "Batch Active Learning at Scale",
+      "authors": [
+        "G Citovsky",
+        "G Desalvo",
+        "C Gentile",
+        "L Karydas",
+        "A Rajagopalan",
+        "A Rostamizadeh",
+        "S Kumar"
+      ],
+      "year": 2021,
+      "journal": "Adv. Neural Inf. Process",
+      "raw": "Batch Active Learning at Scale \n\t\t \n\t\t\t G Citovsky \n\t\t \n\t\t \n\t\t\t G Desalvo \n\t\t \n\t\t \n\t\t\t C Gentile \n\t\t \n\t\t \n\t\t\t L Karydas \n\t\t \n\t\t \n\t\t\t A Rajagopalan \n\t\t \n\t\t \n\t\t\t A Rostamizadeh \n\t\t \n\t\t \n\t\t\t S Kumar \n\t\t \n\t \n\t \n\t\t Adv. Neural Inf. Process \n\t\t \n\t\t\t \n\t\t\t 2021 \n\t\t \n\t \n\t G. Citovsky, G. DeSalvo, C. Gentile, L. Karydas, A. Rajagopalan, A. Rostamizadeh and S. Kumar, Batch Active Learning at Scale, Adv. Neural Inf. Process., 2021, 11933-11944."
+    },
+    {
+      "title": "Discovering Many Diverse Solutions with Bayesian Optimization",
+      "authors": [
+        "N Maus",
+        "K Wu",
+        "D Eriksson",
+        "J Gardner"
+      ],
+      "year": 2023,
+      "raw": "Discovering Many Diverse Solutions with Bayesian Optimization \n\t\t \n\t\t\t N Maus \n\t\t \n\t\t \n\t\t\t K Wu \n\t\t \n\t\t \n\t\t\t D Eriksson \n\t\t \n\t\t \n\t\t\t J Gardner \n\t\t \n\t \n\t \n\t\t Proceedings of the 26th International Conference on Arti\ue103cial Intelligence and Statistics \n\t\t the 26th International Conference on Arti\ue103cial Intelligence and Statistics Valencia, Spain \n\t\t \n\t\t\t AISTATS \n\t\t\t 2023 \n\t\t \n\t \n\t N. Maus, K. Wu, D. Eriksson and J. Gardner, Discovering Many Diverse Solutions with Bayesian Optimization, Proceedings of the 26th International Conference on Arti\ue103cial Intelligence and Statistics, AISTATS, Valencia, Spain, 2023."
+    },
+    {
+      "title": "New Paradigms for Exploiting Parallel Experiments in Bayesian Optimization",
+      "authors": [
+        "L Gonz\u00e1lez",
+        "V Zavala"
+      ],
+      "year": 2023,
+      "doi": "10.1016/j.compchemeng.2022.108110",
+      "journal": "Comput. Chem. Eng",
+      "volume": "170",
+      "pages": "108110",
+      "raw": "New Paradigms for Exploiting Parallel Experiments in Bayesian Optimization \n\t\t \n\t\t\t L D Gonz\u00e1lez \n\t\t \n\t\t \n\t\t\t V M Zavala \n\t\t \n\t\t 10.1016/j.compchemeng.2022.108110 \n\t \n\t \n\t\t Comput. Chem. Eng \n\t\t \n\t\t\t 170 \n\t\t\t 108110 \n\t\t\t 2023 \n\t\t \n\t \n\t L. D. Gonz\u00e1lez and V. M. Zavala, New Paradigms for Exploiting Parallel Experiments in Bayesian Optimization, Comput. Chem. Eng., 2023, 170, 108110."
+    },
+    {
+      "title": "Ensemble Docking of Multiple Protein Structures: Considering Protein Structural Variations in Molecular Docking",
+      "authors": [
+        "S.-Y Huang",
+        "X Zou"
+      ],
+      "year": 2007,
+      "journal": "Proteins: Struct., Funct., Bioinf",
+      "volume": "66",
+      "raw": "Ensemble Docking of Multiple Protein Structures: Considering Protein Structural Variations in Molecular Docking \n\t\t \n\t\t\t S.-Y Huang \n\t\t \n\t\t \n\t\t\t X Zou \n\t\t \n\t \n\t \n\t\t Proteins: Struct., Funct., Bioinf \n\t\t \n\t\t\t 66 \n\t\t\t \n\t\t\t 2007 \n\t\t \n\t \n\t S.-Y. Huang and X. Zou, Ensemble Docking of Multiple Protein Structures: Considering Protein Structural Variations in Molecular Docking, Proteins: Struct., Funct., Bioinf., 2007, 66, 399-421."
+    },
+    {
+      "title": "An effective docking strategy for virtual screening based on multi-objective optimization algorithm",
+      "authors": [
+        "H Li",
+        "H Zhang",
+        "M Zheng",
+        "J Luo",
+        "L Kang",
+        "X Liu",
+        "X Wang",
+        "H Jiang"
+      ],
+      "year": 2009,
+      "journal": "BMC Bioinf",
+      "volume": "10",
+      "pages": "58",
+      "raw": "An effective docking strategy for virtual screening based on multi-objective optimization algorithm \n\t\t \n\t\t\t H Li \n\t\t \n\t\t \n\t\t\t H Zhang \n\t\t \n\t\t \n\t\t\t M Zheng \n\t\t \n\t\t \n\t\t\t J Luo \n\t\t \n\t\t \n\t\t\t L Kang \n\t\t \n\t\t \n\t\t\t X Liu \n\t\t \n\t\t \n\t\t\t X Wang \n\t\t \n\t\t \n\t\t\t H Jiang \n\t\t \n\t \n\t \n\t\t BMC Bioinf \n\t\t \n\t\t\t 10 \n\t\t\t 58 \n\t\t\t 2009 \n\t\t \n\t \n\t H. Li, H. Zhang, M. Zheng, J. Luo, L. Kang, X. Liu, X. Wang and H. Jiang, An effective docking strategy for virtual screening based on multi-objective optimization algorithm, BMC Bioinf., 2009, 10, 58."
+    },
+    {
+      "title": "Consensus Docking: Improving the Reliability of Docking in a Virtual Screening Context",
+      "authors": [
+        "D Houston",
+        "M Walkinshaw"
+      ],
+      "year": 2013,
+      "journal": "J. Chem. Inf. Model",
+      "volume": "53",
+      "raw": "Consensus Docking: Improving the Reliability of Docking in a Virtual Screening Context \n\t\t \n\t\t\t D R Houston \n\t\t \n\t\t \n\t\t\t M D Walkinshaw \n\t\t \n\t \n\t \n\t\t J. Chem. Inf. Model \n\t\t \n\t\t\t 53 \n\t\t\t \n\t\t\t 2013 \n\t\t \n\t \n\t D. R. Houston and M. D. Walkinshaw, Consensus Docking: Improving the Reliability of Docking in a Virtual Screening Context, J. Chem. Inf. Model., 2013, 53, 384-390."
+    },
+    {
+      "title": "Modock: A Multi-Objective Strategy Improves the Accuracy for Molecular Docking",
+      "authors": [
+        "J Gu",
+        "X Yang",
+        "L Kang",
+        "J Wu",
+        "X Wang"
+      ],
+      "year": 2015,
+      "doi": "10.1186/s13015-015-0034-8",
+      "journal": "Algorithms Mol. Biol",
+      "volume": "10",
+      "pages": "8",
+      "raw": "Modock: A Multi-Objective Strategy Improves the Accuracy for Molecular Docking \n\t\t \n\t\t\t J Gu \n\t\t \n\t\t \n\t\t\t X Yang \n\t\t \n\t\t \n\t\t\t L Kang \n\t\t \n\t\t \n\t\t\t J Wu \n\t\t \n\t\t \n\t\t\t X Wang \n\t\t \n\t\t 10.1186/s13015-015-0034-8 \n\t \n\t \n\t\t Algorithms Mol. Biol \n\t\t \n\t\t\t 10 \n\t\t\t 8 \n\t\t\t 2015 \n\t\t \n\t \n\t J. Gu, X. Yang, L. Kang, J. Wu and X. Wang, Modock: A Multi-Objective Strategy Improves the Accuracy for Molecular Docking, Algorithms Mol. Biol., 2015, 10, 8."
+    },
+    {
+      "title": "DOCKSTRING: Easy Molecular Docking Yields Better Benchmarks for Ligand Design",
+      "authors": [
+        "M Garc\u00eda-Orteg\u00f3n",
+        "G Simm",
+        "A Tripp",
+        "J Hern\u00e1ndez-Lobato",
+        "A Bender",
+        "S Bacallado"
+      ],
+      "year": 2022,
+      "journal": "J. Chem. Inf. Model",
+      "volume": "62",
+      "raw": "DOCKSTRING: Easy Molecular Docking Yields Better Benchmarks for Ligand Design \n\t\t \n\t\t\t M Garc\u00eda-Orteg\u00f3n \n\t\t \n\t\t \n\t\t\t G N C Simm \n\t\t \n\t\t \n\t\t\t A J Tripp \n\t\t \n\t\t \n\t\t\t J M Hern\u00e1ndez-Lobato \n\t\t \n\t\t \n\t\t\t A Bender \n\t\t \n\t\t \n\t\t\t S Bacallado \n\t\t \n\t \n\t \n\t\t J. Chem. Inf. Model \n\t\t \n\t\t\t 62 \n\t\t\t \n\t\t\t 2022 \n\t\t \n\t \n\t M. Garc\u00eda-Orteg\u00f3n, G. N. C. Simm, A. J. Tripp, J. M. Hern\u00e1ndez-Lobato, A. Bender and S. Bacallado, DOCKSTRING: Easy Molecular Docking Yields Better Benchmarks for Ligand Design, J. Chem. Inf. Model., 2022, 62, 3486-3502."
+    },
+    {
+      "title": "Selective Blockade of Dopamine D3 Receptors Enhances while D2 Receptor Antagonism Impairs Social Novelty Discrimination and Novel Object Recognition in Rats: A Key Role for the Prefrontal Cortex",
+      "authors": [
+        "D Watson",
+        "F Loiseau",
+        "M Ingallinesi",
+        "M Millan",
+        "C Marsden",
+        "K Fone"
+      ],
+      "year": 2012,
+      "doi": "10.1038/npp.2011.254",
+      "journal": "Neuropsychopharmacology",
+      "volume": "37",
+      "raw": "Selective Blockade of Dopamine D3 Receptors Enhances while D2 Receptor Antagonism Impairs Social Novelty Discrimination and Novel Object Recognition in Rats: A Key Role for the Prefrontal Cortex \n\t\t \n\t\t\t D J Watson \n\t\t \n\t\t \n\t\t\t F Loiseau \n\t\t \n\t\t \n\t\t\t M Ingallinesi \n\t\t \n\t\t \n\t\t\t M J Millan \n\t\t \n\t\t \n\t\t\t C A Marsden \n\t\t \n\t\t \n\t\t\t K C Fone \n\t\t \n\t\t 10.1038/npp.2011.254 \n\t \n\t \n\t\t Neuropsychopharmacology \n\t\t \n\t\t\t 37 \n\t\t\t \n\t\t\t 2012 \n\t\t \n\t \n\t D. J. Watson, F. Loiseau, M. Ingallinesi, M. J. Millan, C. A. Marsden and K. C. Fone, Selective Blockade of Dopamine D3 Receptors Enhances while D2 Receptor Antagonism Impairs Social Novelty Discrimination and Novel Object Recognition in Rats: A Key Role for the Prefrontal Cortex, Neuropsychopharmacology, 2012, 37, 770-786."
+    },
+    {
+      "title": "Novel Dopamine Receptor 3 Antagonists Inhibit the Growth of Primary and Temozolomide Resistant Glioblastoma Cells",
+      "authors": [
+        "S Williford",
+        "C Libby",
+        "A Ayokanmbi",
+        "A Otamias",
+        "J Gordillo",
+        "E Gordon",
+        "S Cooper",
+        "M Redmann",
+        "Y Li",
+        "C Griguer",
+        "J Zhang",
+        "M Napierala",
+        "S Ananthan",
+        "A Hjelmeland"
+      ],
+      "year": 2021,
+      "journal": "PLoS ONE",
+      "volume": "16",
+      "pages": "250649",
+      "raw": "Novel Dopamine Receptor 3 Antagonists Inhibit the Growth of Primary and Temozolomide Resistant Glioblastoma Cells \n\t\t \n\t\t\t S E Williford \n\t\t \n\t\t \n\t\t\t C J Libby \n\t\t \n\t\t \n\t\t\t A Ayokanmbi \n\t\t \n\t\t \n\t\t\t A Otamias \n\t\t \n\t\t \n\t\t\t J J Gordillo \n\t\t \n\t\t \n\t\t\t E R Gordon \n\t\t \n\t\t \n\t\t\t S J Cooper \n\t\t \n\t\t \n\t\t\t M Redmann \n\t\t \n\t\t \n\t\t\t Y Li \n\t\t \n\t\t \n\t\t\t C Griguer \n\t\t \n\t\t \n\t\t\t J Zhang \n\t\t \n\t\t \n\t\t\t M Napierala \n\t\t \n\t\t \n\t\t\t S Ananthan \n\t\t \n\t\t \n\t\t\t A B Hjelmeland \n\t\t \n\t \n\t \n\t\t PLoS ONE \n\t\t \n\t\t\t 16 \n\t\t\t 250649 \n\t\t\t 2021 \n\t\t \n\t \n\t S. E. Williford, C. J. Libby, A. Ayokanmbi, A. Otamias, J. J. Gordillo, E. R. Gordon, S. J. Cooper, M. Redmann, Y. Li, C. Griguer, J. Zhang, M. Napierala, S. Ananthan and A. B. Hjelmeland, Novel Dopamine Receptor 3 Antagonists Inhibit the Growth of Primary and Temozolomide Resistant Glioblastoma Cells, PLoS ONE, 2021, 16, e0250649."
+    },
+    {
+      "title": "Pharmacological and Physicochemical Properties Optimization for Dual-Target Dopamine D3 (D3R) and m-Opioid (MOR) Receptor Ligands as Potentially Safer Analgesics",
+      "authors": [
+        "A Bonifazi",
+        "E Saab",
+        "J Sanchez",
+        "A Nazarova",
+        "S Zaidi",
+        "K Jahan",
+        "V Katritch",
+        "M Canals",
+        "J Lane",
+        "A Newman"
+      ],
+      "year": 2023,
+      "doi": "10.1021/acs.jmedchem.3c00417",
+      "journal": "J. Med. Chem",
+      "volume": "66",
+      "issue": "15",
+      "raw": "Pharmacological and Physicochemical Properties Optimization for Dual-Target Dopamine D3 (D3R) and m-Opioid (MOR) Receptor Ligands as Potentially Safer Analgesics \n\t\t \n\t\t\t A Bonifazi \n\t\t \n\t\t \n\t\t\t E Saab \n\t\t \n\t\t \n\t\t\t J Sanchez \n\t\t \n\t\t \n\t\t\t A L Nazarova \n\t\t \n\t\t \n\t\t\t S A Zaidi \n\t\t \n\t\t \n\t\t\t K Jahan \n\t\t \n\t\t \n\t\t\t V Katritch \n\t\t \n\t\t \n\t\t\t M Canals \n\t\t \n\t\t \n\t\t\t J R Lane \n\t\t \n\t\t \n\t\t\t A H Newman \n\t\t \n\t\t 10.1021/acs.jmedchem.3c00417 \n\t \n\t \n\t\t J. Med. Chem \n\t\t \n\t\t\t 66 \n\t\t\t 15 \n\t\t\t \n\t\t\t 2023 \n\t\t \n\t \n\t A. Bonifazi, E. Saab, J. Sanchez, A. L. Nazarova, S. A. Zaidi, K. Jahan, V. Katritch, M. Canals, J. R. Lane and A. H. Newman, Pharmacological and Physicochemical Properties Optimization for Dual-Target Dopamine D3 (D3R) and m-Opioid (MOR) Receptor Ligands as Potentially Safer Analgesics, J. Med. Chem., 2023, 66(15), 10304-10341."
+    },
+    {
+      "title": "Selective Inhibition of JAK1 and JAK2 Is Efficacious in Rodent Models of Arthritis: Preclinical Characterization of INCB028050",
+      "authors": [
+        "J Fridman"
+      ],
+      "year": 2010,
+      "doi": "10.4049/jimmunol.0902819",
+      "journal": "J. Immunol",
+      "volume": "184",
+      "raw": "Selective Inhibition of JAK1 and JAK2 Is Efficacious in Rodent Models of Arthritis: Preclinical Characterization of INCB028050 \n\t\t \n\t\t\t J S Fridman \n\t\t \n\t\t 10.4049/jimmunol.0902819 \n\t \n\t \n\t\t J. Immunol \n\t\t \n\t\t\t 184 \n\t\t\t \n\t\t\t 2010 \n\t\t \n\t \n\t J. S. Fridman, et al., Selective Inhibition of JAK1 and JAK2 Is Efficacious in Rodent Models of Arthritis: Preclinical Characterization of INCB028050, J. Immunol., 2010, 184, 5298-5307."
+    },
+    {
+      "title": "Design and Synthesis of Carbazole Carboxamides as Promising Inhibitors of Bruton's Tyrosine Kinase (BTK) and Janus Kinase 2 (JAK2)",
+      "authors": [
+        "Q Liu",
+        "D Batt",
+        "J Lippy",
+        "N Surti",
+        "A Tebben",
+        "J Muckelbauer",
+        "L Chen",
+        "Y An",
+        "C Chang",
+        "M Pokross",
+        "Z Yang",
+        "H Wang",
+        "J Burke",
+        "P Carter",
+        "J Tino"
+      ],
+      "year": 2015,
+      "journal": "Bioorg. Med. Chem. Lett",
+      "volume": "25",
+      "raw": "Design and Synthesis of Carbazole Carboxamides as Promising Inhibitors of Bruton's Tyrosine Kinase (BTK) and Janus Kinase 2 (JAK2) \n\t\t \n\t\t\t Q Liu \n\t\t \n\t\t \n\t\t\t D G Batt \n\t\t \n\t\t \n\t\t\t J S Lippy \n\t\t \n\t\t \n\t\t\t N Surti \n\t\t \n\t\t \n\t\t\t A J Tebben \n\t\t \n\t\t \n\t\t\t J K Muckelbauer \n\t\t \n\t\t \n\t\t\t L Chen \n\t\t \n\t\t \n\t\t\t Y An \n\t\t \n\t\t \n\t\t\t C Chang \n\t\t \n\t\t \n\t\t\t M Pokross \n\t\t \n\t\t \n\t\t\t Z Yang \n\t\t \n\t\t \n\t\t\t H Wang \n\t\t \n\t\t \n\t\t\t J R Burke \n\t\t \n\t\t \n\t\t\t P H Carter \n\t\t \n\t\t \n\t\t\t J A Tino \n\t\t \n\t \n\t \n\t\t Bioorg. Med. Chem. Lett \n\t\t \n\t\t\t 25 \n\t\t\t \n\t\t\t 2015 \n\t\t \n\t \n\t Q. Liu, D. G. Batt, J. S. Lippy, N. Surti, A. J. Tebben, J. K. Muckelbauer, L. Chen, Y. An, C. Chang, M. Pokross, Z. Yang, H. Wang, J. R. Burke, P. H. Carter and J. A. Tino, Design and Synthesis of Carbazole Carboxamides as Promising Inhibitors of Bruton's Tyrosine Kinase (BTK) and Janus Kinase 2 (JAK2), Bioorg. Med. Chem. Lett., 2015, 25, 4265-4269."
+    },
+    {
+      "title": "Inhibition of the Insulinlike Growth Factor-1 Receptor (IGF1R) Tyrosine Kinase as a Novel Cancer Therapy Approach",
+      "authors": [
+        "R Li",
+        "A Pourpak",
+        "S Morris"
+      ],
+      "year": 2009,
+      "journal": "J. Med. Chem",
+      "volume": "52",
+      "raw": "Inhibition of the Insulinlike Growth Factor-1 Receptor (IGF1R) Tyrosine Kinase as a Novel Cancer Therapy Approach \n\t\t \n\t\t\t R Li \n\t\t \n\t\t \n\t\t\t A Pourpak \n\t\t \n\t\t \n\t\t\t S W Morris \n\t\t \n\t \n\t \n\t\t J. Med. Chem \n\t\t \n\t\t\t 52 \n\t\t\t \n\t\t\t 2009 \n\t\t \n\t \n\t R. Li, A. Pourpak and S. W. Morris, Inhibition of the Insulin- like Growth Factor-1 Receptor (IGF1R) Tyrosine Kinase as a Novel Cancer Therapy Approach, J. Med. Chem., 2009, 52, 4981-5004."
+    },
+    {
+      "title": "3D QSAR and Pharmacophore Studies on Inhibitors of Insuline Like Growth Factor 1 Receptor (IGF-1R) and Insulin Receptor (IR) as Potential Anti-Cancer Agents",
+      "authors": [
+        "M Pasha",
+        "I Jabeen",
+        "S Samarasinghe"
+      ],
+      "year": 2022,
+      "doi": "10.1016/j.crchbi.2022.100019",
+      "journal": "Curr. Res. Chem. Biol",
+      "volume": "2",
+      "pages": "100019",
+      "raw": "3D QSAR and Pharmacophore Studies on Inhibitors of Insuline Like Growth Factor 1 Receptor (IGF-1R) and Insulin Receptor (IR) as Potential Anti-Cancer Agents \n\t\t \n\t\t\t M K Pasha \n\t\t \n\t\t \n\t\t\t I Jabeen \n\t\t \n\t\t \n\t\t\t S Samarasinghe \n\t\t \n\t\t 10.1016/j.crchbi.2022.100019 \n\t \n\t \n\t\t Curr. Res. Chem. Biol \n\t\t \n\t\t\t 2 \n\t\t\t 100019 \n\t\t\t 2022 \n\t\t \n\t \n\t M. K. Pasha, I. Jabeen and S. Samarasinghe, 3D QSAR and Pharmacophore Studies on Inhibitors of Insuline Like Growth Factor 1 Receptor (IGF-1R) and Insulin Receptor (IR) as Potential Anti-Cancer Agents, Curr. Res. Chem. Biol., 2022, 2, 100019."
+    },
+    {
+      "title": "Imidazole Moiety Replacements in the 3-(1H-Benzo[d]imidazol-2-Yl)pyridin-2(1H)-One Inhibitors of Insulin-Like Growth Factor Receptor-1 (IGF-1R) to Improve Cytochrome P450 Pro\ue103le",
+      "authors": [
+        "U Velaparthi",
+        "P Liu",
+        "B Balasubramanian",
+        "J Carboni",
+        "R Attar",
+        "M Gottardis",
+        "A Li",
+        "A Greer",
+        "M Zoeckler",
+        "M Wittman",
+        "D Vyas"
+      ],
+      "year": 2007,
+      "journal": "Bioorg. Med. Chem. Lett",
+      "volume": "17",
+      "raw": "Imidazole Moiety Replacements in the 3-(1H-Benzo[d]imidazol-2-Yl)pyridin-2(1H)-One Inhibitors of Insulin-Like Growth Factor Receptor-1 (IGF-1R) to Improve Cytochrome P450 Pro\ue103le \n\t\t \n\t\t\t U Velaparthi \n\t\t \n\t\t \n\t\t\t P Liu \n\t\t \n\t\t \n\t\t\t B Balasubramanian \n\t\t \n\t\t \n\t\t\t J Carboni \n\t\t \n\t\t \n\t\t\t R Attar \n\t\t \n\t\t \n\t\t\t M Gottardis \n\t\t \n\t\t \n\t\t\t A Li \n\t\t \n\t\t \n\t\t\t A Greer \n\t\t \n\t\t \n\t\t\t M Zoeckler \n\t\t \n\t\t \n\t\t\t M D Wittman \n\t\t \n\t\t \n\t\t\t D Vyas \n\t\t \n\t \n\t \n\t\t Bioorg. Med. Chem. Lett \n\t\t \n\t\t\t 17 \n\t\t\t \n\t\t\t 2007 \n\t\t \n\t \n\t U. Velaparthi, P. Liu, B. Balasubramanian, J. Carboni, R. Attar, M. Gottardis, A. Li, A. Greer, M. Zoeckler, M. D. Wittman and D. Vyas, Imidazole Moiety Replacements in the 3-(1H-Benzo[d]imidazol-2-Yl)pyridin- 2(1H)-One Inhibitors of Insulin-Like Growth Factor Receptor-1 (IGF-1R) to Improve Cytochrome P450 Pro\ue103le, Bioorg. Med. Chem. Lett., 2007, 17, 3072-3076."
+    },
+    {
+      "title": "Balancing Oral Exposure with CYP3A4 Inhibition in Benzimidazole-Based IGF-IR Inhibitors",
+      "authors": [
+        "K Zimmermann"
+      ],
+      "year": 2008,
+      "doi": "10.1016/j.bmcl.2008.05.104",
+      "journal": "Bioorg. Med. Chem. Lett",
+      "volume": "18",
+      "raw": "Balancing Oral Exposure with CYP3A4 Inhibition in Benzimidazole-Based IGF-IR Inhibitors \n\t\t \n\t\t\t K Zimmermann \n\t\t \n\t\t 10.1016/j.bmcl.2008.05.104 \n\t \n\t \n\t\t Bioorg. Med. Chem. Lett \n\t\t \n\t\t\t 18 \n\t\t\t \n\t\t\t 2008 \n\t\t \n\t \n\t K. Zimmermann, et al., Balancing Oral Exposure with CYP3A4 Inhibition in Benzimidazole-Based IGF-IR Inhibitors, Bioorg. Med. Chem. Lett., 2008, 18, 4075-4080."
+    },
+    {
+      "title": "Inhibition and Induction of Cytochrome P450 and the Clinical Implications",
+      "authors": [
+        "J Lin",
+        "A Lu"
+      ],
+      "year": 1998,
+      "doi": "10.2165/00003088-199835050-00003",
+      "journal": "Clin. Pharmacokinet",
+      "volume": "35",
+      "raw": "Inhibition and Induction of Cytochrome P450 and the Clinical Implications \n\t\t \n\t\t\t J H Lin \n\t\t \n\t\t \n\t\t\t A Y H Lu \n\t\t \n\t\t 10.2165/00003088-199835050-00003 \n\t \n\t \n\t\t Clin. Pharmacokinet \n\t\t \n\t\t\t 35 \n\t\t\t \n\t\t\t 1998 \n\t\t \n\t \n\t J. H. Lin and A. Y. H. Lu, Inhibition and Induction of Cytochrome P450 and the Clinical Implications, Clin. Pharmacokinet., 1998, 35, 361-390."
+    },
+    {
+      "title": "The Effect of Cytochrome P450 Metabolism on Drug Response, Interactions, and Adverse Effects",
+      "authors": [
+        "T Lynch",
+        "A Price"
+      ],
+      "year": 2007,
+      "journal": "Am. Fam. Physician",
+      "volume": "76",
+      "raw": "The Effect of Cytochrome P450 Metabolism on Drug Response, Interactions, and Adverse Effects \n\t\t \n\t\t\t T Lynch \n\t\t \n\t\t \n\t\t\t A Price \n\t\t \n\t \n\t \n\t\t Am. Fam. Physician \n\t\t \n\t\t\t 76 \n\t\t\t \n\t\t\t 2007 \n\t\t \n\t \n\t T. Lynch and A. Price, The Effect of Cytochrome P450 Metabolism on Drug Response, Interactions, and Adverse Effects, Am. Fam. Physician, 2007, 76, 391-396."
+    },
+    {
+      "title": "Insights into Molecular Basis of Cytochrome P450 Inhibitory Promiscuity of Compounds",
+      "authors": [
+        "F Cheng",
+        "Y Yu",
+        "Y Zhou",
+        "Z Shen",
+        "W Xiao",
+        "G Liu",
+        "W Li",
+        "P Lee",
+        "Y Tang"
+      ],
+      "year": 2011,
+      "journal": "J. Chem. Inf. Model",
+      "volume": "51",
+      "raw": "Insights into Molecular Basis of Cytochrome P450 Inhibitory Promiscuity of Compounds \n\t\t \n\t\t\t F Cheng \n\t\t \n\t\t \n\t\t\t Y Yu \n\t\t \n\t\t \n\t\t\t Y Zhou \n\t\t \n\t\t \n\t\t\t Z Shen \n\t\t \n\t\t \n\t\t\t W Xiao \n\t\t \n\t\t \n\t\t\t G Liu \n\t\t \n\t\t \n\t\t\t W Li \n\t\t \n\t\t \n\t\t\t P W Lee \n\t\t \n\t\t \n\t\t\t Y Tang \n\t\t \n\t \n\t \n\t\t J. Chem. Inf. Model \n\t\t \n\t\t\t 51 \n\t\t\t \n\t\t\t 2011 \n\t\t \n\t \n\t F. Cheng, Y. Yu, Y. Zhou, Z. Shen, W. Xiao, G. Liu, W. Li, P. W. Lee and Y. Tang, Insights into Molecular Basis of Cytochrome P450 Inhibitory Promiscuity of Compounds, J. Chem. Inf. Model., 2011, 51, 2482-2495."
+    },
+    {
+      "title": "Analyzing Learned Molecular Representations for Property Prediction",
+      "authors": [
+        "K Yang",
+        "K Swanson",
+        "W Jin",
+        "C Coley",
+        "P Eiden",
+        "H Gao",
+        "A Guzman-Perez",
+        "T Hopper",
+        "B Kelley",
+        "M Mathea",
+        "A Palmer",
+        "V Settels",
+        "T Jaakkola",
+        "K Jensen",
+        "R Barzilay"
+      ],
+      "year": 2019,
+      "journal": "J. Chem. Inf. Model",
+      "volume": "59",
+      "raw": "Analyzing Learned Molecular Representations for Property Prediction \n\t\t \n\t\t\t K Yang \n\t\t \n\t\t \n\t\t\t K Swanson \n\t\t \n\t\t \n\t\t\t W Jin \n\t\t \n\t\t \n\t\t\t C Coley \n\t\t \n\t\t \n\t\t\t P Eiden \n\t\t \n\t\t \n\t\t\t H Gao \n\t\t \n\t\t \n\t\t\t A Guzman-Perez \n\t\t \n\t\t \n\t\t\t T Hopper \n\t\t \n\t\t \n\t\t\t B Kelley \n\t\t \n\t\t \n\t\t\t M Mathea \n\t\t \n\t\t \n\t\t\t A Palmer \n\t\t \n\t\t \n\t\t\t V Settels \n\t\t \n\t\t \n\t\t\t T Jaakkola \n\t\t \n\t\t \n\t\t\t K Jensen \n\t\t \n\t\t \n\t\t\t R Barzilay \n\t\t \n\t \n\t \n\t\t J. Chem. Inf. Model \n\t\t \n\t\t\t 59 \n\t\t\t \n\t\t\t 2019 \n\t\t \n\t \n\t K. Yang, K. Swanson, W. Jin, C. Coley, P. Eiden, H. Gao, A. Guzman-Perez, T. Hopper, B. Kelley, M. Mathea, A. Palmer, V. Settels, T. Jaakkola, K. Jensen and R. Barzilay, Analyzing Learned Molecular Representations for Property Prediction, J. Chem. Inf. Model., 2019, 59, 3370-3388."
+    },
+    {
+      "title": "Chemprop: A Machine Learning Package for Chemical Property Prediction",
+      "authors": [
+        "E Heid",
+        "K Greenman",
+        "Y Chung",
+        "S.-C Li",
+        "D Graff",
+        "F Vermeire",
+        "H Wu",
+        "W Green",
+        "C Mcgill"
+      ],
+      "year": 2023,
+      "doi": "10.26434/chemrxiv-2023-3zcfl",
+      "raw": "Chemprop: A Machine Learning Package for Chemical Property Prediction \n\t\t \n\t\t\t E Heid \n\t\t \n\t\t \n\t\t\t K P Greenman \n\t\t \n\t\t \n\t\t\t Y Chung \n\t\t \n\t\t \n\t\t\t S.-C Li \n\t\t \n\t\t \n\t\t\t D E Graff \n\t\t \n\t\t \n\t\t\t F H Vermeire \n\t\t \n\t\t \n\t\t\t H Wu \n\t\t \n\t\t \n\t\t\t W H Green \n\t\t \n\t\t \n\t\t\t C J Mcgill \n\t\t \n\t\t 10.26434/chemrxiv-2023-3zcfl \n\t\t \n\t\t \n\t\t\t 2023 \n\t\t \n\t \n\t E. Heid, K. P. Greenman, Y. Chung, S.-C. Li, D. E. Graff, F. H. Vermeire, H. Wu, W. H. Green and C. J. McGill, Chemprop: A Machine Learning Package for Chemical Property Prediction, 2023, https://chemrxiv.org/engage/ chemrxiv/article-details/64d1f13d4a3f7d0c0dcd836b."
+    },
+    {
+      "title": "A Practical Guide to Large-Scale Docking",
+      "authors": [
+        "B Bender",
+        "S Gahbauer",
+        "A Luttens",
+        "J Lyu",
+        "C Webb",
+        "R Stein",
+        "E Fink",
+        "T Balius",
+        "J Carlsson",
+        "J Irwin",
+        "B Shoichet"
+      ],
+      "year": 2021,
+      "doi": "10.1038/s41596-021-00597-z",
+      "journal": "Nat. Protoc",
+      "volume": "16",
+      "raw": "A Practical Guide to Large-Scale Docking \n\t\t \n\t\t\t B J Bender \n\t\t \n\t\t \n\t\t\t S Gahbauer \n\t\t \n\t\t \n\t\t\t A Luttens \n\t\t \n\t\t \n\t\t\t J Lyu \n\t\t \n\t\t \n\t\t\t C M Webb \n\t\t \n\t\t \n\t\t\t R M Stein \n\t\t \n\t\t \n\t\t\t E A Fink \n\t\t \n\t\t \n\t\t\t T E Balius \n\t\t \n\t\t \n\t\t\t J Carlsson \n\t\t \n\t\t \n\t\t\t J J Irwin \n\t\t \n\t\t \n\t\t\t B K Shoichet \n\t\t \n\t\t 10.1038/s41596-021-00597-z \n\t\t 100 \n\t \n\t \n\t\t Nat. Protoc \n\t\t \n\t\t\t 16 \n\t\t\t \n\t\t\t 2021 \n\t\t \n\t \n\t B. J. Bender, S. Gahbauer, A. Luttens, J. Lyu, C. M. Webb, R. M. Stein, E. A. Fink, T. E. Balius, J. Carlsson, J. J. Irwin and B. K. Shoichet, A Practical Guide to Large-Scale Docking, Nat. Protoc., 2021, 16, 4799-4832. 100"
+    },
+    {
+      "title": "The Properties of Known Drugs. 1. Molecular Frameworks",
+      "authors": [
+        "G Bemis",
+        "M Murcko"
+      ],
+      "year": 1996,
+      "doi": "10.1021/jm9602928",
+      "journal": "J. Med. Chem",
+      "volume": "39",
+      "pages": "101",
+      "raw": "The Properties of Known Drugs. 1. Molecular Frameworks \n\t\t \n\t\t\t G W Bemis \n\t\t \n\t\t \n\t\t\t M A Murcko \n\t\t \n\t\t 10.1021/jm9602928 \n\t \n\t \n\t\t J. Med. Chem \n\t\t \n\t\t\t 39 \n\t\t\t 101 \n\t\t\t 1996 \n\t\t \n\t \n\t G. W. Bemis and M. A. Murcko, The Properties of Known Drugs. 1. Molecular Frameworks, J. Med. Chem., 1996, 39, 2887-2893. 101"
+    },
+    {
+      "title": "UMAP: Uniform Manifold Approximation and Projection (version 0.5.4)",
+      "authors": [
+        "L Mcinnes",
+        "J Healy",
+        "N Saul",
+        "L Gro\u00dfberger"
+      ],
+      "year": 2018,
+      "doi": "10.21105/joss.00861",
+      "journal": "J. Open Source So\ue09dw",
+      "volume": "3",
+      "raw": "UMAP: Uniform Manifold Approximation and Projection (version 0.5.4) \n\t\t \n\t\t\t L Mcinnes \n\t\t \n\t\t \n\t\t\t J Healy \n\t\t \n\t\t \n\t\t\t N Saul \n\t\t \n\t\t \n\t\t\t L Gro\u00dfberger \n\t\t \n\t\t 10.21105/joss.00861 \n\t \n\t \n\t\t J. Open Source So\ue09dw \n\t\t \n\t\t\t 3 \n\t\t\t \n\t\t\t 2018 \n\t\t \n\t \n\t L. McInnes, J. Healy, N. Saul and L. Gro\u00dfberger, UMAP: Uniform Manifold Approximation and Projection (version 0.5.4), J. Open Source So\ue09dw., 2018, 3, 861. 102"
+    },
+    {
+      "title": "RBx10080307, a Dual EGFR/IGF-1R Inhibitor for Anticancer Therapy",
+      "authors": [
+        "R Tandon"
+      ],
+      "year": 2013,
+      "doi": "10.1016/j.ejphar.2013.04.016",
+      "journal": "Eur. J. Pharmacol",
+      "volume": "711",
+      "pages": "103",
+      "raw": "RBx10080307, a Dual EGFR/IGF-1R Inhibitor for Anticancer Therapy \n\t\t \n\t\t\t R Tandon \n\t\t \n\t\t 10.1016/j.ejphar.2013.04.016 \n\t \n\t \n\t\t Eur. J. Pharmacol \n\t\t \n\t\t\t 711 \n\t\t\t 103 \n\t\t\t 2013 \n\t\t \n\t \n\t R. Tandon, et al., RBx10080307, a Dual EGFR/IGF-1R Inhibitor for Anticancer Therapy, Eur. J. Pharmacol., 2013, 711, 19-26. 103"
+    },
+    {
+      "title": "Dual Target Inhibitors Based on EGFR: Promising Anticancer Agents for the Treatment of Cancers (2017-)",
+      "authors": [
+        "L Hu",
+        "M Fan",
+        "S Shi",
+        "X Song",
+        "F Wang",
+        "H He",
+        "B Qi"
+      ],
+      "year": 2022,
+      "doi": "10.1016/j.ejmech.2021.113963",
+      "journal": "Eur. J. Med. Chem",
+      "volume": "227",
+      "raw": "Dual Target Inhibitors Based on EGFR: Promising Anticancer Agents for the Treatment of Cancers (2017-) \n\t\t \n\t\t\t L Hu \n\t\t \n\t\t \n\t\t\t M Fan \n\t\t \n\t\t \n\t\t\t S Shi \n\t\t \n\t\t \n\t\t\t X Song \n\t\t \n\t\t \n\t\t\t F Wang \n\t\t \n\t\t \n\t\t\t H He \n\t\t \n\t\t \n\t\t\t B Qi \n\t\t \n\t\t 10.1016/j.ejmech.2021.113963 \n\t \n\t \n\t\t Eur. J. Med. Chem \n\t\t \n\t\t\t 227 \n\t\t\t \n\t\t\t 2022 \n\t\t \n\t \n\t L. Hu, M. Fan, S. Shi, X. Song, F. Wang, H. He and B. Qi, Dual Target Inhibitors Based on EGFR: Promising Anticancer Agents for the Treatment of Cancers (2017-), Eur. J. Med. Chem., 2022, 227, 113963. 104"
+    },
+    {
+      "title": "Dual Inhibition of EGFR and IGF-1R Signaling Leads to Enhanced Antitumor Efficacy against Esophageal Squamous Cancer",
+      "authors": [
+        "J Kang",
+        "Z Guo",
+        "H Zhang",
+        "R Guo",
+        "X Zhu",
+        "X Guo"
+      ],
+      "year": 2022,
+      "journal": "Int. J. Mol. Sci",
+      "volume": "23",
+      "raw": "Dual Inhibition of EGFR and IGF-1R Signaling Leads to Enhanced Antitumor Efficacy against Esophageal Squamous Cancer \n\t\t \n\t\t\t J Kang \n\t\t \n\t\t \n\t\t\t Z Guo \n\t\t \n\t\t \n\t\t\t H Zhang \n\t\t \n\t\t \n\t\t\t R Guo \n\t\t \n\t\t \n\t\t\t X Zhu \n\t\t \n\t\t \n\t\t\t X Guo \n\t\t \n\t \n\t \n\t\t Int. J. Mol. Sci \n\t\t \n\t\t\t 23 \n\t\t\t \n\t\t\t 2022 \n\t\t \n\t \n\t J. Kang, Z. Guo, H. Zhang, R. Guo, X. Zhu and X. Guo, Dual Inhibition of EGFR and IGF-1R Signaling Leads to Enhanced Antitumor Efficacy against Esophageal Squamous Cancer, Int. J. Mol. Sci., 2022, 23, 10382. 105"
+    },
+    {
+      "title": "Globally Approved EGFR Inhibitors: Insights into Their Syntheses, Target Kinases, Biological Activities, Receptor Interactions, and Metabolism",
+      "authors": [
+        "M Abourehab",
+        "A Alqahtani",
+        "B Youssif",
+        "A Gouda"
+      ],
+      "year": 2021,
+      "journal": "Molecules",
+      "volume": "26",
+      "raw": "Globally Approved EGFR Inhibitors: Insights into Their Syntheses, Target Kinases, Biological Activities, Receptor Interactions, and Metabolism \n\t\t \n\t\t\t M A S Abourehab \n\t\t \n\t\t \n\t\t\t A M Alqahtani \n\t\t \n\t\t \n\t\t\t B G M Youssif \n\t\t \n\t\t \n\t\t\t A M Gouda \n\t\t \n\t \n\t \n\t\t Molecules \n\t\t \n\t\t\t 26 \n\t\t\t \n\t\t\t 2021 \n\t\t \n\t \n\t M. A. S. Abourehab, A. M. Alqahtani, B. G. M. Youssif and A. M. Gouda, Globally Approved EGFR Inhibitors: Insights into Their Syntheses, Target Kinases, Biological Activities, Receptor Interactions, and Metabolism, Molecules, 2021, 26, 6677. 106"
+    },
+    {
+      "title": "Consideration of molecular weight during compound selection in virtual target-based database screening",
+      "authors": [
+        "Y Pan",
+        "N Huang",
+        "S Cho",
+        "A Mackerell"
+      ],
+      "year": 2003,
+      "journal": "J. Chem. Inf. Comput. Sci",
+      "volume": "43",
+      "raw": "Consideration of molecular weight during compound selection in virtual target-based database screening \n\t\t \n\t\t\t Y Pan \n\t\t \n\t\t \n\t\t\t N Huang \n\t\t \n\t\t \n\t\t\t S Cho \n\t\t \n\t\t \n\t\t\t A D Mackerell \n\t\t \n\t \n\t \n\t\t J. Chem. Inf. Comput. Sci \n\t\t \n\t\t\t 43 \n\t\t\t \n\t\t\t 2003 \n\t\t \n\t \n\t Y. Pan, N. Huang, S. Cho and A. D. MacKerell, Consideration of molecular weight during compound selection in virtual target-based database screening, J. Chem. Inf. Comput. Sci., 2003, 43, 267-272."
+    },
+    {
+      "title": "BatchBALD: Efficient and Diverse Batch Acquisition for Deep Bayesian Active Learning",
+      "authors": [
+        "A Kirsch",
+        "J Van Amersfoort",
+        "Y Gal"
+      ],
+      "year": 2019,
+      "pages": "108",
+      "raw": "BatchBALD: Efficient and Diverse Batch Acquisition for Deep Bayesian Active Learning \n\t\t \n\t\t\t A Kirsch \n\t\t \n\t\t \n\t\t\t J Van Amersfoort \n\t\t \n\t\t \n\t\t\t Y Gal \n\t\t \n\t \n\t \n\t\t Advances in Neural Information Processing Systems \n\t\t \n\t\t\t 2019 \n\t\t\t 108 \n\t\t \n\t \n\t A. Kirsch, J. van Amersfoort and Y. Gal, BatchBALD: Efficient and Diverse Batch Acquisition for Deep Bayesian Active Learning, Advances in Neural Information Processing Systems, 2019. 108"
+    },
+    {
+      "title": "Rational Approaches to Improving Selectivity in Drug Design",
+      "authors": [
+        "D Huggins",
+        "W Sherman",
+        "B Tidor"
+      ],
+      "year": 2012,
+      "journal": "J. Med. Chem",
+      "volume": "55",
+      "pages": "109",
+      "raw": "Rational Approaches to Improving Selectivity in Drug Design \n\t\t \n\t\t\t D J Huggins \n\t\t \n\t\t \n\t\t\t W Sherman \n\t\t \n\t\t \n\t\t\t B Tidor \n\t\t \n\t \n\t \n\t\t J. Med. Chem \n\t\t \n\t\t\t 55 \n\t\t\t 109 \n\t\t\t 2012 \n\t\t \n\t \n\t D. J. Huggins, W. Sherman and B. Tidor, Rational Approaches to Improving Selectivity in Drug Design, J. Med. Chem., 2012, 55, 1424-1444. 109"
+    },
+    {
+      "title": "GPCR Antitarget Modeling: Pharmacophore Models for Biogenic Amine Binding GPCRs to Avoid GPCR-Mediated Side Effects",
+      "authors": [
+        "T Klabunde",
+        "A Evers"
+      ],
+      "year": 2005,
+      "volume": "6",
+      "raw": "GPCR Antitarget Modeling: Pharmacophore Models for Biogenic Amine Binding GPCRs to Avoid GPCR-Mediated Side Effects \n\t\t \n\t\t\t T Klabunde \n\t\t \n\t\t \n\t\t\t A Evers \n\t\t \n\t\t \n\t \n\t \n\t\t Source Cheminformatics So\ue09dware \n\t\t \n\t\t\t 2005. 2021 \n\t\t\t 6 \n\t\t\t \n\t\t \n\t \n\t RDKit \n\t T. Klabunde and A. Evers, GPCR Antitarget Modeling: Pharmacophore Models for Biogenic Amine Binding GPCRs to Avoid GPCR-Mediated Side Effects, ChemBioChem, 2005, 6, 876-889. 110 RDKit, Open-Source Cheminformatics So\ue09dware(version 2021.03.3), http://www.rdkit.org/. 111"
+    },
+    {
+      "title": "Bayesian Optimization Package: PHYSBO",
+      "authors": [
+        "Y Motoyama",
+        "R Tamura",
+        "K Yoshimi",
+        "K Terayama",
+        "T Ueno",
+        "K Tsuda"
+      ],
+      "year": 2022,
+      "journal": "Comput. Phys. Commun",
+      "volume": "278",
+      "raw": "Bayesian Optimization Package: PHYSBO \n\t\t \n\t\t\t Y Motoyama \n\t\t \n\t\t \n\t\t\t R Tamura \n\t\t \n\t\t \n\t\t\t K Yoshimi \n\t\t \n\t\t \n\t\t\t K Terayama \n\t\t \n\t\t \n\t\t\t T Ueno \n\t\t \n\t\t \n\t\t\t K Tsuda \n\t\t \n\t \n\t \n\t\t Comput. Phys. Commun \n\t\t \n\t\t\t 278 \n\t\t\t \n\t\t\t 2022 \n\t\t \n\t \n\t Y. Motoyama, R. Tamura, K. Yoshimi, K. Terayama, T. Ueno and K. Tsuda, Bayesian Optimization Package: PHYSBO, Comput. Phys. Commun., 2022, 278, 108405. 112"
+    },
+    {
+      "title": "Fast Calculation of Multiobjective Probability of Improvement and Expected Improvement Criteria for Pareto Optimization",
+      "authors": [
+        "I Couckuyt",
+        "D Deschrijver",
+        "T Dhaene"
+      ],
+      "year": 2014,
+      "journal": "J. Global Optim",
+      "volume": "60",
+      "pages": "113",
+      "raw": "Fast Calculation of Multiobjective Probability of Improvement and Expected Improvement Criteria for Pareto Optimization \n\t\t \n\t\t\t I Couckuyt \n\t\t \n\t\t \n\t\t\t D Deschrijver \n\t\t \n\t\t \n\t\t\t T Dhaene \n\t\t \n\t \n\t \n\t\t J. Global Optim \n\t\t \n\t\t\t 60 \n\t\t\t 113 \n\t\t\t 2014 \n\t\t \n\t \n\t I. Couckuyt, D. Deschrijver and T. Dhaene, Fast Calculation of Multiobjective Probability of Improvement and Expected Improvement Criteria for Pareto Optimization, J. Global Optim., 2014, 60, 575-594. 113"
+    },
+    {
+      "title": "A Parallel Global Multiobjective Framework for Optimization: Pagmo (version 2.19.5)",
+      "authors": [
+        "F Biscani",
+        "D Izzo"
+      ],
+      "year": 2020,
+      "doi": "10.21105/joss.02338",
+      "journal": "J. Open Source So\ue09dw",
+      "volume": "5",
+      "raw": "A Parallel Global Multiobjective Framework for Optimization: Pagmo (version 2.19.5) \n\t\t \n\t\t\t F Biscani \n\t\t \n\t\t \n\t\t\t D Izzo \n\t\t \n\t\t 10.21105/joss.02338 \n\t \n\t \n\t\t J. Open Source So\ue09dw \n\t\t \n\t\t\t 5 \n\t\t\t \n\t\t\t 2020 \n\t\t \n\t \n\t F. Biscani and D. Izzo, A Parallel Global Multiobjective Framework for Optimization: Pagmo (version 2.19.5), J. Open Source So\ue09dw., 2020, 5, 2338. 114"
+    },
+    {
+      "title": "PyTorch: An Imperative Style, High-Performance Deep Learning Library (version 1.13",
+      "authors": [
+        "A Paszke"
+      ],
+      "year": 2019,
+      "pages": "115",
+      "raw": "PyTorch: An Imperative Style, High-Performance Deep Learning Library (version 1.13 \n\t\t \n\t\t\t A Paszke \n\t\t \n\t \n\t \n\t\t Advances in Neural Information Processing Systems \n\t\t \n\t\t\t 2019 \n\t\t\t 115 \n\t\t \n\t \n\t A. Paszke and et al., PyTorch: An Imperative Style, High- Performance Deep Learning Library (version 1.13.1), Advances in Neural Information Processing Systems, 2019. 115"
+    },
+    {
+      "title": "Estimating the Mean and Variance of the Target Probability Distribution",
+      "authors": [
+        "D Nix",
+        "A Weigend"
+      ],
+      "year": 1994,
+      "volume": "1",
+      "pages": "116",
+      "raw": "Estimating the Mean and Variance of the Target Probability Distribution \n\t\t \n\t\t\t D Nix \n\t\t \n\t\t \n\t\t\t A Weigend \n\t\t \n\t \n\t \n\t\t Proceedings of 1994 IEEE International Conference on Neural Networks \n\t\t 1994 IEEE International Conference on Neural Networks \n\t\t \n\t\t\t 1994 \n\t\t\t 1 \n\t\t\t 116 \n\t\t \n\t \n\t ICNN'94 \n\t D. Nix and A. Weigend, Estimating the Mean and Variance of the Target Probability Distribution, Proceedings of 1994 IEEE International Conference on Neural Networks, (ICNN'94), 1994, vol. 1, pp. 55-60. 116"
+    },
+    {
+      "title": "Uncertainty Quanti\ue103cation Using Neural Networks for Molecular Property Prediction",
+      "authors": [
+        "L Hirschfeld",
+        "K Swanson",
+        "K Yang",
+        "R Barzilay",
+        "C Coley"
+      ],
+      "year": 2020,
+      "journal": "J. Chem. Inf. Model",
+      "volume": "60",
+      "raw": "Uncertainty Quanti\ue103cation Using Neural Networks for Molecular Property Prediction \n\t\t \n\t\t\t L Hirschfeld \n\t\t \n\t\t \n\t\t\t K Swanson \n\t\t \n\t\t \n\t\t\t K Yang \n\t\t \n\t\t \n\t\t\t R Barzilay \n\t\t \n\t\t \n\t\t\t C W Coley \n\t\t \n\t \n\t \n\t\t J. Chem. Inf. Model \n\t\t \n\t\t\t 60 \n\t\t\t \n\t\t\t 2020 \n\t\t \n\t \n\t L. Hirschfeld, K. Swanson, K. Yang, R. Barzilay and C. W. Coley, Uncertainty Quanti\ue103cation Using Neural Networks for Molecular Property Prediction, J. Chem. Inf. Model., 2020, 60, 3770-3780."
+    },
+    {
+      "title": "Atom Pairs as Molecular Features in Structure-Activity Studies: De\ue103nition and Applications",
+      "authors": [
+        "R Carhart",
+        "D Smith",
+        "R Venkataraghavan"
+      ],
+      "year": 1985,
+      "doi": "10.1021/ci00046a002",
+      "journal": "J. Chem. Inf. Comput. Sci",
+      "volume": "25",
+      "pages": "118",
+      "raw": "Atom Pairs as Molecular Features in Structure-Activity Studies: De\ue103nition and Applications \n\t\t \n\t\t\t R E Carhart \n\t\t \n\t\t \n\t\t\t D H Smith \n\t\t \n\t\t \n\t\t\t R Venkataraghavan \n\t\t \n\t\t 10.1021/ci00046a002 \n\t \n\t \n\t\t J. Chem. Inf. Comput. Sci \n\t\t \n\t\t\t 25 \n\t\t\t 118 \n\t\t\t 1985 \n\t\t \n\t \n\t R. E. Carhart, D. H. Smith and R. Venkataraghavan, Atom Pairs as Molecular Features in Structure-Activity Studies: De\ue103nition and Applications, J. Chem. Inf. Comput. Sci., 1985, 25, 64-73. 118"
+    },
+    {
+      "title": "Atom Pair 2D-Fingerprints Perceive 3D-Molecular Shape and Pharmacophores for Very Fast Virtual Screening of ZINC and GDB-17",
+      "authors": [
+        "M Awale",
+        "J.-L Reymond"
+      ],
+      "year": 2014,
+      "journal": "J. Chem. Inf. Model",
+      "volume": "54",
+      "pages": "119",
+      "raw": "Atom Pair 2D-Fingerprints Perceive 3D-Molecular Shape and Pharmacophores for Very Fast Virtual Screening of ZINC and GDB-17 \n\t\t \n\t\t\t M Awale \n\t\t \n\t\t \n\t\t\t J.-L Reymond \n\t\t \n\t \n\t \n\t\t J. Chem. Inf. Model \n\t\t \n\t\t\t 54 \n\t\t\t 119 \n\t\t\t 2014 \n\t\t \n\t \n\t M. Awale and J.-L. Reymond, Atom Pair 2D-Fingerprints Perceive 3D-Molecular Shape and Pharmacophores for Very Fast Virtual Screening of ZINC and GDB-17, J. Chem. Inf. Model., 2014, 54, 1892-1907. 119"
+    },
+    {
+      "title": "Comparing structural \ue103ngerprints using a literature-based similarity benchmark",
+      "authors": [
+        "N O'boyle",
+        "R Sayle"
+      ],
+      "year": 2016,
+      "journal": "J. Cheminf",
+      "volume": "8",
+      "raw": "Comparing structural \ue103ngerprints using a literature-based similarity benchmark \n\t\t \n\t\t\t N M O'boyle \n\t\t \n\t\t \n\t\t\t R A Sayle \n\t\t \n\t \n\t \n\t\t J. Cheminf \n\t\t \n\t\t\t 8 \n\t\t\t \n\t\t\t 2016 \n\t\t \n\t \n\t N. M. O'Boyle and R. A. Sayle, Comparing structural \ue103ngerprints using a literature-based similarity benchmark, J. Cheminf., 2016, 8, 36. 120"
+    },
+    {
+      "title": "Web-Scale k-Means Clustering",
+      "authors": [
+        "D Sculley"
+      ],
+      "year": 2010,
+      "pages": "121",
+      "raw": "Web-Scale k-Means Clustering \n\t\t \n\t\t\t D Sculley \n\t\t \n\t \n\t \n\t\t Proceedings of the 19th international conference on World wide web \n\t\t the 19th international conference on World wide web Raleigh North Carolina USA \n\t\t \n\t\t\t 2010 \n\t\t\t 121 \n\t\t \n\t \n\t D. Sculley, Web-Scale k-Means Clustering, Proceedings of the 19th international conference on World wide web, Raleigh North Carolina USA, 2010, pp. 1177-1178. 121"
+    },
+    {
+      "title": "Scikit-learn: Machine Learning in Python (version 1.3.2)",
+      "authors": [
+        "F Pedregosa"
+      ],
+      "year": 2011,
+      "journal": "J. Mach. Learn. Res",
+      "volume": "12",
+      "pages": "122",
+      "raw": "Scikit-learn: Machine Learning in Python (version 1.3.2) \n\t\t \n\t\t\t F Pedregosa \n\t\t \n\t \n\t \n\t\t J. Mach. Learn. Res \n\t\t \n\t\t\t 12 \n\t\t\t 122 \n\t\t\t 2011 \n\t\t \n\t \n\t F. Pedregosa, et al., Scikit-learn: Machine Learning in Python (version 1.3.2), J. Mach. Learn. Res., 2011, 12, 2825-2830. 122"
+    },
+    {
+      "title": "An Analysis of Quality Indicators Using Approximated Optimal Distributions in a 3-D Objective Space",
+      "authors": [
+        "R Tanabe",
+        "H Ishibuchi"
+      ],
+      "year": 2020,
+      "journal": "IEEE Trans. Evol. Comput",
+      "volume": "24",
+      "raw": "An Analysis of Quality Indicators Using Approximated Optimal Distributions in a 3-D Objective Space \n\t\t \n\t\t\t R Tanabe \n\t\t \n\t\t \n\t\t\t H Ishibuchi \n\t\t \n\t \n\t \n\t\t IEEE Trans. Evol. Comput \n\t\t \n\t\t\t 24 \n\t\t\t \n\t\t\t 2020 \n\t\t \n\t \n\t R. Tanabe and H. Ishibuchi, An Analysis of Quality Indicators Using Approximated Optimal Distributions in a 3-D Objective Space, IEEE Trans. Evol. Comput., 2020, 24, 853-867."
+    },
+    {
+      "title": "Interactive Supercomputing on 40,000 Cores for Machine Learning and Data Analysis",
+      "authors": [
+        "A Reuther"
+      ],
+      "year": 2018,
+      "raw": "A Reuther \n\t\t \n\t\t Interactive Supercomputing on 40,000 Cores for Machine Learning and Data Analysis \n\t\t \n\t\t\t 2018. 2018 \n\t\t\t \n\t\t \n\t \n\t IEEE High Performance extreme Computing Conference (HPEC) \n\t A. Reuther and et al., Interactive Supercomputing on 40,000 Cores for Machine Learning and Data Analysis, 2018 IEEE High Performance extreme Computing Conference (HPEC), 2018, pp. 1-6."
+    }
+  ],
+  "num_references": 122,
+  "figures": [
+    {
+      "description": "For model-guided Pareto optimization, either a multi-task surrogate model, multiple single-task surrogate models, or a combination thereof is needed to predict the set of objective function values. As outlined in Algorithm S2, \u2020 MolPAL trains N single-task surrogate models to predict N objectives to circumvent the challenge of loss function weighting in multitask learning. 66"
+    },
+    {
+      "caption": "Fig. 1",
+      "description": "Fig. 1 Overview of MolPAL's workflow for multi-objective optimization. A surrogate model is first trained with an initial training set of randomly sampled molecules. Predictions and uncertainties from each surrogate model inform which molecules in the library to score next. After these acquired molecules are scored, each surrogate model is retrained, and the iterative loop continues. Once a stopping criterion is met, the set of observed points and their objective values can be analyzed."
+    },
+    {
+      "caption": "Fig. 2",
+      "description": "Fig. 2 Depiction of acquisition functions in Bayesian optimization. (A) Probability of improvement (PI) estimates the likelihood that an as-yet unobserved objective function value exceeds the current maximum value f*. Expected improvement (EI) estimates the amount that f* would increase if an unobserved point is acquired. 53 (B) Non-dominated sorting assigns integer \"Pareto ranks\" to each candidate. (C) Hypervolumebased acquisition functions 53  extend the principles of PI and EI to multiple dimensions using the observed Pareto front (grey dashed line) rather than f*. Probability of hypervolume improvement (PHI) represents the likelihood that acquisition of an unobserved point would increase the hypervolume by any amount. Expected hypervolume improvement (EHI) estimates the increase in hypervolume if the objective function value of such a point is scored. 53 Objectives are defined so that optimization corresponds to maximization."
+    },
+    {
+      "caption": "Fig. 3",
+      "description": "Fig. 3 Docking scores in the DOCKSTRING dataset 84 for (A) case 1, (B) case 2, and (C) case 3. All molecules considered in the top \u223c1%, as determined by NDS rank (Section 5.6), are shown as magenta points, with the remaining data in grey. There are 2986 (1.15%), 2651 (1.02%), and 3261 (1.25%) molecules in the top \u223c1% for cases 1, 2, and 3, respectively."
+    },
+    {
+      "caption": "Fig. 4",
+      "description": "Fig. 4 Fraction of the top \u223c1% acquired and inverted generational distance (IGD) for case 1, 2, and 3. (A, C and E) Fraction of top \u223c1% using Pareto optimization acquisition functions (left) and scalarized acquisition functions (right). (B, D and F) Fraction of the top \u223c1% acquired after 6 iterations. (G-I) IGD after 6 iterations for case 1 (G), case 2 (H), and case 3 (I). Error bars (B, D, F, G-I) and shaded regions (A, C and E) denote \u00b1 one standard deviation across five runs."
+    },
+    {
+      "caption": "Fig. 5",
+      "description": "Fig. 5 Identification of molecules on the true Pareto front. (A) Fraction of non-dominated points acquired for cases 1, 2, and 3. (B) Final Pareto front acquired in case 3 using probability of greedy, expected hypervolume improvement (EHI), expected improvement (EI), and hypervolume improvement (PHI) acquisition, with the true Pareto front shown in grey. The Pareto front identified with greedy acquisition poorly reflects the shape of the true Pareto front, a discrepancy captured well by the fraction of non-dominated points metric. Each plot represents individual runs, all initialized with the same model seed and starting acquired set. Error bars denote \u00b1 one standard deviation across five runs."
+    },
+    {
+      "caption": "Fig. 6",
+      "description": "Fig. 6 Impact of clustering in fingerprint and objective space on optimization performance. (A) Fraction of top \u223c1% acquired. (B) Fraction of top \u223c1% acquired acquired after 6 iterations. (C) Inverted generational distance (IGD) after 6 iterations. (D) Hypervolume profiles. (E) Fraction of the library's non-dominated points acquired after 6 iterations. (F) Number of distinct graph-based Bemis-Murcko scaffolds acquired. Error bars (B, C and E) and shaded regions (A, D and F) denote \u00b1 one standard deviation across five runs."
+    },
+    {
+      "caption": "Fig. 7",
+      "description": "Fig. 7 Distributions of objective function values to be maximized for a retrospective 3-objective virtual screen. (A and B) Docking scores for targets IGF1R and EGFR, respectively. (C) Docking scores for off-target CYP3A4."
+    },
+    {
+      "caption": "Fig. 8",
+      "description": "Fig. 8 Performance of MolPAL for the identification of selective dual IGF1R/EGFR inhibitors from the 4M-member Enamine screening library as an exemplary three-objective optimization. Profiles are depicted for the fraction of (A) top \u223c0.1%, (B) top \u223c0.5%, and (C) non-dominated points acquired, as well as the (D) hypervolume."
+    },
+    {
+      "caption": "Fig. 9",
+      "description": "Fig.9Visualization of the Pareto front for the 3-objective optimization for the identification of putative selective dual inhibitors. All nondominated points depicted were acquired by MolPAL after scoring only 8% of the virtual library. Structures for some molecules on the Pareto front are shown. Many of these molecules (e.g., M4 and M20) would not be suitable starting points for a drug discovery campaign, highlighting the imperfections of docking as a sole oracle function. Docking scores to targets EGFR and IGF1R and off-target CYP3A4 were calculated with the AutoDock Vina wrapper DOCKSTRING. 84"
+    },
+    {
+      "type": "table",
+      "caption": "Table 2",
+      "description": "Performance metrics after acquisition of 10% of the library. Means and standard deviation across three trials are shown. Metrics include hypervolume (HV) and inverted generational distance (IGD), as well as the fraction of the library's top 0.12% (4829 molecules), top 0.524% (21 015 molecules), and Pareto front points (39 molecules) acquired"
+    }
+  ],
+  "num_figures": 11,
+  "tables": [
+    {
+      "content": "Acquisition Fraction of true function Top \u223c0.1% [ Top \u223c0.5% [ HV [ IGD Y front [ PHI 0.65 AE 0.06 0.50 AE 0.09 1.00 AE 0.00 0.00 AE 0.00 1.00 AE 0.00 Random 0.10 AE 0.00 0.10 AE 0.00 0.81 AE 0.05 0.88 AE 0.04 0.10 AE 0.04"
+    }
+  ],
+  "num_tables": 1,
+  "license": "\u00a9 2024 The Author(s). Published by the Royal Society of Chemistry This article is licensed under a Creative Commons Attribution-NonCommercial 3.0 Unported Licence. 38 AM. This article is licensed under a Creative Commons Attribution-NonCommercial 3.0 Unported Licence. View Article Online \u00a9 2024 The Author(s). Published by the Royal Society of Chemistry 38 AM. This article is licensed under a Creative Commons Attribution-NonCommercial 3.0 Unported Licence. View Article Online Digital Discovery Paper 00:38 AM. This article is licensed under a Creative Commons Attribution-NonCommercial 3.0 Unported Licence. View Article Online \u00a9 2024 The Author(s). Published by the Royal Society of Chemistry 38 AM. This article is licensed under a Creative Commons Attribution-NonCommercial 3.0 Unported Licence. View Article Online \u00a9 2024 The Author(s). Published by the Royal Society of Chemistry 38 AM. This article is licensed under a Creative Commons Attribution-NonCommercial 3.0 Unported Licence. View Article Online \u00a9 2024 The Author(s). Published by the Royal Society of Chemistry This article is licensed under a Creative Commons Attribution-NonCommercial 3.0 Unported Licence. View Article Online",
+  "license_type": "unknown",
+  "formulas": [
+    {
+      "text": "f scal \u00f0x\u00de \u00bc X i l i f i \u00f0x\u00de; (1)"
+    },
+    {
+      "text": "f dock (x) = min(0,f(x)) (2)"
+    },
+    {
+      "text": "EI\u00f0x; f *\u00de \u00bc \u00f0m\u00f0x\u00de \u00c0 f * \u00fe x\u00de$F m\u00f0x\u00de \u00c0 f * \u00fe x s\u00f0x\u00de \u00fes\u00f0x\u00de$f m\u00f0x\u00de \u00c0 f * \u00fe x s\u00f0x\u00de"
+    },
+    {
+      "text": "PI\u00f0x; f *\u00de \u00bc F m\u00f0x\u00de \u00c0 f * \u00fe x s\u00f0x\u00de"
+    },
+    {
+      "text": "Greedy\u00f0x\u00de \u00bc m\u00f0x\u00de ( 3"
+    },
+    {
+      "text": ")"
+    },
+    {
+      "text": "L\u00f0f \u00f0x\u00de; m\u00f0x\u00de; s\u00f0x\u00de\u00de \u00bc ln2p 2 \u00fe 1 2 lns 2 \u00f0x\u00de \u00fe \u00f0m\u00f0x\u00de \u00c0 y\u00f0x\u00de\u00de 2 2s 2 \u00f0x\u00de (4)"
+    }
+  ],
+  "num_formulas": 7,
+  "num_citations": 147,
+  "cited_references": [
+    "b43",
+    "b39",
+    "b14",
+    "b20",
+    "b41",
+    "b51",
+    "b76",
+    "b83",
+    "b27",
+    "b33",
+    "b66",
+    "b49",
+    "b16",
+    "b57",
+    "b94",
+    "b30",
+    "b71",
+    "b121",
+    "b45",
+    "b17",
+    "b53",
+    "b84",
+    "b95",
+    "b26",
+    "b86",
+    "b79",
+    "b78",
+    "b13",
+    "b93",
+    "b62",
+    "b73",
+    "b46",
+    "b23",
+    "b52",
+    "b35",
+    "b31",
+    "b58",
+    "b10",
+    "b68",
+    "b88",
+    "b64",
+    "b56",
+    "b75",
+    "b36",
+    "b96",
+    "b25",
+    "b54",
+    "b59",
+    "b32",
+    "b92",
+    "b67",
+    "b77",
+    "b55",
+    "b28",
+    "b97",
+    "b61",
+    "b80",
+    "b70",
+    "b91",
+    "b29",
+    "b6",
+    "b18",
+    "b9",
+    "b106",
+    "b3",
+    "b5",
+    "b8",
+    "b15",
+    "b11",
+    "b37",
+    "b98",
+    "b22",
+    "b2",
+    "b72",
+    "b82",
+    "b89",
+    "b48",
+    "b38",
+    "b4",
+    "b24",
+    "b40",
+    "b7",
+    "b19",
+    "b63",
+    "b42",
+    "b69",
+    "b1",
+    "b90",
+    "b87",
+    "b34",
+    "b47",
+    "b12",
+    "b60",
+    "b81",
+    "b85",
+    "b65",
+    "b0",
+    "b21",
+    "b50",
+    "b44",
+    "b74"
+  ],
+  "notes": [
+    "[raw_affiliation] a  Department of Chemical Engineering , MIT , Cambridge , MA 02139 , USA.",
+    "[raw_affiliation] b  Department of Chemistry and Chemical Biology , Harvard University , Cambridge , MA 02138 , USA",
+    "[raw_affiliation] c  Department of Electrical Engineering and Computer Science , MIT , Cambridge , MA 02139 , USA",
+    "[submission] Received 20th November 2023 Accepted 14th January 2024",
+    "[other] by Couckuyt et al. 112",
+    "\u00a9 2024 The Author(s). Published by the Royal Society of Chemistry",
+    "\u00a9 2024 The Author(s). Published by the Royal Society of Chemistry Digital Discovery, 2024, 3, 467-481 | 471",
+    "\u00a9 2024 The Author(s). Published by the Royal Society of Chemistry Digital Discovery, 2024, 3, 467-481 | 481",
+    "[raw_reference] J. Hughes, S. Rees, S. Kalindjian and K. Philpott, Principles of Early Drug Discovery, Br. J. Pharmacol., 2011, 162, 1239- 1249.",
+    "[raw_reference] J. G. Kettle and D. M. Wilson, Standing on the Shoulders of Giants: A Retrospective Analysis of Kinase Drug Discovery at Astrazeneca, Drug Discovery Today, 2016, 21, 1596-1608.",
+    "[raw_reference] M. Beckers, N. Fechner and N. Stie\ue104, 25 Years of Small- Molecule Optimization at Novartis: A Retrospective Analysis of Chemical Series Evolution, J. Chem. Inf. Model., 2022, 62, 6002-6021.",
+    "[raw_reference] G. M. Keser} u and G. M. Makara, Hit Discovery and Hit-to- Lead Approaches, Drug Discovery Today, 2006, 11, 741-748.",
+    "[raw_reference] D. Sun, W. Gao, H. Hu and S. Zhou, Why 90% of Clinical Drug Development Fails and How to Improve It?, Acta Pharm. Sin. B, 2022, 12, 3049-3062.",
+    "[raw_reference] M. D. Segall and C. Barber, Addressing Toxicity Risk When Designing and Selecting Compounds in Early Drug Discovery, Drug Discovery Today, 2014, 19, 688-693.",
+    "[raw_reference] T. R. Van Vleet, M. J. Liguori, I. Lynch, J. James, M. Rao and S. Warder, Screening Strategies and Methods for Better Off- Target Liability Prediction and Identi\ue103cation of Small- Molecule Pharmaceuticals, SLAS Discovery, 2019, 24, 1-24.",
+    "[raw_reference] K. H. Bleicher, H.-J. B\u00f6hm, K. M\u00fcller and A. I. Alanine, Hit and Lead Generation: Beyond High-Throughput Screening, Nat. Rev. Drug Discovery, 2003, 2, 369-378.",
+    "[raw_reference] M. Recanatini, G. Bottegoni and A. Cavalli, Silico Antitarget Screening, Drug Discovery Today: Technol., 2004, 1, 209-215.",
+    "[raw_reference] A. Macchiarulo, I. Nobeli and J. M. Thornton, Ligand Selectivity and Competition Between Enzymes in Silico, Nat. Biotechnol., 2004, 22, 1039-1045.",
+    "[raw_reference] N. M. Raghavendra, D. Pingili, S. Kadasi, A. Mettu and S. V. U. M. Prasad, Dual or Multi-Targeting Inhibitors: The Next Generation Anticancer Agents, Eur. J. Med. Chem., 2018, 143, 1277-1300.",
+    "[raw_reference] M. M. Ibrahim and M. T. Gabr, Multitarget Therapeutic Strategies for Alzheimer's Disease, Neural Regener. Res., 2019, 14, 437-440.",
+    "[raw_reference] O. Benek, J. Korabecny and O. Soukup, A Perspective on Multi-target Drugs for Alzheimer's Disease, Trends Pharmacol. Sci., 2020, 41, 434-445.",
+    "[raw_reference] M. Brassard and G. Rondeau, Role of Vandetanib in the Management of Medullary Thyroid Cancer, Biol.: Targets Ther., 2012, 6, 59-66.",
+    "[raw_reference] K. Okamoto, M. Ikemori-Kawada, A. Jestel, K. von K\u00f6nig, Y. Funahashi, T. Matsushima, A. Tsuruoka, A. Inoue and J. Matsui, Distinct Binding Mode of Multikinase Inhibitor Lenvatinib Revealed by Biochemical Characterization, ACS Med. Chem. Lett., 2015, 6, 89-94.",
+    "[raw_reference] X. H. Ma, Z. Shi, C. Tan, Y. Jiang, M. L. Go, B. C. Low and Y. Z. Chen, In-Silico Approaches to Multi-target Drug Discovery, Pharm. Res., 2010, 27, 739-749.",
+    "[raw_reference] Z. Yousuf, K. Iman, N. I\ue09dikhar and M. U. Mirza, Structure- Based Virtual Screening and Molecular Docking for the Identi\ue103cation of Potential Multi-Targeted Inhibitors Against Breast Cancer, Breast Cancer: Targets Ther., 2017, 9, 447-459.",
+    "[raw_reference] V. Chahal and R. Kakkar, A Combination Strategy of Structure-Based Virtual Screening, MM-GBSA, Cross Docking, Molecular Dynamics and Metadynamics Simulations Used to Investigate Natural Compounds as Potent and Speci\ue103c Inhibitors of Tumor Linked Human Carbonic Anhydrase Ix, J. Biomol. Struct. Dyn., 2023, 41, 5465-5480.",
+    "[raw_reference] S. Schieferdecker and E. Vock, Development of Pharmacophore Models for the Important Off-Target 5- HT2B Receptor, J. Med. Chem., 2023, 66, 1509-1521.",
+    "[raw_reference] P. Matricon, A. T. Nguyen, D. D. Vo, J.-A. Baltos, M. Jaiteh, A. Luttens, S. Kampen, A. Christopoulos, J. Kihlberg, L. T. May and J. Carlsson, Structure-Based Virtual Screening Discovers Potent and Selective Adenosine A1 Receptor Antagonists, Eur. J. Med. Chem., 2023, 257, 115419.",
+    "[raw_reference] D. R. Weiss, J. Karpiak, X.-P. Huang, M. F. Sassano, J. Lyu, B. L. Roth and B. K. Shoichet, Selectivity Challenges in Docking Screens for GPCR Targets and Antitargets, J. Med. Chem., 2018, 61, 6830-6845.",
+    "[raw_reference] H. Chen, P. D. Lyne, F. Giordanetto, T. Lovell and J. Li, On Evaluating Molecular-Docking Methods for Pose Prediction and Enrichment Factors, J. Chem. Inf. Model., 2006, 46, 401- 415.",
+    "[raw_reference] A. N. Jain, Bias, Reporting, and Sharing: Computational Evaluations of Docking Methods, J. Comput.-Aided Mol. Des., 2008, 22, 201-212.",
+    "[raw_reference] J. B. Cross, D. C. Thompson, B. K. Rai, J. C. Baber, K. Y. Fan, Y. Hu and C. Humblet, Comparison of Several Molecular Docking Programs: Pose Prediction and Virtual Screening Accuracy, J. Chem. Inf. Model., 2009, 49, 1455-1474.",
+    "[raw_reference] J. J. Irwin and B. K. Shoichet, Docking Screens for Novel Ligands Conferring New Biology, J. Med. Chem., 2016, 59, 4103-4120.",
+    "[raw_reference] E. D. Boittier, Y. Y. Tang, M. E. Buckley, Z. P. Schuurs, D. J. Richard and N. S. Gandhi, Assessing Molecular Docking Tools to Guide Targeted Drug Discovery of CD38 Inhibitors, Int. J. Mol. Sci., 2020, 21, 5183.",
+    "[raw_reference] F. Stanzione, I. Giangreco and J. C. Cole, Progress in Medicinal Chemistry, ed. D. R. Witty and B. Cox, Elsevier, 2021, vol. 60, pp. 273-343.",
+    "[raw_reference] L. E. Ling and et al., Transforming Growth Factor-b in Cancer Therapy, Volume II: Cancer Treatment and Therapy, ed. S. B. Jakowlew, Cancer Drug Discovery and Development, Humana Press, Totowa, NJ, 2008, pp. 685-696.",
+    "[raw_reference] D. Bajusz, G. G. Ferenczy and G. M. Keser} u, Discovery of Subtype Selective Janus Kinase (JAK) Inhibitors by Structure-Based Virtual Screening, J. Chem. Inf. Model., 2016, 56, 234-247.",
+    "[raw_reference] J. Lyu, S. Wang, T. E. Balius, I. Singh, A. Levit, Y. S. Moroz, M. J. O'Meara, T. Che, E. Algaa, K. Tolmachova, A. A. Tolmachev, B. K. Shoichet, B. L. Roth and J. J. Irwin, Ultra-Large Library Docking for Discovering New Chemotypes, Nature, 2019, 566, 224-229.",
+    "[raw_reference] F. Gentile, M. Fernandez, F. Ban, A.-T. Ton, H. Mslati, C. F. Perez, E. Leblanc, J. C. Yaacoub, J. Gleave, A. Stern, B. Wong, F. Jean, N. Strynadka and A. Cherkasov, Automated Discovery of Noncovalent Inhibitors of Sars- Cov-2 Main Protease by Consensus Deep Docking of 40 Billion Small Molecules, Chem. Sci., 2021, 12, 15960-15974.",
+    "[raw_reference] A. Alon, et al., Structures of the s 2 Receptor Enable Docking for Bioactive Ligand Discovery, Nature, 2021, 600, 759-764.",
+    "[raw_reference] B. I. Tingle and J. J. Irwin, Large-Scale Docking in the Cloud, J. Chem. Inf. Model., 2023, 63, 2735-2741.",
+    "[raw_reference] R. Garnett, T. G\u00e4rtner, M. Vogt and J. Bajorath, Introducing the 'Active Search' Method for Iterative Virtual Screening, J. Comput.-Aided Mol. Des., 2015, 29, 305-314.",
+    "[raw_reference] J. S. Smith, B. Nebgen, N. Lubbers, O. Isayev and A. E. Roitberg, Less Is More: Sampling Chemical Space with Active Learning, J. Chem. Phys., 2018, 148, 241733.",
+    "[raw_reference] F. Gentile, V. Agrawal, M. Hsing, A.-T. Ton, F. Ban, U. Norinder, M. E. Gleave and A. Cherkasov, Deep Docking: A Deep Learning Platform for Augmentation of Structure Based Drug Discovery, ACS Cent. Sci., 2020, 6, 939-949.",
+    "[raw_reference] D. E. Graff, E. I. Shakhnovich and C. W. Coley, Accelerating High-Throughput Virtual Screening Through Molecular Pool-Based Active Learning, Chem. Sci., 2021, 12, 7866- 7881.",
+    "[raw_reference] Y. Yang, K. Yao, M. P. Repasky, K. Leswing, R. Abel, B. K. Shoichet and S. V. Jerome, Efficient Exploration of Chemical Space with Docking and Deep Learning, J. Chem. Theory Comput., 2021, 17, 7106-7119.",
+    "[raw_reference] S. Mehta, S. Laghuvarapu, Y. Pathak, A. Sethi, M. Alvala and U. D. Priyakumar, MEMES: Machine Learning Framework for Enhanced Molecular Screening, Chem. Sci., 2021, 12, 11710-11721.",
+    "[raw_reference] D. E. Graff, M. Aldeghi, J. A. Morrone, K. E. Jordan, E. O. Pyzer-Knapp and C. W. Coley, Self-Focusing Virtual Screening with Active Design Space Pruning, J. Chem. Inf. Model., 2022, 62, 3854-3862.",
+    "[raw_reference] J. Thompson, W. P. Walters, J. A. Feng, N. A. Pabon, H. Xu, M. Maser, B. B. Goldman, D. Moustakas, M. Schmidt and F. York, Optimizing Active Learning for Free Energy Calculations, Artif. Intell. Life Sci., 2022, 2, 100050.",
+    "[raw_reference] S. Mehta, M. Goel and U. D. Priyakumar, MO-MEMES: A Method for Accelerating Virtual Screening Using Multi- Objective Bayesian Optimization, Front. Med., 2022, 9, DOI: 10.3389/fmed.2022.916481.",
+    "[raw_reference] S. A. Wildman and G. M. Crippen, Prediction of Physicochemical Parameters by Atomic Contributions, J. Chem. Inf. Comput. Sci., 1999, 39, 868-873.",
+    "[raw_reference] P. Ertl and A. Schuffenhauer, Estimation of Synthetic Accessibility Score of Drug-like Molecules Based on Molecular Complexity and Fragment Contributions, J. Cheminf., 2009, 1, 8.",
+    "[raw_reference] Enamine Screening Collections, https://enamine.net/ compound-collections/screening-collection, downloaded May 2023.",
+    "[raw_reference] J. C. Fromer and C. W. Coley, Computer-Aided Multi- Objective Optimization in Small Molecule Discovery, Patterns, 2023, 4, 100678.",
+    "[raw_reference] J. P. Janet, S. Ramesh, C. Duan and H. J. Kulik, Accurate Multiobjective Design in a Space of Millions of Transition Metal Complexes with Neural-Network-Driven Efficient Global Optimization, ACS Cent. Sci., 2020, 6, 513-524.",
+    "[raw_reference] G. Agarwal, H. A. Doan, L. A. Robertson, L. Zhang and R. S. Assary, Discovery of Energy Storage Molecular Materials Using Quantum Chemistry-Guided Multiobjective Bayesian Optimization, Chem. Mater., 2021, 33, 8133-8144.",
+    "[raw_reference] R. Jalem, Y. Tateyama, K. Takada and S.-H. Jang, Multiobjective Solid Electrolyte Design of Tetragonal and Cubic Inverse-Perovskites for All-Solid-State Lithium-Ion Batteries by High-Throughput Density Functional Theory Calculations and AI-Driven Methods, J. Phys. Chem. C, 2023, 127, 17307-17323.",
+    "[raw_reference] A. M. Gopakumar, P. V. Balachandran, D. Xue, J. E. Gubernatis and T. Lookman, Multi-objective Optimization for Materials Discovery via Adaptive Design, Sci. Rep., 2018, 8, 3738.",
+    "[raw_reference] Z. del Rosario, M. Rupp, Y. Kim, E. Antono and J. Ling, Assessing the Frontier: Active Learning, Model Accuracy, and Multi-Objective Candidate Discovery and Optimization, J. Chem. Phys., 2020, 153, 024112.",
+    "[raw_reference] Y. Murakami, S. Ishida, Y. Demizu and K. Terayama, Design of Antimicrobial Peptides Containing Non-Proteinogenic Amino Acids Using Multi-Objective Bayesian Optimisation, Digital Discovery, 2023, 2, 1347-1353.",
+    "[raw_reference] A. J. S. Keane, Improvement Criteria for Use in Multiobjective Design Optimization, AIAA J., 2006, 44, 879-891.",
+    "[raw_reference] B. Paria, K. Kandasamy and B. P\u00f3czos, A Flexible Framework for Multi-Objective Bayesian Optimization using Random Scalarizations, Proceedings of The 35th Uncertainty in Arti\ue103cial Intelligence Conference. 2020, pp. 766-776.",
+    "[raw_reference] R. Zhang and D. Golovin, Random Hypervolume Scalarizations for Provable Multi-Objective Black Box Optimization, Proceedings of the 37th International Conference on Machine Learning, 2020, pp. 11096-11105.",
+    "[raw_reference] R. E. Steuer and E.-U. Choo, An Interactive Weighted Tchebycheff Procedure for Multiple Objective Programming, Math. Program., 1983, 26, 326-344.",
+    "[raw_reference] I. Giagkiozis and P. J. Fleming, Methods for Multi-Objective Optimization: An Analysis, Inf. Sci., 2015, 293, 338-350.",
+    "[raw_reference] H. J. A. Kushner, New Method of Locating the Maximum Point of an Arbitrary Multipeak Curve in the Presence of Noise, J. Basic Eng., 1964, 86, 97-106.",
+    "[raw_reference] J. Mo\u010dkus, On Bayesian Methods for Seeking the Extremum. Optimization Techniques IFIP Technical Conference Novosibirsk, July 1-7, 1974, Berlin, Heidelberg, 1975, pp. 400-404.",
+    "[raw_reference] N. Srinivas, A. Krause, S. M. Kakade and M. W. Seeger, Information-Theoretic Regret Bounds for Gaussian Process Optimization in the Bandit Setting, IEEE Trans. Inf. Theory, 2012, 58, 3250-3265.",
+    "[raw_reference] J. G. Lin, Directions in Large-Scale Systems: Many-Person Optimization and Decentralized Control, ed. Y. C. Ho and S. K. Mitter, Springer US, Boston, MA, 1976, pp. 117-138.",
+    "[raw_reference] Y. Hu, R. Xian, Q. Wu, Q. Fan, L. Yin and H. Zhao, Revisiting Scalarization in Multi-Task Learning: A Theoretical Perspective, 2023, http://arxiv.org/abs/2308.13985.",
+    "[raw_reference] N. Srinivas and K. Deb, Muiltiobjective Optimization Using Nondominated Sorting in Genetic Algorithms, Evol Comput., 1994, 2, 221-248.",
+    "[raw_reference] K. Deb, A. Pratap, S. Agarwal and T. Meyarivan, A Fast and Elitist Multiobjective Genetic Algorithm: NSGA-II, IEEE Trans. Evol. Comput., 2002, 6, 182-197.",
+    "[raw_reference] M. M. Drugan and A. Nowe, Designing Multi-Objective Multi- Armed Bandits Algorithms: A Study. The 2013 International Joint Conference on Neural Networks, IJCNN, 2013, pp. 1-8.",
+    "[raw_reference] T. Gong, T. Lee, C. Stephenson, V. Renduchintala, S. Padhy, A. Ndirango, G. Keskin and O. H. Elibol, A Comparison of Loss Weighting Strategies for Multi task Learning in Deep Neural Networks, IEEE Access, 2019, 7, 141627-141632.",
+    "[raw_reference] H. Bellamy, A. A. Rehim, O. I. Orhobor and R. King, Batched Bayesian Optimization for Drug Design in Noisy Environments, J. Chem. Inf. Model., 2022, 62, 3970-3981.",
+    "[raw_reference] D. Ginsbourger, R. Le Riche and L. Carraro, Computational Intelligence in Expensive Optimization Problems, ed. Y. Tenne and C.-K. Goh, Adaptation Learning and Optimization, Springer, Berlin, Heidelberg, 2010, pp. 131-162.",
+    "[raw_reference] J. Snoek, H. Larochelle and R. P. Adams, Practical Bayesian Optimization of Machine Learning Algorithms, Advances in Neural Information Processing Systems, 2012.",
+    "[raw_reference] J. Janusevskis, R. Le Riche, D. Ginsbourger and R. Girdziusas, Expected Improvements for the Asynchronous Parallel Global Optimization of Expensive Functions: Potentials and Challenges. Learning and Intelligent Optimization, Berlin, Heidelberg, 2012, pp. 413-418.",
+    "[raw_reference] C. Chevalier and D. Ginsbourger, Fast Computation of the Multi-Points Expected Improvement with Applications in Batch Selection, Learning and Intelligent Optimization, Berlin, Heidelberg, 2013, pp. 59-69.",
+    "[raw_reference] S. Jiang, G. Malkomes, G. Converse, A. Shofner, B. Moseley and R. Garnett, Efficient Nonmyopic Active Search, Proceedings of the 34th International Conference on Machine Learning, 2017, pp. 1714-1723.",
+    "[raw_reference] A. Tran, J. Sun, J. M. Furlan, K. V. Pagalthivarthi, R. J. Visintainer and Y. Wang, pBO-2GP-3B: A Batch Parallel Known/Unknown Constrained Bayesian Optimization with Feasibility Classi\ue103cation and Its Applications in Computational Fluid Dynamics, Comput. Methods Appl. Mech. Eng., 2019, 347, 827-852.",
+    "[raw_reference] J. Azimi, A. Fern and X. Fern, Batch Bayesian Optimization via Simulation Matching, Advances in Neural Information Processing Systems, 2010.",
+    "[raw_reference] J. Gonzalez, Z. Dai, P. Hennig and N. Lawrence, Batch Bayesian Optimization via Local Penalization, Proceedings of the 19th International Conference on Arti\ue103cial Intelligence and Statistics, 2016, pp. 648-657.",
+    "[raw_reference] M. Konakovic Lukovic, Y. Tian and W. Matusik, Diversity- Guided Multi-Objective Bayesian Optimization With Batch Evaluations, Adv. Neural Inf. Process., 2020, 17708-17720.",
+    "[raw_reference] G. Citovsky, G. DeSalvo, C. Gentile, L. Karydas, A. Rajagopalan, A. Rostamizadeh and S. Kumar, Batch Active Learning at Scale, Adv. Neural Inf. Process., 2021, 11933-11944.",
+    "[raw_reference] N. Maus, K. Wu, D. Eriksson and J. Gardner, Discovering Many Diverse Solutions with Bayesian Optimization, Proceedings of the 26th International Conference on Arti\ue103cial Intelligence and Statistics, AISTATS, Valencia, Spain, 2023.",
+    "[raw_reference] L. D. Gonz\u00e1lez and V. M. Zavala, New Paradigms for Exploiting Parallel Experiments in Bayesian Optimization, Comput. Chem. Eng., 2023, 170, 108110.",
+    "[raw_reference] S.-Y. Huang and X. Zou, Ensemble Docking of Multiple Protein Structures: Considering Protein Structural Variations in Molecular Docking, Proteins: Struct., Funct., Bioinf., 2007, 66, 399-421.",
+    "[raw_reference] H. Li, H. Zhang, M. Zheng, J. Luo, L. Kang, X. Liu, X. Wang and H. Jiang, An effective docking strategy for virtual screening based on multi-objective optimization algorithm, BMC Bioinf., 2009, 10, 58.",
+    "[raw_reference] D. R. Houston and M. D. Walkinshaw, Consensus Docking: Improving the Reliability of Docking in a Virtual Screening Context, J. Chem. Inf. Model., 2013, 53, 384-390.",
+    "[raw_reference] J. Gu, X. Yang, L. Kang, J. Wu and X. Wang, Modock: A Multi-Objective Strategy Improves the Accuracy for Molecular Docking, Algorithms Mol. Biol., 2015, 10, 8.",
+    "[raw_reference] M. Garc\u00eda-Orteg\u00f3n, G. N. C. Simm, A. J. Tripp, J. M. Hern\u00e1ndez-Lobato, A. Bender and S. Bacallado, DOCKSTRING: Easy Molecular Docking Yields Better Benchmarks for Ligand Design, J. Chem. Inf. Model., 2022, 62, 3486-3502.",
+    "[raw_reference] D. J. Watson, F. Loiseau, M. Ingallinesi, M. J. Millan, C. A. Marsden and K. C. Fone, Selective Blockade of Dopamine D3 Receptors Enhances while D2 Receptor Antagonism Impairs Social Novelty Discrimination and Novel Object Recognition in Rats: A Key Role for the Prefrontal Cortex, Neuropsychopharmacology, 2012, 37, 770-786.",
+    "[raw_reference] S. E. Williford, C. J. Libby, A. Ayokanmbi, A. Otamias, J. J. Gordillo, E. R. Gordon, S. J. Cooper, M. Redmann, Y. Li, C. Griguer, J. Zhang, M. Napierala, S. Ananthan and A. B. Hjelmeland, Novel Dopamine Receptor 3 Antagonists Inhibit the Growth of Primary and Temozolomide Resistant Glioblastoma Cells, PLoS ONE, 2021, 16, e0250649.",
+    "[raw_reference] A. Bonifazi, E. Saab, J. Sanchez, A. L. Nazarova, S. A. Zaidi, K. Jahan, V. Katritch, M. Canals, J. R. Lane and A. H. Newman, Pharmacological and Physicochemical Properties Optimization for Dual-Target Dopamine D3 (D3R) and m-Opioid (MOR) Receptor Ligands as Potentially Safer Analgesics, J. Med. Chem., 2023, 66(15), 10304-10341.",
+    "[raw_reference] J. S. Fridman, et al., Selective Inhibition of JAK1 and JAK2 Is Efficacious in Rodent Models of Arthritis: Preclinical Characterization of INCB028050, J. Immunol., 2010, 184, 5298-5307.",
+    "[raw_reference] Q. Liu, D. G. Batt, J. S. Lippy, N. Surti, A. J. Tebben, J. K. Muckelbauer, L. Chen, Y. An, C. Chang, M. Pokross, Z. Yang, H. Wang, J. R. Burke, P. H. Carter and J. A. Tino, Design and Synthesis of Carbazole Carboxamides as Promising Inhibitors of Bruton's Tyrosine Kinase (BTK) and Janus Kinase 2 (JAK2), Bioorg. Med. Chem. Lett., 2015, 25, 4265-4269.",
+    "[raw_reference] R. Li, A. Pourpak and S. W. Morris, Inhibition of the Insulin- like Growth Factor-1 Receptor (IGF1R) Tyrosine Kinase as a Novel Cancer Therapy Approach, J. Med. Chem., 2009, 52, 4981-5004.",
+    "[raw_reference] M. K. Pasha, I. Jabeen and S. Samarasinghe, 3D QSAR and Pharmacophore Studies on Inhibitors of Insuline Like Growth Factor 1 Receptor (IGF-1R) and Insulin Receptor (IR) as Potential Anti-Cancer Agents, Curr. Res. Chem. Biol., 2022, 2, 100019.",
+    "[raw_reference] U. Velaparthi, P. Liu, B. Balasubramanian, J. Carboni, R. Attar, M. Gottardis, A. Li, A. Greer, M. Zoeckler, M. D. Wittman and D. Vyas, Imidazole Moiety Replacements in the 3-(1H-Benzo[d]imidazol-2-Yl)pyridin- 2(1H)-One Inhibitors of Insulin-Like Growth Factor Receptor-1 (IGF-1R) to Improve Cytochrome P450 Pro\ue103le, Bioorg. Med. Chem. Lett., 2007, 17, 3072-3076.",
+    "[raw_reference] K. Zimmermann, et al., Balancing Oral Exposure with CYP3A4 Inhibition in Benzimidazole-Based IGF-IR Inhibitors, Bioorg. Med. Chem. Lett., 2008, 18, 4075-4080.",
+    "[raw_reference] J. H. Lin and A. Y. H. Lu, Inhibition and Induction of Cytochrome P450 and the Clinical Implications, Clin. Pharmacokinet., 1998, 35, 361-390.",
+    "[raw_reference] T. Lynch and A. Price, The Effect of Cytochrome P450 Metabolism on Drug Response, Interactions, and Adverse Effects, Am. Fam. Physician, 2007, 76, 391-396.",
+    "[raw_reference] F. Cheng, Y. Yu, Y. Zhou, Z. Shen, W. Xiao, G. Liu, W. Li, P. W. Lee and Y. Tang, Insights into Molecular Basis of Cytochrome P450 Inhibitory Promiscuity of Compounds, J. Chem. Inf. Model., 2011, 51, 2482-2495.",
+    "[raw_reference] K. Yang, K. Swanson, W. Jin, C. Coley, P. Eiden, H. Gao, A. Guzman-Perez, T. Hopper, B. Kelley, M. Mathea, A. Palmer, V. Settels, T. Jaakkola, K. Jensen and R. Barzilay, Analyzing Learned Molecular Representations for Property Prediction, J. Chem. Inf. Model., 2019, 59, 3370-3388.",
+    "[raw_reference] E. Heid, K. P. Greenman, Y. Chung, S.-C. Li, D. E. Graff, F. H. Vermeire, H. Wu, W. H. Green and C. J. McGill, Chemprop: A Machine Learning Package for Chemical Property Prediction, 2023, https://chemrxiv.org/engage/ chemrxiv/article-details/64d1f13d4a3f7d0c0dcd836b.",
+    "[raw_reference] B. J. Bender, S. Gahbauer, A. Luttens, J. Lyu, C. M. Webb, R. M. Stein, E. A. Fink, T. E. Balius, J. Carlsson, J. J. Irwin and B. K. Shoichet, A Practical Guide to Large-Scale Docking, Nat. Protoc., 2021, 16, 4799-4832. 100",
+    "[raw_reference] G. W. Bemis and M. A. Murcko, The Properties of Known Drugs. 1. Molecular Frameworks, J. Med. Chem., 1996, 39, 2887-2893. 101",
+    "[raw_reference] L. McInnes, J. Healy, N. Saul and L. Gro\u00dfberger, UMAP: Uniform Manifold Approximation and Projection (version 0.5.4), J. Open Source So\ue09dw., 2018, 3, 861. 102",
+    "[raw_reference] R. Tandon, et al., RBx10080307, a Dual EGFR/IGF-1R Inhibitor for Anticancer Therapy, Eur. J. Pharmacol., 2013, 711, 19-26. 103",
+    "[raw_reference] L. Hu, M. Fan, S. Shi, X. Song, F. Wang, H. He and B. Qi, Dual Target Inhibitors Based on EGFR: Promising Anticancer Agents for the Treatment of Cancers (2017-), Eur. J. Med. Chem., 2022, 227, 113963. 104",
+    "[raw_reference] J. Kang, Z. Guo, H. Zhang, R. Guo, X. Zhu and X. Guo, Dual Inhibition of EGFR and IGF-1R Signaling Leads to Enhanced Antitumor Efficacy against Esophageal Squamous Cancer, Int. J. Mol. Sci., 2022, 23, 10382. 105",
+    "[raw_reference] M. A. S. Abourehab, A. M. Alqahtani, B. G. M. Youssif and A. M. Gouda, Globally Approved EGFR Inhibitors: Insights into Their Syntheses, Target Kinases, Biological Activities, Receptor Interactions, and Metabolism, Molecules, 2021, 26, 6677. 106",
+    "[raw_reference] Y. Pan, N. Huang, S. Cho and A. D. MacKerell, Consideration of molecular weight during compound selection in virtual target-based database screening, J. Chem. Inf. Comput. Sci., 2003, 43, 267-272.",
+    "[raw_reference] A. Kirsch, J. van Amersfoort and Y. Gal, BatchBALD: Efficient and Diverse Batch Acquisition for Deep Bayesian Active Learning, Advances in Neural Information Processing Systems, 2019. 108",
+    "[raw_reference] D. J. Huggins, W. Sherman and B. Tidor, Rational Approaches to Improving Selectivity in Drug Design, J. Med. Chem., 2012, 55, 1424-1444. 109",
+    "RDKit",
+    "[raw_reference] T. Klabunde and A. Evers, GPCR Antitarget Modeling: Pharmacophore Models for Biogenic Amine Binding GPCRs to Avoid GPCR-Mediated Side Effects, ChemBioChem, 2005, 6, 876-889. 110 RDKit, Open-Source Cheminformatics So\ue09dware(version 2021.03.3), http://www.rdkit.org/. 111",
+    "[raw_reference] Y. Motoyama, R. Tamura, K. Yoshimi, K. Terayama, T. Ueno and K. Tsuda, Bayesian Optimization Package: PHYSBO, Comput. Phys. Commun., 2022, 278, 108405. 112",
+    "[raw_reference] I. Couckuyt, D. Deschrijver and T. Dhaene, Fast Calculation of Multiobjective Probability of Improvement and Expected Improvement Criteria for Pareto Optimization, J. Global Optim., 2014, 60, 575-594. 113",
+    "[raw_reference] F. Biscani and D. Izzo, A Parallel Global Multiobjective Framework for Optimization: Pagmo (version 2.19.5), J. Open Source So\ue09dw., 2020, 5, 2338. 114",
+    "[raw_reference] A. Paszke and et al., PyTorch: An Imperative Style, High- Performance Deep Learning Library (version 1.13.1), Advances in Neural Information Processing Systems, 2019. 115",
+    "ICNN'94",
+    "[raw_reference] D. Nix and A. Weigend, Estimating the Mean and Variance of the Target Probability Distribution, Proceedings of 1994 IEEE International Conference on Neural Networks, (ICNN'94), 1994, vol. 1, pp. 55-60. 116",
+    "[raw_reference] L. Hirschfeld, K. Swanson, K. Yang, R. Barzilay and C. W. Coley, Uncertainty Quanti\ue103cation Using Neural Networks for Molecular Property Prediction, J. Chem. Inf. Model., 2020, 60, 3770-3780.",
+    "[raw_reference] R. E. Carhart, D. H. Smith and R. Venkataraghavan, Atom Pairs as Molecular Features in Structure-Activity Studies: De\ue103nition and Applications, J. Chem. Inf. Comput. Sci., 1985, 25, 64-73. 118",
+    "[raw_reference] M. Awale and J.-L. Reymond, Atom Pair 2D-Fingerprints Perceive 3D-Molecular Shape and Pharmacophores for Very Fast Virtual Screening of ZINC and GDB-17, J. Chem. Inf. Model., 2014, 54, 1892-1907. 119",
+    "[raw_reference] N. M. O'Boyle and R. A. Sayle, Comparing structural \ue103ngerprints using a literature-based similarity benchmark, J. Cheminf., 2016, 8, 36. 120",
+    "[raw_reference] D. Sculley, Web-Scale k-Means Clustering, Proceedings of the 19th international conference on World wide web, Raleigh North Carolina USA, 2010, pp. 1177-1178. 121",
+    "[raw_reference] F. Pedregosa, et al., Scikit-learn: Machine Learning in Python (version 1.3.2), J. Mach. Learn. Res., 2011, 12, 2825-2830. 122",
+    "[raw_reference] R. Tanabe and H. Ishibuchi, An Analysis of Quality Indicators Using Approximated Optimal Distributions in a 3-D Objective Space, IEEE Trans. Evol. Comput., 2020, 24, 853-867.",
+    "IEEE High Performance extreme Computing Conference (HPEC)",
+    "[raw_reference] A. Reuther and et al., Interactive Supercomputing on 40,000 Cores for Machine Learning and Data Analysis, 2018 IEEE High Performance extreme Computing Conference (HPEC), 2018, pp. 1-6."
+  ],
+  "editors": [
+    "D R Witty",
+    "B Cox",
+    "S B Jakowlew",
+    "Y. C. Ho and S. K. Mitter",
+    "Y Tenne",
+    "C.-K Goh"
+  ],
+  "processing_software": {
+    "GROBID": "0.8.2"
+  },
+  "journal": "Digital Discovery",
+  "volume": "3",
+  "issue": "3",
+  "pages": "467-481",
+  "zotero_recovery": {
+    "fields_recovered": [
+      "journal"
+    ],
+    "timestamp": "2025-09-01T11:08:21.471465",
+    "zotero_item_type": "journalArticle"
+  }
+}

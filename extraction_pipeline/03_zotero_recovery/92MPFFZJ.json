@@ -1,0 +1,1449 @@
+{
+  "paper_id": "92MPFFZJ",
+  "title": "Recognizing Unintentional Touch on Interactive Tabletop",
+  "abstract": "A multi-touch interactive tabletop is designed to embody the benefits of a digital computer within the familiar surface of a physical tabletop. However, the nature of current multi-touch tabletops to detect and react to all forms of touch, including unintentional touches, impedes users from acting naturally on them. In our research, we leverage gaze direction, head orientation and screen contact data to identify and filter out unintentional touches, so that users can take full advantage of the physical properties of an interactive tabletop, e.g., resting hands or leaning on the tabletop during the interaction. To achieve this, we first conducted a user study to identify behavioral pattern differences (gaze, head and touch) between completing usual tasks on digital versus physical tabletops. We then compiled our findings into five types of spatiotemporal features, and train a machine learning model to recognize unintentional touches with an F1 score of 91.3%, outperforming the state-of-the-art model by 4.3%. Finally we evaluated our algorithm in a real-time filtering system. A user study shows that our algorithm is stable and the improved tabletop effectively screens out unintentional touches, and provide more relaxing and natural user experience. By linking their gaze and head behavior to their touch behavior, our work sheds light on the possibility of future tabletop technology to improve the understanding of users' input intention.",
+  "year": 2014,
+  "date": "2014",
+  "authors": [
+    {
+      "name": "Xuhai Xu",
+      "email": "xuhaixu@uw.edu"
+    },
+    {
+      "name": "Chun Yu",
+      "email": "chunyu@mail.tsinghua.edu.cn"
+    },
+    {
+      "name": "Yuntao Wang",
+      "email": "yuntaowang@mail.tsinghua.edu.cn"
+    },
+    {
+      "name": "Yuanchun Shi"
+    },
+    {
+      "affiliation": {
+        "organization": "Tsinghua University",
+        "institution": "Tsinghua University",
+        "address": "Search Results 30 Shuangqing Rd, 100084, Beijing Beijing"
+      }
+    },
+    {
+      "affiliation": {
+        "organization": "University of Washington",
+        "institution": "University of Washington",
+        "address": "1410 NE Campus Parkway, 98195, Seattle Chun Yu, WA"
+      }
+    }
+  ],
+  "doi": "10.1145/3381011",
+  "md5": "9C5640DE5DE653AEF879F1315DC51BC3",
+  "publication": {
+    "journal": "Proc. ACM Interact. Mob. Wearable Ubiquitous Technol",
+    "journal_inferred": true
+  },
+  "keywords": [
+    "CCS Concepts:",
+    "Human-centered computing Ubiquitous and mobile computing; Empirical studies in HCI Unintentional input",
+    "Interactive tabletop",
+    "Behavior pattern",
+    "Gaze and head"
+  ],
+  "funding": [
+    "",
+    "",
+    "",
+    "ACKNOWLEDGMENTS This work is supported by the  National Key Research and Development Plan  under Grant No.  2016YFB1001402 , the  Natural Science Foundation of China  under Grant No.  61521002 , No.  61672314 , and also by  Beijing Key Lab of Networked Multimedia . We thank  Tianheng Wang  for helping code development and  Gero Bergk  for the proof-reading."
+  ],
+  "sections": [
+    {
+      "title": "1. INTRODUCTION",
+      "text": "Nowadays, interactive tabletops are widely used in exhibition  [49] , education  [23, 27] , military  [4]  and emergency control  [6, 26] , etc. Such a tabletop is expected to combine the advantages of a physical table with a digital computer, by allowing users to directly touch the table's surface to issue input commands. A touchable and unmovable tabletop is distinguished from mobile touchable devices by providing benefits such as body support  [10] , large visual information display  [4, 26, 49]  and simultaneous multiperson collaboration  [3, 4] .\n\nAn interactive tabletop allows for tangible interaction, but not all contacts on the tabletop surface are intended to trigger a digital response. For example, when writing or drawing on the surface, a user may support her body, or rest her palms, wrists, and forearms on the surface to reduce fatigue  [2] . In such cases, an ideal tabletop system should have the intelligence to filter unintentional touches. We define unintentional touches as those touches that Fig.  1 . Intentional and unintentional touches on a tabletop. Face point is the intersection of the tabletop surface and the \"face ray\", which is emitted from the center of the face, in the forward direction. Gaze point is the midpoint of two interactions of the surface and \"gaze rays\", which are emitted from the center of two pupils respectively, in the gaze direction.\n\ndo not contribute to any interaction goal. Previous works also use accidental/unwanted touches  [32, 36] . In our paper, we use them interchangeably with the same definition as unintentional touches.\n\nHowever, currently, the issue of avoiding unintentional touch on tabletops has not been systematically studied in academia; a tabletop system usually recognizes any contact of a human body with the tabletop surface as a touch event. As a result, users tend to behave carefully and prudently on tabletops to avoid triggering unwanted touch events. For example, Annett et al.  [1]  found that users floated their hand over the screen when handling a stylus and drawing on a tablet to avoid accidental palm touches. In other words, it is hard for users to exhibit many of their natural behaviors on interactive tabletops, e.g., resting hands/arms on the surface, stretching arms/elbows to support the body, gesticulating tentatively during contemplation, etc. Users may get even more frustrated when committing unintentional touches disrupts their workflow, despite their effort to avoid them.\n\nIn literature, the issue of unintentional touches has been extensively studied  [9, 13, 37, 65] , but mostly on mobile devices such as phones and tablets  [2, 32, 36] . For instance, some research has looked into palm rejection on mobile devices during tasks such as note-taking and drawing  [2, 14, 52] . However, the interaction paradigm on a large-scale tabletop is different from that on a mobile device because of its physical size and lack of mobility. For example, users can hold and move the mobile phone or tablet when needed, but when interacting with a tabletop, users must move themselves. In our study involving two usual tasks on multi-touch tabletops, we found that on average, 17.1%/45.3% of touches are unintentional on an interactive/physical tabletop. The high frequency of unintentional touches on tabletops motivates our research.\n\nIn this research, we propose a novel approach that leverages the intrinsic relationships between the gaze and face behavior and contact behavior to recognize unintentional touches on interactive tabletops (Figure  1 ). This is inspired by the previous observation that face and gaze direction usually indicates where people's interest and attention lie  [59, 74] . Our work sheds light on the possibility of future tabletop technology to better understand users and their input intention by incorporating the information conveyed by their gaze and head behavior.\n\nThis research has three phases, each contributing to answer one of the three research questions.\n\n(1) RQ1) What are the differences between users' gaze, head, and touch behavior patterns on a digital interactive tabletop and those on a physical tabletop? We conduct a user study to empirically investigate and compare users' gaze, head, and touch behavior on a digital interactive tabletop versus on a physical tabletop, for completing two usual tasks (map navigation and photo categorization). We identify significant differences in terms of the number of unintentional touches, as well as coordination patterns of gaze and head between the two modalities. (2) RQ2) How to filter out unintentional touches on a digital tabletop to allow relaxing postures on the surface?\n\nWe propose a set of features according to the spatiotemporal characteristics of gaze, head and touch data.\n\nBased on these features, we train and compare several machine learning models to recognize unintentional touches. The performance of the best Gradient Boosting model (0.914, 0.913 and 0.913 on average precision, recall, and F1 score, respectively) significantly outperforms baseline models.\n\n(3) RQ3) What is the stability of the algorithm and the usability of the new interactive tabletop? We implement a system that can recognize and filter unintentional touches on an interactive tabletop in real-time. A user study validates the stability of our algorithm (F1 score equals 90.6%), and shows that our new system can effectively screen out unintentional touches, and provide more natural and relaxing user experience."
+    },
+    {
+      "title": "2. BACKGROUND",
+      "text": "We review related work on addressing unintentional touches on mobile devices, how the face/gaze direction indicates a human's intention, and how to use gaze to facilitate touch during interactions. In addition, we also review another body of related work that leverages unintentional touches as an alternative type of input method."
+    },
+    {
+      "title": "2.1. Recognizing Unintentional Touch on Interactive Devices",
+      "text": "Several works have been conducted to recognize unintentional input on small-scale touchscreen devices. Matero and Colley  [36]  tried to classify accidental touch events on mobile phones in daily usage. They investigated numerous typical operations on mobile devices (e.g., sweeping on the screen, device handling and phone calls) and proposed a rule-based classification algorithm according to the contact area and touch duration. Their best algorithm can eliminate 79.6% of unintentional touches with a 0.8% false-positive rate. Lu and Li  [32]  analyzed accidental touches during the standby mode of mobile phones. They compared intentional touch gestures and unintentional touches on a turned-off screen, e.g., putting the device in a pocket. They used a number of touch spatiotemporal features such as duration, touch area trajectory, pressure level on the screen, and acceleration deviation from the motion sensor to classify whether a touch on a turned-off screen was accidental. Their final decision tree model achieved 98.2% on precision and 97.6% on recall.\n\nAnother big family of touch-based devices are tablets. Annett et al.  [1]  compared the unintended touches that occurred when using a stylus on digital versus media. They found that users maintained some unnatural and tiring postures on the digital tablets to avoid unintentional touches caused by their palms, e.g., floating their hands over the screen. They further investigated different algorithms to remove accidental touches on stylusbased tablets  [2] . Their best algorithm used the distance between the screen and the stylus as the threshold and achieved approximately 86% accuracy for the classification. Julia Schwarz et al.  [52]  focused on unwanted interaction triggered by palms on tablets. They used similar spatiotemporal features in  [32]  to distinguish palm touches from stylus input. Their decision forest model achieved a precision of 97.9% and 0.016 errors/stroke.\n\nTo our knowledge, previous works on recognizing unintentional touch were performed on mobile phones and tablets. However, tabletops can accommodate distinct interaction activities. Beyond that, they are more prone to unintentional touches due to their increased surface area and a wider range of possible inputs. For instance, users can easily lean on the tabletop or put an arm on the surface to support themselves. These actions would be far less common when interacting with smartphones or tablets. Although the interactions on tablets have some overlap with those of tabletops, previous works focus on the distinction between the stylus and accidental finger/palm touches. This relieves the technical difficulty, because the stylus has unique properties such as small static touch area, as pointed out in  [52] . The difference on the interface will also lead to the difference in features such as touch trajectories  [40] . In this research, we address the gap by investigating unintentional touches on digital tabletops."
+    },
+    {
+      "title": "2.2. Gaze and Face for Interaction and Intention",
+      "text": "People primarily direct their gaze towards regions of interest  [17, 20, 25, 56, 59, 68, 69, 71, 72, 74] . Several works evaluated the coordination patterns of mouse cursor and gaze during daily interaction on PCs. Huang et al.  [19]  investigated the behavioral patterns of gaze and mouse cursor during web searches. They found that while users' gaze-cursor alignment varied a lot, users lagged their cursor behind their gaze by at least 250 ms and on average 700 ms. Liebling and Dumais  [30]  looked into users' daily work on PC in the wild. In contrast to the previous findings, they suggested that the gaze leads mouse only in two-thirds of the time. However, the results in  [30]  still supported the consistency between the cursor and gaze during intentional interactions.\n\nThe consistency between gaze and intention inspired a number of new interaction techniques. Jacob  [20]  proposed several novel interaction methods using eye gaze as the independent channel, e.g., object selection on a PC screen. Since then, many gaze-enhanced input approaches have been proposed. Researchers have tried to facilitate pointing/touch interaction with the gaze. For example, Zhai et al.  [76]  proposed MAGIC pointing, which used gaze for object suggestions on screens and hand-control for confirmation. Stellmach et al.  [58]  designed a gaze-supported selection method for distant display. They used gaze for selection and hand gestures on a handheld device for manipulation. Sidenmark et al.  [54]  leveraged the coordination of gaze and head to acquire gaze targets in virtual reality. Turner et al.  [62]  extended the idea with more gaze-touch combination patterns, such as performing RST (rotate, scale, translate) by touch on the trajectory suggested by gaze. Voelker et al.  [64]  developed an indirect input system, where a user touched on a horizontal surface and looked at a vertical screen. Both Turner et al.  [63]  and Mauderer et al.  [39]  suggested selecting out-of-reach objects through combination of far gaze and close touch on a tabletop. Pfeuffer et al.  [43, 45]  proposed several scenarios on a tablet screen, using gaze for object selection or button selection and using touch for RST. Sidenmark et al.  [55]  utilized eye-hand coordination patterns on interacted objects for eye-tracking calibration in the virtual reality setting. All these works employed gaze as a viable input channel, showing that gaze could play a significant role in enhancing interaction across mobile devices such as tablets and phones or non-mobile devices such as tabletops.\n\nHowever, these works mainly employed gaze as an active channel during interactions. Fewer works discussed using gaze as a cue for human intention. Schwarz and her colleagues  [51]  used the gaze and body direction to determine whether the user was engaged in a Kinect game. Mariakakis et al.  [34]  detected users' gaze to determine whether they were focusing on their phones. Pfeuffer et al.  [44]  proposed a mechanism to switch between direct and indirect input mode based on the alignment of the input area and the user's visual attention. Compared to gaze direction, a relatively lower-cost alternative is to use facial orientation, which also proves to be a powerful proxy for attention. Hollands et al.  [18]  suggested that in approximately 70 percent of scenarios, the gaze direction and face direction are the same. Liao  [29]  used facial direction as one of the clues to determine a user's most interested picture in a photo collection. Maglio et al.  [33]  built a system that used face direction to determine where the user intends to interact with the environment. All these works indicate that eye gaze and head pose can be used to predict regions of interest. To the best of our knowledge, this is the first work evaluating the performance using gaze and face features for recognizing the unintentional inputs on touchscreens."
+    },
+    {
+      "title": "2.3. Leveraging Unintentional Touches as Intentional Input Methods",
+      "text": "Our goal is to remove unwanted effects of unintentional touches on tabletops. However, some literature interprets the nature of these touches differently: instead of \"ignoring\" unintentional interactions on tabletops, they tried to \"use\" those interactions. For example, Koura et al.  [24]  proposed to use the forearm, which was usually considered problematic (e.g., incorrect recognition and occlusions), as a new interaction technique for menu manipulation and data storage. Le et al.  [28]  proposed to interpret leaning into a new class of gestures to enhance interaction. Matulic et al.  [38]  extended hand interactions from fingertips to the whole hand in hand-shape based interaction. Zhang et al.  [77]  proposed to leverage various hand postures such as using the palm to augment pen and touch interactions. These works provide another perspective to deal with unintentional touches. However, any interaction technique requires additional attention from users. These works do not solve users' concerns about accidentally creating unwanted interaction. Recently, Serim and Jacucci had an interesting discussion on the distinct definition of explicit vs. implicit interaction, and identified new considerations for design and evaluation of implicit interaction  [53] . Similarly, our work tries to obviate the concerns about accidental actions and enable users to operate on tabletops freely.\n\nIn the rest of the paper, we try to answer the three research questions one by one. We begin by answering RQ1 via Study 1."
+    },
+    {
+      "title": "3. STUDY 1: INTERACTION BEHAVIOR ON TABLETOPS",
+      "text": "We conducted Study 1 to obtain empirical knowledge on how frequently unintentional touches occurred while completing common daily tasks on tabletops. We also wanted to investigate the differences among touch behaviors on the two types of tabletops: digital tabletops equipped with multi-touch interactive touch screens versus physical tabletops with unresponsive surfaces. Measuring the difference helped us understand how users changed their interaction behaviors when using touch-sensitive technology. In addition, the data collected from in this study was leveraged to train classification models to recognize and filter unintentional touches."
+    },
+    {
+      "title": "3.1. Participants",
+      "text": "We recruited 12 participants (8 males, 4 females, Age = 23.2 \u00b1 1.47) from a local university through email. All participants had at least four years of experience with touchscreen devices such as smartphones and tablets, and used mobile phones on a daily basis. None of them had used an interactive large-scale tabletop before."
+    },
+    {
+      "title": "3.2. Apparatus",
+      "text": "Figure  2  illustrates the apparatus used in this study. We used a customized interactive tabletop as the experimental platform. The size of the system was 250 cm \u00d7 160 cm \u00d7 80 cm, with a 220cm \u00d7 135cm screen at the center of the table surface, powered by a built-in computer with Windows 10 OS. Its capacitive screen was realized via an iPCT transparent touch foil  [75]  that could sense up to 20 touch events simultaneously at 100Hz, recording the timestamp, location and state (touch down/up/move) of each touch point. Here we defined a touch event as a detected touch point from being put down to lifted up. Note that the system did not provide contact area information. A wide touch area registered as multiple simultaneous touch events. Therefore, if a palm was put on the surface unintentionally, there would be a group of unintentional touch events. Moreover, it did not have any pre-filtering algorithm and registered all touch events, which served as a good platform for answering our research questions.\n\nAdditionally, we used a head-mounted gaze tracker, Binocular 120Hz Pupillab Eye-tracker  [21]  to track users' gaze direction relative to the gaze tracker. The Pupillab was calibrated with its marker system for each participant.\n\nWe employed an Optitrack system with 12 cameras  [46]  to capture the 3D location and angle of the gaze tracker at 120 Hz. The direction of the gaze trackers indicated the head pose and face direction. It could then be used to calculate the face/gaze fixation points. The fixation position on the tabletop where a user was facing/looking at was computed in real-time in Unity 5.5.4. Figure  1  shows the definition and the calculation of the face point and gaze point. We tested the eye-tracking on two authors with 9 markers (3 \u00d7 3, aspect ratio, for all regions of the screen) on the table, with an average gaze angle of 25 \u00b0and an average vision distance of 50 cm. The (a) Digital, Stand, Map Task (b) Physical, Sit, Photo Task Fig. 3. Experiment Setting Examples tracking accuracy is 2.39 \u00b1 1.48 \u00b0and the precision is 1.97 \u00b1 1.05 \u00b0. The tabletop, Pupillab, and Optitrack were three separate systems. All data collected by different devices were synchronized using timestamps in Unity."
+    },
+    {
+      "title": "3.3. Design",
+      "text": "We used a two-factor within-subject design. The two independent variables are the type of the tabletop (digital vs. physical) and the user posture (sitting vs. standing, initially in the middle of the bottom edge of the tabletop).\n\nThe presentation order of the conditions is counterbalanced using a Latin Square design."
+    },
+    {
+      "title": "3.3.1. Tasks.",
+      "text": "We experimented with two typical tasks on tabletops: map navigation  [4, 5]  and photo categorization  [31, 60] . These two tasks were commonly used to investigate interactions in previous research. They involve the most common interactions on the surface, such as tapping, dragging, zooming, rotating, etc.\n\nIn the map navigation task, a mid-sized city map is shown on the tabletop, initially at the same size as the screen and centered. None of the participants were familiar with the city. Two subtasks needed to be finished under each condition. In the first subtask, participants were asked to find three landmarks on the map, after which they were instructed to draw a route connecting them. In the second subtask, participants needed to find two landmarks and design a subway route from one to the other. There were several candidate routes, and the subtask could be completely by sketching out any one of them. To avoid memory effect, the details of the subtasks (e.g., the landmarks) between the digital and physical tabletops were different. But the tasks are kept the same among all participants to maintain the difficulty level.\n\nIn the photo categorization task, 40 fixed-size photos (standard A5 size, 148 x 210 mm) were displayed on the surface. These photos belonged to four different groups such as forest, snowfield, beach, and house. 10 samples from each category were randomly scattered on the table in a reachable region. Participants were required to sort them into four piles by category. We prepared 16 different categories to avoid the learning effect."
+    },
+    {
+      "title": "3.3.2. Setup of The Digital Tabletop.",
+      "text": "For the interactive tabletop, the operations in the map navigation task included 1) moving and zooming the map in the dragging mode, with at least one touch point for moving and at least two touch points for zooming in/out; 2) drawing lines/markers on the map in the drawing mode, where a marker would appear with a tap and a line would be drawn following a finger's movement; 3) erasing lines in the clearing mode, where any line crossed by a finger trajectory would be removed. Participants could press a button to switch between the modes.\n\nThe operations in the photo categorization task were simple. The photos could be moved by at least one finger dragging and rotated by at least two fingers rotating. The photos were not zoomable."
+    },
+    {
+      "title": "3.3.3. Setup of The Physical Tabletop.",
+      "text": "We set up the physical interface on the same interactive tabletop (Figure  2b ), on which we disabled all touch responses and displayed a pure black wallpaper to serve as a plain physical table. All electronic elements on the digital tabletop were substituted with paper materials. We verified the robustness of the capacitive touchscreen of our interactive tabletop to sense touch through papers. Therefore, all touch behaviors on the physical tabletop could also be recorded.\n\nFor the map navigation task, we placed a paper map with identical size (before zooming) and color on top of the surface. Participants were asked to finish the same two sub-tasks as described. They needed to move fingers along the route for the route drawing task. For the photo categorization task, we placed 40 printed photos of the same size as the digital photos on the tabletop. To retain consistency with the digital tabletop, participants were free to move the paper map and photos on the desktop but not allowed to pick them up from the surface."
+    },
+    {
+      "title": "3.4. Procedures",
+      "text": "Participants first signed the consent form. Before the experiment, we notified the participants to act naturally and not to worry about the task performance. The only requirement was to finish each task in 10 minutes. Participants first put on the Pupillab device and went through the calibration procedure. They were given 3 minutes to familiarize themselves with the interactions on the tabletop. After that, they performed the aforementioned tasks under different conditions. On average a map navigation task took about 5 minutes and a photo categorization task took roughly 3 minutes. The full experiment with four conditions, two digital and two physical, lasted approximately 30 minutes. After the experiment, we briefly interviewed each participant about their subjective feelings during the tasks, especially on the perceived difference between the digital and the physical tabletops. Finally, participants were thanked and dismissed. Each participant was offered $10 as compensation."
+    },
+    {
+      "title": "3.5. Data Collection and Annotation",
+      "text": "During the experiment, participants' direction of face and gaze (as described in Section 3.2), face/gaze points (Figure  1 ) and touch points were recorded for each frame. On average, about 100,000 data points were collected per participant. Furthermore, we recorded the table screen and videotaped their behavior throughout the experiment. After data collection, we smoothed and resampled the gaze trajectory using Stampe's two-stage filter  [57]  and two sample weighted average  [30] .\n\nWe collected a total of 1,228,250 frames and 27,384 touch events from twelve participants. Each touch event had 97.1 frames of data (SD = 211.9) on average. Two authors independently annotated every touch event (intentional or not) throughout the data using a simple self-developed tool, which visualized and replayed the participants' behavior (see Figure  4 ). Cohen's Kappa inter-rater reliability equaled 0.73. Conflicts were solved by a collective review of the two authors."
+    },
+    {
+      "title": "3.6. Results",
+      "text": "Participants spent similar amounts of time on digital and physical tables to finish the tasks (t 11 = -0.19, p = 0.85). Overall, we discovered a large proportion of unintentional touches: 17.1 (SD = 13.0) / 45.3 (SD = 10.5) percent of touches were unintentional on an interactive/physical tabletop. We observed interesting differences between the two types of tabletops, in terms of behavior patterns (Section 3.6.1), number of unintentional touches (Section 3.6.2), and mental models (Section 3.6.3). We summarize these differences one by one."
+    },
+    {
+      "title": "3.6.1. Different Behavior Patterns on Physical and Digital",
+      "text": "Tabletops. We found remarkable differences in touch behavior between the digital and the physical tabletops. Figure  5  depicts the typical behavior patterns on these two forms of tabletop. The specific difference is summarized in Table  1 . Although participants were instructed to behave as natural as possible, they tended to be quite cautious on the digital tabletop, which is similar to the findings on tablets  [1] . 8 out of 12 participants mentioned \"careful\" or \"safe\" during the interview. \"It always came to my mind that I need to be careful with the screen, otherwise I will trigger unwanted touch events\" (P2). \"I soon got to float my hands above the surface. That's safe\" (P10). Therefore, only a small number of unintentional (a) Patterns on Digital Table (b) Patterns on Physical Table Fig. 5. Typical Behavioral Patterns on the Two Tabletops\n\nTable  1 . Summary of the behavior difference between the digital and physical tabletop."
+    },
+    {
+      "title": "Digital Tabletop Physical Tabletop",
+      "text": "Intentional Touch\n\n\u2022 Users are cautious, with arms floating over the surface.\n\n\u2022 Mostly one or two fingers are used for interaction.\n\n\u2022 Other parts of hand/arm (except the finger involved in interactions) stay far away from the screen. \u2022 The unused hand rest on the edge of the tabletop.\n\n\u2022 Usually gaze leads or stays in line with the touch.\n\n\u2022 Users are casual, with arms often resting on the surface.\n\n\u2022 Mostly two or three fingers are used for interaction.\n\n\u2022 Other parts of hand/arm (except the finger involved in interactions) lay on the tabletop surface. \u2022 The unused hand rest on the surface casually.\n\n\u2022 Gaze mostly stays in line with touch."
+    },
+    {
+      "title": "Unintentional Touch",
+      "text": "\u2022 Touches are less frequent than those on the physical tabletop due to the carefulness. \u2022 Edge accidental touches are inevitable and usually triggered by the palm/elbow resting on the edge. \u2022 Usually touches are relatively far from the area of the participants' attention.\n\n\u2022 Many touches are static and ephemeral.\n\n\u2022 Gaze does not stay in line with touches.\n\n\u2022 Touches are very common and appear with intentional touches simultaneously. \u2022 Many touches are triggered by the hand/arm resting on the surface (no matter the hand is being used or not). \u2022 Usually touches gather together if triggered by the hand that is being used, and are far from the attentive area if they are triggered by the hand that is not being used. \u2022 Touches are more dynamic and long-lasting than those on the digital tabletop. \u2022 Gaze does not stay in line with touches.\n\ntouch events were recorded on the digital surface. In most cases, participants used only one or two fingers to operate, keeping the rest of their hands and arms far from the surface. In contrast, on the physical table, users were more relaxed. They naturally rested their arms on the surface. \"I did the same as what I will do with my wooden desk\" (P2). When users pointed at the target (usually with two or three fingers), other fingers or even the palm were often put on the tabletop casually (see Figure  3b ). These touches were unwanted but very common on the physical table."
+    },
+    {
+      "title": "3.6.2. More Unintentional Touches When Operating with",
+      "text": "The Physical Tabletop. We first ran two-way ANOVAs (table type \u00d7 posture) according to the experiment design on the number of intentional touches and unintentional touches separately. Neither table type nor posture had a significant effect on the number of intentional touches (F t abl e (1, 11) = 0.826, p = 0.38, F postur e (1, 11) = 0.13, p = 0.73). The effect of the two main factors' interaction was also not significant (F t abl e\u00d7postur e (1, 11) = 2.67, p = 0.13). As for the number of unintentional touches, the results indicated significance on both main factors and their interaction (F t abl e (1, 11) = 45.16, p < 0.01, F postur e (1, 11) = 14.13, p < 0.01, F t abl e\u00d7postur e (1, 11) = 29.54, p < 0.01). More unintentional touches were observed on the physical tabletop and in the sitting posture.\n\nThe posture factor was designed to incorporate a variety of different behavior patterns on the tabletop. We hence combine the data of the standing and sitting postures. In Figure  6 , the boxplot shows the 12 participants' average number of the intentional/unintentional touches on the digital/physical table respectively. We ran two paired t-tests to compare the number of intentional and unintentional touches between two tabletops. The results do not show significance of tabletop types on the number of intentional touches (t 11 = -0.73, p = 0.48), but revealed significance on unintentional touches (t 11 = -5.86, p < 0.01). Similar numbers of intentional touches were triggered on two tabletops, but more unintentional touch events appeared on the physical tabletop than the digital tabletop. In addition, we found an interesting case where two participants exhibited noteceably higher numbers of unintentional touches on the digital tabletop. From the video, the two participants made attempts to \"imitate\" operations on the physical table by placing their palm on the surface, according to their understanding of \"being natural\". This also reflects the difference in behavior patterns between the digital and physical settings."
+    },
+    {
+      "title": "3.6.3. Different Mental Models Towards Two Types of Interface.",
+      "text": "The interview results are also interesting: although participants behaved quite differently on two surfaces, they did not mind the differences: it was natural to be careful on the digital screen and casual on the physical surface. Almost all users (11 out of 12) expressed that they would feel uncomfortable if they were asked to interact with the touch screen in the same way as the plain table. \"I never touch screens\u2026in the way on ordinary tables, otherwise, it will annoy me with a lot of unwanted triggers!\" (P1). \"It does sometimes make me tired, but compared to unwanted triggers, I'd rather be careful\" (P11). One of the two outliers said \"Although I tried to operate naturally on the digital screen, I cannot resist the temptation to raise my hands. It is an awkward experience\u2026\" (P7). We speculate this phenomenon is caused by different mental models towards digital and physical tables. Users are accustomed to use digital screens more cautiously. In order to avoid triggering unwanted touch events, they are willing to pay more attention to their actions."
+    },
+    {
+      "title": "4. TOUCH INTENTION IDENTIFICATION",
+      "text": "Our goal was to build an intelligent tabletop that allows users to operate on an interactive tabletop in a similar manner as on a physical table. To answer RQ2, we extracted features from user behavior data and trained a binary classifier. We blended the data of two tabletops, only focusing on whether the touches were intentional or not. The analysis of the behavior patterns (Table  1 ) provided insights for feature extraction, which shed light on the features that were useful for classification. Specifically, the difference between intentional and unintentional touches is summarized as follows:\n\n\u2022 The majority of the gaze is in line with intentional touches, but not with unintentional ones (Gaze/Face Distance) \u2022 A large number of unintentional touches are more static, ephemeral and closer to the edge compared to intentional ones (Side Distance) \u2022 Intentional touches usually involve one to three fingers while unintentional ones often appear in groups (Clustering) \u2022 Historical behavior affects current touches. E.g., sometimes gaze leads intentional touches shortly, the unintentional touches clustering area often spawn more unintentional touches subsequently (History)\n\nWe randomly split our dataset into an optimization set (30%) for feature analysis, and a traintest set (70%) for model training and testing. In Section 4.1, we introduce the features extracted from the gaze, face and touch data (as summarized in Table  2 ). We present an overview of these features through descriptive statistics, using data from the optimization set. Note that we purposefully only extract features that are compatible with real-time system implementations. Other features, e.g., the lifetime of a touch event, are not included in our analysis."
+    },
+    {
+      "title": "4.1. Feature Definition",
+      "text": "4.1.1 Gaze/Face Distance. Within each frame, the distance between each touch point and face/gaze point (defined in Figure  1 ) is named as face/gaze distance. The distribution of distances of four categories (intentional/unintentional \u00d7 digital/physical) is shown in Figure  7 . In comparison with unintentional touches, intentional touches have smaller gaze/face distance in both digital and physical conditions. Compared with Figure  7b , Figure  7a  has a more pronounced difference between intentional and unintentional touches. This indicates that the gaze point stays more in line with touches than the face point.\n\nFigure  8a  shows a heatmap of touch locations. Intentional touches are distributed in the center of the surface while the majority of unintentional touches are scattered near the bottom edge. Side distance is defined as the perpendicular distance of a touch point to the nearest screen edge. The near-margin property of unintentional touches on both tabletops is salient (Figure  8b )."
+    },
+    {
+      "title": "4.1.2. Clustering.",
+      "text": "We observed obvious spatial clusters of touch points during the study, especially on the physical table. This may be explained by users' casualness: users would usually rest their hand or even their arm on the table, which triggered a wide contacting region. Owing to the hardware properties of the customized tabletop, the system recognized a large contacting region as a group of separate touch points rather than a continuous area. A dynamic distance matrix was created. Each row and column represents a touch point at the frame. Touch (a) Heatmaps of touches (b) Side Distance/cm distance, the mean of the element of the matrix, is the distance between two touch points. Number of adjacent touches of each touch point is defined as the count of other touches whose distance to this touch point is smaller than some particular threshold. Figure  9  suggests apparent clustering of unintentional touches on both tabletops: most intentional touches have zero or one adjacent touch point, while the majority of unintentional touches have at least three adjacent touch points. Several distance thresholds were tested (Figure  9  only shows two examples).\n\nCompared to a 10 cm threshold (see Figure  9a ) and other values, the threshold of 20 cm appeared to have the strongest splitting power between intentional and unintentional touches (see Figure  9b ). Hence, the clustered threshold is set to 20 cm, which is approximately the width of a stretched palm."
+    },
+    {
+      "title": "4.1.3. History.",
+      "text": "As found by previous literature, the gaze leads hands in many cases  [19, 30] . This indicates that the position of current intentional touches may be close to previous gaze points. Moreover, we observe the phenomenon of clustering not only on the spatial dimension but also on the temporal dimension: if a location is clustered with a group of touches, a new touch will be more likely to appear within or near the clustering area shortly afterward, especially when users are unaware of the touches. Hence a historical time window may carry useful information. 700 ms is selected as the width of the window according to  [19] , counted backward from the down time of a touch event. Historical gaze/face distance represents the distance between the current touch point and previous gaze/face points in the window. Historical touch distance and historical number of adjacent touches can be similarly obtained based on the distance between the current touch point and previous ones. Figure  10  shows the historical gaze/face distance. It is similar to Figure  7  but with a higher degree of separation. We categorized all features into four different groups based on their characteristics (see Table  2 ). Some features appear more than once because they belong to different types simultaneously. Then we trained machine learning models based on these features."
+    },
+    {
+      "title": "4.2. Model Comparison and Feature Comparison",
+      "text": "To obtain the best binary classifier for unintentional touch identification, we compared different machine learning models using our features in Section 4.2.1. After obtaining the best model, we compared it with other baseline models in Section 4.2.2. In addition, we also conducted a feature ablation study in Section 4.2.3 to investigate the relative importance among different feature types."
+    },
+    {
+      "title": "4.2.1. Model Selection.",
+      "text": "A good classifier is capable of identifying intentional touches and therefore filtering unintentional ones. Yet more significantly, the effect of each type of feature in the model is also worthy of exploration. This indicates the importance of features during classification, which can provide insights into human behavior patterns.\n\nSix machine learning models were compared on the traintest set, including LR (Logistic Regression), NB (Na\u00efve Bayes), KNN (K-Nearest Neighbor), RF (Random Forest), GB (Gradient Boosting)  [11] , and MLP (Multi-Layer Perceptron). The first three models are typical approaches to classification problems. Both Random Forest and Gradient Boosting employ decision trees as weak classifiers. They are suitable for feature selection  [7] . MLP also proves to be a suitable model for complex problems where the relative importance of features is unknown  [12] . Every person's behavioral pattern has consistency, thus merging all users' data for training will lead to information leaks, which makes the classification naive and impractical. Therefore, we trained models using the leave-one-user-out method, where the models were trained on the data of 11 participants and tested on the remaining one. This can better measure the model's generalizability. The tuning of the hyperparameters of each model was conducted within the leave-one-user-out set using an inner five-fold cross-validation loop. After the best parameters were chosen, the ignored user's data was used for testing. Final metrics (precision, recall and F1 score) were the average of 12 models (same as the number of participants). Table  3  summarizes the testing result of all models. We chose the GB model for our later analysis since this model significantly outperformed than other models."
+    },
+    {
+      "title": "4.2.2. Baseline Model Comparison.",
+      "text": "We further compared our best model with two baseline models:\n\n(1) A naive threshold-based model using gaze distance. The threshold was determined from the optimization set as 23.9cm which maximizes the split of the two types of touches. (2) A modified version of the state-of-the-art decision-tree model from  [52] . Although this model is intended for distinguishing palm touches from stylus input, many features are transferable to our system. We implemented the instant version for a fair comparison. The features include touch distance, touch points travelling speed and acceleration. As our tabletop does not provide touch area information, we omitted this feature type. Table 4. Results of Baseline Comparison. A paired t-test on the cross-validation F1 scores between the full GB and the Palm rejection model shows significance p < 0.01."
+    },
+    {
+      "title": "Models",
+      "text": "Prec Rec F1 Gaze-threshold-based 0.794 \u00b1 0.026 0.791 \u00b1 0.047 0.793 \u00b1 0.033\n\nPalm rejection  [52]  0.873 \u00b1 0.057 0.869 \u00b1 0.021 0.870 \u00b1 0.032 Full GB 0.914 \u00b1 0.020 0.913 \u00b1 0.026 0.913 \u00b1 0.014 Table  4  summarizes the results on the test set. Our model significantly outperforms baseline 1 by 12.0% and baseline 2 by 4.3% on the average F1 score. The big gap between the result of the reimplemented model from  [52]  and that of the original paper can be caused by a few reasons. The interaction paradigms on tabletops are different from tablets. The features of a stylus's input in  [52]  can be very different from a finger's input. [52]  considers palm as the major source of unintentional touches, while in our case other parts of the hand and the arm were also a source. For example, Figure  5a  shows that the thumb can often trigger unwanted touches."
+    },
+    {
+      "title": "4.2.3. Feature Ablation",
+      "text": "Comparison. We enhanced our findings through a feature ablation study to investigate the effect of gaze and face features, i.e., removing certain feature types and observing the performance decrease of the model.\n\nThe removal of the gaze features, including any features that involved gaze information, both in Gaze and History feature types, led to a significant drop in the model performance. This emphasized the importance of gaze-based features, which is a reflection of previous research concluding that people tend to look at the place where they have interest  [17, 74] . Our results further reveal its positive effect in classification and show that Gaze is a strong clue that conveys human intention. These findings are consistent with previous studies on human gaze-attention correlation  [17, 20, 25, 59] . The intuition of \"where we look is where we have interests, therefore where we touch\" is validated again by our study in the context of tabletop interaction.\n\nSurprisingly, compared to Gaze, the removal of Face did not cause much decrease in the performance. Compared to the model with gaze features ablated, the model with all gaze and face features removed just decreased by 0.009 on the F1 score. These results suggest that Face may not be an appropriate alternative for Gaze. This indicates that there will be a significant drop in classification performance by substituting gaze tracking with a lower-cost head tracking. This may be explained by the lack of head-gaze consistency during the interaction on the large-scale surface.\n\nTo further understand the consistency, we investigated the included angle between the face ray and gaze ray during the experiment. Figure  11  shows the heatmaps of the average included angle between the two rays throughout the Study 1. The angle is calculated frame by frame and takes the face point as the position of the  value. Two heatmaps of the sitting and standing postures share similar patterns. Users' gaze direction has a greater deviation from their face direction in the main working area. The figure of standing posture has a wider red region than that of sitting because of the larger movement space for the upper limbs during the standing posture. The heatmaps indicate that when people are focusing on tasks within their reaching range, they may have more gaze movement rather than head movement. The gaze direction greatly deviates from the normal direction of the face -users do not always stare strictly forward, but often move their eyes around, especially when they are operating on the surface close to them."
+    },
+    {
+      "title": "4.3. Misclassification Analysis",
+      "text": "We thoroughly investigated the misclassified samples during training and testing. This can equip us with more insights about the similarities between intentional and unintentional touches that fool our algorithm.\n\nClose inspection shows that some unintentional touches have almost the same values on most features as some intentional ones or vice versa. Table  6  summarizes the relatively frequent patterns of wrongly classified samples in the GB full model. These samples indicate the shortage of the model. The reasons may lie in the fact that some features that hide deep beneath the data are not extracted effectively, or even some patterns that can not be captured by the current feature set.\n\nThe comparison between the GB model with human annotation can reveal some information that is not observable from the data. The videotape allowed the authors to obtain the context information of operations with two additional dimensions, both historical and future, either task-specific or person-specific. These two dimensions can further provide insights into the misclassification issue. For instance, \"The participant just found the start place on the map. So in the next step, he needed to find the destination, so he was searching at that time. \" (Author 1, historical and task-specific). \"Several seconds after this touch, he switched his attention to another place far from the current position. Then he got excited since he found the target, which was quite different from his current state. \" (Author 2, future and user-specific). These messages cannot be reflected in the data from the tabletop or eye tracker because both future and task-specific information are missing. This indicates the limitation of just leveraging gaze and touch information. The task information and emotional state (e.g., getting excited) can be two promising candidate features that worth further exploration to achieve better classification performance."
+    },
+    {
+      "title": "5. STUDY 2: USABILITY STUDY",
+      "text": "To answer RQ3 regarding the viability of the algorithm, we implemented a real-time filtering system by integrating the GB model with the tabletop. This tabletop provided a new experience to users. How well does the algorithm perform in real-time? Will users accept it? Will they feel the benefit? In Study 2 we answer these questions by testing the system's usability and effectiveness. (c) Touch Close to The Bottom Edge: Touches near the bottom edge of the tabletop. This may be biased by the large number of unintentional touches that appear near the edge of the tabletop.\n\n(d) Two-hand Close Cooperation: Close hands cooperation with many simultaneous touches. Touches may be misclassified because of small touch distances.\n\n(e) Two Touches with Gaze Shifting: Two touch points are far from each other, with gaze switching focus between them. The possible reason of misclassification is large gaze distance when the gaze moves away from one touch point to another.\n\n(f) Resting Hand with Gaze Passing by: Fingers resting on the surface with unconsciously close gaze point when the user is searching target or thinking. The small gaze distance can lead to misclassification.\n\n(g) Touch Close to Intentional Area: Touches caused by a part of the palm or redundant fingers of the hand being used, close to the intentional area. The gaze may be close to unintentional touches, which is a common feature for intentional ones.\n\n(h) Hand Flying over the Surface: Unintentionally flying over fingers or transient resting palms on the surface. The combination of moderate touch duration and gaze distance may confuse the classifier."
+    },
+    {
+      "title": "5.1. System Implementation",
+      "text": "We obtained our final GB model by training on the whole dataset collected in Study 1 with the same hyperparameters. When a touch event is registered, it will pass through the classifier to determine whether it is intentional.\n\nIf the event is classified as intentional, then it will be processed as a normal operation. Otherwise, it will be removed immediately and won't change anything on the surface. The average computational time of our algorithm is 83.3 ms."
+    },
+    {
+      "title": "5.2. Participants and Apparatus",
+      "text": "We invited another 12 participants from the local university through email (7 males, 5 females, Age = 22.7 \u00b1 2.1). They were all familiar with mobile phones/tablets. None of them attended Study 1. The equipment remained unchanged. The only difference was the new classifier integrated with the tabletop."
+    },
+    {
+      "title": "5.3. Design",
+      "text": "We used a one-factor within-subject design. The independent factor was the classifier being enabled/disabled. The study consisted of two sessions: one session with our classifier (namely with session) and one without the classifier (namely without session). The order of the two sessions was counterbalanced.\n\nIn Study 2, participants were only asked to finish tasks on the digital surface in the sitting posture. As found in Study 1, this posture condition provoked users to trigger more accidental touches. Similar to Study 1, the tasks consisted of map navigation and photo categorization. In each session of Study 2, participants needed to finish a long map navigation task and a long photo categorization task with a balanced order. The operations in two tasks were the same as Study 1. A 5-minute warm-up stage was scheduled before each session for users to get familiar with the system. Both tasks were designed to take approximately 15 minutes and a 2-minute break was inserted between the two tasks. Participants needed to perform each task in the sitting posture for a long time, henceforth their arms would easily be affected by fatigue, which could make them more \"willing\" to rest their arms on the surface. These modifications could provide more \"opportunities\" for users to evaluate the performance of this new system and have a better sense to compare the systems in the two sessions.\n\nWe manipulated users' expectations of the tabletop in Study 2. In both sessions, the experiment was introduced to the participants as an inspecting study. Participants were told that the tabletop was expected to be intelligent so that it could recognize and filter any unintentional touches. However, the system was not yet perfect. They were asked to perform either carefully or casually as long as they were comfortable with the system, and report any touches they deemed \"wrong\" during the experiment, which can reflect users' subjective evaluation on system's performance in practice. The word \"wrong\" is used to describe those touches that ideally should have been removed (false positive) or should have appeared (false negative), but are noticed by users. Specifically, in the with session, the \"wrong\" touches represent those misclassified touches observed by participants (either intentional touches are classified as unintentional ones or vice versa). In the without session, the \"wrong\" touches mean the accidental touches that trigger responses in the system and are noticed by users. Whenever participants found anything wrong, they needed to speak up to the instructor immediately.\n\nAt the end of each session, users rated the system with a questionnaire. The questions were all rated on a 7-point Likert Scale (1: Not at all -7: A lot), consisting of the following parts.\n\n\u2022 One question for the subjective feeling of intuitiveness of the system during the operation \u2022 Two questions for the efficiency and learnability of the system from Perceived Usefulness and Ease of Use Questionnaire  [8]  \u2022 Five questions for task load during the experiment from the NASA Task Load Index (NASA-TLX)  [16]  \u2022 Two questions for the system's capability of intention recognition and error prevention from Nielsen's Heuristic Evaluation  [42]  (only in the with session)"
+    },
+    {
+      "title": "5.4. Procedure",
+      "text": "In the study, participants first went through the adjustment and the calibration of the Pupillab, and finished two tasks in each session, with a 3-minute break in between. After completing each session, participants were asked to answer the questionnaire to evaluate the system. Each participant was offered $15 as compensation."
+    },
+    {
+      "title": "5.5. Result",
+      "text": "We compared the numeric results between the best model and baseline models to validate the advantages of our method (Section 5.5.1). We observed an interesting phenomenon that users did not notice a number of misclassified touches (Section 5.5.2). We then compared the two sessions in terms of the number of \"wrong\" touches (Section 5.5.3) and users feedback (Section 5.5.4). The results revealed the advantage of our algorithm."
+    },
+    {
+      "title": "5.5.1. Validation of",
+      "text": "The New Algorithm. We first evaluated our best model with Study 2 data. Like Study 1, two authors manually annotated the data with the tool and solved conflicts with a collective review. Then, we applied our model and two baselines to the Study 2 data. Table  7  summarized the results. All models had similar performance as Table  4  and our model consistently outperformed the two baselines. In the real-time system, the model achieved an F-1 score of 0.906. Compared to the model modified from  [52] , our model still had an advantage of 4.0% on the F1 score (with statistical significance). This indicates that our algorithm is stable for new users in the real-time system."
+    },
+    {
+      "title": "5.5.2. Good Numeric Results",
+      "text": "According to User-report Data. Alternatively, user subject reports on the false positive/negative touch event also provided another perspective of the system performance. In the with session, the average subjective F1 score among 12 participants achieved a surprisingly high value (0.956, 0.954, 0.955 for precision, recall and F1 score, respectively). Inspection of the data reveals that some misclassified touches were not perceived by participants. For instance, when a user operates with multiple fingers intentionally (moving or rotating), one finger's touch events may be filtered (false negative) but the operation can still continue normally.\n\nIn another example, some unintentional touches are indeed classified as intentional (false positive), but the duration of the touches is too short to affect the normal operation. These gesture-related or task-related misclassified touches do not change the procedure of the on-going operation, and thus are difficult to be noticed by users. In other words, users only detect misclassification when superficial operations do not go as expected. Therefore, they will ignore lots of misclassification cases in the system."
+    },
+    {
+      "title": "5.5.3. Less \"",
+      "text": "Wrong\" Touches on The New Tabletop. We compared the percentage of the \"wrong\" touches in two sessions, i.e., the perceived classification error rate in the with session and the perceived accidental touch rate in the without session. A Wilcoxon signed-rank test shows that the ratio of \"wrong\" touches in the without session is significantly higher than that of the with session (8.0% vs. 4.7%, V = 3, p = 0.002). This indicates that our new system can reduce the number of noticeable unintentional touches considerably."
+    },
+    {
+      "title": "5.5.4. Positive Feedbacks of",
+      "text": "The New Tabletop. We ran Wilcoxon signed-rank tests on the questionnaire results (see Figure  12 ). The intuitiveness ratings in the with session were significantly higher than the scores in the without session (V = 37.0, p < 0.05). And the mental load scores in the with sessions were significantly lower than those in the without session (V = 9.0, p < 0.05). In addition, the comparison of physical load and effort in two sessions showed marginal significance. Participants had slightly lower physical load and effort in the with session (for physical load, V = 9.0, p = 0.09 < 0.1, for effort, V = 15.5, p = 0.06 < 0.1). However, the ratings of the system's efficiency and learnability, as well as the performance and frustration in the two sessions did not show any significance. Participants gave positive feedback on the two metrics of intention recognition and error prevention for the with session. Most participants agreed that the system could correctly classify their intention (with the average score as 6.1 \u00b1 0.9). They also rated 5.1 \u00b1 1.1 scores on average for evaluating the system's ability for error prevention. These results show that the purpose of the new system was recognized by the participants. Our new system organically integrates the advantages of digital and physical tabletops."
+    },
+    {
+      "title": "6. DISCUSSION 6.1 Generalizability of the Model for Other Scenarios",
+      "text": "In this section, we discuss how the feature sets and classification models can be generalized. We first summarize the similarities and differences between the features of digital tabletops and mobile devices. We then discuss the relationships between our model based on the capacitive technique and other digital table technologies, and show the potential of generalizing our model to other technologies. We also discuss how our single-user scenario can provide insights for multi-user scenarios."
+    },
+    {
+      "title": "6.1.1. Similarities and Differences of Features on Mobile Devices.",
+      "text": "We investigated five spatio-temporal feature types for unintentional touches classification on multi-touch tabletops (see Table  2 ). Our results support the importance of the Gaze for intention classification on a large-scale touchscreen. Comparatively, Face does not have such a great performance.\n\nOther features have been discussed in previous literature on mobile phones and tablets. Our findings suggest that those features share similarities between tabletops and mobile devices. For example, unintentional touches are more prone to cluster together (Clustering  [2, 52] ). They appear more often near the edge of the device, in spite of the size of the touch screen (Side  [32] ). The distribution of the unintentional touch duration has a long tail  [32, 36] . These similarities suggest the potential to transfer our method to mobile devices. Technology . Our tabletop used capacitive sensing technology to register touch events. However, the features used in our model are actually independent of the sensing technique. Features in Table  2  only require positional and temporal information of touch events. E.g., Gaze distance can be calculated once the positions of both touch points and gaze points are obtained, History can be calculated once the timestamps of touch points are recorded. As long as a system's technology can provide accurate information, it will be compatible with our model. Therefore, our system has the potential to be generalized to tabletops with other technologies such as FTIR  [15] , diffused illumination  [50] , etc. However, we point out that some technical issues related to the sensing accuracy of the positional and temporal information are beyond the scope of our paper, e.g., the noise effect of environment lightness on FTIR/DI desktops."
+    },
+    {
+      "title": "6.1.2. Features with Other Digital Table"
+    },
+    {
+      "title": "6.1.3. Multi-user Scenarios.",
+      "text": "In this paper, we only investigated single-user scenarios. A multi-user scenario is another major use case of large-scale interactive surfaces. If different users' interaction areas have minute overlap, each user's interactions can be treated as a single-user case and our model can be generalized easily. The major differences between multi-user and single-user scenarios lie in two aspects  [35] : 1) users can have close collaboration, where their touch points are mixed together. 2) users can have human-human interaction, where their attention is drawn away from the surface. These greatly increase the complexity of the system. For the first aspect, there are some works trying to distinguish users when multiple users are interacting with a tabletop (e.g.,  [10] ). This may be one of the promising methods to leverage our model, i.e., dividing a multi-user scenario into several single-user cases, so that our model can be applied. As for the second aspect, the intuition of \"where we look is where we have interests\" holds in social interaction as well  [22] . Therefore, gaze can still be an important feature showing users' intention for interaction. We expect more exploration in the future work."
+    },
+    {
+      "title": "6.2. Awareness of Unintentional Touch",
+      "text": "There are actually two types of unintentional touches during the interaction on the tabletop. Some touches are unconscious. Users do not realize that they triggered an event. If the system does not respond to such contact, users will not notice it. For example, users will only notice the unintentional touches triggered by the thenar (the bases of the thumb) when they see accidental reactions happening around it.\n\nOn the other hand, some unintentional touches are inevitable. Users \"have to\" do some specific operations during the interaction to achieve their goal, even having the expectation of the consequence that it will lead to accidental touches. For example, users \"have to\" put the palms on the surface to support their body while reaching out to distant targets, or they \"have to\" rest their arms because of fatigue.\n\nThe mental model essentially works only on the inevitable touches but not those unconscious touches, since the model works only when users are conscious of their touches, either explicitly or implicitly, as reflected in our Study 2. However, designers and developers should be careful about unconscious touches. If they are not filtered, it will have a more significant effect on user experience than the unfiltered inevitable touches, since users do not expect any responses from these unconscious touches."
+    },
+    {
+      "title": "6.3. Limitations and Future Work",
+      "text": "First, in this research, we explore user touch behavior in only two tasks: map navigation and photo categorization. Although these tasks are common on multitouch tabletops, there is other unintentional touch behavior we did not investigate which may appear in other interactive scenarios such as drawing sketches. Task-specific patterns may also affect the filtering, which will make the classification more complicated. Studies on more tasks will be involved in future work. Our technique leverages the coordination between touch and gaze. There are some cases where touch input is less guided by visual attention, such as blind typing. The technique might also conflict with other interaction paradigms such as remote object manipulation or peripheral-vision-based interaction  [47] , as summarized in Section 2.3. In these tasks, the benefit of our method is diminished. In addition, although with a limited number of users we found a consistent result (see the 2nd and 4th box in  Fig 6) , 12 people is a relatively small number for a two-factor within-subject design. The manually labeling of intentional and unintentional touches can introduce potential bias. In the future, the number of participants needs to be increased to incorporate more diverse behavior patterns across different users. Better palm-rejection models  [52]  and more sophisticated deep learning (e.g., LSTM) methods are worth exploring.\n\nSecond, due to the hardware properties of the tabletop, the screen does not have the ability to measure the contact area and pressure level of any touch events  [10, 32, 52, 70] . Although the touch area is partially reflected by the Clustering features, the lack of these features limits the performance of our system. For example, the accuracy of our system is not as good as previous work on tablets which leveraged contact size features (91.3% vs. 97.6% [52] ). Regardless of the different interaction paradigms on tablets  [52]  and tabletops, it reflects how the contact size feature can improve recognition. Meanwhile, touch pressure can also reflect interaction intention to some extent  [61] . These pieces of literature indicate the potential of enhancing our model by including these features. There are some commercial multi-touch tabletops that can provide contact images (e.g., Microsoft Pix-elSense  [38] ) or pressure distribution (in the foreseeable future) with fairly high resolution, which needs further exploration. However, nowadays there are a great number of tabletops that cannot provide area or pressure information, our feature sets can be applied for those tables to support intention recognition.\n\nThird, to obtain accurate head orientation and gaze direction, a head-mounted eye tracker is still necessary, which hinders the direct implementation of our model into an ordinary digital surface. This reduces the system's viability and scalability. Some previous researches have worked on head/gaze direction estimation directly from a camera  [41, 48] . It is enticing to obviate the necessity of additional devices. Our work provides an example of improving user understanding by leveraging other aspects of user behavior  [66, 67, 73] . More behaviors beyond gaze and face are worth exploration in the future."
+    },
+    {
+      "title": "7. CONCLUSION",
+      "text": "In this paper, we investigated the face-gaze-touch coordination patterns of touches on large-scale multi-touch tabletops. In the first user study, we collected empirical behavioral data from 12 participants' performing usual daily tasks on both digital and physical tabletops. Inspection of the data indicates a significant difference between the two types of tabletop: users tend to be more careful and prudent when interacting with the digital tabletop than the physical table. We then extracted five types of spatio-temporal features to classify real-time unintentional touches. A Gradient Boosting model was trained on the data and achieved 0.914, 0.913 and 0.913 on precision, recall and F1 score respectively. It significantly outperformed the start-of-the-art model by 4.3% on the F1 score. The model reveals the importance of gaze features for unintentional touch recognition. Our second user study evaluated our model in a real-time system. The results validated the advantage of our system over baselines. Participants' positive subjective feedback indicates the effectiveness of our algorithm. provide a user friendly experience by reducing the cognitive barrier preventing users from interacting naturally with the table. This work sheds light on the possibility of future tabletop technology to improve the understanding of users' input intention by linking their gaze and head behavior to their touch behavior."
+    },
+    {
+      "text": "Fig. 2. System Apparatus"
+    },
+    {
+      "text": "Fig. 4. GUI of Annotation Tool: The video of the tabletop screen (left part) and the participant (right part) are presented after calibration. Annotators can navigate back and forth to any time frame. All touch events and face/gaze point are visualized in the left part at frame level."
+    },
+    {
+      "text": "Fig. 6. Boxplot of touches on two tabletops. Data of sitting and standing postures are merged. \"D/P\" refers to digital/physical tabletop settings. \"Int/Unint\" refers to intentional/unintentional touches. The same below."
+    },
+    {
+      "text": "Fig. 7. Gaze/Face Distance"
+    },
+    {
+      "text": "Fig. 11. Face-gaze average included angle (in degree unit) heatmaps on the tabletop. The gaze/face points outside the screen are discarded. Left) sitting posture. Right) standing posture"
+    },
+    {
+      "text": "Misclassification Pattern Visualization and SummaryPatterns Details Patterns Details (a) Proficient Operation Without Gaze: Proficient operations without the need of gaze. The misclassification may be caused by large gaze distances since proficient operations do not involve gaze extensively. (b) Whole Palm Continuous Interaction: Using the whole palm for moving, rotating and zooming in/out. Close touch distances and large numbers of touch points are common features of unintentional touches."
+    },
+    {
+      "text": "Fig. 12. Results of The Questionnaire. Error bar indicates the standard error. \"w\" represents the with session and \"wo\" represents the without session. + means marginally significance (p < 0.1) and * means significance (p < 0.05)."
+    },
+    {
+      "text": "Feature Groups for Classification"
+    },
+    {
+      "text": "Results of Model Comparison. A paired t-test on the cross-validation F1 scores between the GB and the RF shows significance p < 0.001. The hyperparameters of the GB model among cross-validation is consistent. The best GB model has 100 as the number estimator and 3 as the maximum depth of each tree."
+    },
+    {
+      "text": "Results of Feature Ablation. A paired t-test on the cross-validation F1 scores between the full model and the model with Face feature ablated shows significance p < 0.05."
+    },
+    {
+      "title": "ACKNOWLEDGMENTS",
+      "text": "This work is supported by the  National Key Research and Development Plan  under Grant No.  2016YFB1001402 , the  Natural Science Foundation of China  under Grant No.  61521002 , No.  61672314 , and also by  Beijing Key Lab of Networked Multimedia . We thank  Tianheng Wang  for helping code development and  Gero Bergk  for the proof-reading."
+    }
+  ],
+  "references": [
+    {
+      "title": "The Pen is Mightier: Understanding Stylus Behaviour While Inking on Tablets",
+      "authors": [
+        "Michelle Annett",
+        "Fraser Anderson",
+        "Walter Bischof",
+        "Anoop Gupta"
+      ],
+      "year": 2014,
+      "doi": "10.1201/9781003059325-25",
+      "raw": "The Pen is Mightier: Understanding Stylus Behaviour While Inking on Tablets \n\t\t \n\t\t\t Michelle Annett \n\t\t \n\t\t \n\t\t\t Fraser Anderson \n\t\t \n\t\t \n\t\t\t Walter F Bischof \n\t\t \n\t\t \n\t\t\t Anoop Gupta \n\t\t \n\t\t 10.1201/9781003059325-25 \n\t\t \n\t \n\t \n\t\t Proceedings of Graphics Interface 2014 (GI '14) \n\t\t Graphics Interface 2014 (GI '14) Toronto, Ont., Canada, Canada \n\t\t \n\t\t\t Canadian Information Processing Society \n\t\t\t 2014 \n\t\t\t \n\t\t \n\t \n\t Michelle Annett, Fraser Anderson, Walter F. Bischof, and Anoop Gupta. 2014. The Pen is Mightier: Understanding Stylus Behaviour While Inking on Tablets. In Proceedings of Graphics Interface 2014 (GI '14). Canadian Information Processing Society, Toronto, Ont., Canada, Canada, 193-200. http://dl.acm.org/citation.cfm?id=2619648.2619680"
+    },
+    {
+      "title": "Exploring and Understanding Unintended Touch During Direct Pen Interaction",
+      "authors": [
+        "Michelle Annett",
+        "Anoop Gupta",
+        "Walter Bischof"
+      ],
+      "year": 2014,
+      "doi": "10.1145/2674915",
+      "journal": "ACM Trans. Comput.-Hum. Interact",
+      "volume": "21",
+      "issue": "5",
+      "pages": "39",
+      "raw": "Exploring and Understanding Unintended Touch During Direct Pen Interaction \n\t\t \n\t\t\t Michelle Annett \n\t\t \n\t\t \n\t\t\t Anoop Gupta \n\t\t \n\t\t \n\t\t\t Walter F Bischof \n\t\t \n\t\t 10.1145/2674915 \n\t\t \n\t \n\t \n\t\t ACM Trans. Comput.-Hum. Interact \n\t\t \n\t\t\t 21 \n\t\t\t 5 \n\t\t\t 39 \n\t\t\t 2014. Nov. 2014 \n\t\t \n\t \n\t Michelle Annett, Anoop Gupta, and Walter F. Bischof. 2014. Exploring and Understanding Unintended Touch During Direct Pen Interaction. ACM Trans. Comput.-Hum. Interact. 21, 5, Article 28 (Nov. 2014), 39 pages. https://doi.org/10.1145/2674915"
+    },
+    {
+      "title": "Fluid Grouping: Quantifying Group Engagement Around Interactive Tabletop Exhibits in the Wild",
+      "authors": [
+        "Florian Block",
+        "James Hammerman",
+        "Michael Horn",
+        "Amy Spiegel",
+        "Jonathan Christiansen",
+        "Brenda Phillips",
+        "Judy Diamond",
+        "E Evans",
+        "Chia Shen"
+      ],
+      "year": 2015,
+      "doi": "10.1145/2702123.2702231",
+      "raw": "Fluid Grouping: Quantifying Group Engagement Around Interactive Tabletop Exhibits in the Wild \n\t\t \n\t\t\t Florian Block \n\t\t \n\t\t \n\t\t\t James Hammerman \n\t\t \n\t\t \n\t\t\t Michael Horn \n\t\t \n\t\t \n\t\t\t Amy Spiegel \n\t\t \n\t\t \n\t\t\t Jonathan Christiansen \n\t\t \n\t\t \n\t\t\t Brenda Phillips \n\t\t \n\t\t \n\t\t\t Judy Diamond \n\t\t \n\t\t \n\t\t\t E Margaret Evans \n\t\t \n\t\t \n\t\t\t Chia Shen \n\t\t \n\t\t 10.1145/2702123.2702231 \n\t\t \n\t \n\t \n\t\t Proceedings of the 33rd Annual ACM Conference on Human Factors in Computing Systems (CHI '15) \n\t\t the 33rd Annual ACM Conference on Human Factors in Computing Systems (CHI '15) New York, NY, USA \n\t\t \n\t\t\t ACM \n\t\t\t 2015 \n\t\t\t \n\t\t \n\t \n\t Florian Block, James Hammerman, Michael Horn, Amy Spiegel, Jonathan Christiansen, Brenda Phillips, Judy Diamond, E. Margaret Evans, and Chia Shen. 2015. Fluid Grouping: Quantifying Group Engagement Around Interactive Tabletop Exhibits in the Wild. In Proceedings of the 33rd Annual ACM Conference on Human Factors in Computing Systems (CHI '15). ACM, New York, NY, USA, 867-876. https://doi.org/10.1145/2702123.2702231"
+    },
+    {
+      "title": "The Effect of View Techniques on Collaboration and Awareness in Tabletop Map-Based Tasks",
+      "authors": [
+        "Christophe Bortolaso",
+        "Matthew Oskamp",
+        "Greg Phillips",
+        "Carl Gutwin",
+        "T Nicholas Graham"
+      ],
+      "year": 2014,
+      "doi": "10.1145/2669485.2669504",
+      "raw": "The Effect of View Techniques on Collaboration and Awareness in Tabletop Map-Based Tasks \n\t\t \n\t\t\t Christophe Bortolaso \n\t\t \n\t\t \n\t\t\t Matthew Oskamp \n\t\t \n\t\t \n\t\t\t Greg Phillips \n\t\t \n\t\t \n\t\t\t Carl Gutwin \n\t\t \n\t\t \n\t\t\t T C Nicholas Graham \n\t\t \n\t\t 10.1145/2669485.2669504 \n\t\t \n\t \n\t \n\t\t Proceedings of the Ninth ACM International Conference on Interactive Tabletops and Surfaces (ITS '14) \n\t\t the Ninth ACM International Conference on Interactive Tabletops and Surfaces (ITS '14) New York, NY, USA \n\t\t \n\t\t\t ACM \n\t\t\t 2014 \n\t\t\t \n\t\t \n\t \n\t Christophe Bortolaso, Matthew Oskamp, Greg Phillips, Carl Gutwin, and T.C. Nicholas Graham. 2014. The Effect of View Techniques on Collaboration and Awareness in Tabletop Map-Based Tasks. In Proceedings of the Ninth ACM International Conference on Interactive Tabletops and Surfaces (ITS '14). ACM, New York, NY, USA, 79-88. https://doi.org/10.1145/2669485.2669504"
+    },
+    {
+      "title": "A Comparison of User Preferences for Tangible Objects vs Touch Buttons with a Map-based Tabletop Application",
+      "authors": [
+        "Mark Brown",
+        "Winyu Chinthammit",
+        "Paddy Nixon"
+      ],
+      "year": 2014,
+      "doi": "10.1145/2686612.2686645",
+      "raw": "A Comparison of User Preferences for Tangible Objects vs Touch Buttons with a Map-based Tabletop Application \n\t\t \n\t\t\t Mark Brown \n\t\t \n\t\t \n\t\t\t Winyu Chinthammit \n\t\t \n\t\t \n\t\t\t Paddy Nixon \n\t\t \n\t\t 10.1145/2686612.2686645 \n\t\t \n\t \n\t \n\t\t Proceedings of the 26th Australian Computer-Human Interaction Conference on Designing Futures: The Future of Design (OzCHI '14) \n\t\t the 26th Australian Computer-Human Interaction Conference on Designing Futures: The Future of Design (OzCHI '14) New York, NY, USA \n\t\t \n\t\t\t ACM \n\t\t\t 2014 \n\t\t\t \n\t\t \n\t \n\t Mark Brown, Winyu Chinthammit, and Paddy Nixon. 2014. A Comparison of User Preferences for Tangible Objects vs Touch Buttons with a Map-based Tabletop Application. In Proceedings of the 26th Australian Computer-Human Interaction Conference on Designing Futures: The Future of Design (OzCHI '14). ACM, New York, NY, USA, 212-215. https://doi.org/10.1145/2686612.2686645"
+    },
+    {
+      "title": "Supporting Situation Awareness in Collaborative Tabletop Systems with Automation",
+      "authors": [
+        "Y.-L. Betty Chang",
+        "Stacey Scott",
+        "Mark Hancock"
+      ],
+      "year": 2014,
+      "doi": "10.1145/2669485.2669496",
+      "raw": "Supporting Situation Awareness in Collaborative Tabletop Systems with Automation \n\t\t \n\t\t\t Y.-L. Betty Chang \n\t\t \n\t\t \n\t\t\t Stacey D Scott \n\t\t \n\t\t \n\t\t\t Mark Hancock \n\t\t \n\t\t 10.1145/2669485.2669496 \n\t\t \n\t \n\t \n\t\t Proceedings of the Ninth ACM International Conference on Interactive Tabletops and Surfaces (ITS '14) \n\t\t the Ninth ACM International Conference on Interactive Tabletops and Surfaces (ITS '14) New York, NY, USA \n\t\t \n\t\t\t ACM \n\t\t\t 2014 \n\t\t\t \n\t\t \n\t \n\t Y.-L. Betty Chang, Stacey D. Scott, and Mark Hancock. 2014. Supporting Situation Awareness in Collaborative Tabletop Systems with Automation. In Proceedings of the Ninth ACM International Conference on Interactive Tabletops and Surfaces (ITS '14). ACM, New York, NY, USA, 185-194. https://doi.org/10.1145/2669485.2669496"
+    },
+    {
+      "title": "Feature selection for classification",
+      "authors": [
+        "Manoranjan Dash",
+        "Huan Liu"
+      ],
+      "year": 1997,
+      "doi": "10.1016/s1088-467x(97)00008-5",
+      "journal": "Intelligent data analysis",
+      "volume": "1",
+      "issue": "1-4",
+      "raw": "Feature selection for classification \n\t\t \n\t\t\t Manoranjan Dash \n\t\t \n\t\t \n\t\t\t Huan Liu \n\t\t \n\t\t 10.1016/s1088-467x(97)00008-5 \n\t \n\t \n\t\t Intelligent data analysis \n\t\t \n\t\t\t 1 \n\t\t\t 1-4 \n\t\t\t \n\t\t\t 1997. 1997 \n\t\t \n\t \n\t Manoranjan Dash and Huan Liu. 1997. Feature selection for classification. Intelligent data analysis 1, 1-4 (1997), 131-156."
+    },
+    {
+      "title": "Perceived usefulness, perceived ease of use, and user acceptance of information technology",
+      "authors": [
+        "Fred D Davis"
+      ],
+      "year": 1989,
+      "doi": "10.2307/249008",
+      "journal": "MIS quarterly",
+      "raw": "Perceived usefulness, perceived ease of use, and user acceptance of information technology \n\t\t \n\t\t\t Fred D Davis \n\t\t \n\t\t 10.2307/249008 \n\t \n\t \n\t\t MIS quarterly \n\t\t \n\t\t\t \n\t\t\t 1989. 1989 \n\t\t \n\t \n\t Fred D Davis. 1989. Perceived usefulness, perceived ease of use, and user acceptance of information technology. MIS quarterly (1989), 319-340."
+    },
+    {
+      "title": "Interactive Prototyping of Tabletop and Surface Applications",
+      "authors": [
+        "Tulio De Souza Alcantara",
+        "Jennifer Ferreira",
+        "Frank Maurer"
+      ],
+      "year": 2013,
+      "doi": "10.1145/2494603.2480313",
+      "raw": "Interactive Prototyping of Tabletop and Surface Applications \n\t\t \n\t\t\t Tulio De Souza Alcantara \n\t\t \n\t\t \n\t\t\t Jennifer Ferreira \n\t\t \n\t\t \n\t\t\t Frank Maurer \n\t\t \n\t\t 10.1145/2494603.2480313 \n\t\t \n\t \n\t \n\t\t Proceedings of the 5th ACM SIGCHI Symposium on Engineering Interactive Computing Systems (EICS '13) \n\t\t the 5th ACM SIGCHI Symposium on Engineering Interactive Computing Systems (EICS '13) New York, NY, USA \n\t\t \n\t\t\t ACM \n\t\t\t 2013 \n\t\t\t \n\t\t \n\t \n\t Tulio de Souza Alcantara, Jennifer Ferreira, and Frank Maurer. 2013. Interactive Prototyping of Tabletop and Surface Applications. In Proceedings of the 5th ACM SIGCHI Symposium on Engineering Interactive Computing Systems (EICS '13). ACM, New York, NY, USA, 229-238. https://doi.org/10.1145/2494603.2480313"
+    },
+    {
+      "title": "Group Touch: Distinguishing Tabletop Users in Group Settings via Statistical Modeling of Touch Pairs",
+      "authors": [
+        "Abigail Evans",
+        "Katie Davis",
+        "James Fogarty",
+        "Jacob Wobbrock"
+      ],
+      "year": 2017,
+      "doi": "10.1145/3025453.3025793",
+      "raw": "Group Touch: Distinguishing Tabletop Users in Group Settings via Statistical Modeling of Touch Pairs \n\t\t \n\t\t\t Abigail C Evans \n\t\t \n\t\t \n\t\t\t Katie Davis \n\t\t \n\t\t \n\t\t\t James Fogarty \n\t\t \n\t\t \n\t\t\t Jacob O Wobbrock \n\t\t \n\t\t 10.1145/3025453.3025793 \n\t\t \n\t \n\t \n\t\t Proceedings of the 2017 CHI Conference on Human Factors in Computing Systems (CHI '17) \n\t\t the 2017 CHI Conference on Human Factors in Computing Systems (CHI '17) New York, NY, USA \n\t\t \n\t\t\t ACM \n\t\t\t 2017 \n\t\t\t \n\t\t \n\t \n\t Abigail C. Evans, Katie Davis, James Fogarty, and Jacob O. Wobbrock. 2017. Group Touch: Distinguishing Tabletop Users in Group Settings via Statistical Modeling of Touch Pairs. In Proceedings of the 2017 CHI Conference on Human Factors in Computing Systems (CHI '17). ACM, New York, NY, USA, 35-47. https://doi.org/10.1145/3025453.3025793"
+    },
+    {
+      "title": "Greedy function approximation: a gradient boosting machine",
+      "year": 2001,
+      "journal": "Annals of statistics",
+      "raw": "Greedy function approximation: a gradient boosting machine \n\t\t \n\t\t\t Jerome H Friedman \n\t\t \n\t \n\t \n\t\t Annals of statistics \n\t\t \n\t\t\t \n\t\t\t 2001. 2001 \n\t\t \n\t \n\t Jerome H Friedman. 2001. Greedy function approximation: a gradient boosting machine. Annals of statistics (2001), 1189-1232."
+    },
+    {
+      "title": "Artificial neural networks (the multilayer perceptron)-a review of applications in the atmospheric sciences",
+      "authors": [
+        "W Matt",
+        "S Gardner"
+      ],
+      "year": 1998,
+      "journal": "Atmospheric environment",
+      "volume": "32",
+      "raw": "Artificial neural networks (the multilayer perceptron)-a review of applications in the atmospheric sciences \n\t\t \n\t\t\t W Matt \n\t\t \n\t\t \n\t\t\t S R Gardner \n\t\t \n\t\t \n\t\t\t Dorling \n\t\t \n\t \n\t \n\t\t Atmospheric environment \n\t\t \n\t\t\t 32 \n\t\t\t \n\t\t\t 1998. 1998 \n\t\t \n\t \n\t Matt W Gardner and SR Dorling. 1998. Artificial neural networks (the multilayer perceptron)-a review of applications in the atmo- spheric sciences. Atmospheric environment 32, 14 (1998), 2627-2636."
+    },
+    {
+      "title": "Can \"Touch\" Get Annoying?",
+      "authors": [
+        "Jens Gerken",
+        "Hans-Christian Jetter",
+        "Toni Schmidt",
+        "Harald Reiterer"
+      ],
+      "year": 2010,
+      "doi": "10.1145/1936652.1936704",
+      "raw": "Can \"Touch\" Get Annoying? \n\t\t \n\t\t\t Jens Gerken \n\t\t \n\t\t \n\t\t\t Hans-Christian Jetter \n\t\t \n\t\t \n\t\t\t Toni Schmidt \n\t\t \n\t\t \n\t\t\t Harald Reiterer \n\t\t \n\t\t 10.1145/1936652.1936704 \n\t\t \n\t \n\t \n\t\t ACM International Conference on Interactive Tabletops and Surfaces (ITS '10) \n\t\t New York, NY, USA \n\t\t \n\t\t\t ACM \n\t\t\t 2010 \n\t\t\t \n\t\t \n\t \n\t Jens Gerken, Hans-Christian Jetter, Toni Schmidt, and Harald Reiterer. 2010. Can \"Touch\" Get Annoying?. In ACM International Con- ference on Interactive Tabletops and Surfaces (ITS '10). ACM, New York, NY, USA, 257-258. https://doi.org/10.1145/1936652.1936704"
+    },
+    {
+      "title": "Touch screen palm input rejection",
+      "authors": [
+        "Jason Tyler"
+      ],
+      "year": 2013,
+      "journal": "US Patent App",
+      "volume": "13",
+      "issue": "469",
+      "pages": "354",
+      "raw": "Touch screen palm input rejection \n\t\t \n\t\t\t Jason Tyler \n\t\t \n\t\t \n\t\t\t Griffin \n\t\t \n\t \n\t \n\t\t US Patent App \n\t\t \n\t\t\t 13 \n\t\t\t 469 \n\t\t\t 354 \n\t\t\t 2013 \n\t\t \n\t \n\t Jason Tyler Griffin. 2013. Touch screen palm input rejection. US Patent App. 13/469,354."
+    },
+    {
+      "title": "Low-cost multi-touch sensing through frustrated total internal reflection",
+      "year": 2005,
+      "raw": "Low-cost multi-touch sensing through frustrated total internal reflection \n\t\t \n\t\t\t Jefferson Y Han \n\t\t \n\t \n\t \n\t\t Proceedings of the 18th annual ACM symposium on User interface software and technology \n\t\t the 18th annual ACM symposium on User interface software and technology \n\t\t \n\t\t\t ACM \n\t\t\t 2005 \n\t\t\t \n\t\t \n\t \n\t Jefferson Y Han. 2005. Low-cost multi-touch sensing through frustrated total internal reflection. In Proceedings of the 18th annual ACM symposium on User interface software and technology. ACM, 115-118."
+    },
+    {
+      "title": "Development of NASA-TLX (Task Load Index): Results of empirical and theoretical research",
+      "authors": [
+        "G Sandra",
+        "Lowell Hart"
+      ],
+      "year": 1988,
+      "journal": "Advances in psychology",
+      "volume": "52",
+      "raw": "Development of NASA-TLX (Task Load Index): Results of empirical and theoretical research \n\t\t \n\t\t\t G Sandra \n\t\t \n\t\t \n\t\t\t Lowell E Hart \n\t\t \n\t\t \n\t\t\t Staveland \n\t\t \n\t \n\t \n\t\t Advances in psychology \n\t\t \n\t\t\t 52 \n\t\t\t \n\t\t\t 1988. 1988 \n\t\t \n\t \n\t Sandra G Hart and Lowell E Staveland. 1988. Development of NASA-TLX (Task Load Index): Results of empirical and theoretical research. Advances in psychology 52 (1988), 139-183."
+    },
+    {
+      "title": "Human gaze control during real-world scene perception",
+      "year": 2003,
+      "journal": "Trends in cognitive sciences",
+      "volume": "7",
+      "issue": "11",
+      "raw": "Human gaze control during real-world scene perception \n\t\t \n\t\t\t John M Henderson \n\t\t \n\t \n\t \n\t\t Trends in cognitive sciences \n\t\t \n\t\t\t 7 \n\t\t\t 11 \n\t\t\t \n\t\t\t 2003. 2003 \n\t\t \n\t \n\t John M Henderson. 2003. Human gaze control during real-world scene perception. Trends in cognitive sciences 7, 11 (2003), 498-504."
+    },
+    {
+      "title": "Look where you're going!\": gaze behaviour associated with maintaining and changing the direction of locomotion",
+      "authors": [
+        "Aftab Mark A Hollands",
+        "Joan Patla"
+      ],
+      "year": 2002,
+      "journal": "Experimental brain research",
+      "volume": "143",
+      "issue": "2",
+      "raw": "Look where you're going!\": gaze behaviour associated with maintaining and changing the direction of locomotion \n\t\t \n\t\t\t Aftab E Mark A Hollands \n\t\t \n\t\t \n\t\t\t Joan N Patla \n\t\t \n\t\t \n\t\t\t Vickers \n\t\t \n\t \n\t \n\t\t Experimental brain research \n\t\t \n\t\t\t 143 \n\t\t\t 2 \n\t\t\t \n\t\t\t 2002. 2002 \n\t\t \n\t \n\t Mark A Hollands, Aftab E Patla, and Joan N Vickers. 2002. \"Look where you're going!\": gaze behaviour associated with maintaining and changing the direction of locomotion. Experimental brain research 143, 2 (2002), 221-230."
+    },
+    {
+      "title": "User See, User Point: Gaze and Cursor Alignment in Web Search",
+      "authors": [
+        "Jeff Huang",
+        "Ryen White",
+        "Georg Buscher"
+      ],
+      "year": 2012,
+      "doi": "10.1145/2207676.2208591",
+      "raw": "User See, User Point: Gaze and Cursor Alignment in Web Search \n\t\t \n\t\t\t Jeff Huang \n\t\t \n\t\t \n\t\t\t Ryen White \n\t\t \n\t\t \n\t\t\t Georg Buscher \n\t\t \n\t\t 10.1145/2207676.2208591 \n\t\t \n\t \n\t \n\t\t Proceedings of the SIGCHI Conference on Human Factors in Computing Systems (CHI '12) \n\t\t the SIGCHI Conference on Human Factors in Computing Systems (CHI '12) New York, NY, USA \n\t\t \n\t\t\t ACM \n\t\t\t 2012 \n\t\t\t \n\t\t \n\t \n\t Jeff Huang, Ryen White, and Georg Buscher. 2012. User See, User Point: Gaze and Cursor Alignment in Web Search. In Proceedings of the SIGCHI Conference on Human Factors in Computing Systems (CHI '12). ACM, New York, NY, USA, 1341-1350. https://doi.org/10. 1145/2207676.2208591"
+    },
+    {
+      "title": "The Use of Eye Movements in Human-computer Interaction Techniques: What You Look at is What You Get",
+      "authors": [
+        "J Robert"
+      ],
+      "year": 1991,
+      "doi": "10.1145/123078.128728",
+      "journal": "ACM Trans. Inf. Syst",
+      "volume": "9",
+      "issue": "2",
+      "raw": "The Use of Eye Movements in Human-computer Interaction Techniques: What You Look at is What You Get \n\t\t \n\t\t\t J K Robert \n\t\t \n\t\t \n\t\t\t Jacob \n\t\t \n\t\t 10.1145/123078.128728 \n\t\t \n\t \n\t \n\t\t ACM Trans. Inf. Syst \n\t\t \n\t\t\t 9 \n\t\t\t 2 \n\t\t\t \n\t\t\t 1991. April 1991 \n\t\t \n\t \n\t Robert J. K. Jacob. 1991. The Use of Eye Movements in Human-computer Interaction Techniques: What You Look at is What You Get. ACM Trans. Inf. Syst. 9, 2 (April 1991), 152-169. https://doi.org/10.1145/123078.128728"
+    },
+    {
+      "title": "Pupil: An Open Source Platform for Pervasive Eye Tracking and Mobile Gaze-based Interaction",
+      "authors": [
+        "Moritz Kassner",
+        "William Patera",
+        "Andreas Bulling"
+      ],
+      "year": 2014,
+      "doi": "10.1145/2638728.2641695",
+      "raw": "Pupil: An Open Source Platform for Pervasive Eye Tracking and Mobile Gaze-based Interaction \n\t\t \n\t\t\t Moritz Kassner \n\t\t \n\t\t \n\t\t\t William Patera \n\t\t \n\t\t \n\t\t\t Andreas Bulling \n\t\t \n\t\t 10.1145/2638728.2641695 \n\t\t \n\t \n\t \n\t\t Adjunct Proceedings of the 2014 ACM International Joint Conference on Pervasive and Ubiquitous Computing (UbiComp '14 Adjunct) \n\t\t New York, NY, USA \n\t\t \n\t\t\t ACM \n\t\t\t 2014 \n\t\t\t \n\t\t \n\t \n\t Moritz Kassner, William Patera, and Andreas Bulling. 2014. Pupil: An Open Source Platform for Pervasive Eye Tracking and Mobile Gaze-based Interaction. In Adjunct Proceedings of the 2014 ACM International Joint Conference on Pervasive and Ubiquitous Computing (UbiComp '14 Adjunct). ACM, New York, NY, USA, 1151-1160. https://doi.org/10.1145/2638728.2641695"
+    },
+    {
+      "title": "Some functions of gaze-direction in social interaction",
+      "authors": [
+        "Adam Kendon"
+      ],
+      "year": 1967,
+      "doi": "10.1016/0001-6918(67)90005-4",
+      "journal": "Acta psychologica",
+      "volume": "26",
+      "raw": "Some functions of gaze-direction in social interaction \n\t\t \n\t\t\t Adam Kendon \n\t\t \n\t\t 10.1016/0001-6918(67)90005-4 \n\t \n\t \n\t\t Acta psychologica \n\t\t \n\t\t\t 26 \n\t\t\t \n\t\t\t 1967. 1967 \n\t\t \n\t \n\t Adam Kendon. 1967. Some functions of gaze-direction in social interaction. Acta psychologica 26 (1967), 22-63."
+    },
+    {
+      "title": "Tables in the Wild: Lessons Learned from a Large-scale Multi-tabletop Deployment",
+      "authors": [
+        "Ahmed Kharrufa",
+        "Madeline Balaam",
+        "Phil Heslop",
+        "David Leat",
+        "Paul Dolan",
+        "Patrick Olivier"
+      ],
+      "year": 2013,
+      "doi": "10.1145/2470654.2466130",
+      "raw": "Tables in the Wild: Lessons Learned from a Large-scale Multi-tabletop Deployment \n\t\t \n\t\t\t Ahmed Kharrufa \n\t\t \n\t\t \n\t\t\t Madeline Balaam \n\t\t \n\t\t \n\t\t\t Phil Heslop \n\t\t \n\t\t \n\t\t\t David Leat \n\t\t \n\t\t \n\t\t\t Paul Dolan \n\t\t \n\t\t \n\t\t\t Patrick Olivier \n\t\t \n\t\t 10.1145/2470654.2466130 \n\t\t \n\t \n\t \n\t\t Proceedings of the SIGCHI Conference on Human Factors in Computing Systems (CHI '13) \n\t\t the SIGCHI Conference on Human Factors in Computing Systems (CHI '13) New York, NY, USA \n\t\t \n\t\t\t ACM \n\t\t\t 2013 \n\t\t\t \n\t\t \n\t \n\t Ahmed Kharrufa, Madeline Balaam, Phil Heslop, David Leat, Paul Dolan, and Patrick Olivier. 2013. Tables in the Wild: Lessons Learned from a Large-scale Multi-tabletop Deployment. In Proceedings of the SIGCHI Conference on Human Factors in Computing Systems (CHI '13). ACM, New York, NY, USA, 1021-1030. https://doi.org/10.1145/2470654.2466130"
+    },
+    {
+      "title": "Amazing Forearm As an Innovative Interaction Device and Data Storage on Tabletop Display",
+      "authors": [
+        "Seiya Koura",
+        "Shunsuke Suo",
+        "Asako Kimura",
+        "Fumihisa Shibata",
+        "Hideyuki Tamura"
+      ],
+      "year": 2012,
+      "doi": "10.1145/2396636.2396706",
+      "raw": "Amazing Forearm As an Innovative Interaction Device and Data Storage on Tabletop Display \n\t\t \n\t\t\t Seiya Koura \n\t\t \n\t\t \n\t\t\t Shunsuke Suo \n\t\t \n\t\t \n\t\t\t Asako Kimura \n\t\t \n\t\t \n\t\t\t Fumihisa Shibata \n\t\t \n\t\t \n\t\t\t Hideyuki Tamura \n\t\t \n\t\t 10.1145/2396636.2396706 \n\t\t \n\t \n\t \n\t\t Proceedings of the 2012 ACM International Conference on Interactive Tabletops and Surfaces (ITS '12) \n\t\t the 2012 ACM International Conference on Interactive Tabletops and Surfaces (ITS '12) New York, NY, USA \n\t\t \n\t\t\t ACM \n\t\t\t 2012 \n\t\t\t \n\t\t \n\t \n\t Seiya Koura, Shunsuke Suo, Asako Kimura, Fumihisa Shibata, and Hideyuki Tamura. 2012. Amazing Forearm As an Innovative Inter- action Device and Data Storage on Tabletop Display. In Proceedings of the 2012 ACM International Conference on Interactive Tabletops and Surfaces (ITS '12). ACM, New York, NY, USA, 383-386. https://doi.org/10.1145/2396636.2396706"
+    },
+    {
+      "title": "Combining Observations of Intentional and Unintentional Behaviors for Human-computer Interaction",
+      "authors": [
+        "Yoshinori Kuno",
+        "Tomoyuki Ishiyama",
+        "Satoru Nakanishi",
+        "Yoshiaki Shirai"
+      ],
+      "year": 1999,
+      "doi": "10.1145/302979.303051",
+      "raw": "Combining Observations of Intentional and Unintentional Behaviors for Human-computer Interaction \n\t\t \n\t\t\t Yoshinori Kuno \n\t\t \n\t\t \n\t\t\t Tomoyuki Ishiyama \n\t\t \n\t\t \n\t\t\t Satoru Nakanishi \n\t\t \n\t\t \n\t\t\t Yoshiaki Shirai \n\t\t \n\t\t 10.1145/302979.303051 \n\t\t \n\t \n\t \n\t\t Proceedings of the SIGCHI Conference on Human Factors in Computing Systems (CHI '99) \n\t\t the SIGCHI Conference on Human Factors in Computing Systems (CHI '99) New York, NY, USA \n\t\t \n\t\t\t ACM \n\t\t\t 1999 \n\t\t\t \n\t\t \n\t \n\t Yoshinori Kuno, Tomoyuki Ishiyama, Satoru Nakanishi, and Yoshiaki Shirai. 1999. Combining Observations of Intentional and Unin- tentional Behaviors for Human-computer Interaction. In Proceedings of the SIGCHI Conference on Human Factors in Computing Systems (CHI '99). ACM, New York, NY, USA, 238-245. https://doi.org/10.1145/302979.303051"
+    },
+    {
+      "title": "Tangible Tabletops for Emergency Response: An Exploratory Study",
+      "authors": [
+        "Andreas Kunz",
+        "Ali Alavi",
+        "Jonas Landgren",
+        "Asim Evren Yanta\u00e7",
+        "Zolt\u00e1n Pawe\u0142wo\u017aniak",
+        "Morten S\u00e1rosi"
+      ],
+      "year": 2013,
+      "doi": "10.1145/2500342.2500352",
+      "pages": "8",
+      "raw": "Tangible Tabletops for Emergency Response: An Exploratory Study \n\t\t \n\t\t\t Andreas Kunz \n\t\t \n\t\t \n\t\t\t Ali Alavi \n\t\t \n\t\t \n\t\t\t Jonas Landgren \n\t\t \n\t\t \n\t\t\t Asim Evren Yanta\u00e7 \n\t\t \n\t\t \n\t\t\t Zolt\u00e1n Pawe\u0142wo\u017aniak \n\t\t \n\t\t \n\t\t\t Morten S\u00e1rosi \n\t\t \n\t\t \n\t\t\t Fjeld \n\t\t \n\t\t 10.1145/2500342.2500352 \n\t\t \n\t \n\t \n\t\t Proceedings of the International Conference on Multimedia, Interaction, Design and Innovation (MIDI '13) \n\t\t the International Conference on Multimedia, Interaction, Design and Innovation (MIDI '13) New York, NY, USA \n\t\t \n\t\t\t ACM \n\t\t\t 2013 \n\t\t\t 8 \n\t\t \n\t \n\t Article 10 \n\t Andreas Kunz, Ali Alavi, Jonas Landgren, Asim Evren Yanta\u00e7, Pawe\u0142Wo\u017aniak, Zolt\u00e1n S\u00e1rosi, and Morten Fjeld. 2013. Tangible Tabletops for Emergency Response: An Exploratory Study. In Proceedings of the International Conference on Multimedia, Interaction, Design and Innovation (MIDI '13). ACM, New York, NY, USA, Article 10, 8 pages. https://doi.org/10.1145/2500342.2500352"
+    },
+    {
+      "title": "PhysicsBox: Playful Educational Tabletop Games",
+      "authors": [
+        "Ricardo Langner",
+        "John Brosz",
+        "Raimund Dachselt",
+        "Sheelagh Carpendale"
+      ],
+      "year": 2010,
+      "doi": "10.1145/1936652.1936712",
+      "raw": "PhysicsBox: Playful Educational Tabletop Games \n\t\t \n\t\t\t Ricardo Langner \n\t\t \n\t\t \n\t\t\t John Brosz \n\t\t \n\t\t \n\t\t\t Raimund Dachselt \n\t\t \n\t\t \n\t\t\t Sheelagh Carpendale \n\t\t \n\t\t 10.1145/1936652.1936712 \n\t\t \n\t \n\t \n\t\t ACM International Conference on Interactive Tabletops and Surfaces (ITS '10) \n\t\t New York, NY, USA \n\t\t \n\t\t\t ACM \n\t\t\t 2010 \n\t\t\t \n\t\t \n\t \n\t Ricardo Langner, John Brosz, Raimund Dachselt, and Sheelagh Carpendale. 2010. PhysicsBox: Playful Educational Tabletop Games. In ACM International Conference on Interactive Tabletops and Surfaces (ITS '10). ACM, New York, NY, USA, 273-274. https://doi.org/10. 1145/1936652.1936712"
+    },
+    {
+      "title": "Towards Leaning Aware Interaction with Multitouch Tabletops",
+      "authors": [
+        "Khanh-Duy Le",
+        "Mahsa Paknezhad",
+        "Pawe\u0142 Wo\u017aniak",
+        "Maryam Azh",
+        "Gabriel\u0117 Kasparavi\u010di\u016bt\u0117",
+        "Morten Fjeld",
+        "Shengdong Zhao",
+        "Michael Brown"
+      ],
+      "year": 2016,
+      "doi": "10.1145/2971485.2971553",
+      "raw": "Towards Leaning Aware Interaction with Multitouch Tabletops \n\t\t \n\t\t\t Khanh-Duy Le \n\t\t \n\t\t \n\t\t\t Mahsa Paknezhad \n\t\t \n\t\t \n\t\t\t Pawe\u0142 W Wo\u017aniak \n\t\t \n\t\t \n\t\t\t Maryam Azh \n\t\t \n\t\t \n\t\t\t Gabriel\u0117 Kasparavi\u010di\u016bt\u0117 \n\t\t \n\t\t \n\t\t\t Morten Fjeld \n\t\t \n\t\t \n\t\t\t Shengdong Zhao \n\t\t \n\t\t \n\t\t\t Michael S Brown \n\t\t \n\t\t 10.1145/2971485.2971553 \n\t\t \n\t \n\t \n\t\t Proceedings of the 9th Nordic Conference on Human-Computer Interaction (NordiCHI '16) \n\t\t the 9th Nordic Conference on Human-Computer Interaction (NordiCHI '16) New York, NY, USA \n\t\t \n\t\t\t ACM \n\t\t\t 2016 \n\t\t \n\t \n\t Article 4, 4 \n\t Khanh-Duy Le, Mahsa Paknezhad, Pawe\u0142 W. Wo\u017aniak, Maryam Azh, Gabriel\u0117 Kasparavi\u010di\u016bt\u0117, Morten Fjeld, Shengdong Zhao, and Michael S. Brown. 2016. Towards Leaning Aware Interaction with Multitouch Tabletops. In Proceedings of the 9th Nordic Conference on Human-Computer Interaction (NordiCHI '16). ACM, New York, NY, USA, Article 4, 4 pages. https://doi.org/10.1145/2971485.2971553"
+    },
+    {
+      "title": "A Framework for Attention-based Personal Photo Manager",
+      "authors": [
+        "Wen-Hung Liao"
+      ],
+      "year": 2009,
+      "raw": "A Framework for Attention-based Personal Photo Manager \n\t\t \n\t\t\t Wen-Hung Liao \n\t\t \n\t\t \n\t \n\t \n\t\t Proceedings of the 2009 IEEE International Conference on Systems, Man and Cybernetics (SMC'09) \n\t\t the 2009 IEEE International Conference on Systems, Man and Cybernetics (SMC'09) Piscataway, NJ, USA \n\t\t \n\t\t\t IEEE Press \n\t\t\t 2009 \n\t\t\t \n\t\t \n\t \n\t Wen-Hung Liao. 2009. A Framework for Attention-based Personal Photo Manager. In Proceedings of the 2009 IEEE International Con- ference on Systems, Man and Cybernetics (SMC'09). IEEE Press, Piscataway, NJ, USA, 2128-2132. http://dl.acm.org/citation.cfm?id= 1732003.1732067"
+    },
+    {
+      "title": "Gaze and Mouse Coordination in Everyday Work",
+      "authors": [
+        "J Daniel",
+        "Susan Liebling"
+      ],
+      "year": 2014,
+      "doi": "10.1145/2638728.2641692",
+      "raw": "Gaze and Mouse Coordination in Everyday Work \n\t\t \n\t\t\t J Daniel \n\t\t \n\t\t \n\t\t\t Susan T Liebling \n\t\t \n\t\t \n\t\t\t Dumais \n\t\t \n\t\t 10.1145/2638728.2641692 \n\t\t \n\t \n\t \n\t\t Proceedings of the 2014 ACM International Joint Conference on Pervasive and Ubiquitous Computing: Adjunct Publication (UbiComp '14 Adjunct) \n\t\t the 2014 ACM International Joint Conference on Pervasive and Ubiquitous Computing: Adjunct Publication (UbiComp '14 Adjunct) New York, NY, USA \n\t\t \n\t\t\t ACM \n\t\t\t 2014 \n\t\t\t \n\t\t \n\t \n\t Daniel J. Liebling and Susan T. Dumais. 2014. Gaze and Mouse Coordination in Everyday Work. In Proceedings of the 2014 ACM International Joint Conference on Pervasive and Ubiquitous Computing: Adjunct Publication (UbiComp '14 Adjunct). ACM, New York, NY, USA, 1141-1150. https://doi.org/10.1145/2638728.2641692"
+    },
+    {
+      "title": "Permulin: Mixed-focus Collaboration on Multi-view Tabletops",
+      "authors": [
+        "Roman Lissermann",
+        "Jochen Huber",
+        "Martin Schmitz",
+        "J\u00fcrgen Steimle",
+        "Max M\u00fchlh\u00e4user"
+      ],
+      "year": 2014,
+      "doi": "10.1145/2556288.2557405",
+      "raw": "Permulin: Mixed-focus Collaboration on Multi-view Tabletops \n\t\t \n\t\t\t Roman Lissermann \n\t\t \n\t\t \n\t\t\t Jochen Huber \n\t\t \n\t\t \n\t\t\t Martin Schmitz \n\t\t \n\t\t \n\t\t\t J\u00fcrgen Steimle \n\t\t \n\t\t \n\t\t\t Max M\u00fchlh\u00e4user \n\t\t \n\t\t 10.1145/2556288.2557405 \n\t\t \n\t \n\t \n\t\t Proceedings of the 32Nd Annual ACM Conference on Human Factors in Computing Systems (CHI '14) \n\t\t the 32Nd Annual ACM Conference on Human Factors in Computing Systems (CHI '14) New York, NY, USA \n\t\t \n\t\t\t ACM \n\t\t\t 2014 \n\t\t\t \n\t\t \n\t \n\t Roman Lissermann, Jochen Huber, Martin Schmitz, J\u00fcrgen Steimle, and Max M\u00fchlh\u00e4user. 2014. Permulin: Mixed-focus Collaboration on Multi-view Tabletops. In Proceedings of the 32Nd Annual ACM Conference on Human Factors in Computing Systems (CHI '14). ACM, New York, NY, USA, 3191-3200. https://doi.org/10.1145/2556288.2557405"
+    },
+    {
+      "title": "Gesture On: Enabling Always-On Touch Gestures for Fast Mobile Access from the Device Standby Mode",
+      "authors": [
+        "Hao Lu",
+        "Yang Li"
+      ],
+      "year": 2015,
+      "doi": "10.1145/2702123.2702610",
+      "raw": "Gesture On: Enabling Always-On Touch Gestures for Fast Mobile Access from the Device Standby Mode \n\t\t \n\t\t\t Hao Lu \n\t\t \n\t\t \n\t\t\t Yang Li \n\t\t \n\t\t 10.1145/2702123.2702610 \n\t\t \n\t \n\t \n\t\t Proceedings of the 33rd Annual ACM Conference on Human Factors in Computing Systems (CHI '15) \n\t\t the 33rd Annual ACM Conference on Human Factors in Computing Systems (CHI '15) New York, NY, USA \n\t\t \n\t\t\t ACM \n\t\t\t 2015 \n\t\t\t \n\t\t \n\t \n\t Hao Lu and Yang Li. 2015. Gesture On: Enabling Always-On Touch Gestures for Fast Mobile Access from the Device Standby Mode. In Proceedings of the 33rd Annual ACM Conference on Human Factors in Computing Systems (CHI '15). ACM, New York, NY, USA, 3355-3364. https://doi.org/10.1145/2702123.2702610 33:22 \u2022 Xu et al."
+    },
+    {
+      "title": "Gaze and Speech in Attentive User Interfaces",
+      "authors": [
+        "Paul Maglio",
+        "Teenie Matlock",
+        "Christopher Campbell",
+        "Shumin Zhai",
+        "Barton Smith"
+      ],
+      "year": 2000,
+      "doi": "10.1007/3-540-40063-x_1",
+      "raw": "Gaze and Speech in Attentive User Interfaces \n\t\t \n\t\t\t Paul P Maglio \n\t\t \n\t\t \n\t\t\t Teenie Matlock \n\t\t \n\t\t \n\t\t\t Christopher S Campbell \n\t\t \n\t\t \n\t\t\t Shumin Zhai \n\t\t \n\t\t \n\t\t\t Barton A Smith \n\t\t \n\t\t 10.1007/3-540-40063-x_1 \n\t\t \n\t \n\t \n\t\t Proceedings of the Third International Conference on Advances in Multimodal Interfaces (ICMI '00) \n\t\t the Third International Conference on Advances in Multimodal Interfaces (ICMI '00) London, UK, UK \n\t\t \n\t\t\t Springer-Verlag \n\t\t\t 2000 \n\t\t\t \n\t\t \n\t \n\t Paul P. Maglio, Teenie Matlock, Christopher S. Campbell, Shumin Zhai, and Barton A. Smith. 2000. Gaze and Speech in Attentive User Interfaces. In Proceedings of the Third International Conference on Advances in Multimodal Interfaces (ICMI '00). Springer-Verlag, London, UK, UK, 1-7. http://dl.acm.org/citation.cfm?id=645524.656806"
+    },
+    {
+      "title": "SwitchBack: Using Focus and Saccade Tracking to Guide Users' Attention for Mobile Task Resumption",
+      "authors": [
+        "Alexander Mariakakis",
+        "Mayank Goel",
+        "Md Tanvir Islam",
+        "Shwetak Aumi",
+        "Jacob Patel"
+      ],
+      "year": 2015,
+      "doi": "10.1145/2702123.2702539",
+      "raw": "SwitchBack: Using Focus and Saccade Tracking to Guide Users' Attention for Mobile Task Resumption \n\t\t \n\t\t\t Alexander Mariakakis \n\t\t \n\t\t \n\t\t\t Mayank Goel \n\t\t \n\t\t \n\t\t\t Md Tanvir Islam \n\t\t \n\t\t \n\t\t\t Shwetak N Aumi \n\t\t \n\t\t \n\t\t\t Jacob O Patel \n\t\t \n\t\t \n\t\t\t Wobbrock \n\t\t \n\t\t 10.1145/2702123.2702539 \n\t\t \n\t \n\t \n\t\t Proceedings of the 33rd Annual ACM Conference on Human Factors in Computing Systems (CHI '15) \n\t\t the 33rd Annual ACM Conference on Human Factors in Computing Systems (CHI '15) New York, NY, USA \n\t\t \n\t\t\t ACM \n\t\t\t 2015. 2953-2962 \n\t\t \n\t \n\t Alexander Mariakakis, Mayank Goel, Md Tanvir Islam Aumi, Shwetak N. Patel, and Jacob O. Wobbrock. 2015. SwitchBack: Using Focus and Saccade Tracking to Guide Users' Attention for Mobile Task Resumption. In Proceedings of the 33rd Annual ACM Conference on Human Factors in Computing Systems (CHI '15). ACM, New York, NY, USA, 2953-2962. https://doi.org/10.1145/2702123.2702539"
+    },
+    {
+      "title": "Rethinking 'Multi-user': An In-the-wild Study of How Groups Approach a Walk-up-and-use Tabletop Interface",
+      "authors": [
+        "Paul Marshall",
+        "Richard Morris",
+        "Yvonne Rogers",
+        "Stefan Kreitmayer",
+        "Matt Davies"
+      ],
+      "year": 2011,
+      "doi": "10.1145/1978942.1979392",
+      "raw": "Rethinking 'Multi-user': An In-the-wild Study of How Groups Approach a Walk-up-and-use Tabletop Interface \n\t\t \n\t\t\t Paul Marshall \n\t\t \n\t\t \n\t\t\t Richard Morris \n\t\t \n\t\t \n\t\t\t Yvonne Rogers \n\t\t \n\t\t \n\t\t\t Stefan Kreitmayer \n\t\t \n\t\t \n\t\t\t Matt Davies \n\t\t \n\t\t 10.1145/1978942.1979392 \n\t\t \n\t \n\t \n\t\t Proceedings of the SIGCHI Conference on Human Factors in Computing Systems (CHI '11) \n\t\t the SIGCHI Conference on Human Factors in Computing Systems (CHI '11) New York, NY, USA \n\t\t \n\t\t\t ACM \n\t\t\t 2011 \n\t\t\t \n\t\t \n\t \n\t Paul Marshall, Richard Morris, Yvonne Rogers, Stefan Kreitmayer, and Matt Davies. 2011. Rethinking 'Multi-user': An In-the-wild Study of How Groups Approach a Walk-up-and-use Tabletop Interface. In Proceedings of the SIGCHI Conference on Human Factors in Computing Systems (CHI '11). ACM, New York, NY, USA, 3033-3042. https://doi.org/10.1145/1978942.1979392"
+    },
+    {
+      "title": "Identifying Unintentional Touches on Handheld Touch Screen Devices",
+      "authors": [
+        "Juha Matero",
+        "Ashley Colley"
+      ],
+      "year": 2012,
+      "doi": "10.1145/2317956.2318031",
+      "raw": "Identifying Unintentional Touches on Handheld Touch Screen Devices \n\t\t \n\t\t\t Juha Matero \n\t\t \n\t\t \n\t\t\t Ashley Colley \n\t\t \n\t\t 10.1145/2317956.2318031 \n\t\t \n\t \n\t \n\t\t Proceedings of the Designing Interactive Systems Conference (DIS '12) \n\t\t the Designing Interactive Systems Conference (DIS '12) New York, NY, USA \n\t\t \n\t\t\t ACM \n\t\t\t 2012 \n\t\t\t \n\t\t \n\t \n\t Juha Matero and Ashley Colley. 2012. Identifying Unintentional Touches on Handheld Touch Screen Devices. In Proceedings of the Designing Interactive Systems Conference (DIS '12). ACM, New York, NY, USA, 506-509. https://doi.org/10.1145/2317956.2318031"
+    },
+    {
+      "title": "Empirical Evaluation of Uni-and Bimodal Pen and Touch Interaction Properties on Digital Tabletops",
+      "authors": [
+        "Fabrice Matulic",
+        "Moira Norrie"
+      ],
+      "year": 2012,
+      "doi": "10.1145/2396636.2396659",
+      "raw": "Empirical Evaluation of Uni-and Bimodal Pen and Touch Interaction Properties on Digital Tabletops \n\t\t \n\t\t\t Fabrice Matulic \n\t\t \n\t\t \n\t\t\t Moira Norrie \n\t\t \n\t\t 10.1145/2396636.2396659 \n\t\t \n\t \n\t \n\t\t Proceedings of the 2012 ACM International Conference on Interactive Tabletops and Surfaces (ITS '12) \n\t\t the 2012 ACM International Conference on Interactive Tabletops and Surfaces (ITS '12) New York, NY, USA \n\t\t \n\t\t\t ACM \n\t\t\t 2012 \n\t\t\t \n\t\t \n\t \n\t Fabrice Matulic and Moira Norrie. 2012. Empirical Evaluation of Uni-and Bimodal Pen and Touch Interaction Properties on Digital Tabletops. In Proceedings of the 2012 ACM International Conference on Interactive Tabletops and Surfaces (ITS '12). ACM, New York, NY, USA, 143-152. https://doi.org/10.1145/2396636.2396659"
+    },
+    {
+      "title": "Hand Contact Shape Recognition for Posture-Based Tabletop Widgets and Interaction",
+      "authors": [
+        "Fabrice Matulic",
+        "Daniel Vogel",
+        "Raimund Dachselt"
+      ],
+      "year": 2017,
+      "doi": "10.1145/3132272.3134126",
+      "raw": "Hand Contact Shape Recognition for Posture-Based Tabletop Widgets and Interaction \n\t\t \n\t\t\t Fabrice Matulic \n\t\t \n\t\t \n\t\t\t Daniel Vogel \n\t\t \n\t\t \n\t\t\t Raimund Dachselt \n\t\t \n\t\t 10.1145/3132272.3134126 \n\t\t \n\t \n\t \n\t\t Proceedings of the 2017 ACM International Conference on Interactive Surfaces and Spaces (ISS '17) \n\t\t the 2017 ACM International Conference on Interactive Surfaces and Spaces (ISS '17) New York, NY, USA \n\t\t \n\t\t\t ACM \n\t\t\t 2017 \n\t\t\t \n\t\t \n\t \n\t Fabrice Matulic, Daniel Vogel, and Raimund Dachselt. 2017. Hand Contact Shape Recognition for Posture-Based Tabletop Widgets and Interaction. In Proceedings of the 2017 ACM International Conference on Interactive Surfaces and Spaces (ISS '17). ACM, New York, NY, USA, 3-11. https://doi.org/10.1145/3132272.3134126"
+    },
+    {
+      "title": "Combining Touch and Gaze for Distant Selection in a Tabletop Setting",
+      "authors": [
+        "Michael Mauderer",
+        "Florian Daiber"
+      ],
+      "year": 2013,
+      "raw": "Combining Touch and Gaze for Distant Selection in a Tabletop Setting \n\t\t \n\t\t\t Michael Mauderer \n\t\t \n\t\t \n\t\t\t Florian Daiber \n\t\t \n\t\t \n\t\t\t 2013. 2013 \n\t\t \n\t \n\t Michael Mauderer and Florian Daiber. 2013. Combining Touch and Gaze for Distant Selection in a Tabletop Setting. (2013)."
+    },
+    {
+      "title": "WUW -Wear Ur World: A Wearable Gestural Interface",
+      "authors": [
+        "Pranav Mistry",
+        "Pattie Maes",
+        "Liyan Chang"
+      ],
+      "year": 2009,
+      "doi": "10.1145/1520340.1520626",
+      "raw": "WUW -Wear Ur World: A Wearable Gestural Interface \n\t\t \n\t\t\t Pranav Mistry \n\t\t \n\t\t \n\t\t\t Pattie Maes \n\t\t \n\t\t \n\t\t\t Liyan Chang \n\t\t \n\t\t 10.1145/1520340.1520626 \n\t\t \n\t \n\t \n\t\t CHI '09 Extended Abstracts on Human Factors in Computing Systems (CHI EA '09) \n\t\t New York, NY, USA \n\t\t \n\t\t\t ACM \n\t\t\t 2009 \n\t\t\t \n\t\t \n\t \n\t Pranav Mistry, Pattie Maes, and Liyan Chang. 2009. WUW -Wear Ur World: A Wearable Gestural Interface. In CHI '09 Extended Abstracts on Human Factors in Computing Systems (CHI EA '09). ACM, New York, NY, USA, 4111-4116. https://doi.org/10.1145/1520340.1520626"
+    },
+    {
+      "title": "Head pose estimation in computer vision: A survey",
+      "authors": [
+        "Erik Murphy-Chutorian",
+        "Mohan Trivedi"
+      ],
+      "year": 2009,
+      "journal": "IEEE transactions on pattern analysis and machine intelligence",
+      "volume": "31",
+      "issue": "4",
+      "raw": "Head pose estimation in computer vision: A survey \n\t\t \n\t\t\t Erik Murphy-Chutorian \n\t\t \n\t\t \n\t\t\t Mohan Manubhai Trivedi \n\t\t \n\t \n\t \n\t\t IEEE transactions on pattern analysis and machine intelligence \n\t\t \n\t\t\t 31 \n\t\t\t 4 \n\t\t\t \n\t\t\t 2009. 2009 \n\t\t \n\t \n\t Erik Murphy-Chutorian and Mohan Manubhai Trivedi. 2009. Head pose estimation in computer vision: A survey. IEEE transactions on pattern analysis and machine intelligence 31, 4 (2009), 607-626."
+    },
+    {
+      "title": "Usability inspection methods",
+      "authors": [
+        "Jakob Nielsen"
+      ],
+      "year": 1994,
+      "doi": "10.1145/259963.260531",
+      "raw": "Usability inspection methods \n\t\t \n\t\t\t Jakob Nielsen \n\t\t \n\t\t 10.1145/259963.260531 \n\t \n\t \n\t\t Conference companion on Human factors in computing systems \n\t\t \n\t\t\t ACM \n\t\t\t 1994 \n\t\t\t \n\t\t \n\t \n\t Jakob Nielsen. 1994. Usability inspection methods. In Conference companion on Human factors in computing systems. ACM, 413-414."
+    },
+    {
+      "title": "Gaze-touch: Combining Gaze with Multi-touch for Interaction on the Same Surface",
+      "authors": [
+        "Ken Pfeuffer",
+        "Jason Alexander",
+        "Ming Chong",
+        "Hans Gellersen"
+      ],
+      "year": 2014,
+      "doi": "10.1145/2642918.2647397",
+      "raw": "Gaze-touch: Combining Gaze with Multi-touch for Interaction on the Same Surface \n\t\t \n\t\t\t Ken Pfeuffer \n\t\t \n\t\t \n\t\t\t Jason Alexander \n\t\t \n\t\t \n\t\t\t Ming Ki Chong \n\t\t \n\t\t \n\t\t\t Hans Gellersen \n\t\t \n\t\t 10.1145/2642918.2647397 \n\t\t \n\t \n\t \n\t\t Proceedings of the 27th Annual ACM Symposium on User Interface Software and Technology (UIST '14) \n\t\t the 27th Annual ACM Symposium on User Interface Software and Technology (UIST '14) New York, NY, USA \n\t\t \n\t\t\t ACM \n\t\t\t 2014 \n\t\t\t \n\t\t \n\t \n\t Ken Pfeuffer, Jason Alexander, Ming Ki Chong, and Hans Gellersen. 2014. Gaze-touch: Combining Gaze with Multi-touch for Interaction on the Same Surface. In Proceedings of the 27th Annual ACM Symposium on User Interface Software and Technology (UIST '14). ACM, New York, NY, USA, 509-518. https://doi.org/10.1145/2642918.2647397"
+    },
+    {
+      "title": "Gaze-Shifting: Direct-Indirect Input with Pen and Touch Modulated by Gaze",
+      "authors": [
+        "Ken Pfeuffer",
+        "Jason Alexander",
+        "Ming Chong",
+        "Yanxia Zhang",
+        "Hans Gellersen"
+      ],
+      "year": 2015,
+      "doi": "10.1145/2807442.2807460",
+      "raw": "Gaze-Shifting: Direct-Indirect Input with Pen and Touch Modulated by Gaze \n\t\t \n\t\t\t Ken Pfeuffer \n\t\t \n\t\t \n\t\t\t Jason Alexander \n\t\t \n\t\t \n\t\t\t Ming Ki Chong \n\t\t \n\t\t \n\t\t\t Yanxia Zhang \n\t\t \n\t\t \n\t\t\t Hans Gellersen \n\t\t \n\t\t 10.1145/2807442.2807460 \n\t\t \n\t \n\t \n\t\t Proceedings of the 28th Annual ACM Symposium on User Interface Software &#38; Technology (UIST '15) \n\t\t the 28th Annual ACM Symposium on User Interface Software &#38; Technology (UIST '15) New York, NY, USA \n\t\t \n\t\t\t ACM \n\t\t\t 2015 \n\t\t\t \n\t\t \n\t \n\t Ken Pfeuffer, Jason Alexander, Ming Ki Chong, Yanxia Zhang, and Hans Gellersen. 2015. Gaze-Shifting: Direct-Indirect Input with Pen and Touch Modulated by Gaze. In Proceedings of the 28th Annual ACM Symposium on User Interface Software &#38; Technology (UIST '15). ACM, New York, NY, USA, 373-383. https://doi.org/10.1145/2807442.2807460"
+    },
+    {
+      "title": "Gaze and Touch Interaction on Tablets",
+      "authors": [
+        "Ken Pfeuffer",
+        "Hans Gellersen"
+      ],
+      "year": 2016,
+      "doi": "10.1145/2984511.2984514",
+      "raw": "Gaze and Touch Interaction on Tablets \n\t\t \n\t\t\t Ken Pfeuffer \n\t\t \n\t\t \n\t\t\t Hans Gellersen \n\t\t \n\t\t 10.1145/2984511.2984514 \n\t\t \n\t \n\t \n\t\t Proceedings of the 29th Annual Symposium on User Interface Software and Technology (UIST '16) \n\t\t the 29th Annual Symposium on User Interface Software and Technology (UIST '16) New York, NY, USA \n\t\t \n\t\t\t ACM \n\t\t\t 2016 \n\t\t\t \n\t\t \n\t \n\t Ken Pfeuffer and Hans Gellersen. 2016. Gaze and Touch Interaction on Tablets. In Proceedings of the 29th Annual Symposium on User Interface Software and Technology (UIST '16). ACM, New York, NY, USA, 301-311. https://doi.org/10.1145/2984511.2984514"
+    },
+    {
+      "title": "Optitrack",
+      "raw": "Optitrack \n\t\t \n\t\t \n\t\t\t 2011. 22 2 2014. 2011 \n\t\t\t Natural Point, Inc \n\t\t \n\t \n\t Natural Point. 2011. Optitrack. Natural Point, Inc.,[Online]. Available: http://www. naturalpoint. com/optitrack/.[Accessed 22 2 2014] (2011)."
+    },
+    {
+      "title": "SuperVision: Playing with Gaze Aversion and Peripheral Vision",
+      "authors": [
+        "Argenis Ramirez",
+        "Hans Gellersen"
+      ],
+      "year": 2019,
+      "doi": "10.1145/3290605.3300703",
+      "volume": "473",
+      "pages": "12",
+      "raw": "SuperVision: Playing with Gaze Aversion and Peripheral Vision \n\t\t \n\t\t\t Argenis Ramirez \n\t\t \n\t\t \n\t\t\t Gomez \n\t\t \n\t\t \n\t\t\t Hans Gellersen \n\t\t \n\t\t 10.1145/3290605.3300703 \n\t\t \n\t \n\t \n\t\t Proceedings of the 2019 CHI Conference on Human Factors in Computing Systems (CHI '19) \n\t\t the 2019 CHI Conference on Human Factors in Computing Systems (CHI '19) New York, NY, USA \n\t\t \n\t\t\t ACM \n\t\t\t 2019 \n\t\t\t 473 \n\t\t\t 12 \n\t\t \n\t \n\t Argenis Ramirez Gomez and Hans Gellersen. 2019. SuperVision: Playing with Gaze Aversion and Peripheral Vision. In Proceedings of the 2019 CHI Conference on Human Factors in Computing Systems (CHI '19). ACM, New York, NY, USA, Article 473, 12 pages. https: //doi.org/10.1145/3290605.3300703"
+    },
+    {
+      "title": "Estimating gaze direction from low-resolution faces in video",
+      "authors": [
+        "Neil Robertson",
+        "Ian Reid"
+      ],
+      "year": 2006,
+      "journal": "Computer Vision-ECCV",
+      "volume": "2006",
+      "raw": "Estimating gaze direction from low-resolution faces in video \n\t\t \n\t\t\t Neil Robertson \n\t\t \n\t\t \n\t\t\t Ian Reid \n\t\t \n\t \n\t \n\t\t Computer Vision-ECCV \n\t\t \n\t\t\t 2006 \n\t\t\t \n\t\t\t 2006. 2006 \n\t\t \n\t \n\t Neil Robertson and Ian Reid. 2006. Estimating gaze direction from low-resolution faces in video. Computer Vision-ECCV 2006 (2006), 402-415."
+    },
+    {
+      "title": "Designing Interactive Advertisements for Public Displays",
+      "authors": [
+        "Hasibullah Sahibzada",
+        "Eva Hornecker",
+        "Florian Echtler",
+        "Patrick Fischer"
+      ],
+      "year": 2017,
+      "doi": "10.1145/3025453.3025531",
+      "raw": "Designing Interactive Advertisements for Public Displays \n\t\t \n\t\t\t Hasibullah Sahibzada \n\t\t \n\t\t \n\t\t\t Eva Hornecker \n\t\t \n\t\t \n\t\t\t Florian Echtler \n\t\t \n\t\t \n\t\t\t Patrick Tobias Fischer \n\t\t \n\t\t 10.1145/3025453.3025531 \n\t\t \n\t \n\t \n\t\t Proceedings of the 2017 CHI Conference on Human Factors in Computing Systems (CHI '17) \n\t\t the 2017 CHI Conference on Human Factors in Computing Systems (CHI '17) New York, NY, USA \n\t\t \n\t\t\t ACM \n\t\t\t 2017 \n\t\t\t \n\t\t \n\t \n\t Hasibullah Sahibzada, Eva Hornecker, Florian Echtler, and Patrick Tobias Fischer. 2017. Designing Interactive Advertisements for Public Displays. In Proceedings of the 2017 CHI Conference on Human Factors in Computing Systems (CHI '17). ACM, New York, NY, USA, 1518-1529. https://doi.org/10.1145/3025453.3025531"
+    },
+    {
+      "title": "Multi-touch surfaces: A technical guide",
+      "authors": [
+        "Johannes Sch\u00f6ning",
+        "Peter Brandl",
+        "Florian Daiber",
+        "Florian Echtler",
+        "Otmar Hilliges",
+        "Jonathan Hook",
+        "Markus L\u00f6chtefeld",
+        "Nima Motamedi",
+        "Laurence Muller",
+        "Patrick Olivier"
+      ],
+      "year": 2008,
+      "doi": "10.1080/2151237x.2009.10129285",
+      "journal": "IEEE Tabletops and Interactive Surfaces",
+      "volume": "2",
+      "pages": "11",
+      "raw": "Multi-touch surfaces: A technical guide \n\t\t \n\t\t\t Johannes Sch\u00f6ning \n\t\t \n\t\t \n\t\t\t Peter Brandl \n\t\t \n\t\t \n\t\t\t Florian Daiber \n\t\t \n\t\t \n\t\t\t Florian Echtler \n\t\t \n\t\t \n\t\t\t Otmar Hilliges \n\t\t \n\t\t \n\t\t\t Jonathan Hook \n\t\t \n\t\t \n\t\t\t Markus L\u00f6chtefeld \n\t\t \n\t\t \n\t\t\t Nima Motamedi \n\t\t \n\t\t \n\t\t\t Laurence Muller \n\t\t \n\t\t \n\t\t\t Patrick Olivier \n\t\t \n\t\t 10.1080/2151237x.2009.10129285 \n\t \n\t \n\t\t IEEE Tabletops and Interactive Surfaces \n\t\t \n\t\t\t 2 \n\t\t\t 11 \n\t\t\t 2008. 2008 \n\t\t \n\t \n\t Johannes Sch\u00f6ning, Peter Brandl, Florian Daiber, Florian Echtler, Otmar Hilliges, Jonathan Hook, Markus L\u00f6chtefeld, Nima Motamedi, Laurence Muller, Patrick Olivier, et al. 2008. Multi-touch surfaces: A technical guide. IEEE Tabletops and Interactive Surfaces 2, 11 (2008)."
+    },
+    {
+      "title": "Combining Body Pose, Gaze, and Gesture to Determine Intention to Interact in Vision-based Interfaces",
+      "authors": [
+        "Julia Schwarz",
+        "Claudius Marais",
+        "Tommer Leyvand",
+        "Scott Hudson",
+        "Jennifer Mankoff"
+      ],
+      "year": 2014,
+      "doi": "10.1145/2556288.2556989",
+      "raw": "Combining Body Pose, Gaze, and Gesture to Determine Intention to Interact in Vision-based Interfaces \n\t\t \n\t\t\t Julia Schwarz \n\t\t \n\t\t \n\t\t\t Charles \n\t\t \n\t\t \n\t\t\t Claudius Marais \n\t\t \n\t\t \n\t\t\t Tommer Leyvand \n\t\t \n\t\t \n\t\t\t Scott E Hudson \n\t\t \n\t\t \n\t\t\t Jennifer Mankoff \n\t\t \n\t\t 10.1145/2556288.2556989 \n\t\t \n\t \n\t \n\t\t Proceedings of the 32Nd Annual ACM Conference on Human Factors in Computing Systems (CHI '14) \n\t\t the 32Nd Annual ACM Conference on Human Factors in Computing Systems (CHI '14) New York, NY, USA \n\t\t \n\t\t\t ACM \n\t\t\t 2014 \n\t\t\t \n\t\t \n\t \n\t Julia Schwarz, Charles Claudius Marais, Tommer Leyvand, Scott E. Hudson, and Jennifer Mankoff. 2014. Combining Body Pose, Gaze, and Gesture to Determine Intention to Interact in Vision-based Interfaces. In Proceedings of the 32Nd Annual ACM Conference on Human Factors in Computing Systems (CHI '14). ACM, New York, NY, USA, 3443-3452. https://doi.org/10.1145/2556288.2556989"
+    },
+    {
+      "title": "Probabilistic Palm Rejection Using Spatiotemporal Touch Features and Iterative Classification",
+      "authors": [
+        "Julia Schwarz",
+        "Robert Xiao",
+        "Jennifer Mankoff",
+        "Scott Hudson",
+        "Chris Harrison"
+      ],
+      "year": 2009,
+      "doi": "10.1145/2556288.2557056",
+      "raw": "Probabilistic Palm Rejection Using Spatiotemporal Touch Features and Iterative Classification \n\t\t \n\t\t\t Julia Schwarz \n\t\t \n\t\t \n\t\t\t Robert Xiao \n\t\t \n\t\t \n\t\t\t Jennifer Mankoff \n\t\t \n\t\t \n\t\t\t Scott E Hudson \n\t\t \n\t\t \n\t\t\t Chris Harrison \n\t\t \n\t\t 10.1145/2556288.2557056 \n\t\t \n\t \n\t \n\t\t Proceedings of the 32Nd Annual ACM Conference on Human Factors in Computing Systems (CHI '14) \n\t\t the 32Nd Annual ACM Conference on Human Factors in Computing Systems (CHI '14) New York, NY, USA \n\t\t \n\t\t\t ACM \n\t\t\t 2014. 2009-2012 \n\t\t \n\t \n\t Julia Schwarz, Robert Xiao, Jennifer Mankoff, Scott E. Hudson, and Chris Harrison. 2014. Probabilistic Palm Rejection Using Spatiotem- poral Touch Features and Iterative Classification. In Proceedings of the 32Nd Annual ACM Conference on Human Factors in Computing Systems (CHI '14). ACM, New York, NY, USA, 2009-2012. https://doi.org/10.1145/2556288.2557056"
+    },
+    {
+      "title": "Explicating &#34;Implicit Interaction&#34;: An Examination of the Concept and Challenges for Research",
+      "authors": [
+        "Bar\u0131\u015f Serim",
+        "Giulio Jacucci"
+      ],
+      "year": 2019,
+      "doi": "10.1145/3290605.3300647",
+      "volume": "417",
+      "pages": "16",
+      "raw": "Explicating &#34;Implicit Interaction&#34;: An Examination of the Concept and Challenges for Research \n\t\t \n\t\t\t Bar\u0131\u015f Serim \n\t\t \n\t\t \n\t\t\t Giulio Jacucci \n\t\t \n\t\t 10.1145/3290605.3300647 \n\t\t \n\t \n\t \n\t\t Proceedings of the 2019 CHI Conference on Human Factors in Computing Systems (CHI '19) \n\t\t the 2019 CHI Conference on Human Factors in Computing Systems (CHI '19) New York, NY, USA \n\t\t \n\t\t\t ACM \n\t\t\t 2019 \n\t\t\t 417 \n\t\t\t 16 \n\t\t \n\t \n\t Bar\u0131\u015f Serim and Giulio Jacucci. 2019. Explicating &#34;Implicit Interaction&#34;: An Examination of the Concept and Challenges for Research. In Proceedings of the 2019 CHI Conference on Human Factors in Computing Systems (CHI '19). ACM, New York, NY, USA, Article 417, 16 pages. https://doi.org/10.1145/3290605.3300647"
+    },
+    {
+      "title": "Eye&#38;Head: Synergetic Eye and Head Movement for Gaze Pointing and Selection",
+      "authors": [
+        "Ludwig Sidenmark",
+        "Hans Gellersen"
+      ],
+      "year": 2019,
+      "doi": "10.1145/3332165.3347921",
+      "raw": "Eye&#38;Head: Synergetic Eye and Head Movement for Gaze Pointing and Selection \n\t\t \n\t\t\t Ludwig Sidenmark \n\t\t \n\t\t \n\t\t\t Hans Gellersen \n\t\t \n\t\t 10.1145/3332165.3347921 \n\t\t \n\t \n\t \n\t\t Proceedings of the 32Nd Annual ACM Symposium on User Interface Software and Technology (UIST '19) \n\t\t the 32Nd Annual ACM Symposium on User Interface Software and Technology (UIST '19) New York, NY, USA \n\t\t \n\t\t\t ACM \n\t\t\t 2019 \n\t\t\t \n\t\t \n\t \n\t Ludwig Sidenmark and Hans Gellersen. 2019. Eye&#38;Head: Synergetic Eye and Head Movement for Gaze Pointing and Selection. In Proceedings of the 32Nd Annual ACM Symposium on User Interface Software and Technology (UIST '19). ACM, New York, NY, USA, 1161-1174. https://doi.org/10.1145/3332165.3347921"
+    },
+    {
+      "title": "Gaze Behaviour on Interacted Objects During Hand Interaction in Virtual Reality for Eye Tracking Calibration",
+      "authors": [
+        "Ludwig Sidenmark",
+        "Anders Lundstr\u00f6m"
+      ],
+      "year": 2019,
+      "doi": "10.1145/3314111.3319815",
+      "raw": "Gaze Behaviour on Interacted Objects During Hand Interaction in Virtual Reality for Eye Tracking Calibration \n\t\t \n\t\t\t Ludwig Sidenmark \n\t\t \n\t\t \n\t\t\t Anders Lundstr\u00f6m \n\t\t \n\t\t 10.1145/3314111.3319815 \n\t\t \n\t \n\t \n\t\t Proceedings of the 11th ACM Symposium on Eye Tracking Research & Applications (ETRA '19) \n\t\t the 11th ACM Symposium on Eye Tracking Research & Applications (ETRA '19) New York, NY, USA \n\t\t \n\t\t\t ACM \n\t\t\t 2019 \n\t\t \n\t \n\t Article 6, 9 \n\t Ludwig Sidenmark and Anders Lundstr\u00f6m. 2019. Gaze Behaviour on Interacted Objects During Hand Interaction in Virtual Reality for Eye Tracking Calibration. In Proceedings of the 11th ACM Symposium on Eye Tracking Research & Applications (ETRA '19). ACM, New York, NY, USA, Article 6, 9 pages. https://doi.org/10.1145/3314111.3319815"
+    },
+    {
+      "title": "VMotion: Designing a Seamless Walking Experience in VR",
+      "authors": [
+        "Misha Sra",
+        "Xuhai Xu",
+        "Aske Mottelson",
+        "Pattie Maes"
+      ],
+      "year": 2018,
+      "doi": "10.1145/3196709.3196792",
+      "raw": "VMotion: Designing a Seamless Walking Experience in VR \n\t\t \n\t\t\t Misha Sra \n\t\t \n\t\t \n\t\t\t Xuhai Xu \n\t\t \n\t\t \n\t\t\t Aske Mottelson \n\t\t \n\t\t \n\t\t\t Pattie Maes \n\t\t \n\t\t 10.1145/3196709.3196792 \n\t\t \n\t \n\t \n\t\t Proceedings of the 2018 Designing Interactive Systems Conference (DIS '18) \n\t\t the 2018 Designing Interactive Systems Conference (DIS '18) New York, NY, USA \n\t\t \n\t\t\t ACM \n\t\t\t 2018 \n\t\t\t \n\t\t \n\t \n\t Misha Sra, Xuhai Xu, Aske Mottelson, and Pattie Maes. 2018. VMotion: Designing a Seamless Walking Experience in VR. In Proceedings of the 2018 Designing Interactive Systems Conference (DIS '18). ACM, New York, NY, USA, 59-70. https://doi.org/10.1145/3196709. 3196792"
+    },
+    {
+      "title": "Heuristic filtering and reliable calibration methods for video-based pupil-tracking systems",
+      "authors": [
+        "Dave Stampe"
+      ],
+      "year": 1993,
+      "doi": "10.3758/bf03204486",
+      "journal": "Behavior Research Methods, Instruments, & Computers",
+      "volume": "25",
+      "issue": "2",
+      "raw": "Heuristic filtering and reliable calibration methods for video-based pupil-tracking systems \n\t\t \n\t\t\t Dave M Stampe \n\t\t \n\t\t 10.3758/bf03204486 \n\t \n\t \n\t\t Behavior Research Methods, Instruments, & Computers \n\t\t \n\t\t\t 25 \n\t\t\t 2 \n\t\t\t \n\t\t\t 1993. 1993 \n\t\t \n\t \n\t Dave M Stampe. 1993. Heuristic filtering and reliable calibration methods for video-based pupil-tracking systems. Behavior Research Methods, Instruments, & Computers 25, 2 (1993), 137-142."
+    },
+    {
+      "title": "Still Looking: Investigating Seamless Gaze-supported Selection, Positioning, and Manipulation of Distant Targets",
+      "authors": [
+        "Sophie Stellmach",
+        "Raimund Dachselt"
+      ],
+      "year": 2013,
+      "doi": "10.1145/2470654.2470695",
+      "raw": "Still Looking: Investigating Seamless Gaze-supported Selection, Positioning, and Manipulation of Distant Targets \n\t\t \n\t\t\t Sophie Stellmach \n\t\t \n\t\t \n\t\t\t Raimund Dachselt \n\t\t \n\t\t 10.1145/2470654.2470695 \n\t\t \n\t \n\t \n\t\t Proceedings of the SIGCHI Conference on Human Factors in Computing Systems (CHI '13) \n\t\t the SIGCHI Conference on Human Factors in Computing Systems (CHI '13) New York, NY, USA \n\t\t \n\t\t\t ACM \n\t\t\t 2013 \n\t\t \n\t \n\t Sophie Stellmach and Raimund Dachselt. 2013. Still Looking: Investigating Seamless Gaze-supported Selection, Positioning, and Ma- nipulation of Distant Targets. In Proceedings of the SIGCHI Conference on Human Factors in Computing Systems (CHI '13). ACM, New York, NY, USA, https://doi.org/10.1145/2470654.2470695"
+    },
+    {
+      "title": "From gaze to focus of attention",
+      "authors": [
+        "Rainer Stiefelhagen",
+        "Michael Finke",
+        "Jie Yang",
+        "Alex Waibel"
+      ],
+      "year": 1999,
+      "raw": "From gaze to focus of attention \n\t\t \n\t\t\t Rainer Stiefelhagen \n\t\t \n\t\t \n\t\t\t Michael Finke \n\t\t \n\t\t \n\t\t\t Jie Yang \n\t\t \n\t\t \n\t\t\t Alex Waibel \n\t\t \n\t \n\t \n\t\t Visual Information and Information Systems \n\t\t \n\t\t\t Springer \n\t\t\t 1999 \n\t\t\t \n\t\t \n\t \n\t Rainer Stiefelhagen, Michael Finke, Jie Yang, and Alex Waibel. 1999. From gaze to focus of attention. In Visual Information and Infor- mation Systems. Springer, 765-772."
+    },
+    {
+      "title": "Affordances for Manipulation of Physical Versus Digital Media on Interactive Surfaces",
+      "authors": [
+        "Lucia Terrenghi",
+        "David Kirk",
+        "Abigail Sellen",
+        "Shahram Izadi"
+      ],
+      "year": 2007,
+      "doi": "10.1145/1240624.1240799",
+      "raw": "Affordances for Manipulation of Physical Versus Digital Media on Interactive Surfaces \n\t\t \n\t\t\t Lucia Terrenghi \n\t\t \n\t\t \n\t\t\t David Kirk \n\t\t \n\t\t \n\t\t\t Abigail Sellen \n\t\t \n\t\t \n\t\t\t Shahram Izadi \n\t\t \n\t\t 10.1145/1240624.1240799 \n\t\t \n\t \n\t \n\t\t Proceedings of the SIGCHI Conference on Human Factors in Computing Systems (CHI '07) \n\t\t the SIGCHI Conference on Human Factors in Computing Systems (CHI '07) New York, NY, USA \n\t\t \n\t\t\t ACM \n\t\t\t 2007 \n\t\t\t \n\t\t \n\t \n\t Lucia Terrenghi, David Kirk, Abigail Sellen, and Shahram Izadi. 2007. Affordances for Manipulation of Physical Versus Digital Media on Interactive Surfaces. In Proceedings of the SIGCHI Conference on Human Factors in Computing Systems (CHI '07). ACM, New York, NY, USA, 1157-1166. https://doi.org/10.1145/1240624.1240799"
+    },
+    {
+      "title": "Unintentional touch rejection",
+      "authors": [
+        "Alexander Reed L Townsend",
+        "Steven Kolmykov-Zotov",
+        "Bryan Dodge"
+      ],
+      "year": 2011,
+      "journal": "US Patent",
+      "volume": "8",
+      "pages": "440",
+      "raw": "Unintentional touch rejection \n\t\t \n\t\t\t Alexander J Reed L Townsend \n\t\t \n\t\t \n\t\t\t Steven P Kolmykov-Zotov \n\t\t \n\t\t \n\t\t\t Bryan D Dodge \n\t\t \n\t\t \n\t\t\t Scott \n\t\t \n\t \n\t \n\t\t US Patent \n\t\t \n\t\t\t 8 \n\t\t\t 440 \n\t\t\t 2011 \n\t\t \n\t \n\t Reed L Townsend, Alexander J Kolmykov-Zotov, Steven P Dodge, and Bryan D Scott. 2011. Unintentional touch rejection. US Patent 8,018,440."
+    },
+    {
+      "title": "Gaze+RST: Integrating Gaze and Multitouch for Remote Rotate-Scale-Translate Tasks",
+      "authors": [
+        "Jayson Turner",
+        "Jason Alexander",
+        "Andreas Bulling",
+        "Hans Gellersen"
+      ],
+      "year": 2015,
+      "doi": "10.1145/2702123.2702355",
+      "raw": "Gaze+RST: Integrating Gaze and Multitouch for Remote Rotate-Scale-Translate Tasks \n\t\t \n\t\t\t Jayson Turner \n\t\t \n\t\t \n\t\t\t Jason Alexander \n\t\t \n\t\t \n\t\t\t Andreas Bulling \n\t\t \n\t\t \n\t\t\t Hans Gellersen \n\t\t \n\t\t 10.1145/2702123.2702355 \n\t\t \n\t \n\t \n\t\t Proceedings of the 33rd Annual ACM Conference on Human Factors in Computing Systems (CHI '15) \n\t\t the 33rd Annual ACM Conference on Human Factors in Computing Systems (CHI '15) New York, NY, USA \n\t\t \n\t\t\t ACM \n\t\t\t 2015 \n\t\t\t \n\t\t \n\t \n\t Jayson Turner, Jason Alexander, Andreas Bulling, and Hans Gellersen. 2015. Gaze+RST: Integrating Gaze and Multitouch for Remote Rotate-Scale-Translate Tasks. In Proceedings of the 33rd Annual ACM Conference on Human Factors in Computing Systems (CHI '15). ACM, New York, NY, USA, 4179-4188. https://doi.org/10.1145/2702123.2702355"
+    },
+    {
+      "title": "Combining Gaze with Manual Interaction to Extend Physical Reach",
+      "authors": [
+        "Jayson Turner",
+        "Andreas Bulling",
+        "Hans Gellersen"
+      ],
+      "year": 2011,
+      "doi": "10.1145/2029956.2029966",
+      "raw": "Combining Gaze with Manual Interaction to Extend Physical Reach \n\t\t \n\t\t\t Jayson Turner \n\t\t \n\t\t \n\t\t\t Andreas Bulling \n\t\t \n\t\t \n\t\t\t Hans Gellersen \n\t\t \n\t\t 10.1145/2029956.2029966 \n\t\t \n\t \n\t \n\t\t Proceedings of the 1st International Workshop on Pervasive Eye Tracking &#38; Mobile Eye-based Interaction (PETMEI '11) \n\t\t the 1st International Workshop on Pervasive Eye Tracking &#38; Mobile Eye-based Interaction (PETMEI '11) New York, NY, USA \n\t\t \n\t\t\t ACM \n\t\t\t 2011 \n\t\t\t \n\t\t \n\t \n\t Jayson Turner, Andreas Bulling, and Hans Gellersen. 2011. Combining Gaze with Manual Interaction to Extend Physical Reach. In Proceedings of the 1st International Workshop on Pervasive Eye Tracking &#38; Mobile Eye-based Interaction (PETMEI '11). ACM, New York, NY, USA, 33-36. https://doi.org/10.1145/2029956.2029966"
+    },
+    {
+      "title": "Combining Direct and Indirect Touch Input for Interactive Workspaces Using Gaze Input",
+      "authors": [
+        "Simon Voelker",
+        "Andrii Matviienko",
+        "Johannes Sch\u00f6ning",
+        "Jan Borchers"
+      ],
+      "year": 2015,
+      "doi": "10.1145/2788940.2788949",
+      "raw": "Combining Direct and Indirect Touch Input for Interactive Workspaces Using Gaze Input \n\t\t \n\t\t\t Simon Voelker \n\t\t \n\t\t \n\t\t\t Andrii Matviienko \n\t\t \n\t\t \n\t\t\t Johannes Sch\u00f6ning \n\t\t \n\t\t \n\t\t\t Jan Borchers \n\t\t \n\t\t 10.1145/2788940.2788949 \n\t\t \n\t \n\t \n\t\t Proceedings of the 3rd ACM Symposium on Spatial User Interaction (SUI '15) \n\t\t the 3rd ACM Symposium on Spatial User Interaction (SUI '15) New York, NY, USA \n\t\t \n\t\t\t ACM \n\t\t\t 2015 \n\t\t\t \n\t\t \n\t \n\t Simon Voelker, Andrii Matviienko, Johannes Sch\u00f6ning, and Jan Borchers. 2015. Combining Direct and Indirect Touch Input for Inter- active Workspaces Using Gaze Input. In Proceedings of the 3rd ACM Symposium on Spatial User Interaction (SUI '15). ACM, New York, NY, USA, 79-88. https://doi.org/10.1145/2788940.2788949"
+    },
+    {
+      "title": "Occlusion-aware Interfaces",
+      "authors": [
+        "Daniel Vogel",
+        "Ravin Balakrishnan"
+      ],
+      "year": 2010,
+      "doi": "10.1145/1753326.1753365",
+      "raw": "Occlusion-aware Interfaces \n\t\t \n\t\t\t Daniel Vogel \n\t\t \n\t\t \n\t\t\t Ravin Balakrishnan \n\t\t \n\t\t 10.1145/1753326.1753365 \n\t\t \n\t \n\t \n\t\t Proceedings of the SIGCHI Conference on Human Factors in Computing Systems (CHI '10) \n\t\t the SIGCHI Conference on Human Factors in Computing Systems (CHI '10) New York, NY, USA \n\t\t \n\t\t\t ACM \n\t\t\t 2010 \n\t\t\t \n\t\t \n\t \n\t Daniel Vogel and Ravin Balakrishnan. 2010. Occlusion-aware Interfaces. In Proceedings of the SIGCHI Conference on Human Factors in Computing Systems (CHI '10). ACM, New York, NY, USA, 263-272. https://doi.org/10.1145/1753326.1753365"
+    },
+    {
+      "title": "Understanding User Behavior For Document Recommendation",
+      "authors": [
+        "Xuhai Xu",
+        "Ahmed Hassan Awadallah",
+        "Susan Dumais",
+        "Farheen Omar",
+        "Bogdan Popp",
+        "Robert Routhwaite",
+        "Farnaz Jahanbakhsh"
+      ],
+      "year": 2020,
+      "doi": "10.1145/3366423.3380071",
+      "pages": "7",
+      "raw": "Understanding User Behavior For Document Recommendation \n\t\t \n\t\t\t Xuhai Xu \n\t\t \n\t\t \n\t\t\t Ahmed Hassan Awadallah \n\t\t \n\t\t \n\t\t\t Susan T Dumais \n\t\t \n\t\t \n\t\t\t Farheen Omar \n\t\t \n\t\t \n\t\t\t Bogdan Popp \n\t\t \n\t\t \n\t\t\t Robert Routhwaite \n\t\t \n\t\t \n\t\t\t Farnaz Jahanbakhsh \n\t\t \n\t\t 10.1145/3366423.3380071 \n\t\t \n\t \n\t \n\t\t The World Wide Web Conference (WWW '20) \n\t\t New York, NY, USA \n\t\t \n\t\t\t Association for Computing Machinery \n\t\t\t 2020 \n\t\t\t 7 \n\t\t \n\t \n\t Xuhai Xu, Ahmed Hassan Awadallah, Susan T. Dumais, Farheen Omar, Bogdan Popp, Robert Routhwaite, and Farnaz Jahanbakhsh. 2020. Understanding User Behavior For Document Recommendation. In The World Wide Web Conference (WWW '20). Association for Computing Machinery, New York, NY, USA, 7. https://doi.org/10.1145/3366423.3380071"
+    },
+    {
+      "title": "Leveraging Routine Behavior and Contextually-Filtered Features for Depression Detection among College Students",
+      "authors": [
+        "Xuhai Xu",
+        "Prerna Chikersal",
+        "Afsaneh Doryab",
+        "Daniella Villalba",
+        "Janine Dutcher",
+        "Michael Tumminia",
+        "Tim Althoff",
+        "Sheldon Cohen",
+        "Kasey Creswell",
+        "J Creswell"
+      ],
+      "year": 2019,
+      "doi": "10.1145/3351274",
+      "journal": "Proc. ACM Interact. Mob. Wearable Ubiquitous Technol",
+      "volume": "3",
+      "issue": "3",
+      "pages": "33",
+      "raw": "Leveraging Routine Behavior and Contextually-Filtered Features for Depression Detection among College Students \n\t\t \n\t\t\t Xuhai Xu \n\t\t \n\t\t \n\t\t\t Prerna Chikersal \n\t\t \n\t\t \n\t\t\t Afsaneh Doryab \n\t\t \n\t\t \n\t\t\t Daniella K Villalba \n\t\t \n\t\t \n\t\t\t Janine M Dutcher \n\t\t \n\t\t \n\t\t\t Michael J Tumminia \n\t\t \n\t\t \n\t\t\t Tim Althoff \n\t\t \n\t\t \n\t\t\t Sheldon Cohen \n\t\t \n\t\t \n\t\t\t Kasey G Creswell \n\t\t \n\t\t \n\t\t\t J David Creswell \n\t\t \n\t\t 10.1145/3351274 \n\t\t \n\t \n\t \n\t\t Proc. ACM Interact. Mob. Wearable Ubiquitous Technol \n\t\t \n\t\t\t 3 \n\t\t\t 3 \n\t\t\t 33 \n\t\t\t 2019. Sept. 2019 \n\t\t \n\t \n\t Xuhai Xu, Prerna Chikersal, Afsaneh Doryab, Daniella K. Villalba, Janine M. Dutcher, Michael J. Tumminia, Tim Althoff, Sheldon Cohen, Kasey G. Creswell, J. David Creswell, and et al. 2019. Leveraging Routine Behavior and Contextually-Filtered Features for Depression Detection among College Students. Proc. ACM Interact. Mob. Wearable Ubiquitous Technol. 3, 3, Article Article 116 (Sept. 2019), 33 pages. https://doi.org/10.1145/3351274"
+    },
+    {
+      "title": "Hand Range Interface: Information Always at Hand with a Body-centric Mid-air Input Surface",
+      "authors": [
+        "Xuhai Xu",
+        "Alexandru Dancu",
+        "Pattie Maes",
+        "Suranga Nanayakkara"
+      ],
+      "year": 2018,
+      "doi": "10.1145/3229434.3229449",
+      "pages": "12",
+      "raw": "Hand Range Interface: Information Always at Hand with a Body-centric Mid-air Input Surface \n\t\t \n\t\t\t Xuhai Xu \n\t\t \n\t\t \n\t\t\t Alexandru Dancu \n\t\t \n\t\t \n\t\t\t Pattie Maes \n\t\t \n\t\t \n\t\t\t Suranga Nanayakkara \n\t\t \n\t\t 10.1145/3229434.3229449 \n\t\t \n\t \n\t \n\t\t Proceedings of the 20th International Conference on Human-Computer Interaction with Mobile Devices and Services (MobileHCI '18) \n\t\t the 20th International Conference on Human-Computer Interaction with Mobile Devices and Services (MobileHCI '18) New York, NY, USA \n\t\t \n\t\t\t ACM \n\t\t\t 2018 \n\t\t\t 12 \n\t\t \n\t \n\t Article 5 \n\t Xuhai Xu, Alexandru Dancu, Pattie Maes, and Suranga Nanayakkara. 2018. Hand Range Interface: Information Always at Hand with a Body-centric Mid-air Input Surface. In Proceedings of the 20th International Conference on Human-Computer Interaction with Mobile Devices and Services (MobileHCI '18). ACM, New York, NY, USA, Article 5, 12 pages. https://doi.org/10.1145/3229434.3229449"
+    },
+    {
+      "title": "EarBuddy: Enabling On-Face Interaction via Wireless Earbuds",
+      "authors": [
+        "Xuhai Xu",
+        "Haitian Shi",
+        "Xin Yi",
+        "Wenjia Liu",
+        "Yukang Yan",
+        "Yuanchun Shi",
+        "Alex Mariakakis",
+        "Jennifer Mankoff",
+        "Anind Dey"
+      ],
+      "year": 2020,
+      "doi": "10.1145/3313831.3376836",
+      "pages": "14",
+      "raw": "EarBuddy: Enabling On-Face Interaction via Wireless Earbuds \n\t\t \n\t\t\t Xuhai Xu \n\t\t \n\t\t \n\t\t\t Haitian Shi \n\t\t \n\t\t \n\t\t\t Xin Yi \n\t\t \n\t\t \n\t\t\t Wenjia Liu \n\t\t \n\t\t \n\t\t\t Yukang Yan \n\t\t \n\t\t \n\t\t\t Yuanchun Shi \n\t\t \n\t\t \n\t\t\t Alex Mariakakis \n\t\t \n\t\t \n\t\t\t Jennifer Mankoff \n\t\t \n\t\t \n\t\t\t Anind K Dey \n\t\t \n\t\t 10.1145/3313831.3376836 \n\t\t \n\t \n\t \n\t\t Proceedings of the 2020 CHI Conference on Human Factors in Computing Systems (CHI '20) \n\t\t the 2020 CHI Conference on Human Factors in Computing Systems (CHI '20) New York, NY, USA \n\t\t \n\t\t\t Association for Computing Machinery \n\t\t\t 2020 \n\t\t\t 14 \n\t\t \n\t \n\t Xuhai Xu, Haitian Shi, Xin Yi, Wenjia Liu, Yukang Yan, Yuanchun Shi, Alex Mariakakis, Jennifer Mankoff, and Anind K. Dey. 2020. EarBuddy: Enabling On-Face Interaction via Wireless Earbuds. In Proceedings of the 2020 CHI Conference on Human Factors in Computing Systems (CHI '20). Association for Computing Machinery, New York, NY, USA, 14. https://doi.org/10.1145/3313831.3376836"
+    },
+    {
+      "title": "Clench Interface: Novel Biting Input Techniques",
+      "authors": [
+        "Xuhai Xu",
+        "Chun Yu",
+        "Anind Dey",
+        "Jennifer Mankoff"
+      ],
+      "year": 2019,
+      "doi": "10.1145/3290605.3300505",
+      "volume": "275",
+      "pages": "12",
+      "raw": "Clench Interface: Novel Biting Input Techniques \n\t\t \n\t\t\t Xuhai Xu \n\t\t \n\t\t \n\t\t\t Chun Yu \n\t\t \n\t\t \n\t\t\t Anind K Dey \n\t\t \n\t\t \n\t\t\t Jennifer Mankoff \n\t\t \n\t\t 10.1145/3290605.3300505 \n\t\t \n\t \n\t \n\t\t Proceedings of the 2019 CHI Conference on Human Factors in Computing Systems (CHI '19) \n\t\t the 2019 CHI Conference on Human Factors in Computing Systems (CHI '19) New York, NY, USA \n\t\t \n\t\t\t ACM \n\t\t\t 2019 \n\t\t\t 275 \n\t\t\t 12 \n\t\t \n\t \n\t Xuhai Xu, Chun Yu, Anind K. Dey, and Jennifer Mankoff. 2019. Clench Interface: Novel Biting Input Techniques. In Proceedings of the 2019 CHI Conference on Human Factors in Computing Systems (CHI '19). ACM, New York, NY, USA, Article 275, 12 pages. https: //doi.org/10.1145/3290605.3300505"
+    },
+    {
+      "title": "HeadCross: Exploring Head-Based Crossing Selection on Head-Mounted Displays",
+      "authors": [
+        "Yukang Yan",
+        "Yingtian Shi",
+        "Chun Yu",
+        "Yuanchun Shi"
+      ],
+      "year": 2020,
+      "doi": "10.1145/3380983",
+      "journal": "Proc. ACM Interact. Mob. Wearable Ubiquitous Technol",
+      "volume": "4",
+      "issue": "1",
+      "pages": "22",
+      "raw": "HeadCross: Exploring Head-Based Crossing Selection on Head-Mounted Displays \n\t\t \n\t\t\t Yukang Yan \n\t\t \n\t\t \n\t\t\t Yingtian Shi \n\t\t \n\t\t \n\t\t\t Chun Yu \n\t\t \n\t\t \n\t\t\t Yuanchun Shi \n\t\t \n\t\t 10.1145/3380983 \n\t\t \n\t \n\t \n\t\t Proc. ACM Interact. Mob. Wearable Ubiquitous Technol \n\t\t \n\t\t\t 4 \n\t\t\t 1 \n\t\t\t 22 \n\t\t\t 2020. March 2020 \n\t\t \n\t \n\t Yukang Yan, Yingtian Shi, Chun Yu, and Yuanchun Shi. 2020. HeadCross: Exploring Head-Based Crossing Selection on Head-Mounted Displays. Proc. ACM Interact. Mob. Wearable Ubiquitous Technol. 4, 1 (March 2020), 22. https://doi.org/10.1145/3380983"
+    },
+    {
+      "title": "VirtualGrasp: Leveraging Experience of Interacting with Physical Objects to Facilitate Digital Object Retrieval",
+      "authors": [
+        "Yukang Yan",
+        "Chun Yu",
+        "Xiaojuan Ma",
+        "Xin Yi",
+        "Ke Sun",
+        "Yuanchun Shi"
+      ],
+      "year": 2018,
+      "doi": "10.1145/3173574.3173652",
+      "volume": "78",
+      "pages": "13",
+      "raw": "VirtualGrasp: Leveraging Experience of Interacting with Physical Objects to Facilitate Digital Object Retrieval \n\t\t \n\t\t\t Yukang Yan \n\t\t \n\t\t \n\t\t\t Chun Yu \n\t\t \n\t\t \n\t\t\t Xiaojuan Ma \n\t\t \n\t\t \n\t\t\t Xin Yi \n\t\t \n\t\t \n\t\t\t Ke Sun \n\t\t \n\t\t \n\t\t\t Yuanchun Shi \n\t\t \n\t\t 10.1145/3173574.3173652 \n\t\t \n\t \n\t \n\t\t Proceedings of the 2018 CHI Conference on Human Factors in Computing Systems (CHI '18) \n\t\t the 2018 CHI Conference on Human Factors in Computing Systems (CHI '18) New York, NY, USA \n\t\t \n\t\t\t ACM \n\t\t\t 2018 \n\t\t\t 78 \n\t\t\t 13 \n\t\t \n\t \n\t Yukang Yan, Chun Yu, Xiaojuan Ma, Xin Yi, Ke Sun, and Yuanchun Shi. 2018. VirtualGrasp: Leveraging Experience of Interacting with Physical Objects to Facilitate Digital Object Retrieval. In Proceedings of the 2018 CHI Conference on Human Factors in Computing Systems (CHI '18). ACM, New York, NY, USA, Article 78, 13 pages. https://doi.org/10.1145/3173574.3173652"
+    },
+    {
+      "title": "FrownOnError: Interrupting Responses from Smart Speakers by Facial Expressions",
+      "authors": [
+        "Yukang Yan",
+        "Chun Yu",
+        "Wengrui Zheng",
+        "Ruining Tang",
+        "Xuhai Xu",
+        "Yuanchun Shi"
+      ],
+      "year": 2020,
+      "doi": "10.1145/3313831.3376810",
+      "pages": "14",
+      "raw": "FrownOnError: Interrupting Responses from Smart Speakers by Facial Expressions \n\t\t \n\t\t\t Yukang Yan \n\t\t \n\t\t \n\t\t\t Chun Yu \n\t\t \n\t\t \n\t\t\t Wengrui Zheng \n\t\t \n\t\t \n\t\t\t Ruining Tang \n\t\t \n\t\t \n\t\t\t Xuhai Xu \n\t\t \n\t\t \n\t\t\t Yuanchun Shi \n\t\t \n\t\t 10.1145/3313831.3376810 \n\t\t \n\t \n\t \n\t\t Proceedings of the 2020 CHI Conference on Human Factors in Computing Systems (CHI '20) \n\t\t the 2020 CHI Conference on Human Factors in Computing Systems (CHI '20) New York, NY, USA \n\t\t \n\t\t\t Association for Computing Machinery \n\t\t\t 2020 \n\t\t\t 14 \n\t\t \n\t \n\t Yukang Yan, Chun Yu, Wengrui Zheng, Ruining Tang, Xuhai Xu, and Yuanchun Shi. 2020. FrownOnError: Interrupting Responses from Smart Speakers by Facial Expressions. In Proceedings of the 2020 CHI Conference on Human Factors in Computing Systems (CHI '20). Association for Computing Machinery, New York, NY, USA, 14. https://doi.org/10.1145/3313831.3376810"
+    },
+    {
+      "title": "Eye movements during perception of complex objects",
+      "authors": [
+        "L Alfred"
+      ],
+      "year": 1967,
+      "raw": "Eye movements during perception of complex objects \n\t\t \n\t\t\t L Alfred \n\t\t \n\t\t \n\t\t\t Yarbus \n\t\t \n\t\t \n\t\t\t 1967 \n\t\t\t Springer \n\t\t \n\t \n\t Alfred L Yarbus. 1967. Eye movements during perception of complex objects. Springer."
+    },
+    {
+      "title": "Nanometer touch film production method",
+      "authors": [
+        "Yaning Luo",
+        "Zejiang Liu"
+      ],
+      "year": 2012,
+      "raw": "Nanometer touch film production method \n\t\t \n\t\t\t Yaning Luo \n\t\t \n\t\t \n\t\t\t Zejiang Liu \n\t\t \n\t\t \n\t\t\t 2012 \n\t\t \n\t \n\t Yaning Luo Zejiang Liu. 2012. Nanometer touch film production method."
+    },
+    {
+      "title": "Manual and Gaze Input Cascaded (MAGIC) Pointing",
+      "authors": [
+        "Shumin Zhai",
+        "Carlos Morimoto",
+        "Steven Ihde"
+      ],
+      "year": 1999,
+      "doi": "10.1145/302979.303053",
+      "raw": "Manual and Gaze Input Cascaded (MAGIC) Pointing \n\t\t \n\t\t\t Shumin Zhai \n\t\t \n\t\t \n\t\t\t Carlos Morimoto \n\t\t \n\t\t \n\t\t\t Steven Ihde \n\t\t \n\t\t 10.1145/302979.303053 \n\t\t \n\t \n\t \n\t\t Proceedings of the SIGCHI Conference on Human Factors in Computing Systems (CHI '99) \n\t\t the SIGCHI Conference on Human Factors in Computing Systems (CHI '99) New York, NY, USA \n\t\t \n\t\t\t ACM \n\t\t\t 1999 \n\t\t\t \n\t\t \n\t \n\t Shumin Zhai, Carlos Morimoto, and Steven Ihde. 1999. Manual and Gaze Input Cascaded (MAGIC) Pointing. In Proceedings of the SIGCHI Conference on Human Factors in Computing Systems (CHI '99). ACM, New York, NY, USA, 246-253. https://doi.org/10.1145/ 302979.303053"
+    },
+    {
+      "title": "Sensing Posture-Aware Pen+Touch Interaction on Tablets",
+      "authors": [
+        "Yang Zhang",
+        "Michel Pahud",
+        "Christian Holz",
+        "Haijun Xia",
+        "Gierad Laput",
+        "Michael Mcguffin",
+        "Xiao Tu",
+        "Andrew Mittereder",
+        "Fei Su",
+        "William Buxton",
+        "Ken Hinckley"
+      ],
+      "year": 2019,
+      "doi": "10.1145/3290605.3300285",
+      "volume": "55",
+      "pages": "14",
+      "raw": "Sensing Posture-Aware Pen+Touch Interaction on Tablets \n\t\t \n\t\t\t Yang Zhang \n\t\t \n\t\t \n\t\t\t Michel Pahud \n\t\t \n\t\t \n\t\t\t Christian Holz \n\t\t \n\t\t \n\t\t\t Haijun Xia \n\t\t \n\t\t \n\t\t\t Gierad Laput \n\t\t \n\t\t \n\t\t\t Michael Mcguffin \n\t\t \n\t\t \n\t\t\t Xiao Tu \n\t\t \n\t\t \n\t\t\t Andrew Mittereder \n\t\t \n\t\t \n\t\t\t Fei Su \n\t\t \n\t\t \n\t\t\t William Buxton \n\t\t \n\t\t \n\t\t\t Ken Hinckley \n\t\t \n\t\t 10.1145/3290605.3300285 \n\t\t \n\t \n\t \n\t\t Proceedings of the 2019 CHI Conference on Human Factors in Computing Systems (CHI '19) \n\t\t the 2019 CHI Conference on Human Factors in Computing Systems (CHI '19) New York, NY, USA \n\t\t \n\t\t\t ACM \n\t\t\t 2019 \n\t\t\t 55 \n\t\t\t 14 \n\t\t \n\t \n\t Yang Zhang, Michel Pahud, Christian Holz, Haijun Xia, Gierad Laput, Michael McGuffin, Xiao Tu, Andrew Mittereder, Fei Su, William Buxton, and Ken Hinckley. 2019. Sensing Posture-Aware Pen+Touch Interaction on Tablets. In Proceedings of the 2019 CHI Conference on Human Factors in Computing Systems (CHI '19). ACM, New York, NY, USA, Article 55, 14 pages. https://doi.org/10.1145/3290605.3300285"
+    }
+  ],
+  "num_references": 77,
+  "figures": [
+    {
+      "caption": "33: 6 \u2022Fig. 3 .",
+      "description": "Fig. 2. System Apparatus"
+    },
+    {
+      "caption": "Fig. 4 .",
+      "description": "Fig. 4. GUI of Annotation Tool: The video of the tabletop screen (left part) and the participant (right part) are presented after calibration. Annotators can navigate back and forth to any time frame. All touch events and face/gaze point are visualized in the left part at frame level."
+    },
+    {
+      "caption": "Fig. 6 .",
+      "description": "Fig. 6. Boxplot of touches on two tabletops. Data of sitting and standing postures are merged. \"D/P\" refers to digital/physical tabletop settings. \"Int/Unint\" refers to intentional/unintentional touches. The same below."
+    },
+    {
+      "caption": "Fig. 8 .Fig. 9 .Fig. 10 .",
+      "description": "Fig. 7. Gaze/Face Distance"
+    },
+    {
+      "caption": "Fig. 11 .",
+      "description": "Fig. 11. Face-gaze average included angle (in degree unit) heatmaps on the tabletop. The gaze/face points outside the screen are discarded. Left) sitting posture. Right) standing posture"
+    },
+    {
+      "caption": "Table 6 .",
+      "description": "Misclassification Pattern Visualization and SummaryPatterns Details Patterns Details (a) Proficient Operation Without Gaze: Proficient operations without the need of gaze. The misclassification may be caused by large gaze distances since proficient operations do not involve gaze extensively. (b) Whole Palm Continuous Interaction: Using the whole palm for moving, rotating and zooming in/out. Close touch distances and large numbers of touch points are common features of unintentional touches."
+    },
+    {
+      "caption": "Table 7 .Fig. 12 .",
+      "description": "Fig. 12. Results of The Questionnaire. Error bar indicates the standard error. \"w\" represents the with session and \"wo\" represents the without session. + means marginally significance (p < 0.1) and * means significance (p < 0.05)."
+    },
+    {
+      "type": "table",
+      "caption": "Table 2 .",
+      "description": "Feature Groups for Classification"
+    },
+    {
+      "type": "table",
+      "caption": "Table 3 .",
+      "description": "Results of Model Comparison. A paired t-test on the cross-validation F1 scores between the GB and the RF shows significance p < 0.001. The hyperparameters of the GB model among cross-validation is consistent. The best GB model has 100 as the number estimator and 3 as the maximum depth of each tree."
+    },
+    {
+      "type": "table",
+      "caption": "Table 5 .",
+      "description": "Results of Feature Ablation. A paired t-test on the cross-validation F1 scores between the full model and the model with Face feature ablated shows significance p < 0.05."
+    }
+  ],
+  "num_figures": 10,
+  "tables": [
+    {
+      "content": "Gaze/Face Side Clustering History Touch Distance Historical Gaze Distance Gaze/Face Distance Historical Gaze/Face Distance Side Distance Historical Touch Distance Number of Adjacent Touches (20cm) Historical Face Distance Historical Touch Distance Historical Number of Adjacent Touches (10cm) Historical Number of Adjacent Touches (10cm)"
+    },
+    {
+      "content": "Models Prec Rec F1 NB 0.832 \u00b1 0.016 0.836 \u00b1 0.020 0.833 \u00b1 0.008 KNN 0.842 \u00b1 0.029 0.844 \u00b1 0.026 0.843 \u00b1 0.027 MLP 0.850 \u00b1 0.018 0.848 \u00b1 0.033 0.848 \u00b1 0.025 LR 0.874 \u00b1 0.020 0.869 \u00b1 0.012 0.872 \u00b1 0.009 RF 0.893 \u00b1 0.020 0.892 \u00b1 0.011 0.893 \u00b1 0.009 GB 0.914 \u00b1 0.020 0.913 \u00b1 0.026 0.913 \u00b1 0.014"
+    },
+    {
+      "content": "Feature Ablated Prec Rec F1 -(Full) 0.914 \u00b1 0.020 0.913 \u00b1 0.026 0.913 \u00b1 0.014 Face 0.900 \u00b1 0.021 0.892 \u00b1 0.020 0.895 \u00b1 0.018 Gaze 0.842 \u00b1 0.029 0.837 \u00b1 0.031 0.838 \u00b1 0.022 Gaze&Face 0.831 \u00b1 0.032 0.826 \u00b1 0.022 0.829 \u00b1 0.026"
+    }
+  ],
+  "num_tables": 3,
+  "num_citations": 128,
+  "cited_references": [
+    "b43",
+    "b39",
+    "b14",
+    "b20",
+    "b41",
+    "b51",
+    "b76",
+    "b33",
+    "b27",
+    "b66",
+    "b49",
+    "b16",
+    "b57",
+    "b30",
+    "b71",
+    "b45",
+    "b17",
+    "b53",
+    "b26",
+    "b13",
+    "b62",
+    "b73",
+    "b46",
+    "b23",
+    "b52",
+    "b35",
+    "b31",
+    "b58",
+    "b68",
+    "b10",
+    "b64",
+    "b75",
+    "b56",
+    "b36",
+    "b25",
+    "b54",
+    "b59",
+    "b32",
+    "b67",
+    "b55",
+    "b28",
+    "b61",
+    "b70",
+    "b29",
+    "b6",
+    "b18",
+    "b9",
+    "b3",
+    "b5",
+    "b8",
+    "b15",
+    "b37",
+    "b11",
+    "b22",
+    "b2",
+    "b72",
+    "b48",
+    "b38",
+    "b4",
+    "b24",
+    "b40",
+    "b7",
+    "b19",
+    "b63",
+    "b42",
+    "b69",
+    "b1",
+    "b34",
+    "b47",
+    "b12",
+    "b60",
+    "b65",
+    "b0",
+    "b21",
+    "b50",
+    "b44",
+    "b74"
+  ],
+  "notes": [
+    "[raw_affiliation] Tsinghua University and University of Washington Tsinghua University Tsinghua University , Search Results 30 Shuangqing Rd , Beijing , Beijing , 100084 ,",
+    "[raw_affiliation] University of Washington , 1410 NE Campus Parkway , Seattle , WA , 98195 ; Chun Yu ,",
+    "Proc. ACM Interact. Mob. Wearable Ubiquitous Technol., Vol. 4, No. 1, Article 33. Publication date: March 2020.",
+    "[raw_reference] Michelle Annett, Fraser Anderson, Walter F. Bischof, and Anoop Gupta. 2014. The Pen is Mightier: Understanding Stylus Behaviour While Inking on Tablets. In Proceedings of Graphics Interface 2014 (GI '14). Canadian Information Processing Society, Toronto, Ont., Canada, Canada, 193-200. http://dl.acm.org/citation.cfm?id=2619648.2619680",
+    "[raw_reference] Michelle Annett, Anoop Gupta, and Walter F. Bischof. 2014. Exploring and Understanding Unintended Touch During Direct Pen Interaction. ACM Trans. Comput.-Hum. Interact. 21, 5, Article 28 (Nov. 2014), 39 pages. https://doi.org/10.1145/2674915",
+    "[raw_reference] Florian Block, James Hammerman, Michael Horn, Amy Spiegel, Jonathan Christiansen, Brenda Phillips, Judy Diamond, E. Margaret Evans, and Chia Shen. 2015. Fluid Grouping: Quantifying Group Engagement Around Interactive Tabletop Exhibits in the Wild. In Proceedings of the 33rd Annual ACM Conference on Human Factors in Computing Systems (CHI '15). ACM, New York, NY, USA, 867-876. https://doi.org/10.1145/2702123.2702231",
+    "[raw_reference] Christophe Bortolaso, Matthew Oskamp, Greg Phillips, Carl Gutwin, and T.C. Nicholas Graham. 2014. The Effect of View Techniques on Collaboration and Awareness in Tabletop Map-Based Tasks. In Proceedings of the Ninth ACM International Conference on Interactive Tabletops and Surfaces (ITS '14). ACM, New York, NY, USA, 79-88. https://doi.org/10.1145/2669485.2669504",
+    "[raw_reference] Mark Brown, Winyu Chinthammit, and Paddy Nixon. 2014. A Comparison of User Preferences for Tangible Objects vs Touch Buttons with a Map-based Tabletop Application. In Proceedings of the 26th Australian Computer-Human Interaction Conference on Designing Futures: The Future of Design (OzCHI '14). ACM, New York, NY, USA, 212-215. https://doi.org/10.1145/2686612.2686645",
+    "[raw_reference] Y.-L. Betty Chang, Stacey D. Scott, and Mark Hancock. 2014. Supporting Situation Awareness in Collaborative Tabletop Systems with Automation. In Proceedings of the Ninth ACM International Conference on Interactive Tabletops and Surfaces (ITS '14). ACM, New York, NY, USA, 185-194. https://doi.org/10.1145/2669485.2669496",
+    "[raw_reference] Manoranjan Dash and Huan Liu. 1997. Feature selection for classification. Intelligent data analysis 1, 1-4 (1997), 131-156.",
+    "[raw_reference] Fred D Davis. 1989. Perceived usefulness, perceived ease of use, and user acceptance of information technology. MIS quarterly (1989), 319-340.",
+    "[raw_reference] Tulio de Souza Alcantara, Jennifer Ferreira, and Frank Maurer. 2013. Interactive Prototyping of Tabletop and Surface Applications. In Proceedings of the 5th ACM SIGCHI Symposium on Engineering Interactive Computing Systems (EICS '13). ACM, New York, NY, USA, 229-238. https://doi.org/10.1145/2494603.2480313",
+    "[raw_reference] Abigail C. Evans, Katie Davis, James Fogarty, and Jacob O. Wobbrock. 2017. Group Touch: Distinguishing Tabletop Users in Group Settings via Statistical Modeling of Touch Pairs. In Proceedings of the 2017 CHI Conference on Human Factors in Computing Systems (CHI '17). ACM, New York, NY, USA, 35-47. https://doi.org/10.1145/3025453.3025793",
+    "[raw_reference] Jerome H Friedman. 2001. Greedy function approximation: a gradient boosting machine. Annals of statistics (2001), 1189-1232.",
+    "[raw_reference] Matt W Gardner and SR Dorling. 1998. Artificial neural networks (the multilayer perceptron)-a review of applications in the atmo- spheric sciences. Atmospheric environment 32, 14 (1998), 2627-2636.",
+    "[raw_reference] Jens Gerken, Hans-Christian Jetter, Toni Schmidt, and Harald Reiterer. 2010. Can \"Touch\" Get Annoying?. In ACM International Con- ference on Interactive Tabletops and Surfaces (ITS '10). ACM, New York, NY, USA, 257-258. https://doi.org/10.1145/1936652.1936704",
+    "[raw_reference] Jason Tyler Griffin. 2013. Touch screen palm input rejection. US Patent App. 13/469,354.",
+    "[raw_reference] Jefferson Y Han. 2005. Low-cost multi-touch sensing through frustrated total internal reflection. In Proceedings of the 18th annual ACM symposium on User interface software and technology. ACM, 115-118.",
+    "[raw_reference] Sandra G Hart and Lowell E Staveland. 1988. Development of NASA-TLX (Task Load Index): Results of empirical and theoretical research. Advances in psychology 52 (1988), 139-183.",
+    "[raw_reference] John M Henderson. 2003. Human gaze control during real-world scene perception. Trends in cognitive sciences 7, 11 (2003), 498-504.",
+    "[raw_reference] Mark A Hollands, Aftab E Patla, and Joan N Vickers. 2002. \"Look where you're going!\": gaze behaviour associated with maintaining and changing the direction of locomotion. Experimental brain research 143, 2 (2002), 221-230.",
+    "[raw_reference] Jeff Huang, Ryen White, and Georg Buscher. 2012. User See, User Point: Gaze and Cursor Alignment in Web Search. In Proceedings of the SIGCHI Conference on Human Factors in Computing Systems (CHI '12). ACM, New York, NY, USA, 1341-1350. https://doi.org/10. 1145/2207676.2208591",
+    "[raw_reference] Robert J. K. Jacob. 1991. The Use of Eye Movements in Human-computer Interaction Techniques: What You Look at is What You Get. ACM Trans. Inf. Syst. 9, 2 (April 1991), 152-169. https://doi.org/10.1145/123078.128728",
+    "[raw_reference] Moritz Kassner, William Patera, and Andreas Bulling. 2014. Pupil: An Open Source Platform for Pervasive Eye Tracking and Mobile Gaze-based Interaction. In Adjunct Proceedings of the 2014 ACM International Joint Conference on Pervasive and Ubiquitous Computing (UbiComp '14 Adjunct). ACM, New York, NY, USA, 1151-1160. https://doi.org/10.1145/2638728.2641695",
+    "[raw_reference] Adam Kendon. 1967. Some functions of gaze-direction in social interaction. Acta psychologica 26 (1967), 22-63.",
+    "[raw_reference] Ahmed Kharrufa, Madeline Balaam, Phil Heslop, David Leat, Paul Dolan, and Patrick Olivier. 2013. Tables in the Wild: Lessons Learned from a Large-scale Multi-tabletop Deployment. In Proceedings of the SIGCHI Conference on Human Factors in Computing Systems (CHI '13). ACM, New York, NY, USA, 1021-1030. https://doi.org/10.1145/2470654.2466130",
+    "[raw_reference] Seiya Koura, Shunsuke Suo, Asako Kimura, Fumihisa Shibata, and Hideyuki Tamura. 2012. Amazing Forearm As an Innovative Inter- action Device and Data Storage on Tabletop Display. In Proceedings of the 2012 ACM International Conference on Interactive Tabletops and Surfaces (ITS '12). ACM, New York, NY, USA, 383-386. https://doi.org/10.1145/2396636.2396706",
+    "[raw_reference] Yoshinori Kuno, Tomoyuki Ishiyama, Satoru Nakanishi, and Yoshiaki Shirai. 1999. Combining Observations of Intentional and Unin- tentional Behaviors for Human-computer Interaction. In Proceedings of the SIGCHI Conference on Human Factors in Computing Systems (CHI '99). ACM, New York, NY, USA, 238-245. https://doi.org/10.1145/302979.303051",
+    "Article 10",
+    "[raw_reference] Andreas Kunz, Ali Alavi, Jonas Landgren, Asim Evren Yanta\u00e7, Pawe\u0142Wo\u017aniak, Zolt\u00e1n S\u00e1rosi, and Morten Fjeld. 2013. Tangible Tabletops for Emergency Response: An Exploratory Study. In Proceedings of the International Conference on Multimedia, Interaction, Design and Innovation (MIDI '13). ACM, New York, NY, USA, Article 10, 8 pages. https://doi.org/10.1145/2500342.2500352",
+    "[raw_reference] Ricardo Langner, John Brosz, Raimund Dachselt, and Sheelagh Carpendale. 2010. PhysicsBox: Playful Educational Tabletop Games. In ACM International Conference on Interactive Tabletops and Surfaces (ITS '10). ACM, New York, NY, USA, 273-274. https://doi.org/10. 1145/1936652.1936712",
+    "Article 4, 4",
+    "[raw_reference] Khanh-Duy Le, Mahsa Paknezhad, Pawe\u0142 W. Wo\u017aniak, Maryam Azh, Gabriel\u0117 Kasparavi\u010di\u016bt\u0117, Morten Fjeld, Shengdong Zhao, and Michael S. Brown. 2016. Towards Leaning Aware Interaction with Multitouch Tabletops. In Proceedings of the 9th Nordic Conference on Human-Computer Interaction (NordiCHI '16). ACM, New York, NY, USA, Article 4, 4 pages. https://doi.org/10.1145/2971485.2971553",
+    "[raw_reference] Wen-Hung Liao. 2009. A Framework for Attention-based Personal Photo Manager. In Proceedings of the 2009 IEEE International Con- ference on Systems, Man and Cybernetics (SMC'09). IEEE Press, Piscataway, NJ, USA, 2128-2132. http://dl.acm.org/citation.cfm?id= 1732003.1732067",
+    "[raw_reference] Daniel J. Liebling and Susan T. Dumais. 2014. Gaze and Mouse Coordination in Everyday Work. In Proceedings of the 2014 ACM International Joint Conference on Pervasive and Ubiquitous Computing: Adjunct Publication (UbiComp '14 Adjunct). ACM, New York, NY, USA, 1141-1150. https://doi.org/10.1145/2638728.2641692",
+    "[raw_reference] Roman Lissermann, Jochen Huber, Martin Schmitz, J\u00fcrgen Steimle, and Max M\u00fchlh\u00e4user. 2014. Permulin: Mixed-focus Collaboration on Multi-view Tabletops. In Proceedings of the 32Nd Annual ACM Conference on Human Factors in Computing Systems (CHI '14). ACM, New York, NY, USA, 3191-3200. https://doi.org/10.1145/2556288.2557405",
+    "[raw_reference] Hao Lu and Yang Li. 2015. Gesture On: Enabling Always-On Touch Gestures for Fast Mobile Access from the Device Standby Mode. In Proceedings of the 33rd Annual ACM Conference on Human Factors in Computing Systems (CHI '15). ACM, New York, NY, USA, 3355-3364. https://doi.org/10.1145/2702123.2702610 33:22 \u2022 Xu et al.",
+    "[raw_reference] Paul P. Maglio, Teenie Matlock, Christopher S. Campbell, Shumin Zhai, and Barton A. Smith. 2000. Gaze and Speech in Attentive User Interfaces. In Proceedings of the Third International Conference on Advances in Multimodal Interfaces (ICMI '00). Springer-Verlag, London, UK, UK, 1-7. http://dl.acm.org/citation.cfm?id=645524.656806",
+    "[raw_reference] Alexander Mariakakis, Mayank Goel, Md Tanvir Islam Aumi, Shwetak N. Patel, and Jacob O. Wobbrock. 2015. SwitchBack: Using Focus and Saccade Tracking to Guide Users' Attention for Mobile Task Resumption. In Proceedings of the 33rd Annual ACM Conference on Human Factors in Computing Systems (CHI '15). ACM, New York, NY, USA, 2953-2962. https://doi.org/10.1145/2702123.2702539",
+    "[raw_reference] Paul Marshall, Richard Morris, Yvonne Rogers, Stefan Kreitmayer, and Matt Davies. 2011. Rethinking 'Multi-user': An In-the-wild Study of How Groups Approach a Walk-up-and-use Tabletop Interface. In Proceedings of the SIGCHI Conference on Human Factors in Computing Systems (CHI '11). ACM, New York, NY, USA, 3033-3042. https://doi.org/10.1145/1978942.1979392",
+    "[raw_reference] Juha Matero and Ashley Colley. 2012. Identifying Unintentional Touches on Handheld Touch Screen Devices. In Proceedings of the Designing Interactive Systems Conference (DIS '12). ACM, New York, NY, USA, 506-509. https://doi.org/10.1145/2317956.2318031",
+    "[raw_reference] Fabrice Matulic and Moira Norrie. 2012. Empirical Evaluation of Uni-and Bimodal Pen and Touch Interaction Properties on Digital Tabletops. In Proceedings of the 2012 ACM International Conference on Interactive Tabletops and Surfaces (ITS '12). ACM, New York, NY, USA, 143-152. https://doi.org/10.1145/2396636.2396659",
+    "[raw_reference] Fabrice Matulic, Daniel Vogel, and Raimund Dachselt. 2017. Hand Contact Shape Recognition for Posture-Based Tabletop Widgets and Interaction. In Proceedings of the 2017 ACM International Conference on Interactive Surfaces and Spaces (ISS '17). ACM, New York, NY, USA, 3-11. https://doi.org/10.1145/3132272.3134126",
+    "[raw_reference] Michael Mauderer and Florian Daiber. 2013. Combining Touch and Gaze for Distant Selection in a Tabletop Setting. (2013).",
+    "[raw_reference] Pranav Mistry, Pattie Maes, and Liyan Chang. 2009. WUW -Wear Ur World: A Wearable Gestural Interface. In CHI '09 Extended Abstracts on Human Factors in Computing Systems (CHI EA '09). ACM, New York, NY, USA, 4111-4116. https://doi.org/10.1145/1520340.1520626",
+    "[raw_reference] Erik Murphy-Chutorian and Mohan Manubhai Trivedi. 2009. Head pose estimation in computer vision: A survey. IEEE transactions on pattern analysis and machine intelligence 31, 4 (2009), 607-626.",
+    "[raw_reference] Jakob Nielsen. 1994. Usability inspection methods. In Conference companion on Human factors in computing systems. ACM, 413-414.",
+    "[raw_reference] Ken Pfeuffer, Jason Alexander, Ming Ki Chong, and Hans Gellersen. 2014. Gaze-touch: Combining Gaze with Multi-touch for Interaction on the Same Surface. In Proceedings of the 27th Annual ACM Symposium on User Interface Software and Technology (UIST '14). ACM, New York, NY, USA, 509-518. https://doi.org/10.1145/2642918.2647397",
+    "[raw_reference] Ken Pfeuffer, Jason Alexander, Ming Ki Chong, Yanxia Zhang, and Hans Gellersen. 2015. Gaze-Shifting: Direct-Indirect Input with Pen and Touch Modulated by Gaze. In Proceedings of the 28th Annual ACM Symposium on User Interface Software &#38; Technology (UIST '15). ACM, New York, NY, USA, 373-383. https://doi.org/10.1145/2807442.2807460",
+    "[raw_reference] Ken Pfeuffer and Hans Gellersen. 2016. Gaze and Touch Interaction on Tablets. In Proceedings of the 29th Annual Symposium on User Interface Software and Technology (UIST '16). ACM, New York, NY, USA, 301-311. https://doi.org/10.1145/2984511.2984514",
+    "[raw_reference] Natural Point. 2011. Optitrack. Natural Point, Inc.,[Online]. Available: http://www. naturalpoint. com/optitrack/.[Accessed 22 2 2014] (2011).",
+    "[raw_reference] Argenis Ramirez Gomez and Hans Gellersen. 2019. SuperVision: Playing with Gaze Aversion and Peripheral Vision. In Proceedings of the 2019 CHI Conference on Human Factors in Computing Systems (CHI '19). ACM, New York, NY, USA, Article 473, 12 pages. https: //doi.org/10.1145/3290605.3300703",
+    "[raw_reference] Neil Robertson and Ian Reid. 2006. Estimating gaze direction from low-resolution faces in video. Computer Vision-ECCV 2006 (2006), 402-415.",
+    "[raw_reference] Hasibullah Sahibzada, Eva Hornecker, Florian Echtler, and Patrick Tobias Fischer. 2017. Designing Interactive Advertisements for Public Displays. In Proceedings of the 2017 CHI Conference on Human Factors in Computing Systems (CHI '17). ACM, New York, NY, USA, 1518-1529. https://doi.org/10.1145/3025453.3025531",
+    "[raw_reference] Johannes Sch\u00f6ning, Peter Brandl, Florian Daiber, Florian Echtler, Otmar Hilliges, Jonathan Hook, Markus L\u00f6chtefeld, Nima Motamedi, Laurence Muller, Patrick Olivier, et al. 2008. Multi-touch surfaces: A technical guide. IEEE Tabletops and Interactive Surfaces 2, 11 (2008).",
+    "[raw_reference] Julia Schwarz, Charles Claudius Marais, Tommer Leyvand, Scott E. Hudson, and Jennifer Mankoff. 2014. Combining Body Pose, Gaze, and Gesture to Determine Intention to Interact in Vision-based Interfaces. In Proceedings of the 32Nd Annual ACM Conference on Human Factors in Computing Systems (CHI '14). ACM, New York, NY, USA, 3443-3452. https://doi.org/10.1145/2556288.2556989",
+    "[raw_reference] Julia Schwarz, Robert Xiao, Jennifer Mankoff, Scott E. Hudson, and Chris Harrison. 2014. Probabilistic Palm Rejection Using Spatiotem- poral Touch Features and Iterative Classification. In Proceedings of the 32Nd Annual ACM Conference on Human Factors in Computing Systems (CHI '14). ACM, New York, NY, USA, 2009-2012. https://doi.org/10.1145/2556288.2557056",
+    "[raw_reference] Bar\u0131\u015f Serim and Giulio Jacucci. 2019. Explicating &#34;Implicit Interaction&#34;: An Examination of the Concept and Challenges for Research. In Proceedings of the 2019 CHI Conference on Human Factors in Computing Systems (CHI '19). ACM, New York, NY, USA, Article 417, 16 pages. https://doi.org/10.1145/3290605.3300647",
+    "[raw_reference] Ludwig Sidenmark and Hans Gellersen. 2019. Eye&#38;Head: Synergetic Eye and Head Movement for Gaze Pointing and Selection. In Proceedings of the 32Nd Annual ACM Symposium on User Interface Software and Technology (UIST '19). ACM, New York, NY, USA, 1161-1174. https://doi.org/10.1145/3332165.3347921",
+    "Article 6, 9",
+    "[raw_reference] Ludwig Sidenmark and Anders Lundstr\u00f6m. 2019. Gaze Behaviour on Interacted Objects During Hand Interaction in Virtual Reality for Eye Tracking Calibration. In Proceedings of the 11th ACM Symposium on Eye Tracking Research & Applications (ETRA '19). ACM, New York, NY, USA, Article 6, 9 pages. https://doi.org/10.1145/3314111.3319815",
+    "[raw_reference] Misha Sra, Xuhai Xu, Aske Mottelson, and Pattie Maes. 2018. VMotion: Designing a Seamless Walking Experience in VR. In Proceedings of the 2018 Designing Interactive Systems Conference (DIS '18). ACM, New York, NY, USA, 59-70. https://doi.org/10.1145/3196709. 3196792",
+    "[raw_reference] Dave M Stampe. 1993. Heuristic filtering and reliable calibration methods for video-based pupil-tracking systems. Behavior Research Methods, Instruments, & Computers 25, 2 (1993), 137-142.",
+    "[raw_reference] Sophie Stellmach and Raimund Dachselt. 2013. Still Looking: Investigating Seamless Gaze-supported Selection, Positioning, and Ma- nipulation of Distant Targets. In Proceedings of the SIGCHI Conference on Human Factors in Computing Systems (CHI '13). ACM, New York, NY, USA, https://doi.org/10.1145/2470654.2470695",
+    "[raw_reference] Rainer Stiefelhagen, Michael Finke, Jie Yang, and Alex Waibel. 1999. From gaze to focus of attention. In Visual Information and Infor- mation Systems. Springer, 765-772.",
+    "[raw_reference] Lucia Terrenghi, David Kirk, Abigail Sellen, and Shahram Izadi. 2007. Affordances for Manipulation of Physical Versus Digital Media on Interactive Surfaces. In Proceedings of the SIGCHI Conference on Human Factors in Computing Systems (CHI '07). ACM, New York, NY, USA, 1157-1166. https://doi.org/10.1145/1240624.1240799",
+    "[raw_reference] Reed L Townsend, Alexander J Kolmykov-Zotov, Steven P Dodge, and Bryan D Scott. 2011. Unintentional touch rejection. US Patent 8,018,440.",
+    "[raw_reference] Jayson Turner, Jason Alexander, Andreas Bulling, and Hans Gellersen. 2015. Gaze+RST: Integrating Gaze and Multitouch for Remote Rotate-Scale-Translate Tasks. In Proceedings of the 33rd Annual ACM Conference on Human Factors in Computing Systems (CHI '15). ACM, New York, NY, USA, 4179-4188. https://doi.org/10.1145/2702123.2702355",
+    "[raw_reference] Jayson Turner, Andreas Bulling, and Hans Gellersen. 2011. Combining Gaze with Manual Interaction to Extend Physical Reach. In Proceedings of the 1st International Workshop on Pervasive Eye Tracking &#38; Mobile Eye-based Interaction (PETMEI '11). ACM, New York, NY, USA, 33-36. https://doi.org/10.1145/2029956.2029966",
+    "[raw_reference] Simon Voelker, Andrii Matviienko, Johannes Sch\u00f6ning, and Jan Borchers. 2015. Combining Direct and Indirect Touch Input for Inter- active Workspaces Using Gaze Input. In Proceedings of the 3rd ACM Symposium on Spatial User Interaction (SUI '15). ACM, New York, NY, USA, 79-88. https://doi.org/10.1145/2788940.2788949",
+    "[raw_reference] Daniel Vogel and Ravin Balakrishnan. 2010. Occlusion-aware Interfaces. In Proceedings of the SIGCHI Conference on Human Factors in Computing Systems (CHI '10). ACM, New York, NY, USA, 263-272. https://doi.org/10.1145/1753326.1753365",
+    "[raw_reference] Xuhai Xu, Ahmed Hassan Awadallah, Susan T. Dumais, Farheen Omar, Bogdan Popp, Robert Routhwaite, and Farnaz Jahanbakhsh. 2020. Understanding User Behavior For Document Recommendation. In The World Wide Web Conference (WWW '20). Association for Computing Machinery, New York, NY, USA, 7. https://doi.org/10.1145/3366423.3380071",
+    "[raw_reference] Xuhai Xu, Prerna Chikersal, Afsaneh Doryab, Daniella K. Villalba, Janine M. Dutcher, Michael J. Tumminia, Tim Althoff, Sheldon Cohen, Kasey G. Creswell, J. David Creswell, and et al. 2019. Leveraging Routine Behavior and Contextually-Filtered Features for Depression Detection among College Students. Proc. ACM Interact. Mob. Wearable Ubiquitous Technol. 3, 3, Article Article 116 (Sept. 2019), 33 pages. https://doi.org/10.1145/3351274",
+    "Article 5",
+    "[raw_reference] Xuhai Xu, Alexandru Dancu, Pattie Maes, and Suranga Nanayakkara. 2018. Hand Range Interface: Information Always at Hand with a Body-centric Mid-air Input Surface. In Proceedings of the 20th International Conference on Human-Computer Interaction with Mobile Devices and Services (MobileHCI '18). ACM, New York, NY, USA, Article 5, 12 pages. https://doi.org/10.1145/3229434.3229449",
+    "[raw_reference] Xuhai Xu, Haitian Shi, Xin Yi, Wenjia Liu, Yukang Yan, Yuanchun Shi, Alex Mariakakis, Jennifer Mankoff, and Anind K. Dey. 2020. EarBuddy: Enabling On-Face Interaction via Wireless Earbuds. In Proceedings of the 2020 CHI Conference on Human Factors in Computing Systems (CHI '20). Association for Computing Machinery, New York, NY, USA, 14. https://doi.org/10.1145/3313831.3376836",
+    "[raw_reference] Xuhai Xu, Chun Yu, Anind K. Dey, and Jennifer Mankoff. 2019. Clench Interface: Novel Biting Input Techniques. In Proceedings of the 2019 CHI Conference on Human Factors in Computing Systems (CHI '19). ACM, New York, NY, USA, Article 275, 12 pages. https: //doi.org/10.1145/3290605.3300505",
+    "[raw_reference] Yukang Yan, Yingtian Shi, Chun Yu, and Yuanchun Shi. 2020. HeadCross: Exploring Head-Based Crossing Selection on Head-Mounted Displays. Proc. ACM Interact. Mob. Wearable Ubiquitous Technol. 4, 1 (March 2020), 22. https://doi.org/10.1145/3380983",
+    "[raw_reference] Yukang Yan, Chun Yu, Xiaojuan Ma, Xin Yi, Ke Sun, and Yuanchun Shi. 2018. VirtualGrasp: Leveraging Experience of Interacting with Physical Objects to Facilitate Digital Object Retrieval. In Proceedings of the 2018 CHI Conference on Human Factors in Computing Systems (CHI '18). ACM, New York, NY, USA, Article 78, 13 pages. https://doi.org/10.1145/3173574.3173652",
+    "[raw_reference] Yukang Yan, Chun Yu, Wengrui Zheng, Ruining Tang, Xuhai Xu, and Yuanchun Shi. 2020. FrownOnError: Interrupting Responses from Smart Speakers by Facial Expressions. In Proceedings of the 2020 CHI Conference on Human Factors in Computing Systems (CHI '20). Association for Computing Machinery, New York, NY, USA, 14. https://doi.org/10.1145/3313831.3376810",
+    "[raw_reference] Alfred L Yarbus. 1967. Eye movements during perception of complex objects. Springer.",
+    "[raw_reference] Yaning Luo Zejiang Liu. 2012. Nanometer touch film production method.",
+    "[raw_reference] Shumin Zhai, Carlos Morimoto, and Steven Ihde. 1999. Manual and Gaze Input Cascaded (MAGIC) Pointing. In Proceedings of the SIGCHI Conference on Human Factors in Computing Systems (CHI '99). ACM, New York, NY, USA, 246-253. https://doi.org/10.1145/ 302979.303053",
+    "[raw_reference] Yang Zhang, Michel Pahud, Christian Holz, Haijun Xia, Gierad Laput, Michael McGuffin, Xiao Tu, Andrew Mittereder, Fei Su, William Buxton, and Ken Hinckley. 2019. Sensing Posture-Aware Pen+Touch Interaction on Tablets. In Proceedings of the 2019 CHI Conference on Human Factors in Computing Systems (CHI '19). ACM, New York, NY, USA, Article 55, 14 pages. https://doi.org/10.1145/3290605.3300285"
+  ],
+  "processing_software": {
+    "GROBID": "0.8.2"
+  },
+  "journal": "Proceedings of the ACM on Interactive, Mobile, Wearable and Ubiquitous Technologies",
+  "volume": "4",
+  "issue": "1",
+  "pages": "1-24",
+  "zotero_recovery": {
+    "fields_recovered": [
+      "journal"
+    ],
+    "timestamp": "2025-09-01T11:08:23.078153",
+    "zotero_item_type": "journalArticle"
+  }
+}

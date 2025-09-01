@@ -1,0 +1,758 @@
+{
+  "paper_id": "VQ8JQY4U",
+  "title": "Optimizing Adaptive Notifications in Mobile Health Interventions Systems: Reinforcement Learning from a Data-driven Behavioral Simulator",
+  "abstract": "Mobile health (mHealth) intervention systems can employ adaptive strategies to interact with users. Instead of designing such complex strategies manually, reinforcement learning (RL) can be used to adaptively optimize intervention strategies concerning the user's context. In this paper, we focus on the issue of overwhelming interactions when learning a good adaptive strategy for the user in RL-based mHealth intervention agents. We present a data-driven approach integrating psychological insights and knowledge of historical data. It allows RL agents to optimize the strategy of delivering context-aware notifications from empirical data when counterfactual information (user responses when receiving notifications) is missing. Our approach also considers a constraint on the frequency of notifications, which reduces the interaction burden for users. We evaluated our approach in several simulation scenarios using real large-scale running data. The results indicate that our RL agent can deliver notifications in a manner that realizes a higher behavioral impact than context-blind strategies.",
+  "year": 2021,
+  "date": "2021-10-18",
+  "authors": [
+    {
+      "name": "Shihan Wang",
+      "email": "s.wang2@uu.nl",
+      "affiliation": {
+        "organization": "Informatics Institute",
+        "department": "Informatics Institute",
+        "institution": "University of Amsterdam",
+        "address": "Amsterdam, Netherlands"
+      }
+    },
+    {
+      "name": "\u2022 Chao Zhang",
+      "affiliation": {
+        "organization": "Department of Psychology",
+        "department": "Department of Psychology",
+        "institution": "Utrecht University",
+        "address": "Utrecht, Netherlands"
+      }
+    },
+    {
+      "name": "Ben Kr\u00f6se",
+      "affiliation": {
+        "organization": "Informatics Institute",
+        "department": "Informatics Institute",
+        "institution": "University of Amsterdam",
+        "address": "Amsterdam, Netherlands"
+      }
+    },
+    {
+      "name": "Herke Van Hoof",
+      "affiliation": {
+        "organization": "Informatics Institute",
+        "department": "Informatics Institute",
+        "institution": "University of Amsterdam",
+        "address": "Amsterdam, Netherlands"
+      }
+    }
+  ],
+  "doi": "10.1007/s10916-021-01773-0",
+  "md5": "328ECB4FA2EC5F1DA710E6A5F5DFA266",
+  "publication": {
+    "journal": "Health Psychology",
+    "journal_inferred": true
+  },
+  "keywords": [
+    "Mobile health intervention",
+    "Adaptive agent",
+    "Reinforcement learning",
+    "Human simulator",
+    "Just-in-time adaptive intervention"
+  ],
+  "funding": [
+    "",
+    "",
+    "",
+    "Acknowledgements The authors thank the cooperator  MYLAPS  for providing the mobile application dataset, as well as anonymous reviewers for providing precious comments."
+  ],
+  "sections": [
+    {
+      "title": "Introduction",
+      "text": "Adaptive interventions have emerged as a new perspective of prevention and treatment in healthcare  [1] . The just-in-time adaptive intervention (JITAI) is an adaptive intervention design concept, aiming to provide the right type /amount of support at the right time based on an individual's changing internal and external states  [2, 3] . Though JITAIs can be administered through several means (e.g. in-person and computer), the ubiquity of mobile devices allows for continuous participant monitoring and delivery of personalized interventions. Mobile health systems (agents) with JITAIs have proven effective in preventing certain health threats (e.g. overeating  [4] , smoking  [5]  and prolonged sedentary behaviors  [6] ) and eliciting beneficial health outcomes (e.g. increased physical activity  [7]  and self-management support related to chronic diseases  [8] ). However, the design of such interventions is demanding and the interaction with the user can be complex. Reinforcement learning (RL) based agents have been used to optimize mobile healthcare interventions adaptively  [9] [10] [11] , which make use of historical data or data collected on the run. The problem of historical data is that it often misses counterfactual information (i.e. what would have been the outcome had interventions or circumstances been different). The problem of data collected during the intervention is that it requires many interactions in a short period, which add burden for the user and adversely impact engagement  [12, 13] .\n\nThroughout the paper, we focus on optimizing the delivery of context-aware notifications in mobile health systems. These notifications are sent in an adaptive manner dependent on the temporal and environmental context of users, motivating them to perform a target activity. To solve the two mentioned problems, based on a framework that combines historical data and psychological theories about human decision-making, we developed a simulation environment to optimize the timing of these notifications. Moreover, to restrict interaction burden, we adapted an RL algorithm by incorporating a constraint on the number of notifications that can be sent within a period. Finally, we conducted a case study on promoting running activity to demonstrate our approach. A dataset covering over 10K real users' running activity was used to build our simulator and evaluate our RL agent."
+    },
+    {
+      "title": "Related work",
+      "text": "For the optimization of JITAI intervention in mHealth systems, several different strategies were taken by researchers using RL  [7, 8, 10, 11, 14] . However, most of those RL approaches require the agent to interact many times with the user before performing well. To shorten the online learning process, several researchers followed the concept of transfer learning to perform faster learning in mHealth settings. Tabatabaei et al.  [15]  and Tomkins et al.  [16]  make RL algorithms quickly learn from the limited experience at the beginning stage by considering similar users. Gonul et al.  [17]  transfer the common knowledge acquired in other environments to get faster convergence. Without constraints on the intervention frequency, those RL approaches might still bother users by too many interventions during fast learning. While they concentrate on using data collected during the online interventions, we follow another direction to solve this challenge, i.e., incorporating prior knowledge from historical data to optimize the policy in advance. Similar to our approach, Liao et al.  [18]  and Ameko et al.  [19]  integrate prior distributions using collected data in an RL optimization process. However, they apply relative small datasets in pre-learning because experimental data for specific intervention situations are often involving user interaction and therefore expensive to collect. Our framework allows learning prior knowledge from historical data collected without interacting with users, which makes the usage of largescale data possible. To avoid many interactions in a short period, our approach for the first time performs a structural study to incorporate a constraint on interaction frequency in RL-based mHealth systems."
+    },
+    {
+      "title": "Methodology",
+      "text": "We model how users sequentially decide on whether to perform a target activity when receiving notifications (we use running as an example in this paper, in this case, the mobile agent sends notifications for promoting running activities). We formalize our problem (i.e. learning the optimal strategy for delivering notifications) as a finite horizon Markov Decision Process (MDP)  [20] . Figure  1  presents an overview of our approach. Here, the agent represents a mobile system that interacts with a target user (i.e. the environment) to optimize the strategy. Our agent and environment interact in a sequence of discrete and finite time steps {1, 2, .., t} , which can be naturally broken into episodes. At each time step, the agent observes a representation of the environment and selects an action accordingly (two possible actions in our case: send a notification or not send). The environment then passes a numerical reward back to the agent. Based on this feedback mechanism, the agent adapts its policy to maximize an expected long-term reward. Since too frequent interactions with the environment are not desirable in mHealth settings, we constrained the maximum number of notifications sent in each week (i.e. episode). In this paper, our optimization goal is to wisely deliver a restricted number of notifications to maximize the user's weekly running frequency."
+    },
+    {
+      "title": "Insight from psychological theories",
+      "text": "Conceptually, it can be assumed that users' decisions to engage in certain activities (e.g., running) after notifications take two steps, option generation and option evaluation  [21] [22] [23] . At any decision moment, behavioral options have Fig.  1  The overview of our methodology, including the agent-environment interaction in the MDP model and three key components developed in both environment and agent. The approach optimizes the delivery of context-aware notifications from empirical data to be generated in memory before they can be compared to inform a final choice. Memory accessibility of different options during option generation is influenced by environmental cues, including system notifications. When a user receives a notification for running, the memory accessibility of running reaches its maximum. This accessibility then gradually decreases in the form of a memory decay until the next notification is received. The form of memory decay, or forgetting curve, is modeled as exponential functions in the psychology literature  [22, 24] .\n\nAfter being generated, a target option (running) has to compete with other generated behavioral options (e.g. working on a paper) in terms of how much they satisfy a user's personal goals, such as being healthy and productive. According to classic decision-making models  [25, 26] , the goal-satisfying values of options, weighted by the importance of the goals, are transformed into subjective utilities, and the option with the highest subjective utility will be chosen. Without enumerating all goal-related attributes, two types of attributes are important for running behavior. First, a user's momentary context (e.g. time and weather) can have great impacts on decisions because the options' goalsatisfying values depend on the contextual variables  [27] . For example, a Sunday morning with good weather makes running more enjoyable and also less interfering with one's work-related goals. Second, recently having a run ought to temporarily lower the utility of running. After a run, one's body certainly needs time to recover to a level that is sufficient for running again. Furthermore, having a run satisfies running-related goals and attenuates the importance of the goals. As people pursue multiple goals, this psychological mechanism allows people to switch to other goals and engage in behaviors that satisfy those goals (e.g. finishing a manuscript to be productive)  [28] . In summary, three key determinants of running decisionmemory accessibility of running, urge of running, and personal context -were derived from the above theories and included in our computational model."
+    },
+    {
+      "title": "Computational model",
+      "text": "We formalized the above procedure as a dynamic Bayesian network (DBN). As a probabilistic graphical model, the DBN considers a set of variables and their conditional dependencies over adjacent time steps  [29] . In this way, we generated a stochastic human simulator to make decisions based on both contextual and cognitive states sequentially."
+    },
+    {
+      "title": "Representation and topology of the DBN",
+      "text": "Following the psychological theories above, we defined five variables and their dependencies in our DBN as follows:\n\n-A t represents whether an user decides to take a target activity (running) at time t. -M t is the user's memory accessibility of running at time t. -U t is the user's urge to run at time t. -C t is the personal context of the user at time t.\n\n-N t represents whether the user receives a notification at time t.\n\nThe variable M t and U t are real values in (0, 1). The variable N t and A t are binary values \u2208 {0, 1} , where '1' represents 'receive a notification' and 'decide to run' respectively. The variable C t includes a set of contextual features, defined as a vector of values. Under the first-order Markov assumption, we proposed a topological structure of the DBN, as shown in Fig.  2 ."
+    },
+    {
+      "title": "Definitions and inference of the DBN",
+      "text": "We specified transition probabilities in the DBN from either empirical data or psychological insights. Based on Insight from Psychological Theories, the state transitions of U t and M t were defined as Eqs. 1 and 2 in Fig.  2 , where the nota- tion represents the Kronecker delta function  [30] . Given a certain A t-1 and N t , we deterministically have U t and M t . The parameters and define the changing rate of urge and memory accessibility. While memory accessibility decreases exponentially, the urge to run increases linearly over time.\n\nWe also defined the transition from a joint observation of M t and U t to a target activity A t as Eq. 3 in Fig.  2 . In particular, we proposed to calculate two probabilities P(C t ) and P(C t |A t ) from empirical data (for details, see Data Description and Processing). Given these probabilities, we used the following equation to estimate how a user reacts to notifications."
+    },
+    {
+      "title": "Reinforcement learning algorithm",
+      "text": "To learn the optimal policy (i.e. a stochastic mapping between a personal state of the user and an action to take) in our restricted setting, we adopted a policy gradient RL algorithm, REINFORCE  [31] . The REINFORCE algorithm with baseline and restriction is outlined in Algorithm 1. Our algorithm updates based on episodes. In each episode, it performs a gradient step on a neural network to optimize the policy parameter . We inserted a baseline function \u1e20t inside the expectation to reduce the high variance, using the average of all returns G t in the past n episodes. Moreo- ver, to integrate with the restricted setting, we adjusted the procedures of action selection and policy adaptation in the REINFORCE algorithm. Inspired by clipping the continuous action space in policy gradient  [32] , we constrained the (  1 )\n\nprobability of certain discrete actions. After reaching the maximum number of notifications in each episode, the probability of sending a notification is always 0. In this way, we make sure our RL algorithm learns to deliver a restricted number of notifications according to the given momentary state."
+    },
+    {
+      "title": "Simulation experiments using real data",
+      "text": "We demonstrated the performance of our approach in a case study, aiming at promoting running activities by sending context-aware notifications. Our approach was evaluated in a simulation environment using real running data."
+    },
+    {
+      "title": "Experimental data and settings"
+    },
+    {
+      "title": "Data description and processing",
+      "text": "We used two datasets to derive the context related distributions in Eq. 1. First, a running dataset was used to derive the distribution P(C t |A t ) , measuring the relation between user context and running behavior. The data contains around 406K runs contributed by over 10K Dutch users while using a mobile fitness app from 2013-03 to 2017-03  [33] .\n\nFor each run, a set of metadata is collected and timestamp and weather information at the beginning are marked. We considered six variables in the data, namely 'hour of the day', 'weekday', 'temperature', 'weather type', 'wind type' and 'humidity type'. An example of context data is {8:00, Monday, -2, cloudy, moderate wind, moderate humidity}.\n\nSecond, an open dataset provided by the Royal Netherlands Meteorological Institute (KNMI) foot_1  was used to derive P(C t ) , the prior distribution of contextual information (general Dutch weather), which contains around 439K records of hourly weather. To make the two datasets comparable, we used the weather data over the same period of the running data.\n\nWe derived distribution P(C t |A t ) and P(C t ) from the run- ning and the weather dataset in a same manner. Thus, we only demonstrate how we derived the context distribution from the running data. Since data are only available when a running activity is performed, we concentrate on computing the distribution P(C t |A t = 1) , which is a joint distribution of all contextual variables. Since we noticed that the feature 'weekday' is conditionally independent with other features, we learned the distribution P(weekday t |A t = 1) by comput- ing probabilities of all seven values in the categorized feature 'weekday'. We also extracted the joint distribution of all the other features. For each combination of the discrete variables (weather, wind and humidity), we learned a separate multivariate Gaussian distribution for continuous variables (hour and temperature) using maximum likelihood estimation."
+    },
+    {
+      "title": "Setting of simulation with real contextual data",
+      "text": "We implemented our simulation experiments using python 2 . The RL algorithm was developed based on pytorch 3 , and our RL agent and simulation environment were built following the framework of OpenAI gym 4 . In the simulation, the agent makes a decision on whether to send notification at every hour from 8:00 to 20:00. Only when the user performs a run before the next decision time step (within one hour), the agent gets a reward of 1.0 (otherwise zero reward). In our environment, each episode is one week and maximum of 14 notifications are allowed in each week. We also provided realistic context information in the simulation environment by using empirical data in the used KNMI dataset. Based on the results of a simulator verification 5 , we set memory retention rate ( in Eq. 2) at 0.8 and urge recovery rate ( in Eq. 1) at 0.05. The discount factor and learning rate are set to 1 and 0.001 respectively. We ran each simulation 20 times. In each run, the environment starts at 0:00 of a random date with its corresponding real weather data."
+    },
+    {
+      "title": "Experimental results",
+      "text": "We evaluated our data-driven RL approach in two experiments. To set a comparable environment, we randomly initialize a single simulation environment for all agents of each experiment at every simulation run."
+    },
+    {
+      "title": "Evaluation of context-aware policy",
+      "text": "The first experiment aims to examine whether the policy learned by our data-driven approach outperforms general rule-based policies (not considering the contextual Fig.  3  The simulation results shown the average reward of agents in the sliding windows of 500 episodes information of users). We compared our RL-based agent (R agent) with three baseline agents. All four agents send the same number of notifications per episode, but use different strategies. Three strategies of the baseline agents are (1) 'random week agent' sends 14 notifications randomly in each week; (2) 'random day agent' sends 2 notifications randomly in each day; (3) 'fixed agent' sends 2 notifications per day and they were evenly distributed (at 12:00 and 16:00). The performance of agents is shown in Fig.  3 -left. We observed an obvious increase in the reward of R agent, while three others hold a relatively stable performance. It indicates our approach adaptively optimizes the policy to send a restricted amount of notifications with respect to user's momentary context, and afterward outperforms all context-blind agents."
+    },
+    {
+      "title": "Evaluation of restricted policy",
+      "text": "In the second experiment, we evaluated the efficiency of our restricted notification setting and how well the RL agents perform when incorporating this constraint during the learning in two different ways. One is applied and described in our RL algorithm of Reinforcement Learning Algorithm (R agent). Second is to integrate it into the simulation environment: after the maximum number of notifications is reached in an episode, a notification will not be sent even if the algorithm decides to send one (C agent). In Fig.  3 -right, we found that although the R agent learns faster than the C agent (consistent with results shown in  [32] ), two agents show a similar performance after learning. In addition, we set up the B agent, which had no restriction on the number of notifications sent in each episode before 15,000 episodes. Afterwards, we integrated the restriction in its environment, leading to a dramatic performance drop in Fig.  3 -right. This phenomenon demonstrates the different performances from an agent without restriction during learning (agent B) and agents with restriction during learning (both the agent R and agent C). It indicates that the policy learned without considering the restriction hardly performs well in a restricted mHealth setting, suggesting the importance of modeling this practical restriction in training RL algorithms."
+    },
+    {
+      "title": "Interpretation of learned policy",
+      "text": "We further evaluated our approach by visualizing the detailed information of episodes in the learning process. Results of episode No. 100, 1500 and 16000 in a run of the R agent are presented in Fig.  4 , which correspond to a policy before learning, a policy at the end of the first rapid learning process and a policy at the stable stage of learning in Fig.  3 -left. We observed that at the beginning stage (episode 100), the R agent sends all notifications early in the episode. Afterwards, the agent learns to spread the restricted number of notifications over the entire episode (see episode 1500). This is the first strategy our agent learns, which leads to the first increase of the reward in Fig.  3 . Moreover, the R agent learns to send notifications based on contextual situations. Notifications are sent in the decision points with very bad situations (dark blue ones) in the first two episodes, but almost all of them are sent under very good situations (dark red ones) in episode 16000. Finally, as indicated in green color in Fig.  4 , the R agent realized that the simulated users are unlikely to run again in the hours following a recent run. Hence, the strategy of 'not sending notification after a run' seems to be learned."
+    },
+    {
+      "title": "Conclusion and future work",
+      "text": "In this paper, we explored the practical usage of adaptive and intelligent agents in personal mobile health intervention and developed an RL-based agent to optimize the strategy of adaptively delivering context-aware notifications. The simulation results showed that the policy learned by our RL agent is more efficient than manually defined strategies without context awareness. In particular, our work made two contributions to perform this practical learning task without bothering users too much. First, when incorporating prior knowledge from historical data and psychological theories for optimizing the policy, our proposed dynamic Bayes network can handle empirical data with various context space and flexible target activity. Second, we constrained notification frequency in a period and adapted an RL algorithm for this constraint. As far as we know, such constraint was never structurally studied and evaluated in a mHealth setting, our results provide evidence that it is essential to take the frequency restriction of certain actions into account in the learning process of RL. For future work, it would be interesting to examine the efficiency of various state-of-art RL algorithms considering this constraint. Also, the practical usage of our approach should be further evaluated in trials with real users. We have conducted a small-scale feasibility study  [34] . Based on the initial results and learned lessons, we plan a longer study to evaluate the effectiveness of our pre-learned delivery strategy for comparable user groups."
+    },
+    {
+      "text": "Fig. 2 Topological structure and transition probabilities of our dynamic Bayesian network"
+    },
+    {
+      "text": "Fig. 4 Information of three episodes in the R (R-REIN-FORCE) agent. Each circle represents one decision point, marked by hour and weekday. Black on the left side means 'a notification', and black on the right side means 'a run'. The color of a circle represents the context desirability for running. While red and blue color correspond to the high and low desirability respectively, darker is more extreme"
+    },
+    {
+      "title": "Acknowledgements",
+      "text": "The authors thank the cooperator  MYLAPS  for providing the mobile application dataset, as well as anonymous reviewers for providing precious comments."
+    },
+    {
+      "text": "Funding This work is funded by  Playful Data-driven Active Urban Living  project under  NWO  and  SIA  grant  629.004.013 ."
+    },
+    {
+      "title": "Supplementary Information",
+      "text": "The online version contains supplementary material available at  https:// doi. org/ 10. 1007/ s10916-021-01773-0 ."
+    },
+    {
+      "title": "Declarations",
+      "text": "Research involving human and animal participants This article does not contain any studies with human participants or animals performed by any of the authors."
+    },
+    {
+      "title": "Conflicts of interest",
+      "text": "The authors declare that they have no conflict of interest.\n\nOpen Access This article is licensed under a Creative Commons Attribution 4.0 International License, which permits use, sharing, adaptation, distribution and reproduction in any medium or format, as long as you give appropriate credit to the original author(s) and the source, provide a link to the Creative Commons licence, and indicate if changes were made. The images or other third party material in this article are included in the article's Creative Commons licence, unless indicated otherwise in a credit line to the material. If material is not included in the article's Creative Commons licence and your intended use is not permitted by statutory regulation or exceeds the permitted use, you will need to obtain permission directly from the copyright holder. To view a copy of this licence, visit  http:// creat iveco mmons. org/ licen ses/ by/4. 0/ . Publisher's Note Springer Nature remains neutral with regard to jurisdictional claims in published maps and institutional affiliations."
+    }
+  ],
+  "references": [
+    {
+      "title": "A conceptual framework for adaptive preventive interventions",
+      "authors": [
+        "L Collins",
+        "S Murphy",
+        "K Bierman"
+      ],
+      "year": 2004,
+      "doi": "10.1023/b:prev.0000037641.26017.00",
+      "journal": "Prevention science",
+      "volume": "5",
+      "issue": "3",
+      "raw": "A conceptual framework for adaptive preventive interventions \n\t\t \n\t\t\t L M Collins \n\t\t \n\t\t \n\t\t\t S A Murphy \n\t\t \n\t\t \n\t\t\t K L Bierman \n\t\t \n\t\t 10.1023/b:prev.0000037641.26017.00 \n\t \n\t \n\t\t Prevention science \n\t\t \n\t\t\t 5 \n\t\t\t 3 \n\t\t\t \n\t\t\t 2004 \n\t\t \n\t \n\t Collins, L.M., Murphy, S.A., Bierman, K.L.: A conceptual frame- work for adaptive preventive interventions. Prevention science 5(3), 185-196 (2004)"
+    },
+    {
+      "title": "A systematic review of just-in-time adaptive interventions (Jitais) to promote physical activity",
+      "authors": [
+        "W Hardeman",
+        "J Houghton",
+        "K Lane",
+        "A Jones",
+        "F Naughton"
+      ],
+      "year": 2019,
+      "doi": "10.1186/s12966-019-0792-7",
+      "journal": "International Journal of Behavioral Nutrition and Physical Activity",
+      "volume": "16",
+      "issue": "1",
+      "pages": "31",
+      "raw": "A systematic review of just-in-time adaptive interventions (Jitais) to promote physical activity \n\t\t \n\t\t\t W Hardeman \n\t\t \n\t\t \n\t\t\t J Houghton \n\t\t \n\t\t \n\t\t\t K Lane \n\t\t \n\t\t \n\t\t\t A Jones \n\t\t \n\t\t \n\t\t\t F Naughton \n\t\t \n\t\t 10.1186/s12966-019-0792-7 \n\t \n\t \n\t\t International Journal of Behavioral Nutrition and Physical Activity \n\t\t \n\t\t\t 16 \n\t\t\t 1 \n\t\t\t 31 \n\t\t\t 2019 \n\t\t \n\t \n\t Hardeman, W., Houghton, J., Lane, K., Jones, A., Naughton, F.: A systematic review of just-in-time adaptive interventions (Jitais) to promote physical activity. International Journal of Behavioral Nutrition and Physical Activity 16(1), 31 (2019)"
+    },
+    {
+      "title": "Just-in-time adaptive interventions (Jitais) in mobile health: key components and design principles for ongoing health behavior support",
+      "authors": [
+        "I Nahum-Shani",
+        "S Smith",
+        "B Spring",
+        "L Collins",
+        "K Witkiewitz",
+        "A Tewari",
+        "S Murphy"
+      ],
+      "year": 2017,
+      "journal": "Annals of Behavioral Medicine",
+      "volume": "52",
+      "issue": "6",
+      "raw": "Just-in-time adaptive interventions (Jitais) in mobile health: key components and design principles for ongoing health behavior support \n\t\t \n\t\t\t I Nahum-Shani \n\t\t \n\t\t \n\t\t\t S N Smith \n\t\t \n\t\t \n\t\t\t B J Spring \n\t\t \n\t\t \n\t\t\t L M Collins \n\t\t \n\t\t \n\t\t\t K Witkiewitz \n\t\t \n\t\t \n\t\t\t A Tewari \n\t\t \n\t\t \n\t\t\t S A Murphy \n\t\t \n\t \n\t \n\t\t Annals of Behavioral Medicine \n\t\t \n\t\t\t 52 \n\t\t\t 6 \n\t\t\t \n\t\t\t 2017 \n\t\t \n\t \n\t Nahum-Shani, I., Smith, S.N., Spring, B.J., Collins, L.M., Witkiewitz, K., Tewari, A., Murphy, S.A.: Just-in-time adaptive interventions (Jitais) in mobile health: key components and design principles for ongoing health behavior support. Annals of Behavioral Medicine 52(6), 446-462 (2017)"
+    },
+    {
+      "title": "Return of the Jitai: applying a justin-time adaptive intervention framework to the development of m-health solutions for addictive behaviors",
+      "authors": [
+        "S Goldstein",
+        "B Evans",
+        "D Flack",
+        "A Juarascio",
+        "S Manasse",
+        "F Zhang",
+        "E Forman"
+      ],
+      "year": 2017,
+      "journal": "International journal of behavioral medicine",
+      "volume": "24",
+      "issue": "5",
+      "raw": "Return of the Jitai: applying a justin-time adaptive intervention framework to the development of m-health solutions for addictive behaviors \n\t\t \n\t\t\t S P Goldstein \n\t\t \n\t\t \n\t\t\t B C Evans \n\t\t \n\t\t \n\t\t\t D Flack \n\t\t \n\t\t \n\t\t\t A Juarascio \n\t\t \n\t\t \n\t\t\t S Manasse \n\t\t \n\t\t \n\t\t\t F Zhang \n\t\t \n\t\t \n\t\t\t E M Forman \n\t\t \n\t \n\t \n\t\t International journal of behavioral medicine \n\t\t \n\t\t\t 24 \n\t\t\t 5 \n\t\t\t \n\t\t\t 2017 \n\t\t \n\t \n\t Goldstein, S.P., Evans, B.C., Flack, D., Juarascio, A., Manasse, S., Zhang, F., Forman, E.M.: Return of the Jitai: applying a just- in-time adaptive intervention framework to the development of m-health solutions for addictive behaviors. International journal of behavioral medicine 24(5), 673-682 (2017)"
+    },
+    {
+      "title": "Assessing the availability of users to engage in just-in-time intervention in the natural environment",
+      "authors": [
+        "H Sarker",
+        "M Sharmin",
+        "A Ali",
+        "M Rahman",
+        "R Bari",
+        "S Hossain",
+        "S Kumar"
+      ],
+      "year": 2014,
+      "doi": "10.1145/2632048.2636082",
+      "raw": "Assessing the availability of users to engage in just-in-time intervention in the natural environment \n\t\t \n\t\t\t H Sarker \n\t\t \n\t\t \n\t\t\t M Sharmin \n\t\t \n\t\t \n\t\t\t A A Ali \n\t\t \n\t\t \n\t\t\t M M Rahman \n\t\t \n\t\t \n\t\t\t R Bari \n\t\t \n\t\t \n\t\t\t S M Hossain \n\t\t \n\t\t \n\t\t\t S Kumar \n\t\t \n\t\t 10.1145/2632048.2636082 \n\t \n\t \n\t\t Proceedings of the 2014 ACM International Joint Conference on Pervasive and Ubiquitous Computing \n\t\t the 2014 ACM International Joint Conference on Pervasive and Ubiquitous Computing \n\t\t \n\t\t\t 2014 \n\t\t\t \n\t\t \n\t \n\t Sarker, H., Sharmin, M., Ali, A.A., Rahman, M.M., Bari, R., Hossain, S.M., Kumar, S.: Assessing the availability of users to engage in just-in-time intervention in the natural environment. In: Proceedings of the 2014 ACM International Joint Conference on Pervasive and Ubiquitous Computing, pp. 909-920 (2014)"
+    },
+    {
+      "title": "Behavioral response to a just-in-time adaptive intervention (Jitai) to reduce sedentary behavior in obese adults: Implications for Jitai optimization",
+      "authors": [
+        "J Thomas",
+        "D Bond"
+      ],
+      "year": 2015,
+      "doi": "10.1037/hea0000304",
+      "journal": "Health Psychology",
+      "volume": "34",
+      "issue": "S",
+      "pages": "1261",
+      "raw": "Behavioral response to a just-in-time adaptive intervention (Jitai) to reduce sedentary behavior in obese adults: Implications for Jitai optimization \n\t\t \n\t\t\t J G Thomas \n\t\t \n\t\t \n\t\t\t D S Bond \n\t\t \n\t\t 10.1037/hea0000304 \n\t \n\t \n\t\t Health Psychology \n\t\t \n\t\t\t 34 \n\t\t\t S \n\t\t\t 1261 \n\t\t\t 2015 \n\t\t \n\t \n\t Thomas, J.G., Bond, D.S.: Behavioral response to a just-in-time adaptive intervention (Jitai) to reduce sedentary behavior in obese adults: Implications for Jitai optimization. Health Psychology 34(S), 1261 (2015)"
+    },
+    {
+      "title": "Encouraging physical activity in patients with diabetes: intervention using a reinforcement learning system",
+      "authors": [
+        "E Yom-Tov",
+        "G Feraru",
+        "M Kozdoba",
+        "S Mannor",
+        "M Tennenholtz",
+        "I Hochberg"
+      ],
+      "year": 2017,
+      "doi": "10.2196/jmir.7994",
+      "journal": "Journal of medical Internet research",
+      "volume": "19",
+      "issue": "10",
+      "pages": "338",
+      "raw": "Encouraging physical activity in patients with diabetes: intervention using a reinforcement learning system \n\t\t \n\t\t\t E Yom-Tov \n\t\t \n\t\t \n\t\t\t G Feraru \n\t\t \n\t\t \n\t\t\t M Kozdoba \n\t\t \n\t\t \n\t\t\t S Mannor \n\t\t \n\t\t \n\t\t\t M Tennenholtz \n\t\t \n\t\t \n\t\t\t I Hochberg \n\t\t \n\t\t 10.2196/jmir.7994 \n\t \n\t \n\t\t Journal of medical Internet research \n\t\t \n\t\t\t 19 \n\t\t\t 10 \n\t\t\t 338 \n\t\t\t 2017 \n\t\t \n\t \n\t Yom-Tov, E., Feraru, G., Kozdoba, M., Mannor, S., Tennenholtz, M., Hochberg, I.: Encouraging physical activity in patients with diabetes: intervention using a reinforcement learning system. Journal of medical Internet research 19(10), e338 (2017)"
+    },
+    {
+      "title": "A reinforcement learning based algorithm for personalization of digital, just-intime, adaptive interventions",
+      "authors": [
+        "S G\u00f6n\u00fcl",
+        "T Naml\u0131",
+        "A Co\u015far",
+        "\u0130 Toroslu"
+      ],
+      "year": 2021,
+      "doi": "10.1016/j.artmed.2021.102062",
+      "journal": "Artificial Intelligence in Medicine",
+      "volume": "115",
+      "pages": "102062",
+      "raw": "A reinforcement learning based algorithm for personalization of digital, just-intime, adaptive interventions \n\t\t \n\t\t\t S G\u00f6n\u00fcl \n\t\t \n\t\t \n\t\t\t T Naml\u0131 \n\t\t \n\t\t \n\t\t\t A Co\u015far \n\t\t \n\t\t \n\t\t\t \u0130 H Toroslu \n\t\t \n\t\t 10.1016/j.artmed.2021.102062 \n\t \n\t \n\t\t Artificial Intelligence in Medicine \n\t\t \n\t\t\t 115 \n\t\t\t 102062 \n\t\t\t 2021 \n\t\t \n\t \n\t G\u00f6n\u00fcl, S., Naml\u0131, T., Co\u015far, A., and Toroslu, \u0130.H.: A reinforcement learning based algorithm for personalization of digital, just-in- time, adaptive interventions. Artificial Intelligence in Medicine 115, 102062 (2021)"
+    },
+    {
+      "title": "mhealth app using machine learning to increase physical activity in diabetes and depression: clinical trial protocol for the diamante study",
+      "authors": [
+        "A Aguilera",
+        "C Figueroa",
+        "R Hernandez-Ramos",
+        "U Sarkar",
+        "A Cemballi",
+        "L Gomez-Pathak",
+        "J Miramontes",
+        "E Yom-Tov",
+        "B Chakraborty",
+        "X Yan"
+      ],
+      "year": 2020,
+      "journal": "BMJ open",
+      "volume": "10",
+      "issue": "8",
+      "pages": "34723",
+      "raw": "mhealth app using machine learning to increase physical activity in diabetes and depression: clinical trial protocol for the diamante study \n\t\t \n\t\t\t A Aguilera \n\t\t \n\t\t \n\t\t\t C A Figueroa \n\t\t \n\t\t \n\t\t\t R Hernandez-Ramos \n\t\t \n\t\t \n\t\t\t U Sarkar \n\t\t \n\t\t \n\t\t\t A Cemballi \n\t\t \n\t\t \n\t\t\t L Gomez-Pathak \n\t\t \n\t\t \n\t\t\t J Miramontes \n\t\t \n\t\t \n\t\t\t E Yom-Tov \n\t\t \n\t\t \n\t\t\t B Chakraborty \n\t\t \n\t\t \n\t\t\t X Yan \n\t\t \n\t \n\t \n\t\t BMJ open \n\t\t \n\t\t\t 10 \n\t\t\t 8 \n\t\t\t 34723 \n\t\t\t 2020 \n\t\t \n\t \n\t Aguilera, A., Figueroa, C.A., Hernandez-Ramos, R., Sarkar, U., Cemballi, A., Gomez-Pathak, L., Miramontes, J., Yom-Tov, E., Chakraborty, B., Yan, X., et al.: mhealth app using machine learn- ing to increase physical activity in diabetes and depression: clini- cal trial protocol for the diamante study. BMJ open 10(8), e034723 (2020)"
+    },
+    {
+      "title": "Can the artificial intelligence technique of reinforcement learning use continuously-monitored digital data to optimize treatment for weight loss",
+      "authors": [
+        "E Forman",
+        "S Kerrigan",
+        "M Butryn",
+        "A Juarascio",
+        "S Manasse",
+        "S Onta\u00f1\u00f3n",
+        "D Dallal",
+        "R Crochiere",
+        "D Moskow"
+      ],
+      "year": 2019,
+      "doi": "10.1007/s10865-018-9964-1",
+      "journal": "Journal of behavioral medicine",
+      "volume": "42",
+      "issue": "2",
+      "raw": "Can the artificial intelligence technique of reinforcement learning use continuously-monitored digital data to optimize treatment for weight loss \n\t\t \n\t\t\t E M Forman \n\t\t \n\t\t \n\t\t\t S G Kerrigan \n\t\t \n\t\t \n\t\t\t M L Butryn \n\t\t \n\t\t \n\t\t\t A S Juarascio \n\t\t \n\t\t \n\t\t\t S M Manasse \n\t\t \n\t\t \n\t\t\t S Onta\u00f1\u00f3n \n\t\t \n\t\t \n\t\t\t D H Dallal \n\t\t \n\t\t \n\t\t\t R J Crochiere \n\t\t \n\t\t \n\t\t\t D Moskow \n\t\t \n\t\t 10.1007/s10865-018-9964-1 \n\t \n\t \n\t\t Journal of behavioral medicine \n\t\t \n\t\t\t 42 \n\t\t\t 2 \n\t\t\t \n\t\t\t 2019 \n\t\t \n\t \n\t Forman, E.M., Kerrigan, S.G., Butryn, M.L., Juarascio, A.S., Manasse, S.M., Onta\u00f1\u00f3n, S., Dallal, D.H., Crochiere, R.J., Moskow, D.: Can the artificial intelligence technique of reinforce- ment learning use continuously-monitored digital data to optimize treatment for weight loss? Journal of behavioral medicine 42(2), 276-290 (2019)"
+    },
+    {
+      "title": "My behavior: automatic personalized health feedback from user behaviors and preferences using smartphones",
+      "authors": [
+        "M Rabbi",
+        "M Aung",
+        "M Zhang",
+        "T Choudhury"
+      ],
+      "year": 2015,
+      "doi": "10.1145/2750858.2805840",
+      "raw": "My behavior: automatic personalized health feedback from user behaviors and preferences using smartphones \n\t\t \n\t\t\t M Rabbi \n\t\t \n\t\t \n\t\t\t M H Aung \n\t\t \n\t\t \n\t\t\t M Zhang \n\t\t \n\t\t \n\t\t\t T Choudhury \n\t\t \n\t\t 10.1145/2750858.2805840 \n\t \n\t \n\t\t Proceedings of the 2015 ACM International Joint Conference on Pervasive and Ubiquitous Computing \n\t\t the 2015 ACM International Joint Conference on Pervasive and Ubiquitous Computing \n\t\t \n\t\t\t ACM \n\t\t\t 2015 \n\t\t\t \n\t\t \n\t \n\t Rabbi, M., Aung, M.H., Zhang, M., Choudhury, T.: My behav- ior: automatic personalized health feedback from user behaviors and preferences using smartphones. In: Proceedings of the 2015 ACM International Joint Conference on Pervasive and Ubiquitous Computing, pp. 707-718. ACM (2015)"
+    },
+    {
+      "title": "Smartphone applications to support weight loss: current perspectives",
+      "authors": [
+        "C Pellegrini",
+        "A Pfammatter",
+        "D Conroy",
+        "B Spring"
+      ],
+      "year": 2015,
+      "doi": "10.2147/ahct.s57844",
+      "journal": "Advanced health care technologies",
+      "volume": "1",
+      "pages": "13",
+      "raw": "Smartphone applications to support weight loss: current perspectives \n\t\t \n\t\t\t C A Pellegrini \n\t\t \n\t\t \n\t\t\t A F Pfammatter \n\t\t \n\t\t \n\t\t\t D E Conroy \n\t\t \n\t\t \n\t\t\t B Spring \n\t\t \n\t\t 10.2147/ahct.s57844 \n\t \n\t \n\t\t Advanced health care technologies \n\t\t \n\t\t\t 1 \n\t\t\t 13 \n\t\t\t 2015 \n\t\t \n\t \n\t Pellegrini, C.A., Pfammatter, A.F., Conroy, D.E., Spring, B.: Smartphone applications to support weight loss: current perspec- tives. Advanced health care technologies 1, 13 (2015)"
+    },
+    {
+      "title": "Trial without error: Towards safe reinforcement learning via human intervention",
+      "authors": [
+        "W Saunders",
+        "G Sastry",
+        "A Stuhlm\u00fcller",
+        "O Evans"
+      ],
+      "year": 2018,
+      "raw": "Trial without error: Towards safe reinforcement learning via human intervention \n\t\t \n\t\t\t W Saunders \n\t\t \n\t\t \n\t\t\t G Sastry \n\t\t \n\t\t \n\t\t\t A Stuhlm\u00fcller \n\t\t \n\t\t \n\t\t\t O Evans \n\t\t \n\t \n\t \n\t\t Proceedings of the 17th International Conference on Autonomous Agents and MultiAgent Systems \n\t\t the 17th International Conference on Autonomous Agents and MultiAgent Systems \n\t\t \n\t\t\t 2018 \n\t\t\t \n\t\t \n\t \n\t Saunders, W., Sastry, G., Stuhlm\u00fcller, A., Evans, O.: Trial with- out error: Towards safe reinforcement learning via human inter- vention. In: Proceedings of the 17th International Conference on Autonomous Agents and MultiAgent Systems, pp. 2067-2069 (2018)"
+    },
+    {
+      "title": "Personalizing mobile fitness apps using reinforcement learning",
+      "authors": [
+        "M Zhou",
+        "Y Mintz",
+        "Y Fukuoka",
+        "K Goldberg",
+        "E Flowers",
+        "P Kaminsky",
+        "A Castillejo",
+        "A Aswani"
+      ],
+      "year": 2018,
+      "doi": "10.2196/mhealth.9117",
+      "volume": "2068",
+      "raw": "Personalizing mobile fitness apps using reinforcement learning \n\t\t \n\t\t\t M Zhou \n\t\t \n\t\t \n\t\t\t Y Mintz \n\t\t \n\t\t \n\t\t\t Y Fukuoka \n\t\t \n\t\t \n\t\t\t K Goldberg \n\t\t \n\t\t \n\t\t\t E Flowers \n\t\t \n\t\t \n\t\t\t P Kaminsky \n\t\t \n\t\t \n\t\t\t A Castillejo \n\t\t \n\t\t \n\t\t\t A Aswani \n\t\t \n\t\t 10.2196/mhealth.9117 \n\t \n\t \n\t\t CEUR workshop proceedings \n\t\t \n\t\t\t 2068 \n\t\t\t 2018 \n\t\t\t NIH Public Access \n\t\t \n\t \n\t Zhou, M., Mintz, Y., Fukuoka, Y., Goldberg, K., Flowers, E., Kaminsky, P., Castillejo, A., Aswani, A.: Personalizing mobile fitness apps using reinforcement learning. In: CEUR workshop proceedings, vol. 2068. NIH Public Access (2018)"
+    },
+    {
+      "title": "Narrowing reinforcement learning: Overcoming the cold start problem for personalized health interventions",
+      "authors": [
+        "S Tabatabaei",
+        "M Hoogendoorn",
+        "A Van Halteren"
+      ],
+      "year": 2018,
+      "doi": "10.1007/978-3-030-03098-8_19",
+      "raw": "Narrowing reinforcement learning: Overcoming the cold start problem for personalized health interventions \n\t\t \n\t\t\t S A Tabatabaei \n\t\t \n\t\t \n\t\t\t M Hoogendoorn \n\t\t \n\t\t \n\t\t\t A Van Halteren \n\t\t \n\t\t 10.1007/978-3-030-03098-8_19 \n\t \n\t \n\t\t International Conference on Principles and Practice of Multi-Agent Systems \n\t\t \n\t\t\t Springer \n\t\t\t 2018 \n\t\t\t \n\t\t \n\t \n\t Tabatabaei, S.A., Hoogendoorn, M., van Halteren, A.: Narrowing reinforcement learning: Overcoming the cold start problem for personalized health interventions. In: International Conference on Principles and Practice of Multi-Agent Systems, pp. 312-327. Springer (2018)"
+    },
+    {
+      "title": "Intelligent pooling in thompson sampling for rapid personalization in mobile health",
+      "authors": [
+        "S Tomkins",
+        "P Liao",
+        "S Yeung",
+        "P Klasnja",
+        "S Murphy"
+      ],
+      "year": 2019,
+      "doi": "10.1007/s10994-021-05995-8",
+      "raw": "S Tomkins \n\t\t \n\t\t \n\t\t\t P Liao \n\t\t \n\t\t \n\t\t\t S Yeung \n\t\t \n\t\t \n\t\t\t P Klasnja \n\t\t \n\t\t \n\t\t\t S Murphy \n\t\t \n\t\t 10.1007/s10994-021-05995-8 \n\t\t Intelligent pooling in thompson sampling for rapid personalization in mobile health \n\t\t \n\t\t\t 2019 \n\t\t \n\t \n\t Tomkins, S., Liao, P., Yeung, S., Klasnja, P., Murphy, S.: Intel- ligent pooling in thompson sampling for rapid personalization in mobile health (2019)"
+    },
+    {
+      "title": "Optimization of just-in-time adaptive interventions using reinforcement learning",
+      "authors": [
+        "S Gonul",
+        "T Namli",
+        "M Baskaya",
+        "A Sinaci",
+        "A Cosar",
+        "I Toroslu"
+      ],
+      "year": 2018,
+      "doi": "10.1007/978-3-319-92058-0_32",
+      "raw": "Optimization of just-in-time adaptive interventions using reinforcement learning \n\t\t \n\t\t\t S Gonul \n\t\t \n\t\t \n\t\t\t T Namli \n\t\t \n\t\t \n\t\t\t M Baskaya \n\t\t \n\t\t \n\t\t\t A A Sinaci \n\t\t \n\t\t \n\t\t\t A Cosar \n\t\t \n\t\t \n\t\t\t I H Toroslu \n\t\t \n\t\t 10.1007/978-3-319-92058-0_32 \n\t \n\t \n\t\t International Conference on Industrial, Engineering and Other Applications of Applied Intelligent Systems \n\t\t \n\t\t\t Springer \n\t\t\t 2018 \n\t\t\t \n\t\t \n\t \n\t Gonul, S., Namli, T., Baskaya, M., Sinaci, A.A., Cosar, A., Toroslu, I.H.: Optimization of just-in-time adaptive interven- tions using reinforcement learning. In: International Conference on Industrial, Engineering and Other Applications of Applied Intelligent Systems, pp. 334-341. Springer (2018)"
+    },
+    {
+      "title": "Personalized heartsteps: A reinforcement learning algorithm for optimizing physical activity",
+      "authors": [
+        "P Liao",
+        "K Greenewald",
+        "P Klasnja",
+        "S Murphy"
+      ],
+      "year": 2020,
+      "doi": "10.1145/3381007",
+      "journal": "Proceedings of the ACM on Interactive, Mobile, Wearable and Ubiquitous Technologies",
+      "volume": "4",
+      "issue": "1",
+      "raw": "Personalized heartsteps: A reinforcement learning algorithm for optimizing physical activity \n\t\t \n\t\t\t P Liao \n\t\t \n\t\t \n\t\t\t K Greenewald \n\t\t \n\t\t \n\t\t\t P Klasnja \n\t\t \n\t\t \n\t\t\t S Murphy \n\t\t \n\t\t 10.1145/3381007 \n\t \n\t \n\t\t Proceedings of the ACM on Interactive, Mobile, Wearable and Ubiquitous Technologies \n\t\t \n\t\t\t 4 \n\t\t\t 1 \n\t\t\t \n\t\t\t 2020 \n\t\t \n\t \n\t Liao, P., Greenewald, K., Klasnja, P., Murphy, S.: Personalized heartsteps: A reinforcement learning algorithm for optimizing physical activity. Proceedings of the ACM on Interactive, Mobile, Wearable and Ubiquitous Technologies 4(1), 1-22 (2020)"
+    },
+    {
+      "title": "Online contextual multi-armed bandits for mobile health interventions: A case study on emotion regulation",
+      "authors": [
+        "M Ameko",
+        "M Beltzer",
+        "L Cai",
+        "M Boukhechba",
+        "B Teachman",
+        "L Barnes"
+      ],
+      "year": 2020,
+      "doi": "10.1145/3383313.3412244",
+      "raw": "Online contextual multi-armed bandits for mobile health interventions: A case study on emotion regulation \n\t\t \n\t\t\t M K Ameko \n\t\t \n\t\t \n\t\t\t M L Beltzer \n\t\t \n\t\t \n\t\t\t L Cai \n\t\t \n\t\t \n\t\t\t M Boukhechba \n\t\t \n\t\t \n\t\t\t B A Teachman \n\t\t \n\t\t \n\t\t\t L E Barnes \n\t\t \n\t\t 10.1145/3383313.3412244 \n\t \n\t \n\t\t Fourteenth ACM Conference on Recommender Systems \n\t\t \n\t\t\t 2020 \n\t\t\t \n\t\t \n\t \n\t Ameko, M.K., Beltzer, M.L., Cai, L., Boukhechba, M., Teachman, B.A., Barnes, L.E.: Online contextual multi-armed bandits for mobile health interventions: A case study on emotion regulation. In: Fourteenth ACM Conference on Recommender Systems, pp. 249-258 (2020)"
+    },
+    {
+      "title": "Reinforcement learning: An introduction",
+      "authors": [
+        "R Sutton",
+        "A Barto"
+      ],
+      "year": 2018,
+      "raw": "Reinforcement learning: An introduction \n\t\t \n\t\t\t R S Sutton \n\t\t \n\t\t \n\t\t\t A G Barto \n\t\t \n\t\t \n\t\t\t 2018 \n\t\t\t MIT press \n\t\t \n\t \n\t Sutton, R.S., Barto, A.G.: Reinforcement learning: An introduc- tion. MIT press (2018)"
+    },
+    {
+      "title": "Why option generation matters for the design of autonomous e-coaching systems",
+      "authors": [
+        "B Kamphorst",
+        "A Kalis"
+      ],
+      "year": 2015,
+      "doi": "10.1007/s00146-013-0532-5",
+      "journal": "AI & SOCIETY",
+      "volume": "30",
+      "issue": "1",
+      "raw": "Why option generation matters for the design of autonomous e-coaching systems \n\t\t \n\t\t\t B Kamphorst \n\t\t \n\t\t \n\t\t\t A Kalis \n\t\t \n\t\t 10.1007/s00146-013-0532-5 \n\t \n\t \n\t\t AI & SOCIETY \n\t\t \n\t\t\t 30 \n\t\t\t 1 \n\t\t\t \n\t\t\t 2015 \n\t\t \n\t \n\t Kamphorst, B., Kalis, A.: Why option generation matters for the design of autonomous e-coaching systems. AI & SOCIETY 30(1), 77-88 (2015)"
+    },
+    {
+      "title": "Changing behavior by memory aids: A social psychological model of prospective memory and habit development tested with dynamic field data",
+      "authors": [
+        "R Tobias"
+      ],
+      "year": 2009,
+      "journal": "Psychological review",
+      "volume": "116",
+      "issue": "2",
+      "raw": "Changing behavior by memory aids: A social psychological model of prospective memory and habit development tested with dynamic field data \n\t\t \n\t\t\t R Tobias \n\t\t \n\t \n\t \n\t\t Psychological review \n\t\t \n\t\t\t 116 \n\t\t\t 2 \n\t\t\t \n\t\t\t 2009 \n\t\t \n\t \n\t Tobias, R.: Changing behavior by memory aids: A social psy- chological model of prospective memory and habit development tested with dynamic field data. Psychological review 116(2), 408-438 (2009)"
+    },
+    {
+      "title": "Theory integration for lifestyle behavior change in the digital age: An adaptive decisionmaking framework",
+      "authors": [
+        "C Zhang",
+        "D Lakens",
+        "W Ijsselsteijn"
+      ],
+      "year": 2021,
+      "doi": "10.2196/17127",
+      "journal": "Journal of Medical Internet Research",
+      "volume": "23",
+      "issue": "4",
+      "pages": "17127",
+      "raw": "Theory integration for lifestyle behavior change in the digital age: An adaptive decisionmaking framework \n\t\t \n\t\t\t C Zhang \n\t\t \n\t\t \n\t\t\t D Lakens \n\t\t \n\t\t \n\t\t\t W A Ijsselsteijn \n\t\t \n\t\t 10.2196/17127 \n\t \n\t \n\t\t Journal of Medical Internet Research \n\t\t \n\t\t\t 23 \n\t\t\t 4 \n\t\t\t 17127 \n\t\t\t 2021 \n\t\t \n\t \n\t Zhang, C., Lakens, D., IJsselsteijn, W.A.: Theory integration for lifestyle behavior change in the digital age: An adaptive decision- making framework. Journal of Medical Internet Research 23(4), e17127 (2021)"
+    },
+    {
+      "title": "The precise time course of retention",
+      "authors": [
+        "D Rubin",
+        "S Hinton",
+        "A Wenzel"
+      ],
+      "year": 1999,
+      "doi": "10.1037//0278-7393.25.5.1161",
+      "journal": "Journal of Experimental Psychology: Learning, Memory, and Cognition",
+      "volume": "25",
+      "issue": "5",
+      "raw": "The precise time course of retention \n\t\t \n\t\t\t D C Rubin \n\t\t \n\t\t \n\t\t\t S Hinton \n\t\t \n\t\t \n\t\t\t A Wenzel \n\t\t \n\t\t 10.1037//0278-7393.25.5.1161 \n\t \n\t \n\t\t Journal of Experimental Psychology: Learning, Memory, and Cognition \n\t\t \n\t\t\t 25 \n\t\t\t 5 \n\t\t\t \n\t\t\t 1999 \n\t\t \n\t \n\t Rubin, D.C., Hinton, S., Wenzel, A.: The precise time course of retention. Journal of Experimental Psychology: Learning, Mem- ory, and Cognition 25(5), 1161-1176 (1999)"
+    },
+    {
+      "title": "The foundations of statistics",
+      "authors": [
+        "L Savage"
+      ],
+      "year": 1972,
+      "raw": "The foundations of statistics \n\t\t \n\t\t\t L J Savage \n\t\t \n\t\t \n\t\t\t 1972 \n\t\t\t Courier Corporation \n\t\t \n\t \n\t Savage, L.J.: The foundations of statistics. Courier Corporation (1972)"
+    },
+    {
+      "title": "Theory of games and economic behavior",
+      "authors": [
+        "J Von Neumann",
+        "O Morgenstern"
+      ],
+      "year": 1945,
+      "journal": "Bull. Amer. Math. Soc",
+      "volume": "51",
+      "issue": "7",
+      "raw": "Theory of games and economic behavior \n\t\t \n\t\t\t J Von Neumann \n\t\t \n\t\t \n\t\t\t O Morgenstern \n\t\t \n\t \n\t \n\t\t Bull. Amer. Math. Soc \n\t\t \n\t\t\t 51 \n\t\t\t 7 \n\t\t\t \n\t\t\t 1945 \n\t\t \n\t \n\t Von Neumann, J., Morgenstern, O.: Theory of games and eco- nomic behavior. Bull. Amer. Math. Soc 51(7), 498{504 (1945)"
+    },
+    {
+      "title": "Momentary assessment of contextual influences on affective response during physical activity",
+      "authors": [
+        "G Dunton",
+        "Y Liao",
+        "S Intille",
+        "J Huh",
+        "A Leventhal"
+      ],
+      "year": 2015,
+      "journal": "Health Psychology",
+      "volume": "34",
+      "issue": "12",
+      "pages": "1145",
+      "raw": "Momentary assessment of contextual influences on affective response during physical activity \n\t\t \n\t\t\t G F Dunton \n\t\t \n\t\t \n\t\t\t Y Liao \n\t\t \n\t\t \n\t\t\t S Intille \n\t\t \n\t\t \n\t\t\t J Huh \n\t\t \n\t\t \n\t\t\t A Leventhal \n\t\t \n\t \n\t \n\t\t Health Psychology \n\t\t \n\t\t\t 34 \n\t\t\t 12 \n\t\t\t 1145 \n\t\t\t 2015 \n\t\t \n\t \n\t Dunton, G.F., Liao, Y., Intille, S., Huh, J., Leventhal, A.: Momen- tary assessment of contextual influences on affective response dur- ing physical activity. Health Psychology 34(12), 1145 (2015)"
+    },
+    {
+      "title": "Dynamics of multiplegoal pursuit",
+      "authors": [
+        "M Louro",
+        "R Pieters",
+        "M Zeelenberg"
+      ],
+      "year": 2007,
+      "doi": "10.1037/0022-3514.93.2.174",
+      "journal": "Journal of personality and social psychology",
+      "volume": "93",
+      "issue": "2",
+      "pages": "174",
+      "raw": "Dynamics of multiplegoal pursuit \n\t\t \n\t\t\t M J Louro \n\t\t \n\t\t \n\t\t\t R Pieters \n\t\t \n\t\t \n\t\t\t M Zeelenberg \n\t\t \n\t\t 10.1037/0022-3514.93.2.174 \n\t \n\t \n\t\t Journal of personality and social psychology \n\t\t \n\t\t\t 93 \n\t\t\t 2 \n\t\t\t 174 \n\t\t\t 2007 \n\t\t \n\t \n\t Louro, M.J., Pieters, R., Zeelenberg, M.: Dynamics of multiple- goal pursuit. Journal of personality and social psychology 93(2), 174 (2007)"
+    },
+    {
+      "title": "Dynamic bayesian networks: A state of the art",
+      "authors": [
+        "V Mihajlovic",
+        "M Petkovic"
+      ],
+      "year": 2001,
+      "raw": "Dynamic bayesian networks: A state of the art \n\t\t \n\t\t\t V Mihajlovic \n\t\t \n\t\t \n\t\t\t M Petkovic \n\t\t \n\t\t \n\t\t\t 2001 \n\t\t \n\t\t \n\t\t\t University of Twente Document Repository \n\t\t \n\t \n\t Mihajlovic, V., Petkovic, M.: Dynamic bayesian networks: A state of the art. University of Twente Document Repository (2001)"
+    },
+    {
+      "title": "Advanced calculus",
+      "authors": [
+        "W Kaplan"
+      ],
+      "year": 1952,
+      "doi": "10.1017/s0025557200027741",
+      "raw": "Advanced calculus \n\t\t \n\t\t\t W Kaplan \n\t\t \n\t\t 10.1017/s0025557200027741 \n\t\t \n\t\t\t 1952 \n\t\t\t Pearson Education India \n\t\t \n\t \n\t Kaplan, W.: Advanced calculus. Pearson Education India (1952)"
+    },
+    {
+      "title": "Simple statistical gradient-following algorithms for connectionist reinforcement learning",
+      "authors": [
+        "R Williams"
+      ],
+      "year": 1992,
+      "journal": "Machine learning",
+      "volume": "8",
+      "issue": "3-4",
+      "raw": "Simple statistical gradient-following algorithms for connectionist reinforcement learning \n\t\t \n\t\t\t R J Williams \n\t\t \n\t \n\t \n\t\t Machine learning \n\t\t \n\t\t\t 8 \n\t\t\t 3-4 \n\t\t\t \n\t\t\t 1992 \n\t\t \n\t \n\t Williams, R.J.: Simple statistical gradient-following algorithms for connectionist reinforcement learning. Machine learning 8(3- 4), 229-256 (1992)"
+    },
+    {
+      "title": "Clipped action policy gradient",
+      "authors": [
+        "Y Fujita",
+        "S Maeda"
+      ],
+      "year": 2018,
+      "volume": "80",
+      "raw": "Clipped action policy gradient \n\t\t \n\t\t\t Y Fujita \n\t\t \n\t\t \n\t\t\t S I Maeda \n\t\t \n\t \n\t \n\t\t Proceedings of the 35th International Conference on Machine Learning, Proceedings of Machine Learning Research \n\t\t the 35th International Conference on Machine Learning, Machine Learning Research Stockholm Sweden \n\t\t \n\t\t\t PMLR, Stockholmsm\u00e4ssan \n\t\t\t 2018 \n\t\t\t 80 \n\t\t\t \n\t\t \n\t \n\t Fujita, Y., Maeda, S.i.: Clipped action policy gradient. In: Pro- ceedings of the 35th International Conference on Machine Learning, Proceedings of Machine Learning Research, vol. 80, pp. 1597-1606. PMLR, Stockholmsm\u00e4ssan, Stockholm Sweden (2018)"
+    },
+    {
+      "title": "What are good situations for running? a machine learning study using mobile and geographical data",
+      "authors": [
+        "S Wang",
+        "S Scheider",
+        "K Sporrel",
+        "M Deutekom",
+        "J Timmer",
+        "B Kr\u00f6se"
+      ],
+      "year": 2021,
+      "doi": "10.3389/fpubh.2020.536370",
+      "journal": "Frontiers in Public Health",
+      "volume": "8",
+      "pages": "985",
+      "raw": "What are good situations for running? a machine learning study using mobile and geographical data \n\t\t \n\t\t\t S Wang \n\t\t \n\t\t \n\t\t\t S Scheider \n\t\t \n\t\t \n\t\t\t K Sporrel \n\t\t \n\t\t \n\t\t\t M Deutekom \n\t\t \n\t\t \n\t\t\t J Timmer \n\t\t \n\t\t \n\t\t\t B Kr\u00f6se \n\t\t \n\t\t 10.3389/fpubh.2020.536370 \n\t \n\t \n\t\t Frontiers in Public Health \n\t\t \n\t\t\t 8 \n\t\t\t 985 \n\t\t\t 2021 \n\t\t \n\t \n\t Wang, S., Scheider, S., Sporrel, K., Deutekom, M., Timmer, J., Kr\u00f6se, B.: What are good situations for running? a machine learn- ing study using mobile and geographical data. Frontiers in Public Health 8, 985 (2021)"
+    },
+    {
+      "title": "Reinforcement learning to send reminders at right moments in smartphone exercise application: A feasibility study",
+      "authors": [
+        "S Wang",
+        "K Sporrel",
+        "H Van Hoof",
+        "M Simons",
+        "R De Boer",
+        "D Ettema",
+        "N Nibbeling",
+        "M Deutekom",
+        "B Kr\u00f6se"
+      ],
+      "year": 2021,
+      "journal": "International Journal of Environmental Research and Public Health",
+      "volume": "18",
+      "issue": "11",
+      "pages": "6059",
+      "raw": "Reinforcement learning to send reminders at right moments in smartphone exercise application: A feasibility study \n\t\t \n\t\t\t S Wang \n\t\t \n\t\t \n\t\t\t K Sporrel \n\t\t \n\t\t \n\t\t\t H Van Hoof \n\t\t \n\t\t \n\t\t\t M Simons \n\t\t \n\t\t \n\t\t\t R D De Boer \n\t\t \n\t\t \n\t\t\t D Ettema \n\t\t \n\t\t \n\t\t\t N Nibbeling \n\t\t \n\t\t \n\t\t\t M Deutekom \n\t\t \n\t\t \n\t\t\t B Kr\u00f6se \n\t\t \n\t \n\t \n\t\t International Journal of Environmental Research and Public Health \n\t\t \n\t\t\t 18 \n\t\t\t 11 \n\t\t\t 6059 \n\t\t\t 2021 \n\t\t \n\t \n\t Wang, S., Sporrel, K., van Hoof, H., Simons, M., de Boer, R.D., Ettema, D., Nibbeling, N., Deutekom, M. and Kr\u00f6se, B.: Reinforce- ment learning to send reminders at right moments in smartphone exercise application: A feasibility study. International Journal of Environmental Research and Public Health, 18(11), 6059 (2021)"
+    }
+  ],
+  "num_references": 34,
+  "figures": [
+    {
+      "caption": "Fig. 2",
+      "description": "Fig. 2 Topological structure and transition probabilities of our dynamic Bayesian network"
+    },
+    {
+      "caption": "Fig. 4",
+      "description": "Fig. 4 Information of three episodes in the R (R-REIN-FORCE) agent. Each circle represents one decision point, marked by hour and weekday. Black on the left side means 'a notification', and black on the right side means 'a run'. The color of a circle represents the context desirability for running. While red and blue color correspond to the high and low desirability respectively, darker is more extreme"
+    }
+  ],
+  "num_figures": 2,
+  "license": "\u00a9 The Author(s) 2021",
+  "license_type": "unknown",
+  "formulas": [
+    {
+      "text": "P(A t |M 0\u22eft-1 , U 0\u22eft-1 , C 0\u22eft , N 0\u22eft ) = P(A t |C t , N t , A t-1 , M t-1 , U t-1 ) = \u2211 M t \u2211 U t P(C t |A t ) P(C t ) \u22c5 P(A t |U t , M t ) \u22c5 P(M t |N t , M t-1 ) \u22c5 P(U t |A t-1 , U t-1 ) ."
+    }
+  ],
+  "num_formulas": 1,
+  "num_citations": 41,
+  "cited_references": [
+    "b32",
+    "b4",
+    "b14",
+    "b17",
+    "b20",
+    "b24",
+    "b26",
+    "b28",
+    "b13",
+    "b27",
+    "b33",
+    "b16",
+    "b7",
+    "b23",
+    "b29",
+    "b19",
+    "b6",
+    "b18",
+    "b30",
+    "b1",
+    "b9",
+    "b31",
+    "b10",
+    "b3",
+    "b5",
+    "b8",
+    "b12",
+    "b15",
+    "b11",
+    "b25",
+    "b22",
+    "b0",
+    "b21",
+    "b2"
+  ],
+  "notes": [
+    "[raw_affiliation] 1  Informatics Institute , University of Amsterdam , Amsterdam , Netherlands",
+    "[raw_affiliation] 2  Information and Computing Sciences , Utrecht University , Utrecht , Netherlands",
+    "[raw_affiliation] 3  Department of Psychology , Utrecht University , Utrecht , Netherlands",
+    "[raw_affiliation] 5  Human-Technology Interaction , Eindhoven University of Technology , Eindhoven , Netherlands",
+    "[raw_affiliation] 1  Informatics Institute , University of Amsterdam , Amsterdam , Netherlands",
+    "[raw_affiliation] 4  Digital Life , Amsterdam University of Applied Sciences , Amsterdam , Netherlands",
+    "[raw_affiliation] 1  Informatics Institute , University of Amsterdam , Amsterdam , Netherlands",
+    "[submission] Received: 4 June 2021 / Accepted: 20 September 2021",
+    "Journal of Medical Systems (2021) 45: 102",
+    "https:// knmi. nl/ neder land-nu/ klima tolog ie/ uurge gevens (last access on Oct 15th",
+    "2021)2 https:// github. com/ sw1989/ RLfor PAUL 3 https:// pytor ch. org/ 4 https:// github. com/ openai/ gym 5  For details about the verification, see the supplementary information.",
+    "[raw_reference] Collins, L.M., Murphy, S.A., Bierman, K.L.: A conceptual frame- work for adaptive preventive interventions. Prevention science 5(3), 185-196 (2004)",
+    "[raw_reference] Hardeman, W., Houghton, J., Lane, K., Jones, A., Naughton, F.: A systematic review of just-in-time adaptive interventions (Jitais) to promote physical activity. International Journal of Behavioral Nutrition and Physical Activity 16(1), 31 (2019)",
+    "[raw_reference] Nahum-Shani, I., Smith, S.N., Spring, B.J., Collins, L.M., Witkiewitz, K., Tewari, A., Murphy, S.A.: Just-in-time adaptive interventions (Jitais) in mobile health: key components and design principles for ongoing health behavior support. Annals of Behavioral Medicine 52(6), 446-462 (2017)",
+    "[raw_reference] Goldstein, S.P., Evans, B.C., Flack, D., Juarascio, A., Manasse, S., Zhang, F., Forman, E.M.: Return of the Jitai: applying a just- in-time adaptive intervention framework to the development of m-health solutions for addictive behaviors. International journal of behavioral medicine 24(5), 673-682 (2017)",
+    "[raw_reference] Sarker, H., Sharmin, M., Ali, A.A., Rahman, M.M., Bari, R., Hossain, S.M., Kumar, S.: Assessing the availability of users to engage in just-in-time intervention in the natural environment. In: Proceedings of the 2014 ACM International Joint Conference on Pervasive and Ubiquitous Computing, pp. 909-920 (2014)",
+    "[raw_reference] Thomas, J.G., Bond, D.S.: Behavioral response to a just-in-time adaptive intervention (Jitai) to reduce sedentary behavior in obese adults: Implications for Jitai optimization. Health Psychology 34(S), 1261 (2015)",
+    "[raw_reference] Yom-Tov, E., Feraru, G., Kozdoba, M., Mannor, S., Tennenholtz, M., Hochberg, I.: Encouraging physical activity in patients with diabetes: intervention using a reinforcement learning system. Journal of medical Internet research 19(10), e338 (2017)",
+    "[raw_reference] G\u00f6n\u00fcl, S., Naml\u0131, T., Co\u015far, A., and Toroslu, \u0130.H.: A reinforcement learning based algorithm for personalization of digital, just-in- time, adaptive interventions. Artificial Intelligence in Medicine 115, 102062 (2021)",
+    "[raw_reference] Aguilera, A., Figueroa, C.A., Hernandez-Ramos, R., Sarkar, U., Cemballi, A., Gomez-Pathak, L., Miramontes, J., Yom-Tov, E., Chakraborty, B., Yan, X., et al.: mhealth app using machine learn- ing to increase physical activity in diabetes and depression: clini- cal trial protocol for the diamante study. BMJ open 10(8), e034723 (2020)",
+    "[raw_reference] Forman, E.M., Kerrigan, S.G., Butryn, M.L., Juarascio, A.S., Manasse, S.M., Onta\u00f1\u00f3n, S., Dallal, D.H., Crochiere, R.J., Moskow, D.: Can the artificial intelligence technique of reinforce- ment learning use continuously-monitored digital data to optimize treatment for weight loss? Journal of behavioral medicine 42(2), 276-290 (2019)",
+    "[raw_reference] Rabbi, M., Aung, M.H., Zhang, M., Choudhury, T.: My behav- ior: automatic personalized health feedback from user behaviors and preferences using smartphones. In: Proceedings of the 2015 ACM International Joint Conference on Pervasive and Ubiquitous Computing, pp. 707-718. ACM (2015)",
+    "[raw_reference] Pellegrini, C.A., Pfammatter, A.F., Conroy, D.E., Spring, B.: Smartphone applications to support weight loss: current perspec- tives. Advanced health care technologies 1, 13 (2015)",
+    "[raw_reference] Saunders, W., Sastry, G., Stuhlm\u00fcller, A., Evans, O.: Trial with- out error: Towards safe reinforcement learning via human inter- vention. In: Proceedings of the 17th International Conference on Autonomous Agents and MultiAgent Systems, pp. 2067-2069 (2018)",
+    "[raw_reference] Zhou, M., Mintz, Y., Fukuoka, Y., Goldberg, K., Flowers, E., Kaminsky, P., Castillejo, A., Aswani, A.: Personalizing mobile fitness apps using reinforcement learning. In: CEUR workshop proceedings, vol. 2068. NIH Public Access (2018)",
+    "[raw_reference] Tabatabaei, S.A., Hoogendoorn, M., van Halteren, A.: Narrowing reinforcement learning: Overcoming the cold start problem for personalized health interventions. In: International Conference on Principles and Practice of Multi-Agent Systems, pp. 312-327. Springer (2018)",
+    "[raw_reference] Tomkins, S., Liao, P., Yeung, S., Klasnja, P., Murphy, S.: Intel- ligent pooling in thompson sampling for rapid personalization in mobile health (2019)",
+    "[raw_reference] Gonul, S., Namli, T., Baskaya, M., Sinaci, A.A., Cosar, A., Toroslu, I.H.: Optimization of just-in-time adaptive interven- tions using reinforcement learning. In: International Conference on Industrial, Engineering and Other Applications of Applied Intelligent Systems, pp. 334-341. Springer (2018)",
+    "[raw_reference] Liao, P., Greenewald, K., Klasnja, P., Murphy, S.: Personalized heartsteps: A reinforcement learning algorithm for optimizing physical activity. Proceedings of the ACM on Interactive, Mobile, Wearable and Ubiquitous Technologies 4(1), 1-22 (2020)",
+    "[raw_reference] Ameko, M.K., Beltzer, M.L., Cai, L., Boukhechba, M., Teachman, B.A., Barnes, L.E.: Online contextual multi-armed bandits for mobile health interventions: A case study on emotion regulation. In: Fourteenth ACM Conference on Recommender Systems, pp. 249-258 (2020)",
+    "[raw_reference] Sutton, R.S., Barto, A.G.: Reinforcement learning: An introduc- tion. MIT press (2018)",
+    "[raw_reference] Kamphorst, B., Kalis, A.: Why option generation matters for the design of autonomous e-coaching systems. AI & SOCIETY 30(1), 77-88 (2015)",
+    "[raw_reference] Tobias, R.: Changing behavior by memory aids: A social psy- chological model of prospective memory and habit development tested with dynamic field data. Psychological review 116(2), 408-438 (2009)",
+    "[raw_reference] Zhang, C., Lakens, D., IJsselsteijn, W.A.: Theory integration for lifestyle behavior change in the digital age: An adaptive decision- making framework. Journal of Medical Internet Research 23(4), e17127 (2021)",
+    "[raw_reference] Rubin, D.C., Hinton, S., Wenzel, A.: The precise time course of retention. Journal of Experimental Psychology: Learning, Mem- ory, and Cognition 25(5), 1161-1176 (1999)",
+    "[raw_reference] Savage, L.J.: The foundations of statistics. Courier Corporation (1972)",
+    "[raw_reference] Von Neumann, J., Morgenstern, O.: Theory of games and eco- nomic behavior. Bull. Amer. Math. Soc 51(7), 498{504 (1945)",
+    "[raw_reference] Dunton, G.F., Liao, Y., Intille, S., Huh, J., Leventhal, A.: Momen- tary assessment of contextual influences on affective response dur- ing physical activity. Health Psychology 34(12), 1145 (2015)",
+    "[raw_reference] Louro, M.J., Pieters, R., Zeelenberg, M.: Dynamics of multiple- goal pursuit. Journal of personality and social psychology 93(2), 174 (2007)",
+    "[raw_reference] Mihajlovic, V., Petkovic, M.: Dynamic bayesian networks: A state of the art. University of Twente Document Repository (2001)",
+    "[raw_reference] Kaplan, W.: Advanced calculus. Pearson Education India (1952)",
+    "[raw_reference] Williams, R.J.: Simple statistical gradient-following algorithms for connectionist reinforcement learning. Machine learning 8(3- 4), 229-256 (1992)",
+    "[raw_reference] Fujita, Y., Maeda, S.i.: Clipped action policy gradient. In: Pro- ceedings of the 35th International Conference on Machine Learning, Proceedings of Machine Learning Research, vol. 80, pp. 1597-1606. PMLR, Stockholmsm\u00e4ssan, Stockholm Sweden (2018)",
+    "[raw_reference] Wang, S., Scheider, S., Sporrel, K., Deutekom, M., Timmer, J., Kr\u00f6se, B.: What are good situations for running? a machine learn- ing study using mobile and geographical data. Frontiers in Public Health 8, 985 (2021)",
+    "[raw_reference] Wang, S., Sporrel, K., van Hoof, H., Simons, M., de Boer, R.D., Ettema, D., Nibbeling, N., Deutekom, M. and Kr\u00f6se, B.: Reinforce- ment learning to send reminders at right moments in smartphone exercise application: A feasibility study. International Journal of Environmental Research and Public Health, 18(11), 6059 (2021)"
+  ],
+  "processing_software": {
+    "GROBID": "0.8.2"
+  },
+  "journal": "Journal of Medical Systems",
+  "volume": "45",
+  "issue": "12",
+  "pages": "102",
+  "zotero_recovery": {
+    "fields_recovered": [
+      "journal"
+    ],
+    "timestamp": "2025-09-01T11:08:19.696545",
+    "zotero_item_type": "journalArticle"
+  }
+}

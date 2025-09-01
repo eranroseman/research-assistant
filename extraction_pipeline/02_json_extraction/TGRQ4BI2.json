@@ -1,0 +1,821 @@
+{
+  "paper_id": "TGRQ4BI2",
+  "title": "Research and Applications",
+  "abstract": "Objectives: This study aims to develop and evaluate an approach using large language models (LLMs) and a knowledge graph to triage patient messages that need emergency care. The goal is to notify patients when their messages indicate an emergency, guiding them to seek immediate help rather than using the patient portal, to improve patient safety. Materials and Methods: We selected 1020 messages sent to Vanderbilt University Medical Center providers between January 1, 2022 and March 7, 2023. We developed four models to triage these messages for emergencies: (1) Prompt-Only: the patient message was input with a prompt directly into the LLM; (2) Na\u00efve Retrieval Augmented Generation (RAG): provided retrieved information as context to the LLM; (3) RAG from Knowledge Graph with Local Search: a knowledge graph was used to retrieve locally relevant information based on semantic similarities; (4) RAG from Knowledge Graph with Global Search: a knowledge graph was used to retrieve globally relevant information through hierarchical community detection. The knowledge base was a triage book covering 225 protocols. \n Results: The RAG from Knowledge Graph model with global search outperformed other models, achieving an accuracy of 0.99, a sensitivity of 0.98, and a specificity of 0.99. It demonstrated significant improvements in triaging emergency messages compared to LLM without RAG and na\u00efve RAG. \n Discussion: The traditional LLM without any retrieval mechanism underperformed compared to models with RAG, which aligns with the expected benefits of augmenting LLMs with domain-specific knowledge sources. Our results suggest that providing external knowledge, especially in a structured manner and in community summaries, can improve LLM performance in triaging patient portal messages. \n Conclusion: LLMs can effectively assist in triaging emergency patient messages after integrating with a knowledge graph about a nurse triage book. Future research should focus on expanding the knowledge graph and deploying the system to evaluate its impact on patient outcomes.",
+  "year": 2022,
+  "date": "2022",
+  "authors": [
+    {
+      "name": "Siru Liu",
+      "email": "siru.liu@vumc.org",
+      "affiliation": {
+        "organization": "Department of Biomedical Informatics",
+        "department": "Department of Biomedical Informatics",
+        "institution": "Vanderbilt University Medical Center",
+        "address": "37212, Nashville, TN, United States"
+      }
+    },
+    {
+      "name": "Aileen Wright",
+      "affiliation": {
+        "organization": "Department of Biomedical Informatics",
+        "department": "Department of Biomedical Informatics",
+        "institution": "Vanderbilt University Medical Center",
+        "address": "37212, Nashville, TN, United States"
+      }
+    },
+    {
+      "name": "Allison Mccoy",
+      "orcid": "0000-0003-2292-9147",
+      "affiliation": {
+        "organization": "Department of Biomedical Informatics",
+        "department": "Department of Biomedical Informatics",
+        "institution": "Vanderbilt University Medical Center",
+        "address": "37212, Nashville, TN, United States"
+      }
+    },
+    {
+      "name": "Sean Huang",
+      "affiliation": {
+        "organization": "Department of Biomedical Informatics",
+        "department": "Department of Biomedical Informatics",
+        "institution": "Vanderbilt University Medical Center",
+        "address": "37212, Nashville, TN, United States"
+      }
+    },
+    {
+      "name": "Bryan Steitz",
+      "affiliation": {
+        "organization": "Department of Biomedical Informatics",
+        "department": "Department of Biomedical Informatics",
+        "institution": "Vanderbilt University Medical Center",
+        "address": "37212, Nashville, TN, United States"
+      }
+    },
+    {
+      "name": "Adam Wright",
+      "orcid": "0000-0001-6844-145X",
+      "affiliation": {
+        "organization": "Department of Medicine",
+        "department": "Department of Medicine",
+        "institution": "Vanderbilt University Medical Center",
+        "address": "37232, Nashville, TN, United States"
+      }
+    },
+    {
+      "affiliation": {
+        "organization": "Department of Biomedical Informatics",
+        "department": "Department of Biomedical Informatics",
+        "institution": "Vanderbilt University Medical Center",
+        "address": "2525 West End Avenue #1475, 37212, Nashville, TN, United States"
+      }
+    }
+  ],
+  "doi": "10.1093/jamia/ocaf059",
+  "orcid": "0000-0001-6844-145X",
+  "md5": "18086B0D86D8E342EAFF7B418A0E5ADA",
+  "publication": {
+    "journal": "J Am Med Inf Assoc",
+    "journal_inferred": true
+  },
+  "keywords": [
+    "clinical decision support",
+    "large language model",
+    "message content",
+    "patient-doctor communication",
+    "primary health care",
+    "patient portal",
+    "knowledge graph",
+    "retrieval augmented generation"
+  ],
+  "funding": [
+    ""
+  ],
+  "sections": [
+    {
+      "title": "Introduction",
+      "text": "Patients are increasingly using patient portals to communicate with their healthcare providers.  1 Between 2013 and 2018, the number of patient messages received by primary care providers (PCPs) increased by 110%.  2  This increase is partly due to increased out-of-pocket costs for in-person visits, leading patients to prefer online messages through patient portals.  3 he COVID-19 pandemic further intensified this trend, resulting in a 157% spike in patient messages-a trend that continues even post-pandemic.  4 At the same time, patients now appreciate direct and timely communication with their healthcare providers, with many anticipating near-instantaneous responses. However, response times often span several days.  5 hile such delays may be manageable for non-emergencies, they can significantly endanger patient safety in emergency situations. An ongoing challenge is to efficiently identify emergencies, in which patients should be notified to call or seek emergency care rather than continue message exchanges. Currently, at Vanderbilt University Medical Center (VUMC), the Epic MyChart Patient Portal includes a disclaimer stating: \"If you're having a medical emergency, call your provider, go to the nearest emergency department, or call 911.\" Despite this warning, patients occasionally send messages indicating potential medical emergencies to their healthcare providers. For example, a patient sent a message stating that they had a terrible headache with facial twitching and numbness (Figure  1 ). The patient portal is designed to streamline routine care and improve communications between doctors and patients, not to handle urgent situations. Consequently, there is a pressing need for an automated and efficient triage approach that can accurately identify patient messages requiring immediate medical attention. Such a system would help prevent patients from relying on the portal during the emergencies, ensuring patient safety.\n\nLLMs are advanced AI models trained on vast amounts of text data to understand, reason, and generate human-like text across various domains.  [6] [7] 7] [8]  LLMs show great potential for tasks such as medical question and answering, 7 clinical decision support analysis, 9,10 and assisting doctors and patients in writing messages.  11, 12 However, challenges remain in applying LLMs to triage patient messages. A previous study evaluated GPT-3's performance in triaging 48 synthetic case vignettes and compared it to the performance of physicians and laypeople.  13 The study found that GPT-3's performance was inferior-even compared to laypeople-at correctly categorizing only 6 out of 12 emergency cases. This shortcoming could be attributed to the insufficient triage information for emergency cases in the training data for the LLM, or to an underperforming reasoning process regarding patient triage.  13 It is also reflective of the clinical complexity of patient triage. Moreover, LLMs sometimes generate fabricated or inaccurate information, a phenomenon known as \"hallucination,\" which is particularly problematic in clinical settings.  [14] [15] ] [16]  Integrating domain-specific knowledge into LLMs is a promising approach to address these challenges. In healthcare, knowledge graphs can construct medical concepts and relationships that improve clinical reasoning and decision-making.  17 Combining knowledge graphs with LLMs can improve inference capabilities.  18, 19 Providing comprehensive, highquality context can help mitigate hallucination.  20, 21 Moreover, retrieval augmented generation (RAG) has been shown to improve accurate and more useful results to novel queries.  [22] [23] 3] [24]  Integrating external knowledge, for example, a nurse triage book with over 200 protocols for common concerns and symptoms, might further support the emergency triage task.  25 RAG can be categorized into na\u00efve and advanced approaches. Na\u00efve RAG employs similarity metrics to extract relevant text snippets from documents, which are then directly incorporated into the LLM's prompt as contextual information.  26 Na\u00efve RAG approaches often suffer from the \"lost-inthe-middle\" phenomenon, where important information is missed or overlooked in large and unstructured document sets.  27, 28 Integrating knowledge graphs might improve the quality of retrieved information, leading to more accurate and reliable outputs, which is crucial for clinical tasks such as triage.  29, 30 The objective of this research is to develop and evaluate an evidence-based LLM-powered triage system for emergency patient messages by integrating knowledge graphs to enhance accuracy and reliability."
+    },
+    {
+      "title": "Materials and methods",
+      "text": "This study took place at VUMC and was exempted from review by the Vanderbilt University Institutional Review Board. An overview of the study design is presented in Figure  2 . We collected a dataset consisting of messages sent by patients to their PCPs and the corresponding replies via the My Health at Vanderbilt patient portal (Epic's MyChart, Verona, WI) between January 1, 2022 and March 7, 2023. We also collected the subject of each patient message. Protected health information (PHI) was removed from the messages using an automatic de-identification tool to ensure patient privacy,  31  but the content was otherwise left unchanged. We manually reviewed physician responses and randomly selected a set of non-emergency messages. Regarding emergency messages, we observed that healthcare providers were less likely to reply to patients instructing them to go to the emergency room through patient portal; instead, they often called patients to inform them of the emergency and documented it in a \"Telephone Encounter\" note in the Epic electronic health record (EHR). Other types of notes might also include information to identify emergencies in patient messages. In this study, to select messages indicating potential emergencies, we extracted notes written within 24 h after a patient message, The form includes a warning to call 911 or visit the emergency department for emergencies, followed by text fields for \"Enter a subject...\" (filled in with \"Headache\") and \"Enter your message...\" (containing a detailed note about severe headache, neck tightness, left-side facial twitching, and lip numbness). The interface also shows buttons labeled \"Discard,\" \"Draft,\" \"Attach,\" and \"Send.\"\n\nwith a note type marked as \"Telephone Encounter.\" Within these notes, we searched for the term \"go to ER\" and other synonyms to identify potential emergency cases. An internal medicine physician then reviewed the dataset and confirmed 41 emergency patient messages. The total dataset included 1020 messages (979 non-emergency and 41 emergency).\n\nThe LLM used was GPT-4o, deployed via Microsoft Azure in a secure environment at VUMC to ensure patient data protection. The setting parameters are listed in the Appendix S1. Although this version of GPT-4o is approved for use with PHI and does not store prompts for future model training, we de-identified the messages before analyzing them for an additional layer of privacy protection. For each patient message, we applied four methods to generate responses: (1) Prompt-Only: The patient message was input with a prompt directly into the LLM without additional context; (2) Na\u00efve RAG: Relevant information was retrieved using semantic similarities and provided as context to the LLM; (3) RAG from Knowledge Graph with Local Search: A knowledge graph was used to retrieve locally relevant information based on semantic similarities; (4) RAG from Knowledge Graph with Global Search: A knowledge graph was used to retrieve globally relevant information through hierarchical community detection. In particular, the local search was performed by identifying semantically similar entities to the patient message within the knowledge graph. Associated text chunks were retrieved, assessed for relevance by the LLM, and condensed into a single context window. On the other hand, for the global search, we first partitioned the knowledge graph into hierarchical communities using the Leiden Algorithm.  32 ommunity detection is critical for understanding large and complex graphs, and the Leiden algorithm is a state-of-theart approach that guarantees connected communities while converging to partitions where all subsets are locally optimally assigned. Additionally, its fast local move approach makes it computationally more efficient, providing improved partition quality. Summaries were generated for communities at each level. The LLM evaluated these summaries for their relevance in assessing the patient messages. Relevant community summaries were combined until reaching the maximum context length allowed by the LLM. We implemented the RAG from Knowledge Graph approach using Microsoft's GraphRAG package in Python.  33 The prompts are listed in Appendix S2.\n\nWe used GPT-4o to develop a knowledge graph based on the nursing telephone triage book, published in 2021.  25 The book includes adult, pediatric, geriatric, and maternal/child concerns, covering 225 protocols for common symptoms, disorders, and medical emergencies. Each protocol has been peer-reviewed by clinical experts to ensure accuracy and upto-date content. The protocols are primarily symptom-based (eg, anxiety, back pain) but also include disease-based entries (eg, COVID-19 exposure, avian influenza). To construct the knowledge graph, we extracted entities such as symptoms, and recommended actions from the protocols. Relationships between these entities were established based on the guidelines provided in the triage book. Nodes in the graph represent medical concepts, while edges represent the relationships or protocols connecting them. To conduct a preliminary evaluation of the knowledge graph, we randomly selected 100 edges and compared them to the original text to assess their accuracy.\n\nFor the na\u00efve RAG approach, we used the Chroma vector database  34  to store embeddings of the knowledge base. Text from the nursing triage guide was segmented into chunks of up to 2000 tokens. When processing a patient message, we computed its embedding and retrieved the top five most similar chunks based on semantic similarities. These retrieved chunks were included as additional context in the prompt provided to the LLM.\n\nWe conducted statistical analyses to compare the effectiveness of the four methods. We performed 1000 rounds of bootstrapping to estimate the sampling distributions of the performance metrics. The Friedman test, a non-parametric test for comparing more than two related groups, was used to determine if there were significant differences among the  methods.  35, 36 If the Friedman test indicated significant differences, we conducted a Nemenyi post-hoc test to identify which pairs of methods differed significantly.  37 Statistical significance was set at P < .005."
+    },
+    {
+      "title": "Results",
+      "text": "The average length of patient messages was 427 characters, sent by 954 unique patients. Based on their subjects, the messages were categorized into nine types, reflecting various healthcare needs (\n\nTable 1). The most common category was Medication and Prescription Management, with 235 messages. These messages frequently included requests for prescription refills, new medications, and inquiries about specific therapies. Many patients sought dosage adjustments or changes in their medication routines. The second most common category, Lab and Test Results, accounted for 215 messages. Patients primarily discussed lab results, including about comprehensive metabolic panels, lipid panels, A1C tests, and hormone tests, as well as imaging diagnostics such as CT scans, X-rays, and MRIs. Some messages involved follow-up questions about cancer screenings and other specialized tests.\n\nThe knowledge graph constructed from the nursing triage protocols contained 29 680 entities, 5142 relationships, and 249 communities. The preliminary evaluation of its quality, based on a random sample of 100 edges, yielded an accuracy score of 0.95. For example, one error was identified for the edge from \"PELVIC INFLAMMATORY DISEASE\" to \"URINARY TRACT INFECTION.\" The associated description was, \"UTIs can sometimes lead to PID if the infection spreads,\" yet this relationship was not explicitly stated in the original text. Notably, this edge had the lowest weight (7) among all the sampled edges.\n\nTable 2 summarizes the performance metrics of four models: Prompt-Only, Na\u00efve RAG, RAG from Knowledge Graph (Local Search), and RAG from Knowledge Graph (Global Search). The prompt-only model, while achieving an accuracy of 0.91 [0.89, 0.93], showed limitations in sensitivity (0.73 [0.5, 0.86]) and precision (0.27 [0.19, 0.35]), indicating a lower capability to correctly identify emergency messages and a higher rate of false positives. In comparison, the na\u00efve RAG model demonstrated moderate improvements across all metrics, particularly in sensitivity (0.83 [0.71, 0.93]) and precision (0.45 [0.34, 0.57]). The RAG from Knowledge Graph with local search model further enhanced performance, reaching 0.98 [0.97, 0.98] in both accuracy and specificity, along with a precision of 0.63 [0.51, 0.74]. The RAG from Knowledge Graph with global search achieved the highest performance across all metrics. This model also showed the highest precision (0.80 [0.68, 0.91]) and F1 score (0.88 [0.80, 0.95]), indicating its effectiveness in reliably detecting emergency cases while minimizing false\n\npositives. The Friedman tests revealed significant differences among all models for each metric (P \u00bc .001). In the subsequent Nemenyi post-hoc tests, each model was found to be significantly different from the others (P \u00bc .001).\n\nThe RAG from Knowledge Graph (global search) model misclassified 10 non-emergency messages (0.98%) as emergencies and 1 emergency message (0.1%) as a nonemergency. Table  3  provides examples of misclassified patient messages, and the responses generated by each model. For instance, an emergency message describing symptoms of a possible drug interaction with the COVID-19 medication was classified as a non-emergency by the RAG from Knowledge Graph with global search. This misclassification likely occurred due to the absence of specific COVID-19 drug-drug interaction resources in the knowledge graph. In contrast, the na\u00efve RAG model correctly identified the case as an emergency by matching symptoms such as blurry vision, which indicated an urgent concern. Another example involved a non-emergency patient message, which requested a colonoscopy due to observed blood in the stool and a family history of colon cancer, and was correctly classified as a nonemergency only by the RAG from Knowledge Graph with global search. Although the patient expresses concern about blood in the stool and a family history of colon cancer, the absence of acute symptoms (eg, severe pain, dizziness, or vomiting blood) aligns with nurse triage protocols that classify such cases as non-emergencies.  25 The other three models, prompt only, na\u00efve RAG, and RAG from Knowledge Graph with local search, focused on the blood and family history of cancer, leading them to incorrectly classify it as an emergency. The final example was about the low iron level. The patient directly emphasized urgency in the message with the phrase \"It is urgent.\" The prompt-only model misclassified it as an emergency message, while other three models successfully filtered it out. In addition, in a random sample of 30 patient messages, we did not identify any instances where a correct judgment was supported by a flawed reasoning process."
+    },
+    {
+      "title": "Discussion",
+      "text": "The results of our study indicated that incorporating a knowledge graph-based RAG approach significantly enhances the performance of LLMs in triaging patient messages which indicate a potential emergency. Among all models tested, the RAG from Knowledge Graph with global search yielded the highest accuracy, sensitivity, and specificity, demonstrating its efficacy in accurately identifying emergency situations in patient messages.\n\nThe traditional LLM without any retrieval mechanism underperformed compared to models with RAG, which aligns with the expected benefits of augmenting LLMs with Table 3. Examples of misclassified patient messages. The text shown in bold indicates the key differences between methods.\n\nExample 1 Emergency Patient Message: I went to the walk-in clinic for COVID and got Paxlovid. When I took it, I started feeling really anxious and restless, had muscle spasms and had blurry vision with small pupils. I read online that buspirone and Paxlovid can interact with each other. What should I do? Prompt-Only: This is PAIGE. I'm an AI helper that will assist you in sending a message to your physician. I will ask you some follow-up questions to clarify important information and help ensure your physician will be able to accurately answer your question the first time. Could you please confirm the dosage and frequency of both Paxlovid and Buspar that you are currently taking? Na\u00efve RAG: This is PAIGE. I'm an AI helper that will assist you in sending a message to your physician. Based on the symptoms you described, including anxiousness, muscle spasms, restlessness, and small pupils with blurry vision, it is important to seek emergency care immediately. Please call 911 or go to the nearest emergency room right away. RAG from Knowledge Graph (Local Search): This is PAIGE. I'm an AI helper that will assist you in sending a message to your physician. I will ask you some follow-up questions to clarify important information and help ensure your physician will be able to accurately answer your question the first time. First, can you please confirm if you are currently experiencing any severe or life-threatening symptoms such as difficulty breathing, chest pain, or severe allergic reactions? RAG from Knowledge Graph (Global Search): This is PAIGE. I'm an AI helper that will assist you in sending a message to your physician. I will ask you some follow-up questions to clarify important information and help ensure your physician will be able to accurately answer your question the first time. To help your physician understand your situation better, could you please provide the following information: How long have you been experiencing these symptoms (anxiousness, muscle spasms, restlessness, and small pupils with blurry vision)? Example 2: Non-Emergency Patient Message: Over the last two days I have noticed blood in my stool, and I have a family history of colon cancer (my dad passed away from it). It might be a hemorrhoid, but I would feel better if I got a colonoscopy, since it has been several years since I had mine. Could you please order a colonoscopy for me as soon as possible? Prompt-Only: This is PAIGE. I'm an AI helper that will assist you in sending a message to your physician. Blood in the stool can be a serious concern, especially with a family history of colon cancer. I recommend you seek immediate medical attention. Please call 911 or go to the nearest emergency room right away. Your safety is the most important thing. Na\u00efve RAG: This is PAIGE. I'm an AI helper that will assist you in sending a message to your physician. I will ask you some follow-up questions to clarify important information and help ensure your physician will be able to accurately answer your question the first time."
+    },
+    {
+      "title": "Given that you have noticed blood in your stool and have a family history of colon cancer, I recommend you seek emergency care immediately.",
+      "text": "Please call 911 or go to the nearest emergency room. RAG from Knowledge Graph (Local Search): This is PAIGE. I'm an AI helper that will assist you in sending a message to your physician. I will ask you some follow-up questions to clarify important information and help ensure your physician will be able to accurately answer your question the first time. Given the presence of blood in your stool and your family history of colon cancer, it is important to seek immediate medical attention. Please call 911 or go to the nearest emergency room right away. RAG from Knowledge Graph (Global Search): This is PAIGE. I'm an AI helper that will assist you in sending a message to your physician. I will ask you some follow-up questions to clarify important information and help ensure your physician will be able to accurately answer your question the first time. I understand that you have noticed blood in your stool for the past two days and have a family history of colon cancer. You mentioned that it has been several years since your last colonoscopy.\n\nTo help your physician better understand your situation, could you please provide more details about the amount of blood you have noticed and if you have experienced any other symptoms such as abdominal pain or weight loss? Example 3: Non-Emergency Patient Message: It is urgent, would you please call me at [PHONE NUMBER]. My iron is very low. I feel no energy. I want to sleep all day and night, and like eating ice and carrots. I must check my iron now. I don't know what to do or who to see. Thank you. Prompt-Only: This is PAIGE. I'm an AI helper that will assist you in sending a message to your physician. Based on what you've shared, you might require immediate medical attention. I recommend that you call 911 or go to the nearest emergency room right away for your symptoms.\n\nNa\u00efve RAG: This is PAIGE. I'm an AI helper that will assist you in sending a message to your physician. I will ask you some follow-up questions to clarify important information and help ensure your physician will be able to accurately answer your question the first time. Your symptoms of extreme exhaustion, constant need to sleep, and craving non-food items like ice and carrots can be concerning. Let's proceed with gathering more information to help your physician understand your situation better. Can you please confirm if you have any other symptoms or medical conditions that might be relevant? RAG from Knowledge Graph (Local Search): This is PAIGE. I'm an AI helper that will assist you in sending a message to your physician. I will ask you some follow-up questions to clarify important information and help ensure your physician will be able to accurately answer your question the first time. Based on your message, it sounds like you are experiencing extreme exhaustion, constant need for sleep, lack of energy, and cravings for ice and carrots, which you believe are due to low iron levels. Before we proceed, I need to check if you are experiencing any conditions that might require immediate medical attention. Are you currently feeling confused, too weak to stand, or experiencing any signs of a stroke such as sudden-onset numbness, difficulty walking, talking, swallowing, or thinking?\n\n(continued)\n\ndomain-specific knowledge sources. The na\u00efve RAG model showed improvements over the prompt-only method but was less effective than the RAG from Knowledge Graph approaches, particularly in emergency message classification.\n\nThe ability of RAG from Knowledge Graph to identify semantically related entities and summarize them efficiently led to more accurate and context-aware responses, mitigating the \"lost-in-the-middle\" phenomenon described in previous studies.  27 Incorporating a knowledge graph as part of the RAG approach provided a structured way to represent relationships between medical concepts, which in turn enhanced the LLM's inference capabilities. By systematically organizing entities and relationships into communities, the global search model was able to provide a more comprehensive understanding of the patient's condition, leading to improved triage performance.\n\nThe low performance of the prompt-only model matched previously reported outcomes,  38  as did the improvement of the na\u00efve RAG model over the prompt-only model.  39 These studies found a substantial reduction in under-triage rates from 39% to 8% when using GPT-4 without vs with RAG. While these studies used a small number of vignettes or simulated scenarios (eg, <150),  40  we were able to test on a large set of real patient messages with validated labels based on physicians' actual responses and with verification by an additional internal medicine physician. Another strength was our development of a knowledge graph using a standard telephone triage book as the knowledge base for the RAG. Our results suggest that providing this external knowledge, especially in a structured manner and in community summaries, can improve LLM performance in triaging patient portal messages.\n\nWhile we integrated a book for nursing triage, a simple and more protocolized medical activity that lends itself well to a RAG, future research could expand the knowledge base to include clinical guidelines, local triage policies, and external APIs, such as RxNorm for medication information. This expansion could further enhance the RAG from Knowledge Graph model's ability to handle a broader range of medical scenarios and improve its generalizability. Another approach could be developing a multi-agent system. Instead of relying only on pre-stored knowledge, this system could assign agents various tasks, allowing them to work collaboratively to handle patient messages more comprehensively. For instance, agents could perform real-time searches on the latest clinical guidelines and extract patient EHR information through FHIR, providing accurate and personalized responses.\n\nFinally, the implementation and evaluation of such tools in the patient portal is an important direction for future work.  41 rrently, when a patient portal message is received by the clinic and determined to indicate a potential emergency, this message must be responded to by telephone, since messages are not always read promptly by the patient. This process can be time-consuming and lead to delays in the patient receiving appropriate care as the clinic tries to reach the patient. An AI tool which automatically detected a potential emergency in the text of a patient portal message could display an immediate warning to the patient at the time of sending the message, and suggest contacting the clinic by telephone or seeking emergency medical care for the condition they are describing. Even in the case of non-emergency messages, an LLMpowered triage approach could place messages into categories based on urgency, such as needing to be seen within one day, within one week, at the next available appointment, or appropriate for self-care. Such a system could provide this feedback directly to patients  13  and be integrated into EHR systems to flag messages which should be reviewed urgently by the healthcare provider. These systems could help improve effective management of inbox messages, which is a pressing issue for PCPs who process approximately 150 messages per day.  42, 43 mitations One limitation of our study is the reliance on a nursing telephone triage book as a single source for knowledge graph development, which may not cover all possible emergency scenarios. Expanding the knowledge graph with additional sources, such as clinical guidelines and expert knowledge, could further enhance the model's performance. Additionally, the evaluation was performed using a historical dataset, and real-world testing is needed to validate the system's effectiveness in clinical practice.  44 Moreover, LLMs may occasionally produce correct answers while relying on flawed reasoning processes.  44 To effectively implement this tool in a clinical workflow, further detailed evaluations focusing on the reasoning process are warranted. A potential direction is to identify hidden flaws and penalize them in the reinforcement learning process to fine-tune a specialized LLM for emergency information detection."
+    },
+    {
+      "title": "Conclusion",
+      "text": "By using RAG from a knowledge graph, this study demonstrates that LLMs can effectively assist in detecting emergencies in patient messages, offering significant improvements over LLMs without RAG and na\u00efve RAG approaches. Future research should focus on expanding the knowledge graph and deploying the system in real clinical environments to evaluate its impact on patient outcomes. RAG from Knowledge Graph (Global Search): This is PAIGE. I'm an AI helper that will assist you in sending a message to your physician. I will ask you some follow-up questions to clarify important information and help ensure your physician will be able to accurately answer your question the first time. Based on your message, it sounds like you are experiencing extreme exhaustion, constant need for sleep, lack of energy, and cravings for ice and carrots, which you believe are due to very low iron levels. Before we proceed, I need to check if you are experiencing any conditions that might require immediate medical attention. Are you currently: -Confused or too weak to stand? -Experiencing signs of meningitis such as fever, confusion, headache, vomiting, stiff neck, or a red or blood-colored flat rash? -Experiencing signs of a stroke such as sudden-onset numbness or tingling, difficulty walking, talking, swallowing, or thinking? Please let me know if any of these apply to you. If not, we can continue preparing your message to your physician.\n\nTable 3. (continued)"
+    },
+    {
+      "text": "Figure1. The screenshot of a patient message indicating a potential medical emergency. The form includes a warning to call 911 or visit the emergency department for emergencies, followed by text fields for \"Enter a subject...\" (filled in with \"Headache\") and \"Enter your message...\" (containing a detailed note about severe headache, neck tightness, left-side facial twitching, and lip numbness). The interface also shows buttons labeled \"Discard,\" \"Draft,\" \"Attach,\" and \"Send.\""
+    },
+    {
+      "text": "Figure 2. Study overview. A flowchart showing a study overview where a knowledge graph, developed using a GPT-4-powered nurse triage book, feeds into three RAG methods (naive, local, global) and a prompt-only approach, with all outputs evaluated via statistical tests on key performance metrics. (RAG: retrieval augmented generation, LLM: large language model)."
+    },
+    {
+      "text": "Categorization of patient messages."
+    },
+    {
+      "text": "Model performance."
+    },
+    {
+      "title": "Funding",
+      "text": "This work was supported by  NIH  [ R00LM014097-02  and  R01LM013995-01 ]."
+    },
+    {
+      "title": "Data availability",
+      "text": "The prompts were reported in the Appendix."
+    },
+    {
+      "title": "Author contributions"
+    },
+    {
+      "title": "Supplementary material",
+      "text": "Supplementary material is available at Journal of the American Medical Informatics Association online."
+    },
+    {
+      "title": "Conflicts of interest",
+      "text": "None declared."
+    }
+  ],
+  "references": [
+    {
+      "title": "Characterizing patient-clinician communication in secure medical messages: retrospective study",
+      "authors": [
+        "M Huang",
+        "J Fan",
+        "J Prigge"
+      ],
+      "year": 2022,
+      "doi": "10.2196/17273",
+      "journal": "J Med Internet Res",
+      "volume": "24",
+      "pages": "17273",
+      "raw": "Characterizing patient-clinician communication in secure medical messages: retrospective study \n\t\t \n\t\t\t M Huang \n\t\t \n\t\t \n\t\t\t J Fan \n\t\t \n\t\t \n\t\t\t J Prigge \n\t\t \n\t\t 10.2196/17273 \n\t\t \n\t \n\t \n\t\t J Med Internet Res \n\t\t \n\t\t\t 24 \n\t\t\t 17273 \n\t\t\t 2022 \n\t\t \n\t \n\t Huang M, Fan J, Prigge J, et al. Characterizing patient-clinician communication in secure medical messages: retrospective study. J Med Internet Res. 2022;24:e17273. https://doi.org/10.2196/17273"
+    },
+    {
+      "title": "A retrospective analysis of provider-to-patient secure messages: how much are they increasing, who is doing the work, and is the work happening after hours?",
+      "authors": [
+        "F North",
+        "K Luhman",
+        "E Mallmann"
+      ],
+      "year": 2020,
+      "doi": "10.2196/16521",
+      "journal": "JMIR Med Inform",
+      "volume": "8",
+      "pages": "16521",
+      "raw": "A retrospective analysis of provider-to-patient secure messages: how much are they increasing, who is doing the work, and is the work happening after hours? \n\t\t \n\t\t\t F North \n\t\t \n\t\t \n\t\t\t K E Luhman \n\t\t \n\t\t \n\t\t\t E A Mallmann \n\t\t \n\t\t 10.2196/16521 \n\t\t \n\t \n\t \n\t\t JMIR Med Inform \n\t\t \n\t\t\t 8 \n\t\t\t 16521 \n\t\t\t 2020 \n\t\t \n\t \n\t North F, Luhman KE, Mallmann EA, et al. A retrospective analysis of provider-to-patient secure messages: how much are they increasing, who is doing the work, and is the work happening after hours? JMIR Med Inform. 2020;8:e16521. https://doi.org/ 10.2196/16521"
+    },
+    {
+      "title": "The electronic health record inbox: recommendations for relief",
+      "authors": [
+        "C Sinsky",
+        "T Shanafelt",
+        "J Ripp"
+      ],
+      "year": 2022,
+      "doi": "10.1007/s11606-022-07766-0",
+      "journal": "J Gen Intern Med",
+      "volume": "37",
+      "raw": "The electronic health record inbox: recommendations for relief \n\t\t \n\t\t\t C A Sinsky \n\t\t \n\t\t \n\t\t\t T D Shanafelt \n\t\t \n\t\t \n\t\t\t J A Ripp \n\t\t \n\t\t 10.1007/s11606-022-07766-0 \n\t\t \n\t \n\t \n\t\t J Gen Intern Med \n\t\t \n\t\t\t 37 \n\t\t\t \n\t\t\t 2022 \n\t\t \n\t \n\t Sinsky CA, Shanafelt TD, Ripp JA. The electronic health record inbox: recommendations for relief. J Gen Intern Med. 2022;37:4002-4003. https://doi.org/10.1007/s11606-022-07766-0"
+    },
+    {
+      "title": "Assessing the impact of the COVID-19 pandemic on clinician ambulatory electronic health record use",
+      "authors": [
+        "A Holmgren",
+        "N Downing",
+        "M Tang"
+      ],
+      "year": 2022,
+      "doi": "10.1093/jamia/ocab268",
+      "journal": "J Am Med Inf Assoc",
+      "volume": "29",
+      "raw": "Assessing the impact of the COVID-19 pandemic on clinician ambulatory electronic health record use \n\t\t \n\t\t\t A J Holmgren \n\t\t \n\t\t \n\t\t\t N L Downing \n\t\t \n\t\t \n\t\t\t M Tang \n\t\t \n\t\t 10.1093/jamia/ocab268 \n\t\t \n\t \n\t \n\t\t J Am Med Inf Assoc \n\t\t \n\t\t\t 29 \n\t\t\t \n\t\t\t 2022 \n\t\t \n\t \n\t Holmgren AJ, Downing NL, Tang M, et al. Assessing the impact of the COVID-19 pandemic on clinician ambulatory electronic health record use. J Am Med Inf Assoc. 2022;29:453-460. https:// doi.org/10.1093/jamia/ocab268"
+    },
+    {
+      "title": "An analysis of patient-provider secure messaging at two Veterans Health Administration medical centers: message content and resolution through secure messaging",
+      "authors": [
+        "S Shimada",
+        "B Petrakis",
+        "J Rothendler"
+      ],
+      "year": 2017,
+      "doi": "10.1093/jamia/ocx021",
+      "journal": "J Am Med Inf Assoc",
+      "volume": "24",
+      "raw": "An analysis of patient-provider secure messaging at two Veterans Health Administration medical centers: message content and resolution through secure messaging \n\t\t \n\t\t\t S L Shimada \n\t\t \n\t\t \n\t\t\t B A Petrakis \n\t\t \n\t\t \n\t\t\t J A Rothendler \n\t\t \n\t\t 10.1093/jamia/ocx021 \n\t\t \n\t \n\t \n\t\t J Am Med Inf Assoc \n\t\t \n\t\t\t 24 \n\t\t\t \n\t\t\t 2017 \n\t\t \n\t \n\t Shimada SL, Petrakis BA, Rothendler JA, et al. An analysis of patient-provider secure messaging at two Veterans Health Admin- istration medical centers: message content and resolution through secure messaging. J Am Med Inf Assoc. 2017;24:942-949. https:// doi.org/10.1093/jamia/ocx021"
+    },
+    {
+      "title": "Language models are few-shot learners",
+      "authors": [
+        "T Brown",
+        "B Mann",
+        "N Ryder"
+      ],
+      "year": 2020,
+      "doi": "10.48550/arXiv.2005.14165",
+      "journal": "Adv Neural Inf Process Syst",
+      "volume": "33",
+      "raw": "Language models are few-shot learners \n\t\t \n\t\t\t T B Brown \n\t\t \n\t\t \n\t\t\t B Mann \n\t\t \n\t\t \n\t\t\t N Ryder \n\t\t \n\t\t 10.48550/arXiv.2005.14165 \n\t\t \n\t \n\t \n\t\t Adv Neural Inf Process Syst \n\t\t \n\t\t\t 33 \n\t\t\t \n\t\t\t 2020 \n\t\t \n\t \n\t Brown TB, Mann B, Ryder N, et al. Language models are few-shot learners. Adv Neural Inf Process Syst. 2020;33:1877-1901. https://doi.org/10.48550/arXiv.2005.14165"
+    },
+    {
+      "title": "Comparing physician and artificial intelligence chatbot responses to patient questions posted to a public social media forum",
+      "authors": [
+        "J Ayers",
+        "A Poliak",
+        "M Dredze"
+      ],
+      "year": 2023,
+      "doi": "10.1001/jamainternmed.2023.1838",
+      "journal": "JAMA Intern Med",
+      "volume": "183",
+      "raw": "Comparing physician and artificial intelligence chatbot responses to patient questions posted to a public social media forum \n\t\t \n\t\t\t J W Ayers \n\t\t \n\t\t \n\t\t\t A Poliak \n\t\t \n\t\t \n\t\t\t M Dredze \n\t\t \n\t\t 10.1001/jamainternmed.2023.1838 \n\t\t \n\t \n\t \n\t\t JAMA Intern Med \n\t\t \n\t\t\t 183 \n\t\t\t \n\t\t\t 2023 \n\t\t \n\t \n\t Ayers JW, Poliak A, Dredze M, et al. Comparing physician and arti- ficial intelligence chatbot responses to patient questions posted to a public social media forum. JAMA Intern Med. 2023;183:589-596. https://doi.org/10.1001/jamainternmed.2023.1838"
+    },
+    {
+      "title": "Evaluating insomnia queries from an artificial intelligence chatbot for patient education",
+      "authors": [
+        "R Alapati",
+        "D Campbell",
+        "N Molin"
+      ],
+      "year": 2024,
+      "doi": "10.5664/jcsm.10948",
+      "journal": "J Clin Sleep Med",
+      "volume": "20",
+      "raw": "Evaluating insomnia queries from an artificial intelligence chatbot for patient education \n\t\t \n\t\t\t R Alapati \n\t\t \n\t\t \n\t\t\t D Campbell \n\t\t \n\t\t \n\t\t\t N Molin \n\t\t \n\t\t 10.5664/jcsm.10948 \n\t\t \n\t \n\t \n\t\t J Clin Sleep Med \n\t\t \n\t\t\t 20 \n\t\t\t \n\t\t\t 2024 \n\t\t \n\t \n\t Alapati R, Campbell D, Molin N, et al. Evaluating insomnia queries from an artificial intelligence chatbot for patient education. J Clin Sleep Med. 2024;20:583-594. https://doi.org/10.5664/jcsm. 10948"
+    },
+    {
+      "title": "Using AI-generated suggestions from ChatGPT to optimize clinical decision support",
+      "authors": [
+        "S Liu",
+        "A Wright",
+        "B Patterson"
+      ],
+      "year": 2023,
+      "doi": "10.1093/jamia/ocad072",
+      "journal": "J Am Med Inf Assoc",
+      "volume": "30",
+      "raw": "Using AI-generated suggestions from ChatGPT to optimize clinical decision support \n\t\t \n\t\t\t S Liu \n\t\t \n\t\t \n\t\t\t A P Wright \n\t\t \n\t\t \n\t\t\t B L Patterson \n\t\t \n\t\t 10.1093/jamia/ocad072 \n\t\t \n\t \n\t \n\t\t J Am Med Inf Assoc \n\t\t \n\t\t\t 30 \n\t\t\t \n\t\t\t 2023 \n\t\t \n\t \n\t Liu S, Wright AP, Patterson BL, et al. Using AI-generated sugges- tions from ChatGPT to optimize clinical decision support. J Am Med Inf Assoc. 2023;30:1237-1245. https://doi.org/10.1093/ jamia/ocad072"
+    },
+    {
+      "title": "Why do users override alerts? Utilizing large language model to summarize comments and optimize clinical decision support",
+      "authors": [
+        "S Liu",
+        "A Mccoy",
+        "A Wright"
+      ],
+      "year": 2024,
+      "doi": "10.1093/jamia/ocae041",
+      "journal": "J Am Med Inf Assoc",
+      "volume": "31",
+      "raw": "Why do users override alerts? Utilizing large language model to summarize comments and optimize clinical decision support \n\t\t \n\t\t\t S Liu \n\t\t \n\t\t \n\t\t\t A B Mccoy \n\t\t \n\t\t \n\t\t\t A P Wright \n\t\t \n\t\t 10.1093/jamia/ocae041 \n\t\t \n\t \n\t \n\t\t J Am Med Inf Assoc \n\t\t \n\t\t\t 31 \n\t\t\t \n\t\t\t 2024 \n\t\t \n\t \n\t Liu S, McCoy AB, Wright AP, et al. Why do users override alerts? Utilizing large language model to summarize comments and optimize clinical decision support. J Am Med Inf Assoc. 2024;31:1388-1396. https://doi.org/10.1093/jamia/ocae041"
+    },
+    {
+      "title": "Using large language model to guide patients to create efficient and comprehensive clinical care message",
+      "authors": [
+        "S Liu",
+        "A Wright",
+        "A Mccoy"
+      ],
+      "year": 2024,
+      "doi": "10.1093/jamia/ocae142",
+      "journal": "J Am Med Inf Assoc",
+      "volume": "31",
+      "raw": "Using large language model to guide patients to create efficient and comprehensive clinical care message \n\t\t \n\t\t\t S Liu \n\t\t \n\t\t \n\t\t\t A P Wright \n\t\t \n\t\t \n\t\t\t A B Mccoy \n\t\t \n\t\t 10.1093/jamia/ocae142 \n\t\t \n\t \n\t \n\t\t J Am Med Inf Assoc \n\t\t \n\t\t\t 31 \n\t\t\t \n\t\t\t 2024 \n\t\t \n\t \n\t Liu S, Wright AP, Mccoy AB, et al. Using large language model to guide patients to create efficient and comprehensive clinical care message. J Am Med Inf Assoc. 2024;31:1665-1670. https://doi. org/10.1093/JAMIA/OCAE142"
+    },
+    {
+      "title": "Leveraging large language models for generating responses to patient messages-a subjective analysis",
+      "authors": [
+        "S Liu",
+        "A Mccoy",
+        "A Wright"
+      ],
+      "year": 2024,
+      "doi": "10.1093/jamia/ocae052",
+      "journal": "J Am Med Inf Assoc",
+      "volume": "31",
+      "raw": "Leveraging large language models for generating responses to patient messages-a subjective analysis \n\t\t \n\t\t\t S Liu \n\t\t \n\t\t \n\t\t\t A B Mccoy \n\t\t \n\t\t \n\t\t\t A P Wright \n\t\t \n\t\t 10.1093/jamia/ocae052 \n\t\t \n\t \n\t \n\t\t J Am Med Inf Assoc \n\t\t \n\t\t\t 31 \n\t\t\t \n\t\t\t 2024 \n\t\t \n\t \n\t Liu S, McCoy AB, Wright AP, et al. Leveraging large language models for generating responses to patient messages-a subjective analysis. J Am Med Inf Assoc. 2024;31:1367-1379. https://doi. org/10.1093/jamia/ocae052"
+    },
+    {
+      "title": "The diagnostic and triage accuracy of the GPT-3 artificial intelligence model: an observational study",
+      "authors": [
+        "D Levine",
+        "R Tuwani",
+        "B Kompa"
+      ],
+      "year": 2024,
+      "doi": "10.1016/s2589-7500(24)00097-9",
+      "journal": "Lancet Digit Health",
+      "volume": "6",
+      "pages": "561",
+      "raw": "The diagnostic and triage accuracy of the GPT-3 artificial intelligence model: an observational study \n\t\t \n\t\t\t D M Levine \n\t\t \n\t\t \n\t\t\t R Tuwani \n\t\t \n\t\t \n\t\t\t B Kompa \n\t\t \n\t\t 10.1016/s2589-7500(24)00097-9 \n\t\t \n\t \n\t \n\t\t Lancet Digit Health \n\t\t \n\t\t\t 6 \n\t\t\t 561 \n\t\t\t 2024 \n\t\t \n\t \n\t Levine DM, Tuwani R, Kompa B, et al. The diagnostic and triage accuracy of the GPT-3 artificial intelligence model: an observatio- nal study. Lancet Digit Health. 2024;6:e555-61.e561. https://doi. org/10.1016/S2589-7500(24)00097-9"
+    },
+    {
+      "title": "Hallucination is inevitable: an innate limitation of large language models",
+      "authors": [
+        "Z Xu",
+        "S Jain",
+        "M Kankanhalli"
+      ],
+      "year": 2024,
+      "raw": "Hallucination is inevitable: an innate limitation of large language models \n\t\t \n\t\t\t Z Xu \n\t\t \n\t\t \n\t\t\t S Jain \n\t\t \n\t\t \n\t\t\t M Kankanhalli \n\t\t \n\t\t \n\t\t \n\t\t\t 2024 \n\t\t \n\t \n\t preprint: not peer reviewed \n\t Xu Z, Jain S, Kankanhalli M. Hallucination is inevitable: an innate limitation of large language models. 2024, preprint: not peer reviewed. https://arxiv.org/abs/2401.11817"
+    },
+    {
+      "title": "Siren's song in the AI ocean: a survey on hallucination in large language models",
+      "authors": [
+        "Y Zhang",
+        "Y Li",
+        "L Cui"
+      ],
+      "year": 2023,
+      "doi": "10.1162/coli.a.16",
+      "raw": "Siren's song in the AI ocean: a survey on hallucination in large language models \n\t\t \n\t\t\t Y Zhang \n\t\t \n\t\t \n\t\t\t Y Li \n\t\t \n\t\t \n\t\t\t L Cui \n\t\t \n\t\t 10.1162/coli.a.16 \n\t\t \n\t\t \n\t\t\t 2023 \n\t\t \n\t \n\t preprint: not peer reviewed \n\t Zhang Y, Li Y, Cui L, et al. Siren's song in the AI ocean: a survey on hallucination in large language models. 2023, preprint: not peer reviewed. https://https://arxiv.org/abs/2309.01219"
+    },
+    {
+      "title": "a survey on hallucination in large language models: principles, taxonomy, challenges, and open questions",
+      "authors": [
+        "L Huang",
+        "W Yu",
+        "W Ma"
+      ],
+      "year": 2023,
+      "raw": "a survey on hallucination in large language models: principles, taxonomy, challenges, and open questions \n\t\t \n\t\t\t L Huang \n\t\t \n\t\t \n\t\t\t W Yu \n\t\t \n\t\t \n\t\t\t W Ma \n\t\t \n\t\t \n\t\t \n\t\t\t 2023 \n\t\t \n\t \n\t preprint: not peer reviewed \n\t Huang L, Yu W, Ma W, et al. a survey on hallucination in large language models: principles, taxonomy, challenges, and open questions. 2023, preprint: not peer reviewed. https://arxiv.org/abs/ 2311.05232"
+    },
+    {
+      "title": "Learning a health knowledge graph from electronic medical records",
+      "authors": [
+        "M Rotmensch",
+        "Y Halpern",
+        "A Tlimat"
+      ],
+      "year": 2017,
+      "doi": "10.1038/s41598-017-05778-z",
+      "journal": "Sci Rep",
+      "volume": "7",
+      "pages": "5994",
+      "raw": "Learning a health knowledge graph from electronic medical records \n\t\t \n\t\t\t M Rotmensch \n\t\t \n\t\t \n\t\t\t Y Halpern \n\t\t \n\t\t \n\t\t\t A Tlimat \n\t\t \n\t\t 10.1038/s41598-017-05778-z \n\t\t \n\t \n\t \n\t\t Sci Rep \n\t\t \n\t\t\t 7 \n\t\t\t 5994 \n\t\t\t 2017 \n\t\t \n\t \n\t Rotmensch M, Halpern Y, Tlimat A, et al. Learning a health knowledge graph from electronic medical records. Sci Rep. 2017;7:5994. https://doi.org/10.1038/s41598-017-05778-z"
+    },
+    {
+      "title": "On exploring the reasoning capability of large language models with knowledge graphs",
+      "authors": [
+        "P-C Lo",
+        "Y-H Tsai",
+        "E-P Lim"
+      ],
+      "year": 2023,
+      "raw": "On exploring the reasoning capability of large language models with knowledge graphs \n\t\t \n\t\t\t P-C Lo \n\t\t \n\t\t \n\t\t\t Y-H Tsai \n\t\t \n\t\t \n\t\t\t E-P Lim \n\t\t \n\t\t \n\t\t \n\t\t\t 2023 \n\t\t \n\t \n\t preprint: not peer reviewed \n\t Lo P-C, Tsai Y-H, Lim E-P, et al. On exploring the reasoning capa- bility of large language models with knowledge graphs. 2023, pre- print: not peer reviewed. https://arxiv.org/abs/2312.00353"
+    },
+    {
+      "title": "HW-TSC at TextGraphs-17 shared task: enhancing inference capabilities of LLMs with knowledge graphs",
+      "authors": [
+        "W Tang",
+        "X Qiao",
+        "X Zhao"
+      ],
+      "year": 2024,
+      "doi": "10.18653/v1/2024.textgraphs-1.11",
+      "raw": "HW-TSC at TextGraphs-17 shared task: enhancing inference capabilities of LLMs with knowledge graphs \n\t\t \n\t\t\t W Tang \n\t\t \n\t\t \n\t\t\t X Qiao \n\t\t \n\t\t \n\t\t\t X Zhao \n\t\t \n\t\t 10.18653/v1/2024.textgraphs-1.11 \n\t \n\t \n\t\t Proceedings of TextGraphs-17: Graph-based Methods for Natural Language Processing \n\t\t TextGraphs-17: Graph-based Methods for Natural Language Processing Bangkok, Thailand \n\t\t \n\t\t\t Association for Computational Linguistics \n\t\t\t 2024 \n\t\t\t \n\t\t \n\t \n\t Tang W, Qiao X, Zhao X, et al. HW-TSC at TextGraphs-17 shared task: enhancing inference capabilities of LLMs with knowl- edge graphs. In: Proceedings of TextGraphs-17: Graph-based Methods for Natural Language Processing. Bangkok, Thailand: Association for Computational Linguistics; 2024:131-136."
+    },
+    {
+      "title": "Chain-of-knowledge: grounding large language models via dynamic knowledge adapting over heterogeneous sources",
+      "authors": [
+        "X Li",
+        "R Zhao",
+        "Y Chia"
+      ],
+      "year": 2024,
+      "raw": "Chain-of-knowledge: grounding large language models via dynamic knowledge adapting over heterogeneous sources \n\t\t \n\t\t\t X Li \n\t\t \n\t\t \n\t\t\t R Zhao \n\t\t \n\t\t \n\t\t\t Y K Chia \n\t\t \n\t \n\t \n\t\t 12th International Conference on Learning Representations \n\t\t Vienna, Austria \n\t\t \n\t\t\t ICLR \n\t\t\t 2024 \n\t\t \n\t \n\t International Conference on Learning Representations \n\t Li X, Zhao R, Chia YK, et al. Chain-of-knowledge: grounding large language models via dynamic knowledge adapting over het- erogeneous sources. In: 12th International Conference on Learn- ing Representations. Vienna, Austria: International Conference on Learning Representations, ICLR; 2024."
+    },
+    {
+      "title": "Check your facts and try again: improving large language models with external knowledge and automated feedback",
+      "authors": [
+        "B Peng",
+        "M Galley",
+        "P He"
+      ],
+      "year": 2023,
+      "raw": "Check your facts and try again: improving large language models with external knowledge and automated feedback \n\t\t \n\t\t\t B Peng \n\t\t \n\t\t \n\t\t\t M Galley \n\t\t \n\t\t \n\t\t\t P He \n\t\t \n\t\t \n\t\t \n\t\t\t 2023 \n\t\t \n\t \n\t preprint: not peer reviewed \n\t Peng B, Galley M, He P, et al. Check your facts and try again: improving large language models with external knowledge and automated feedback. 2023, preprint: not peer reviewed. https:// arxiv.org/abs/2302.12813"
+    },
+    {
+      "title": "Improving retrieval-augmented generation in medicine with iterative follow-up questions",
+      "authors": [
+        "G Xiong",
+        "Jin Wang"
+      ],
+      "year": 2024,
+      "doi": "10.1142/9789819807024_0015",
+      "raw": "Improving retrieval-augmented generation in medicine with iterative follow-up questions \n\t\t \n\t\t\t G Xiong \n\t\t \n\t\t \n\t\t\t Jin Q Wang \n\t\t \n\t\t \n\t\t\t X \n\t\t \n\t\t 10.1142/9789819807024_0015 \n\t\t \n\t\t \n\t\t\t 2024 \n\t\t \n\t \n\t preprint: not peer reviewed \n\t Xiong G, Jin Q, Wang X, et al. Improving retrieval-augmented gen- eration in medicine with iterative follow-up questions. 2024, pre- print: not peer reviewed. https://arxiv.org/abs/2408.00727"
+    },
+    {
+      "title": "Benchmarking large language models on communicative medical coaching: a dataset and a novel system",
+      "authors": [
+        "H Huang",
+        "S Wang",
+        "H Liu"
+      ],
+      "year": 2024,
+      "doi": "10.18653/v1/2024.findings-acl.94",
+      "raw": "Benchmarking large language models on communicative medical coaching: a dataset and a novel system \n\t\t \n\t\t\t H Huang \n\t\t \n\t\t \n\t\t\t S Wang \n\t\t \n\t\t \n\t\t\t H Liu \n\t\t \n\t\t 10.18653/v1/2024.findings-acl.94 \n\t\t \n\t\t \n\t\t\t 2024 \n\t\t\t Association for Computational Linguistics \n\t\t\t \n\t\t\t Bangkok, Thailand \n\t\t \n\t \n\t Findings of the Association for Computational Linguistics: ACL 2024 \n\t Huang H, Wang S, Liu H, et al. Benchmarking large language models on communicative medical coaching: a dataset and a novel system. In: Findings of the Association for Computational Linguis- tics: ACL 2024. Bangkok, Thailand: Association for Computa- tional Linguistics; 2024:1624-1637. https://doi.org/10.18653/V1/ 2024.FINDINGS-ACL.94"
+    },
+    {
+      "title": "Improving large language model applications in biomedicine with retrieval-augmented generation: a systematic review, meta-analysis, and clinical development guidelines",
+      "authors": [
+        "S Liu",
+        "A Mccoy",
+        "A Wright"
+      ],
+      "year": 2025,
+      "doi": "10.1093/jamia/ocaf008",
+      "journal": "J Am Med Inform Assoc",
+      "pages": "8",
+      "raw": "Improving large language model applications in biomedicine with retrieval-augmented generation: a systematic review, meta-analysis, and clinical development guidelines \n\t\t \n\t\t\t S Liu \n\t\t \n\t\t \n\t\t\t A B Mccoy \n\t\t \n\t\t \n\t\t\t A Wright \n\t\t \n\t\t 10.1093/jamia/ocaf008 \n\t\t \n\t \n\t \n\t\t J Am Med Inform Assoc \n\t\t \n\t\t\t 8 \n\t\t\t 2025 \n\t\t \n\t \n\t Liu S, McCoy AB, Wright A. Improving large language model applications in biomedicine with retrieval-augmented generation: a systematic review, meta-analysis, and clinical development guidelines. J Am Med Inform Assoc. 2025:ocaf008. https://doi. org/10.1093/JAMIA/OCAF008"
+    },
+    {
+      "title": "Telephone Triage Protocols for Nurses",
+      "authors": [
+        "J Briggs"
+      ],
+      "year": 2021,
+      "doi": "10.1542/9781610025638-references",
+      "raw": "Telephone Triage Protocols for Nurses \n\t\t \n\t\t\t J K Briggs \n\t\t \n\t\t 10.1542/9781610025638-references \n\t\t \n\t\t\t 2021 \n\t\t\t Wolters Kluwer Health \n\t\t \n\t \n\t Briggs JK. Telephone Triage Protocols for Nurses. Wolters Kluwer Health; 2021."
+    },
+    {
+      "title": "Retrieval-augmented generation for large language models: a survey",
+      "authors": [
+        "Y Gao",
+        "Y Xiong",
+        "X Gao"
+      ],
+      "year": 2023,
+      "raw": "Retrieval-augmented generation for large language models: a survey \n\t\t \n\t\t\t Y Gao \n\t\t \n\t\t \n\t\t\t Y Xiong \n\t\t \n\t\t \n\t\t\t X Gao \n\t\t \n\t\t \n\t\t \n\t\t\t 2023 \n\t\t \n\t \n\t preprint: not peer reviewed \n\t Gao Y, Xiong Y, Gao X, et al. Retrieval-augmented generation for large language models: a survey. 2023, preprint: not peer reviewed. https://arxiv.org/abs/2312.10997"
+    },
+    {
+      "title": "Lost in the middle: how language models use long contexts",
+      "authors": [
+        "N Liu",
+        "K Lin",
+        "J Hewitt"
+      ],
+      "year": 2024,
+      "doi": "10.1162/tacl_a_00638",
+      "journal": "Trans Assoc Comput Linguist",
+      "volume": "12",
+      "raw": "Lost in the middle: how language models use long contexts \n\t\t \n\t\t\t N F Liu \n\t\t \n\t\t \n\t\t\t K Lin \n\t\t \n\t\t \n\t\t\t J Hewitt \n\t\t \n\t\t 10.1162/tacl_a_00638 \n\t\t \n\t \n\t \n\t\t Trans Assoc Comput Linguist \n\t\t \n\t\t\t 12 \n\t\t\t \n\t\t\t 2024 \n\t\t \n\t \n\t Liu NF, Lin K, Hewitt J, et al. Lost in the middle: how language models use long contexts. Trans Assoc Comput Linguist. 2024;12:157-173. https://doi.org/10.1162/tacl_a_00638"
+    },
+    {
+      "title": "Retrieval meets long context large language models",
+      "authors": [
+        "P Xu",
+        "Ping Wu"
+      ],
+      "year": 2024,
+      "raw": "Retrieval meets long context large language models \n\t\t \n\t\t\t P Xu \n\t\t \n\t\t \n\t\t\t Ping W Wu \n\t\t \n\t\t \n\t\t\t X \n\t\t \n\t \n\t \n\t\t 12th International Conference on Learning Representations \n\t\t Vienna, Austria \n\t\t \n\t\t\t ICLR \n\t\t\t 2024 \n\t\t \n\t \n\t International Conference on Learning Representations \n\t Xu P, Ping W, Wu X, et al. Retrieval meets long context large lan- guage models. In: 12th International Conference on Learning Rep- resentations. Vienna, Austria: International Conference on Learning Representations, ICLR; 2024."
+    },
+    {
+      "title": "Unifying large language models and knowledge graphs: a roadmap",
+      "authors": [
+        "S Pan",
+        "L Luo",
+        "Y Wang"
+      ],
+      "year": 2024,
+      "doi": "10.1109/tkde.2024.3352100",
+      "journal": "IEEE Trans Knowl Data Eng",
+      "volume": "36",
+      "raw": "Unifying large language models and knowledge graphs: a roadmap \n\t\t \n\t\t\t S Pan \n\t\t \n\t\t \n\t\t\t L Luo \n\t\t \n\t\t \n\t\t\t Y Wang \n\t\t \n\t\t 10.1109/tkde.2024.3352100 \n\t\t \n\t \n\t \n\t\t IEEE Trans Knowl Data Eng \n\t\t \n\t\t\t 36 \n\t\t\t \n\t\t\t 2024 \n\t\t \n\t \n\t Pan S, Luo L, Wang Y, et al. Unifying large language models and knowledge graphs: a roadmap. IEEE Trans Knowl Data Eng. 2024;36:3580-3599. https://doi.org/10.1109/TKDE.2024.3352100"
+    },
+    {
+      "title": "GraphEval: a knowledge-graph based LLM hallucination evaluation framework",
+      "authors": [
+        "H Sansford",
+        "N Richardson",
+        "H Maretic"
+      ],
+      "year": 2024,
+      "raw": "GraphEval: a knowledge-graph based LLM hallucination evaluation framework \n\t\t \n\t\t\t H Sansford \n\t\t \n\t\t \n\t\t\t N Richardson \n\t\t \n\t\t \n\t\t\t H P Maretic \n\t\t \n\t\t \n\t\t \n\t\t\t 2024 \n\t\t \n\t \n\t preprint: not peer reviewed \n\t Sansford H, Richardson N, Maretic HP, et al. GraphEval: a knowledge-graph based LLM hallucination evaluation framework. 2024, preprint: not peer reviewed. https://arxiv.org/abs/2407.10793"
+    },
+    {
+      "title": "Automated deidentification of radiology reports combining transformer and \"hide in plain sight\" rule-based methods",
+      "authors": [
+        "P Chambon",
+        "C Wu",
+        "J Steinkamp"
+      ],
+      "year": 2023,
+      "doi": "10.1093/jamia/ocac219",
+      "journal": "J Am Med Inf Assoc",
+      "volume": "30",
+      "raw": "Automated deidentification of radiology reports combining transformer and \"hide in plain sight\" rule-based methods \n\t\t \n\t\t\t P J Chambon \n\t\t \n\t\t \n\t\t\t C Wu \n\t\t \n\t\t \n\t\t\t J M Steinkamp \n\t\t \n\t\t 10.1093/jamia/ocac219 \n\t\t \n\t \n\t \n\t\t J Am Med Inf Assoc \n\t\t \n\t\t\t 30 \n\t\t\t \n\t\t\t 2023 \n\t\t \n\t \n\t Chambon PJ, Wu C, Steinkamp JM, et al. Automated deidentifica- tion of radiology reports combining transformer and \"hide in plain sight\" rule-based methods. J Am Med Inf Assoc. 2023;30:318-328. https://doi.org/10.1093/jamia/ocac219"
+    },
+    {
+      "title": "From Louvain to Leiden: guaranteeing well-connected communities",
+      "authors": [
+        "V Traag",
+        "L Waltman",
+        "N Van Eck"
+      ],
+      "year": 2019,
+      "doi": "10.1038/s41598-019-41695-z",
+      "journal": "Sci Rep",
+      "volume": "9",
+      "pages": "5233",
+      "raw": "From Louvain to Leiden: guaranteeing well-connected communities \n\t\t \n\t\t\t V A Traag \n\t\t \n\t\t \n\t\t\t L Waltman \n\t\t \n\t\t \n\t\t\t N J Van Eck \n\t\t \n\t\t 10.1038/s41598-019-41695-z \n\t\t \n\t \n\t \n\t\t Sci Rep \n\t\t \n\t\t\t 9 \n\t\t\t 5233 \n\t\t\t 2019 \n\t\t \n\t \n\t Traag VA, Waltman L, van Eck NJ. From Louvain to Leiden: guar- anteeing well-connected communities. Sci Rep. 2019;9:5233. https://doi.org/10.1038/s41598-019-41695-z"
+    },
+    {
+      "title": "From local to global: a graph rag approach to query-focused summarization",
+      "authors": [
+        "D Edge",
+        "H Trinh",
+        "N Cheng"
+      ],
+      "year": 2024,
+      "raw": "From local to global: a graph rag approach to query-focused summarization \n\t\t \n\t\t\t D Edge \n\t\t \n\t\t \n\t\t\t H Trinh \n\t\t \n\t\t \n\t\t\t N Cheng \n\t\t \n\t\t \n\t\t \n\t\t\t 2024 \n\t\t \n\t \n\t preprint: not peer reviewed \n\t Edge D, Trinh H, Cheng N, et al. From local to global: a graph rag approach to query-focused summarization. 2024, preprint: not peer reviewed. https://arxiv.org/abs/2404.16130"
+    },
+    {
+      "year": 2025,
+      "doi": "10.1089/glre.2016.201011",
+      "raw": "Chroma \n\t\t \n\t\t 10.1089/glre.2016.201011 \n\t\t \n\t\t \n\t\t\t March 2, 2025 \n\t\t \n\t \n\t Chroma. Accessed March 2, 2025. https://www.trychroma.com/"
+    },
+    {
+      "title": "Evaluation metrics and statistical tests for machine learning",
+      "authors": [
+        "O Rainio",
+        "J Teuho"
+      ],
+      "year": 2024,
+      "doi": "10.1038/s41598-024-56706-x",
+      "journal": "Sci Rep",
+      "volume": "14",
+      "pages": "6086",
+      "raw": "Evaluation metrics and statistical tests for machine learning \n\t\t \n\t\t\t O Rainio \n\t\t \n\t\t \n\t\t\t J Teuho \n\t\t \n\t\t \n\t\t\t Kl\ufffd En R \n\t\t \n\t\t 10.1038/s41598-024-56706-x \n\t\t \n\t \n\t \n\t\t Sci Rep \n\t\t \n\t\t\t 14 \n\t\t\t 6086 \n\t\t\t 2024 \n\t\t \n\t \n\t Rainio O, Teuho J, Kl\ufffd en R. Evaluation metrics and statistical tests for machine learning. Sci Rep. 2024;14:6086. https://doi.org/10. 1038/s41598-024-56706-x"
+    },
+    {
+      "title": "Statistical comparisons of classifiers over multiple data sets",
+      "authors": [
+        "J Demsar"
+      ],
+      "year": 2006,
+      "journal": "J Mach Learn Res",
+      "volume": "7",
+      "raw": "Statistical comparisons of classifiers over multiple data sets \n\t\t \n\t\t\t J Demsar \n\t\t \n\t \n\t \n\t\t J Mach Learn Res \n\t\t \n\t\t\t 7 \n\t\t\t \n\t\t\t 2006 \n\t\t \n\t \n\t Demsar J. Statistical comparisons of classifiers over multiple data sets. J Mach Learn Res. 2006;7:1-30."
+    },
+    {
+      "title": "Distribution-Free Multiple Comparisons",
+      "authors": [
+        "P Nemenyi"
+      ],
+      "year": 1963,
+      "doi": "10.2307/26409630",
+      "raw": "Distribution-Free Multiple Comparisons \n\t\t \n\t\t\t P B Nemenyi \n\t\t \n\t\t 10.2307/26409630 \n\t\t \n\t\t\t 1963 \n\t\t \n\t\t \n\t\t\t Princeton University \n\t\t \n\t \n\t Nemenyi PB. Distribution-Free Multiple Comparisons. Princeton University; 1963."
+    },
+    {
+      "title": "Repeatability, reproducibility, and diagnostic accuracy of a commercial large language model (ChatGPT) to perform emergency department triage using the Canadian triage and acuity scale",
+      "authors": [
+        "J Franc",
+        "L Cheng",
+        "A Hart"
+      ],
+      "year": 2024,
+      "doi": "10.1007/s43678-023-00616-w",
+      "journal": "Can J Emerg Med",
+      "volume": "26",
+      "raw": "Repeatability, reproducibility, and diagnostic accuracy of a commercial large language model (ChatGPT) to perform emergency department triage using the Canadian triage and acuity scale \n\t\t \n\t\t\t J M Franc \n\t\t \n\t\t \n\t\t\t L Cheng \n\t\t \n\t\t \n\t\t\t A Hart \n\t\t \n\t\t 10.1007/s43678-023-00616-w \n\t\t \n\t \n\t \n\t\t Can J Emerg Med \n\t\t \n\t\t\t 26 \n\t\t\t \n\t\t\t 2024 \n\t\t \n\t \n\t Franc JM, Cheng L, Hart A, et al. Repeatability, reproducibility, and diagnostic accuracy of a commercial large language model (ChatGPT) to perform emergency department triage using the Cana- dian triage and acuity scale. Can J Emerg Med. 2024;26:40-46. https://doi.org/10.1007/s43678-023-00616-w"
+    },
+    {
+      "title": "Emergency patient triage improvement through a retrieval-augmented generation enhanced large-scale language model",
+      "authors": [
+        "M Yazaki",
+        "S Maki",
+        "T Furuya"
+      ],
+      "year": 2025,
+      "doi": "10.1080/10903127.2024.2374400",
+      "journal": "Prehospital Emerg Care",
+      "volume": "29",
+      "raw": "Emergency patient triage improvement through a retrieval-augmented generation enhanced large-scale language model \n\t\t \n\t\t\t M Yazaki \n\t\t \n\t\t \n\t\t\t S Maki \n\t\t \n\t\t \n\t\t\t T Furuya \n\t\t \n\t\t 10.1080/10903127.2024.2374400 \n\t\t \n\t \n\t \n\t\t Prehospital Emerg Care \n\t\t \n\t\t\t 29 \n\t\t\t \n\t\t\t 2025 \n\t\t \n\t \n\t Yazaki M, Maki S, Furuya T, et al. Emergency patient triage improve- ment through a retrieval-augmented generation enhanced large-scale language model. Prehospital Emerg Care. 2025;29:203-209. https:// doi.org/10.1080/10903127.2024.2374400"
+    },
+    {
+      "title": "Triage performance across large language models, ChatGPT, and untrained doctors in emergency medicine: comparative study",
+      "authors": [
+        "L Masanneck",
+        "L Schmidt",
+        "A Seifert"
+      ],
+      "year": 2024,
+      "doi": "10.2196/53297",
+      "journal": "J Med Internet Res",
+      "volume": "26",
+      "pages": "53297",
+      "raw": "Triage performance across large language models, ChatGPT, and untrained doctors in emergency medicine: comparative study \n\t\t \n\t\t\t L Masanneck \n\t\t \n\t\t \n\t\t\t L Schmidt \n\t\t \n\t\t \n\t\t\t A Seifert \n\t\t \n\t\t 10.2196/53297 \n\t\t \n\t \n\t \n\t\t J Med Internet Res \n\t\t \n\t\t\t 26 \n\t\t\t 53297 \n\t\t\t 2024 \n\t\t \n\t \n\t Masanneck L, Schmidt L, Seifert A, et al. Triage performance across large language models, ChatGPT, and untrained doctors in emergency medicine: comparative study. J Med Internet Res. 2024;26:e53297. https://doi.org/10.2196/53297"
+    },
+    {
+      "title": "Utility of ChatGPT in clinical practice",
+      "authors": [
+        "J Liu",
+        "C Wang",
+        "S Liu"
+      ],
+      "year": 2023,
+      "doi": "10.2196/48568",
+      "journal": "J Med Internet Res",
+      "volume": "25",
+      "pages": "48568",
+      "raw": "Utility of ChatGPT in clinical practice \n\t\t \n\t\t\t J Liu \n\t\t \n\t\t \n\t\t\t C Wang \n\t\t \n\t\t \n\t\t\t S Liu \n\t\t \n\t\t 10.2196/48568 \n\t\t \n\t \n\t \n\t\t J Med Internet Res \n\t\t \n\t\t\t 25 \n\t\t\t 48568 \n\t\t\t 2023 \n\t\t \n\t \n\t Liu J, Wang C, Liu S. Utility of ChatGPT in clinical practice. J Med Internet Res. 2023;25:e48568. https://doi.org/10.2196/48568"
+    },
+    {
+      "title": "Physicians' electronic inbox work patterns and factors associated with high inbox work duration",
+      "authors": [
+        "F Akbar",
+        "G Mark",
+        "E Warton"
+      ],
+      "year": 2021,
+      "doi": "10.1093/jamia/ocaa229",
+      "journal": "J Am Med Inf Assoc",
+      "volume": "28",
+      "raw": "Physicians' electronic inbox work patterns and factors associated with high inbox work duration \n\t\t \n\t\t\t F Akbar \n\t\t \n\t\t \n\t\t\t G Mark \n\t\t \n\t\t \n\t\t\t E M Warton \n\t\t \n\t\t 10.1093/jamia/ocaa229 \n\t\t \n\t \n\t \n\t\t J Am Med Inf Assoc \n\t\t \n\t\t\t 28 \n\t\t\t \n\t\t\t 2021 \n\t\t \n\t \n\t Akbar F, Mark G, Warton EM, et al. Physicians' electronic inbox work patterns and factors associated with high inbox work dura- tion. J Am Med Inf Assoc. 2021;28:923-930. https://doi.org/10. 1093/jamia/ocaa229"
+    },
+    {
+      "title": "Tethered to the EHR: primary care physician workload assessment using EHR event log data and time-motion observations",
+      "authors": [
+        "B Arndt",
+        "J Beasley",
+        "M Watkinson"
+      ],
+      "year": 2017,
+      "doi": "10.1370/afm.2121",
+      "journal": "Ann Fam Med",
+      "volume": "15",
+      "raw": "Tethered to the EHR: primary care physician workload assessment using EHR event log data and time-motion observations \n\t\t \n\t\t\t B G Arndt \n\t\t \n\t\t \n\t\t\t J W Beasley \n\t\t \n\t\t \n\t\t\t M D Watkinson \n\t\t \n\t\t 10.1370/afm.2121 \n\t\t \n\t \n\t \n\t\t Ann Fam Med \n\t\t \n\t\t\t 15 \n\t\t\t \n\t\t\t 2017 \n\t\t \n\t \n\t Arndt BG, Beasley JW, Watkinson MD, et al. Tethered to the EHR: primary care physician workload assessment using EHR event log data and time-motion observations. Ann Fam Med. 2017;15:419-426. https://doi.org/10.1370/afm.2121"
+    },
+    {
+      "title": "Hidden flaws behind expert-level accuracy of multimodal GPT-4 vision in medicine",
+      "authors": [
+        "Q Jin",
+        "F Chen",
+        "Y Zhou"
+      ],
+      "year": 2024,
+      "doi": "10.1038/s41746-024-01185-7",
+      "journal": "NPJ Digit Med",
+      "volume": "7",
+      "pages": "190",
+      "raw": "Hidden flaws behind expert-level accuracy of multimodal GPT-4 vision in medicine \n\t\t \n\t\t\t Q Jin \n\t\t \n\t\t \n\t\t\t F Chen \n\t\t \n\t\t \n\t\t\t Y Zhou \n\t\t \n\t\t 10.1038/s41746-024-01185-7 \n\t\t \n\t \n\t \n\t\t NPJ Digit Med \n\t\t \n\t\t\t 7 \n\t\t\t 190 \n\t\t\t 2024 \n\t\t \n\t \n\t Jin Q, Chen F, Zhou Y, et al. Hidden flaws behind expert-level accuracy of multimodal GPT-4 vision in medicine. NPJ Digit Med. 2024;7:190. https://doi.org/10.1038/s41746-024-01185-7"
+    }
+  ],
+  "num_references": 44,
+  "figures": [
+    {
+      "caption": "Figure 1 .",
+      "description": "Figure1. The screenshot of a patient message indicating a potential medical emergency. The form includes a warning to call 911 or visit the emergency department for emergencies, followed by text fields for \"Enter a subject...\" (filled in with \"Headache\") and \"Enter your message...\" (containing a detailed note about severe headache, neck tightness, left-side facial twitching, and lip numbness). The interface also shows buttons labeled \"Discard,\" \"Draft,\" \"Attach,\" and \"Send.\""
+    },
+    {
+      "caption": "Figure 2 .",
+      "description": "Figure 2. Study overview. A flowchart showing a study overview where a knowledge graph, developed using a GPT-4-powered nurse triage book, feeds into three RAG methods (naive, local, global) and a prompt-only approach, with all outputs evaluated via statistical tests on key performance metrics. (RAG: retrieval augmented generation, LLM: large language model)."
+    },
+    {
+      "type": "table",
+      "caption": "Table 1 .",
+      "description": "Categorization of patient messages."
+    },
+    {
+      "type": "table",
+      "caption": "Table 2 .",
+      "description": "Model performance."
+    }
+  ],
+  "num_figures": 4,
+  "tables": [
+    {
+      "content": "Number of patient messages Medication and prescription management 235 Lab and test results 215 Chronic condition and pain management 207 General follow-up and appointments 158 Infections and immunizations 93 Blood pressure and cardiovascular concerns 82 Endocrinology and metabolic health 57 Mental health and psychiatric support 50 Other/miscellaneous 80"
+    },
+    {
+      "content": "Model Accuracy Sensitivity Specificity Precision F1 Prompt-only 0.91 [0.89, 0.93] 0.73 [0.57, 0.86] 0.92 [0.90, 0.93] 0.27 [0.19, 0.35] 0.39 [0.29, 0.49] Na\u00efve RAG 0.95 [0.94, 0.96] 0.83 [0.71, 0.93] 0.96 [0.95, 0.97] 0.45 [0.34, 0.57] 0.59 [0.47, 0.68] RAG from knowledge graph 0.98 [0.97, 0.98] 0.95 [0.88, 1.00] 0.98 [0.97, 0.98] 0.63 [0.51, 0.74] 0.76 [0.67, 0.84] (local search) RAG from knowledge graph 0.99 [0.98, 1.00] 0.98 [0.92, 1.00] 0.99 [0.98, 1.00] 0.80 [0.68, 0.91] 0.88 [0.80, 0.95] (global search)"
+    }
+  ],
+  "num_tables": 2,
+  "num_citations": 49,
+  "cited_references": [
+    "b13",
+    "b39",
+    "b41",
+    "b18",
+    "b14",
+    "b17",
+    "b36",
+    "b25",
+    "b35",
+    "b20",
+    "b43",
+    "b21",
+    "b40",
+    "b12",
+    "b42",
+    "b30",
+    "b31",
+    "b29",
+    "b16",
+    "b37",
+    "b15",
+    "b23",
+    "b32",
+    "b19",
+    "b28",
+    "b10",
+    "b38",
+    "b24",
+    "b33",
+    "b11",
+    "b22",
+    "b34",
+    "b27",
+    "b26"
+  ],
+  "notes": [
+    "[raw_affiliation] 1  Department of Biomedical Informatics , Vanderbilt University Medical Center , Nashville , TN 37212 , United States ,",
+    "[raw_affiliation] 2  Department of Computer Science , Vanderbilt University , Nashville , TN 37240 , United States ,",
+    "[raw_affiliation] 1  Department of Biomedical Informatics , Vanderbilt University Medical Center , Nashville , TN 37212 , United States ,",
+    "[raw_affiliation] 1  Department of Biomedical Informatics , Vanderbilt University Medical Center , Nashville , TN 37212 , United States ,",
+    "[raw_affiliation] 3  Department of Medicine , Vanderbilt University Medical Center , Nashville , TN 37232 , United States",
+    "[raw_affiliation] 1  Department of Biomedical Informatics , Vanderbilt University Medical Center , Nashville , TN 37212 , United States ,",
+    "[raw_affiliation] 1  Department of Biomedical Informatics , Vanderbilt University Medical Center , Nashville , TN 37212 , United States ,",
+    "[raw_affiliation] 3  Department of Medicine , Vanderbilt University Medical Center , Nashville , TN 37232 , United States",
+    "[raw_affiliation] 1  Department of Biomedical Informatics , Vanderbilt University Medical Center , Nashville , TN 37212 , United States ,",
+    "[raw_affiliation] 3  Department of Medicine , Vanderbilt University Medical Center , Nashville , TN 37232 , United States",
+    "[raw_affiliation] Department of Biomedical Informatics , Vanderbilt University Medical Center , 2525 West End Avenue #1475 , Nashville , TN 37212 , United States",
+    "[submission] Received: November 1, 2024; Revised: March 6, 2025; Editorial Decision: March 28, 2025; Accepted: April 1, 2025",
+    "Downloaded from https://academic.oup.com/jamia/article/32/6/1032/8112816 by guest on 04 August 2025",
+    "Journal of the American Medical Informatics Association, 2025, Vol. 32,  No. 6",
+    "[other] Siru",
+    "[raw_reference] Huang M, Fan J, Prigge J, et al. Characterizing patient-clinician communication in secure medical messages: retrospective study. J Med Internet Res. 2022;24:e17273. https://doi.org/10.2196/17273",
+    "[raw_reference] North F, Luhman KE, Mallmann EA, et al. A retrospective analysis of provider-to-patient secure messages: how much are they increasing, who is doing the work, and is the work happening after hours? JMIR Med Inform. 2020;8:e16521. https://doi.org/ 10.2196/16521",
+    "[raw_reference] Sinsky CA, Shanafelt TD, Ripp JA. The electronic health record inbox: recommendations for relief. J Gen Intern Med. 2022;37:4002-4003. https://doi.org/10.1007/s11606-022-07766-0",
+    "[raw_reference] Holmgren AJ, Downing NL, Tang M, et al. Assessing the impact of the COVID-19 pandemic on clinician ambulatory electronic health record use. J Am Med Inf Assoc. 2022;29:453-460. https:// doi.org/10.1093/jamia/ocab268",
+    "[raw_reference] Shimada SL, Petrakis BA, Rothendler JA, et al. An analysis of patient-provider secure messaging at two Veterans Health Admin- istration medical centers: message content and resolution through secure messaging. J Am Med Inf Assoc. 2017;24:942-949. https:// doi.org/10.1093/jamia/ocx021",
+    "[raw_reference] Brown TB, Mann B, Ryder N, et al. Language models are few-shot learners. Adv Neural Inf Process Syst. 2020;33:1877-1901. https://doi.org/10.48550/arXiv.2005.14165",
+    "[raw_reference] Ayers JW, Poliak A, Dredze M, et al. Comparing physician and arti- ficial intelligence chatbot responses to patient questions posted to a public social media forum. JAMA Intern Med. 2023;183:589-596. https://doi.org/10.1001/jamainternmed.2023.1838",
+    "[raw_reference] Alapati R, Campbell D, Molin N, et al. Evaluating insomnia queries from an artificial intelligence chatbot for patient education. J Clin Sleep Med. 2024;20:583-594. https://doi.org/10.5664/jcsm. 10948",
+    "[raw_reference] Liu S, Wright AP, Patterson BL, et al. Using AI-generated sugges- tions from ChatGPT to optimize clinical decision support. J Am Med Inf Assoc. 2023;30:1237-1245. https://doi.org/10.1093/ jamia/ocad072",
+    "[raw_reference] Liu S, McCoy AB, Wright AP, et al. Why do users override alerts? Utilizing large language model to summarize comments and optimize clinical decision support. J Am Med Inf Assoc. 2024;31:1388-1396. https://doi.org/10.1093/jamia/ocae041",
+    "[raw_reference] Liu S, Wright AP, Mccoy AB, et al. Using large language model to guide patients to create efficient and comprehensive clinical care message. J Am Med Inf Assoc. 2024;31:1665-1670. https://doi. org/10.1093/JAMIA/OCAE142",
+    "[raw_reference] Liu S, McCoy AB, Wright AP, et al. Leveraging large language models for generating responses to patient messages-a subjective analysis. J Am Med Inf Assoc. 2024;31:1367-1379. https://doi. org/10.1093/jamia/ocae052",
+    "[raw_reference] Levine DM, Tuwani R, Kompa B, et al. The diagnostic and triage accuracy of the GPT-3 artificial intelligence model: an observatio- nal study. Lancet Digit Health. 2024;6:e555-61.e561. https://doi. org/10.1016/S2589-7500(24)00097-9",
+    "preprint: not peer reviewed",
+    "[raw_reference] Xu Z, Jain S, Kankanhalli M. Hallucination is inevitable: an innate limitation of large language models. 2024, preprint: not peer reviewed. https://arxiv.org/abs/2401.11817",
+    "preprint: not peer reviewed",
+    "[raw_reference] Zhang Y, Li Y, Cui L, et al. Siren's song in the AI ocean: a survey on hallucination in large language models. 2023, preprint: not peer reviewed. https://https://arxiv.org/abs/2309.01219",
+    "preprint: not peer reviewed",
+    "[raw_reference] Huang L, Yu W, Ma W, et al. a survey on hallucination in large language models: principles, taxonomy, challenges, and open questions. 2023, preprint: not peer reviewed. https://arxiv.org/abs/ 2311.05232",
+    "[raw_reference] Rotmensch M, Halpern Y, Tlimat A, et al. Learning a health knowledge graph from electronic medical records. Sci Rep. 2017;7:5994. https://doi.org/10.1038/s41598-017-05778-z",
+    "preprint: not peer reviewed",
+    "[raw_reference] Lo P-C, Tsai Y-H, Lim E-P, et al. On exploring the reasoning capa- bility of large language models with knowledge graphs. 2023, pre- print: not peer reviewed. https://arxiv.org/abs/2312.00353",
+    "[raw_reference] Tang W, Qiao X, Zhao X, et al. HW-TSC at TextGraphs-17 shared task: enhancing inference capabilities of LLMs with knowl- edge graphs. In: Proceedings of TextGraphs-17: Graph-based Methods for Natural Language Processing. Bangkok, Thailand: Association for Computational Linguistics; 2024:131-136.",
+    "International Conference on Learning Representations",
+    "[raw_reference] Li X, Zhao R, Chia YK, et al. Chain-of-knowledge: grounding large language models via dynamic knowledge adapting over het- erogeneous sources. In: 12th International Conference on Learn- ing Representations. Vienna, Austria: International Conference on Learning Representations, ICLR; 2024.",
+    "preprint: not peer reviewed",
+    "[raw_reference] Peng B, Galley M, He P, et al. Check your facts and try again: improving large language models with external knowledge and automated feedback. 2023, preprint: not peer reviewed. https:// arxiv.org/abs/2302.12813",
+    "preprint: not peer reviewed",
+    "[raw_reference] Xiong G, Jin Q, Wang X, et al. Improving retrieval-augmented gen- eration in medicine with iterative follow-up questions. 2024, pre- print: not peer reviewed. https://arxiv.org/abs/2408.00727",
+    "Findings of the Association for Computational Linguistics: ACL 2024",
+    "[raw_reference] Huang H, Wang S, Liu H, et al. Benchmarking large language models on communicative medical coaching: a dataset and a novel system. In: Findings of the Association for Computational Linguis- tics: ACL 2024. Bangkok, Thailand: Association for Computa- tional Linguistics; 2024:1624-1637. https://doi.org/10.18653/V1/ 2024.FINDINGS-ACL.94",
+    "[raw_reference] Liu S, McCoy AB, Wright A. Improving large language model applications in biomedicine with retrieval-augmented generation: a systematic review, meta-analysis, and clinical development guidelines. J Am Med Inform Assoc. 2025:ocaf008. https://doi. org/10.1093/JAMIA/OCAF008",
+    "[raw_reference] Briggs JK. Telephone Triage Protocols for Nurses. Wolters Kluwer Health; 2021.",
+    "preprint: not peer reviewed",
+    "[raw_reference] Gao Y, Xiong Y, Gao X, et al. Retrieval-augmented generation for large language models: a survey. 2023, preprint: not peer reviewed. https://arxiv.org/abs/2312.10997",
+    "[raw_reference] Liu NF, Lin K, Hewitt J, et al. Lost in the middle: how language models use long contexts. Trans Assoc Comput Linguist. 2024;12:157-173. https://doi.org/10.1162/tacl_a_00638",
+    "International Conference on Learning Representations",
+    "[raw_reference] Xu P, Ping W, Wu X, et al. Retrieval meets long context large lan- guage models. In: 12th International Conference on Learning Rep- resentations. Vienna, Austria: International Conference on Learning Representations, ICLR; 2024.",
+    "[raw_reference] Pan S, Luo L, Wang Y, et al. Unifying large language models and knowledge graphs: a roadmap. IEEE Trans Knowl Data Eng. 2024;36:3580-3599. https://doi.org/10.1109/TKDE.2024.3352100",
+    "preprint: not peer reviewed",
+    "[raw_reference] Sansford H, Richardson N, Maretic HP, et al. GraphEval: a knowledge-graph based LLM hallucination evaluation framework. 2024, preprint: not peer reviewed. https://arxiv.org/abs/2407.10793",
+    "[raw_reference] Chambon PJ, Wu C, Steinkamp JM, et al. Automated deidentifica- tion of radiology reports combining transformer and \"hide in plain sight\" rule-based methods. J Am Med Inf Assoc. 2023;30:318-328. https://doi.org/10.1093/jamia/ocac219",
+    "[raw_reference] Traag VA, Waltman L, van Eck NJ. From Louvain to Leiden: guar- anteeing well-connected communities. Sci Rep. 2019;9:5233. https://doi.org/10.1038/s41598-019-41695-z",
+    "preprint: not peer reviewed",
+    "[raw_reference] Edge D, Trinh H, Cheng N, et al. From local to global: a graph rag approach to query-focused summarization. 2024, preprint: not peer reviewed. https://arxiv.org/abs/2404.16130",
+    "[raw_reference] Chroma. Accessed March 2, 2025. https://www.trychroma.com/",
+    "[raw_reference] Rainio O, Teuho J, Kl\ufffd en R. Evaluation metrics and statistical tests for machine learning. Sci Rep. 2024;14:6086. https://doi.org/10. 1038/s41598-024-56706-x",
+    "[raw_reference] Demsar J. Statistical comparisons of classifiers over multiple data sets. J Mach Learn Res. 2006;7:1-30.",
+    "[raw_reference] Nemenyi PB. Distribution-Free Multiple Comparisons. Princeton University; 1963.",
+    "[raw_reference] Franc JM, Cheng L, Hart A, et al. Repeatability, reproducibility, and diagnostic accuracy of a commercial large language model (ChatGPT) to perform emergency department triage using the Cana- dian triage and acuity scale. Can J Emerg Med. 2024;26:40-46. https://doi.org/10.1007/s43678-023-00616-w",
+    "[raw_reference] Yazaki M, Maki S, Furuya T, et al. Emergency patient triage improve- ment through a retrieval-augmented generation enhanced large-scale language model. Prehospital Emerg Care. 2025;29:203-209. https:// doi.org/10.1080/10903127.2024.2374400",
+    "[raw_reference] Masanneck L, Schmidt L, Seifert A, et al. Triage performance across large language models, ChatGPT, and untrained doctors in emergency medicine: comparative study. J Med Internet Res. 2024;26:e53297. https://doi.org/10.2196/53297",
+    "[raw_reference] Liu J, Wang C, Liu S. Utility of ChatGPT in clinical practice. J Med Internet Res. 2023;25:e48568. https://doi.org/10.2196/48568",
+    "[raw_reference] Akbar F, Mark G, Warton EM, et al. Physicians' electronic inbox work patterns and factors associated with high inbox work dura- tion. J Am Med Inf Assoc. 2021;28:923-930. https://doi.org/10. 1093/jamia/ocaa229",
+    "[raw_reference] Arndt BG, Beasley JW, Watkinson MD, et al. Tethered to the EHR: primary care physician workload assessment using EHR event log data and time-motion observations. Ann Fam Med. 2017;15:419-426. https://doi.org/10.1370/afm.2121",
+    "[raw_reference] Jin Q, Chen F, Zhou Y, et al. Hidden flaws behind expert-level accuracy of multimodal GPT-4 vision in medicine. NPJ Digit Med. 2024;7:190. https://doi.org/10.1038/s41746-024-01185-7"
+  ],
+  "processing_software": {
+    "GROBID": "0.8.2"
+  }
+}

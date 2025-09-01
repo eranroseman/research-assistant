@@ -1,0 +1,1677 @@
+{
+  "paper_id": "VFCBHW2T",
+  "title": "Understanding Ecological-Momentary-Assessment Data: A Tutorial on Exploring Item Performance in Ecological-Momentary-Assessment Data",
+  "abstract": "The use of ecological momentary assessment (EMA) to study individuals in their everyday lives has become widespread in many areas of social sciences. \"EMA\" refers to various methods that include repeated assessments of individuals in their day-to-day lives  (Shiffman et al., 2008) . EMA data collection, often carried out via smartphone apps, comes with several benefits, such as increased ecological validity, the possibility to investigate contextual influences, and the opportunity to use a within-persons perspective to explore how concepts of interest develop, interact, and change over time  (Trull & Ebner-Priemer, 2009) . To facilitate such rich insights, EMA data sets tend to be relatively complex. For example, EMA data contain a large number of measurement points nested within individuals, usually with multiple assessments per day  (Wrzus & Neubauer, 2023) . The data frequently feature many different constructs of interest, 1286877A MPXXX10.",
+  "year": 2017,
+  "date": "2017",
+  "authors": [
+    {
+      "name": "Bj\u00f6rn Siepe",
+      "email": "bjoern.siepe@uni-marburg.de",
+      "affiliation": {
+        "organization": "Department of Psychology",
+        "department": "Department of Psychology",
+        "institution": "University of Marburg",
+        "address": "Marburg, Germany;"
+      }
+    },
+    {
+      "name": "Carlotta Rieble",
+      "affiliation": {
+        "organization": "Department of Clinical Psychology",
+        "department": "Department of Clinical Psychology",
+        "institution": "Leiden University",
+        "address": "Leiden, Netherlands;"
+      }
+    },
+    {
+      "name": "Rayyan Tutunji",
+      "affiliation": {
+        "organization": "Department of Clinical Psychology",
+        "department": "Department of Clinical Psychology",
+        "institution": "Leiden University",
+        "address": "Leiden, Netherlands;"
+      }
+    },
+    {
+      "name": "Aljoscha Rimpler",
+      "affiliation": {
+        "organization": "Department of Psychometrics and Statistics",
+        "department": "Department of Psychometrics and Statistics",
+        "institution": "University of Groningen",
+        "address": "Groningen, Netherlands; and"
+      }
+    },
+    {
+      "name": "Julius M\u00e4rz",
+      "affiliation": {
+        "organization": "Department of Child and Adolescence Psychiatry",
+        "department": "Department of Child and Adolescence Psychiatry",
+        "institution": "Erasmus Medical Centre",
+        "address": "Rotterdam, Netherlands"
+      }
+    },
+    {
+      "name": "Ricarda Proppert",
+      "affiliation": {
+        "organization": "Department of Clinical Psychology",
+        "department": "Department of Clinical Psychology",
+        "institution": "Leiden University",
+        "address": "Leiden, Netherlands;"
+      }
+    },
+    {
+      "name": "Eiko Fried",
+      "affiliation": {
+        "organization": "Department of Clinical Psychology",
+        "department": "Department of Clinical Psychology",
+        "institution": "Leiden University",
+        "address": "Leiden, Netherlands;"
+      }
+    },
+    {
+      "affiliation": {
+        "organization": "Department of Psychology",
+        "department": "Department of Psychology",
+        "institution": "University of Marburg",
+        "address": "Marburg, Germany"
+      }
+    }
+  ],
+  "doi": "10.1177/25152459241286877",
+  "md5": "61EF5FF159C6F8E533D3BF2D29AF1A39",
+  "publication": {
+    "journal": "Multivariate Behavioral Research",
+    "journal_inferred": true
+  },
+  "keywords": [
+    "ecological momentary assessment",
+    "data visualization",
+    "time-series analysis",
+    "intensive longitudinal data",
+    "tutorial",
+    "open materials"
+  ],
+  "funding": [
+    "",
+    ""
+  ],
+  "sections": [
+    {
+      "text": "commonly using only one item per construct to minimize burden for participants  (Dejonckheere et al., 2022) . In addition, different sampling schemes are often used for different items, such as asking about sleep quality only in the morning versus measuring current affect multiple times per day.\n\nThese and other common features of EMA data, such as attrition and interindividual and intraindividual variation, pose two core challenges for assessment, analysis, and valid inference  (Hall et al., 2021) . First, common descriptive measures and visualizations, such as sample averages or aggregate histograms of items, fail to convey all relevant information about the highly multivariable and dynamic nature of the data. Given that a thorough description and visualization of EMA data is a crucial requirement for choosing appropriate statistical models and gaining a better theoretical understanding of the constructs under study, there is an urgent need to tackle this challenge. Second, classical psychometric strategies using latent-variable models to assess the quality of measures cannot easily be applied to the many single-item measures common in EMA (M. S.  Allen et al., 2022) , leaving open the question of how well EMA items perform or function and, as a subsequent step, whether they can be considered valid. To put it differently, the EMA literature is currently in a bit of a free-for-all situation when it comes to assessment because it is largely unclear what \"good\" items should look like and which psychometric standards this evaluation should be based on.\n\nTo tackle these two challenges, in this article, we showcase different descriptive statistics and datavisualization techniques for EMA data to increase the understanding of the performance of individual items. With \"item performance,\" we loosely refer to item distributions and other relevant properties across individuals, contexts, and time. We consider obtaining a deeper understanding of EMA data a necessary precursor for discussions about the validity of EMA data for two reasons. First, understanding data better is a necessary first step for selecting appropriate statistical models. For example, statistical models often assume normally distributed and unimodal data, and violating these assumptions may have important ramifications for the quality of estimates  (Haslbeck et al., 2023; von Klipstein et al., 2023) . Second, it is a crucial element for epistemic iteration, that is, for updating theories about constructs based on an improved understanding of measurements and then improving measurements based on updated theories  (Chang, 2004) . To do so, we stay at the descriptive level of individual items and their bivariate associations and thus do not consider multivariate measurement models, such as reflective latent variables, commonly used in psychometrics.\n\nOur line of reasoning is based on a long tradition of arguing for the importance of data visualization before model fitting (e.g.,  Anscombe, 1973; Tukey, 1977; Wainer & Thissen, 1981) , a call that is arguably even more relevant with increasing complexity of data for which researchers are no longer interested in just sample averages but also dynamic aspects of the data and interindividual and intraindividual variation. We argue that many key features of data may be obscured if researchers focus solely on the results of modeling techniques and neglect the informational content of raw data. While many researchers may already thoroughly explore and visualize their raw data, this information is usually not available in publications. In that sense, the intensive use of (visual) exploratory data analysis can be tied to theory building in psychology  (Haig, 2013) . Establishing robust, that is, replicable, phenomena, which the field aims to explain with theories, means finding generalizable patterns in data. This can often be achieved via relatively simple methods, such as visualizations or basic correlations, but requires this information to be available to build a cumulative psychological science. This way, insights generated from individual work can then serve as building blocks to generate and refine explanations and analysis techniques.\n\nBelow, we provide a tutorial for researchers interested in better understanding their EMA data focused on the following topics: (a) distributions, (b) context, (c) temporal (in)stability, (d) disentangling variability sources, and (e) measuring across different time scales. We provide R code suitable for standard EMA data formats so that researchers can adopt our visualizations and analyses for their data. In contrast to existing visualization frameworks for EMA data (e.g.,  Bringmann et al., 2020; Rimpler et al., 2024) , which were developed to provide feedback to participants or clinicians, our core goal is to provide a tool for the research community. As a supplement to the article, we further provide a \"full report,\" which contains multiple additional analyses referenced throughout the article, and a \"tutorial\" file containing the R code to reproduce all figures on synthetic data (available at OSF,  https://osf.io/yf3up/ ). 1  For the tutorial, we use data from the WARN-D project, which aims to build a personalized early warning system for depression. The 3-month EMA data-with around 40 EMA items, around 360 measurement points, and several hundred participants-are representative of the complex nature of EMA data, featuring different sampling frequencies, interindividual and intraindividual variability, state-and trait-like variables, missing data, attrition, and other aspects we discuss below  (Fried et al., 2023) .\n\nAfter a brief introduction to data and software, the tutorial is structured into five sections. In the first three sections, we cover insights into individual EMA items based on (a) distributions, (b) context, and (c) time. In the fourth section, we expand on these insights by (d) disentangling different sources of variability in our data. Finally, we move beyond the univariable case to (e) assess the association of EMA items with more static measures, such as a validated depression questionnaire. For each section, we present several analyses to facilitate a better understanding of an EMA data set and highlight their implications from both a theoretical and substantive standpoint. Analyses are accompanied by visualization examples, our theoretical and statistical interpretation of the results in the WARN-D data, and resources for further reading on the respective topic and potential modeling strategies. We finish the tutorial with an outlook on where researchers might go next after having described and visualized their data."
+    },
+    {
+      "title": "Method"
+    },
+    {
+      "title": "WARN-D",
+      "text": "The overarching goal of the WARN-D project is to build a personalized early warning system for depression in higher-education students. To do so, around 2,000 students, split into four cohorts of around 500 students each, are followed over 2 years. Participating students had to be enrolled in a Dutch institution of higher education, and all surveys were available in both English and Dutch. Participants completed a baseline survey and then underwent 3 months of daily data collection by completing questionnaires and wearing a smartwatch to track digital phenotyping parameters, such as activity, sleep, and heart rate. After this period, students complete follow-ups every 3 months for 2 years. In this article, we use data from a subset of participants from the first two cohorts for illustrative purposes. EMA data collection has been completed for all cohorts, but follow-up assessments are ongoing at the time of writing. The project is funded by the European Research Council in the Horizon 2020 research and innovation program (Grant 949059), and data collection was approved by the Leiden University Research Ethics Committee (2021-09-06-E.I.FriedV2-3406). An in-depth description of WARN-D, including an extensive codebook of all measures and information on reimbursement and data-collection procedures, is available in the protocol article by  Fried et al. (2023) . Because one of the primary aims of the WARN-D project is creating a prediction system, we excluded a subset of the whole sample for cross-validation techniques in future projects (see the associated preregistration at  Tutunji et al., 2023) , reducing the sample size available at the time of writing this article from 865 to 599.\n\nDuring the 3 months of daily data collection, participants received prompts four times per day at semirandom times. In addition, participants received an extra survey on Sundays that included questions about the past week. The full list of items used here is provided in the online supplement. Unless stated otherwise, all EMA items were assessed on a Likert scale from 1 (not at all) to 7 (very much).\n\nOn average, participants missed 45 85 . % of prompts (Mdn = 44 12 . , SD = 28.15). The average age of participants was 22 42 . years (SD = 3 95 . ). Of the participants, 80 70 . % identified as women, 16 61 . % identified as men, and 2 68 . % indicated another gender identity. More than half of the participants (54 77 . %) were of Dutch/Belgian/German nationality, and 35 51 . % had another European nationality; the rest indicated a non-European nationality.\n\nUnless stated otherwise, we exclude participants from analyses if they responded to fewer than 30% of measurement points, after which, n = 499 participants remained. We do not investigate missing data in-depth but provide some ideas on how to explore missing data in the full report and link further resources there."
+    },
+    {
+      "title": "Software and visualization",
+      "text": "We use the statistical programming language R (Version 4.3.1; R Core Team, 2023) for all visualizations and analyses. Details, such as specific R packages used, are available in the supplementary materials ( https://osf.io/  yf3up/ ). Throughout the tutorial, we follow guiding principles for informative visualizations (see e.g.,  Midway, 2020)  when possible, including making heterogeneity across participants, items, and time explicit; using color to highlight differences while remaining colorblindfriendly; and plotting raw data points and/or uncertainty when presenting aggregates or estimates. With these principles in mind and with the overarching goal of gaining a better understanding of our data, the figures and analyses presented below were created and conducted in an iterative process. We recognize that many alternative visualizations of EMA data may be equally or more useful for other research projects. Rather than providing a single set of recommended figures, we aim to showcase our visualization workflow and inspire researchers to adapt and improve on it.\n\nOur commented R code is intended for a long-data format in which each row is a single response of an individual at a certain time point. For a more general introduction to using R and RStudio for data visualization and an explanation for how to restructure data into a long format, see  Nordmann et al. (2022) . For further resources on data visualization, we refer readers to  Hehman and Xie (2021) . WARN-D data collection is still ongoing, and we want to avoid having different small parts of the data shared across many different articles. We will make data available on the WARN-D project hub ( https://osf.io/frqdv/ ) when all data are collected, cleaned, and checked (excluding potentially identifiable data). To make this article reproducible in the future, we share the exact participant IDs we used for this article in the supplementary materials. We have also created a mock data set that allows researchers to understand the data structure that we are using, available on OSF ( https://osf.io/yf3up/ ). It has a similar structure as the real data but does not mimic any associations or patterns therein and is used within the tutorial code supplement. We recommend researchers wishing to adopt our analyses start with that document."
+    },
+    {
+      "title": "Results",
+      "text": "In the following sections, we introduce statistical and visualization techniques to summarize information that we believe is critical to a better understanding of the EMA data. We provide an extensive online supplementary document, which we call \"full report\" and includes code to reproduce all analyses in this article and several additional analyses for each of the sections below. In each of the following five sections, we first explain the importance of the topic, perform example analyses and visualizations in the WARN-D data, and then interpret them. At the end of each section, we provide a \"Further reading\" section that contains literature relevant to each topic."
+    },
+    {
+      "title": "Distributions",
+      "text": "Summary statistics. We start by displaying a range of summary statistics for specific items to gain a first understanding of individual distributions. Table  1  contains means, medians, standard deviations, skew, and the root mean square of successive differences (RMSSDs; for the original publication on the mean square of successive differences, see von  Neumann et al., 1941) , which has been suggested as a measure of the (in)stability of psychological constructs, such as affect  (Schoevers et al., 2021) . We show the RMSSD as an example of a time-series variability measure that has gained popularity in the context of EMA and refer to the further reading section below for more information. Instead of providing a between-subjects average, we calculate each statistic for the whole time series of every item for each participant first. We then calculate the means and standard deviations of the individual statistics across people. For example, suppose we have time series of three individuals A, B, and C, each with 100 time points. We first calculate the individual mean for each person in that person's time series. If we obtained the means of 1, 4, and 7 for individuals A, B, and C, respectively, we could then calculate the mean across these three mean values as 4. We do the same for all individual summary statistics below-first aggregating within individuals and then across individuals.\n\nWe use the starting letter \"i\" to denote individual summary statistics. For example, the iMedian for cheerful is the mean of all person-specific medians for the item. Table  1  shows, for example, that participants are on average not very irritable, that aggregated means and medians of motivated are around the center of the scale (3 5 . ), that items such as cheerful and relaxed are leftskewed, and that multiple negative-affect items are rightskewed (i.e., exhibited floor effects). The RMSSD is similar across items but shows a large interindividual variation in every item.\n\nAlthough these statistics provide some first information about our data, the raincloud plots in Figure  1  facilitate a better understanding of the distributions of individual means. These plots include individual observations, density estimates of the distributions, and box plots to show central tendencies and quantiles of the distribution, thus improving over traditional bar or box plot only (M. Allen et al., 2021; Hehman & Xie, 2021) . Note: We did not exclude participants because of missingness here. All items ranged from 1 (not at all) to 7 (very much). Starting letter \"i\" refers to individual summary statistics. Skewness was calculated in the default way implemented in the R package e1071  (Meyer et al., 2023) . RMSSD = root mean square of successive difference.\n\nIn this example, we found both large heterogeneity in individual means across all items and marked differences in the distribution of negative affect (floor effects at the aggregate level for some items) compared with positive ones. Some item distributions also seem to exhibit multiple modes instead of having just one clear peak. Although informative about the heterogeneity in average responses, the summary statistics presented in Table  1  may miss crucial distributional features of individual data. For example, two individuals may have the same individual means, but their distributions may look very different because of multimodality, which we explain further in the following paragraph.\n\nModality. One particular feature of interest is whether individual distributions are unimodal, that is, have one clear peak, or exhibit multimodality. This may be masked when calculating summary statistics: Even if the distribution of an item was strongly bimodal in every person, the aggregate distribution of all person-specific means of that item could look perfectly normal. This is important for two reasons. First, the form of person-specific distributions may contain important information about the individuals and constructs that we are studying. For example, a multimodal distribution of an affect item could point to a specific response process in which an individual does not use certain regions of the response scale because of a tendency to choose extreme or center values only  (Van Vaerenbergh & Thomas, 2013) . It could also hint at phenomena such as individuals switching between multiple stable states, for example, a state of low negative affect and one with high negative affect, which may correspond to better and worse states of their overall mental health  (Haslbeck et al., 2023) . Second, typical summary statistics, such as the standard deviation, cease to be meaningful descriptors in the presence of multimodality  (Smaldino, 2013) , and many statistical models applied to time-series data assume unimodal (and symmetric) distributions; violations of these assumptions may have important ramifications for the quality of estimates  (Haslbeck et al., 2023) . One way to investigate modality is the visual inspection of marginal distributions  (Haslbeck et al., 2023) , achieved by creating histograms for every item and participant (for an example for the item stressed in six individuals, see Fig.  2a ). The example of participant E illustrates that the number of modes is often somewhat ambiguous. For larger data sets, the modality estimation technique by  Haslbeck et al. (2023)  can be used (we present these results in the full report). We show the number of estimated modes for multiple items in Figure  2b . Although we use Likert scales with a limited range of 1 to 7, which makes it more difficult to identify bimodality, we still find considerable multimodality in some items. For example, around 20% of the response distributions for the items stressed and overwhelmed are estimated to be multimodal, which can be seen by comparing the height of the leftmost blue bar with the height of the other bars in Figure  2b .\n\nFloor effects. Next to the presence of multimodality, floor and (less commonly) ceiling effects can occur in person-specific distributions in EMA data  (Mestdagh & Dejonckheere, 2021) . Floor effects occur when the average score is low and the response distribution is skewed and exhibits limited variability. This can violate standard assumptions of linear models and make the interpretation of their results problematic, leading to incorrect conclusions and findings based on statistical artifacts  (Terluin et al., 2016; von Klipstein et al., 2023) . Floor effects may also help with understanding items and the underlying response processes. For example, one can speculate that floor effects could mean that symptoms or events are not sufficiently relevant or common for many participants in a study. Alternatively, some individuals may not conceptualize the rating of emotions or other constructs on a continuous (e.g., 1-7) scale; instead, they may first evaluate whether the emotion is present and only then rate response options higher than 1. Studying such response processes via cognitive interviews is urgently needed to get a better understanding of why EMA item distributions look like they do (see e.g.,  Zumbo & Hubley, 2017) . We assess floor effects by calculating the proportion of participants that choose the lowest response category more than 80% of the time. 2 For several items, we find a substantive amount of individuals showing clear evidence of floor effects, leading to some of the group-level distributions shown in Figure  1 . For example, for sad or ruminate, 30 47\n\n. % and 28 04 . % of individuals, respectively, endorse the lowest response option more than 80% of the time. Visualizations of the floor effect and the limited use of some response options are presented in the full report in Section F3. Further reading. In general,  Revol et al. (2023)  provided useful tools for the preprocessing and investigation of EMA data. For a nuanced perspective on calculating time-series summary statistics that aim to capture (in)stability, see Jahng et al. (2008). Haslbeck et al. (2023) investigated modality and skewness in various EMA studies in depth, whereas Haslbeck and Ryan (2022) probed the performance of common time-series models for bimodal response distributions. For some example modeling options for such data, see Cui et al. (2023) and Hamaker et al. (2010). Terluin et al. (2016) and von Klipstein et al. (2023) showed examples of when an ignored floor effect may have affected the conclusions of studies. Alternative time-series models better suited for heavily skewed or zero-inflated distributions have so far been rarely discussed in psychology. They are, for example, covered in Haqiqatkhah et al. (2024) and in Ruf et al. (2021)."
+    },
+    {
+      "title": "Context",
+      "text": "One of the key promises of EMA studies is to \"captur[e] life as it is lived\"  (Bolger et al., 2003) , which includes variation across different contexts, situations, or activities.\n\nTherefore, in this section, we demonstrate ways in which several contextual factors may be associated with response behavior. The question of the extent to which behavior or experiences are stable across different contexts is reminiscent of the well-established personsituation debate in personality psychology  (Beck & Jackson, 2022) . If EMA data are to advance understanding of such questions, items that measure constructs that likely vary across different contexts should indeed show such variation in empirical data. Which items researchers may expect to vary to which degree across different contexts is necessarily dependent on the population and constructs they are studying. For example, researchers may expect different levels of variability of psychopathological symptoms in a clinical sample compared with a student sample. Here, we aggregate across time and individuals and present two example items that illustrate different levels of stability across contexts.\n\nItem response across activities. In Figure  3 , we present the distribution of the answer options for the items cheerful, depressed, motivated, and irritable across different activities that participants reported when answering\n\nPassive Leisure Social Study/Work Other On Way Eating Active Leisure Chores Nothing Physical Passive Leisure Social Study/Work Other On Way Eating Active Leisure Chores Nothing Physical Passive Leisure Social Study/Work Other On Way Eating Active Leisure Chores Nothing Physical Passive Leisure Social Study/Work Other On Way Eating Active Leisure Chores Nothing Physical 0% 25% 5 0% 75% 100% 0 % 2 5% 50% 7 5% 100% 0% 25% 5 0% 75% 100% 0 % 2 5% 50% 7 5% 100% Cheerful Not At All Depressed Motivated Irritable Very Much Not At All Very Much Not At All Very Much Not At All Very Much prompts. The relative frequency (in percentages) of an answer option is displayed on the x-axis. For example, when individuals are in a social activity, they indicate that they are very cheerful (dark red) more often than during other activities. Likewise, participants indicate higher levels of motivation during study/work activities than during leisure. Such pronounced effects do not occur for depressed and irritable, for which responses seem to be more stable across contexts.\n\nThe difference in stability across contexts fits the different nature of the items. Whereas the depressed item was collected in the evening only and inquires about a summary of the whole day, the item cheerful aims to capture momentary affect (\"How cheerful are you right now?\") and should be more responsive to different contexts given that it was collected four times a day. From a statistical perspective, we can learn that the inclusion of contextual variables may provide relevant additional information when modeling or predicting certain constructs that fluctuate considerably across contexts. Furthermore, floor effects in items such as irritable impede their informativeness on an aggregate level because they show little insight into interindividual differences, and these items are potentially harder to include in typical statistical models. We take a deeper look comparing the two example activities study/work versus social activities in Figure  4a . We can again see that for some items, such as relaxed and cheerful, responses differ quite strongly across these activities, whereas responses for tired or sad are very similar for these different activities.\n\nTime-of-day and weekday effects. The time when people answer surveys provides important situational context that may give rise to recurring patterns in EMA data that can be of interest for various research questions (e.g.,  Helliwell & Wang, 2014; Smith et al., 2018) . Time-of-day effects, such as lower motivation in the evenings, can be indicative of natural circadian rhythms or external influences, such as work or university courses, and the daily\n\nTired Stressed Sad Ruminate Relaxed Overwhelm Nervous Motivated Irritable Cheerful Tired Stressed Sad Ruminate Relaxed Overwhelmed Nervous Motivated Irritable Cheerful 1 2 3 4 5 6 7 1 2 3 4 5 6 7 Activity Social Study/Work Beep Time 10:00 am 01:45 pm 05:30 pm 09:15 pm experiences of participants on a weekday compared with the weekend may be markedly different  (Koudela-Hamila et al., 2019) . This, in turn, can have implications for how to best measure EMA items because researchers might miss important information by infrequent sampling. Likewise, too-frequent sampling can also lead to a loss of information. In Cohort 1 of WARN-D, we queried participants about daily drug use in the evening prompt around 9:30 p.m., which likely misses some behavior later in the night. In Cohort 2, we adapted a less frequent but more functional sampling schedule and asked the item retrospectively on the weekend for the whole week. We find the most pronounced time-of-day effects for the item tired, which increases by about 0.77 points on the 7-point Likert scale from around noon compared with the evening. Other items, such as sad or ruminate, stay mostly stable during the day.\n\nRegarding weekend effects, the largest differences between weekdays and weekends are found for the items useful (0 26\n\n. points lower on weekends), relaxed (0 24\n\n. points higher on weekends), and stressed (0 24 . points lower on weekends). In contrast, responses to items tired, sad, or irritable appear to be very similar on the weekend. The full report includes our calculations, more information on this, and visualizations for time-ofday/beep and weekday effects in Section F7. By \"beep effects,\" we mean potential systematic differences in responses across the different surveys per day or, in other words, across the time of day. Furthermore, we present additional contextual analyses of EMA items based on specific activities, the rating of negative events, and other variables in Section F6.\n\nFurther reading. Mestdagh and Dejonckheere (2021)  discussed shortcomings of previous research and ways forward for the investigation of contextual influences in EMA. Beyond self-reported context, the abundance of GPS data has allowed the study of the influence of environmental context on mood measures  (de Vries et al., 2021) . Langener et al. (2023)  reviewed how the social environment, including activity, is captured in experiencesampling and passive-sensing studies. Recent methodological innovations extend dynamical structural equation modeling to be able to include person-situation interactions  (Castro-Alvarez et al., 2022) . Adolf et al. (2017)  showed how context-related changes in parameter estimates can be modeled for time-series analyses. Beck and Jackson (2022)  displayed how information about situations can be leveraged for individual prediction of behaviors and experiences and discussed the relevance of situation information for personality research, and  Cloos et al. (2022)  used the sensitivity to emotionally relevant events as a quality criterion for EMA items. Both weekend effects and time-of-day effects have been studied across a range of constructs (e.g., for suicide and mood, see  Freichel and O'Shea, 2023;  for positive affect, see  Egloff et al., 1995) . Gabriel et al. (2019)  offered a discussion on time trends and how to model them, and  Zhang and Volkow (2023)  discussed the role of seasonality and circadian rhythms in psychiatric disorders."
+    },
+    {
+      "title": "Across time",
+      "text": "Changes over time. Change over time is one of the main reasons why collecting longitudinal data is of interest to researchers. This includes, for example, intervention research; research into biological rhythms, such as menstrual cycles  (Beddig et al., 2020) ; and research following participants during periods of stressful events, such as students over a semester with multiple exam periods. But other factors, such as shifting response styles of participants, may also cause observed changes. For example, initial elevation bias has been observed in multiple intensive longitudinal studies, meaning that individuals report higher state values at the beginning of data collection  (Shrout et al., 2018 ). Yet summary statistics, such as those presented in the first two sections of this article, give very limited insight into stability or change over time. Potential changes are also important because time-series models commonly assume no (lasting) changes in means or variances over time  (Ryan et al., 2023) . In the following, we present tools that help highlight stability and changes over time. We first take a look at aggregate changes of multiple items throughout data collection, followed by the temporal stability of a single item at the group level. We then highlight interindividual differences across people researchers may miss when using group-level approaches.\n\nInvestigating item changes at the group level. To visualize how the daily averages of responses change over time, we visualize the average daily EMA responses over time (solid lines) and their overall mean across all time points (dotted line) in Figure  5 . For both cohorts, we show that the reports of stressed were above the overall mean at the beginning of data collection and that the reverse was true for happy and relaxed. There are several explanations for this. For example, for Cohort 1, we know that there was an intense exam period until around Day 20. We further observed a clear periodicity in which higher negative affect and lower positive affect were being reported on Mondays or, in other words, at the vertical grid lines. Because WARN-D follows a sample from a general student population and does not include any intervention, overall mean changes over time were generally small. Using such a visualization may bring additional insight when studying distinct groups, for example, diagnostic conditions or treatment groups. In these cases, distinct change patterns between groups can often be expected, which is easy to see in plots."
+    },
+    {
+      "title": "Investigating item stability at the individual level.",
+      "text": "Beyond the aggregate change of mean levels of items over time, the stability or fluctuation within individual items over time is of central relevance for most EMA research. One of the most common indicators of temporal dependencies in time series is the autocorrelation. For a lag size of 1, the autocorrelation quantifies the linear dependency between the current and the previous time point. Autocorrelations are often used to infer the optimal lag size in time-series modeling. Beyond modeling decisions, the inspection of autocorrelations can help understand time dependence in data. Broadly, autocorrelations indicate the extent to which states persist over time and are resistant to change  (Kuppens et al., 2010) . Such effects are often called \"inertia\" and also play a role in the literature on identifying early warning signals for mental disorders  (Helmich et al., 2021) . The concept of long-range autocorrelations has also been studied as the \"memory\" of a time series in complexity science, indicating that the current state of a time series may be dependent on its state a long time ago  (Olthof et al., 2020) .\n\nIn Figure  6 , we plot all individual autocorrelations for the item stressed across nine different lags, that is, beeps, while excluding overnight effects. The number 9 was selected here for ease of plotting. Depending on the specific item and context, a smaller or larger range of lags may be of interest. Each point reflects the autocorrelation of one individual. Note that we detrend the data by removing a linear trend of time.\n\nThe plot in Figure  6  indicates substantial heterogeneity across people at every lag size. Still, the association with the previous time point is the strongest overall. In addition, autocorrelations seem to be elevated around Lags 4 and 5, which indicates some stability of the item stressed (measured 4 times a day) across roughly a 24-hr interval. Other items not shown here show slightly different patterns. For example, autocorrelations of the item cheerful are generally slightly lower compared with the item stressed, and they decrease somewhat faster with higher lag size. Theoretically, this informs about the tendency of certain item responses to persist over time and the interindividual differences therein. For modeling, significantly elevated autocorrelations beyond Lag 1 can indicate that for certain purposes and individuals, researchers should consider using models that take into account more than the first lag typical for psychological research.\n\nItem Cheerful Irritable Relaxed Sad Stressed Daily Mean Cohort 1 Day Cohort 2 1 3 2 4 6 5 7 0 2 0 4 0 6 0 8 0 0 20 40 60 80 Fig. 5. Group-level changes of daily means of example items. This figure shows daily means for five example items, split by Cohort 1 and 2. Vertical grid lines represent Mondays. Solid lines indicate average daily ecological-momentary-assessment responses across all individuals. Dotted lines indicate the overall items' means across all time points and individuals. Investigating item changes at the individual level. Plotting time-series data can inform about the nature and degree of changes over time. However, with many time points, variables, and individuals, such visualizations are often quite messy. This can make it hard to see certain changes over time and features of the individual response distribution. We therefore zoom into six participants for the remainder of this section.\n\nFigure  7a  shows the raw time-series data for the item depressed of these six participants. In this figure, it is very hard to distinguish individual lines and to recognize overall trend patterns. Figure  7b  depicts the same data using a moving-window technique (Fig.  7a ) in which (in this case) 7 days of data are averaged for each time point (e.g., Time Point 40 includes the average of Time Points 37-43; Time Point 41 includes the average of Time Points 38-44). Such visualizations can be flexibly applied in varying window sizes to summarize different statistics, such as the mean or variance, to simplify the visual interpretation of patterns over time. We additionally color the time series based on their variability over time such that time series with a higher fluctuation are shaded in darker colors and time series with less variability are colored in lighter colors. Overall, we show that the responses to depressed fluctuate highly and change abruptly for some participants, while they are more stable or gradually changing for others. This interindividual heterogeneity in change patterns is not directly apparent from the other analyses in this article because they often condense the time-series information into a single summary statistic. This could imply, for example, that the stability of depressive symptoms may vary between individuals and that symptoms may change faster than what is often assumed  (Fried et al., 2022) . Statistically, it may be relevant to use methods that can account for or explicitly model such changes over time, which we sketch in the \"Further reading\" section.\n\nFigure  8  illustrates how time series for one item (at the individual or group level) can be made more informative by displaying the marginal distribution of the item on the right side of the plot. Here, we show that responses of one individual to the items sad and stressed tend to fall in either the middle or the extreme values of the scale, which is not easily visible from the long time-series visualization alone. 3 Creating individual timeseries plots, such as in Figures  7  and  8 , can be challenging in large samples. In such cases, we recommend looking into a random subsample of participants to obtain insight into potential patterns that may warrant further investigation.\n\nFurther reading. The analysis of lagged dependencies is explained in many standard time-series textbooks, such as  Box et al. (2008) . We chose the simple approach of calculating autocorrelation in a univariate and basic way, but other approaches allow one to handle the possible nonstationarity of the data and the influence of other variables on a given item. Concerning the former, movingwindow calculations of autocorrelations can also be used to deal with nonstationarity (see e.g.,  Olthof et al., 2020) .\n\nInertia is also often operationalized as an autoregressive effect in multivariable statistical models, such as multilevel models  (Hamaker & Wichers, 2017; Jongerling et al., 2015) , in which the influence of other variables and interindividual differences can be modeled. The analysis of autocorrelations, as shown here, can be the first step in understanding the lag structure. Beyond that, for example,  Jacobson et al. (2019)  developed a tool for exploratory and confirmatory lag diagnostics in typical psychological time-series data. Change-point detection techniques also commonly use moving-window approaches (see e.g.,  Cabrieto et al., 2018) . To explicitly model changes over time in intensive longitudinal data, readers may refer to  Boker et al. (2002)  for an example of changing associations between two time series or  Haslbeck et al. (2021)  for more complex multivariate methods."
+    },
+    {
+      "title": "Disentangling variability sources",
+      "text": "Up to this point, we have looked at sources of variability, such as changes over time and contextual factors, mostly separately. Now we can try to synthesize them and try to understand where most of the variance in our data set comes from. This helps us answer questions such as the following: Is there more between-days variability than within-days variability? Are there strong changes in responses over time that are consistent across individuals? And what is the ratio of within-individuals variability to between-individuals variability? This last question occurs regularly in the context of multilevel modeling and is commonly answered by calculating the intraclass correlation (ICC), which quantifies the proportion of variance because of stable between-persons differences  (Hamaker, 2024) . Expanding on this perspective, generalizability theory  (Cranford et al., 2006; Sch\u00f6nbrodt et al., 2022)  is concerned with decomposing variance at multiple hierarchical structures, such as beeps, days, individuals, or items in the data set. This can help researchers obtain a first insight into the structure of variation in their data. Here, we investigate the influence of time and interindividual variability for an example item. First, we estimate the ICC for every Likert-scaled EMA item in the data set. For more details about its calculation, see the full report. The mean of ICCs across items is 0 32\n\n. (SD = 0 05 . ); useful (evening item: \"Today, I felt productive/useful\") has the lowest ICC of 0 22\n\n. , and ruminate (four times per day item: \"I am experiencing negative thoughts right now\") has the highest one with 0 42\n\n. . This means that more than half of the variance for all items appears to occur at the within-persons level (but note that within-persons variability can be overestimated in the presence of measurement error;  Wilms et al., 2020) . For more detailed results, see the full report.\n\nWe can extend this and decompose the variance of moments/beeps nested in days nested in individuals in our data set. The following description is, in parts, adapted from  Sch\u00f6nbrodt et al. (2022) . Technically, we estimate an intercept-only multilevel model including a random intercept variance for all factors and allocate the variance of item responses across multiple levels and factors without assuming linear relationships. This is summarized in Figure  9 , which shows the proportion of variance components across these factors. The size of a tile represents the relative proportion of total variance that is attributable to a certain factor. \"Person\" contains between-persons differences, \"Person:Day\" contains variance between days (in which each day of each person is a unique element), \"Person:Prompt\" contains time-ofday effects for some individuals, \"Prompt\" contains general time-of-day effects, \"Day\" contains general effects of study day, \"Day:Prompt\" contains effects of certain prompts on certain days, and the residual contains the remaining residual variance left after all other factors have been taken into account. For code for this plot, see Section F7 in the full report. The variance decomposition in Figure  9  shows the large extent of residual variance, which here represents within-persons variation in the item stressed that is not explained by the other factors. A substantial amount of variance can also be attributed to between-persons differences, as indicated by the size of Person in the plot. The interactions of Person with beep and day show between-individuals variability in time-of-day and dayof-study effects, respectively. The latter can be interpreted as different trajectories of stress between different participants. The general effect of the day of the study is small, which is to be expected given that we follow students during their normal lives and do not expect particularly impactful events on any specific day. In addition, our sample comprised two cohorts in which a given day of the study refers to different dates. Note that the decomposition here builds on classical test theory and thereby comes with some strong assumptions, including the absence of autoregressive effects or the independence of different variance components  (Sch\u00f6nbrodt et al., 2022) . We sketch some potential solutions for these shortcomings in the \"Further reading\" section below.\n\nFurther reading. Various reliability indices could be computed from variance decomposition analyses  (Sch\u00f6nbrodt et al., 2022) . How to incorporate autocorrelation structures into variance decomposition for EMA is shown in  Vansteelandt and Verbeke (2016) . A more flexible approach to calculate reliability in longitudinal data with multiple indicators per construct is the use of dynamicfactor models  (Fuller-Tyszkiewicz et al., 2017) , and  Schuurman et al. (2015)  showed how to calculate between-and within-persons reliability with singleindicator measures. General recommendations regarding reliability in single and multiitem EMA measures are provided in  Vogelsmeier et al. (2023) ."
+    },
+    {
+      "title": "Measuring different time scales",
+      "text": "One additional source to better understand EMA items is to look at how they are associated with other features in the data, such as EMA items assessed weekly or psychometric scales assessed at baseline before the EMA\n\nResidual Person Person:Day Day Person:Beep Beep Day:Beep Term Person:Day Person Residual Day Beep Person:Beep stage. This allows researchers to better understand the association between dynamic momentary items and slower moving or trait-like measures. In traditional validation work, such analyses may be used to establish predictive (How well does a daily item predict later measures?) or concurrent (How well does a daily item overlap with less frequent assessments of the same construct?) validity (M. S.  Allen et al., 2022) . Here, we aggregate across time and individuals, calculating between-persons correlations for multiple EMA items and baseline questionnaires.\n\nEMA and baseline items. Figure  10  depicts these correlations, with a focus on questionnaires assessing mentalhealth-related constructs, shown on the x-axis, including the Altman Self-Rating Mania Scale (ASRM;  Altman et al., 1997) , assessing manic symptoms; the Generalized Anxiety Disorder (GAD-7;  Spitzer et al., 2006)  scale, assessing anxiety-disorder symptoms; an adapted form of the Patient Health Questionnaire-9 (PHQ-9;  Kroenke et al., 2001) , assessing depressive symptoms; and the 10-item version of the Perceived Stress Scale (PSS-10;  Cohen & Williamson, 1988) , and the SCOFF (acronym explained in  Morgan et al., 1999)  assessing eating disorder symptoms. We use sumscoring for these questionnaires to obtain a single score per individual on the x-axis. On the y-axis, we include the mean of multiple EMA items over the whole data-collection period.\n\nCorrelations between EMA means and the depression (PHQ-9), anxiety (GAD-7), and stress (PSS-10) questionnaires appear fairly similar, indicating that EMA means do not differentiate well between the baseline questionnaires. Most items are only weakly connected to the eatingdisorder (SCOFF) and mania (ASRM) questionnaires. Emo_reg refers to the item, \"Today, it was difficult to cope with my emotions.\" For more information about all items and their phrasing, see the supplementary material on OSF.\n\nDaily and weekly items. We can also look into the relations of EMA items collected at different frequencies, such as multiple times per day, daily, or weekly. Specifically, here we investigate how validated retrospective reports over a longer period relate to aggregates of daily reports, such as comparing a validated scale for a construct assessed on the weekend (\"Last week, I felt . . . \") with daily scores obtained every evening of the week (\"Today, I felt . . . \"). If items with a higher sampling frequency deliver additional information, this points to the added value of intensive daily versus less frequent assessments and can inform the frequency of assessment in future studies. In the WARN-D data, we investigate this question by looking at the association of the weekly means of a daily depression question (\"Today, I felt down or depressed\") with various individual depressive symptoms assessed retrospectively once a week with the PHQ-9 (\"Last week, I felt . . . \"). We do not visualize these calculations here but rather show more detailed quantitative results in the full report in Section F9.\n\nOverall, the correlations range from .17 to .57. Mean daily depression (averaged across the week) and a weekly retrospective depression item (\"Feeling down or depressed\") correlated with .57 (95% confidence interval [CI] = [.55, .59]); the lowest correlation obtained was .17 between mean daily depression (across the week) and both motor retardation and overeating (95% CI = [.14, .20] for both). The correlation of the mean daily depression item with the sum score of the weekly PHQ-9  (Kroenke et al., 2001)  was .56 (95% CI = [.54, .58]). 4 In summary, the weekly measurement appears to (at least on average in this group of people) approximate the daily scores fairly well and certainly better than we had anticipated. In the end, the decision at what frequency to sample will depend on many other factors as well, including the specific research question.\n\nFurther reading. Recent work has compared momentary versus recalled affect  (Greene et al., 2022; Leertouwer et al., 2022)  and daily versus biweekly depressive symptoms  (Horwitz et al., 2023) . For example ways to study the predictive and concurrent validity for single-item measures, see  Song et al. (2023) . A spectrum of techniques that, among other advantages, allow modeling using items assessed at different sampling frequencies is subsumed under continuous-time modeling  (van Montfort et al., 2018) ."
+    },
+    {
+      "title": "Discussion",
+      "text": "EMA data are commonly collected across a variety of disciplines, and there are many rich data sets available for psychological researchers to analyze. However, EMA data tend to be quite complex, and in our tutorial, we aim to provide ideas on how researchers can better understand such data. To introduce and demonstrate useful analytic and data-visualization tools, we have presented the properties and performance of various items in the WARN-D study. Most of these insights would not have been gained by applying only typical time-series models that capture multivariate associations between variables. We have emphasized the relevance of the information researchers can gain for both theoretical and statistical considerations. We hope that this tutorial and the associated R code will help researchers explore items in their EMA data in more detail but also share the results of such explorations in their articles or supplementary materials to build a basis for establishing robust phenomena. Making full use of all the information hiding in EMA data sets by employing the full breadth of available data-visualization and modeling tools-and sharing the results (possibly in longer online supplements, such as the full report that we provided)-will not only benefit the quality and transparency of analyses but also improve the understanding of the individuals and constructs under study. We believe that these tools can be helpful in a variety of contexts, from pilot studies with new questionnaires to the description and analysis of large samples with well-known items.\n\nIn our application of these techniques for the WARN-D data, we uncovered threats to the integrity of potential modeling strategies because of, for example, floor effects and bimodality. At the same time, we also learned more about the variability and possible contextual influences on the responses of participants. We have gained further insights into the potential added value of EMA above and beyond cross-sectional measures, for example, by investigating the change of item responses over time or assessing the overlap between EMA responses and typical trait-like questionnaires. Finally, we hope that sharing these results of our EMA data in the full report will help other researchers build on our EMA item battery and choose or modify items, for example, to achieve more desirable distributions.\n\nWe also note that this tutorial is aimed to provide a first step for researchers to better understand their EMA data. We see our focus on individual items and descriptive statistics as an important precursor to tackling more complex challenges, three of which we highlight below. First, we have not yet discussed multiitem constructs and measurement models, which are the default in psychometrics for cross-sectional data. Such models assume that each item of a scale measuring a purported construct, such as depression, neuroticism, or mathematical ability, is error-prone and that measuring multiple related items and then estimating the construct based on the shared variance of items improves measurement precision. For EMA data, there is a fast-growing literature on measurement models that can capture interindividual differences  (McNeish et al., 2021) , changes over time  (Vogelsmeier et al., 2019) , and nonlinear and stateswitching properties of measurement models  (Kelava & Brandt, 2019) . Second, readers may have noticed that we used terms such as item \"functioning\" and \"performance\" and refrained from terms such as \"validity\" or \"validation.\" Existing validity frameworks, such as the Standards for Educational and Psychological Testing (American Educational Research Association, 2014), do provide crucial opportunities in understanding psychological constructs (see e.g.,  Fried et al., 2022) , but how to apply them to EMA data is not quite established. Furthermore, and related to our first point, validity terminology in psychology is traditionally associated with the evaluation of measurement models in the context of multiple indicators for a construct instead of focusing on individual items. New methods are emerging for marrying EMA data and notions of validity, such as investigating single-item reliability  (Dejonckheere et al., 2022; Schuurman et al., 2015)  and validity (M. S.  Allen et al., 2022)  in longitudinal studies. Third, establishing how our items perform in data is helpful to guide questions into an underappreciated aspect of the question of validity: understanding the response processes, that is, the cognitive processes underlying people's item responses.\n\nChoosing the highest answer category in the item sad, for example, may have substantively different meanings across individuals and within individuals over time. What response processes underlie EMA item answers is largely unknown and can be tackled by conducting cognitive interviews in which participants are queried to make explicit how and why they answer items in the way they answer them  (Stone et al., 2023) . Understanding this process is crucial to understanding if the constructs researchers use actually measure what they intend to measure  (Borsboom et al., 2004) ."
+    },
+    {
+      "title": "Transparency",
+      "text": "Action Editor: Katie Corker Editor: David A. Sbarra"
+    },
+    {
+      "text": "Fig. 1. Raincloud plots for example items. The box plot displays the first and third quartiles of the distribution as upper and lower hinges and the median as a horizontal bar. The whiskers extend to 1 5 . times the interquartile range. Dots represent individual means."
+    },
+    {
+      "text": "Fig. 2. Modality of ecological-momentary-assessment items. (a) Distributions for unimodal (first row) and bimodal (second row) distributions for the item stressed for six example participants. The x-axis denotes the response options; the height of a chart on the y-axis denotes the count of the respective response. (b) Results for the modality estimation for different items. The x-axis denotes the number of modes; the y-axis denotes the count of participants having a certain number of modes in their individual distribution."
+    },
+    {
+      "text": "Fig.3. Answers across activities. This figure displays the relative frequencies of answer options (x-axis) depending on the concurrent activity (y-axis) for four example items. Activities are ordered by their relative frequencies from top to bottom."
+    },
+    {
+      "text": "Fig.4. Activity and time-of-day effects. (a) Item means across all participants when participants either indicated that they were in a \"social\" activity or a \"study/work\" activity. (b) Item means across the four daily beeps/notifications. The hours of the day indicated in the legend for Fig.4bare approximate because the exact timing of beeps included some planned randomness (Fried et al., 2023) . Horizontal lines around the points would indicate the standard error of the estimated means, but they are barely visible here because of our sample size."
+    },
+    {
+      "text": "Fig. 6. Autocorrelations of the item stressed. The individual data points in this figure represent individual autocorrelation function (ACF) values. A linear trend was detrended before calculation, and overnight effects were not included. The ACF was calculated only for individuals with more than 100 data points."
+    },
+    {
+      "text": "Fig. 7. Development of the item depressed for six participants. (a) Raw values of item responses. (b) Seven-day rolling means are visualized as an intuitive example of an aggregation window spanning a week. The x-axis denotes the day of the study, and the y-axis denotes the response value. Time series with higher variability (operationalized as standard deviation) are colored in darker colors, and time series with lower variability are in lighter colors."
+    },
+    {
+      "text": "Fig. 8. Raw time series with marginal distribution. The figure shows time series for items sad and stressed for an example participant. The x-axis denotes the day of the study, and the y-axis denotes the response value."
+    },
+    {
+      "text": "Fig. 9. Variance decomposition for the item stressed. The figure illustrates different variance components. The proportion of variance components is represented by their tile size."
+    },
+    {
+      "text": "Fig. 10. Correlation of ecological momentary assessment (EMA) with baseline. This figure shows the correlation of EMA means with baseline items. The y-axis contains the mean of different EMA variables, aggregated to individual means across the whole study duration. The x-axis contains different baseline questionnaires.Emo_reg refers to the item, \"Today, it was difficult to cope with my emotions.\" For more information about all items and their phrasing, see the supplementary material on OSF."
+    },
+    {
+      "text": "Means (SDs) of Different Individual Summary Statistics"
+    },
+    {
+      "text": "Funding  C. L. Rieble ,  R. Tutunji ,  R. K. K. Proppert , and  E. I . Fried are supported by funding from the  European Research Council  under the  European Union 's  Horizon 2020 research and innovation program  (Grant  949059 )."
+    },
+    {
+      "title": "Open Practices",
+      "text": "This article has received the badge for Open Materials. More information about the Open Practices badges can be found at  http://www.psychologicalscience.org/publications/  badges ."
+    },
+    {
+      "title": "Declaration of Conflicting Interests",
+      "text": "The author(s) declared that there were no conflicts of interest with respect to the authorship or the publication of this article."
+    },
+    {
+      "title": "Notes",
+      "text": "1. The version of the supplementary files associated with this article is available in the folder \"Version 1.1.\" 2. This cutoff is arbitrary; lower proportions of choosing the lowest response may also pose difficulties for statistical models.\n\n3. These figures were inspired by  Haslbeck et al. (2023) . 4. We calculated the PHQ-9 sum score by retransforming the relevant PHQ-15 items into the PHQ-9 by taking the higher value (e.g., the higher score of the two disaggregated PHQ-15 sleep symptoms \"insomnia\" and \"hypersomnia\" was used to reconstruct the PHQ-9 \"insomnia or hypersomnia\" item)."
+    }
+  ],
+  "references": [
+    {
+      "title": "Capturing context-related change in emotional dynamics via fixed moderated time series analysis",
+      "authors": [
+        "J Adolf",
+        "M Voelkle",
+        "A Brose",
+        "F Schmiedek"
+      ],
+      "year": 2017,
+      "doi": "10.1080/00273171.2017.1321978",
+      "journal": "Multivariate Behavioral Research",
+      "volume": "52",
+      "issue": "4",
+      "raw": "Capturing context-related change in emotional dynamics via fixed moderated time series analysis \n\t\t \n\t\t\t J K Adolf \n\t\t \n\t\t \n\t\t\t M C Voelkle \n\t\t \n\t\t \n\t\t\t A Brose \n\t\t \n\t\t \n\t\t\t F Schmiedek \n\t\t \n\t\t 10.1080/00273171.2017.1321978 \n\t\t \n\t \n\t \n\t\t Multivariate Behavioral Research \n\t\t \n\t\t\t 52 \n\t\t\t 4 \n\t\t\t \n\t\t\t 2017 \n\t\t \n\t \n\t Adolf, J. K., Voelkle, M. C., Brose, A., & Schmiedek, F. (2017). Capturing context-related change in emotional dynamics via fixed moderated time series analysis. Multivariate Behavioral Research, 52(4), 499-531. https://doi.org/10 .1080/00273171.2017.1321978"
+    },
+    {
+      "title": "Raincloud plots: A multi-platform tool for robust data visualization",
+      "authors": [
+        "M Allen",
+        "D Poggiali",
+        "K Whitaker",
+        "T Marshall",
+        "J Van Langen",
+        "R Kievit"
+      ],
+      "year": 2021,
+      "doi": "10.12688/wellcomeopenres.15191.2",
+      "journal": "Wellcome Open Research",
+      "volume": "4",
+      "pages": "63",
+      "raw": "Raincloud plots: A multi-platform tool for robust data visualization \n\t\t \n\t\t\t M Allen \n\t\t \n\t\t \n\t\t\t D Poggiali \n\t\t \n\t\t \n\t\t\t K Whitaker \n\t\t \n\t\t \n\t\t\t T R Marshall \n\t\t \n\t\t \n\t\t\t J Van Langen \n\t\t \n\t\t \n\t\t\t R A Kievit \n\t\t \n\t\t 10.12688/wellcomeopenres.15191.2 \n\t\t \n\t \n\t \n\t\t Wellcome Open Research \n\t\t \n\t\t\t 4 \n\t\t\t 63 \n\t\t\t 2021 \n\t\t \n\t \n\t Allen, M., Poggiali, D., Whitaker, K., Marshall, T. R., van Langen, J., & Kievit, R. A. (2021). Raincloud plots: A multi-platform tool for robust data visualization. Wellcome Open Research, 4, Article 63. https://doi.org/10.12688/well comeopenres.15191."
+    },
+    {
+      "title": "Single item measures in psychological science",
+      "authors": [
+        "M Allen",
+        "D Iliescu",
+        "S Greiff"
+      ],
+      "year": 2022,
+      "doi": "10.1027/1015-5759/a000699",
+      "journal": "European Journal of Psychological Assessment",
+      "volume": "38",
+      "issue": "1",
+      "raw": "Single item measures in psychological science \n\t\t \n\t\t\t M S Allen \n\t\t \n\t\t \n\t\t\t D Iliescu \n\t\t \n\t\t \n\t\t\t S Greiff \n\t\t \n\t\t 10.1027/1015-5759/a000699 \n\t\t \n\t \n\t \n\t\t European Journal of Psychological Assessment \n\t\t \n\t\t\t 38 \n\t\t\t 1 \n\t\t\t \n\t\t\t 2022 \n\t\t \n\t \n\t Allen, M. S., Iliescu, D., & Greiff, S. (2022). Single item measures in psychological science. European Journal of Psychological Assessment, 38(1), 1-5. https://doi.org/ 10.1027/1015-5759/a000699"
+    },
+    {
+      "title": "The Altman self-rating mania scale",
+      "authors": [
+        "E Altman",
+        "D Hedeker",
+        "J Peterson",
+        "J Davis"
+      ],
+      "year": 1997,
+      "doi": "10.1016/s0006-3223(96)00548-3",
+      "journal": "Biological Psychiatry",
+      "volume": "42",
+      "issue": "10",
+      "raw": "The Altman self-rating mania scale \n\t\t \n\t\t\t E G Altman \n\t\t \n\t\t \n\t\t\t D Hedeker \n\t\t \n\t\t \n\t\t\t J L Peterson \n\t\t \n\t\t \n\t\t\t J M Davis \n\t\t \n\t\t 10.1016/s0006-3223(96)00548-3 \n\t \n\t \n\t\t Biological Psychiatry \n\t\t \n\t\t\t 42 \n\t\t\t 10 \n\t\t\t \n\t\t\t 1997 \n\t\t \n\t \n\t Altman, E. G., Hedeker, D., Peterson, J. L., & Davis, J. M. (1997). The Altman self-rating mania scale. Biological Psychiatry, 42(10), 948-955."
+    },
+    {
+      "title": "Standards for educational and psychological testing",
+      "year": 2014,
+      "doi": "10.3102/9780935302967_1",
+      "raw": "Standards for educational and psychological testing \n\t\t 10.3102/9780935302967_1 \n\t\t \n\t\t\t 2014 \n\t\t\t American Educational Research Association \n\t\t \n\t \n\t American Educational Research Association. (Ed.). (2014). Standards for educational and psychological testing."
+    },
+    {
+      "title": "Graphs in statistical analysis",
+      "authors": [
+        "F Anscombe"
+      ],
+      "year": 1973,
+      "doi": "10.1080/00031305.1973.10478966",
+      "journal": "The American Statistician",
+      "volume": "27",
+      "issue": "1",
+      "raw": "Graphs in statistical analysis \n\t\t \n\t\t\t F J Anscombe \n\t\t \n\t\t 10.1080/00031305.1973.10478966 \n\t \n\t \n\t\t The American Statistician \n\t\t \n\t\t\t 27 \n\t\t\t 1 \n\t\t\t \n\t\t\t 1973 \n\t\t \n\t \n\t Anscombe, F. J. (1973). Graphs in statistical analysis. The American Statistician, 27(1), 17-21."
+    },
+    {
+      "title": "Personalized prediction of behaviors and experiences: An idiographic personsituation test",
+      "authors": [
+        "E Beck",
+        "J Jackson"
+      ],
+      "year": 2022,
+      "doi": "10.1177/09567976221093307",
+      "journal": "Psychological Science",
+      "volume": "33",
+      "issue": "10",
+      "raw": "Personalized prediction of behaviors and experiences: An idiographic personsituation test \n\t\t \n\t\t\t E D Beck \n\t\t \n\t\t \n\t\t\t J J Jackson \n\t\t \n\t\t 10.1177/09567976221093307 \n\t\t \n\t \n\t \n\t\t Psychological Science \n\t\t \n\t\t\t 33 \n\t\t\t 10 \n\t\t\t \n\t\t\t 2022 \n\t\t \n\t \n\t Beck, E. D., & Jackson, J. J. (2022). Personalized prediction of behaviors and experiences: An idiographic person- situation test. Psychological Science, 33(10), 1767-1782. https://doi.org/10.1177/09567976221093307"
+    },
+    {
+      "title": "Reciprocal effects between cognitive and affective states in women with premenstrual dysphoric disorder: An ecological momentary assessment study",
+      "authors": [
+        "T Beddig",
+        "I Reinhard",
+        "U Ebner-Priemer",
+        "C Kuehner"
+      ],
+      "year": 2020,
+      "doi": "10.1016/j.brat.2020.103613",
+      "journal": "Behaviour Research and Therapy",
+      "volume": "131",
+      "pages": "103613",
+      "raw": "Reciprocal effects between cognitive and affective states in women with premenstrual dysphoric disorder: An ecological momentary assessment study \n\t\t \n\t\t\t T Beddig \n\t\t \n\t\t \n\t\t\t I Reinhard \n\t\t \n\t\t \n\t\t\t U Ebner-Priemer \n\t\t \n\t\t \n\t\t\t C Kuehner \n\t\t \n\t\t 10.1016/j.brat.2020.103613 \n\t\t \n\t \n\t \n\t\t Behaviour Research and Therapy \n\t\t \n\t\t\t 131 \n\t\t\t 103613 \n\t\t\t 2020 \n\t\t \n\t \n\t Beddig, T., Reinhard, I., Ebner-Priemer, U., & Kuehner, C. (2020). Reciprocal effects between cognitive and affective states in women with premenstrual dysphoric disorder: An ecological momentary assessment study. Behaviour Research and Therapy, 131, Article 103613. https://doi .org/10.1016/j.brat.2020.103613"
+    },
+    {
+      "title": "Windowed cross-correlation and peak picking for the analysis of variability in the association between behavioral time series",
+      "authors": [
+        "S Boker",
+        "J Rotondo",
+        "M Xu",
+        "K King"
+      ],
+      "year": 2002,
+      "doi": "10.1037/1082-989x.7.3.338",
+      "journal": "Psychological Methods",
+      "volume": "7",
+      "issue": "3",
+      "raw": "Windowed cross-correlation and peak picking for the analysis of variability in the association between behavioral time series \n\t\t \n\t\t\t S M Boker \n\t\t \n\t\t \n\t\t\t J L Rotondo \n\t\t \n\t\t \n\t\t\t M Xu \n\t\t \n\t\t \n\t\t\t K King \n\t\t \n\t\t 10.1037/1082-989x.7.3.338 \n\t\t \n\t \n\t \n\t\t Psychological Methods \n\t\t \n\t\t\t 7 \n\t\t\t 3 \n\t\t\t \n\t\t\t 2002 \n\t\t \n\t \n\t Boker, S. M., Rotondo, J. L., Xu, M., & King, K. (2002). Windowed cross-correlation and peak picking for the anal- ysis of variability in the association between behavioral time series. Psychological Methods, 7(3), 338-355. https:// doi.org/10.1037/1082-989X.7.3.338"
+    },
+    {
+      "title": "Diary methods: Capturing life as it is lived",
+      "authors": [
+        "N Bolger",
+        "A Davis",
+        "E Rafaeli"
+      ],
+      "year": 2003,
+      "doi": "10.1146/annurev.psych.54.101601.145030",
+      "journal": "Annual Review of Psychology",
+      "volume": "54",
+      "raw": "Diary methods: Capturing life as it is lived \n\t\t \n\t\t\t N Bolger \n\t\t \n\t\t \n\t\t\t A Davis \n\t\t \n\t\t \n\t\t\t E Rafaeli \n\t\t \n\t\t 10.1146/annurev.psych.54.101601.145030 \n\t\t \n\t \n\t \n\t\t Annual Review of Psychology \n\t\t \n\t\t\t 54 \n\t\t\t \n\t\t\t 2003 \n\t\t \n\t \n\t Bolger, N., Davis, A., & Rafaeli, E. (2003). Diary methods: Capturing life as it is lived. Annual Review of Psycho- logy, 54, 579-616. https://doi.org/10.1146/annurev .psych.54.101601.145030"
+    },
+    {
+      "title": "The concept of validity",
+      "authors": [
+        "D Borsboom",
+        "G Mellenbergh",
+        "J Van Heerden"
+      ],
+      "year": 2004,
+      "doi": "10.1037/0033-295x.111.4.1061",
+      "journal": "Psychological Review",
+      "volume": "111",
+      "raw": "The concept of validity \n\t\t \n\t\t\t D Borsboom \n\t\t \n\t\t \n\t\t\t G J Mellenbergh \n\t\t \n\t\t \n\t\t\t J Van Heerden \n\t\t \n\t\t 10.1037/0033-295x.111.4.1061 \n\t\t \n\t \n\t \n\t\t Psychological Review \n\t\t \n\t\t\t 111 \n\t\t\t \n\t\t\t 2004 \n\t\t \n\t \n\t Borsboom, D., Mellenbergh, G. J., & van Heerden, J. (2004). The concept of validity. Psychological Review, 111, 1061- 1071. https://doi.org/10.1037/0033-295X.111.4.1061"
+    },
+    {
+      "title": "Time series analysis",
+      "authors": [
+        "G Box",
+        "G Jenkins",
+        "G Reinsel"
+      ],
+      "year": 2008,
+      "doi": "10.1002/9781118619193",
+      "raw": "Time series analysis \n\t\t \n\t\t\t G E Box \n\t\t \n\t\t \n\t\t\t G M Jenkins \n\t\t \n\t\t \n\t\t\t G C Reinsel \n\t\t \n\t\t 10.1002/9781118619193 \n\t\t \n\t\t \n\t\t\t 2008 \n\t\t\t John Wiley & Sons \n\t\t \n\t \n\t 4th ed. \n\t Box, G. E., Jenkins, G. M., & Reinsel, G. C. (2008). Time series analysis (4th ed.). John Wiley & Sons. https://doi .org/10.1002/9781118619193"
+    },
+    {
+      "title": "ESMvis: A tool for visualizing individual Experience Sampling Method (ESM) data",
+      "authors": [
+        "L Bringmann",
+        "D Van Der Veen",
+        "M Wichers",
+        "H Riese",
+        "G Stulp"
+      ],
+      "year": 2020,
+      "doi": "10.1007/s11136-020-02701-4",
+      "journal": "Quality of Life Research",
+      "volume": "30",
+      "raw": "ESMvis: A tool for visualizing individual Experience Sampling Method (ESM) data \n\t\t \n\t\t\t L F Bringmann \n\t\t \n\t\t \n\t\t\t D C Van Der Veen \n\t\t \n\t\t \n\t\t\t M Wichers \n\t\t \n\t\t \n\t\t\t H Riese \n\t\t \n\t\t \n\t\t\t G Stulp \n\t\t \n\t\t 10.1007/s11136-020-02701-4 \n\t\t \n\t \n\t \n\t\t Quality of Life Research \n\t\t \n\t\t\t 30 \n\t\t\t \n\t\t\t 2020 \n\t\t \n\t \n\t Bringmann, L. F., van der Veen, D. C., Wichers, M., Riese, H., & Stulp, G. (2020). ESMvis: A tool for visualizing individual Experience Sampling Method (ESM) data. Quality of Life Research, 30, 3179-3188. https://doi.org/10.1007/s11136- 020-02701-4"
+    },
+    {
+      "title": "Testing for the presence of correlation changes in a multivariate time series: A permutation based approach",
+      "authors": [
+        "J Cabrieto",
+        "F Tuerlinckx",
+        "P Kuppens",
+        "B Hunyadi",
+        "E Ceulemans"
+      ],
+      "year": 2018,
+      "doi": "10.1038/s41598-017-19067-2",
+      "journal": "Scientific Reports",
+      "volume": "8",
+      "pages": "769",
+      "raw": "Testing for the presence of correlation changes in a multivariate time series: A permutation based approach \n\t\t \n\t\t\t J Cabrieto \n\t\t \n\t\t \n\t\t\t F Tuerlinckx \n\t\t \n\t\t \n\t\t\t P Kuppens \n\t\t \n\t\t \n\t\t\t B Hunyadi \n\t\t \n\t\t \n\t\t\t E Ceulemans \n\t\t \n\t\t 10.1038/s41598-017-19067-2 \n\t\t \n\t \n\t \n\t\t Scientific Reports \n\t\t \n\t\t\t 8 \n\t\t\t 769 \n\t\t\t 2018 \n\t\t \n\t \n\t Cabrieto, J., Tuerlinckx, F., Kuppens, P., Hunyadi, B., & Ceulemans, E. (2018). Testing for the presence of correla- tion changes in a multivariate time series: A permutation based approach. Scientific Reports, 8, Article 769. https:// doi.org/10.1038/s41598-017-19067-2"
+    },
+    {
+      "title": "Mixed-effects trait-stateoccasion model: Studying the psychometric properties and the person-situation interactions of psychological dynamics",
+      "authors": [
+        "S Castro-Alvarez",
+        "J Tendeiro",
+        "P De Jonge",
+        "R Meijer",
+        "L Bringmann"
+      ],
+      "year": 2022,
+      "doi": "10.1080/10705511.2021.1961587",
+      "journal": "Structural Equation Modeling: A Multidisciplinary Journal",
+      "volume": "29",
+      "issue": "3",
+      "raw": "Mixed-effects trait-stateoccasion model: Studying the psychometric properties and the person-situation interactions of psychological dynamics \n\t\t \n\t\t\t S Castro-Alvarez \n\t\t \n\t\t \n\t\t\t J N Tendeiro \n\t\t \n\t\t \n\t\t\t P De Jonge \n\t\t \n\t\t \n\t\t\t R R Meijer \n\t\t \n\t\t \n\t\t\t L F Bringmann \n\t\t \n\t\t 10.1080/10705511.2021.1961587 \n\t\t \n\t \n\t \n\t\t Structural Equation Modeling: A Multidisciplinary Journal \n\t\t \n\t\t\t 29 \n\t\t\t 3 \n\t\t\t \n\t\t\t 2022 \n\t\t \n\t \n\t Castro-Alvarez, S., Tendeiro, J. N., de Jonge, P., Meijer, R. R., & Bringmann, L. F. (2022). Mixed-effects trait-state- occasion model: Studying the psychometric properties and the person-situation interactions of psychological dynam- ics. Structural Equation Modeling: A Multidisciplinary Journal, 29(3), 438-451. https://doi.org/10.1080/107055 11.2021.1961587"
+    },
+    {
+      "title": "Inventing temperature: Measurement and scientific progress",
+      "authors": [
+        "H Chang"
+      ],
+      "year": 2004,
+      "raw": "H Chang \n\t\t \n\t\t Inventing temperature: Measurement and scientific progress \n\t\t \n\t\t\t Oxford University Press \n\t\t\t 2004 \n\t\t \n\t \n\t Chang, H. (2004). Inventing temperature: Measurement and scientific progress. Oxford University Press."
+    },
+    {
+      "title": "Development, validation, and comparison of self-report measures for positive and negative affect in intensive longitudinal research",
+      "authors": [
+        "L Cloos",
+        "P Kuppens",
+        "E Ceulemans"
+      ],
+      "year": 2022,
+      "doi": "10.31234/osf.io/5j7c6",
+      "journal": "PsyArXiv",
+      "raw": "Development, validation, and comparison of self-report measures for positive and negative affect in intensive longitudinal research \n\t\t \n\t\t\t L Cloos \n\t\t \n\t\t \n\t\t\t P Kuppens \n\t\t \n\t\t \n\t\t\t E Ceulemans \n\t\t \n\t\t 10.31234/osf.io/5j7c6 \n\t\t \n\t \n\t \n\t\t PsyArXiv \n\t\t \n\t\t\t 2022 \n\t\t \n\t \n\t Cloos, L., Kuppens, P., & Ceulemans, E. (2022). Development, validation, and comparison of self-report measures for posi- tive and negative affect in intensive longitudinal research. PsyArXiv. https://doi.org/10.31234/osf.io/5j7c6"
+    },
+    {
+      "title": "Perceived stress in a probability sample of the United States",
+      "authors": [
+        "S Cohen",
+        "G Williamson"
+      ],
+      "year": 1988,
+      "raw": "Perceived stress in a probability sample of the United States \n\t\t \n\t\t\t S Cohen \n\t\t \n\t\t \n\t\t\t G Williamson \n\t\t \n\t \n\t \n\t\t The social psychology of health \n\t\t \n\t\t\t S Spacapan \n\t\t \n\t\t \n\t\t\t S Oskamp \n\t\t \n\t\t \n\t\t\t 1988 \n\t\t\t \n\t\t \n\t \n\t Cohen, S., & Williamson, G. (1988). Perceived stress in a prob- ability sample of the United States. In S. Spacapan & S. Oskamp (Eds.), The social psychology of health (pp. 31-67)."
+    },
+    {
+      "title": "A procedure for evaluating sensitivity to within-person change: Can mood measures in diary studies detect change reliably?",
+      "authors": [
+        "J Cranford",
+        "P Shrout",
+        "M Iida",
+        "E Rafaeli",
+        "T Yip",
+        "N Bolger"
+      ],
+      "year": 2006,
+      "doi": "10.1177/0146167206287721",
+      "journal": "Personality & Social Psychology Bulletin",
+      "volume": "32",
+      "issue": "7",
+      "raw": "A procedure for evaluating sensitivity to within-person change: Can mood measures in diary studies detect change reliably? \n\t\t \n\t\t\t J A Cranford \n\t\t \n\t\t \n\t\t\t P E Shrout \n\t\t \n\t\t \n\t\t\t M Iida \n\t\t \n\t\t \n\t\t\t E Rafaeli \n\t\t \n\t\t \n\t\t\t T Yip \n\t\t \n\t\t \n\t\t\t N Bolger \n\t\t \n\t\t 10.1177/0146167206287721 \n\t\t \n\t \n\t \n\t\t Personality & Social Psychology Bulletin \n\t\t \n\t\t\t 32 \n\t\t\t 7 \n\t\t\t \n\t\t\t 2006 \n\t\t \n\t \n\t Cranford, J. A., Shrout, P. E., Iida, M., Rafaeli, E., Yip, T., & Bolger, N. (2006). A procedure for evaluating sensi- tivity to within-person change: Can mood measures in diary studies detect change reliably? Personality & Social Psychology Bulletin, 32(7), 917-929. https://doi .org/10.1177/0146167206287721"
+    },
+    {
+      "title": "Unlocking nonlinear dynamics and multistability from intensive longitudinal data: A novel method",
+      "authors": [
+        "J Cui",
+        "F Hasselman",
+        "A Lichtwarck-Aschoff"
+      ],
+      "year": 2023,
+      "doi": "10.1037/met0000623",
+      "journal": "Psychological Methods. Advance online",
+      "raw": "Unlocking nonlinear dynamics and multistability from intensive longitudinal data: A novel method \n\t\t \n\t\t\t J Cui \n\t\t \n\t\t \n\t\t\t F Hasselman \n\t\t \n\t\t \n\t\t\t A Lichtwarck-Aschoff \n\t\t \n\t\t 10.1037/met0000623 \n\t\t \n\t \n\t \n\t\t Psychological Methods. Advance online \n\t\t \n\t\t\t 2023 \n\t\t \n\t \n\t Cui, J., Hasselman, F., & Lichtwarck-Aschoff, A. (2023). Unlocking nonlinear dynamics and multistability from intensive longitudinal data: A novel method. Psychological Methods. Advance online publication. https://doi.org/10 .1037/met0000623"
+    },
+    {
+      "title": "In which natural environments are people happiest? Large-scale experience sampling in the Netherlands",
+      "authors": [
+        "S De Vries",
+        "W Nieuwenhuizen",
+        "H Farjon",
+        "A Van Hinsberg",
+        "J Dirkx"
+      ],
+      "year": 2021,
+      "doi": "10.1016/j.landurbplan.2020.103972",
+      "journal": "Landscape and Urban Planning",
+      "volume": "205",
+      "pages": "103972",
+      "raw": "In which natural environments are people happiest? Large-scale experience sampling in the Netherlands \n\t\t \n\t\t\t S De Vries \n\t\t \n\t\t \n\t\t\t W Nieuwenhuizen \n\t\t \n\t\t \n\t\t\t H Farjon \n\t\t \n\t\t \n\t\t\t A Van Hinsberg \n\t\t \n\t\t \n\t\t\t J Dirkx \n\t\t \n\t\t 10.1016/j.landurbplan.2020.103972 \n\t\t \n\t \n\t \n\t\t Landscape and Urban Planning \n\t\t \n\t\t\t 205 \n\t\t\t 103972 \n\t\t\t 2021 \n\t\t \n\t \n\t de Vries, S., Nieuwenhuizen, W., Farjon, H., van Hinsberg, A., & Dirkx, J. (2021). In which natural environments are people happiest? Large-scale experience sampling in the Netherlands. Landscape and Urban Planning, 205, Article 103972. https://doi.org/10.1016/j.landurbplan.2020.103972"
+    },
+    {
+      "title": "Assessing the reliability of single-item momentary affective measurements in experience sampling",
+      "authors": [
+        "E Dejonckheere",
+        "F Demeyer",
+        "B Geusens",
+        "M Piot",
+        "F Tuerlinckx",
+        "S Verdonck",
+        "M Mestdagh"
+      ],
+      "year": 2022,
+      "doi": "10.1037/pas0001178",
+      "journal": "Psychological Assessment",
+      "volume": "34",
+      "issue": "12",
+      "raw": "Assessing the reliability of single-item momentary affective measurements in experience sampling \n\t\t \n\t\t\t E Dejonckheere \n\t\t \n\t\t \n\t\t\t F Demeyer \n\t\t \n\t\t \n\t\t\t B Geusens \n\t\t \n\t\t \n\t\t\t M Piot \n\t\t \n\t\t \n\t\t\t F Tuerlinckx \n\t\t \n\t\t \n\t\t\t S Verdonck \n\t\t \n\t\t \n\t\t\t M Mestdagh \n\t\t \n\t\t 10.1037/pas0001178 \n\t\t \n\t \n\t \n\t\t Psychological Assessment \n\t\t \n\t\t\t 34 \n\t\t\t 12 \n\t\t\t \n\t\t\t 2022 \n\t\t \n\t \n\t Dejonckheere, E., Demeyer, F., Geusens, B., Piot, M., Tuerlinckx, F., Verdonck, S., & Mestdagh, M. (2022). Assessing the reliability of single-item momentary affec- tive measurements in experience sampling. Psychological Assessment, 34(12), 1138-1154. https://doi.org/10.1037/ pas0001178"
+    },
+    {
+      "title": "Relationships between time of day, day of the week, and positive mood: Exploring the role of the mood measure",
+      "authors": [
+        "B Egloff",
+        "A Tausch",
+        "C.-W Kohlmann",
+        "H Krohne"
+      ],
+      "year": 1995,
+      "doi": "10.1007/bf02250565",
+      "journal": "Motivation and Emotion",
+      "volume": "19",
+      "issue": "2",
+      "raw": "Relationships between time of day, day of the week, and positive mood: Exploring the role of the mood measure \n\t\t \n\t\t\t B Egloff \n\t\t \n\t\t \n\t\t\t A Tausch \n\t\t \n\t\t \n\t\t\t C.-W Kohlmann \n\t\t \n\t\t \n\t\t\t H W Krohne \n\t\t \n\t\t 10.1007/bf02250565 \n\t\t \n\t \n\t \n\t\t Motivation and Emotion \n\t\t \n\t\t\t 19 \n\t\t\t 2 \n\t\t\t \n\t\t\t 1995 \n\t\t \n\t \n\t Egloff, B., Tausch, A., Kohlmann, C.-W., & Krohne, H. W. (1995). Relationships between time of day, day of the week, and positive mood: Exploring the role of the mood measure. Motivation and Emotion, 19(2), 99-110. https:// doi.org/10.1007/BF02250565"
+    },
+    {
+      "title": "Suicidality and mood: The impact of trends, seasons, day of the week, and time of day on explicit and implicit cognitions among an online community sample",
+      "authors": [
+        "R Freichel",
+        "B Shea"
+      ],
+      "year": 2023,
+      "doi": "10.1038/s41398-023-02434-1",
+      "journal": "Translational Psychiatry",
+      "volume": "13",
+      "pages": "157",
+      "raw": "Suicidality and mood: The impact of trends, seasons, day of the week, and time of day on explicit and implicit cognitions among an online community sample \n\t\t \n\t\t\t R Freichel \n\t\t \n\t\t \n\t\t\t B A Shea \n\t\t \n\t\t 10.1038/s41398-023-02434-1 \n\t\t \n\t \n\t \n\t\t Translational Psychiatry \n\t\t \n\t\t\t 13 \n\t\t\t 157 \n\t\t\t 2023 \n\t\t \n\t \n\t Freichel, R., & O'Shea, B. A. (2023). Suicidality and mood: The impact of trends, seasons, day of the week, and time of day on explicit and implicit cognitions among an online community sample. Translational Psychiatry, 13, Article 157. https://doi.org/10.1038/s41398-023-02434-1"
+    },
+    {
+      "title": "Revisiting the theoretical and methodological foundations of depression measurement",
+      "authors": [
+        "E Fried",
+        "J Flake",
+        "D Robinaugh"
+      ],
+      "year": 2022,
+      "doi": "10.1038/s44159-022-00050-2",
+      "journal": "Nature Reviews Psychology",
+      "volume": "1",
+      "issue": "6",
+      "raw": "Revisiting the theoretical and methodological foundations of depression measurement \n\t\t \n\t\t\t E I Fried \n\t\t \n\t\t \n\t\t\t J K Flake \n\t\t \n\t\t \n\t\t\t D J Robinaugh \n\t\t \n\t\t 10.1038/s44159-022-00050-2 \n\t\t \n\t \n\t \n\t\t Nature Reviews Psychology \n\t\t \n\t\t\t 1 \n\t\t\t 6 \n\t\t\t \n\t\t\t 2022 \n\t\t \n\t \n\t Fried, E. I., Flake, J. K., & Robinaugh, D. J. (2022). Revisiting the theoretical and methodological foundations of depres- sion measurement. Nature Reviews Psychology, 1(6), 358- 368. https://doi.org/10.1038/s44159-022-00050-2"
+    },
+    {
+      "title": "Building an early warning system for depression: Rationale, objectives, and methods of the WARN-D study",
+      "authors": [
+        "E Fried",
+        "R Proppert",
+        "C Rieble"
+      ],
+      "year": 2023,
+      "doi": "10.32872/cpe.10075",
+      "journal": "Clinical Psychology in Europe",
+      "volume": "5",
+      "issue": "3",
+      "raw": "Building an early warning system for depression: Rationale, objectives, and methods of the WARN-D study \n\t\t \n\t\t\t E I Fried \n\t\t \n\t\t \n\t\t\t R K K Proppert \n\t\t \n\t\t \n\t\t\t C L Rieble \n\t\t \n\t\t 10.32872/cpe.10075 \n\t\t \n\t \n\t \n\t\t Clinical Psychology in Europe \n\t\t \n\t\t\t 5 \n\t\t\t 3 \n\t\t\t \n\t\t\t 2023 \n\t\t \n\t \n\t Fried, E. I., Proppert, R. K. K., & Rieble, C. L. (2023). Building an early warning system for depression: Rationale, objectives, and methods of the WARN-D study. Clinical Psychology in Europe, 5(3), 1-25. https://doi.org/10.32872/cpe.10075"
+    },
+    {
+      "title": "Using dynamic factor analysis to provide insights into data reliability in experience sampling studies",
+      "authors": [
+        "M Fuller-Tyszkiewicz",
+        "L Hartley-Clark",
+        "R Cummins",
+        "A Tomyn",
+        "M Weinberg",
+        "B Richardson"
+      ],
+      "year": 2017,
+      "doi": "10.1037/pas0000411",
+      "journal": "Psychological Assessment",
+      "volume": "29",
+      "issue": "9",
+      "raw": "Using dynamic factor analysis to provide insights into data reliability in experience sampling studies \n\t\t \n\t\t\t M Fuller-Tyszkiewicz \n\t\t \n\t\t \n\t\t\t L Hartley-Clark \n\t\t \n\t\t \n\t\t\t R A Cummins \n\t\t \n\t\t \n\t\t\t A J Tomyn \n\t\t \n\t\t \n\t\t\t M K Weinberg \n\t\t \n\t\t \n\t\t\t B Richardson \n\t\t \n\t\t 10.1037/pas0000411 \n\t\t \n\t \n\t \n\t\t Psychological Assessment \n\t\t \n\t\t\t 29 \n\t\t\t 9 \n\t\t\t \n\t\t\t 2017 \n\t\t \n\t \n\t Fuller-Tyszkiewicz, M., Hartley-Clark, L., Cummins, R. A., Tomyn, A. J., Weinberg, M. K., & Richardson, B. (2017). Using dynamic factor analysis to provide insights into data reliabil- ity in experience sampling studies. Psychological Assessment, 29(9), 1120-1128. https://doi.org/10.1037/pas0000411"
+    },
+    {
+      "title": "Experience sampling methods: A discussion of critical trends and considerations for scholarly advancement",
+      "authors": [
+        "A Gabriel",
+        "N Podsakoff",
+        "D Beal",
+        "B Scott",
+        "S Sonnentag",
+        "J Trougakos",
+        "M Butts"
+      ],
+      "year": 2019,
+      "doi": "10.1177/1094428118802626",
+      "journal": "Organizational Research Methods",
+      "volume": "22",
+      "issue": "4",
+      "raw": "Experience sampling methods: A discussion of critical trends and considerations for scholarly advancement \n\t\t \n\t\t\t A S Gabriel \n\t\t \n\t\t \n\t\t\t N P Podsakoff \n\t\t \n\t\t \n\t\t\t D J Beal \n\t\t \n\t\t \n\t\t\t B A Scott \n\t\t \n\t\t \n\t\t\t S Sonnentag \n\t\t \n\t\t \n\t\t\t J P Trougakos \n\t\t \n\t\t \n\t\t\t M M Butts \n\t\t \n\t\t 10.1177/1094428118802626 \n\t\t \n\t \n\t \n\t\t Organizational Research Methods \n\t\t \n\t\t\t 22 \n\t\t\t 4 \n\t\t\t \n\t\t\t 2019 \n\t\t \n\t \n\t Gabriel, A. S., Podsakoff, N. P., Beal, D. J., Scott, B. A., Sonnentag, S., Trougakos, J. P., & Butts, M. M. (2019). Experience sampling methods: A discussion of critical trends and considerations for scholarly advancement. Organizational Research Methods, 22(4), 969-1006. https://doi.org/10.1177/1094428118802626"
+    },
+    {
+      "title": "The memory-experience gap for PTSD symptoms: The correspondence between experience sampling and past month retrospective reports of traumatic stress symptoms",
+      "authors": [
+        "T Greene",
+        "S Sznitman",
+        "A Contractor",
+        "K Prakash",
+        "E Fried",
+        "M Gelkopf"
+      ],
+      "year": 2022,
+      "doi": "10.1016/j.psychres.2021.114315",
+      "journal": "Psychiatry Research",
+      "volume": "307",
+      "pages": "114315",
+      "raw": "The memory-experience gap for PTSD symptoms: The correspondence between experience sampling and past month retrospective reports of traumatic stress symptoms \n\t\t \n\t\t\t T Greene \n\t\t \n\t\t \n\t\t\t S Sznitman \n\t\t \n\t\t \n\t\t\t A A Contractor \n\t\t \n\t\t \n\t\t\t K Prakash \n\t\t \n\t\t \n\t\t\t E I Fried \n\t\t \n\t\t \n\t\t\t M Gelkopf \n\t\t \n\t\t 10.1016/j.psychres.2021.114315 \n\t\t \n\t \n\t \n\t\t Psychiatry Research \n\t\t \n\t\t\t 307 \n\t\t\t 114315 \n\t\t\t 2022 \n\t\t \n\t \n\t Greene, T., Sznitman, S., Contractor, A. A., Prakash, K., Fried, E. I., & Gelkopf, M. (2022). The memory-experience gap for PTSD symptoms: The correspondence between experience sampling and past month retrospective reports of traumatic stress symptoms. Psychiatry Research, 307, Article 114315. https://doi.org/10.1016/j.psychres.2021.114315"
+    },
+    {
+      "title": "Detecting psychological phenomena: Taking bottom-up research seriously",
+      "authors": [
+        "B Haig"
+      ],
+      "year": 2013,
+      "doi": "10.5406/amerjpsyc.126.2.0135",
+      "journal": "The American Journal of Psychology",
+      "volume": "126",
+      "issue": "2",
+      "raw": "Detecting psychological phenomena: Taking bottom-up research seriously \n\t\t \n\t\t\t B D Haig \n\t\t \n\t\t 10.5406/amerjpsyc.126.2.0135 \n\t\t \n\t \n\t \n\t\t The American Journal of Psychology \n\t\t \n\t\t\t 126 \n\t\t\t 2 \n\t\t\t \n\t\t\t 2013 \n\t\t \n\t \n\t Haig, B. D. (2013). Detecting psychological phenomena: Taking bottom-up research seriously. The American Journal of Psychology, 126(2), 135-153. https://doi.org/10.5406/ amerjpsyc.126.2.0135"
+    },
+    {
+      "title": "A systematic review of momentary assessment designs for mood and anxiety symptoms",
+      "authors": [
+        "M Hall",
+        "P Scherner",
+        "Y Kreidel",
+        "J Rubel"
+      ],
+      "year": 2021,
+      "doi": "10.3389/fpsyg.2021.642044",
+      "journal": "Frontiers in Psychology",
+      "volume": "12",
+      "pages": "1716",
+      "raw": "A systematic review of momentary assessment designs for mood and anxiety symptoms \n\t\t \n\t\t\t M Hall \n\t\t \n\t\t \n\t\t\t P V Scherner \n\t\t \n\t\t \n\t\t\t Y Kreidel \n\t\t \n\t\t \n\t\t\t J A Rubel \n\t\t \n\t\t 10.3389/fpsyg.2021.642044 \n\t\t \n\t \n\t \n\t\t Frontiers in Psychology \n\t\t \n\t\t\t 12 \n\t\t\t 1716 \n\t\t\t 2021 \n\t\t \n\t \n\t Hall, M., Scherner, P. V., Kreidel, Y., & Rubel, J. A. (2021). A systematic review of momentary assessment designs for mood and anxiety symptoms. Frontiers in Psychology, 12, Article 1716. https://doi.org/10.3389/fpsyg.2021.642044"
+    },
+    {
+      "title": "The curious case of the cross-sectional correlation",
+      "authors": [
+        "E Hamaker"
+      ],
+      "year": 2024,
+      "doi": "10.1080/00273171.2022.2155930",
+      "journal": "Multivariate Behavioral Research",
+      "volume": "59",
+      "raw": "The curious case of the cross-sectional correlation \n\t\t \n\t\t\t E L Hamaker \n\t\t \n\t\t 10.1080/00273171.2022.2155930 \n\t\t \n\t \n\t \n\t\t Multivariate Behavioral Research \n\t\t \n\t\t\t 59 \n\t\t\t \n\t\t\t 2024 \n\t\t \n\t \n\t Hamaker, E. L. (2024). The curious case of the cross-sectional correlation. Multivariate Behavioral Research, 59, 1111- 1122. https://doi.org/10.1080/00273171.2022.2155930"
+    },
+    {
+      "title": "Regime-switching models to study psychological processes",
+      "authors": [
+        "E Hamaker",
+        "R Grasman",
+        "J Kamphuis"
+      ],
+      "year": 2010,
+      "doi": "10.1037/12140-009",
+      "raw": "Regime-switching models to study psychological processes \n\t\t \n\t\t\t E L Hamaker \n\t\t \n\t\t \n\t\t\t R P P P Grasman \n\t\t \n\t\t \n\t\t\t J H Kamphuis \n\t\t \n\t\t 10.1037/12140-009 \n\t\t \n\t \n\t \n\t\t Individual pathways of change: Statistical models for analyzing learning and development \n\t\t \n\t\t\t P C M Molenaar \n\t\t \n\t\t \n\t\t\t K M Newell \n\t\t \n\t\t \n\t\t\t American Psychological Association \n\t\t\t 2010 \n\t\t\t \n\t\t \n\t \n\t Hamaker, E. L., Grasman, R. P. P. P., & Kamphuis, J. H. (2010). Regime-switching models to study psychological processes. In P. C. M. Molenaar & K. M. Newell (Eds.), Individual pathways of change: Statistical models for ana- lyzing learning and development (pp. 155-168). American Psychological Association. https://doi.org/10.1037/12140- 009"
+    },
+    {
+      "title": "No time like the present: Discovering the hidden dynamics in intensive longitudinal data",
+      "authors": [
+        "E Hamaker",
+        "M Wichers"
+      ],
+      "year": 2017,
+      "doi": "10.1177/0963721416666518",
+      "journal": "Current Directions in Psychological Science",
+      "volume": "26",
+      "issue": "1",
+      "raw": "No time like the present: Discovering the hidden dynamics in intensive longitudinal data \n\t\t \n\t\t\t E L Hamaker \n\t\t \n\t\t \n\t\t\t M Wichers \n\t\t \n\t\t 10.1177/0963721416666518 \n\t\t \n\t \n\t \n\t\t Current Directions in Psychological Science \n\t\t \n\t\t\t 26 \n\t\t\t 1 \n\t\t\t \n\t\t\t 2017 \n\t\t \n\t \n\t Hamaker, E. L., & Wichers, M. (2017). No time like the present: Discovering the hidden dynamics in intensive longitudinal data. Current Directions in Psychological Science, 26(1), 10-15. https://doi.org/10.1177/0963721416666518"
+    },
+    {
+      "title": "Skewness and staging: Does the floor effect induce bias in multilevel AR(1) models?",
+      "authors": [
+        "M Haqiqatkhah",
+        "O Ryan",
+        "E Hamaker"
+      ],
+      "year": 2024,
+      "doi": "10.1080/00273171.2023.2254769",
+      "journal": "Multivariate Behavioral Research",
+      "volume": "59",
+      "issue": "2",
+      "raw": "Skewness and staging: Does the floor effect induce bias in multilevel AR(1) models? \n\t\t \n\t\t\t M M Haqiqatkhah \n\t\t \n\t\t \n\t\t\t O Ryan \n\t\t \n\t\t \n\t\t\t E L Hamaker \n\t\t \n\t\t 10.1080/00273171.2023.2254769 \n\t\t \n\t \n\t \n\t\t Multivariate Behavioral Research \n\t\t \n\t\t\t 59 \n\t\t\t 2 \n\t\t\t \n\t\t\t 2024 \n\t\t \n\t \n\t Haqiqatkhah, M. M., Ryan, O., & Hamaker, E. L. (2024). Skewness and staging: Does the floor effect induce bias in multilevel AR(1) models? Multivariate Behavioral Research, 59(2), 289-319. https://doi.org/10.1080/00273171.2023.2 254769"
+    },
+    {
+      "title": "A tutorial on estimating time-varying vector autoregressive models",
+      "authors": [
+        "J Haslbeck",
+        "L Bringmann",
+        "L Waldorp"
+      ],
+      "year": 2021,
+      "doi": "10.1080/00273171.2020.1743630",
+      "journal": "Multivariate Behavioral Research",
+      "volume": "56",
+      "issue": "1",
+      "raw": "A tutorial on estimating time-varying vector autoregressive models \n\t\t \n\t\t\t J M B Haslbeck \n\t\t \n\t\t \n\t\t\t L F Bringmann \n\t\t \n\t\t \n\t\t\t L J Waldorp \n\t\t \n\t\t 10.1080/00273171.2020.1743630 \n\t\t \n\t \n\t \n\t\t Multivariate Behavioral Research \n\t\t \n\t\t\t 56 \n\t\t\t 1 \n\t\t\t \n\t\t\t 2021 \n\t\t \n\t \n\t Haslbeck, J. M. B., Bringmann, L. F., & Waldorp, L. J. (2021). A tutorial on estimating time-varying vector autoregressive models. Multivariate Behavioral Research, 56(1), 120-149. https://doi.org/10.1080/00273171.2020.1743630"
+    },
+    {
+      "title": "Recovering withinperson dynamics from psychological time series",
+      "authors": [
+        "J Haslbeck",
+        "O Ryan"
+      ],
+      "year": 2022,
+      "doi": "10.1080/00273171.2021.1896353",
+      "journal": "Multivariate Behavioral Research",
+      "volume": "57",
+      "issue": "5",
+      "raw": "Recovering withinperson dynamics from psychological time series \n\t\t \n\t\t\t J M B Haslbeck \n\t\t \n\t\t \n\t\t\t O Ryan \n\t\t \n\t\t 10.1080/00273171.2021.1896353 \n\t\t \n\t \n\t \n\t\t Multivariate Behavioral Research \n\t\t \n\t\t\t 57 \n\t\t\t 5 \n\t\t\t \n\t\t\t 2022 \n\t\t \n\t \n\t Haslbeck, J. M. B., & Ryan, O. (2022). Recovering within- person dynamics from psychological time series. Multivariate Behavioral Research, 57(5), 735-766. https:// doi.org/10.1080/00273171.2021.1896353"
+    },
+    {
+      "title": "Multimodality and skewness in emotion time series",
+      "authors": [
+        "J Haslbeck",
+        "O Ryan",
+        "F Dablander"
+      ],
+      "year": 2023,
+      "doi": "10.1037/emo0001218",
+      "journal": "Emotion",
+      "volume": "23",
+      "issue": "8",
+      "raw": "Multimodality and skewness in emotion time series \n\t\t \n\t\t\t J M B Haslbeck \n\t\t \n\t\t \n\t\t\t O Ryan \n\t\t \n\t\t \n\t\t\t F Dablander \n\t\t \n\t\t 10.1037/emo0001218 \n\t\t \n\t \n\t \n\t\t Emotion \n\t\t \n\t\t\t 23 \n\t\t\t 8 \n\t\t\t \n\t\t\t 2023 \n\t\t \n\t \n\t Haslbeck, J. M. B., Ryan, O., & Dablander, F. (2023). Multimodality and skewness in emotion time series. Emotion, 23(8), 2117- 2141. https://doi.org/10.1037/emo0001218"
+    },
+    {
+      "title": "Doing better data visualization",
+      "authors": [
+        "E Hehman",
+        "S Xie"
+      ],
+      "year": 2021,
+      "doi": "10.1177/25152459211045334",
+      "journal": "Advances in Methods and Practices in Psychological Science",
+      "volume": "4",
+      "issue": "4",
+      "raw": "Doing better data visualization \n\t\t \n\t\t\t E Hehman \n\t\t \n\t\t \n\t\t\t S Y Xie \n\t\t \n\t\t 10.1177/25152459211045334 \n\t\t \n\t \n\t \n\t\t Advances in Methods and Practices in Psychological Science \n\t\t \n\t\t\t 4 \n\t\t\t 4 \n\t\t\t 2021 \n\t\t \n\t \n\t Hehman, E., & Xie, S. Y. (2021). Doing better data visualiza- tion. Advances in Methods and Practices in Psychological Science, 4(4). https://doi.org/10.1177/25152459211045334"
+    },
+    {
+      "title": "Weekends and subjective well-being",
+      "authors": [
+        "J Helliwell",
+        "S Wang"
+      ],
+      "year": 2014,
+      "doi": "10.1007/s11205-013-0306-y",
+      "journal": "Social Indicators Research",
+      "volume": "116",
+      "issue": "2",
+      "raw": "Weekends and subjective well-being \n\t\t \n\t\t\t J F Helliwell \n\t\t \n\t\t \n\t\t\t S Wang \n\t\t \n\t\t 10.1007/s11205-013-0306-y \n\t\t \n\t \n\t \n\t\t Social Indicators Research \n\t\t \n\t\t\t 116 \n\t\t\t 2 \n\t\t\t \n\t\t\t 2014 \n\t\t \n\t \n\t Helliwell, J. F., & Wang, S. (2014). Weekends and subjective well-being. Social Indicators Research, 116(2), 389-407. https://doi.org/10.1007/s11205-013-0306-y"
+    },
+    {
+      "title": "Early warning signals and critical transitions in psychopathology: Challenges and recommendations",
+      "authors": [
+        "M Helmich",
+        "M Olthof",
+        "A Oldehinkel",
+        "M Wichers",
+        "L Bringmann",
+        "A Smit"
+      ],
+      "year": 2021,
+      "doi": "10.1016/j.copsyc.2021.02.008",
+      "journal": "Current Opinion in Psychology",
+      "volume": "41",
+      "raw": "Early warning signals and critical transitions in psychopathology: Challenges and recommendations \n\t\t \n\t\t\t M A Helmich \n\t\t \n\t\t \n\t\t\t M Olthof \n\t\t \n\t\t \n\t\t\t A J Oldehinkel \n\t\t \n\t\t \n\t\t\t M Wichers \n\t\t \n\t\t \n\t\t\t L F Bringmann \n\t\t \n\t\t \n\t\t\t A C Smit \n\t\t \n\t\t 10.1016/j.copsyc.2021.02.008 \n\t\t \n\t \n\t \n\t\t Current Opinion in Psychology \n\t\t \n\t\t\t 41 \n\t\t\t \n\t\t\t 2021 \n\t\t \n\t \n\t Helmich, M. A., Olthof, M., Oldehinkel, A. J., Wichers, M., Bringmann, L. F., & Smit, A. C. (2021). Early warning sig- nals and critical transitions in psychopathology: Challenges and recommendations. Current Opinion in Psychology, 41, 51-58. https://doi.org/10.1016/j.copsyc.2021.02.008"
+    },
+    {
+      "title": "Peak-end bias in retrospective recall of depressive symptoms on the PHQ-9",
+      "authors": [
+        "A Horwitz",
+        "Z Zhao",
+        "S Sen"
+      ],
+      "year": 2023,
+      "doi": "10.1037/pas0001219",
+      "journal": "Psychological Assessment",
+      "volume": "35",
+      "issue": "4",
+      "raw": "Peak-end bias in retrospective recall of depressive symptoms on the PHQ-9 \n\t\t \n\t\t\t A G Horwitz \n\t\t \n\t\t \n\t\t\t Z Zhao \n\t\t \n\t\t \n\t\t\t S Sen \n\t\t \n\t\t 10.1037/pas0001219 \n\t\t \n\t \n\t \n\t\t Psychological Assessment \n\t\t \n\t\t\t 35 \n\t\t\t 4 \n\t\t\t \n\t\t\t 2023 \n\t\t \n\t \n\t Horwitz, A. G., Zhao, Z., & Sen, S. (2023). Peak-end bias in retrospective recall of depressive symptoms on the PHQ- 9. Psychological Assessment, 35(4), 378-381. https://doi .org/10.1037/pas0001219"
+    },
+    {
+      "title": "The differential time-varying effect model (dtvem): A tool for diagnosing and modeling time lags in intensive longitudinal data",
+      "authors": [
+        "N Jacobson",
+        "S.-M Chow",
+        "M Newman"
+      ],
+      "year": 2019,
+      "doi": "10.3758/s13428-018-1101-0",
+      "journal": "Behavior Research Methods",
+      "volume": "51",
+      "issue": "1",
+      "raw": "The differential time-varying effect model (dtvem): A tool for diagnosing and modeling time lags in intensive longitudinal data \n\t\t \n\t\t\t N C Jacobson \n\t\t \n\t\t \n\t\t\t S.-M Chow \n\t\t \n\t\t \n\t\t\t M G Newman \n\t\t \n\t\t 10.3758/s13428-018-1101-0 \n\t\t \n\t \n\t \n\t\t Behavior Research Methods \n\t\t \n\t\t\t 51 \n\t\t\t 1 \n\t\t\t \n\t\t\t 2019 \n\t\t \n\t \n\t Jacobson, N. C., Chow, S.-M., & Newman, M. G. (2019). The differential time-varying effect model (dtvem): A tool for diagnosing and modeling time lags in intensive longitu- dinal data. Behavior Research Methods, 51(1), 295-315. https://doi.org/10.3758/s13428-018-1101-0"
+    },
+    {
+      "title": "Analysis of affective instability in ecological momentary assessment: Indices using successive difference and group comparison via multilevel modeling",
+      "authors": [
+        "S Jahng",
+        "P Wood",
+        "T Trull"
+      ],
+      "year": 2008,
+      "doi": "10.1037/a0014173",
+      "journal": "Psychological Methods",
+      "volume": "13",
+      "issue": "4",
+      "raw": "Analysis of affective instability in ecological momentary assessment: Indices using successive difference and group comparison via multilevel modeling \n\t\t \n\t\t\t S Jahng \n\t\t \n\t\t \n\t\t\t P K Wood \n\t\t \n\t\t \n\t\t\t T J Trull \n\t\t \n\t\t 10.1037/a0014173 \n\t\t \n\t \n\t \n\t\t Psychological Methods \n\t\t \n\t\t\t 13 \n\t\t\t 4 \n\t\t\t \n\t\t\t 2008 \n\t\t \n\t \n\t Jahng, S., Wood, P. K., & Trull, T. J. (2008). Analysis of affec- tive instability in ecological momentary assessment: Indices using successive difference and group comparison via mul- tilevel modeling. Psychological Methods, 13(4), 354-375. https://doi.org/10.1037/a0014173"
+    },
+    {
+      "title": "A multilevel AR(1) model: Allowing for inter-individual differences in trait-scores, inertia, and innovation variance",
+      "authors": [
+        "J Jongerling",
+        "J.-P Laurenceau",
+        "E Hamaker"
+      ],
+      "year": 2015,
+      "doi": "10.1080/00273171.2014.1003772",
+      "journal": "Multivariate Behavioral Research",
+      "volume": "50",
+      "issue": "3",
+      "raw": "A multilevel AR(1) model: Allowing for inter-individual differences in trait-scores, inertia, and innovation variance \n\t\t \n\t\t\t J Jongerling \n\t\t \n\t\t \n\t\t\t J.-P Laurenceau \n\t\t \n\t\t \n\t\t\t E L Hamaker \n\t\t \n\t\t 10.1080/00273171.2014.1003772 \n\t\t \n\t \n\t \n\t\t Multivariate Behavioral Research \n\t\t \n\t\t\t 50 \n\t\t\t 3 \n\t\t\t \n\t\t\t 2015 \n\t\t \n\t \n\t Jongerling, J., Laurenceau, J.-P., & Hamaker, E. L. (2015). A multilevel AR(1) model: Allowing for inter-individual dif- ferences in trait-scores, inertia, and innovation variance. Multivariate Behavioral Research, 50(3), 334-349. https:// doi.org/10.1080/00273171.2014.1003772"
+    },
+    {
+      "title": "A nonlinear dynamic latent class structural equation model",
+      "authors": [
+        "A Kelava",
+        "H Brandt"
+      ],
+      "year": 2019,
+      "doi": "10.1080/10705511.2018.1555692",
+      "journal": "Structural Equation Modeling: A Multidisciplinary Journal",
+      "volume": "26",
+      "issue": "4",
+      "raw": "A nonlinear dynamic latent class structural equation model \n\t\t \n\t\t\t A Kelava \n\t\t \n\t\t \n\t\t\t H Brandt \n\t\t \n\t\t 10.1080/10705511.2018.1555692 \n\t\t \n\t \n\t \n\t\t Structural Equation Modeling: A Multidisciplinary Journal \n\t\t \n\t\t\t 26 \n\t\t\t 4 \n\t\t\t \n\t\t\t 2019 \n\t\t \n\t \n\t Kelava, A., & Brandt, H. (2019). A nonlinear dynamic latent class structural equation model. Structural Equation Modeling: A Multidisciplinary Journal, 26(4), 509-528. https://doi.org/10.1080/10705511.2018.1555692"
+    },
+    {
+      "title": "Valence and motivation as predictors of student time use in everyday life: An experience sampling study",
+      "authors": [
+        "S Koudela-Hamila",
+        "A Grund",
+        "P Santangelo",
+        "U Ebner-Priemer"
+      ],
+      "year": 2019,
+      "doi": "10.3389/fpsyg.2019.01430",
+      "journal": "Frontiers in Psychology",
+      "volume": "10",
+      "pages": "1430",
+      "raw": "Valence and motivation as predictors of student time use in everyday life: An experience sampling study \n\t\t \n\t\t\t S Koudela-Hamila \n\t\t \n\t\t \n\t\t\t A Grund \n\t\t \n\t\t \n\t\t\t P Santangelo \n\t\t \n\t\t \n\t\t\t U W Ebner-Priemer \n\t\t \n\t\t 10.3389/fpsyg.2019.01430 \n\t\t \n\t \n\t \n\t\t Frontiers in Psychology \n\t\t \n\t\t\t 10 \n\t\t\t 1430 \n\t\t\t 2019 \n\t\t \n\t \n\t Koudela-Hamila, S., Grund, A., Santangelo, P., & Ebner- Priemer, U. W. (2019). Valence and motivation as predic- tors of student time use in everyday life: An experience sampling study. Frontiers in Psychology, 10, Article 1430. https://doi.org/10.3389/fpsyg.2019.01430"
+    },
+    {
+      "title": "The PHQ-9: Validity of a brief depression severity measure",
+      "authors": [
+        "K Kroenke",
+        "R Spitzer",
+        "J Williams"
+      ],
+      "year": 2001,
+      "doi": "10.1046/j.1525-1497.2001.016009606.x",
+      "journal": "Journal of General Internal Medicine",
+      "volume": "16",
+      "issue": "9",
+      "raw": "The PHQ-9: Validity of a brief depression severity measure \n\t\t \n\t\t\t K Kroenke \n\t\t \n\t\t \n\t\t\t R L Spitzer \n\t\t \n\t\t \n\t\t\t J B W Williams \n\t\t \n\t\t 10.1046/j.1525-1497.2001.016009606.x \n\t\t \n\t \n\t \n\t\t Journal of General Internal Medicine \n\t\t \n\t\t\t 16 \n\t\t\t 9 \n\t\t\t \n\t\t\t 2001 \n\t\t \n\t \n\t Kroenke, K., Spitzer, R. L., & Williams, J. B. W. (2001). The PHQ-9: Validity of a brief depression severity measure. Journal of General Internal Medicine, 16(9), 606-613. https://doi.org/10.1046/j.1525-1497.2001.016009606.x"
+    },
+    {
+      "title": "Emotional inertia and psychological maladjustment",
+      "authors": [
+        "P Kuppens",
+        "N Allen",
+        "L Sheeber"
+      ],
+      "year": 2010,
+      "doi": "10.1177/0956797610372634",
+      "journal": "Psychological Science",
+      "volume": "21",
+      "issue": "7",
+      "raw": "Emotional inertia and psychological maladjustment \n\t\t \n\t\t\t P Kuppens \n\t\t \n\t\t \n\t\t\t N B Allen \n\t\t \n\t\t \n\t\t\t L B Sheeber \n\t\t \n\t\t 10.1177/0956797610372634 \n\t\t \n\t \n\t \n\t\t Psychological Science \n\t\t \n\t\t\t 21 \n\t\t\t 7 \n\t\t\t \n\t\t\t 2010 \n\t\t \n\t \n\t Kuppens, P., Allen, N. B., & Sheeber, L. B. (2010). Emotional inertia and psychological maladjustment. Psychological Science, 21(7), 984-991. https://doi.org/10.1177/09567976 10372634"
+    },
+    {
+      "title": "Capturing the dynamics of the social environment through experience sampling methods, passive sensing, and egocentric networks: Scoping review",
+      "authors": [
+        "A Langener",
+        "G Stulp",
+        "M Kas",
+        "L Bringmann"
+      ],
+      "year": 2023,
+      "doi": "10.2196/42646",
+      "journal": "JMIR Mental Health",
+      "volume": "10",
+      "issue": "1",
+      "pages": "42646",
+      "raw": "Capturing the dynamics of the social environment through experience sampling methods, passive sensing, and egocentric networks: Scoping review \n\t\t \n\t\t\t A M Langener \n\t\t \n\t\t \n\t\t\t G Stulp \n\t\t \n\t\t \n\t\t\t M J Kas \n\t\t \n\t\t \n\t\t\t L F Bringmann \n\t\t \n\t\t 10.2196/42646 \n\t\t \n\t \n\t \n\t\t JMIR Mental Health \n\t\t \n\t\t\t 10 \n\t\t\t 1 \n\t\t\t 42646 \n\t\t\t 2023 \n\t\t \n\t \n\t Langener, A. M., Stulp, G., Kas, M. J., & Bringmann, L. F. (2023). Capturing the dynamics of the social environment through experience sampling methods, passive sensing, and ego- centric networks: Scoping review. JMIR Mental Health, 10(1), Article e42646. https://doi.org/10.2196/42646"
+    },
+    {
+      "title": "Are retrospective assessments means of people's experiences?",
+      "authors": [
+        "I Leertouwer",
+        "N Schuurman",
+        "J Vermunt"
+      ],
+      "year": 2022,
+      "doi": "10.17505/jpor.2022.24855",
+      "journal": "Journal for Person-Oriented Research",
+      "volume": "8",
+      "issue": "2",
+      "raw": "Are retrospective assessments means of people's experiences? \n\t\t \n\t\t\t I J Leertouwer \n\t\t \n\t\t \n\t\t\t N K Schuurman \n\t\t \n\t\t \n\t\t\t J K Vermunt \n\t\t \n\t\t 10.17505/jpor.2022.24855 \n\t\t \n\t \n\t \n\t\t Journal for Person-Oriented Research \n\t\t \n\t\t\t 8 \n\t\t\t 2 \n\t\t\t \n\t\t\t 2022 \n\t\t \n\t \n\t Leertouwer, I. J., Schuurman, N. K., & Vermunt, J. K. (2022). Are retrospective assessments means of people's experi- ences? Journal for Person-Oriented Research, 8(2), 52-70. https://doi.org/10.17505/jpor.2022.24855"
+    },
+    {
+      "title": "Measurement in intensive longitudinal data",
+      "authors": [
+        "D Mcneish",
+        "D Mackinnon",
+        "L Marsch",
+        "R Poldrack"
+      ],
+      "year": 2021,
+      "doi": "10.1080/10705511.2021.1915788",
+      "journal": "Structural Equation Modeling: A Multidisciplinary Journal",
+      "volume": "28",
+      "issue": "5",
+      "raw": "Measurement in intensive longitudinal data \n\t\t \n\t\t\t D Mcneish \n\t\t \n\t\t \n\t\t\t D P Mackinnon \n\t\t \n\t\t \n\t\t\t L A Marsch \n\t\t \n\t\t \n\t\t\t R A Poldrack \n\t\t \n\t\t 10.1080/10705511.2021.1915788 \n\t\t \n\t \n\t \n\t\t Structural Equation Modeling: A Multidisciplinary Journal \n\t\t \n\t\t\t 28 \n\t\t\t 5 \n\t\t\t \n\t\t\t 2021 \n\t\t \n\t \n\t McNeish, D., Mackinnon, D. P., Marsch, L. A., & Poldrack, R. A. (2021). Measurement in intensive longitudinal data. Structural Equation Modeling: A Multidisciplinary Journal, 28(5), 807-822. https://doi.org/10.1080/10705511.2021.1 915788"
+    },
+    {
+      "title": "Ambulatory assessment in psychopathology research: Current achievements and future ambitions",
+      "authors": [
+        "M Mestdagh",
+        "E Dejonckheere"
+      ],
+      "year": 2021,
+      "doi": "10.1016/j.copsyc.2021.01.004",
+      "journal": "Current Opinion in Psychology",
+      "volume": "41",
+      "raw": "Ambulatory assessment in psychopathology research: Current achievements and future ambitions \n\t\t \n\t\t\t M Mestdagh \n\t\t \n\t\t \n\t\t\t E Dejonckheere \n\t\t \n\t\t 10.1016/j.copsyc.2021.01.004 \n\t\t \n\t \n\t \n\t\t Current Opinion in Psychology \n\t\t \n\t\t\t 41 \n\t\t\t \n\t\t\t 2021 \n\t\t \n\t \n\t Mestdagh, M., & Dejonckheere, E. (2021). Ambulatory assess- ment in psychopathology research: Current achievements and future ambitions. Current Opinion in Psychology, 41, 1-8. https://doi.org/10.1016/j.copsyc.2021.01.004"
+    },
+    {
+      "title": "E1071: Misc functions of the Department of Statistics, Probability Theory Group (formerly: E1071)",
+      "authors": [
+        "D Meyer",
+        "E Dimitriadou",
+        "K Hornik",
+        "A Weingessel",
+        "F Leisch"
+      ],
+      "year": 2023,
+      "doi": "10.32614/cran.package.e1071",
+      "volume": "1",
+      "raw": "E1071: Misc functions of the Department of Statistics, Probability Theory Group (formerly: E1071) \n\t\t \n\t\t\t D Meyer \n\t\t \n\t\t \n\t\t\t E Dimitriadou \n\t\t \n\t\t \n\t\t\t K Hornik \n\t\t \n\t\t \n\t\t\t A Weingessel \n\t\t \n\t\t \n\t\t\t F Leisch \n\t\t \n\t\t 10.32614/cran.package.e1071 \n\t\t \n\t\t \n\t\t\t 2023, February 1 \n\t\t\t 1 \n\t\t\t \n\t\t \n\t\t \n\t\t\t TU Wien \n\t\t \n\t \n\t Meyer, D., Dimitriadou, E., Hornik, K., Weingessel, A., & Leisch, F. (2023, February 1). E1071: Misc functions of the Department of Statistics, Probability Theory Group (for- merly: E1071), TU Wien (Version 1.7-13). https://cran.r- project.org/web/packages/e1071/index.html"
+    },
+    {
+      "title": "Principles of effective data visualization",
+      "authors": [
+        "S Midway"
+      ],
+      "year": 2020,
+      "doi": "10.1016/j.patter.2020.100141",
+      "journal": "Patterns",
+      "volume": "1",
+      "issue": "9",
+      "pages": "100141",
+      "raw": "Principles of effective data visualization \n\t\t \n\t\t\t S R Midway \n\t\t \n\t\t 10.1016/j.patter.2020.100141 \n\t\t \n\t \n\t \n\t\t Patterns \n\t\t \n\t\t\t 1 \n\t\t\t 9 \n\t\t\t 100141 \n\t\t\t 2020 \n\t\t \n\t \n\t Midway, S. R. (2020). Principles of effective data visualization. Patterns, 1(9), Article 100141. https://doi.org/10.1016/ j.patter.2020.100141"
+    },
+    {
+      "title": "The SCOFF questionnaire: Assessment of a new screening tool for eating disorders",
+      "authors": [
+        "J Morgan",
+        "F Reid",
+        "J Lacey"
+      ],
+      "year": 1999,
+      "doi": "10.1136/bmj.319.7223.1467",
+      "journal": "BMJ",
+      "volume": "319",
+      "issue": "7223",
+      "raw": "The SCOFF questionnaire: Assessment of a new screening tool for eating disorders \n\t\t \n\t\t\t J F Morgan \n\t\t \n\t\t \n\t\t\t F Reid \n\t\t \n\t\t \n\t\t\t J H Lacey \n\t\t \n\t\t 10.1136/bmj.319.7223.1467 \n\t\t \n\t \n\t \n\t\t BMJ \n\t\t \n\t\t\t 319 \n\t\t\t 7223 \n\t\t\t \n\t\t\t 1999 \n\t\t \n\t \n\t Morgan, J. F., Reid, F., & Lacey, J. H. (1999). The SCOFF questionnaire: Assessment of a new screening tool for eating disorders. BMJ, 319(7223), 1467-1468. https://doi .org/10.1136/bmj.319.7223.1467"
+    },
+    {
+      "title": "Data visualization using R for researchers who do not use R",
+      "authors": [
+        "E Nordmann",
+        "P Mcaleer",
+        "W Toivo",
+        "H Paterson",
+        "L Debruine"
+      ],
+      "year": 2022,
+      "doi": "10.1177/25152459221074654",
+      "journal": "Advances in Methods and Practices in Psychological Science",
+      "volume": "5",
+      "issue": "2",
+      "raw": "Data visualization using R for researchers who do not use R \n\t\t \n\t\t\t E Nordmann \n\t\t \n\t\t \n\t\t\t P Mcaleer \n\t\t \n\t\t \n\t\t\t W Toivo \n\t\t \n\t\t \n\t\t\t H Paterson \n\t\t \n\t\t \n\t\t\t L M Debruine \n\t\t \n\t\t 10.1177/25152459221074654 \n\t\t \n\t \n\t \n\t\t Advances in Methods and Practices in Psychological Science \n\t\t \n\t\t\t 5 \n\t\t\t 2 \n\t\t\t 2022 \n\t\t \n\t \n\t Nordmann, E., McAleer, P., Toivo, W., Paterson, H., & DeBruine, L. M. (2022). Data visualization using R for researchers who do not use R. Advances in Methods and Practices in Psychological Science, 5(2). https://doi .org/10.1177/25152459221074654"
+    },
+    {
+      "title": "Complexity in psychological self-ratings: Implications for research and practice",
+      "authors": [
+        "M Olthof",
+        "F Hasselman",
+        "A Lichtwarck-Aschoff"
+      ],
+      "year": 2020,
+      "doi": "10.1186/s12916-020-01727-2",
+      "journal": "BMC Medicine",
+      "volume": "18",
+      "issue": "1",
+      "pages": "317",
+      "raw": "Complexity in psychological self-ratings: Implications for research and practice \n\t\t \n\t\t\t M Olthof \n\t\t \n\t\t \n\t\t\t F Hasselman \n\t\t \n\t\t \n\t\t\t A Lichtwarck-Aschoff \n\t\t \n\t\t 10.1186/s12916-020-01727-2 \n\t\t \n\t \n\t \n\t\t BMC Medicine \n\t\t \n\t\t\t 18 \n\t\t\t 1 \n\t\t\t 317 \n\t\t\t 2020 \n\t\t \n\t \n\t Olthof, M., Hasselman, F., & Lichtwarck-Aschoff, A. (2020). Complexity in psychological self-ratings: Implications for research and practice. BMC Medicine, 18(1), Article 317. https://doi.org/10.1186/s12916-020-01727-2"
+    },
+    {
+      "title": "R: A language and environment for statistical computing",
+      "authors": [
+        "Team Core"
+      ],
+      "year": 2023,
+      "doi": "10.32614/r.manuals",
+      "raw": "R: A language and environment for statistical computing \n\t\t \n\t\t\t Team Core \n\t\t \n\t\t 10.32614/r.manuals \n\t\t \n\t\t \n\t\t\t 2023 \n\t\t \n\t \n\t Version 4.3.2 \n\t R Core Team. (2023). R: A language and environment for sta- tistical computing (Version 4.3.2). https://www.R-project .org/"
+    },
+    {
+      "title": "Preprocessing ESM data: A step-by-step framework, tutorial website, R package, and reporting templates",
+      "authors": [
+        "J Revol",
+        "C Carlier",
+        "G Lafit",
+        "M Verhees",
+        "L Sels",
+        "E Ceulemans"
+      ],
+      "year": 2023,
+      "doi": "10.31234/osf.io/hnu2t",
+      "raw": "Preprocessing ESM data: A step-by-step framework, tutorial website, R package, and reporting templates \n\t\t \n\t\t\t J Revol \n\t\t \n\t\t \n\t\t\t C Carlier \n\t\t \n\t\t \n\t\t\t G Lafit \n\t\t \n\t\t \n\t\t\t M Verhees \n\t\t \n\t\t \n\t\t\t L Sels \n\t\t \n\t\t \n\t\t\t E Ceulemans \n\t\t \n\t\t 10.31234/osf.io/hnu2t \n\t\t \n\t\t \n\t\t\t 2023 \n\t\t \n\t \n\t PsyArXiv \n\t Revol, J., Carlier, C., Lafit, G., Verhees, M., Sels, L., & Ceulemans, E. (2023). Preprocessing ESM data: A step-by- step framework, tutorial website, R package, and reporting templates. PsyArXiv. https://doi.org/10.31234/osf.io/hnu2t"
+    },
+    {
+      "title": "Introducing FRED: Software for generating feedback reports for ecological momentary assessment data",
+      "authors": [
+        "A Rimpler",
+        "B Siepe",
+        "C Rieble",
+        "R Proppert",
+        "E Fried"
+      ],
+      "year": 2024,
+      "doi": "10.1007/s10488-023-01324-4",
+      "journal": "Administration and Policy in Mental Health and Mental Health Services Research",
+      "volume": "51",
+      "raw": "Introducing FRED: Software for generating feedback reports for ecological momentary assessment data \n\t\t \n\t\t\t A Rimpler \n\t\t \n\t\t \n\t\t\t B S Siepe \n\t\t \n\t\t \n\t\t\t C L Rieble \n\t\t \n\t\t \n\t\t\t R K K Proppert \n\t\t \n\t\t \n\t\t\t E I Fried \n\t\t \n\t\t 10.1007/s10488-023-01324-4 \n\t\t \n\t \n\t \n\t\t Administration and Policy in Mental Health and Mental Health Services Research \n\t\t \n\t\t\t 51 \n\t\t\t \n\t\t\t 2024 \n\t\t \n\t \n\t Rimpler, A., Siepe, B. S., Rieble, C. L., Proppert, R. K. K., & Fried, E. I. (2024). Introducing FRED: Software for gener- ating feedback reports for ecological momentary assess- ment data. Administration and Policy in Mental Health and Mental Health Services Research, 51, 490-500. https://doi .org/10.1007/s10488-023-01324-4"
+    },
+    {
+      "title": "Studying dietary intake in daily life through multilevel two-part modelling: A novel analytical approach and its practical application",
+      "authors": [
+        "A Ruf",
+        "A Neubauer",
+        "U Ebner-Priemer",
+        "A Reif",
+        "S Matura"
+      ],
+      "year": 2021,
+      "doi": "10.1186/s12966-021-01187-8",
+      "journal": "International Journal of Behavioral Nutrition and Physical Activity",
+      "volume": "18",
+      "pages": "130",
+      "raw": "Studying dietary intake in daily life through multilevel two-part modelling: A novel analytical approach and its practical application \n\t\t \n\t\t\t A Ruf \n\t\t \n\t\t \n\t\t\t A B Neubauer \n\t\t \n\t\t \n\t\t\t U Ebner-Priemer \n\t\t \n\t\t \n\t\t\t A Reif \n\t\t \n\t\t \n\t\t\t S Matura \n\t\t \n\t\t 10.1186/s12966-021-01187-8 \n\t\t \n\t \n\t \n\t\t International Journal of Behavioral Nutrition and Physical Activity \n\t\t \n\t\t\t 18 \n\t\t\t 130 \n\t\t\t 2021 \n\t\t \n\t \n\t Ruf, A., Neubauer, A. B., Ebner-Priemer, U., Reif, A., & Matura, S. (2021). Studying dietary intake in daily life through multilevel two-part modelling: A novel analytical approach and its practical application. International Journal of Behavioral Nutrition and Physical Activity, 18, Article 130. https://doi.org/10.1186/s12966-021-01187-8"
+    },
+    {
+      "title": "Nonstationarity in time-series analysis: Modeling stochastic and deterministic trends",
+      "authors": [
+        "O Ryan",
+        "J Haslbeck",
+        "L Waldorp"
+      ],
+      "year": 2023,
+      "doi": "10.31234/osf.io/z7ja2",
+      "journal": "PsyArXiv",
+      "raw": "Nonstationarity in time-series analysis: Modeling stochastic and deterministic trends \n\t\t \n\t\t\t O Ryan \n\t\t \n\t\t \n\t\t\t J M Haslbeck \n\t\t \n\t\t \n\t\t\t L Waldorp \n\t\t \n\t\t 10.31234/osf.io/z7ja2 \n\t\t \n\t \n\t \n\t\t PsyArXiv \n\t\t \n\t\t\t 2023 \n\t\t \n\t \n\t Ryan, O., Haslbeck, J. M., & Waldorp, L. (2023). Non- stationarity in time-series analysis: Modeling stochastic and deterministic trends. PsyArXiv. https://doi.org/10.31234/ osf.io/z7ja2"
+    },
+    {
+      "title": "Affect fluctuations examined with ecological momentary assessment in patients with current or remitted depression and anxiety disorders",
+      "authors": [
+        "R Schoevers",
+        "C Borkulo",
+        "F Van Lamers",
+        "M Servaas",
+        "J Bastiaansen",
+        "A Beekman",
+        "A Hemert",
+        "J Van Smit",
+        "B Penninx",
+        "H Riese"
+      ],
+      "year": 2021,
+      "doi": "10.1017/s0033291720000689",
+      "journal": "Psychological Medicine",
+      "volume": "51",
+      "issue": "11",
+      "raw": "Affect fluctuations examined with ecological momentary assessment in patients with current or remitted depression and anxiety disorders \n\t\t \n\t\t\t R A Schoevers \n\t\t \n\t\t \n\t\t\t C D Borkulo \n\t\t \n\t\t \n\t\t\t F Van Lamers \n\t\t \n\t\t \n\t\t\t M N Servaas \n\t\t \n\t\t \n\t\t\t J A Bastiaansen \n\t\t \n\t\t \n\t\t\t A T F Beekman \n\t\t \n\t\t \n\t\t\t A M Hemert \n\t\t \n\t\t \n\t\t\t J H Van Smit \n\t\t \n\t\t \n\t\t\t B W J H Penninx \n\t\t \n\t\t \n\t\t\t H Riese \n\t\t \n\t\t 10.1017/s0033291720000689 \n\t\t \n\t \n\t \n\t\t Psychological Medicine \n\t\t \n\t\t\t 51 \n\t\t\t 11 \n\t\t\t \n\t\t\t 2021 \n\t\t \n\t \n\t Schoevers, R. A., Borkulo, C. D., van Lamers, F., Servaas, M. N., Bastiaansen, J. A., Beekman, A. T. F., Hemert, A. M., van Smit, J. H., Penninx, B. W. J. H., & Riese, H. (2021). Affect fluctuations examined with ecological momentary assess- ment in patients with current or remitted depression and anxiety disorders. Psychological Medicine, 51(11), 1906- 1915. https://doi.org/10.1017/S0033291720000689"
+    },
+    {
+      "title": "Measuring motivational relationship processes in experience sampling: A reliability model for moments, days, and persons nested in couples",
+      "authors": [
+        "F Sch\u00f6nbrodt",
+        "C Zygar-Hoffmann",
+        "S Nestler",
+        "S Pusch",
+        "B Hagemeyer"
+      ],
+      "year": 2022,
+      "doi": "10.3758/s13428-021-01701-7",
+      "journal": "Behavior Research Methods",
+      "volume": "54",
+      "issue": "4",
+      "raw": "Measuring motivational relationship processes in experience sampling: A reliability model for moments, days, and persons nested in couples \n\t\t \n\t\t\t F D Sch\u00f6nbrodt \n\t\t \n\t\t \n\t\t\t C Zygar-Hoffmann \n\t\t \n\t\t \n\t\t\t S Nestler \n\t\t \n\t\t \n\t\t\t S Pusch \n\t\t \n\t\t \n\t\t\t B Hagemeyer \n\t\t \n\t\t 10.3758/s13428-021-01701-7 \n\t\t \n\t \n\t \n\t\t Behavior Research Methods \n\t\t \n\t\t\t 54 \n\t\t\t 4 \n\t\t\t \n\t\t\t 2022 \n\t\t \n\t \n\t Sch\u00f6nbrodt, F. D., Zygar-Hoffmann, C., Nestler, S., Pusch, S., & Hagemeyer, B. (2022). Measuring motivational rela- tionship processes in experience sampling: A reliability model for moments, days, and persons nested in couples. Behavior Research Methods, 54(4), 1869-1888. https://doi .org/10.3758/s13428-021-01701-7"
+    },
+    {
+      "title": "Incorporating measurement error in n = 1 psychological autoregressive modeling",
+      "authors": [
+        "N Schuurman",
+        "J Houtveen",
+        "E Hamaker"
+      ],
+      "year": 2015,
+      "doi": "10.3389/fpsyg.2015.01038",
+      "journal": "Frontiers in Psychology",
+      "volume": "6",
+      "pages": "1038",
+      "raw": "Incorporating measurement error in n = 1 psychological autoregressive modeling \n\t\t \n\t\t\t N K Schuurman \n\t\t \n\t\t \n\t\t\t J H Houtveen \n\t\t \n\t\t \n\t\t\t E L Hamaker \n\t\t \n\t\t 10.3389/fpsyg.2015.01038 \n\t\t \n\t \n\t \n\t\t Frontiers in Psychology \n\t\t \n\t\t\t 6 \n\t\t\t 1038 \n\t\t\t 2015 \n\t\t \n\t \n\t Schuurman, N. K., Houtveen, J. H., & Hamaker, E. L. (2015). Incorporating measurement error in n = 1 psychological autoregressive modeling. Frontiers in Psychology, 6, Article 1038. https://doi.org/10.3389/fpsyg.2015.01038"
+    },
+    {
+      "title": "Ecological momentary assessment",
+      "authors": [
+        "S Shiffman",
+        "A Stone",
+        "M Hufford"
+      ],
+      "year": 2008,
+      "doi": "10.1146/annurev.clinpsy.3.022806.091415",
+      "journal": "Annual Review of Clinical Psychology",
+      "volume": "4",
+      "raw": "Ecological momentary assessment \n\t\t \n\t\t\t S Shiffman \n\t\t \n\t\t \n\t\t\t A A Stone \n\t\t \n\t\t \n\t\t\t M R Hufford \n\t\t \n\t\t 10.1146/annurev.clinpsy.3.022806.091415 \n\t\t \n\t \n\t \n\t\t Annual Review of Clinical Psychology \n\t\t \n\t\t\t 4 \n\t\t\t \n\t\t\t 2008 \n\t\t \n\t \n\t Shiffman, S., Stone, A. A., & Hufford, M. R. (2008). Ecological momentary assessment. Annual Review of Clinical Psychology, 4, 1-32. https://doi.org/10.1146/annurev.clinpsy .3.022806.091415"
+    },
+    {
+      "title": "Initial elevation bias in subjective reports",
+      "authors": [
+        "P Shrout",
+        "G Stadler",
+        "S Lane",
+        "M Mcclure",
+        "G Jackson",
+        "F Clav\u00e9l",
+        "M Iida",
+        "M Gleason",
+        "J Xu",
+        "N Bolger"
+      ],
+      "year": 2018,
+      "doi": "10.1073/pnas.1712277115",
+      "journal": "Proceedings of the National Academy of Sciences",
+      "volume": "115",
+      "issue": "1",
+      "raw": "Initial elevation bias in subjective reports \n\t\t \n\t\t\t P E Shrout \n\t\t \n\t\t \n\t\t\t G Stadler \n\t\t \n\t\t \n\t\t\t S P Lane \n\t\t \n\t\t \n\t\t\t M J Mcclure \n\t\t \n\t\t \n\t\t\t G L Jackson \n\t\t \n\t\t \n\t\t\t F D Clav\u00e9l \n\t\t \n\t\t \n\t\t\t M Iida \n\t\t \n\t\t \n\t\t\t M E J Gleason \n\t\t \n\t\t \n\t\t\t J H Xu \n\t\t \n\t\t \n\t\t\t N Bolger \n\t\t \n\t\t 10.1073/pnas.1712277115 \n\t\t \n\t \n\t \n\t\t Proceedings of the National Academy of Sciences \n\t\t \n\t\t\t 115 \n\t\t\t 1 \n\t\t\t \n\t\t\t 2018 \n\t\t\t USA \n\t\t \n\t \n\t Shrout, P. E., Stadler, G., Lane, S. P., McClure, M. J., Jackson, G. L., Clav\u00e9l, F. D., Iida, M., Gleason, M. E. J., Xu, J. H., & Bolger, N. (2018). Initial elevation bias in subjec- tive reports. Proceedings of the National Academy of Sciences, USA, 115(1), E15-E23. https://doi.org/10.1073/ pnas.1712277115"
+    },
+    {
+      "title": "Measures of individual uncertainty for ecological models: Variance and entropy",
+      "authors": [
+        "P Smaldino"
+      ],
+      "year": 2013,
+      "doi": "10.1016/j.ecolmodel.2013.01.015",
+      "journal": "Ecological Modelling",
+      "volume": "254",
+      "raw": "Measures of individual uncertainty for ecological models: Variance and entropy \n\t\t \n\t\t\t P E Smaldino \n\t\t \n\t\t 10.1016/j.ecolmodel.2013.01.015 \n\t\t \n\t \n\t \n\t\t Ecological Modelling \n\t\t \n\t\t\t 254 \n\t\t\t \n\t\t\t 2013 \n\t\t \n\t \n\t Smaldino, P. E. (2013). Measures of individual uncertainty for ecological models: Variance and entropy. Ecological Modelling, 254, 50-53. https://doi.org/10.1016/j.ecol model.2013.01.015"
+    },
+    {
+      "title": "Mindwandering rates fluctuate across the day: Evidence from an experience-sampling study",
+      "authors": [
+        "G Smith",
+        "C Mills",
+        "A Paxton",
+        "K Christoff"
+      ],
+      "year": 2018,
+      "doi": "10.1186/s41235-018-0141-4",
+      "journal": "Cognitive Research: Principles and Implications",
+      "volume": "3",
+      "pages": "54",
+      "raw": "Mindwandering rates fluctuate across the day: Evidence from an experience-sampling study \n\t\t \n\t\t\t G K Smith \n\t\t \n\t\t \n\t\t\t C Mills \n\t\t \n\t\t \n\t\t\t A Paxton \n\t\t \n\t\t \n\t\t\t K Christoff \n\t\t \n\t\t 10.1186/s41235-018-0141-4 \n\t\t \n\t \n\t \n\t\t Cognitive Research: Principles and Implications \n\t\t \n\t\t\t 3 \n\t\t\t 54 \n\t\t\t 2018 \n\t\t \n\t \n\t Smith, G. K., Mills, C., Paxton, A., & Christoff, K. (2018). Mind- wandering rates fluctuate across the day: Evidence from an experience-sampling study. Cognitive Research: Principles and Implications, 3, Article 54. https://doi.org/10.1186/ s41235-018-0141-4"
+    },
+    {
+      "title": "Examining the concurrent and predictive validity of single items in ecological momentary assessments",
+      "authors": [
+        "J Song",
+        "E Howe",
+        "J Oltmanns",
+        "A Fisher"
+      ],
+      "year": 2023,
+      "doi": "10.1177/10731911221113563",
+      "journal": "Assessment",
+      "volume": "30",
+      "issue": "5",
+      "raw": "Examining the concurrent and predictive validity of single items in ecological momentary assessments \n\t\t \n\t\t\t J Song \n\t\t \n\t\t \n\t\t\t E Howe \n\t\t \n\t\t \n\t\t\t J R Oltmanns \n\t\t \n\t\t \n\t\t\t A J Fisher \n\t\t \n\t\t 10.1177/10731911221113563 \n\t\t \n\t \n\t \n\t\t Assessment \n\t\t \n\t\t\t 30 \n\t\t\t 5 \n\t\t\t \n\t\t\t 2023 \n\t\t \n\t \n\t Song, J., Howe, E., Oltmanns, J. R., & Fisher, A. J. (2023). Examining the concurrent and predictive validity of single items in ecological momentary assessments. Assessment, 30(5), 1662-1671. https://doi.org/10.1177/107319112 21113563"
+    },
+    {
+      "title": "A brief measure for assessing generalized anxiety disorder: The GAD-7",
+      "authors": [
+        "R Spitzer",
+        "K Kroenke",
+        "J Williams",
+        "B L\u00f6we"
+      ],
+      "year": 2006,
+      "doi": "10.1001/archinte.166.10.1092",
+      "journal": "Archives of Internal Medicine",
+      "volume": "166",
+      "issue": "10",
+      "raw": "A brief measure for assessing generalized anxiety disorder: The GAD-7 \n\t\t \n\t\t\t R L Spitzer \n\t\t \n\t\t \n\t\t\t K Kroenke \n\t\t \n\t\t \n\t\t\t J B Williams \n\t\t \n\t\t \n\t\t\t B L\u00f6we \n\t\t \n\t\t 10.1001/archinte.166.10.1092 \n\t \n\t \n\t\t Archives of Internal Medicine \n\t\t \n\t\t\t 166 \n\t\t\t 10 \n\t\t\t \n\t\t\t 2006 \n\t\t \n\t \n\t Spitzer, R. L., Kroenke, K., Williams, J. B., & L\u00f6we, B. (2006). A brief measure for assessing generalized anxiety disor- der: The GAD-7. Archives of Internal Medicine, 166(10), 1092-1097."
+    },
+    {
+      "title": "Evaluation of pressing issues in ecological momentary assessment",
+      "authors": [
+        "A Stone",
+        "S Schneider",
+        "J Smyth"
+      ],
+      "year": 2023,
+      "doi": "10.1146/annurev-clinpsy-080921-083128",
+      "journal": "Annual Review of Clinical Psychology",
+      "volume": "19",
+      "raw": "Evaluation of pressing issues in ecological momentary assessment \n\t\t \n\t\t\t A A Stone \n\t\t \n\t\t \n\t\t\t S Schneider \n\t\t \n\t\t \n\t\t\t J M Smyth \n\t\t \n\t\t 10.1146/annurev-clinpsy-080921-083128 \n\t\t \n\t \n\t \n\t\t Annual Review of Clinical Psychology \n\t\t \n\t\t\t 19 \n\t\t\t \n\t\t\t 2023 \n\t\t \n\t \n\t Stone, A. A., Schneider, S., & Smyth, J. M. (2023). Evaluation of pressing issues in ecological momentary assessment. Annual Review of Clinical Psychology, 19, 107-131. https:// doi.org/10.1146/annurev-clinpsy-080921-083128"
+    },
+    {
+      "title": "Differences in connection strength between mental symptoms might be explained by differences in variance: Reanalysis of network data did not confirm staging",
+      "authors": [
+        "B Terluin",
+        "M De Boer",
+        "H Vet"
+      ],
+      "year": 2016,
+      "doi": "10.1371/journal.pone.0155205",
+      "journal": "PLOS ONE",
+      "volume": "11",
+      "issue": "11",
+      "pages": "155205",
+      "raw": "Differences in connection strength between mental symptoms might be explained by differences in variance: Reanalysis of network data did not confirm staging \n\t\t \n\t\t\t B Terluin \n\t\t \n\t\t \n\t\t\t M R De Boer \n\t\t \n\t\t \n\t\t\t H C W Vet \n\t\t \n\t\t 10.1371/journal.pone.0155205 \n\t\t \n\t \n\t \n\t\t PLOS ONE \n\t\t \n\t\t\t 11 \n\t\t\t 11 \n\t\t\t 155205 \n\t\t\t 2016 \n\t\t \n\t \n\t Terluin, B., de Boer, M. R., & de Vet, H. C. W. (2016). Differences in connection strength between mental symptoms might be explained by differences in variance: Reanalysis of network data did not confirm staging. PLOS ONE, 11(11), Article e0155205. https://doi.org/10.1371/journal.pone.0155205"
+    },
+    {
+      "title": "Using experience sampling methods/ecological momentary assessment (ESN/EMA) in clinical assessment and clinical research: Introduction to the special section",
+      "authors": [
+        "T Trull",
+        "U Ebner-Priemer"
+      ],
+      "year": 2009,
+      "doi": "10.1037/a0017653",
+      "journal": "Psychological Assessment",
+      "volume": "21",
+      "issue": "4",
+      "raw": "Using experience sampling methods/ecological momentary assessment (ESN/EMA) in clinical assessment and clinical research: Introduction to the special section \n\t\t \n\t\t\t T J Trull \n\t\t \n\t\t \n\t\t\t U W Ebner-Priemer \n\t\t \n\t\t 10.1037/a0017653 \n\t\t \n\t \n\t \n\t\t Psychological Assessment \n\t\t \n\t\t\t 21 \n\t\t\t 4 \n\t\t\t \n\t\t\t 2009 \n\t\t \n\t \n\t Trull, T. J., & Ebner-Priemer, U. W. (2009). Using experi- ence sampling methods/ecological momentary assess- ment (ESN/EMA) in clinical assessment and clinical research: Introduction to the special section. Psychological Assessment, 21(4), 457-462. https://doi.org/10.1037/ a0017653"
+    },
+    {
+      "title": "Exploratory data analysis",
+      "authors": [
+        "J Tukey"
+      ],
+      "year": 1977,
+      "volume": "2",
+      "raw": "J W Tukey \n\t\t \n\t\t Exploratory data analysis \n\t\t \n\t\t\t Addison-Wesley \n\t\t\t 1977 \n\t\t\t 2 \n\t\t \n\t \n\t Tukey, J. W. (1977). Exploratory data analysis (Vol. 2). Addison-Wesley."
+    },
+    {
+      "title": "Defining a generic holdout sample for combined exploratory and predictive analyses in the WARN-D dataset",
+      "authors": [
+        "R Tutunji",
+        "R Proppert",
+        "C Rieble",
+        "E Fried"
+      ],
+      "year": 2023,
+      "doi": "10.17605/OSF.IO/W9NXY",
+      "journal": "OSF",
+      "raw": "Defining a generic holdout sample for combined exploratory and predictive analyses in the WARN-D dataset \n\t\t \n\t\t\t R Tutunji \n\t\t \n\t\t \n\t\t\t R K K Proppert \n\t\t \n\t\t \n\t\t\t C L Rieble \n\t\t \n\t\t \n\t\t\t E I Fried \n\t\t \n\t\t 10.17605/OSF.IO/W9NXY \n\t\t \n\t \n\t \n\t\t OSF \n\t\t \n\t\t\t 2023 \n\t\t \n\t \n\t Tutunji, R., Proppert, R. K. K., Rieble, C. L., & Fried, E. I. (2023). Defining a generic holdout sample for combined exploratory and predictive analyses in the WARN-D dataset. OSF. https://doi.org/10.17605/OSF.IO/W9NXY"
+    },
+    {
+      "title": "Continuous time modeling in the behavioral and related sciences",
+      "year": 2018,
+      "doi": "10.1007/978-3-319-77219-6",
+      "raw": "Continuous time modeling in the behavioral and related sciences \n\t\t 10.1007/978-3-319-77219-6 \n\t\t \n\t\t van Montfort, K., Oud, J. H. L., & Voelkle, M. C. \n\t\t \n\t\t\t 2018 \n\t\t\t Springer \n\t\t \n\t \n\t van Montfort, K., Oud, J. H. L., & Voelkle, M. C. (Eds.). (2018). Continuous time modeling in the behavioral and related sci- ences. Springer. https://doi.org/10.1007/978-3-319-77219-6"
+    },
+    {
+      "title": "Response styles in survey research: A literature review of antecedents, consequences, and remedies",
+      "authors": [
+        "Y Van Vaerenbergh",
+        "T Thomas"
+      ],
+      "year": 2013,
+      "doi": "10.1093/ijpor/eds021",
+      "journal": "International Journal of Public Opinion Research",
+      "volume": "25",
+      "issue": "2",
+      "raw": "Response styles in survey research: A literature review of antecedents, consequences, and remedies \n\t\t \n\t\t\t Y Van Vaerenbergh \n\t\t \n\t\t \n\t\t\t T D Thomas \n\t\t \n\t\t 10.1093/ijpor/eds021 \n\t\t \n\t \n\t \n\t\t International Journal of Public Opinion Research \n\t\t \n\t\t\t 25 \n\t\t\t 2 \n\t\t\t \n\t\t\t 2013 \n\t\t \n\t \n\t Van Vaerenbergh, Y., & Thomas, T. D. (2013). Response styles in survey research: A literature review of antecedents, con- sequences, and remedies. International Journal of Public Opinion Research, 25(2), 195-217. https://doi.org/10.1093/ ijpor/eds021"
+    },
+    {
+      "title": "A mixed model to disentangle variance and serial autocorrelation in affective instability using ecological momentary assessment data",
+      "authors": [
+        "K Vansteelandt",
+        "G Verbeke"
+      ],
+      "year": 2016,
+      "doi": "10.1080/00273171.2016.1159177",
+      "journal": "Multivariate Behavioral Research",
+      "volume": "51",
+      "issue": "4",
+      "raw": "A mixed model to disentangle variance and serial autocorrelation in affective instability using ecological momentary assessment data \n\t\t \n\t\t\t K Vansteelandt \n\t\t \n\t\t \n\t\t\t G Verbeke \n\t\t \n\t\t 10.1080/00273171.2016.1159177 \n\t\t \n\t \n\t \n\t\t Multivariate Behavioral Research \n\t\t \n\t\t\t 51 \n\t\t\t 4 \n\t\t\t \n\t\t\t 2016 \n\t\t \n\t \n\t Vansteelandt, K., & Verbeke, G. (2016). A mixed model to disentangle variance and serial autocorrelation in affective instability using ecological momentary assessment data. Multivariate Behavioral Research, 51(4), 446-465. https:// doi.org/10.1080/00273171.2016.1159177"
+    },
+    {
+      "title": "Assessing and accounting for measurement in intensive longitudinal studies: Current practices, considerations, and avenues for improvement",
+      "authors": [
+        "L Vogelsmeier",
+        "J Jongerling",
+        "E Maassen"
+      ],
+      "year": 2023,
+      "doi": "10.31234/osf.io/uat5r",
+      "journal": "PsyArXiv",
+      "raw": "Assessing and accounting for measurement in intensive longitudinal studies: Current practices, considerations, and avenues for improvement \n\t\t \n\t\t\t L V D E Vogelsmeier \n\t\t \n\t\t \n\t\t\t J Jongerling \n\t\t \n\t\t \n\t\t\t E Maassen \n\t\t \n\t\t 10.31234/osf.io/uat5r \n\t\t \n\t \n\t \n\t\t PsyArXiv \n\t\t \n\t\t\t 2023 \n\t\t \n\t \n\t Vogelsmeier, L. V. D. E., Jongerling, J., & Maassen, E. (2023). Assessing and accounting for measurement in intensive longitudinal studies: Current practices, considerations, and avenues for improvement. PsyArXiv. https://doi.org/ 10.31234/osf.io/uat5r"
+    },
+    {
+      "title": "Latent Markov factor analysis for exploring measurement model changes in time-intensive longitudinal studies",
+      "authors": [
+        "L Vogelsmeier",
+        "J Vermunt",
+        "E Van Roekel",
+        "K De Roover"
+      ],
+      "year": 2019,
+      "doi": "10.1080/10705511.2018.1554445",
+      "journal": "Structural Equation Modeling: A Multidisciplinary Journal",
+      "volume": "26",
+      "issue": "4",
+      "raw": "Latent Markov factor analysis for exploring measurement model changes in time-intensive longitudinal studies \n\t\t \n\t\t\t L V D E Vogelsmeier \n\t\t \n\t\t \n\t\t\t J K Vermunt \n\t\t \n\t\t \n\t\t\t E Van Roekel \n\t\t \n\t\t \n\t\t\t K De Roover \n\t\t \n\t\t 10.1080/10705511.2018.1554445 \n\t\t \n\t \n\t \n\t\t Structural Equation Modeling: A Multidisciplinary Journal \n\t\t \n\t\t\t 26 \n\t\t\t 4 \n\t\t\t \n\t\t\t 2019 \n\t\t \n\t \n\t Vogelsmeier, L. V. D. E., Vermunt, J. K., van Roekel, E., & De Roover, K. (2019). Latent Markov factor analysis for exploring measurement model changes in time-intensive longitudinal studies. Structural Equation Modeling: A Multidisciplinary Journal, 26(4), 557-575. https://doi.org /10.1080/10705511.2018.1554445"
+    },
+    {
+      "title": "Increased affective reactivity among depressed individuals can be explained by floor effects: An experience sampling study",
+      "authors": [
+        "L Von Klipstein",
+        "M Servaas",
+        "F Lamers",
+        "R Schoevers",
+        "K Wardenaar",
+        "H Riese"
+      ],
+      "year": 2023,
+      "doi": "10.1016/j.jad.2023.04.118",
+      "journal": "Journal of Affective Disorders",
+      "volume": "334",
+      "raw": "Increased affective reactivity among depressed individuals can be explained by floor effects: An experience sampling study \n\t\t \n\t\t\t L Von Klipstein \n\t\t \n\t\t \n\t\t\t M N Servaas \n\t\t \n\t\t \n\t\t\t F Lamers \n\t\t \n\t\t \n\t\t\t R A Schoevers \n\t\t \n\t\t \n\t\t\t K J Wardenaar \n\t\t \n\t\t \n\t\t\t H Riese \n\t\t \n\t\t 10.1016/j.jad.2023.04.118 \n\t\t \n\t \n\t \n\t\t Journal of Affective Disorders \n\t\t \n\t\t\t 334 \n\t\t\t \n\t\t\t 2023 \n\t\t \n\t \n\t von Klipstein, L., Servaas, M. N., Lamers, F., Schoevers, R. A., Wardenaar, K. J., & Riese, H. (2023). Increased affective reactivity among depressed individuals can be explained by floor effects: An experience sampling study. Journal of Affective Disorders, 334, 370-381. https://doi.org/10.1016/ j.jad.2023.04.118"
+    },
+    {
+      "title": "The mean square successive difference",
+      "authors": [
+        "J Von Neumann",
+        "R Kent",
+        "H Bellinson",
+        "B Hart"
+      ],
+      "year": 1941,
+      "doi": "10.1214/aoms/1177731746",
+      "journal": "The Annals of Mathematical Statistics",
+      "volume": "12",
+      "issue": "2",
+      "raw": "The mean square successive difference \n\t\t \n\t\t\t J Von Neumann \n\t\t \n\t\t \n\t\t\t R H Kent \n\t\t \n\t\t \n\t\t\t H R Bellinson \n\t\t \n\t\t \n\t\t\t B I Hart \n\t\t \n\t\t 10.1214/aoms/1177731746 \n\t\t \n\t \n\t \n\t\t The Annals of Mathematical Statistics \n\t\t \n\t\t\t 12 \n\t\t\t 2 \n\t\t\t \n\t\t\t 1941 \n\t\t \n\t \n\t von Neumann, J., Kent, R. H., Bellinson, H. R., & Hart, B. I. (1941). The mean square successive difference. The Annals of Mathematical Statistics, 12(2), 153-162. https://www .jstor.org/stable/2235765"
+    },
+    {
+      "title": "Graphical data analysis",
+      "authors": [
+        "H Wainer",
+        "D Thissen"
+      ],
+      "year": 1981,
+      "doi": "10.1146/annurev.ps.32.020181.001203",
+      "journal": "Annual Review of Psychology",
+      "volume": "32",
+      "raw": "Graphical data analysis \n\t\t \n\t\t\t H Wainer \n\t\t \n\t\t \n\t\t\t D Thissen \n\t\t \n\t\t 10.1146/annurev.ps.32.020181.001203 \n\t \n\t \n\t\t Annual Review of Psychology \n\t\t \n\t\t\t 32 \n\t\t\t \n\t\t\t 1981 \n\t\t \n\t \n\t Wainer, H., & Thissen, D. (1981). Graphical data analysis. Annual Review of Psychology, 32, 191-241."
+    },
+    {
+      "title": "Do we overestimate the within-variability? The impact of measurement error on intraclass coefficient estimation",
+      "authors": [
+        "R Wilms",
+        "R Lanwehr",
+        "A Kastenm\u00fcller"
+      ],
+      "year": 2020,
+      "doi": "10.3389/fpsyg.2020.00825",
+      "journal": "Frontiers in Psychology",
+      "volume": "11",
+      "pages": "825",
+      "raw": "Do we overestimate the within-variability? The impact of measurement error on intraclass coefficient estimation \n\t\t \n\t\t\t R Wilms \n\t\t \n\t\t \n\t\t\t R Lanwehr \n\t\t \n\t\t \n\t\t\t A Kastenm\u00fcller \n\t\t \n\t\t 10.3389/fpsyg.2020.00825 \n\t\t \n\t \n\t \n\t\t Frontiers in Psychology \n\t\t \n\t\t\t 11 \n\t\t\t 825 \n\t\t\t 2020 \n\t\t \n\t \n\t Wilms, R., Lanwehr, R., & Kastenm\u00fcller, A. (2020). Do we overestimate the within-variability? The impact of measure- ment error on intraclass coefficient estimation. Frontiers in Psychology, 11, Article 825. https://doi.org/10.3389/ fpsyg.2020.00825"
+    },
+    {
+      "title": "Ecological momentary assessment: A meta-analysis on designs, samples, and compliance across research fields",
+      "authors": [
+        "C Wrzus",
+        "A Neubauer"
+      ],
+      "year": 2023,
+      "doi": "10.1177/10731911211067538",
+      "journal": "Assessment",
+      "volume": "30",
+      "issue": "3",
+      "raw": "Ecological momentary assessment: A meta-analysis on designs, samples, and compliance across research fields \n\t\t \n\t\t\t C Wrzus \n\t\t \n\t\t \n\t\t\t A B Neubauer \n\t\t \n\t\t 10.1177/10731911211067538 \n\t\t \n\t \n\t \n\t\t Assessment \n\t\t \n\t\t\t 30 \n\t\t\t 3 \n\t\t\t \n\t\t\t 2023 \n\t\t \n\t \n\t Wrzus, C., & Neubauer, A. B. (2023). Ecological momentary assessment: A meta-analysis on designs, samples, and compliance across research fields. Assessment, 30(3), 825- 846. https://doi.org/10.1177/10731911211067538"
+    },
+    {
+      "title": "Seasonality of brain function: Role in psychiatric disorders",
+      "authors": [
+        "R Zhang",
+        "N Volkow"
+      ],
+      "year": 2023,
+      "doi": "10.1038/s41398-023-02365-x",
+      "journal": "Translational Psychiatry",
+      "volume": "13",
+      "pages": "65",
+      "raw": "Seasonality of brain function: Role in psychiatric disorders \n\t\t \n\t\t\t R Zhang \n\t\t \n\t\t \n\t\t\t N D Volkow \n\t\t \n\t\t 10.1038/s41398-023-02365-x \n\t\t \n\t \n\t \n\t\t Translational Psychiatry \n\t\t \n\t\t\t 13 \n\t\t\t 65 \n\t\t\t 2023 \n\t\t \n\t \n\t Zhang, R., & Volkow, N. D. (2023). Seasonality of brain func- tion: Role in psychiatric disorders. Translational Psychiatry, 13, Article 65. https://doi.org/10.1038/s41398-023- 02365-x"
+    },
+    {
+      "title": "Understanding and investigating response processes in validation research",
+      "year": 2017,
+      "doi": "10.1007/978-3-319-56129-5",
+      "raw": "Understanding and investigating response processes in validation research \n\t\t 10.1007/978-3-319-56129-5 \n\t\t \n\t\t Zumbo, B. D., & Hubley, A. M. \n\t\t \n\t\t\t 2017 \n\t\t\t Springer \n\t\t \n\t \n\t Zumbo, B. D., & Hubley, A. M. (Eds.). (2017). Understanding and investigating response processes in validation research. Springer. https://doi.org/10.1007/978-3-319-56129-5"
+    }
+  ],
+  "num_references": 89,
+  "figures": [
+    {
+      "caption": "Fig. 1 .",
+      "description": "Fig. 1. Raincloud plots for example items. The box plot displays the first and third quartiles of the distribution as upper and lower hinges and the median as a horizontal bar. The whiskers extend to 1 5 . times the interquartile range. Dots represent individual means."
+    },
+    {
+      "caption": "Fig. 2 .",
+      "description": "Fig. 2. Modality of ecological-momentary-assessment items. (a) Distributions for unimodal (first row) and bimodal (second row) distributions for the item stressed for six example participants. The x-axis denotes the response options; the height of a chart on the y-axis denotes the count of the respective response. (b) Results for the modality estimation for different items. The x-axis denotes the number of modes; the y-axis denotes the count of participants having a certain number of modes in their individual distribution."
+    },
+    {
+      "caption": "Fig. 3 .",
+      "description": "Fig.3. Answers across activities. This figure displays the relative frequencies of answer options (x-axis) depending on the concurrent activity (y-axis) for four example items. Activities are ordered by their relative frequencies from top to bottom."
+    },
+    {
+      "caption": "Fig. 4 .",
+      "description": "Fig.4. Activity and time-of-day effects. (a) Item means across all participants when participants either indicated that they were in a \"social\" activity or a \"study/work\" activity. (b) Item means across the four daily beeps/notifications. The hours of the day indicated in the legend for Fig.4bare approximate because the exact timing of beeps included some planned randomness (Fried et al., 2023) . Horizontal lines around the points would indicate the standard error of the estimated means, but they are barely visible here because of our sample size."
+    },
+    {
+      "caption": "Fig. 6 .",
+      "description": "Fig. 6. Autocorrelations of the item stressed. The individual data points in this figure represent individual autocorrelation function (ACF) values. A linear trend was detrended before calculation, and overnight effects were not included. The ACF was calculated only for individuals with more than 100 data points."
+    },
+    {
+      "caption": "Fig. 7 .",
+      "description": "Fig. 7. Development of the item depressed for six participants. (a) Raw values of item responses. (b) Seven-day rolling means are visualized as an intuitive example of an aggregation window spanning a week. The x-axis denotes the day of the study, and the y-axis denotes the response value. Time series with higher variability (operationalized as standard deviation) are colored in darker colors, and time series with lower variability are in lighter colors."
+    },
+    {
+      "caption": "Fig. 8 .",
+      "description": "Fig. 8. Raw time series with marginal distribution. The figure shows time series for items sad and stressed for an example participant. The x-axis denotes the day of the study, and the y-axis denotes the response value."
+    },
+    {
+      "caption": "Fig. 9 .",
+      "description": "Fig. 9. Variance decomposition for the item stressed. The figure illustrates different variance components. The proportion of variance components is represented by their tile size."
+    },
+    {
+      "caption": "Fig. 10 .",
+      "description": "Fig. 10. Correlation of ecological momentary assessment (EMA) with baseline. This figure shows the correlation of EMA means with baseline items. The y-axis contains the mean of different EMA variables, aggregated to individual means across the whole study duration. The x-axis contains different baseline questionnaires.Emo_reg refers to the item, \"Today, it was difficult to cope with my emotions.\" For more information about all items and their phrasing, see the supplementary material on OSF."
+    },
+    {
+      "type": "table",
+      "caption": "Table 1 .",
+      "description": "Means (SDs) of Different Individual Summary Statistics"
+    }
+  ],
+  "num_figures": 10,
+  "tables": [
+    {
+      "content": "Item iMean iMedian iSD iSkew iRMSSD Cheerful 4.34 (0.86) 4.42 (1.04) 1.18 (0.31) -0.27 (0.57) 1.39 (0.37) Irritable 1.98 (0.78) 1.61 (0.88) 1.08 (0.41) 2.09 (1.60) 1.36 (0.51) Motivated 3.76 (0.87) 3.77 (1.11) 1.26 (0.34) -0.10 (0.62) 1.53 (0.45) Nervous 2.22 (0.91) 1.89 (1.09) 1.11 (0.41) 1.69 (1.62) 1.30 (0.49) Overwhelmed 2.39 (1.02) 2.09 (1.23) 1.18 (0.44) 1.53 (1.86) 1.36 (0.52) Relaxed 4.34 (0.80) 4.48 (0.99) 1.27 (0.33) -0.34 (0.54) 1.53 (0.43) Ruminate 2.01 (0.90) 1.70 (1.01) 1.00 (0.45) 2.26 (2.22) 1.18 (0.52) Sad 1.88 (0.77) 1.55 (0.83) 1.00 (0.42) 2.51 (2.10) 1.15 (0.47) Stressed 2.58 (0.94) 2.28 (1.17) 1.25 (0.39) 1.07 (1.36) 1.42 (0.47) Tired 3.73 (0.94) 3.67 (1.22) 1.41 (0.34) 0.14 (0.61) 1.73 (0.45)"
+    }
+  ],
+  "num_tables": 1,
+  "num_citations": 100,
+  "cited_references": [
+    "b82",
+    "b39",
+    "b38",
+    "b14",
+    "b48",
+    "b17",
+    "b67",
+    "b20",
+    "b84",
+    "b53",
+    "b24",
+    "b40",
+    "b55",
+    "b41",
+    "b26",
+    "b28",
+    "b51",
+    "b79",
+    "b78",
+    "b13",
+    "b76",
+    "b83",
+    "b80",
+    "b62",
+    "b27",
+    "b33",
+    "b73",
+    "b49",
+    "b52",
+    "b46",
+    "b16",
+    "b23",
+    "b29",
+    "b7",
+    "b70",
+    "b6",
+    "b63",
+    "b57",
+    "b42",
+    "b69",
+    "b18",
+    "b30",
+    "b1",
+    "b68",
+    "b9",
+    "b87",
+    "b35",
+    "b31",
+    "b5",
+    "b3",
+    "b64",
+    "b71",
+    "b10",
+    "b47",
+    "b8",
+    "b75",
+    "b15",
+    "b12",
+    "b60",
+    "b56",
+    "b85",
+    "b37",
+    "b11",
+    "b81",
+    "b45",
+    "b65",
+    "b25",
+    "b22",
+    "b0",
+    "b21",
+    "b2",
+    "b54",
+    "b44",
+    "b50",
+    "b72",
+    "b59"
+  ],
+  "notes": [
+    "[raw_affiliation] 1  Psychological Methods Lab , Department of Psychology , University of Marburg , Marburg , Germany;",
+    "[raw_affiliation] 2  Department of Clinical Psychology , Leiden University , Leiden , Netherlands;",
+    "[raw_affiliation] 2  Department of Clinical Psychology , Leiden University , Leiden , Netherlands;",
+    "[raw_affiliation] 3  Department of Psychometrics and Statistics , University of Groningen , Groningen , Netherlands; and",
+    "[raw_affiliation] 4  Department of Child and Adolescence Psychiatry , Erasmus Medical Centre , Rotterdam , Netherlands",
+    "[raw_affiliation] 2  Department of Clinical Psychology , Leiden University , Leiden , Netherlands;",
+    "[raw_affiliation] 2  Department of Clinical Psychology , Leiden University , Leiden , Netherlands;",
+    "[raw_affiliation] Psychological Methods Lab , Department of Psychology , University of Marburg , Marburg , Germany",
+    "[submission] Received 1/25/24; Revision accepted 9/9/24",
+    "[raw_reference] Adolf, J. K., Voelkle, M. C., Brose, A., & Schmiedek, F. (2017). Capturing context-related change in emotional dynamics via fixed moderated time series analysis. Multivariate Behavioral Research, 52(4), 499-531. https://doi.org/10 .1080/00273171.2017.1321978",
+    "[raw_reference] Allen, M., Poggiali, D., Whitaker, K., Marshall, T. R., van Langen, J., & Kievit, R. A. (2021). Raincloud plots: A multi-platform tool for robust data visualization. Wellcome Open Research, 4, Article 63. https://doi.org/10.12688/well comeopenres.15191.",
+    "[raw_reference] Allen, M. S., Iliescu, D., & Greiff, S. (2022). Single item measures in psychological science. European Journal of Psychological Assessment, 38(1), 1-5. https://doi.org/ 10.1027/1015-5759/a000699",
+    "[raw_reference] Altman, E. G., Hedeker, D., Peterson, J. L., & Davis, J. M. (1997). The Altman self-rating mania scale. Biological Psychiatry, 42(10), 948-955.",
+    "[raw_reference] American Educational Research Association. (Ed.). (2014). Standards for educational and psychological testing.",
+    "[raw_reference] Anscombe, F. J. (1973). Graphs in statistical analysis. The American Statistician, 27(1), 17-21.",
+    "[raw_reference] Beck, E. D., & Jackson, J. J. (2022). Personalized prediction of behaviors and experiences: An idiographic person- situation test. Psychological Science, 33(10), 1767-1782. https://doi.org/10.1177/09567976221093307",
+    "[raw_reference] Beddig, T., Reinhard, I., Ebner-Priemer, U., & Kuehner, C. (2020). Reciprocal effects between cognitive and affective states in women with premenstrual dysphoric disorder: An ecological momentary assessment study. Behaviour Research and Therapy, 131, Article 103613. https://doi .org/10.1016/j.brat.2020.103613",
+    "[raw_reference] Boker, S. M., Rotondo, J. L., Xu, M., & King, K. (2002). Windowed cross-correlation and peak picking for the anal- ysis of variability in the association between behavioral time series. Psychological Methods, 7(3), 338-355. https:// doi.org/10.1037/1082-989X.7.3.338",
+    "[raw_reference] Bolger, N., Davis, A., & Rafaeli, E. (2003). Diary methods: Capturing life as it is lived. Annual Review of Psycho- logy, 54, 579-616. https://doi.org/10.1146/annurev .psych.54.101601.145030",
+    "[raw_reference] Borsboom, D., Mellenbergh, G. J., & van Heerden, J. (2004). The concept of validity. Psychological Review, 111, 1061- 1071. https://doi.org/10.1037/0033-295X.111.4.1061",
+    "4th ed.",
+    "[raw_reference] Box, G. E., Jenkins, G. M., & Reinsel, G. C. (2008). Time series analysis (4th ed.). John Wiley & Sons. https://doi .org/10.1002/9781118619193",
+    "[raw_reference] Bringmann, L. F., van der Veen, D. C., Wichers, M., Riese, H., & Stulp, G. (2020). ESMvis: A tool for visualizing individual Experience Sampling Method (ESM) data. Quality of Life Research, 30, 3179-3188. https://doi.org/10.1007/s11136- 020-02701-4",
+    "[raw_reference] Cabrieto, J., Tuerlinckx, F., Kuppens, P., Hunyadi, B., & Ceulemans, E. (2018). Testing for the presence of correla- tion changes in a multivariate time series: A permutation based approach. Scientific Reports, 8, Article 769. https:// doi.org/10.1038/s41598-017-19067-2",
+    "[raw_reference] Castro-Alvarez, S., Tendeiro, J. N., de Jonge, P., Meijer, R. R., & Bringmann, L. F. (2022). Mixed-effects trait-state- occasion model: Studying the psychometric properties and the person-situation interactions of psychological dynam- ics. Structural Equation Modeling: A Multidisciplinary Journal, 29(3), 438-451. https://doi.org/10.1080/107055 11.2021.1961587",
+    "[raw_reference] Chang, H. (2004). Inventing temperature: Measurement and scientific progress. Oxford University Press.",
+    "[raw_reference] Cloos, L., Kuppens, P., & Ceulemans, E. (2022). Development, validation, and comparison of self-report measures for posi- tive and negative affect in intensive longitudinal research. PsyArXiv. https://doi.org/10.31234/osf.io/5j7c6",
+    "[raw_reference] Cohen, S., & Williamson, G. (1988). Perceived stress in a prob- ability sample of the United States. In S. Spacapan & S. Oskamp (Eds.), The social psychology of health (pp. 31-67).",
+    "[raw_reference] Cranford, J. A., Shrout, P. E., Iida, M., Rafaeli, E., Yip, T., & Bolger, N. (2006). A procedure for evaluating sensi- tivity to within-person change: Can mood measures in diary studies detect change reliably? Personality & Social Psychology Bulletin, 32(7), 917-929. https://doi .org/10.1177/0146167206287721",
+    "[raw_reference] Cui, J., Hasselman, F., & Lichtwarck-Aschoff, A. (2023). Unlocking nonlinear dynamics and multistability from intensive longitudinal data: A novel method. Psychological Methods. Advance online publication. https://doi.org/10 .1037/met0000623",
+    "[raw_reference] de Vries, S., Nieuwenhuizen, W., Farjon, H., van Hinsberg, A., & Dirkx, J. (2021). In which natural environments are people happiest? Large-scale experience sampling in the Netherlands. Landscape and Urban Planning, 205, Article 103972. https://doi.org/10.1016/j.landurbplan.2020.103972",
+    "[raw_reference] Dejonckheere, E., Demeyer, F., Geusens, B., Piot, M., Tuerlinckx, F., Verdonck, S., & Mestdagh, M. (2022). Assessing the reliability of single-item momentary affec- tive measurements in experience sampling. Psychological Assessment, 34(12), 1138-1154. https://doi.org/10.1037/ pas0001178",
+    "[raw_reference] Egloff, B., Tausch, A., Kohlmann, C.-W., & Krohne, H. W. (1995). Relationships between time of day, day of the week, and positive mood: Exploring the role of the mood measure. Motivation and Emotion, 19(2), 99-110. https:// doi.org/10.1007/BF02250565",
+    "[raw_reference] Freichel, R., & O'Shea, B. A. (2023). Suicidality and mood: The impact of trends, seasons, day of the week, and time of day on explicit and implicit cognitions among an online community sample. Translational Psychiatry, 13, Article 157. https://doi.org/10.1038/s41398-023-02434-1",
+    "[raw_reference] Fried, E. I., Flake, J. K., & Robinaugh, D. J. (2022). Revisiting the theoretical and methodological foundations of depres- sion measurement. Nature Reviews Psychology, 1(6), 358- 368. https://doi.org/10.1038/s44159-022-00050-2",
+    "[raw_reference] Fried, E. I., Proppert, R. K. K., & Rieble, C. L. (2023). Building an early warning system for depression: Rationale, objectives, and methods of the WARN-D study. Clinical Psychology in Europe, 5(3), 1-25. https://doi.org/10.32872/cpe.10075",
+    "[raw_reference] Fuller-Tyszkiewicz, M., Hartley-Clark, L., Cummins, R. A., Tomyn, A. J., Weinberg, M. K., & Richardson, B. (2017). Using dynamic factor analysis to provide insights into data reliabil- ity in experience sampling studies. Psychological Assessment, 29(9), 1120-1128. https://doi.org/10.1037/pas0000411",
+    "[raw_reference] Gabriel, A. S., Podsakoff, N. P., Beal, D. J., Scott, B. A., Sonnentag, S., Trougakos, J. P., & Butts, M. M. (2019). Experience sampling methods: A discussion of critical trends and considerations for scholarly advancement. Organizational Research Methods, 22(4), 969-1006. https://doi.org/10.1177/1094428118802626",
+    "[raw_reference] Greene, T., Sznitman, S., Contractor, A. A., Prakash, K., Fried, E. I., & Gelkopf, M. (2022). The memory-experience gap for PTSD symptoms: The correspondence between experience sampling and past month retrospective reports of traumatic stress symptoms. Psychiatry Research, 307, Article 114315. https://doi.org/10.1016/j.psychres.2021.114315",
+    "[raw_reference] Haig, B. D. (2013). Detecting psychological phenomena: Taking bottom-up research seriously. The American Journal of Psychology, 126(2), 135-153. https://doi.org/10.5406/ amerjpsyc.126.2.0135",
+    "[raw_reference] Hall, M., Scherner, P. V., Kreidel, Y., & Rubel, J. A. (2021). A systematic review of momentary assessment designs for mood and anxiety symptoms. Frontiers in Psychology, 12, Article 1716. https://doi.org/10.3389/fpsyg.2021.642044",
+    "[raw_reference] Hamaker, E. L. (2024). The curious case of the cross-sectional correlation. Multivariate Behavioral Research, 59, 1111- 1122. https://doi.org/10.1080/00273171.2022.2155930",
+    "[raw_reference] Hamaker, E. L., Grasman, R. P. P. P., & Kamphuis, J. H. (2010). Regime-switching models to study psychological processes. In P. C. M. Molenaar & K. M. Newell (Eds.), Individual pathways of change: Statistical models for ana- lyzing learning and development (pp. 155-168). American Psychological Association. https://doi.org/10.1037/12140- 009",
+    "[raw_reference] Hamaker, E. L., & Wichers, M. (2017). No time like the present: Discovering the hidden dynamics in intensive longitudinal data. Current Directions in Psychological Science, 26(1), 10-15. https://doi.org/10.1177/0963721416666518",
+    "[raw_reference] Haqiqatkhah, M. M., Ryan, O., & Hamaker, E. L. (2024). Skewness and staging: Does the floor effect induce bias in multilevel AR(1) models? Multivariate Behavioral Research, 59(2), 289-319. https://doi.org/10.1080/00273171.2023.2 254769",
+    "[raw_reference] Haslbeck, J. M. B., Bringmann, L. F., & Waldorp, L. J. (2021). A tutorial on estimating time-varying vector autoregressive models. Multivariate Behavioral Research, 56(1), 120-149. https://doi.org/10.1080/00273171.2020.1743630",
+    "[raw_reference] Haslbeck, J. M. B., & Ryan, O. (2022). Recovering within- person dynamics from psychological time series. Multivariate Behavioral Research, 57(5), 735-766. https:// doi.org/10.1080/00273171.2021.1896353",
+    "[raw_reference] Haslbeck, J. M. B., Ryan, O., & Dablander, F. (2023). Multimodality and skewness in emotion time series. Emotion, 23(8), 2117- 2141. https://doi.org/10.1037/emo0001218",
+    "[raw_reference] Hehman, E., & Xie, S. Y. (2021). Doing better data visualiza- tion. Advances in Methods and Practices in Psychological Science, 4(4). https://doi.org/10.1177/25152459211045334",
+    "[raw_reference] Helliwell, J. F., & Wang, S. (2014). Weekends and subjective well-being. Social Indicators Research, 116(2), 389-407. https://doi.org/10.1007/s11205-013-0306-y",
+    "[raw_reference] Helmich, M. A., Olthof, M., Oldehinkel, A. J., Wichers, M., Bringmann, L. F., & Smit, A. C. (2021). Early warning sig- nals and critical transitions in psychopathology: Challenges and recommendations. Current Opinion in Psychology, 41, 51-58. https://doi.org/10.1016/j.copsyc.2021.02.008",
+    "[raw_reference] Horwitz, A. G., Zhao, Z., & Sen, S. (2023). Peak-end bias in retrospective recall of depressive symptoms on the PHQ- 9. Psychological Assessment, 35(4), 378-381. https://doi .org/10.1037/pas0001219",
+    "[raw_reference] Jacobson, N. C., Chow, S.-M., & Newman, M. G. (2019). The differential time-varying effect model (dtvem): A tool for diagnosing and modeling time lags in intensive longitu- dinal data. Behavior Research Methods, 51(1), 295-315. https://doi.org/10.3758/s13428-018-1101-0",
+    "[raw_reference] Jahng, S., Wood, P. K., & Trull, T. J. (2008). Analysis of affec- tive instability in ecological momentary assessment: Indices using successive difference and group comparison via mul- tilevel modeling. Psychological Methods, 13(4), 354-375. https://doi.org/10.1037/a0014173",
+    "[raw_reference] Jongerling, J., Laurenceau, J.-P., & Hamaker, E. L. (2015). A multilevel AR(1) model: Allowing for inter-individual dif- ferences in trait-scores, inertia, and innovation variance. Multivariate Behavioral Research, 50(3), 334-349. https:// doi.org/10.1080/00273171.2014.1003772",
+    "[raw_reference] Kelava, A., & Brandt, H. (2019). A nonlinear dynamic latent class structural equation model. Structural Equation Modeling: A Multidisciplinary Journal, 26(4), 509-528. https://doi.org/10.1080/10705511.2018.1555692",
+    "[raw_reference] Koudela-Hamila, S., Grund, A., Santangelo, P., & Ebner- Priemer, U. W. (2019). Valence and motivation as predic- tors of student time use in everyday life: An experience sampling study. Frontiers in Psychology, 10, Article 1430. https://doi.org/10.3389/fpsyg.2019.01430",
+    "[raw_reference] Kroenke, K., Spitzer, R. L., & Williams, J. B. W. (2001). The PHQ-9: Validity of a brief depression severity measure. Journal of General Internal Medicine, 16(9), 606-613. https://doi.org/10.1046/j.1525-1497.2001.016009606.x",
+    "[raw_reference] Kuppens, P., Allen, N. B., & Sheeber, L. B. (2010). Emotional inertia and psychological maladjustment. Psychological Science, 21(7), 984-991. https://doi.org/10.1177/09567976 10372634",
+    "[raw_reference] Langener, A. M., Stulp, G., Kas, M. J., & Bringmann, L. F. (2023). Capturing the dynamics of the social environment through experience sampling methods, passive sensing, and ego- centric networks: Scoping review. JMIR Mental Health, 10(1), Article e42646. https://doi.org/10.2196/42646",
+    "[raw_reference] Leertouwer, I. J., Schuurman, N. K., & Vermunt, J. K. (2022). Are retrospective assessments means of people's experi- ences? Journal for Person-Oriented Research, 8(2), 52-70. https://doi.org/10.17505/jpor.2022.24855",
+    "[raw_reference] McNeish, D., Mackinnon, D. P., Marsch, L. A., & Poldrack, R. A. (2021). Measurement in intensive longitudinal data. Structural Equation Modeling: A Multidisciplinary Journal, 28(5), 807-822. https://doi.org/10.1080/10705511.2021.1 915788",
+    "[raw_reference] Mestdagh, M., & Dejonckheere, E. (2021). Ambulatory assess- ment in psychopathology research: Current achievements and future ambitions. Current Opinion in Psychology, 41, 1-8. https://doi.org/10.1016/j.copsyc.2021.01.004",
+    "[raw_reference] Meyer, D., Dimitriadou, E., Hornik, K., Weingessel, A., & Leisch, F. (2023, February 1). E1071: Misc functions of the Department of Statistics, Probability Theory Group (for- merly: E1071), TU Wien (Version 1.7-13). https://cran.r- project.org/web/packages/e1071/index.html",
+    "[raw_reference] Midway, S. R. (2020). Principles of effective data visualization. Patterns, 1(9), Article 100141. https://doi.org/10.1016/ j.patter.2020.100141",
+    "[raw_reference] Morgan, J. F., Reid, F., & Lacey, J. H. (1999). The SCOFF questionnaire: Assessment of a new screening tool for eating disorders. BMJ, 319(7223), 1467-1468. https://doi .org/10.1136/bmj.319.7223.1467",
+    "[raw_reference] Nordmann, E., McAleer, P., Toivo, W., Paterson, H., & DeBruine, L. M. (2022). Data visualization using R for researchers who do not use R. Advances in Methods and Practices in Psychological Science, 5(2). https://doi .org/10.1177/25152459221074654",
+    "[raw_reference] Olthof, M., Hasselman, F., & Lichtwarck-Aschoff, A. (2020). Complexity in psychological self-ratings: Implications for research and practice. BMC Medicine, 18(1), Article 317. https://doi.org/10.1186/s12916-020-01727-2",
+    "Version 4.3.2",
+    "[raw_reference] R Core Team. (2023). R: A language and environment for sta- tistical computing (Version 4.3.2). https://www.R-project .org/",
+    "[report_type] PsyArXiv",
+    "[raw_reference] Revol, J., Carlier, C., Lafit, G., Verhees, M., Sels, L., & Ceulemans, E. (2023). Preprocessing ESM data: A step-by- step framework, tutorial website, R package, and reporting templates. PsyArXiv. https://doi.org/10.31234/osf.io/hnu2t",
+    "[raw_reference] Rimpler, A., Siepe, B. S., Rieble, C. L., Proppert, R. K. K., & Fried, E. I. (2024). Introducing FRED: Software for gener- ating feedback reports for ecological momentary assess- ment data. Administration and Policy in Mental Health and Mental Health Services Research, 51, 490-500. https://doi .org/10.1007/s10488-023-01324-4",
+    "[raw_reference] Ruf, A., Neubauer, A. B., Ebner-Priemer, U., Reif, A., & Matura, S. (2021). Studying dietary intake in daily life through multilevel two-part modelling: A novel analytical approach and its practical application. International Journal of Behavioral Nutrition and Physical Activity, 18, Article 130. https://doi.org/10.1186/s12966-021-01187-8",
+    "[raw_reference] Ryan, O., Haslbeck, J. M., & Waldorp, L. (2023). Non- stationarity in time-series analysis: Modeling stochastic and deterministic trends. PsyArXiv. https://doi.org/10.31234/ osf.io/z7ja2",
+    "[raw_reference] Schoevers, R. A., Borkulo, C. D., van Lamers, F., Servaas, M. N., Bastiaansen, J. A., Beekman, A. T. F., Hemert, A. M., van Smit, J. H., Penninx, B. W. J. H., & Riese, H. (2021). Affect fluctuations examined with ecological momentary assess- ment in patients with current or remitted depression and anxiety disorders. Psychological Medicine, 51(11), 1906- 1915. https://doi.org/10.1017/S0033291720000689",
+    "[raw_reference] Sch\u00f6nbrodt, F. D., Zygar-Hoffmann, C., Nestler, S., Pusch, S., & Hagemeyer, B. (2022). Measuring motivational rela- tionship processes in experience sampling: A reliability model for moments, days, and persons nested in couples. Behavior Research Methods, 54(4), 1869-1888. https://doi .org/10.3758/s13428-021-01701-7",
+    "[raw_reference] Schuurman, N. K., Houtveen, J. H., & Hamaker, E. L. (2015). Incorporating measurement error in n = 1 psychological autoregressive modeling. Frontiers in Psychology, 6, Article 1038. https://doi.org/10.3389/fpsyg.2015.01038",
+    "[raw_reference] Shiffman, S., Stone, A. A., & Hufford, M. R. (2008). Ecological momentary assessment. Annual Review of Clinical Psychology, 4, 1-32. https://doi.org/10.1146/annurev.clinpsy .3.022806.091415",
+    "[raw_reference] Shrout, P. E., Stadler, G., Lane, S. P., McClure, M. J., Jackson, G. L., Clav\u00e9l, F. D., Iida, M., Gleason, M. E. J., Xu, J. H., & Bolger, N. (2018). Initial elevation bias in subjec- tive reports. Proceedings of the National Academy of Sciences, USA, 115(1), E15-E23. https://doi.org/10.1073/ pnas.1712277115",
+    "[raw_reference] Smaldino, P. E. (2013). Measures of individual uncertainty for ecological models: Variance and entropy. Ecological Modelling, 254, 50-53. https://doi.org/10.1016/j.ecol model.2013.01.015",
+    "[raw_reference] Smith, G. K., Mills, C., Paxton, A., & Christoff, K. (2018). Mind- wandering rates fluctuate across the day: Evidence from an experience-sampling study. Cognitive Research: Principles and Implications, 3, Article 54. https://doi.org/10.1186/ s41235-018-0141-4",
+    "[raw_reference] Song, J., Howe, E., Oltmanns, J. R., & Fisher, A. J. (2023). Examining the concurrent and predictive validity of single items in ecological momentary assessments. Assessment, 30(5), 1662-1671. https://doi.org/10.1177/107319112 21113563",
+    "[raw_reference] Spitzer, R. L., Kroenke, K., Williams, J. B., & L\u00f6we, B. (2006). A brief measure for assessing generalized anxiety disor- der: The GAD-7. Archives of Internal Medicine, 166(10), 1092-1097.",
+    "[raw_reference] Stone, A. A., Schneider, S., & Smyth, J. M. (2023). Evaluation of pressing issues in ecological momentary assessment. Annual Review of Clinical Psychology, 19, 107-131. https:// doi.org/10.1146/annurev-clinpsy-080921-083128",
+    "[raw_reference] Terluin, B., de Boer, M. R., & de Vet, H. C. W. (2016). Differences in connection strength between mental symptoms might be explained by differences in variance: Reanalysis of network data did not confirm staging. PLOS ONE, 11(11), Article e0155205. https://doi.org/10.1371/journal.pone.0155205",
+    "[raw_reference] Trull, T. J., & Ebner-Priemer, U. W. (2009). Using experi- ence sampling methods/ecological momentary assess- ment (ESN/EMA) in clinical assessment and clinical research: Introduction to the special section. Psychological Assessment, 21(4), 457-462. https://doi.org/10.1037/ a0017653",
+    "[raw_reference] Tukey, J. W. (1977). Exploratory data analysis (Vol. 2). Addison-Wesley.",
+    "[raw_reference] Tutunji, R., Proppert, R. K. K., Rieble, C. L., & Fried, E. I. (2023). Defining a generic holdout sample for combined exploratory and predictive analyses in the WARN-D dataset. OSF. https://doi.org/10.17605/OSF.IO/W9NXY",
+    "[raw_reference] van Montfort, K., Oud, J. H. L., & Voelkle, M. C. (Eds.). (2018). Continuous time modeling in the behavioral and related sci- ences. Springer. https://doi.org/10.1007/978-3-319-77219-6",
+    "[raw_reference] Van Vaerenbergh, Y., & Thomas, T. D. (2013). Response styles in survey research: A literature review of antecedents, con- sequences, and remedies. International Journal of Public Opinion Research, 25(2), 195-217. https://doi.org/10.1093/ ijpor/eds021",
+    "[raw_reference] Vansteelandt, K., & Verbeke, G. (2016). A mixed model to disentangle variance and serial autocorrelation in affective instability using ecological momentary assessment data. Multivariate Behavioral Research, 51(4), 446-465. https:// doi.org/10.1080/00273171.2016.1159177",
+    "[raw_reference] Vogelsmeier, L. V. D. E., Jongerling, J., & Maassen, E. (2023). Assessing and accounting for measurement in intensive longitudinal studies: Current practices, considerations, and avenues for improvement. PsyArXiv. https://doi.org/ 10.31234/osf.io/uat5r",
+    "[raw_reference] Vogelsmeier, L. V. D. E., Vermunt, J. K., van Roekel, E., & De Roover, K. (2019). Latent Markov factor analysis for exploring measurement model changes in time-intensive longitudinal studies. Structural Equation Modeling: A Multidisciplinary Journal, 26(4), 557-575. https://doi.org /10.1080/10705511.2018.1554445",
+    "[raw_reference] von Klipstein, L., Servaas, M. N., Lamers, F., Schoevers, R. A., Wardenaar, K. J., & Riese, H. (2023). Increased affective reactivity among depressed individuals can be explained by floor effects: An experience sampling study. Journal of Affective Disorders, 334, 370-381. https://doi.org/10.1016/ j.jad.2023.04.118",
+    "[raw_reference] von Neumann, J., Kent, R. H., Bellinson, H. R., & Hart, B. I. (1941). The mean square successive difference. The Annals of Mathematical Statistics, 12(2), 153-162. https://www .jstor.org/stable/2235765",
+    "[raw_reference] Wainer, H., & Thissen, D. (1981). Graphical data analysis. Annual Review of Psychology, 32, 191-241.",
+    "[raw_reference] Wilms, R., Lanwehr, R., & Kastenm\u00fcller, A. (2020). Do we overestimate the within-variability? The impact of measure- ment error on intraclass coefficient estimation. Frontiers in Psychology, 11, Article 825. https://doi.org/10.3389/ fpsyg.2020.00825",
+    "[raw_reference] Wrzus, C., & Neubauer, A. B. (2023). Ecological momentary assessment: A meta-analysis on designs, samples, and compliance across research fields. Assessment, 30(3), 825- 846. https://doi.org/10.1177/10731911211067538",
+    "[raw_reference] Zhang, R., & Volkow, N. D. (2023). Seasonality of brain func- tion: Role in psychiatric disorders. Translational Psychiatry, 13, Article 65. https://doi.org/10.1038/s41398-023- 02365-x",
+    "[raw_reference] Zumbo, B. D., & Hubley, A. M. (Eds.). (2017). Understanding and investigating response processes in validation research. Springer. https://doi.org/10.1007/978-3-319-56129-5"
+  ],
+  "editors": [
+    "S Spacapan",
+    "S Oskamp",
+    "P C M Molenaar",
+    "K M Newell",
+    "van Montfort, K., Oud, J. H. L., & Voelkle, M. C.",
+    "Zumbo, B. D., & Hubley, A. M."
+  ],
+  "processing_software": {
+    "GROBID": "0.8.2"
+  },
+  "journal": "Advances in Methods and Practices in Psychological Science",
+  "volume": "8",
+  "issue": "1",
+  "pages": "25152459241286877",
+  "zotero_recovery": {
+    "fields_recovered": [
+      "journal"
+    ],
+    "timestamp": "2025-09-01T11:08:19.645163",
+    "zotero_item_type": "journalArticle"
+  }
+}

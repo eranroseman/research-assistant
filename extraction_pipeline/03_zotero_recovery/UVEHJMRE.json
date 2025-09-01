@@ -1,0 +1,956 @@
+{
+  "paper_id": "UVEHJMRE",
+  "title": "A novel approach for computerized quantitative image analysis of proximal femur bone shape deformities based on the hip joint symmetry",
+  "abstract": "As a result of most of the bone disorders seen in hip joints, shape deformities occur in the structural form of the hip joint components. Image-based quantitative analysis and assessment of these deformities in bone shapes are very important for the evaluation, treatment, and prognosis of the various hip joint bone disorders. In this article, a novel approach for the image-based computerized quantitative analysis of proximal femur shape deformities is presented. In the proposed approach, shape deformities of the pathological proximal femurs were quantified over the contralateral healthy proximal femur shape structure of the same patient in 2D by taking the hip joint symmetry property of human anatomy into consideration. It is based on the idea that if the right and left proximal femurs in bilateral hip joints are highly symmetrical and also if one of the proximal femurs is healthy and the contralateral one is pathological, the non-overlapping bone shape regions can represent the deformities in pathological proximal femurs when both proximal femurs are registered to overlap each other. In the methodological process of the proposed study, a set of image preprocessing operations was primarily performed on the raw magnetic resonance imaging (MRI) data. Then, the segmented proximal femurs in bilateral hip joint images were automatically aligned with the Iterative Closest Point (ICP) rigid registration method. Following the registration, a set of image postprocessing operations was performed on the images of proximal femurs aligned. In the quantification phase, the bone shape deformities in pathological proximal femurs were quantified simply in terms of the mismatching area in 2D by measuring a shape variation index representing the total bone shape deformity ratio. To evaluate the proposed quantitative shape analysis approach, bilateral hip joints in a total of 13 coronal MRI sections of 13 patients with Legg-Calve-Perthes disease (LCPD) were used. Experimental studies have shown that the proposed approach has quite promising results in the quantitative representation of the pathological proximal femur shape deformities. Furthermore, consistent results have been observed for the Waldenstr\u00f6m classification stages of the disease. The shape deformity ratios in pathological proximal femurs were quantified as 9.44% (\u00b11.40), 18.38% (\u00b16.30), 24.73% (\u00b112.42), and 27.66% (\u00b110.41), respectively for the Initial, Fragmentation, Reossification, and Remodelling stages of LCPD with the quantification error rates of 0.29% (\u00b10.16), 0.58% (\u00b10.71), 1.12% (\u00b10.82), and 0.80% (\u00b10.98). Additionally, a mean error rate of 0.65% (\u00b10.68) was observed for the quantified shape deformity ratios of all samples.",
+  "year": 2016,
+  "date": "2016",
+  "authors": [
+    {
+      "name": "Abbas Memis",
+      "email": "abbasmemis@gmail.com",
+      "affiliation": {
+        "organization": "Department of Computer Engineering",
+        "department": "Department of Computer Engineering",
+        "institution": "Y\u0131ld\u0131z Technical University",
+        "address": "\u02d9Istanbul, Turkey"
+      }
+    },
+    {
+      "name": "Song\u00fcl Varl\u0131",
+      "email": "svarli@yildiz.edu.tr",
+      "affiliation": {
+        "organization": "Department of Computer Engineering",
+        "department": "Department of Computer Engineering",
+        "institution": "Y\u0131ld\u0131z Technical University",
+        "address": "\u02d9Istanbul, Turkey"
+      }
+    },
+    {
+      "name": "Fuat Bilgili",
+      "email": "fuat.bilgili@istanbul.edu.tr",
+      "affiliation": {
+        "organization": "Department of Orthopaedics and Traumatology",
+        "department": "Department of Orthopaedics and Traumatology",
+        "institution": "\u02d9Istanbul University",
+        "address": "\u02d9Istanbul, Turkey"
+      }
+    }
+  ],
+  "doi": "10.1016/j.artmed.2021.102057",
+  "md5": "2891BC382CBC217A430BCA68F46A08DF",
+  "publication": {
+    "journal": "Med Image Anal",
+    "journal_inferred": true
+  },
+  "sections": [
+    {
+      "title": "1.. Introduction",
+      "text": "In orthopaedics and traumatology, the bone components composing the human skeletal system may be damaged due to the many factors and the shape structures of these bone components may be altered. These factors may be external factors such as direct impact, fall, and exposure to the high compressive strength, as well as the various bone diseases occurring in bone tissue. Deformations that are occurred in the bone structures not only affect the aesthetic appearance of the human body but may also affect the functional mechanism of the human body  [1] . In particular, computer-aided quantitative analysis of the bone deformities can significantly facilitate the clinical evaluations of the clinicians and contribute to the assessments of the bone disorders. Such a piece of information representing the quantity of the deformity may be useful if it is used in conjunction with the other correlated clinical observations, findings and statistics to clarify some unknown points of the etiologies of the diseases, to diagnose the diseases more accurately, to determine the appropriate treatment methods for the disease and patients, and to facilitate prospective predictions. In this context, it can be stated that the analysis of variations in the shape structures of bone components has importance in medicine, especially in Orthopaedics and Traumatology.\n\nMost of the methods and approaches that are employed in the investigations on bone shape analysis in the scientific literature can be classified within the scope of the Statistical Shape Models (SSM)  [2, 3]  in general. The use of Active Shape Models (ASM)  [4] , Active Appearance Models (AAM)  [5]  and Combined Statistical Models (CSM) is the principal focus in SSM based bone shape analysis  [6] . Apart from the related SSM based approaches, Principal Component Analysis (PCA)  [7]  and Finite Element Models (FEM)  [8]  can be employed within the scope of the SSMs. In addition, several applications such as SSM based anatomical shape segmentation  [2] , reconstruction  [9] , registration  [10]  and population-based morphological variation analysis  [11]  can be made in orthopaedics  [1] . Current researches in the literature show that SSM is used not only in bone shape analysis but also in bone quality assessment  [12] . More extensive resources  [1, 13]  are also available for the SSM based methods, their implementations and applications.\n\nConcerning the quantitative bone shape analysis, we focused on and addressed the computerized quantitative image analysis of the proximal femur bone shape deformities of the patients with Legg-Calve-Perthes disease (LCPD) in this article. LCPD is a painful hip disorder seen in early childhood in paediatric orthopaedics  [14] . Although it has been more than a century since the discovery of the disease, the aetiology of the LCPD is still unclear. The major symptoms of the disease are rising pain in the hip joint, limping and the limited range of motion  [14, 15] . The disease is usually seen between the ages of 4 and 8 years and it is almost 4 times more common in boys than girls  [14] . In LCPD, due to the ischaemia induced by the inadequate blood supply arising in the femoral head, avascular necrosis appears in the femoral head bone. As a result of this biomechanical process, local collapses occur on the femoral head ball and the cartilage covering the femoral head is fragmented. Besides, femoral heads converge to a flattened form in further stages. Ultimately, proximal femur loses its natural pure shape form and cannot properly perform its movement function in the hip joint. In this respect, quantitative information of the proximal femur shape deformity which occurs as a result of the LCPD can significantly contribute to clinical procedures in several directions such as diagnosis, treatment and prognosis.\n\nSeveral analyses have been performed to discover whether the left and right proximal femurs in the human hip joints are symmetrical and reported in the current literature  [16, 17] . The results of an analysis proposed by Young et al.  [17]  on proximal femur symmetry support the assumptions of substantial symmetry of the proximal femur and highlight that asymmetry is not affected by demographics or the size of the proximal femur. Besides, Lindner et al.  [18]  have shown that the global shape of the left and right proximal femurs is symmetric without isolated locations of asymmetry. Also, they have demonstrated that a combined SSM of the left and right proximal femurs can be used to identify and adjust for oppositional asymmetric patterns of shape variation. As is known in the current scientific literature, approximately 90% of the LCPD cases are unilateral. It means that LCPD occurs in a single hip joint with the probability of about 90%. Considering the related advances, we defined such a hypothesis for the quantification of proximal femur shape deformities as follows: If the right and left proximal femurs are considered to be symmetrical substantially, then the total shape deformity of a morphologically deformed proximal femur of a patient that is exposed to a hip disorder can be quantified through the contralateral healthy proximal femur of the same patient. In other words, if one of the right and left proximal femurs in bilateral hip joints is healthy and the other one is pathological, the non-overlapping bone shape regions can represent the deformities in pathological proximal femurs when the both of proximal femurs are registered to overlap each other. When the images resulting of the registration of the healthy and pathological proximal femurs are observed, it will have been witnessed that the intersection bone regions will overlap, some regions of the healthy proximal femur will be different from the pathological proximal femur, and some regions of the pathological proximal femur will be different from the healthy proximal femur. In Fig.  1 , this textual description is delineated in a visual form.\n\nAs seen in Fig.  1 , if bilaterally healthy proximal femurs are registered precisely, the ratio of overlap (the yellow region) will be considerably high and a low shape dissimilarity ratio will be observed. In contrast, if a unilaterally healthy proximal femur is registered to the contralateral pathological proximal femur precisely, the ratio of overlap will decrease and a high shape dissimilarity ratio will be observed. Hence, all the local regions excluding the intersectional area can be considered as the shape deformities and the total shape deformity of the abnormal proximal femurs can be represented by a proportional metric exploiting the intersecting and the non-intersecting regions.\n\nTo this end, a novel and quite simple proximal femur shape deformity quantification approach relying on the hip joint symmetry was aimed and proposed. Based on the hypothesis previously stated, we performed experimental evaluations on coronal magnetic resonance imaging (MRI) sections including the bilateral hip joints of the patients with LCPD and quantified the total shape deformity of the abnormal proximal femurs from these bilateral hip joint images with the proposed approach. The proposed approach quantifies the shape deformities in pathological proximal femurs by representing the whole shape deformity with a single rational metric in 2D. To the best of our knowledge, no analysis report quantifying the pathological proximal femur shape deformity of a patient by using the healthy proximal femur shape of the same patient has been performed and presented before in a same manner to the proposed approach discussed in this article. The clinical relevance of the proposed proximal femur shape deformity analysis is that it may both contribute to the selection of the treatment method and prognosis in clinical evaluations."
+    },
+    {
+      "title": "2.. Materials and methods"
+    },
+    {
+      "title": "2.1.. Materials",
+      "text": "The proposed proximal femur shape deformity quantification approach based on the hip joint symmetry was evaluated on MRI sequences of the patients with LCPD. In this context, 13 MRI sequences of the 13 patients (12 males and 1 female) were used. Patients were identified from existing MRI data and analyzed retrospectively. The MRI dataset we employed was provided by the Department of Orthopaedics and Traumatology, Istanbul Faculty of Medicine. Also, the proposed study and the use of the MRI data were approved by the institution from which the MRI data was provided. In our current dataset, each of 13 subjects has multiple MRI sequences which are acquired in coronal imaging plane in different imaging protocols. Since our dataset consists of retrospective MRI data, each patient was scanned on different dates. On the other hand, MRI sequences of each patient have the same date and time stamps. Therefore, only one MRI sequence in which hip joints were more apparent was chosen and the subset which the proposed shape deformity quantification approach was evaluated on constructed. In Table  1 , MRI protocols and protocol parameters of 13 MRI samples in the evaluated dataset are presented.\n\nSince we have been currently analysing the MRI data of LCPD, the proposed approach has been evaluated only on MRI sequences temporarily. However, the proposed approach can also be followed for the same proximal femur shape analysis which is intended to perform on the other medical image modalities such as X-rays. Because a 2D shape analysis was performed within the proposed study, only one MRI section was chosen from each of the bilateral hip MRI sequences. Since the total slice numbers of the MRI sequences vary, the orders of the chosen MRI sections within the whole MRI sequences vary. In selection of the MRI sections to be evaluated, picking up the MRI section that is closest to the femoral head core was determined as the major criterion. Eventually, a total of 13 MRI sections were obtained. In Fig.  2 , a subset of the selected MRI sections is shown."
+    },
+    {
+      "title": "2.2.. General scheme of the proposed study",
+      "text": "Based on the symmetrical shape structure of the proximal femurs, we followed a scheme to measure the deformity ratio of the pathological proximal femurs in bilateral hip joint MR images which are acquired in coronal imaging plane as follows:\n\nIn the methodological process of the proposed study, a set of image preprocessing operations is primarily performed on the raw MRI data to obtain the outputs which are going to be used as the inputs in further processing. Then, the segmented proximal femurs in bilateral hip joint images are automatically aligned with the Iterative Closest Point (ICP) rigid registration method. Following the registration, a set of image postprocessing operations is performed on the images of proximal femurs aligned. So the resultant images to be processed in the phase of quantification are obtained. In the quantification phase, the bone shape deformities in pathological proximal femurs are quantified simply in terms of the mismatching area in 2D by measuring a shape variation index representing the total bone shape deformity ratio. Besides the textual description stated, a visual scheme illustrating the process flow of the proposed approach is presented in Fig.  3 ."
+    },
+    {
+      "title": "2.3.. Preprocessing of the MRI data",
+      "text": "In the initial stage of the methodological process, a set of image preprocessing operations was applied to the raw input MRI data. In the first preprocessing step, both of the thigh bones were manually annotated, and they were segmented. Therefore, the left and right thigh bone regions were isolated from the other anatomical structures that surround the thigh bones. For the manual annotation process of the MRI sections, we utilized the ITK-SNAP  [19]  is a professional medical image analysis and segmentation software tool. Concerning the segmentation operation, some other appropriate medical software tools  [20, 21]  having the capability of segmentation by manually image annotation may also be utilized. The manual annotation of the thigh bones was achieved with ITK-SNAP under the guidance of an expert clinician in Orthopaedics and Traumatology. In Fig.  4 , both intensity images and corresponding manually annotated segmentation maps of some sample MRI sections are presented.\n\nAs seen in Fig.  4 , manually annotated segmentation maps of the MRI sections are binary-level images consisting of the values of 0 and 1. In segmentation maps, the values of 1 (white pixels) indicate the thigh bone, and the values of 0 (black pixels) refer to the background. In the second stage of the MRI data preprocessing, proximal femur RoIs were defined on the segmentation maps. Then, the proximal femurs RoIs were extracted from the whole segmentation maps. As a result of this operation, the left and right proximal femur RoI images were obtained separately."
+    },
+    {
+      "title": "2.4.. Automatic registration of the proximal femur images",
+      "text": "Image registration is the process of aligning and combining data coming from more than one image source  [22] . The essential intention of an image registration method is to find the optimal transformation that best aligns the structures of interest in the input images  [23] . In this research study, the image registration task is utilized and performed for the image-based quantification of the shape deformities of the abnormal proximal femurs. In this context, the automatic registration process of the left and right proximal femur images is addressed and introduced in this section.\n\nIn the registration process of the left and right proximal femur images, the ICP method  [24, 25]  was employed. ICP is a geometric transformation method, which aligns the input point clouds rigidly, and it has an algorithmic structure operating the registration in an iterative routine. More mathematical details regarding the ICP method are included in Appendix A. In the initial step of the registration phase, edge detection is performed on the binary RoI images obtained in MRI data preprocessing to extract the proximal femur edge maps. For this purpose, Canny's edge detection method  [26]  was employed. Then the edge map of the healthy proximal femur is flipped in the direction of the x-axis, and both proximal femurs are set to the same direction roughly before the ICP based registration. In Fig.  5 , binary proximal femur images with the corresponding edge maps are illustrated. By using the ICP, the edge maps of the proximal femurs in same direction are registered. In the application of the ICP method, the 'pcregrigid' function which is provided in the MATLAB Computer Vision System Toolbox was utilized. Since the related method registers two point clouds using the ICP algorithm, the edge maps of the left and right proximal femurs in the 2D spatial domain were represented as point clouds in the 3D Cartesian domain. Because of this reason, locations of the pixels having the value of 1 (edge pixels) in edge maps are transformed from the image coordinate system (spatial domain) to the point space coordinate system (Cartesian domain). They are represented as the points whose components in the third axis (z-axis) are zero in 3D as shown in Fig.  6 . As a result of the proximal femur registration, the required rigid registration parameters are obtained to align the healthy proximal femurs with the contralateral pathological ones.\n\nIn 3D space, rigid transformations including the ICP involve six  Fig. 3. The visual scheme and process flow of the proposed proximal femur shape deformity quantification approach."
+    },
+    {
+      "title": "2.5.. Postprocessing on aligned proximal femur images",
+      "text": "Following the registration of the proximal femur images, a set of image postprocessing procedures is performed on the images storing the registered proximal femurs. The image postprocessing stage consists of two principal operations. The primary image postprocessing operation is applied to the images of the healthy proximal femurs registered to the pathological proximal femurs. While the set of points on which the rigid transformation is performed is being transformed into the image spatial domain, a set of pixels inside the healthy proximal femurs may appear empty (black pixels) because of the rotation. This is because some points may overlap within the same pixels. Hence, a set of black pixels within the healthy proximal femurs may occur as a result of the registration as shown in Fig.  8 .\n\nTo remove the black pixels looking like pepper noise on proximal femur regions, a specific function, 'imfill', that is provided by MATLAB numerical computing and programming software was employed. The 'imfill' function fills image regions and holes by using an algorithm based on morphological reconstruction  [27] . The relevant function does not modify the boundary of the shape when performing this operation, and therefore the structure of shape is not altered. The proximal femur images to which the specified image filling operation is applied are presented in Fig.  8 . As it can be seen in Fig.  9 , the bone region locating at the bottom of the registered images is larger in one of the proximal femurs than in the other. In the secondary image postprocessing operation, the redundant femoral bone regions appearing at the bottom of the registered images of the proximal femurs were intended to remove. For this purpose, a simple process eliminating the bone region between the long and the short proximal femurs was performed. The resultant images regarding the secondary postprocessing operation are additionally shown in Fig.  9 .  Fig. 6. Edge maps of the directionally equalized healthy (H) and pathological (P) proximal femurs in image spatial domain (1st row). Point space representation of the proximal femur edge maps in Cartesian domain (2nd row)."
+    },
+    {
+      "title": "2.6.. Quantification of the proximal femur shape deformities",
+      "text": "The shape deformities resulting from the LCPD in the pathological proximal femurs are quantified automatically from the images on which the image postprocessing operations are performed. In quantification of the shape deformities, the bone regions including all the nonintersecting areas are evaluated as the deformities. Since the right and left proximal femurs in human hip joints are substantially symmetrical, the sum of the non-intersecting regions may indicate the variation of a pathological proximal femur from its natural shape. Therefore, these variations can represent the deformations in the shape of a pathological proximal femur. In Fig.  10 , the quantification process of the shape deformities is delineated over a sample case visually.\n\nAs clearly seen in Fig.  10 , the left and right proximal femurs are in their natural (anatomical) positions in State-1. In State-2, the healthy proximal femur is flipped horizontally and registered to the pathological proximal femur as expressed in detail in the previous sections. Next to the image postprocessing, the images, one of which is shown on the right side of Fig.  10 , are made ready for the quantitative image analysis. To quantify the shape deformities, we proposed and used S V shape variation index which gives the pixel-based ratio of non-intersecting regions to the total area of the proximal femurs. S V score provides a dissimilarity value in the range of [0, 1], and it can also be calculated by using the Intersection over Union (IoU) metric. The calculation of the S V score is also expressed both visually and mathematically in Fig.  10 . If the S V score is close to 0, it means that the shape deformity ratio in pathological proximal femur is low. If it is close to 1, it indicates that the pathological proximal femur has considerably lost its natural shape. More mathematical details regarding the S V and IoU scores are included in Appendix B.\n\nBy using the S V score notation, the actual and quantified shape deformity ratios were calculated for each patient initially. The errors of the patient-based deformity ratios were measured from the actual and quantified S V scores. Then, the mean error ratio and its standard deviation were calculated to observe the mean shape deformity quantification error on all over the samples. In calculation of the deformity quantification error, the absolute error whose mathematical notation is given in Appendix C was performed. In addition to the patient-based quantification statistics, the actual and quantified S V scores were categorized into the 4 levels of the disease. Hence, the mean actual and quantified S V scores were observed for each level with the standard deviations. Additionally, level-based mean quantification errors and their standard deviations were measured. The numerical outcomes of all these calculations are given in the section of experimental results."
+    },
+    {
+      "title": "2.7.. Ground-truth data generation",
+      "text": "To measure the error statistics of the quantification outcomes, it is needed to have the ground-truth deformity quantification data. Therefore, the pathological and healthy proximal femur images, which were extracted from the segmentation maps by performing MR image preprocessing, were manually aligned initially. In manual alignment, Inkscape professional quality vector graphics software  [28]  was utilized. The related graphic editor software allows the use of multiple image layers and additionally allows performing precise rotations and translations on images. Following the manual alignment using Inkscape, the redundant femoral bone regions locating at the bottom of the aligned proximal femur images were removed by performing a postprocessing operation as described in the previous section concerning the image postprocessing. As a result of these operations, the manual registration process of the healthy and pathological proximal femur images was completed, and the ground-truth images that are ready for the quantification process were obtained. In Fig.  11 , a set of manually aligned proximal femur images is presented. Besides, the areas of the healthy and pathological proximal femurs were calculated over the final manual registration images by considering the voxel dimensions of the MRI Fig.  8 . The healthy proximal femur images in spatial domain after registration (1st row) and the same proximal femur images after the regional filling and filtering with 'imfill' (2nd row). sections and stated in Table  2 ."
+    },
+    {
+      "title": "3.. Experimental results",
+      "text": "In experimental studies of the proposed approach, an MRI set, which consists of 13 bilateral hip MRI sections of 13 patients diagnosed with LCPD, was evaluated. The mean age of the patients is 8 (\u00b14) years and the mean body mass is 48.46 (\u00b128.02) kg. Only one hip joint (right or left) of each patient suffers from LCPD. The distribution of the patients according to the severity of the disease is as follows: 3 patients in Initial level, 5 patients in Fragmentation level, 2 patients in Reossification level, 3 patients in Remodelling level. In Table  3 , clinical statistics including the patient sex, age, body mass and the LCPD stage are presented for each of the subjects in the cohort.\n\nPatients in the study cohort are in the different levels of LCPD as it can be seen in Table  3 . Because there are no common MRI based classification systems for the categorization of the LCPD disease severity, Waldenstr\u00f6m radiological classification system  [29, 14]  was used to represent the disease levels of the patients. Waldenstr\u00f6m classified LCPD patients into 4 levels by using the radiological findings of the patients  [14]  as follows: Initial (Level-1), Fragmentation (Level-2), Reossification (Level-3) and Remodelling (Level-4). Details of the Waldenstr\u00f6m classification system and the details of the variations occurring on proximal femurs within each disease level are available in several comprehensive resources  [14] . However, the primary findings in these stages can be summarized as follows: In Initial stage, avascular necrosis rises in femoral head bone but femoral head preserves its natural spherical form. In Fragmentation stage, subchondral fractures occur on the femoral head and the spherical form of the femoral head converges to a nonspherical form due to the collapses. In the stage of Reossification, necrotic bone is resorbed and the new bone appears with ossification. In the last stage, which is known as Remodelling or Healing, the morphological structure of the femoral head is remodelled by the human biomechanism. As a result of this anatomical process, the femoral head converges to the original shape that it has before the disease, or keep up its non-spherical form depending on the disease progression and procedures applied in the treatment process.\n\nWithin the scope of the performance evaluations, patient-based S V scores of the pathological proximal femurs were calculated initially by performing the proposed shape quantification approach on the MRI section of each patient in the study cohort. Patient-based actual shape deformity ratios, quantified shape deformity ratios and the observed shape deformity errors are given in Table  4 . All of the observed S V scores are given as percentages in Table  4 .\n\nAs stated in Table  4 , the mean error is 0.65% with its standard deviation of \u00b10.68%. In addition, an error rate of shape deformity less than 1% was observed for the 10 of the 13 patients. Since the S V scores vary in the range of [0, 1], the S V scores are multiplied by the value of 100 in order to represent the ratios as percentages. Apart from the patientbased statistics stated in Table  4 , the results were categorized into the 4 levels of the LCPD for a level-based shape deformity analysis as expressed in Table  5 .\n\nIn Table  5 , the observed actual and quantified shape deformity ratios are presented for the LCPD stages of Initial, Fragmentation, Reossification and Remodelling. The ratios in each cell of Table  5  indicate the mean shape deformity ratio and its standard deviation observed in the related level of the LCPD. The patient-based results were already given in Table  4 . The level-based statistics can also be inferred from the related table."
+    },
+    {
+      "title": "4.. Discussions",
+      "text": "The resultant shape deformity quantification outputs that were obtained in the experimental studies were evaluated on two bases. In the first one, the proposed approach was performed on the MRI data of each patient independently to observe the patient-based quantification statistics. In the second one, patient-based quantification scores were categorized into the 4 levels of the LCPD, and a categorical analysis was performed. The patient-based results observed in the experimental studies seem to be quite successful. An error rate of shape deformity less than 1% was observed for the 10 of the 13 patients. These low error rates show that the registration of the bilateral proximal femurs was achieved with a high success rate, and the ICP method is remarkably successful in registration of the healthy and pathological proximal femur bones. Additionally, the results reflecting the analyses on the 4 LCPD levels seem to be quite consistent with the severity of the disease in each level.\n\nIn medicine, it is already known roughly whether the changes in proximal femur bone shapes are small or large according to the LCPD levels. In Initial level, almost no deformity occurs at the femoral head. Even, the beginning of the initial stage may not be detected in plain radiographs for the same reason. In Fragmentation stage, subchondral fractures occur on the femoral head and the spherical form of the femoral head converges to a non-spherical form due to the collapses. Therefore, the mean shape deformity ratio is higher in this stage than the ratio in the first stage. The quantified mean shape deformity ratios and their standard deviations in the first two stages of the LCPD are lower than the values in the other stages because there is not much deformity in the shape of the proximal femur bone in the first two stages. Also, higher standard deviations were observed in the mean shape deformity ratios belonging to the Reossification and Remodelling stages of the LCPD. The reason why the standard deviation of the shape deformity ratio is higher in the last two stages of the disease is that the femoral heads can heal properly and recover its original shape, or cannot heal properly and not recover its normal shape Reossification stage. Furthermore, it can be observed from Table  5  that the error rates are higher in the last two stages of the LCPD. It also seems to be consistent. As the deformations of the pathological proximal femur bone shapes increase in the progressive LCPD stages, it becomes more difficult to register the healthy and pathological proximal femurs with a high registration accuracy by using ICP. Nevertheless, the mean observed errors in all the LCPD stages are low and acceptable. These observations are quite promising for future investigations that could be performed in this way.\n\nThe LCPD occurs unilaterally in about 90% of the total cases. Therefore, the proposed quantification approach can be performed for approximately 9 of every 10 LCPD cases. For the remaining 10% of the total LCPD cases with bilateral disease, the proposed quantification approach also has the potential to be utilized. In bilateral cases, the shape information of the contralateral healthy proximal femurs cannot be used directly since the shape of both hip joints are deformed. However, such a scheme can be followed by using the proposed approach in the quantification of the proximal femur bone shape deformities in bilateral cases: The mean proximal femur shape models can be constructed from the healthy proximal femur shapes which are collected from the healthy individuals of different gender and age groups, and the deformity ratio of both pathological proximal femurs can be quantified through the constructed mean shape models.\n\nIn the current literature of medical image analysis, there have been various research studies proposed for proximal femur shape analysis and quantification. Lindner et al. developed a fully automatic shape model matching (FASMM) system that uses an SSM to capture and represent the shape of skeletal elements within standard radiographs and demonstrated the use of the FASMM system for the segmentation of the proximal femur from anteroposterior radiographs  [30] . In another study proposed by Lindner et al.  [18] , it was aimed to analyze the proximal femur symmetry based on the SSMs. Harris et al. used SSMs to quantify the 3D variation and morphologic differences between femurs with and without cam femoroacetabular impingement  [31] . Hefny and Ellis presented an analysis based on the principal tangent components as a new method  [32]  for shape description since the current frameworks, based on principal component analysis, appear inadequate for analyzing femoral contours because of the complex deformations in diseased patients. Schumann et al. presented a study on validation of the SSM based reconstruction of proximal femurs  [9] . They showed that statistically there was no significant difference between the morphometric parameters extracted from the reconstructed surface models of the normal cases and those extracted from the reconstructed surface models of the outliers. In another study in which proximal femur reconstruction was aimed  [33] , Balestra et al. addressed the reconstruction of 3D patient-specific models of a hip joint from 2D calibrated X-ray images. They used articulated SSM and reconstructed the proximal femur and pelvis shapes with minor errors.\n\nAs similar to the proposed approach, there also exist some research papers  [34, 35]  on analysis of the unilateral symptomatic hip joint cases. In a more recent study regarding the femoral bone quantification, Keating et al.  [35]  evaluated the SSMs in quantification of the morphological differences between symptomatic and nonsymptomatic hips in patients with unilateral femoroacetabular impingement syndrome to determine whether the SSMs can detect subtle morphological differences in the shape of the proximal femur. Keating et al. generated the 3D shape models in the form of triangle meshes from the computed tomography images, and built SSM models. By comparing the statistical shapes of the deformed and normal hips, they aimed to identify structural differences. As similar to the proposed study in this article, they analyzed the morphological differences between the healthy and pathological proximal femurs. However, the related study  [35]  presents a population-based analysis with the use of the SSMs. Additionally, our approach evaluates the proximal femur shape deformities with a patient-specific scheme based on the hip symmetry and produces a quantitative output representing the total shape deformity ratio. In another research paper published in the last decade of the previous century, Mouravliansky et al.  [34]  presented a semi-automatic, computer-based method for the quantitative analysis of radiographs in children with Perthes disease. They tried to estimate the femoral head shape and its relationship with the acetabulum, as well as the bone loss and the flattening of the affected femoral head with respect to the contralateral unaffected hip. An accurate prediction of the bone loss in the affected hip was aimed by Mouravliansky et al. by comparing the area included in the affected contour with that in the contour of the unaffected hip. Although the related study  [34]  evaluated the contralateral healthy and pathological hip joints and it is similar to the proposed approach in this respect, it presented a bone loss analysis which was performed in a specific local area on the top of the femoral head without a numerical analysis output. In contrast, our approach analyzes the whole proximal femur morphologically and performs this shape analysis with a quantification approach based on image registration and shape dissimilarity.\n\nApart from the related studies on proximal femur shape analysis introduced in the previous paragraph, bone shape analysis studies have also been particularly performed for proximal femurs with LCPD. In one of these researches, Chan et al.  [11]  aimed to improve the 3D understanding of shape variations during normal growth, and in LCPD and Slipped Capital Femoral Epiphysis (SCFE), through statistical shape modelling. For that purpose, they described the proximal femur shape by using eight modes of variation and corresponding shape variables. In another and a more recent study presented by Chan et al.  [36] , principles of continuum mechanics were applied to SSM and 3D metrics for the evaluation of shape deformations in normal growth, LCPD, and SCFE were determined. The related article  [36]  also provides new 3D metrics for characterizing the shape and biomechanics of the proximal femur. Standefer et al. proposed a study  [37]  to quantify femoral head deformity in patients with LCPD using a novel 3D magnetic resonance imaging (MRI) reconstruction and volume-based analysis. They quantified the deformity using a 3D volume ratio method based on reference hemisphere volume as well as two surface geometry methods. Shah et al.  [38]  evaluated a method of quantifying the shape and size of the femoral head and the femoral-acetabular relationship from computer images of anteroposterior and lateral radiographs to devise reliable continuous outcome measures for assessing the outcomes of treatment of LCPD. They analyzed the radiographs of mature individuals with healed LCPD and calculated the sphericity deviation score, femoral head enlargement, femoral neck growth inhibition, and composite femoral congruency arc.\n\nMost of the research studies reveal that the SSMs have been extensively used for the proximal femur shape analysis  [30, 18, 31, 33, 11, 36] . In an article  [1]  presented by Lamecker and Zachow, SSM based modelling of the musculoskeletal structures and their applications have been discussed. The role of the SSMs in modelling of the bone anatomical structures and the SSM based methods used for this purpose have been extensively discussed by Sarkalkan et al.  [6] . However, in SSM based shape analyses, the shape variation modes which are directly related to the anatomical shapes of the population are evaluated  [18, 36] . In contrast, the proposed approach quantifies the deformity ratio of a pathological proximal femur by directly using the contralateral healthy proximal femur of a subject by considering the hip joint symmetry. Moreover, the proposed quantification approach can additionally be performed by using an SSM based analysis. In some related works  [18, 36] , it is also seen that shape variations of the proximal femurs are quantified by using distance-based metrics. In contrast, we quantified the shape variations of the pathological proximal femurs by using an area-based metric which represents the total deformity with a single ratio. Since the quantification metric we used shows the whole deformity ratio, it does not allow to represent the local deformities in the femoral neck or femoral head independently. However, this limitation can be overcome by performing an SSM based segmentation similar to a related study that was proposed by Chan et al.  [36] . Because the anatomical landmarks can be localized with the SSM based approaches, the boundaries of the related anatomical regions can be determined automatically and the local deformity analyses can be performed. Furthermore, the ICP method can also be used in conjunction with the SSMs, since the SSM based approaches utilize anatomical anchor points on images. Also, it will be needed to keep the number of anchor points that are defined on images as many as possible in an SSM based analysis. Otherwise, the error variances of both distance-based and area-based shape deformity measurements will increase. Since all the pixels within edge contours are taken into consideration in the proposed study, the variations of such measurement errors are minimized.\n\nThe study introduced in this article has the potential to provide advances in many respects. Some featured highlights of the proposed image-based proximal femur quantification approach are stated as follows:\n\n\u2022 Although this approach has been performed on the MRI slices, it can be also performed on the other medical image modalities such as CT images and plain radiographs. \u2022 Since the morphological difference percentage of the pathological bone is calculated by using the structural shape of the contralateral healthy bone in the same image, it does not require a shape alignment according to the age and sex of the patients. \u2022 LCPD occurs in a single hip joint with the probability of approximately 90%. Hence, this high incident rate enables this shape analysis to be carried out directly for most of the LCPD cases. For the bilateral LCPD cases, the mean shape models which can be constructed from the proximal femur shapes of the healthy individuals of different gender and age groups can be utilized to perform the proposed deformity quantification approach. \u2022 This approach was implemented by using the proximal femurs of the patients with LCPD in the scope of this article. However, it can be performed in shape analysis of the other hip disorders resulting in morphological variations on global shape structures of the proximal femurs.\n\nThe outcomes of the study are also promising for the clinical applicability of the proposed method regarding the proximal femur shape deformity quantification. Although it is difficult to make definite and precise inferences because of the evaluation of the limited number of the patients within the experimental studies, the proposed approach may contribute to the potential clinical translational applications and the clinical evaluation cases in multiple ways in quantification of the proximal femur bone shape deformities as follows:\n\nTable  5  The actual and quantified shape deformity ratios, and the error of the shape deformity for the 4 stages of the LCPD.\n\nDegree of the disease (LCPD level) Number of the patients Actual shape deformity ratio (\u03bc(\u00b1\u03c3)%) Quantified shape deformity ratio (\u03bc(\u00b1\u03c3)%) Error of the shape deformity ratio (\u03bc(\u00b1\u03c3)%) Level-1: Initial 3 patients 9.41 (\u00b11.25) 9.44 (\u00b11.40) 0.29 (\u00b10.16) Level-2: Fragmentation 5 patients 18.87 (\u00b16.42) 18.38 (\u00b16.30) 0.58 (\u00b10.71) Level-3: Reossification 2 patients 25.85 (\u00b113.24) 24.73 (\u00b112.42) 1.12 (\u00b10.82) Level-4:Remodelling 3 patients 28.12 (\u00b111.67) 27.66 (\u00b110.41) 0.80 (\u00b10.98)\n\n\u2022 The shape variation index representing the total deformity ratio of the abnormal proximal femurs may be used as a clinical classification parameter.\n\n\u2022 The success of a treatment method may be analyzed by measuring the total deformity ratios of an abnormal proximal femur regularly in a clinical examination period. \u2022 The shape variation index may be used as a decision support mechanism in the case of a surgical operation intention or similar cases. \u2022 The shape variation index may be used to decide the appropriate treatment method for the patients suffering from hip disorders. \u2022 Moreover, the shape variation index of an abnormal proximal femur may serve as a decision support parameter in prognosis process.\n\nSince our MRI dataset has a limited number of patients, we were able to analyze the proximal femurs of totally 13 LCPD patients. Furthermore, it is very troublesome and laborious to collect the MRI data of the LCPD patients because LCPD is not a common disease. Additionally, even if a satisfying number of subjects are communicated for imaging, the MRI protocols to be used in imaging may not be suitable for all children because of the other health-based limitations such as claustrophobia and significantly limited range of motion. Even though the size of the study cohort cannot be considered as a limitation for the method, it makes harder to generalize the results of the study even more, and it restricts to make more reliable inferences. However, we have been currently working on increasing the number of subjects in our study cohort. We additionally plan to perform the stated proximal femur quantification analyzes on more samples. Besides, we utilized the manually annotated segmentation maps for the automatic quantification of the proximal femur shape deformities. Since we aimed to measure the error rates of the registration and observe whether the proposed quantification approach is feasible or not, we used manually annotated segmentation maps in our preliminary researches for the quantitative MR image analysis. The quantitative analysis of the proximal femur shape deformities proposed in this article can also be automated by integrating with an automated segmentation method.\n\nIn registration of the proximal femurs, we used the ICP which performs a transformation based registration. In medical image analysis, image registration is also a crucial task, and plenty of research studies and methodologies have been proposed in the current literature of medical image registration  [23] . In general, transformation based registration methods can be categorized into two groups as the rigid and non-rigid  [23] . The rigid transformation methods include the geometric operations of rotation and translation. Hence, they do not alter the shape of the objects to be transformed. Contrarily, the non-rigid transformations include the geometric operations of translation, rotation, scaling and shear. Therefore, they allow altering the shape of the object. For more detailed information regarding the transformation approaches and the medical image registration, several reports within this field  [22, 23]  can be followed. The main reason why we use a rigid transformation method in the registration of the bilateral proximal femur images is that it is intended to quantify the total deformity ratio is directly related to the shapes of the proximal femurs. Therefore, no shape alterations stemming from the transformation operations including the scaling and shearing have to occur in the global shape of the proximal femurs. This requirement in registration can be satisfied with a rigid transformation method. This was the primary reason why the ICP method was used. The main reason why the edge maps were used instead of the binary segmentation RoIs in the registration is that the binary segmentation RoIs may induce an inaccurate alignment since they contain a large number of pixels with the value of 1 compared to the edge maps. Furthermore, a shape in an image cannot only be represented by the area covering the shape but also the edges of this shape can provide sufficient information about the general structure of the shape. By the use of the edge maps, not only the proximal femurs were registered more successfully but also the consumed time was reduced since the edge maps include only the contours of the proximal femurs, not the whole proximal femur area. ICP performs a rigid registration by trying to minimize the error between the point clouds. In other words, it is performed by trying to find the maximum similarity between the point clouds. At this point, it may be asked how ICP can be remarkably successful in the registration of the healthy proximal femurs to the pathological ones because the shape structures of the pathological proximal femurs are extremely deformed. Although the LCPD deforms the shape of the femoral head substantially, in fact, no significant structural shape variations occur in the interior side of the femoral neck and also in the trochanter regions. Hence, the ICP can overcome the successful registration of the healthy and pathological proximal femurs through the local regions that are non-deformed in both proximal femurs. Within the registration process, some pixels of the aligned proximal femur regions may overlap because of the rotation and the domain transformation, and this may lead to appear the pepper-like noises on transformed proximal femur images as it is stated in the image postprocessing. If this kind of noises occurs on the surface contour of the shape, they may produce very small and negligible shape errors that can be ignored. The quantity of the related shape errors depends on the resolution of the images, as well. The more the image resolution is higher, the more likely the occurrence of the transformation based shape errors will decrease. In other words, the more the image resolution is smaller, the more likely the occurrence of the transformation based shape errors will increase.\n\nIn MRI scanning, the position of the patients during the imaging affects the appearance of the anatomical structures in the resultant image series. To apply the proposed approach reliably on 2D MRI sections, the positions of both hip joints of the patients should be equal (or almost equal) to the imaging plane during the scanning process. Therefore, the bilateral hip images can be obtained from the same anatomical regions of both hip joints and the symmetry-based deformity quantification can be performed more reliably. In our study, since we performed the proposed approach on retrospective MRI data, we had to ignore minor errors that might stem from the positions of patients. But, as far as we could observe from the MRI sections, there were no major deviations in positions of the hip joints in most of the MRI sections that were used. In clinical evaluations, this situation should also be taken into consideration. Another issue within the discussion is the selection process of the MRI sections within the whole MRI sequences. In MRI section selection, the sections that are the closest to the femoral head core were picked up. Because each MRI sequence consists of a different number of slices, the orders of the selected MRI sections are different as expected. Since the selection of the MRI sections is rather subjective, this procedure can affect measurements. However, to reduce the effect of this subjectivity, we have taken anterior sections that are the closest to the femoral head core as we have already stated.\n\nIn quantification of the shape deformity, the total areas of the analyzed femurs may have an impact on the shape variation index. Femoral head and neck are largely affected in LCPD while the remaining bony regions are not affected considerably. When a greater area of a femur (relatively the smaller femoral head and neck) is analyzed, it seems to observe smaller deformities within the entire femoral area that is analyzed. Therefore, the shape variation index would be smaller when a large segment of the femur is analyzed. This issue should be taken into consideration in proximal femur annotation performed for segmentation. If not, an additional adjustment is required for the size of the analyzed segment of the femur to overcome such an issue. While we were performing the manual annotation, we took into consideration this issue and tried to make sure that the lengths of the proximal femur pairs were as close as possible. For an appropriate solution of such an issue, it makes sense to perform a normalization with a proportional factor. This may require further information such as total femoral length to which the proximal femur length can be proportioned. A much simpler solution is to identify an anatomical boundary (a straight line which is parallel to the x-axis) on aligned proximal femur images after the image postprocessing. Therefore, the area under the identified anatomical boundary can be discarded in quantification of the shape deformities. Such an operation could significantly standardize the analyzed femoral regions of all subjects.\n\nWe have recently reported a preliminary study  [39]  for the quantification of the abnormal proximal femurs with the proposed approach. The proposed study includes new and extended analyses of our previous researches  [39] . Therefore, the related image-based proximal femur quantification approach is handled more comprehensively in this article. Apart from the previous analyses, we additionally analyzed the registration performance by performing the manual alignments. Furthermore, the error rates between the ground-truth registrations and the registrations which were performed automatically with the ICP were measured. In this respect, one of the main objectives of the proposed study was to verify the deformity measurements of the abnormal proximal femur shapes. Therefore, manually segmented proximal femur images were used within the quantification analyses.\n\nIn future works, it is intended to integrate the proposed approach with an automatic segmentation approach to achieve an automatic proximal femur deformity quantification. We have been currently conducting deep learning based segmentation studies  [40, 41]  for the segmentation of the multiform femoral head and proximal femur bones. Besides, it is intended to implement the proposed approach in 3D for the 3D quantification of the proximal femur bone shape deformities. Moreover, regional quantitative analyses could be performed particularly for the variations of femoral head balls by performing automatic femoral head detection in 2D  [42] [43] [44]  or 3D  [45, 46] ."
+    },
+    {
+      "title": "5.. Conclusions",
+      "text": "By using the proposed approach based on the hip joint symmetry, successful results were achieved in quantitative representation of the proximal femur bone shape deformities. To evaluate the proposed approach, bilateral hip joint images in a retrospective MRI dataset consisting of a total of 13 coronal MRI sections of 13 patients who are diagnosed with unilaterally LCPD were used. In quantitative analyses of the bilateral hip MRI sections, a mean error rate of 0.65(\u00b10.68)% was observed for the quantified shape deformity ratios of all samples. Experimental studies have shown that the proposed approach has quite promising results in the quantitative representation of the proximal femur bone shape deformities. Furthermore, consistent results have been observed for the Waldenstr\u00f6m classification stages of the LCPD. The shape deformity ratios in pathological proximal femurs were quantified as 9.44% (\u00b11.40), 18.38% (\u00b16.30), 24.73% (\u00b112.42), and 27.66% (\u00b110.41), respectively for the Initial, Fragmentation, Reossification, and Remodelling stages of the LCPD with the quantification error rates of 0.29% (\u00b10.16), 0.58% (\u00b10.71), 1.12% (\u00b10.82), and 0.80% (\u00b10.98). The clinical relevance of the proposed proximal femur shape deformity analysis is that it may both contribute to the selection of the treatment method and prognosis in clinical evaluations. Furthermore, it should be considered that the proposed approach may be performed for the various quantification based clinical applications. Additionally, the proposed approach may also be used in shape analysis of the other hip disorders which affect the proximal femurs and deform their shapes. Moreover, the proposed approach may be performed on various medical image modalities such as CT images and plain radiographs in addition to the MRI sections. proximal femurs. Therefore, the yellow region represents the similarity of the bones. The proposed study aims to analyze the shape deformities resulted from the disease. For this reason, the sum of the non-intersecting regions ((S H \\S P ) + (S P \\S H )) of the two proximal femurs was evaluated as the total shape deformity. A shape variance index which describes the total shape variation using the Intersection over Union (IoU) similarity score have been defined to quantify the ratio of the shape deformity. In Eq. (B.1), the IoU formula is presented as follows:\n\nIoU yields a similarity coefficient within the range of [0, 1] by proportioning the intersection of two objects to the union of these objects as seen in Eq. (B.1). If the IoU score is close to 0, it indicates that the similarity between two objects is low and if it is close to 1, two objects are quite similar. By the way, the IoU is also known as the Jaccard index  [48] . Since it is intended to measure the bone shape variation unlike the similarity, an S V shape variation index was defined by subtracting the IoU score from the value of 1 as expressed in Eq. (B.2).\n\nThe S V shape variation index is the ratio of the sum of non-intersecting ((S H \\S P ) + (S P \\S H )) areas to the total area (S H \u222a S P ), in contrast to the IoU score. The S V index is in the range of [0, 1] like the IoU score. If the S V index is close to 0, it indicates that the pathological proximal femur has deformed slightly. If it is close to 1, it indicates that the pathological proximal femur has substantially lost its natural shape."
+    },
+    {
+      "title": "Appendix C. Error analysis in shape deformity quantification",
+      "text": "In error calculation of the shape deformity quantifications, the absolute error between the actual and quantified shape deformity scores (S V ) was measured. The mathematical notation of the absolute error is given in Eq. (C.1) as follows:\n\nwhere E SV is the shape deformity error, and the A SV and Q SV denote the actual and quantified shape deformity scores respectively."
+    },
+    {
+      "text": "Fig. 1. Alignment of the left (L) and right (R) proximal femurs in bilateral hip joints. The representation of the low (top) and high (bottom) shape dissimilarities of the proximal femurs. The green and red colours indicate the healthy and pathological proximal femurs respectively. In aligned proximal femurs, the yellow colour covering the region of intersection indicates the shape similarity, and the sum of the red and green regions represents the shape dissimilarity. (For interpretation of the references to colour in this figure legend, the reader is referred to the web version of this article.)"
+    },
+    {
+      "text": "transformation parameters as three for rotations and three for the translations. The related transformation parameters, which are obtained by employing the edge maps in ICP, are applied to the binary RoI images to register the proximal femur total shapes. The binary RoI images of the proximal femurs are transformed into the Cartesian space before the registration. This is performed on only the healthy proximal femurs since the point clouds defining the pathological proximal femurs are the fixed (model) data and the other point clouds representing the healthy proximal femurs are the moving (source) data. After the transformation in the Cartesian domain is completed, the points are transformed back to the spatial domain again. In Fig.7, proximal femur edge maps which are registered with ICP are presented with the corresponding registered proximal femur complete shapes (segmented binary RoI images) on which the transformation parameters obtained in the registration of the edge maps are applied."
+    },
+    {
+      "text": "Fig. 2. A subset of the MRI sections (1st row) from the evaluated MRI dataset, and the enlarged views of both proximal femurs in the MRI sections (2nd row). The pathological (P) proximal femurs are enclosed with the red boxes and the healthy (H) proximal femurs are enclosed with the green boxes. The pathological proximal femurs in the MRI sections are in LCPD levels of Initial, Fragmentation, Reossification, and Remodelling from left to right, respectively. (For interpretation of the references to colour in this figure legend, the reader is referred to the web version of this article.)"
+    },
+    {
+      "text": "Fig. 4. MRI intensity images (1st row), manually annotated segmentation maps of the MRI sections (2nd row), and the pathological (P) and healthy (H) proximal femur region of interest (RoI) images extracted from the segmentation maps (3rd row)."
+    },
+    {
+      "text": "Fig. 5. The segmentation maps of the left and right proximal femurs, one of which is healthy (H) and the other is pathological (P), obtained from the MRI sections of three patients as a result of the MRI data preprocessing (1st row). Edge maps belonging to the segmentation maps of the left and right proximal femurs (2nd row). Directionally equalized proximal femur edge maps by flipping the healthy (green) proximal femur horizontally and keeping up the direction of the pathological (red) proximal femur (3rd row). (For interpretation of the references to colour in this figure legend, the reader is referred to the web version of this article.)"
+    },
+    {
+      "text": "Fig. 7. Edge maps of the directionally equalized healthy (H) and pathological (P) proximal femurs (1st row). The resultant images obtained after the registration of the proximal femur edge maps with ICP (2nd row) and the complete shapes (segmented binary RoI images) of the registered proximal femurs on which the transformation parameters obtained in the registration of the edge maps are employed (3rd row). In the registered edge maps and binary RoI images, the green and red colours indicate the healthy and pathological proximal femurs respectively. The yellow colour indicates the intersection of the healthy and pathological proximal femurs. (For interpretation of the references to colour in this figure legend, the reader is referred to the web version of this article.)"
+    },
+    {
+      "text": "Fig. 9. The registration images of the healthy and pathological proximal femurs in the spatial domain (1st row) and the same registration images after the redundant bone regions locating at the bottom of the registered images are removed (2nd row)."
+    },
+    {
+      "text": "Fig. 10. The visual representation of the shape deformity quantification (Letters of L and R refer to the left and right proximal femurs respectively. The red, green and yellow colours indicate the pathological proximal femur, healthy proximal femur, and the intersection of the proximal femurs, respectively.) (For interpretation of the references to colour in this figure legend, the reader is referred to the web version of this article.)"
+    },
+    {
+      "text": "Fig. 11. Manually aligned images of the healthy (green) and pathological (red) proximal femurs (1st row) and the manually aligned images after removing of the femoral bone remnants locating at the bottom of the aligned proximal femurs (2nd row). (For interpretation of the references to colour in this figure legend, the reader is referred to the web version of this article.)"
+    },
+    {
+      "text": "MRI protocols and protocol parameters of the MRI sequences in the evaluated MRI dataset."
+    },
+    {
+      "text": "The proximal femur areas of the LCPD patients in manually aligned images (L: left hip joint, R: right hip joint)."
+    },
+    {
+      "text": "Clinical statistics of the subjects."
+    },
+    {
+      "text": "The actual and quantified shape deformity ratios, and the observed shape deformity errors in patient-based shape deformity analysis of the subjects with LCPD."
+    },
+    {
+      "title": "Conflict of interest",
+      "text": "The authors declare that there is no conflict of interest."
+    },
+    {
+      "title": "Appendix A. Mathematical background of the Iterative Closest Point (ICP) method",
+      "text": "Iterative Closest Point (ICP) is a point matching method that aligns two or more point clouds by registering the set of the points of the point clouds rigidly  [24, 25] . The ICP method has been widely used in several research fields such as cartography, mapping, image processing, computer vision, etc. It gives the rotation and translation parameters, which are required for a rigid alignment, by trying to minimize the distance between the point sets defining the two point clouds via the least squares. The ICP method basically performs the registration process with its iterative computational structure. It selects the nearest point pairs at each iteration and calculates the rotation matrix R and the translation vector t over these matching point pairs of the two point clouds. By using the computed parameter set (R,t), the registration error of a model (M) and a source (S) data point clouds is tried to be minimized as expressed in Eq. (A.1) as follows:\n\nwhere N M and N S are the total number of the points in M and S data point clouds respectively. The S source point cloud with N S points is defined as\n\nSimilarly, the M model point cloud with N M points is defined as M = {m i |m i \u2208 \u211d n , i = 1, \u2026, N M } in Cartesian domain, as well. In Eq. (A.1), w ij denotes the value of weight of the closest point pairs matching in the M and S point clouds. If a point m i in model point cloud M is the closest point to the point s j in source point cloud S, the value of 1 is assigned to the weight w ij as w ij = 1; otherwise, w ij is set to 0 as w ij = 0. The equation expressing the registration error in Eq. (A.1) can be written in a much simpler form as stated in Eq. (A.2)."
+    },
+    {
+      "title": "E(R, t)\u221d",
+      "text": "1 N\n\nThe term N in Eq. (A.2) represents the cardinality of the closest point pairs which are selected from the M and S point clouds. This can also be formulated in terms of the sum of the weight coefficients w ij as shown in Eq. (A.3).\n\nIn rigid registration process of the M and S point clouds by using the ICP, the closest points to which each point in the point cloud of M corresponds within the point cloud of S are initially identified. This is performed by measuring the Euclidean distance which is expressed mathematically in the following equation, Eq. (A.4). Then, the corresponding points are paired by matching these points which are closest to each other in the point clouds of M and S.\n\nIn Eq. (A.4), m i and s j are the points in point clouds of M and S, respectively. The expression d Pi in Eq. (A.4) refers to the distance between the point m i and the point s j to which m i is the closest. In Fig.  A12 , two sample point clouds describing two distinct shapes as the M = {M 1 , M 2 , M 3 , M 4 , M 5 , M 6 , M 7 } and S = {S 1 , S 2 , S 3 , S 4 , S 5 , S 6 , S 7 } in 2D are illustrated. The point pairs in which a point in M corresponds to the nearest point in S are assumed to have distances of\n\nIn Eq. (A.4), if the value of d Pi is greater than a constant threshold, distances of the point pairs which do not match this condition are eliminated and not processed in registration. Therefore, a possible high registration error is intended to be prevented in the first stages. Then, a specific weight value of w ij = 1 is determined for each of the selected point pairs. Since the point pairs consisting of the nearest s j points corresponding to the m i points, the value of weight w ij is assigned as 1 for each of these point pairs. Thereafter, the rotation matrix R and the transition vector t are computed based on the minimization of the error E(R, t). Singular Value Decomposition (SVD) is a solution approach that can be used for this purpose. In the solution to be performed with SVD, the centres of the M and S points in point pairs are calculated primarily. In Eqs. (A.5) and (A.6), mathematical notations for the calculations of the centroids C M and C S , which represent the centres of the M and S points in the point pairs respectively, are presented.\n\nThen all m i and s i points are aligned with respect to the related centroids. The alignment is performed by subtracting the centroids C M and C S from all the points m i and s i , as expressed in Eqs. (A.7) and (A.8).\n\nIn Eqs. (A.7) and (A.8), M \u2032 and S \u2032 denote the sets of the points that are aligned to the centroids C M and C S . The H covariance matrix is calculated by using the M \u2032 and S \u2032 as expressed in Eq. (A.9), and the SVD whose general notation is stated in Eq. (A.10) is performed on the H covariance matrix.\n\nIn Eq. (A.10), U and V are the orthogonal matrices consisting of the orthonormal eigenvectors that are obtained from the HH T and H T H respectively. Another expression existing in the same equation is the \u039b is a diagonal matrix which consists of the square roots of the positive eigenvalues of HH T or H T H. As a result of SVD which is performed on the H covariance matrix, the parameters of rotation matrix R and translation vector t can be calculated by using the equations stated in Eqs. (A.11) and (A.12)."
+    },
+    {
+      "title": "R = VU T",
+      "text": "(A.11)\n\nThe parameter set (R, t) provides the rotation and translation quantities which are required to register the source point cloud S to the model point cloud M. By considering the error in Eq. (A.2), the error value of E(R, t) between the transformed point cloud S and the point cloud M is calculated by performing the rotation and translation parameters (R, t) on point cloud S. If the measured error falls below a predetermined e T error threshold level, the registration is complete; if not, the related operations are repeated iteratively until the condition that the measured error value reaches a value below the error threshold level e T or the iteration epoch reaches the total number of the iterations defined previously.\n\nThe detailed algorithmic information, mathematical definitions and the mathematical background of the ICP method are discussed in detail in a study presented by Prochazkova and Martisek  [47] . The related study  [47]  was also utilized to express the background of ICP, and it can be followed for more details."
+    },
+    {
+      "title": "Appendix B. Mathematical background of the shape deformity quantification index",
+      "text": "Let S H and S P be the aligned shapes of the healthy and pathological proximal femurs respectively. The fusion image of the aligned proximal femurs consists of the colours of red, green and yellow as seen in Fig.  10 . The region coloured with the yellow indicates the intersection of the S H and S P , as S H \u2229 S P . The region coloured with the red indicates the difference of S P and S H , and it can be expressed as S P \\S H by using the set notations. Similarly, the region coloured with the green refers to the difference of S H and S P , and it can be expressed as S H \\S P . The yellow region (S H \u2229 S P ) is the common area in both healthy and pathological A.  Memis \u00b8 et al."
+    }
+  ],
+  "references": [
+    {
+      "title": "Statistical shape modeling of musculoskeletal structures and its applications",
+      "authors": [
+        "H Lamecker",
+        "S Zachow"
+      ],
+      "year": 2016,
+      "journal": "Computational radiology for orthopaedic interventions",
+      "raw": "Statistical shape modeling of musculoskeletal structures and its applications \n\t\t \n\t\t\t H Lamecker \n\t\t \n\t\t \n\t\t\t S Zachow \n\t\t \n\t \n\t \n\t\t Computational radiology for orthopaedic interventions \n\t\t \n\t\t\t \n\t\t\t 2016 \n\t\t \n\t \n\t Lamecker H, Zachow S. Statistical shape modeling of musculoskeletal structures and its applications. Computational radiology for orthopaedic interventions 2016: 1-23."
+    },
+    {
+      "title": "Statistical shape models for 3D medical image segmentation: A review",
+      "authors": [
+        "T Heimann",
+        "H-P Meinzer"
+      ],
+      "year": 2009,
+      "journal": "Med Image Anal",
+      "volume": "13",
+      "issue": "4",
+      "raw": "Statistical shape models for 3D medical image segmentation: A review \n\t\t \n\t\t\t T Heimann \n\t\t \n\t\t \n\t\t\t H-P Meinzer \n\t\t \n\t \n\t \n\t\t Med Image Anal \n\t\t \n\t\t\t 13 \n\t\t\t 4 \n\t\t\t \n\t\t\t 2009 \n\t\t \n\t \n\t Heimann T, Meinzer H-P. Statistical shape models for 3D medical image segmentation: A review. Med Image Anal 2009;13(4):543-63."
+    },
+    {
+      "title": "Statistical shape models for 3D medical image segmentation",
+      "authors": [
+        "T Heimann"
+      ],
+      "year": 2009,
+      "raw": "Statistical shape models for 3D medical image segmentation \n\t\t \n\t\t\t T Heimann \n\t\t \n\t\t \n\t\t\t 2009 \n\t\t\t VDM Verlag \n\t\t \n\t \n\t Heimann T. Statistical shape models for 3D medical image segmentation. VDM Verlag; 2009."
+    },
+    {
+      "title": "Active shape models-their training and application",
+      "authors": [
+        "T Cootes",
+        "C Taylor",
+        "D Cooper",
+        "J Graham"
+      ],
+      "year": 1995,
+      "doi": "10.1006/cviu.1995.1004",
+      "journal": "Comput Vis Image Understand",
+      "volume": "61",
+      "issue": "1",
+      "raw": "Active shape models-their training and application \n\t\t \n\t\t\t T F Cootes \n\t\t \n\t\t \n\t\t\t C J Taylor \n\t\t \n\t\t \n\t\t\t D H Cooper \n\t\t \n\t\t \n\t\t\t J Graham \n\t\t \n\t\t 10.1006/cviu.1995.1004 \n\t \n\t \n\t\t Comput Vis Image Understand \n\t\t \n\t\t\t 61 \n\t\t\t 1 \n\t\t\t \n\t\t\t 1995 \n\t\t \n\t \n\t Cootes TF, Taylor CJ, Cooper DH, Graham J. Active shape models-their training and application. Comput Vis Image Understand 1995;61(1):38-59."
+    },
+    {
+      "title": "Active appearance models",
+      "authors": [
+        "T Cootes",
+        "G Edwards",
+        "C Taylor"
+      ],
+      "year": 1998,
+      "journal": "European conference on computer vision",
+      "raw": "Active appearance models \n\t\t \n\t\t\t T F Cootes \n\t\t \n\t\t \n\t\t\t G J Edwards \n\t\t \n\t\t \n\t\t\t C J Taylor \n\t\t \n\t \n\t \n\t\t European conference on computer vision \n\t\t \n\t\t\t \n\t\t\t 1998 \n\t\t \n\t \n\t Cootes TF, Edwards GJ, Taylor CJ. Active appearance models. European conference on computer vision 1998:484-98."
+    },
+    {
+      "title": "Statistical shape and appearance models of bones",
+      "authors": [
+        "N Sarkalkan",
+        "H Weinans",
+        "A Zadpoor"
+      ],
+      "year": 2014,
+      "doi": "10.1016/j.bone.2013.12.006",
+      "journal": "Bone",
+      "volume": "60",
+      "raw": "Statistical shape and appearance models of bones \n\t\t \n\t\t\t N Sarkalkan \n\t\t \n\t\t \n\t\t\t H Weinans \n\t\t \n\t\t \n\t\t\t A A Zadpoor \n\t\t \n\t\t 10.1016/j.bone.2013.12.006 \n\t \n\t \n\t\t Bone \n\t\t \n\t\t\t 60 \n\t\t\t \n\t\t\t 2014 \n\t\t \n\t \n\t Sarkalkan N, Weinans H, Zadpoor AA. Statistical shape and appearance models of bones. Bone 2014;60:129-40."
+    },
+    {
+      "title": "Principal component analysis",
+      "authors": [
+        "I Jolliffe"
+      ],
+      "year": 2011,
+      "raw": "Principal component analysis \n\t\t \n\t\t\t I Jolliffe \n\t\t \n\t\t \n\t\t\t 2011 \n\t\t\t Springer \n\t\t \n\t \n\t Jolliffe I. Principal component analysis. Springer; 2011."
+    },
+    {
+      "title": "Development of a parametric finite element model of the proximal femur using statistical shape and density modelling",
+      "authors": [
+        "D Nicolella",
+        "T Bredbenner"
+      ],
+      "year": 2012,
+      "journal": "Comput Methods Biomech Biomed Eng",
+      "volume": "15",
+      "issue": "2",
+      "raw": "Development of a parametric finite element model of the proximal femur using statistical shape and density modelling \n\t\t \n\t\t\t D P Nicolella \n\t\t \n\t\t \n\t\t\t T L Bredbenner \n\t\t \n\t \n\t \n\t\t Comput Methods Biomech Biomed Eng \n\t\t \n\t\t\t 15 \n\t\t\t 2 \n\t\t\t \n\t\t\t 2012 \n\t\t \n\t \n\t Nicolella DP, Bredbenner TL. Development of a parametric finite element model of the proximal femur using statistical shape and density modelling. Comput Methods Biomech Biomed Eng 2012;15(2):101-10."
+    },
+    {
+      "title": "Validation of statistical shape model based reconstruction of the proximal femura morphology study",
+      "authors": [
+        "S Schumann",
+        "M Tannast",
+        "L-P Nolte",
+        "G Zheng"
+      ],
+      "year": 2010,
+      "doi": "10.1016/j.medengphy.2010.03.010",
+      "journal": "Med Eng Phys",
+      "volume": "32",
+      "issue": "6",
+      "raw": "Validation of statistical shape model based reconstruction of the proximal femura morphology study \n\t\t \n\t\t\t S Schumann \n\t\t \n\t\t \n\t\t\t M Tannast \n\t\t \n\t\t \n\t\t\t L-P Nolte \n\t\t \n\t\t \n\t\t\t G Zheng \n\t\t \n\t\t 10.1016/j.medengphy.2010.03.010 \n\t \n\t \n\t\t Med Eng Phys \n\t\t \n\t\t\t 32 \n\t\t\t 6 \n\t\t\t \n\t\t\t 2010 \n\t\t \n\t \n\t Schumann S, Tannast M, Nolte L-P, Zheng G. Validation of statistical shape model based reconstruction of the proximal femur -a morphology study. Med Eng Phys 2010;32(6):638-44."
+    },
+    {
+      "title": "Instantiation and registration of statistical shape models of the femur and pelvis using 3D ultrasound imaging",
+      "authors": [
+        "D Barratt",
+        "C Chan",
+        "P Edwards",
+        "G Penney",
+        "M Slomczykowski",
+        "T Carter"
+      ],
+      "year": 2008,
+      "journal": "Med Image Anal",
+      "volume": "12",
+      "issue": "3",
+      "raw": "Instantiation and registration of statistical shape models of the femur and pelvis using 3D ultrasound imaging \n\t\t \n\t\t\t D C Barratt \n\t\t \n\t\t \n\t\t\t C S Chan \n\t\t \n\t\t \n\t\t\t P J Edwards \n\t\t \n\t\t \n\t\t\t G P Penney \n\t\t \n\t\t \n\t\t\t M Slomczykowski \n\t\t \n\t\t \n\t\t\t T J Carter \n\t\t \n\t \n\t \n\t\t Med Image Anal \n\t\t \n\t\t\t 12 \n\t\t\t 3 \n\t\t\t \n\t\t\t 2008 \n\t\t \n\t \n\t Barratt DC, Chan CS, Edwards PJ, Penney GP, Slomczykowski M, Carter TJ, et al. Instantiation and registration of statistical shape models of the femur and pelvis using 3D ultrasound imaging. Med Image Anal 2008;12(3):358-74."
+    },
+    {
+      "title": "Statistical shape modeling of proximal femoral shape deformities in Legg-Calv\u00e9-Perthes disease and slipped capital femoral epiphysis",
+      "authors": [
+        "E Chan",
+        "C Farnsworth",
+        "J Koziol",
+        "H Hosalkar",
+        "R Sah"
+      ],
+      "year": 2013,
+      "doi": "10.1016/j.joca.2012.12.007",
+      "journal": "Osteoarthr Cartil",
+      "volume": "21",
+      "issue": "3",
+      "raw": "Statistical shape modeling of proximal femoral shape deformities in Legg-Calv\u00e9-Perthes disease and slipped capital femoral epiphysis \n\t\t \n\t\t\t E F Chan \n\t\t \n\t\t \n\t\t\t C L Farnsworth \n\t\t \n\t\t \n\t\t\t J A Koziol \n\t\t \n\t\t \n\t\t\t H S Hosalkar \n\t\t \n\t\t \n\t\t\t R L Sah \n\t\t \n\t\t 10.1016/j.joca.2012.12.007 \n\t \n\t \n\t\t Osteoarthr Cartil \n\t\t \n\t\t\t 21 \n\t\t\t 3 \n\t\t\t \n\t\t\t 2013 \n\t\t \n\t \n\t Chan EF, Farnsworth CL, Koziol JA, Hosalkar HS, Sah RL. Statistical shape modeling of proximal femoral shape deformities in Legg-Calv\u00e9-Perthes disease and slipped capital femoral epiphysis. Osteoarthr Cartil 2013;21(3):443-9."
+    },
+    {
+      "title": "Statistical shape and appearance models for bone quality assessment",
+      "authors": [
+        "P Raudaschl",
+        "K Fritscher"
+      ],
+      "year": 2017,
+      "doi": "10.1016/b978-0-12-810493-4.00018-3",
+      "journal": "Statistical shape and deformation analysis",
+      "raw": "Statistical shape and appearance models for bone quality assessment \n\t\t \n\t\t\t P Raudaschl \n\t\t \n\t\t \n\t\t\t K Fritscher \n\t\t \n\t\t 10.1016/b978-0-12-810493-4.00018-3 \n\t \n\t \n\t\t Statistical shape and deformation analysis \n\t\t \n\t\t\t \n\t\t\t 2017 \n\t\t \n\t \n\t Raudaschl P, Fritscher K. Statistical shape and appearance models for bone quality assessment. Statistical shape and deformation analysis 2017:409-43."
+    },
+    {
+      "title": "Statistical shape and deformation analysis: methods, implementation and applications",
+      "authors": [
+        "G Zheng",
+        "S Li",
+        "G Szekely"
+      ],
+      "year": 2017,
+      "raw": "Statistical shape and deformation analysis: methods, implementation and applications \n\t\t \n\t\t\t G Zheng \n\t\t \n\t\t \n\t\t\t S Li \n\t\t \n\t\t \n\t\t\t G Szekely \n\t\t \n\t\t \n\t\t\t 2017 \n\t\t\t Academic Press \n\t\t \n\t \n\t Zheng G, Li S, Szekely G. Statistical shape and deformation analysis: methods, implementation and applications. Academic Press; 2017."
+    },
+    {
+      "title": "Tachdjian's pediatric orthopaedics e-book: from the Texas Scottish Rite Hospital for Children",
+      "authors": [
+        "J Herring"
+      ],
+      "year": 2013,
+      "raw": "Tachdjian's pediatric orthopaedics e-book: from the Texas Scottish Rite Hospital for Children \n\t\t \n\t\t\t J A Herring \n\t\t \n\t\t \n\t\t\t 2013 \n\t\t\t Elsevier Health Sciences \n\t\t \n\t \n\t Herring JA. Tachdjian's pediatric orthopaedics e-book: from the Texas Scottish Rite Hospital for Children. Elsevier Health Sciences; 2013."
+    },
+    {
+      "title": "Legg-Calv\u00e9-Perthes disease: an overview with recent literature",
+      "authors": [
+        "S Chaudhry",
+        "D Phillips",
+        "D Feldman"
+      ],
+      "year": 2014,
+      "journal": "Bull NYU Hosp Jt Dis",
+      "volume": "72",
+      "issue": "1",
+      "pages": "18",
+      "raw": "Legg-Calv\u00e9-Perthes disease: an overview with recent literature \n\t\t \n\t\t\t S Chaudhry \n\t\t \n\t\t \n\t\t\t D Phillips \n\t\t \n\t\t \n\t\t\t D Feldman \n\t\t \n\t \n\t \n\t\t Bull NYU Hosp Jt Dis \n\t\t \n\t\t\t 72 \n\t\t\t 1 \n\t\t\t 18 \n\t\t\t 2014 \n\t\t \n\t \n\t Chaudhry S, Phillips D, Feldman D. Legg-Calv\u00e9-Perthes disease: an overview with recent literature. Bull NYU Hosp Jt Dis 2014;72(1):18."
+    },
+    {
+      "title": "Assessment of the bilateral asymmetry of human femurs based on physical, densitometric, and structural rigidity characteristics",
+      "authors": [
+        "M Pierre",
+        "D Zurakowski",
+        "A Nazarian",
+        "D Hauser-Kara",
+        "B Snyder"
+      ],
+      "year": 2010,
+      "journal": "J Biomech",
+      "volume": "43",
+      "issue": "11",
+      "raw": "Assessment of the bilateral asymmetry of human femurs based on physical, densitometric, and structural rigidity characteristics \n\t\t \n\t\t\t M A Pierre \n\t\t \n\t\t \n\t\t\t D Zurakowski \n\t\t \n\t\t \n\t\t\t A Nazarian \n\t\t \n\t\t \n\t\t\t D A Hauser-Kara \n\t\t \n\t\t \n\t\t\t B D Snyder \n\t\t \n\t \n\t \n\t\t J Biomech \n\t\t \n\t\t\t 43 \n\t\t\t 11 \n\t\t\t \n\t\t\t 2010 \n\t\t \n\t \n\t Pierre MA, Zurakowski D, Nazarian A, Hauser-Kara DA, Snyder BD. Assessment of the bilateral asymmetry of human femurs based on physical, densitometric, and structural rigidity characteristics. J Biomech 2010;43(11):2228-36."
+    },
+    {
+      "title": "Are the left and right proximal femurs symmetric?",
+      "authors": [
+        "E Young",
+        "J Gebhart",
+        "D Cooperman",
+        "N Ahn"
+      ],
+      "year": 2013,
+      "doi": "10.1007/s11999-012-2704-x",
+      "journal": "Clin Orthop Relat Res",
+      "volume": "471",
+      "issue": "5",
+      "raw": "Are the left and right proximal femurs symmetric? \n\t\t \n\t\t\t E Y Young \n\t\t \n\t\t \n\t\t\t J Gebhart \n\t\t \n\t\t \n\t\t\t D Cooperman \n\t\t \n\t\t \n\t\t\t N U Ahn \n\t\t \n\t\t 10.1007/s11999-012-2704-x \n\t \n\t \n\t\t Clin Orthop Relat Res \n\t\t \n\t\t\t 471 \n\t\t\t 5 \n\t\t\t \n\t\t\t 2013 \n\t\t \n\t \n\t Young EY, Gebhart J, Cooperman D, Ahn NU. Are the left and right proximal femurs symmetric? Clin Orthop Relat Res 2013;471(5):1593-601."
+    },
+    {
+      "title": "Increasing shape modelling accuracy by adjusting for subject positioning: an application to the analysis of radiographic proximal femur symmetry using data from the Osteoarthritis Initiative",
+      "authors": [
+        "C Lindner",
+        "G Wallis",
+        "T Cootes"
+      ],
+      "year": 2014,
+      "journal": "Bone",
+      "volume": "61",
+      "raw": "Increasing shape modelling accuracy by adjusting for subject positioning: an application to the analysis of radiographic proximal femur symmetry using data from the Osteoarthritis Initiative \n\t\t \n\t\t\t C Lindner \n\t\t \n\t\t \n\t\t\t G Wallis \n\t\t \n\t\t \n\t\t\t T Cootes \n\t\t \n\t \n\t \n\t\t Bone \n\t\t \n\t\t\t 61 \n\t\t\t \n\t\t\t 2014 \n\t\t \n\t \n\t Lindner C, Wallis G, Cootes T. Increasing shape modelling accuracy by adjusting for subject positioning: an application to the analysis of radiographic proximal femur symmetry using data from the Osteoarthritis Initiative. Bone 2014;61:64-70."
+    },
+    {
+      "title": "Userguided 3D active contour segmentation of anatomical structures: significantly improved efficiency and reliability",
+      "authors": [
+        "P Yushkevich",
+        "J Piven",
+        "Cody Hazlett",
+        "Gimpel Smith",
+        "R Ho",
+        "S Gee"
+      ],
+      "year": 2006,
+      "journal": "Neuroimage",
+      "volume": "31",
+      "issue": "3",
+      "raw": "Userguided 3D active contour segmentation of anatomical structures: significantly improved efficiency and reliability \n\t\t \n\t\t\t P A Yushkevich \n\t\t \n\t\t \n\t\t\t J Piven \n\t\t \n\t\t \n\t\t\t Cody Hazlett \n\t\t \n\t\t \n\t\t\t H \n\t\t \n\t\t \n\t\t\t Gimpel Smith \n\t\t \n\t\t \n\t\t\t R Ho \n\t\t \n\t\t \n\t\t\t S Gee \n\t\t \n\t\t \n\t\t\t J C \n\t\t \n\t \n\t \n\t\t Neuroimage \n\t\t \n\t\t\t 31 \n\t\t\t 3 \n\t\t\t \n\t\t\t 2006 \n\t\t \n\t \n\t Yushkevich PA, Piven J, Cody Hazlett H, Gimpel Smith R, Ho S, Gee JC, et al. User- guided 3D active contour segmentation of anatomical structures: significantly improved efficiency and reliability. Neuroimage 2006;31(3):1116-28."
+    },
+    {
+      "title": "A survey of medical image processing tools",
+      "authors": [
+        "L Khoon",
+        "L Chuin"
+      ],
+      "year": 2016,
+      "doi": "10.15282/ijsecs.2.2016.2.0013",
+      "journal": "Int J Softw Eng Comput Syst",
+      "volume": "2",
+      "issue": "1",
+      "raw": "A survey of medical image processing tools \n\t\t \n\t\t\t L L Khoon \n\t\t \n\t\t \n\t\t\t L S Chuin \n\t\t \n\t\t 10.15282/ijsecs.2.2016.2.0013 \n\t \n\t \n\t\t Int J Softw Eng Comput Syst \n\t\t \n\t\t\t 2 \n\t\t\t 1 \n\t\t\t \n\t\t\t 2016 \n\t\t \n\t \n\t Khoon LL, Chuin LS. A survey of medical image processing tools. Int J Softw Eng Comput Syst 2016;2(1):10-27."
+    },
+    {
+      "title": "A brief overview of medical software tools used in MR image segmentation",
+      "authors": [
+        "\u00b8 Memis",
+        "S Albayrak",
+        "F Bilgili"
+      ],
+      "year": 2018,
+      "raw": "A brief overview of medical software tools used in MR image segmentation \n\t\t \n\t\t\t \u00b8 A Memis \n\t\t \n\t\t \n\t\t\t S Albayrak \n\t\t \n\t\t \n\t\t\t F Bilgili \n\t\t \n\t \n\t \n\t\t 2018 medical technologies national congress (TIPTEKNO) \n\t\t \n\t\t\t 2018 \n\t\t\t \n\t\t \n\t \n\t Memis \u00b8 A, Albayrak S, Bilgili F. A brief overview of medical software tools used in MR image segmentation. In: 2018 medical technologies national congress (TIPTEKNO); 2018. p. 1-4."
+    },
+    {
+      "title": "Slice-to-volume medical image registration: a survey",
+      "authors": [
+        "E Ferrante",
+        "N Paragios"
+      ],
+      "year": 2017,
+      "doi": "10.1016/j.media.2017.04.010",
+      "journal": "Med Image Anal",
+      "volume": "39",
+      "raw": "Slice-to-volume medical image registration: a survey \n\t\t \n\t\t\t E Ferrante \n\t\t \n\t\t \n\t\t\t N Paragios \n\t\t \n\t\t 10.1016/j.media.2017.04.010 \n\t \n\t \n\t\t Med Image Anal \n\t\t \n\t\t\t 39 \n\t\t\t \n\t\t\t 2017 \n\t\t \n\t \n\t Ferrante E, Paragios N. Slice-to-volume medical image registration: a survey. Med Image Anal 2017;39:101-23."
+    },
+    {
+      "title": "Medical image registration: a review",
+      "authors": [
+        "F Oliveira",
+        "Jmr Tavares"
+      ],
+      "year": 2014,
+      "doi": "10.1080/10255842.2012.670855",
+      "journal": "Comput Methods Biomech Biomed Eng",
+      "volume": "17",
+      "issue": "2",
+      "raw": "Medical image registration: a review \n\t\t \n\t\t\t F P Oliveira \n\t\t \n\t\t \n\t\t\t Jmr Tavares \n\t\t \n\t\t 10.1080/10255842.2012.670855 \n\t \n\t \n\t\t Comput Methods Biomech Biomed Eng \n\t\t \n\t\t\t 17 \n\t\t\t 2 \n\t\t\t \n\t\t\t 2014 \n\t\t \n\t \n\t Oliveira FP, Tavares JMR. Medical image registration: a review. Comput Methods Biomech Biomed Eng 2014;17(2):73-93."
+    },
+    {
+      "title": "Method for registration of 3-D shapes",
+      "authors": [
+        "P Besl",
+        "N Mckay"
+      ],
+      "year": 1992,
+      "volume": "1611",
+      "raw": "Method for registration of 3-D shapes \n\t\t \n\t\t\t P J Besl \n\t\t \n\t\t \n\t\t\t N D Mckay \n\t\t \n\t \n\t \n\t\t Sensor fusion IV: control paradigms and data structures \n\t\t \n\t\t\t 1992 \n\t\t\t 1611 \n\t\t\t \n\t\t \n\t \n\t Besl PJ, McKay ND. Method for registration of 3-D shapes. In: Sensor fusion IV: control paradigms and data structures, vol. 1611; 1992. p. 586-606."
+    },
+    {
+      "title": "Object modelling by registration of multiple range images",
+      "authors": [
+        "Y Chen",
+        "G Medioni"
+      ],
+      "year": 1992,
+      "journal": "Image Vis Comput",
+      "volume": "10",
+      "issue": "3",
+      "raw": "Object modelling by registration of multiple range images \n\t\t \n\t\t\t Y Chen \n\t\t \n\t\t \n\t\t\t G Medioni \n\t\t \n\t \n\t \n\t\t Image Vis Comput \n\t\t \n\t\t\t 10 \n\t\t\t 3 \n\t\t\t \n\t\t\t 1992 \n\t\t \n\t \n\t Chen Y, Medioni G. Object modelling by registration of multiple range images. Image Vis Comput 1992;10(3):145-55."
+    },
+    {
+      "title": "A computational approach to edge detection",
+      "authors": [
+        "J Canny"
+      ],
+      "year": 1986,
+      "journal": "IEEE Trans Pattern Anal Mach Intell",
+      "volume": "8",
+      "issue": "6",
+      "raw": "A computational approach to edge detection \n\t\t \n\t\t\t J Canny \n\t\t \n\t \n\t \n\t\t IEEE Trans Pattern Anal Mach Intell \n\t\t \n\t\t\t 8 \n\t\t\t 6 \n\t\t\t \n\t\t\t 1986 \n\t\t \n\t \n\t PAMI- \n\t Canny J. A computational approach to edge detection. IEEE Trans Pattern Anal Mach Intell 1986;PAMI-8(6):679-98."
+    },
+    {
+      "title": "Morphological image analysis: principles and applications",
+      "authors": [
+        "P Soille"
+      ],
+      "year": 1999,
+      "doi": "10.1007/978-3-662-03939-7",
+      "raw": "Morphological image analysis: principles and applications \n\t\t \n\t\t\t P Soille \n\t\t \n\t\t 10.1007/978-3-662-03939-7 \n\t\t \n\t\t\t 1999 \n\t\t\t Springer-Verlag \n\t\t \n\t \n\t Soille P. Morphological image analysis: principles and applications. Springer- Verlag; 1999."
+    },
+    {
+      "title": "Inkscape: guide to a vector drawing program",
+      "authors": [
+        "T Bah"
+      ],
+      "year": 2011,
+      "volume": "559",
+      "raw": "T Bah \n\t\t \n\t\t Inkscape: guide to a vector drawing program \n\t\t Upper Saddle River, NJ, USA \n\t\t \n\t\t\t Prentice Hall \n\t\t\t 2011 \n\t\t\t 559 \n\t\t \n\t \n\t Bah T. Inkscape: guide to a vector drawing program, vol. 559. Upper Saddle River, NJ, USA: Prentice Hall; 2011."
+    },
+    {
+      "title": "The definite form of the coxa plana",
+      "authors": [
+        "H Waldenstr\u00f6m"
+      ],
+      "year": 2016,
+      "journal": "Acta Radiol",
+      "volume": "57",
+      "issue": "7",
+      "raw": "The definite form of the coxa plana \n\t\t \n\t\t\t H Waldenstr\u00f6m \n\t\t \n\t \n\t \n\t\t Acta Radiol \n\t\t \n\t\t\t 57 \n\t\t\t 7 \n\t\t\t \n\t\t\t 2016 \n\t\t \n\t \n\t Waldenstr\u00f6m H. The definite form of the coxa plana. Acta Radiol 2016;57(7): e79-94."
+    },
+    {
+      "title": "Development of a fully automatic shape model matching (FASMM) system to derive statistical shape models from radiographs: application to the accurate capture and global representation of proximal femur shape",
+      "authors": [
+        "C Lindner",
+        "S Thiagarajah",
+        "J Wilkinson",
+        "G Wallis",
+        "T Cootes"
+      ],
+      "year": 2013,
+      "journal": "Osteoarthr Cartil",
+      "volume": "21",
+      "issue": "10",
+      "raw": "Development of a fully automatic shape model matching (FASMM) system to derive statistical shape models from radiographs: application to the accurate capture and global representation of proximal femur shape \n\t\t \n\t\t\t C Lindner \n\t\t \n\t\t \n\t\t\t S Thiagarajah \n\t\t \n\t\t \n\t\t\t J Wilkinson \n\t\t \n\t\t \n\t\t\t G Wallis \n\t\t \n\t\t \n\t\t\t T Cootes \n\t\t \n\t\t \n\t\t\t Consortium \n\t\t \n\t \n\t \n\t\t Osteoarthr Cartil \n\t\t \n\t\t\t 21 \n\t\t\t 10 \n\t\t\t \n\t\t\t 2013 \n\t\t \n\t \n\t Lindner C, Thiagarajah S, Wilkinson J, Wallis G, Cootes T, arcOGEN Consortium, et al. Development of a fully automatic shape model matching (FASMM) system to derive statistical shape models from radiographs: application to the accurate capture and global representation of proximal femur shape. Osteoarthr Cartil 2013; 21(10):1537-44."
+    },
+    {
+      "title": "Statistical shape modeling of cam femoroacetabular impingement",
+      "authors": [
+        "M Harris",
+        "M Datar",
+        "R Whitaker",
+        "E Jurrus",
+        "C Peters",
+        "A Anderson"
+      ],
+      "year": 2013,
+      "journal": "J Orthop Res",
+      "volume": "31",
+      "issue": "10",
+      "raw": "Statistical shape modeling of cam femoroacetabular impingement \n\t\t \n\t\t\t M D Harris \n\t\t \n\t\t \n\t\t\t M Datar \n\t\t \n\t\t \n\t\t\t R T Whitaker \n\t\t \n\t\t \n\t\t\t E R Jurrus \n\t\t \n\t\t \n\t\t\t C L Peters \n\t\t \n\t\t \n\t\t\t A E Anderson \n\t\t \n\t \n\t \n\t\t J Orthop Res \n\t\t \n\t\t\t 31 \n\t\t\t 10 \n\t\t\t \n\t\t\t 2013 \n\t\t \n\t \n\t Harris MD, Datar M, Whitaker RT, Jurrus ER, Peters CL, Anderson AE. Statistical shape modeling of cam femoroacetabular impingement. J Orthop Res 2013;31(10): 1620-6."
+    },
+    {
+      "title": "A statistical shape model of femoral head-neck cross sections using principal tangent components",
+      "authors": [
+        "M Hefny",
+        "R Ellis"
+      ],
+      "year": 2013,
+      "raw": "A statistical shape model of femoral head-neck cross sections using principal tangent components \n\t\t \n\t\t\t M S Hefny \n\t\t \n\t\t \n\t\t\t R E Ellis \n\t\t \n\t \n\t \n\t\t IEEE 10th international symposium on biomedical imaging \n\t\t \n\t\t\t 2013. 2013 \n\t\t\t \n\t\t \n\t \n\t Hefny MS, Ellis RE. A statistical shape model of femoral head-neck cross sections using principal tangent components. In: 2013 IEEE 10th international symposium on biomedical imaging; 2013. p. 89-92."
+    },
+    {
+      "title": "Articulated statistical shape model-based 2D-3D reconstruction of a hip joint",
+      "authors": [
+        "S Balestra",
+        "S Schumann",
+        "J Heverhagen",
+        "L Nolte",
+        "G Zheng"
+      ],
+      "year": 2014,
+      "journal": "International conference on",
+      "raw": "Articulated statistical shape model-based 2D-3D reconstruction of a hip joint \n\t\t \n\t\t\t S Balestra \n\t\t \n\t\t \n\t\t\t S Schumann \n\t\t \n\t\t \n\t\t\t J Heverhagen \n\t\t \n\t\t \n\t\t\t L Nolte \n\t\t \n\t\t \n\t\t\t G Zheng \n\t\t \n\t \n\t \n\t\t International conference on \n\t\t \n\t\t\t \n\t\t\t 2014 \n\t\t \n\t \n\t information processing in computer-assisted interventions \n\t Balestra S, Schumann S, Heverhagen J, Nolte L, Zheng G. Articulated statistical shape model-based 2D-3D reconstruction of a hip joint. International conference on information processing in computer-assisted interventions 2014:128-37."
+    },
+    {
+      "title": "An image processing technique for the quantitative analysis of hip disorder in Perthes' disease",
+      "authors": [
+        "N Mouravliansky",
+        "G Matsopoulos",
+        "K Nikita",
+        "N Uzunoglu",
+        "G Pistevos"
+      ],
+      "year": 1996,
+      "doi": "10.1109/iembs.1996.652728",
+      "volume": "3",
+      "raw": "An image processing technique for the quantitative analysis of hip disorder in Perthes' disease \n\t\t \n\t\t\t N Mouravliansky \n\t\t \n\t\t \n\t\t\t G Matsopoulos \n\t\t \n\t\t \n\t\t\t K Nikita \n\t\t \n\t\t \n\t\t\t N Uzunoglu \n\t\t \n\t\t \n\t\t\t G Pistevos \n\t\t \n\t\t 10.1109/iembs.1996.652728 \n\t \n\t \n\t\t Proceedings of 18th \n\t\t 18th \n\t\t \n\t\t\t 1996 \n\t\t\t 3 \n\t\t\t \n\t\t \n\t \n\t Mouravliansky N, Matsopoulos G, Nikita K, Uzunoglu N, Pistevos G. An image processing technique for the quantitative analysis of hip disorder in Perthes' disease. In: Proceedings of 18th annual international conference of the IEEE engineering in medicine and biology society, vol. 3; 1996. p. 1103-4."
+    },
+    {
+      "title": "Evaluation of statistical shape modeling in quantifying femoral morphologic differences between symptomatic and nonsymptomatic hips in patients with unilateral femoroacetabular impingement syndrome",
+      "authors": [
+        "T Keating",
+        "N Leong",
+        "E Beck",
+        "B Nwachukwu",
+        "Aae Or\u00edas",
+        "X Qian"
+      ],
+      "year": 2020,
+      "doi": "10.1016/j.asmr.2019.11.005",
+      "journal": "Arthrosc Sports Med Rehabil",
+      "volume": "2",
+      "issue": "2",
+      "raw": "Evaluation of statistical shape modeling in quantifying femoral morphologic differences between symptomatic and nonsymptomatic hips in patients with unilateral femoroacetabular impingement syndrome \n\t\t \n\t\t\t T C Keating \n\t\t \n\t\t \n\t\t\t N Leong \n\t\t \n\t\t \n\t\t\t E C Beck \n\t\t \n\t\t \n\t\t\t B U Nwachukwu \n\t\t \n\t\t \n\t\t\t Aae Or\u00edas \n\t\t \n\t\t \n\t\t\t X Qian \n\t\t \n\t\t 10.1016/j.asmr.2019.11.005 \n\t \n\t \n\t\t Arthrosc Sports Med Rehabil \n\t\t \n\t\t\t 2 \n\t\t\t 2 \n\t\t\t \n\t\t\t 2020 \n\t\t \n\t \n\t Keating TC, Leong N, Beck EC, Nwachukwu BU, Or\u00edas AAE, Qian X, et al. Evaluation of statistical shape modeling in quantifying femoral morphologic differences between symptomatic and nonsymptomatic hips in patients with unilateral femoroacetabular impingement syndrome. Arthrosc Sports Med Rehabil 2020;2(2):e91-5."
+    },
+    {
+      "title": "3-Dimensional metrics of proximal femoral shape deformities in Legg-Calv\u00e9-Perthes disease and slipped capital femoral epiphysis",
+      "authors": [
+        "E Chan",
+        "C Farnsworth",
+        "S Klisch",
+        "H Hosalkar",
+        "R Sah"
+      ],
+      "year": 2018,
+      "journal": "J Orthop Res",
+      "volume": "36",
+      "issue": "5",
+      "raw": "3-Dimensional metrics of proximal femoral shape deformities in Legg-Calv\u00e9-Perthes disease and slipped capital femoral epiphysis \n\t\t \n\t\t\t E F Chan \n\t\t \n\t\t \n\t\t\t C L Farnsworth \n\t\t \n\t\t \n\t\t\t S M Klisch \n\t\t \n\t\t \n\t\t\t H S Hosalkar \n\t\t \n\t\t \n\t\t\t R L Sah \n\t\t \n\t \n\t \n\t\t J Orthop Res \n\t\t \n\t\t\t 36 \n\t\t\t 5 \n\t\t\t \n\t\t\t 2018 \n\t\t \n\t \n\t Chan EF, Farnsworth CL, Klisch SM, Hosalkar HS, Sah RL. 3-Dimensional metrics of proximal femoral shape deformities in Legg-Calv\u00e9-Perthes disease and slipped capital femoral epiphysis. J Orthop Res 2018;36(5):1526-35."
+    },
+    {
+      "title": "3D MRI quantification of femoral head deformity in Legg-Calv\u00e9-Perthes disease",
+      "authors": [
+        "K Standefer",
+        "M Dempsey",
+        "Jo Kim"
+      ],
+      "year": 2017,
+      "journal": "J Orthop Res",
+      "volume": "35",
+      "issue": "9",
+      "raw": "3D MRI quantification of femoral head deformity in Legg-Calv\u00e9-Perthes disease \n\t\t \n\t\t\t K D Standefer \n\t\t \n\t\t \n\t\t\t M Dempsey \n\t\t \n\t\t \n\t\t\t Jo C Kim \n\t\t \n\t\t \n\t\t\t H K \n\t\t \n\t \n\t \n\t\t J Orthop Res \n\t\t \n\t\t\t 35 \n\t\t\t 9 \n\t\t\t \n\t\t\t 2017 \n\t\t \n\t \n\t Standefer KD, Dempsey M, Jo C, Kim HK. 3D MRI quantification of femoral head deformity in Legg-Calv\u00e9-Perthes disease. J Orthop Res 2017;35(9):2051-8."
+    },
+    {
+      "title": "Quantitative measures for evaluating the radiographic outcome of Legg-Calv\u00e9-Perthes disease",
+      "authors": [
+        "H Shah",
+        "N Siddesh",
+        "H Pai",
+        "S Tercier",
+        "B Joseph"
+      ],
+      "year": 2013,
+      "journal": "J Bone Jt Surg",
+      "volume": "95",
+      "issue": "4",
+      "raw": "Quantitative measures for evaluating the radiographic outcome of Legg-Calv\u00e9-Perthes disease \n\t\t \n\t\t\t H Shah \n\t\t \n\t\t \n\t\t\t N Siddesh \n\t\t \n\t\t \n\t\t\t H Pai \n\t\t \n\t\t \n\t\t\t S Tercier \n\t\t \n\t\t \n\t\t\t B Joseph \n\t\t \n\t \n\t \n\t\t J Bone Jt Surg \n\t\t \n\t\t\t 95 \n\t\t\t 4 \n\t\t\t \n\t\t\t 2013 \n\t\t \n\t \n\t Shah H, Siddesh N, Pai H, Tercier S, Joseph B. Quantitative measures for evaluating the radiographic outcome of Legg-Calv\u00e9-Perthes disease. J Bone Jt Surg 2013;95 (4):354-61."
+    },
+    {
+      "title": "Quantification of 2D shape variation of abnormal proximal femurs over normal proximal femurs in bilateral hip MRI: a computerized analysis for Legg-Calve-Perthes disease",
+      "authors": [
+        "\u00b8 Memis",
+        "S Varl\u0131",
+        "F Bilgili"
+      ],
+      "year": 2019,
+      "journal": "Procedia Comput Sci",
+      "volume": "158",
+      "raw": "Quantification of 2D shape variation of abnormal proximal femurs over normal proximal femurs in bilateral hip MRI: a computerized analysis for Legg-Calve-Perthes disease \n\t\t \n\t\t\t \u00b8 A Memis \n\t\t \n\t\t \n\t\t\t S Varl\u0131 \n\t\t \n\t\t \n\t\t\t F Bilgili \n\t\t \n\t \n\t \n\t\t Procedia Comput Sci \n\t\t \n\t\t\t 158 \n\t\t\t \n\t\t\t 2019 \n\t\t \n\t \n\t Memis \u00b8 A, Varl\u0131 S, Bilgili F. Quantification of 2D shape variation of abnormal proximal femurs over normal proximal femurs in bilateral hip MRI: a computerized analysis for Legg-Calve-Perthes disease. Procedia Comput Sci 2019;158:426-35."
+    },
+    {
+      "title": "Semantic segmentation of the multiform proximal femur and femoral head bones with the deep convolutional neural networks in low quality MRI sections acquired in different MRI protocols",
+      "authors": [
+        "\u00b8 Memis",
+        "S Varl\u0131",
+        "F Bilgili"
+      ],
+      "year": 2020,
+      "doi": "10.1016/j.compmedimag.2020.101715",
+      "journal": "Comput Med Imaging Graph",
+      "volume": "81",
+      "pages": "101715",
+      "raw": "Semantic segmentation of the multiform proximal femur and femoral head bones with the deep convolutional neural networks in low quality MRI sections acquired in different MRI protocols \n\t\t \n\t\t\t \u00b8 A Memis \n\t\t \n\t\t \n\t\t\t S Varl\u0131 \n\t\t \n\t\t \n\t\t\t F Bilgili \n\t\t \n\t\t 10.1016/j.compmedimag.2020.101715 \n\t \n\t \n\t\t Comput Med Imaging Graph \n\t\t \n\t\t\t 81 \n\t\t\t 101715 \n\t\t\t 2020 \n\t\t \n\t \n\t Memis \u00b8 A, Varl\u0131 S, Bilgili F. Semantic segmentation of the multiform proximal femur and femoral head bones with the deep convolutional neural networks in low quality MRI sections acquired in different MRI protocols. Comput Med Imaging Graph 2020;81:101715."
+    },
+    {
+      "title": "Femoral head segmentation with convolutional neural networks in MR imaging slices of the patients with Legg-Calve-Perthes disease",
+      "authors": [
+        "\u00b8 Memis",
+        "S Varl\u0131",
+        "F Bilgili"
+      ],
+      "year": 2020,
+      "doi": "10.1109/siu49456.2020.9302213",
+      "raw": "Femoral head segmentation with convolutional neural networks in MR imaging slices of the patients with Legg-Calve-Perthes disease \n\t\t \n\t\t\t \u00b8 A Memis \n\t\t \n\t\t \n\t\t\t S Varl\u0131 \n\t\t \n\t\t \n\t\t\t F Bilgili \n\t\t \n\t\t 10.1109/siu49456.2020.9302213 \n\t \n\t \n\t\t 2020 28th signal processing and communications applications conference (SIU) \n\t\t \n\t\t\t 2020 \n\t\t\t \n\t\t \n\t \n\t Memis \u00b8 A, Varl\u0131 S, Bilgili F. Femoral head segmentation with convolutional neural networks in MR imaging slices of the patients with Legg-Calve-Perthes disease. In: 2020 28th signal processing and communications applications conference (SIU); 2020. p. 1-4."
+    },
+    {
+      "title": "Femoral head detection in Perthes MR slices with circular Hough transform",
+      "authors": [
+        "\u00b8 Memis",
+        "S Albayrak",
+        "F Bilgili"
+      ],
+      "year": 2018,
+      "doi": "10.1109/siu.2018.8404340",
+      "raw": "Femoral head detection in Perthes MR slices with circular Hough transform \n\t\t \n\t\t\t \u00b8 A Memis \n\t\t \n\t\t \n\t\t\t S Albayrak \n\t\t \n\t\t \n\t\t\t F Bilgili \n\t\t \n\t\t 10.1109/siu.2018.8404340 \n\t \n\t \n\t\t 2018 26th signal processing and communications applications conference (SIU) \n\t\t \n\t\t\t 2018 \n\t\t\t \n\t\t \n\t \n\t Memis \u00b8 A, Albayrak S, Bilgili F. Femoral head detection in Perthes MR slices with circular Hough transform. In: 2018 26th signal processing and communications applications conference (SIU); 2018. p. 1-4."
+    },
+    {
+      "title": "A new scheme for automatic 2D detection of spheric and aspheric femoral heads: a case study on coronal MR images of bilateral hip joints of patients with Legg-Calve-Perthes disease",
+      "authors": [
+        "\u00b8 Memis",
+        "S Albayrak",
+        "F Bilgili"
+      ],
+      "year": 2019,
+      "doi": "10.1016/j.cmpb.2019.04.001",
+      "journal": "Comput Methods Prog Biomed",
+      "volume": "175",
+      "raw": "A new scheme for automatic 2D detection of spheric and aspheric femoral heads: a case study on coronal MR images of bilateral hip joints of patients with Legg-Calve-Perthes disease \n\t\t \n\t\t\t \u00b8 A Memis \n\t\t \n\t\t \n\t\t\t S Albayrak \n\t\t \n\t\t \n\t\t\t F Bilgili \n\t\t \n\t\t 10.1016/j.cmpb.2019.04.001 \n\t \n\t \n\t\t Comput Methods Prog Biomed \n\t\t \n\t\t\t 175 \n\t\t\t \n\t\t\t 2019 \n\t\t \n\t \n\t Memis \u00b8 A, Albayrak S, Bilgili F. A new scheme for automatic 2D detection of spheric and aspheric femoral heads: a case study on coronal MR images of bilateral hip joints of patients with Legg-Calve-Perthes disease. Comput Methods Prog Biomed 2019;175:83-93."
+    },
+    {
+      "title": "Computerized 2D detection of the multiform femoral heads in magnetic resonance imaging (MRI) sections with the integro-differential operator",
+      "authors": [
+        "\u00b8 Memis",
+        "S Varl\u0131",
+        "F Bilgili"
+      ],
+      "year": 2019,
+      "doi": "10.1016/j.bspc.2019.101578",
+      "journal": "Biomed Signal Process Control",
+      "volume": "54",
+      "pages": "101578",
+      "raw": "Computerized 2D detection of the multiform femoral heads in magnetic resonance imaging (MRI) sections with the integro-differential operator \n\t\t \n\t\t\t \u00b8 A Memis \n\t\t \n\t\t \n\t\t\t S Varl\u0131 \n\t\t \n\t\t \n\t\t\t F Bilgili \n\t\t \n\t\t 10.1016/j.bspc.2019.101578 \n\t \n\t \n\t\t Biomed Signal Process Control \n\t\t \n\t\t\t 54 \n\t\t\t 101578 \n\t\t\t 2019 \n\t\t \n\t \n\t Memis \u00b8 A, Varl\u0131 S, Bilgili F. Computerized 2D detection of the multiform femoral heads in magnetic resonance imaging (MRI) sections with the integro-differential operator. Biomed Signal Process Control 2019;54:101578."
+    },
+    {
+      "title": "3D detection of spheric and aspheric femoral heads in coronal MR images of patients with Legg-Calve-Perthes disease using the spherical Hough transform",
+      "authors": [
+        "\u00b8 Memis",
+        "S Albayrak",
+        "F Bilgili"
+      ],
+      "year": 2018,
+      "doi": "10.1145/3288200.3288205",
+      "raw": "3D detection of spheric and aspheric femoral heads in coronal MR images of patients with Legg-Calve-Perthes disease using the spherical Hough transform \n\t\t \n\t\t\t \u00b8 A Memis \n\t\t \n\t\t \n\t\t\t S Albayrak \n\t\t \n\t\t \n\t\t\t F Bilgili \n\t\t \n\t\t 10.1145/3288200.3288205 \n\t \n\t \n\t\t Proceedings of the 2018 3rd international conference on biomedical imaging \n\t\t the 2018 3rd international conference on biomedical imaging signal processing \n\t\t \n\t\t\t 2018 \n\t\t\t \n\t\t \n\t \n\t Memis \u00b8 A, Albayrak S, Bilgili F. 3D detection of spheric and aspheric femoral heads in coronal MR images of patients with Legg-Calve-Perthes disease using the spherical Hough transform. In: Proceedings of the 2018 3rd international conference on biomedical imaging, signal processing; 2018. p. 46-52."
+    },
+    {
+      "title": "3D femoral head detection in MRI data sequences with the integro-differential operator",
+      "authors": [
+        "\u00b8 Memis",
+        "S Varl\u0131",
+        "F Bilgili"
+      ],
+      "year": 2020,
+      "raw": "3D femoral head detection in MRI data sequences with the integro-differential operator \n\t\t \n\t\t\t \u00b8 A Memis \n\t\t \n\t\t \n\t\t\t S Varl\u0131 \n\t\t \n\t\t \n\t\t\t F Bilgili \n\t\t \n\t \n\t \n\t\t 2020 medical technologies congress (TIPTEKNO) \n\t\t \n\t\t\t 2020 \n\t\t\t \n\t\t \n\t \n\t Memis \u00b8 A, Varl\u0131 S, Bilgili F. 3D femoral head detection in MRI data sequences with the integro-differential operator. In: 2020 medical technologies congress (TIPTEKNO); 2020. p. 1-4."
+    },
+    {
+      "title": "Notes on Iterative Closest Point algorithm",
+      "authors": [
+        "J Prochazkova",
+        "D Martisek"
+      ],
+      "year": 2018,
+      "raw": "Notes on Iterative Closest Point algorithm \n\t\t \n\t\t\t J Prochazkova \n\t\t \n\t\t \n\t\t\t D Martisek \n\t\t \n\t \n\t \n\t\t 17th conference on applied mathematics APLIMAT 2018 \n\t\t \n\t\t\t 2018 \n\t\t\t \n\t\t \n\t \n\t Prochazkova J, Martisek D. Notes on Iterative Closest Point algorithm. 17th conference on applied mathematics APLIMAT 2018 2018:876-84."
+    },
+    {
+      "title": "Distribution de la flore alpine dans le bassin des dranses et dans quelques r\u00e9gions voisines",
+      "authors": [
+        "P Jaccard"
+      ],
+      "year": 1901,
+      "journal": "Bull Soc Vaudoise Sci Nat",
+      "volume": "37",
+      "raw": "Distribution de la flore alpine dans le bassin des dranses et dans quelques r\u00e9gions voisines \n\t\t \n\t\t\t P Jaccard \n\t\t \n\t \n\t \n\t\t Bull Soc Vaudoise Sci Nat \n\t\t \n\t\t\t 37 \n\t\t\t \n\t\t\t 1901 \n\t\t \n\t \n\t Jaccard P. Distribution de la flore alpine dans le bassin des dranses et dans quelques r\u00e9gions voisines. Bull Soc Vaudoise Sci Nat 1901;37:241-72."
+    }
+  ],
+  "num_references": 48,
+  "figures": [
+    {
+      "caption": "Fig. 1 .",
+      "description": "Fig. 1. Alignment of the left (L) and right (R) proximal femurs in bilateral hip joints. The representation of the low (top) and high (bottom) shape dissimilarities of the proximal femurs. The green and red colours indicate the healthy and pathological proximal femurs respectively. In aligned proximal femurs, the yellow colour covering the region of intersection indicates the shape similarity, and the sum of the red and green regions represents the shape dissimilarity. (For interpretation of the references to colour in this figure legend, the reader is referred to the web version of this article.)"
+    },
+    {
+      "description": "transformation parameters as three for rotations and three for the translations. The related transformation parameters, which are obtained by employing the edge maps in ICP, are applied to the binary RoI images to register the proximal femur total shapes. The binary RoI images of the proximal femurs are transformed into the Cartesian space before the registration. This is performed on only the healthy proximal femurs since the point clouds defining the pathological proximal femurs are the fixed (model) data and the other point clouds representing the healthy proximal femurs are the moving (source) data. After the transformation in the Cartesian domain is completed, the points are transformed back to the spatial domain again. In Fig.7, proximal femur edge maps which are registered with ICP are presented with the corresponding registered proximal femur complete shapes (segmented binary RoI images) on which the transformation parameters obtained in the registration of the edge maps are applied."
+    },
+    {
+      "caption": "Fig. 2 .Fig. 3 .",
+      "description": "Fig. 2. A subset of the MRI sections (1st row) from the evaluated MRI dataset, and the enlarged views of both proximal femurs in the MRI sections (2nd row). The pathological (P) proximal femurs are enclosed with the red boxes and the healthy (H) proximal femurs are enclosed with the green boxes. The pathological proximal femurs in the MRI sections are in LCPD levels of Initial, Fragmentation, Reossification, and Remodelling from left to right, respectively. (For interpretation of the references to colour in this figure legend, the reader is referred to the web version of this article.)"
+    },
+    {
+      "caption": "Fig. 4 .",
+      "description": "Fig. 4. MRI intensity images (1st row), manually annotated segmentation maps of the MRI sections (2nd row), and the pathological (P) and healthy (H) proximal femur region of interest (RoI) images extracted from the segmentation maps (3rd row)."
+    },
+    {
+      "caption": "Fig. 5 .Fig. 6 .",
+      "description": "Fig. 5. The segmentation maps of the left and right proximal femurs, one of which is healthy (H) and the other is pathological (P), obtained from the MRI sections of three patients as a result of the MRI data preprocessing (1st row). Edge maps belonging to the segmentation maps of the left and right proximal femurs (2nd row). Directionally equalized proximal femur edge maps by flipping the healthy (green) proximal femur horizontally and keeping up the direction of the pathological (red) proximal femur (3rd row). (For interpretation of the references to colour in this figure legend, the reader is referred to the web version of this article.)"
+    },
+    {
+      "caption": "Fig. 7 .",
+      "description": "Fig. 7. Edge maps of the directionally equalized healthy (H) and pathological (P) proximal femurs (1st row). The resultant images obtained after the registration of the proximal femur edge maps with ICP (2nd row) and the complete shapes (segmented binary RoI images) of the registered proximal femurs on which the transformation parameters obtained in the registration of the edge maps are employed (3rd row). In the registered edge maps and binary RoI images, the green and red colours indicate the healthy and pathological proximal femurs respectively. The yellow colour indicates the intersection of the healthy and pathological proximal femurs. (For interpretation of the references to colour in this figure legend, the reader is referred to the web version of this article.)"
+    },
+    {
+      "caption": "Fig. 9 .",
+      "description": "Fig. 9. The registration images of the healthy and pathological proximal femurs in the spatial domain (1st row) and the same registration images after the redundant bone regions locating at the bottom of the registered images are removed (2nd row)."
+    },
+    {
+      "caption": "Fig. 10 .",
+      "description": "Fig. 10. The visual representation of the shape deformity quantification (Letters of L and R refer to the left and right proximal femurs respectively. The red, green and yellow colours indicate the pathological proximal femur, healthy proximal femur, and the intersection of the proximal femurs, respectively.) (For interpretation of the references to colour in this figure legend, the reader is referred to the web version of this article.)"
+    },
+    {
+      "caption": "Fig. 11 .",
+      "description": "Fig. 11. Manually aligned images of the healthy (green) and pathological (red) proximal femurs (1st row) and the manually aligned images after removing of the femoral bone remnants locating at the bottom of the aligned proximal femurs (2nd row). (For interpretation of the references to colour in this figure legend, the reader is referred to the web version of this article.)"
+    },
+    {
+      "type": "table",
+      "caption": "Table 1",
+      "description": "MRI protocols and protocol parameters of the MRI sequences in the evaluated MRI dataset."
+    },
+    {
+      "type": "table",
+      "caption": "Table 2",
+      "description": "The proximal femur areas of the LCPD patients in manually aligned images (L: left hip joint, R: right hip joint)."
+    },
+    {
+      "type": "table",
+      "caption": "Table 3",
+      "description": "Clinical statistics of the subjects."
+    },
+    {
+      "type": "table",
+      "caption": "Table 4",
+      "description": "The actual and quantified shape deformity ratios, and the observed shape deformity errors in patient-based shape deformity analysis of the subjects with LCPD."
+    }
+  ],
+  "num_figures": 13,
+  "tables": [
+    {
+      "content": "Patient ID MRI device MRI protocol name TR/TE (ms) Flip angle ( \u2218 ) Voxel size (mm) Matrix size Patient-1 Philips T1W SPGR FATSAT SENSE 300/6.91 60 0.7463 \u00d7 0.7463 \u00d7 0.3284 400 \u00d7 400 Patient-2 Philips SPDW SPAIR SENSE 2465.04/30 90 0.4297 \u00d7 0.4297 \u00d7 0.5935 512 \u00d7 512 Patient-3 Philips SPDW SPAIR SENSE 2467.34/30 90 0.4297 \u00d7 0.4297 \u00d7 0.0695 512 \u00d7 512 Patient-4 General Electric COR PD FSE FSAT 2240/40.04 90 0.6836 \u00d7 0.6836 \u00d7 0.0080 512 \u00d7 512 Patient-5 General Electric COR T1 618/7.45 160 0.6250 \u00d7 0.6250 \u00d7 0.0080 512 \u00d7 512 Patient-6 Siemens STIR COR FIL 4450/43 150 0.7813 \u00d7 0.7813 \u00d7 0.0031 512 \u00d7 464 Patient-7 General Electric COR T1 FSE ASSET 620/15.01 90 0.7813 \u00d7 0.7813 \u00d7 0.0180 512 \u00d7 512 Patient-8 Philips STIR LONGTE 2180.38/60 90 0.7500 \u00d7 0.7500 \u00d7 0.0008 400 \u00d7 400 Patient-9 Siemens T1 TIRM COR P2 320 3090/31 150 1.2500 \u00d7 1.2500 \u00d7 3.6000 320 \u00d7 320 Patient-10 General Electric COR FAST STIR 4700/47.49 90 0.7813 \u00d7 0.7813 \u00d7 6.5000 512 \u00d7 512 Patient-11 Philips ST1W TSE 641.65/18 90 0.7009 \u00d7 0.7009 \u00d7 0.0841 512 \u00d7 512 Patient-12 Philips STIR LONGTE 2452.93/60 90 0.7432 \u00d7 0.7432 \u00d7 3.3000 336 \u00d7 336 Patient-13 Philips ST2W TSE SPIR 4277.10/80 90 0.7083 \u00d7 0.7083 \u00d7 6.3000 560 \u00d7 560"
+    },
+    {
+      "content": "Patient ID Degree of the Actual area of Actual area of the disease (LCPD the healthy pathological level) proximal femur proximal femur (cm 2 ) (cm 2 ) Patient-1 Remodelling 22.16 (R) 23.23 (L) Patient-2 Reossification 9.54 (L) 9.61 (R) Patient-3 Initial 8.33 (L) 8.52 (R) Patient-4 Fragmentation 26.60 (R) 28.42 (L) Patient-5 Fragmentation 7.15 (L) 9.02 (R) Patient-6 Fragmentation 10.09 (R) 10.61 (L) Patient-7 Initial 14.34 (L) 13.61 (R) Patient-8 Fragmentation 12.58 (L) 11.40 (R) Patient-9 Fragmentation 19.98 (L) 20.88 (R) Patient-10 Reossification 20.72 (L) 30.35 (R) Patient-11 Remodelling 15.30 (L) 15.20 (R) Patient-12 Remodelling 16.50 (L) 15.29 (R) Patient-13 Initial 23.24 (R) 24.21 (L)"
+    },
+    {
+      "content": "Patient ID LCPD stage Patient Patient age Body mass sex (year) (kg) Patient-1 Remodelling Male 9 50 Patient-2 Reossification Male 3 14 Patient-3 Initial Male 4 13 Patient-4 Fragmentation Male 13 80 Patient-5 Fragmentation Male 5 60 Patient-6 Fragmentation Male 5 33 Patient-7 Initial Female 10 90 Patient-8 Fragmentation Male 4 20 Patient-9 Fragmentation Male 8 50 Patient-10 Reossification Male 12 100 Patient-11 Remodelling Male 9 30 Patient-12 Remodelling Male 9 40 Patient-13 Initial Male 13 50 \u03bc 8 48.46 \u00b1\u03c3 4 28.02"
+    },
+    {
+      "content": "Patient ID Degree of the Actual Quantified Error of the disease (LCPD shape shape shape level) deformity deformity deformity ratio (%) ratio (%) ratio (%) Patient-1 Remodelling 23.88 23.88 0.00 Patient-2 Reossification 16.49 15.95 0.54 Patient-3 Initial 8.01 7.83 0.19 Patient-4 Fragmentation 11.30 11.21 0.09 Patient-5 Fragmentation 23.08 22.17 0.91 Patient-6 Fragmentation 20.58 18.89 1.69 Patient-7 Initial 9.80 10.28 0.48 Patient-8 Fragmentation 13.15 13.15 0.00 Patient-9 Fragmentation 26.25 26.48 0.23 Patient-10 Reossification 35.22 33.51 1.70 Patient-11 Remodelling 41.32 39.43 1.89 Patient-12 Remodelling 19.16 19.68 0.52 Patient-13 Initial 10.42 10.23 0.20 \u03bc 0.65 \u00b1\u03c3 0.68"
+    }
+  ],
+  "num_tables": 4,
+  "license": "\u00a9 2021 Elsevier B.V. All rights reserved.",
+  "license_type": "unknown",
+  "formulas": [
+    {
+      "text": "IoU = S H \u2229 S P S H \u222a S P (B.1)"
+    },
+    {
+      "text": "S V = 1 -IoU (B.2)"
+    },
+    {
+      "text": "E SV = \u20d2 \u20d2 A SV -Q SV \u20d2 \u20d2 (C.1)"
+    }
+  ],
+  "num_formulas": 3,
+  "num_citations": 87,
+  "cited_references": [
+    "b32",
+    "b43",
+    "b39",
+    "b38",
+    "b4",
+    "b14",
+    "b17",
+    "b20",
+    "b24",
+    "b40",
+    "b41",
+    "b26",
+    "b28",
+    "b13",
+    "b27",
+    "b33",
+    "b16",
+    "b7",
+    "b23",
+    "b46",
+    "b29",
+    "b19",
+    "b6",
+    "b42",
+    "b18",
+    "b30",
+    "b1",
+    "b35",
+    "b9",
+    "b31",
+    "b10",
+    "b3",
+    "b5",
+    "b34",
+    "b47",
+    "b8",
+    "b12",
+    "b15",
+    "b45",
+    "b11",
+    "b36",
+    "b37",
+    "b25",
+    "b22",
+    "b0",
+    "b21",
+    "b2",
+    "b44"
+  ],
+  "notes": [
+    "[raw_affiliation] a  Department of Computer Engineering , Faculty of Electrical and Electronics Engineering , Y\u0131ld\u0131z Technical University , \u02d9Istanbul , Turkey",
+    "[raw_affiliation] a  Department of Computer Engineering , Faculty of Electrical and Electronics Engineering , Y\u0131ld\u0131z Technical University , \u02d9Istanbul , Turkey",
+    "[raw_affiliation] b  Department of Orthopaedics and Traumatology , \u02d9Istanbul Faculty of Medicine , \u02d9Istanbul University , \u02d9Istanbul , Turkey",
+    "[submission] Received 4 March 2020; Received in revised form 15 March 2021; Accepted 22 March 2021",
+    "[raw_reference] Lamecker H, Zachow S. Statistical shape modeling of musculoskeletal structures and its applications. Computational radiology for orthopaedic interventions 2016: 1-23.",
+    "[raw_reference] Heimann T, Meinzer H-P. Statistical shape models for 3D medical image segmentation: A review. Med Image Anal 2009;13(4):543-63.",
+    "[raw_reference] Heimann T. Statistical shape models for 3D medical image segmentation. VDM Verlag; 2009.",
+    "[raw_reference] Cootes TF, Taylor CJ, Cooper DH, Graham J. Active shape models-their training and application. Comput Vis Image Understand 1995;61(1):38-59.",
+    "[raw_reference] Cootes TF, Edwards GJ, Taylor CJ. Active appearance models. European conference on computer vision 1998:484-98.",
+    "[raw_reference] Sarkalkan N, Weinans H, Zadpoor AA. Statistical shape and appearance models of bones. Bone 2014;60:129-40.",
+    "[raw_reference] Jolliffe I. Principal component analysis. Springer; 2011.",
+    "[raw_reference] Nicolella DP, Bredbenner TL. Development of a parametric finite element model of the proximal femur using statistical shape and density modelling. Comput Methods Biomech Biomed Eng 2012;15(2):101-10.",
+    "[raw_reference] Schumann S, Tannast M, Nolte L-P, Zheng G. Validation of statistical shape model based reconstruction of the proximal femur -a morphology study. Med Eng Phys 2010;32(6):638-44.",
+    "[raw_reference] Barratt DC, Chan CS, Edwards PJ, Penney GP, Slomczykowski M, Carter TJ, et al. Instantiation and registration of statistical shape models of the femur and pelvis using 3D ultrasound imaging. Med Image Anal 2008;12(3):358-74.",
+    "[raw_reference] Chan EF, Farnsworth CL, Koziol JA, Hosalkar HS, Sah RL. Statistical shape modeling of proximal femoral shape deformities in Legg-Calv\u00e9-Perthes disease and slipped capital femoral epiphysis. Osteoarthr Cartil 2013;21(3):443-9.",
+    "[raw_reference] Raudaschl P, Fritscher K. Statistical shape and appearance models for bone quality assessment. Statistical shape and deformation analysis 2017:409-43.",
+    "[raw_reference] Zheng G, Li S, Szekely G. Statistical shape and deformation analysis: methods, implementation and applications. Academic Press; 2017.",
+    "[raw_reference] Herring JA. Tachdjian's pediatric orthopaedics e-book: from the Texas Scottish Rite Hospital for Children. Elsevier Health Sciences; 2013.",
+    "[raw_reference] Chaudhry S, Phillips D, Feldman D. Legg-Calv\u00e9-Perthes disease: an overview with recent literature. Bull NYU Hosp Jt Dis 2014;72(1):18.",
+    "[raw_reference] Pierre MA, Zurakowski D, Nazarian A, Hauser-Kara DA, Snyder BD. Assessment of the bilateral asymmetry of human femurs based on physical, densitometric, and structural rigidity characteristics. J Biomech 2010;43(11):2228-36.",
+    "[raw_reference] Young EY, Gebhart J, Cooperman D, Ahn NU. Are the left and right proximal femurs symmetric? Clin Orthop Relat Res 2013;471(5):1593-601.",
+    "[raw_reference] Lindner C, Wallis G, Cootes T. Increasing shape modelling accuracy by adjusting for subject positioning: an application to the analysis of radiographic proximal femur symmetry using data from the Osteoarthritis Initiative. Bone 2014;61:64-70.",
+    "[raw_reference] Yushkevich PA, Piven J, Cody Hazlett H, Gimpel Smith R, Ho S, Gee JC, et al. User- guided 3D active contour segmentation of anatomical structures: significantly improved efficiency and reliability. Neuroimage 2006;31(3):1116-28.",
+    "[raw_reference] Khoon LL, Chuin LS. A survey of medical image processing tools. Int J Softw Eng Comput Syst 2016;2(1):10-27.",
+    "[raw_reference] Memis \u00b8 A, Albayrak S, Bilgili F. A brief overview of medical software tools used in MR image segmentation. In: 2018 medical technologies national congress (TIPTEKNO); 2018. p. 1-4.",
+    "[raw_reference] Ferrante E, Paragios N. Slice-to-volume medical image registration: a survey. Med Image Anal 2017;39:101-23.",
+    "[raw_reference] Oliveira FP, Tavares JMR. Medical image registration: a review. Comput Methods Biomech Biomed Eng 2014;17(2):73-93.",
+    "[raw_reference] Besl PJ, McKay ND. Method for registration of 3-D shapes. In: Sensor fusion IV: control paradigms and data structures, vol. 1611; 1992. p. 586-606.",
+    "[raw_reference] Chen Y, Medioni G. Object modelling by registration of multiple range images. Image Vis Comput 1992;10(3):145-55.",
+    "PAMI-",
+    "[raw_reference] Canny J. A computational approach to edge detection. IEEE Trans Pattern Anal Mach Intell 1986;PAMI-8(6):679-98.",
+    "[raw_reference] Soille P. Morphological image analysis: principles and applications. Springer- Verlag; 1999.",
+    "[raw_reference] Bah T. Inkscape: guide to a vector drawing program, vol. 559. Upper Saddle River, NJ, USA: Prentice Hall; 2011.",
+    "[raw_reference] Waldenstr\u00f6m H. The definite form of the coxa plana. Acta Radiol 2016;57(7): e79-94.",
+    "[raw_reference] Lindner C, Thiagarajah S, Wilkinson J, Wallis G, Cootes T, arcOGEN Consortium, et al. Development of a fully automatic shape model matching (FASMM) system to derive statistical shape models from radiographs: application to the accurate capture and global representation of proximal femur shape. Osteoarthr Cartil 2013; 21(10):1537-44.",
+    "[raw_reference] Harris MD, Datar M, Whitaker RT, Jurrus ER, Peters CL, Anderson AE. Statistical shape modeling of cam femoroacetabular impingement. J Orthop Res 2013;31(10): 1620-6.",
+    "[raw_reference] Hefny MS, Ellis RE. A statistical shape model of femoral head-neck cross sections using principal tangent components. In: 2013 IEEE 10th international symposium on biomedical imaging; 2013. p. 89-92.",
+    "information processing in computer-assisted interventions",
+    "[raw_reference] Balestra S, Schumann S, Heverhagen J, Nolte L, Zheng G. Articulated statistical shape model-based 2D-3D reconstruction of a hip joint. International conference on information processing in computer-assisted interventions 2014:128-37.",
+    "[raw_reference] Mouravliansky N, Matsopoulos G, Nikita K, Uzunoglu N, Pistevos G. An image processing technique for the quantitative analysis of hip disorder in Perthes' disease. In: Proceedings of 18th annual international conference of the IEEE engineering in medicine and biology society, vol. 3; 1996. p. 1103-4.",
+    "[raw_reference] Keating TC, Leong N, Beck EC, Nwachukwu BU, Or\u00edas AAE, Qian X, et al. Evaluation of statistical shape modeling in quantifying femoral morphologic differences between symptomatic and nonsymptomatic hips in patients with unilateral femoroacetabular impingement syndrome. Arthrosc Sports Med Rehabil 2020;2(2):e91-5.",
+    "[raw_reference] Chan EF, Farnsworth CL, Klisch SM, Hosalkar HS, Sah RL. 3-Dimensional metrics of proximal femoral shape deformities in Legg-Calv\u00e9-Perthes disease and slipped capital femoral epiphysis. J Orthop Res 2018;36(5):1526-35.",
+    "[raw_reference] Standefer KD, Dempsey M, Jo C, Kim HK. 3D MRI quantification of femoral head deformity in Legg-Calv\u00e9-Perthes disease. J Orthop Res 2017;35(9):2051-8.",
+    "[raw_reference] Shah H, Siddesh N, Pai H, Tercier S, Joseph B. Quantitative measures for evaluating the radiographic outcome of Legg-Calv\u00e9-Perthes disease. J Bone Jt Surg 2013;95 (4):354-61.",
+    "[raw_reference] Memis \u00b8 A, Varl\u0131 S, Bilgili F. Quantification of 2D shape variation of abnormal proximal femurs over normal proximal femurs in bilateral hip MRI: a computerized analysis for Legg-Calve-Perthes disease. Procedia Comput Sci 2019;158:426-35.",
+    "[raw_reference] Memis \u00b8 A, Varl\u0131 S, Bilgili F. Semantic segmentation of the multiform proximal femur and femoral head bones with the deep convolutional neural networks in low quality MRI sections acquired in different MRI protocols. Comput Med Imaging Graph 2020;81:101715.",
+    "[raw_reference] Memis \u00b8 A, Varl\u0131 S, Bilgili F. Femoral head segmentation with convolutional neural networks in MR imaging slices of the patients with Legg-Calve-Perthes disease. In: 2020 28th signal processing and communications applications conference (SIU); 2020. p. 1-4.",
+    "[raw_reference] Memis \u00b8 A, Albayrak S, Bilgili F. Femoral head detection in Perthes MR slices with circular Hough transform. In: 2018 26th signal processing and communications applications conference (SIU); 2018. p. 1-4.",
+    "[raw_reference] Memis \u00b8 A, Albayrak S, Bilgili F. A new scheme for automatic 2D detection of spheric and aspheric femoral heads: a case study on coronal MR images of bilateral hip joints of patients with Legg-Calve-Perthes disease. Comput Methods Prog Biomed 2019;175:83-93.",
+    "[raw_reference] Memis \u00b8 A, Varl\u0131 S, Bilgili F. Computerized 2D detection of the multiform femoral heads in magnetic resonance imaging (MRI) sections with the integro-differential operator. Biomed Signal Process Control 2019;54:101578.",
+    "[raw_reference] Memis \u00b8 A, Albayrak S, Bilgili F. 3D detection of spheric and aspheric femoral heads in coronal MR images of patients with Legg-Calve-Perthes disease using the spherical Hough transform. In: Proceedings of the 2018 3rd international conference on biomedical imaging, signal processing; 2018. p. 46-52.",
+    "[raw_reference] Memis \u00b8 A, Varl\u0131 S, Bilgili F. 3D femoral head detection in MRI data sequences with the integro-differential operator. In: 2020 medical technologies congress (TIPTEKNO); 2020. p. 1-4.",
+    "[raw_reference] Prochazkova J, Martisek D. Notes on Iterative Closest Point algorithm. 17th conference on applied mathematics APLIMAT 2018 2018:876-84.",
+    "[raw_reference] Jaccard P. Distribution de la flore alpine dans le bassin des dranses et dans quelques r\u00e9gions voisines. Bull Soc Vaudoise Sci Nat 1901;37:241-72."
+  ],
+  "processing_software": {
+    "GROBID": "0.8.2"
+  },
+  "journal": "Artificial Intelligence in Medicine",
+  "volume": "115",
+  "pages": "102057",
+  "zotero_recovery": {
+    "fields_recovered": [
+      "journal"
+    ],
+    "timestamp": "2025-09-01T11:08:19.905087",
+    "zotero_item_type": "journalArticle"
+  }
+}

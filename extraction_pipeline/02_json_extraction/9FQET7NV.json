@@ -1,0 +1,1272 @@
+{
+  "paper_id": "9FQET7NV",
+  "title": "Optimizing the First Response to Sepsis: An Electronic Health Record-Based Markov Decision Process Model",
+  "abstract": "Sepsis is considered a medical emergency where delays in initial treatment are associated with increased morbidity and mortality, yet there is no gold standard for identifying sepsis onset and thus treatment timing. We leverage electronic health record (EHR) data with clinical expertise to develop a continuous-time Markov decision process (MDP) optimal stopping model that identifies the optimal first intervention action (antiinfective, fluid, or wait). To study the impact of initial treatment of patients at risk for developing sepsis, we define the delayed treatment population who received delayed treatment upon admission or during hospitalization and serves as an approximation of the natural history of sepsis. We apply the optimal first treatment policy to sample patient visits from the nondelayed treatment population. This analysis indicates the average risk of death could be reduced by approximately 2.2%, the average time until treatment could be reduced by 106 minutes, and the average severity of the treatment state could be reduced by 15.5% compared with the treatment they received in the hospital. We study the properties of the optimal policy to define an easily interpretable initial treatment heuristic that considers a patient's organ dysfunction, location, and septic shock status. This generalizable framework can inform personalized treatment of patients at risk for sepsis.",
+  "year": 2015,
+  "date": "2015",
+  "authors": [
+    {
+      "name": "Erik Rosenstrom",
+      "affiliation": {
+        "organization": "Department of Industrial and Systems Engineering",
+        "department": "Department of Industrial and Systems Engineering",
+        "institution": "North Carolina State University",
+        "address": "27606, Raleigh, North Carolina"
+      }
+    },
+    {
+      "name": "Sareh Meshkinfam",
+      "affiliation": {
+        "organization": "Department of Industrial and Systems Engineering",
+        "department": "Department of Industrial and Systems Engineering",
+        "institution": "North Carolina State University",
+        "address": "27606, Raleigh, North Carolina"
+      }
+    },
+    {
+      "name": "Julie Simmons Ivy",
+      "affiliation": {
+        "organization": "Department of Industrial and Systems Engineering",
+        "department": "Department of Industrial and Systems Engineering",
+        "institution": "North Carolina State University",
+        "address": "27606, Raleigh, North Carolina"
+      }
+    },
+    {
+      "name": "Shadi Goodarzi",
+      "affiliation": {
+        "organization": "Department of Industrial and Systems Engineering",
+        "department": "Department of Industrial and Systems Engineering",
+        "institution": "North Carolina State University",
+        "address": "27606, Raleigh, North Carolina"
+      }
+    },
+    {
+      "name": "Muge Capan",
+      "email": "mcapan@umass.edu",
+      "affiliation": {
+        "organization": "Department of Mechanical and Industrial Engineering",
+        "department": "Department of Mechanical and Industrial Engineering",
+        "institution": "University of Massachusetts Amherst",
+        "address": "01003, Amherst, Massachusetts"
+      }
+    },
+    {
+      "name": "Jeanne Huddleston",
+      "email": "huddleston.jeanne@mayo.edu",
+      "affiliation": {
+        "organization": "Center for the Science of Health Care Delivery",
+        "department": "Center for the Science of Health Care Delivery",
+        "institution": "Mayo Clinic",
+        "address": "55902, Rochester, Minnesota"
+      }
+    },
+    {
+      "name": "Santiago Romero-Brufau",
+      "email": "romerobrufau.santiago@mayo.edu",
+      "affiliation": {
+        "organization": "Department of Otolaryngology (ENT) / Head and Neck Surgery",
+        "department": "Department of Otolaryngology (ENT) / Head and Neck Surgery",
+        "institution": "Mayo Clinic",
+        "address": "55902, Rochester, Minnesota"
+      }
+    },
+    {
+      "name": "Patricia Kern"
+    }
+  ],
+  "doi": "10.1287/deca.2022.0455",
+  "issn": "1545-8490 (print)",
+  "md5": "9D9EDBA90BCEEEFC623C9315FC825973",
+  "publication": {
+    "journal": "Critical Care Medicine",
+    "journal_inferred": true
+  },
+  "keywords": [
+    "clinical decision support",
+    "sepsis treatment",
+    "electronic health records",
+    "continuous-time Markov decision process",
+    "optimal stopping problem"
+  ],
+  "funding": [
+    "",
+    "",
+    "",
+    ""
+  ],
+  "sections": [
+    {
+      "title": "1.. Introduction",
+      "text": "Sepsis is a life-threatening condition associated with a dysregulated host response to infection, which can cascade into organ system dysfunction (OD) and septic shock (SS)  (Singer et al. 2016) . Septic shock is the most severe stage in the sepsis continuum in which profound circulatory, cellular, and metabolic abnormalities are associated with a greater risk of mortality than any other stage of sepsis  (Hotchkiss et al. 2016) . Sepsis can be brought on by any infection and affects more than 1.5 million Americans each year  (CDC 2019 , NIH 2019) . From 1999-2014, 6% of all deaths had sepsis listed among the causes of death  (CDC 2019 , NIH 2019) . Many of those who survive, especially those who had pre-existing chronic diseases, may experience permanent organ damage  (CDC 2019) . The cost of sepsis was more than $23 billion in 2013 for nearly 1.3 million hospitalizations in the United States  (NIH 2019) .\n\nThe incidence of sepsis is increasing as well. From 2012-2018, the annual number of Medicare beneficiaries that were hospitalized for sepsis increased from 811,644 to 1,136,889  (Buchman et al. 2020) .\n\nAlthough sepsis is considered a medical emergency, there is no gold standard for diagnosis. Delays in the initial treatment of sepsis are associated with increased morbidity and mortality  (Kumar et al. 2006 , SSC 2016) . Guidelines for the management of sepsis and septic shock are designed by a committee of 55 international experts representing 25 international organizations every four years for the Surviving Sepsis Campaign. The committee uses an evidence-based approach to formulate and score statements on early management and resuscitation of patients with sepsis or septic shock. Assessing the state of the patient and responding as quickly as possible is a theme for the diagnosis of sepsis patients. It is recommended that a patient's lactate level is assessed and a blood culture is taken before administering antibiotics within one hour from the recognition of sepsis. The corresponding actions are administering broadspectrum antibiotics (anti-infectives), beginning rapid administration of 30 mL/kg crystalloid (fluids) for hypotension or lactate \u2265 4 mmol/L, and applying vasopressors if hypotensive during or after fluid resuscitation to maintain a mean arterial pressure \u2265 65 mmHg  (SSC 2016) . Notice that recognition of sepsis is the trigger for treatment, for which there is no gold standard  (Yealy et al. 2015) .\n\nMedically, there is a key tension between prioritizing fluids or anti-infectives first. This tension is that one ensures appropriate blood pressure and thus appropriate blood flow to organs, whereas the other attacks the infectious organism stopping its proliferation. Depending on how many organ dysfunctions the patient has (which are a marker for insufficient blood flow), it is an open question which of the two treatments is more important. Although ideally both would be administered simultaneously and as soon as possible, physicians are often forced to choose because of resource availability and time constraints of the treatment supply chain (limited nursing time and competing priorities with other patients). This leads to sequential administration of fluids or anti-infectives, requiring a decision of which to give first  (SSC 2016) .\n\nIn this paper, we address this clinical decisionmaking challenge associated with initial treatment conditions (e.g., type of organ system dysfunctions) and initial treatment type, fluids or anti-infectives. We leverage electronic health record (EHR) data to develop a proxy for the natural history of sepsis, the delayed treatment population (DTP), and a continuous-time Markov chain (CTMC) model of this population's health during hospitalization. Utilizing this CTMC, we develop a continuous-time Markovian optimal stopping decision model to identify the optimal first treatment policy. This model addresses the conditions for and selection of the first treatment by quantifying the impact of this first treatment as a function of the patient's future health. Using this modeling framework, we develop a generalizable methodology to optimally treat patients at risk for sepsis when they enter a healthcare system or during hospitalization. In Section 2, we review relevant literature; in Section 3, we describe the data and define the study population; in Section 4, we formulate the Markov Decision Process (MDP) model; in Section 5, we examine the structural characteristics, performance of the optimal first treatment policy, and limitations; and we conclude with discussion and directions for future work in Section 6."
+    },
+    {
+      "title": "2.. Literature Review",
+      "text": "Markov decision process models have been used in the healthcare field for acute treatment of patients  (Sonnenberg and Beck 1993 , Shechter et al. 2008 , Capan et al. 2017) . Markovian and machine learning models have also been used to study sepsis. This research can be divided into two categories: (i) models to predict sepsis onset and associated mortality risk  (Alberti et al. 2005 , Marshall et al. 2005 , Saka et al. 2007 , Shapiro et al. 2007 , Ribas et al. 2012 , Paxton et al. 2013 , Tsoukalas et al. 2015 , Chen et al. 2017 , Ghosh et al. 2017 , van Wyk et al. 2019 , Gupta et al. 2020 , Parente et al. 2021 ) and (ii) models to identify optimal sepsis treatment strategies  (Rangel-Frausto et al. 1998 , Magni et al. 2000 , Annane et al. 2004 , Huang et al. 2007 , Tsoukalas et al. 2015 , Ghassemi et al. 2017 , Raghu et al. 2017 , Komorowski et al. 2018 , Ayvaci et al. 2021) .\n\ni. Sepsis Progression Models: Parente et al. (  2021 ) developed a hidden Markov model (HMM) for early detection and diagnosis of sepsis in patients that signals the beginning of treatment. They used a four-point sepsis score to model patient health to determine the unknown status of a patient's infection and the onset of sepsis. Gupta et al. (2020)  utilized an HMM to continuously model mortality risk for patients who are suspected of infection and at risk for developing sepsis. They found that the temporal nature of the HMM yields better performance compared with nontemporal machine learning techniques like random forest or support vector machine classification.\n\nOther machine learning techniques have been used to study sepsis onset and mortality risk. van Wyk et al. (2019)  used random forest classification on different sets of physiological data to classify patients who are likely to develop sepsis. Tsoukalas et al. (2015)  developed support vector machine classifiers to determine sepsis patients' length-of-stay and mortality risk. Saka et al. (2007)  designed an empirically based Monte Carlo model to simulate the progression of sepsis in 1,888 hospitalized patients enrolled in the Genetic and Inflammatory Markers of Sepsis (GenIMS) study over 30 days. Their model predicted a patient's change in health represented by the Sepsis-Related Organ Failure Assessment (SOFA) score as a function of their previous health state and hospital length of stay (LOS). Similarly,  Shapiro et al. (2007) ,  Ribas et al. (2012), and Chen et al. (2017)  applied statistical approaches such as logistic regression to predict a patient's mortality from sepsis.\n\nii. Sepsis Treatment Models:  Komorowski et al. (2018)  and  Raghu et al. (2017)  used deep reinforcement learning to find optimal sepsis treatment strategies for intensive care unit (ICU) patients in the Multiparameter Intelligent Monitoring in Intensive Care (MIMIC-III v1.4) database  (Johnson et al. 2016) . They defined a five-by-five action space for interventions, including the fluid volume and vasopressor dosage for each four-hour window, and derived a sequential treatment policy that performs better than the corresponding clinical treatment. Tsoukalas et al. (2015)  used a partially observable Markov decision process model with eight systemic inflammatory response syndrome (SIRS)-based health states to derive a sequential treatment policy for the combination of five different antibiotic treatments. Ayvaci et al. (2021)  developed a personalized sepsis alert system using a discrete-time MDP model. They leveraged patientspecific attributes (e.g., race, age) with the SIRS score as the state space to construct patient-specific Markov chains and derive their optimal alert policy. Although these papers have developed Markovian models to find sequential treatment strategies, we specifically focus on the first treatment timing to provide a meaningful treatment recommendation. We also create a more detailed state space to model patient health to tailor treatment recommendations more effectively.\n\nOur approach combines these two categories of sepsis research in a single Markovian model. Our model of patient health explicitly captures multiple types of organ system dysfunction, inflammation, and the patient's location, which leads to a larger state space. This representation of patient health considers sepsis as an evolving condition and facilitates early intervention or prevention. We use this model to formulate a continuous-time MDP optimal stopping problem to identify the optimal initial treatment type as a function of the patient's health state. An optimal first treatment policy can provide clinical insights that reduce the uncertainty medical practitioners face when treating a patient with suspected infection that is at risk for developing sepsis.\n\nOur approach differs from previous work as we define a unique patient population, the DTP, to approximate the natural history of sepsis and derive the optimal first treatment policy as a function of organ system dysfunction and patient location. Thematically, identifying the optimal first treatment is similar to identifying the onset of sepsis or the first stage of sepsis for which providers should intervene. Because we solve for the optimal first treatment, the action space of our Markovian model also differs from previous work as we identify the type of intervention, administration of fluids or anti-infectives. This action space considers the resource challenges faced by many treatment facilities that cannot provide all recommended treatments simultaneously."
+    },
+    {
+      "title": "3.. Study Population",
+      "text": "The study population includes adult patient visits (i.e., age 18 or older at the time of admission) for patients suspected of infection defined by a single dose of any antiinfective or a positive viral polymerase chain reaction (PCR) result. We exclude surgical patients and patients who left against medical advice. Time-stamped laboratory results (labs), vital signs, and care location are recorded for each visit. For each new observation (e.g., a newly measured temperature value), the updated value was stored with the corresponding data entry time. The interarrival time of updates is calculated from the difference in time stamps. During their visit, patients are treated in various locations (i.e., the general floor, emergency department (ED), Step Down (STEPDN), and ICU) and could change locations during their visit. The discharge disposition is also recorded, which terminates the visit. The discharge dispositions are \"Dead,\" \"Nonroutine,\" or \"Routine.\" The Dead disposition includes \"Do Not Resuscitate\" (DNR) and discharge to hospice. The Routine disposition indicates that patients are discharged to their home. The Nonroutine disposition refers to all other discharges, including transfers to another hospital or care facility or receiving a home health service."
+    },
+    {
+      "title": "3.1.. Delayed and Nondelayed Subpopulations",
+      "text": "This study focuses on the initial treatment of patients suspected of infection and at risk for sepsis. To study initial treatment, we must define a patient population that captures the disease dynamics of sepsis progression unimpeded by treatment, the natural history of the disease. However, there are only six visits with a positive PCR and no anti-infective or fluid that qualify as the natural history, as it is unethical not to treat patients. To address this issue, we identify a subpopulation, the DTP, that approximates the natural history of sepsis, as those visits with suspected infection during which a patient had delayed anti-infective treatment. All visits that do not belong to the DTP belong to the nondelayed treatment population (NDTP).\n\nClinically timely treatment is critical for sepsis management; for each hour treatment is delayed, mortality increases by 3%-8%  (Kumar et al. 2006 , Andersson et al. 2019) . A significant delay in treatment can be as bad as receiving no treatment  (Bone et al. 1989 , Kumar et al. 2006) . We explore the optimization of the first treatment for the DTP. We define two types of delayed treatment visits based on the time of infection suspicion: (i) infection suspicion at the time of admission and (ii) infection suspicion during their hospital stay. Based on clinical expert opinion, these two groups are defined as follows:\n\n1. Patients who had a positive culture within 48 hours from admission: a. Patients who received no anti-infective in the first 24 hours from admission and received antiinfective within the first 72 hours from admission.\n\nb. Patients who received no anti-infective from culture order for more than 24 hours and received antiinfective within the first 72 hours from admission.\n\n2. Patients who had no culture, no anti-infective, and no met SIRS criteria in the first 48 hours from admission: a. Patients who did not have a culture or an antiinfective before meeting SIRS; the time between SIRS criteria and culture order was between 24 and 72 hours.\n\nb. Patients who did not have a culture or an antiinfective before meeting SIRS; the time between SIRS criteria and anti-infective was between 24 and 72 hours. Clinical expertise suggests delayed treatment upon admission (Group 1) may arise in practice because of human error (possibly due to the load on the system or patient volume) as best treatment practices emphasize beginning treatment within one hour (SSC 2016). There are several possible delays in care, including failure to see the results of labs and vitals for timely treatment decisions to be made, errors in patient admission, patient results are switched, and false-positive culture results. EHR limitations do not allow for exact reconstruction of events in the hospital. It is possible that patients may be misclassified as belonging to the NDTP."
+    },
+    {
+      "title": "4.. Markov Decision Process Optimal Stopping Problem Formulation",
+      "text": "We use DTP EHR data to formulate an MDP stopping problem to identify the optimal first treatment policy for patients with suspected infection at risk for sepsis. The state space (Section 4.2) and transition probabilities (Section 4.3) of the MDP are constructed using the health trajectories from admission to discharge. The possible actions are to administer fluid, administer antiinfectives, or wait (Section 4.4). The optimal policy identified for each state minimizes a function that considers the cost of (i) treatment, (ii) the current health of the patient, (iii) the future expected health of the patient, and (iv) the expected discharge status (Section 4.5). The optimal first treatment policy is identified using policy iteration (Section 4.6). The concept of policy dominance is introduced in Section 4.7. Note that we use the postintervention portion of NDTP visits to inform action cost; thus, it receives similar treatment to the DTP in Sections 4.2 and 4.3. Table  1  introduces the required notation."
+    },
+    {
+      "title": "4.1.. Modeling Intuition and Assumptions",
+      "text": "The problem is modeled as an infinite horizon stopping problem to identify a time-independent or stationary optimal treatment policy. We choose this approach because the patient's health condition is the key factor for identifying the optimal first treatment. The time scale in which treatment decisions are made in this context is in the range of minutes or hours, as such our approach focuses on the patient's health condition as a trigger for action. Furthermore, it is generally accepted that for worse health states, the longer a patient stays in Uniformized transition probability from s to s under policy \u03c0(s) T(s |s, d(s))\n\nUniformized transition probability from s to s under action d(s)\n\n, AI} Action Space d(s) Action in state s: administer fluid, administer anti-infective, or do not treat, that is, wait Cost Function r(s, d(s)) Total cost associated with taking action d(s) in state s k(s, d(s)) Immediate cost of taking action d(s) in state s H(s, d(s)) Expected remaining health cost associated with taking action d(s) in state s c i (s) Cost of i organ dysfunctions in state s, i \u2208 I {1, 2, : : : , 7} c l (s) Cost of septic shock in state s c e (s) Location cost associated with state s u(s) Probability fluid action has a positive effect in state s q(s) Probability anti-infective action has a positive effect in state s m d(s) Measure which quantifies effect of action d(s) in state s c(s, d(s)) Cost rate for taking action d(s) in state s G Terminal vector cost of the absorbing states t \u03c9 (s, s ) Time to absorption from s to s , \u03c9 \u2208 {F, AI} R(s, \u03c0(s)) Uniformized cost for state s under policy \u03c0(s) R(s, d(s)) Uniformized cost for state s under action d(s) Solution Method \u03b1 Discount rate, 0 < \u03b1 < 1 c Uniformization factor \u03c0(s) Action in state s under deterministic policy p p * Optimal policy V p\n\nExpected infinite-horizon discounted reward vector under policy p, optimal under policy p * a state, the worse the potential outcome. Therefore, the priority is to intervene as soon as a patient enters a health state rather than delay. Clinical expertise suggests the current state is the most relevant factor for patients who have not received treatment supporting our Markovian framework. In practice, clinicians use the most recent information available about the patient at the current time to make first treatment decisions. In our model framework, we carry forward vitals and labs until new information is learned, so decisions are made based on the most recently available information about the patient's health. We assume that sojourn time between health states follows an exponential distribution. Additional analysis to support this assumption is in Appendix A."
+    },
+    {
+      "title": "4.2.. State Space",
+      "text": "The patient's health condition is defined by more than 40 vital signs and labs within the EHR. These vitals and labs are translated into the patient's health state, which is tracked longitudinally. To reduce the complexity of the state space, the observed values for each laboratory and vital are aggregated to indicator values, indicating whether the values are in the normal or abnormal range. Further, sets of laboratory results and vitals are grouped to translate to inflammation, organ system function, and septic shock as defined in Table  2 . The normal and abnormal value thresholds for each vital and laboratory are based on the SEPSIS Collaborative definition. They were developed through an iterative process considering clinicians' input and guidelines, such as the Surviving Sepsis Campaign  (Singer et al. 2016 , Rhodes et al. 2017) , and are supported by  Shankar-Hari et al. (2016) .\n\nThe state is defined as an 11-element vector of 0 (normal), 1 (abnormal), and NA (i.e., not measured) flags for the patient's vitals and laboratory results corresponding to two types of inflammation, seven organ system dysfunctions, septic shock, and the location within the hospital. When a patient enters the hospital, all state vector elements are assigned NA except the location. The elements of the state vector change as new information from vitals and labs is accrued."
+    },
+    {
+      "title": "4.3.. Transition Matrix",
+      "text": "The health evolution of the DTP and NDTP are formulated as CTMCs. We define the \"Time Between Transitions\" as the interarrival time between recorded values of the 11-element health state vector components. For each possible transition between two health states, s and \u015d, in a CTMC, we calculate the average time to transition, M(s, \u015d). Because the CTMCs assume exponentially distributed interarrival times, the rate of each transition between any state s and state \u015d is defined as\n\nThe transition probability matrix (TPM), P \u03c9 , that characterizes the transitions of the CTMC \u03c9, \u03c9 \u2208 \u03a9 {D (Delayed), F (Postintervention Fluid), AI (Postintervention Anti-Infective)}. The (s, \u015d) element of P \u03c9 describes the probability of transitioning from state s to state \u015d and is defined as follows:\n\nRate(s, \u015d)\n\ns S \u03c9 Rate(s, s ) :\n\n(2)"
+    },
+    {
+      "title": "4.4.. Action Space",
+      "text": "Treatment is decided each time the health state is updated. The treatment actions for the decision model are \"wait,\" \"administer fluid,\" or \"administer antiinfective,\" which are based on clinical guidance associated with sepsis management (SSC 2016). Treatment actions are modeled as absorbing states in the CTMC."
+    },
+    {
+      "title": "4.5.. Cost Structure",
+      "text": "The costs in the MDP are not monetary, but rather they model decrements associated with the patient's health state. The expected discounted cost, r(s, d(s)), is composed of three elements that consider different aspects of a patient's health trajectory and treatment. The expected discounted cost associated with choosing action d(s) in state s is the summation of (i) the immediate cost of action d(s) in state s, k(s, d(s)); (ii) the cost for the time the patient spends in state s using the cost rate, c(s, d(s)); and (iii) the expected cost for the remaining patient health trajectory from state s, H(s, d(s)). Relative costs are assigned based on the severity of illness (e.g., number of organ system dysfunctions), the complexity of care based on location (e.g., ICU), and the severity of the discharge location (e.g., home or death). These costs are developed with clinical expertise. Each element of the cost function is described in the sections that follow.\n\n4.5.1. Immediate Cost of Taking Action. To incorporate the negative effect of administering anti-infective or fluids when it is not clinically recommended, we assign a cost penalty to these actions.\n\nBased on clinical input, we assume these costs to be constant values ranging between 0% and 20% of the cost of death. Sensitivity analysis is conducted on \u03ba and \u03b4 in Section 5.4."
+    },
+    {
+      "title": "4.5.2.. Cost of",
+      "text": "Time the Patient Spends in State s. The cost rate, c(s, d(s)), for state s and action d(s) is the penalty for each unit of time a patient spends in a health state. It quantifies the severity of the health state and is defined as a function of the number of organ dysfunctions, the presence of septic shock, and the patient's location. Specifically,\n\nThe cost associated with i organ system dysfunctions in health state s, c i (s), captures the cumulative effect of organ dysfunctions. Experiencing multiple organ dysfunctions is worse than any single organ dysfunction  (Levy et al. 2005 , Rubulotta et al. 2009) . We assign a \"unit\" cost for each organ dysfunction in state s. This follows SOFA score criteria, which does not value one organ dysfunction more than another  (Singer et al. 2016) . The cost of septic shock, c l (s), captures that septic shock is the most severe health state  (Schoenberg et al. 1998 , Bauer et al. 2020) .\n\nWe incorporate the positive or negative effective of action d(s) in state s through the multiplier m d(s) . We define the m d(s) as\n\nClinically, the first treatment impacts the discharge disposition as a patient's risk of mortality increases by 3%-8% for every hour they are untreated  (Kumar et al. 2006 , Andersson et al. 2019) , so using the discharge disposition provides a reasonable estimate for capturing the effectiveness of a treatment given the treatment state. We define survival (Routine and Nonroutine discharge) as the positive effect of treatment and death as the negative effect of treatment. The probability of survival, u(s) and q(s), given anti-infective or fluid treatment, respectively, in state s is defined by the absorption probabilities of state s from the NDTP postintervention TPMs. The probability of death is the complement, 1u(s) and 1q(s), for anti-infective and fluid, respectively. The coefficient for the negative effect of anti-infective is greater than fluid as misuse or overuse of anti-infective should be avoided to prevent the development of antibiotic resistance  (Abraham 2015 , CDC 2021) .\n\nGiven the NDTP postintervention TPMs for the antiinfective and fluid treatments, we calculate the absorption probabilities using B \u03c9 (I -Q \u03c9 ) -1 R \u03c9 , where I is the identity matrix, R \u03c9 is the transient-to-absorbing state submatrix of P \u03c9 , and Q \u03c9 is the transient-to-transient state submatrix of P \u03c9 for \u03c9 \u2208 {F, AI}  (Puterman 2014) . The probabilities u(s) and q(s) are the sum of the probabilities of Routine and Nonroutine discharge found in B \u03c9 . Under the wait action, a multiplier of one is used.\n\nThe location of the patient is incorporated via c e (s), which has values based on the severity of the disease typically seen within these locations. The location provides additional information about the severity of patient health that may be otherwise unobservable in EHRs. Discharge dispositions are modeled as absorbing states. For these states, c e (s) is the discharge cost. c e (s)\n\nThis location cost of the discharge disposition is leveraged when calculating the future expected health cost.\n\nThe relative magnitude of these costs is decided with clinical expertise. Sensitivity analysis is conducted on \u0394 in Section 5.4."
+    },
+    {
+      "title": "4.5.3.. Expected Remaining Health Cost.",
+      "text": "To capture the post-anti-infective and fluid treatment health trajectories, we incorporate the future expected health cost for the patient postintervention. This cost is calculated using posttreatment NDTP health trajectories that capture the intervention's effect on a patient's future health and discharge disposition. The postintervention CTMCs for each treatment action are transient with absorbing states representing patient discharge. The transient state TPM for each action, Q \u03c9 defined for the set states q \u03c9 , \u03c9 \u2208 {F, AI}, can be inverted, and the expected time spent in any state s starting from state s,\n\nWe calculate the cost rate of the health state s using this expected time in state s and the state severity costs defined in Equations (  6 )-(  9 ). The sum over all transient states given the state s in which the action d(s) is taken defines the future expected health cost until discharge. If the action is to wait, then the patient's health evolution is defined by the CTMC for the delayed population. We incorporate the discharge disposition in the future expected health cost. Using the absorption probability matrix, B \u03c9 , defined by B \u03c9 D \u03c9 R \u03c9 , this total expected remaining health cost is calculated for each state and action combination as follows:\n\nwhere G is the cost matrix associated with the absorbing states defined by c e (s)."
+    },
+    {
+      "title": "4.6.. Uniformized Value Function",
+      "text": "The uniformization of the continuous time Markov decision process applies to the TPM and the rewards.\n\nHere p( j| s, d(s)) is the probability j is the next state given the current state is s and action d(s) is taken, \u03b2(s, d(s)) is the transition rate from state s under action d(s), and \u03b2(s, \u03c0(s)) is the transition rate from state s under action \u03c0(s) defined by policy p. Using discount factor, \u03b1, the uniformization constant c where\n\nthe uniformized transition probability associated with state s and action d(s), T( j| s, d(s)), and uniformized cost associated with state s and action d(s), R(s, d(s)), are defined as follows:\n\nThe value function associated with policy p for the discounted continuous time MDP is defined as\n\nFor which the optimality equation is\n\nWe use the policy iteration algorithm to solve the continuous-time MDP  (Puterman 2014) . We initiate the algorithm with a randomly generated policy, p, which prescribes administering fluid, administering antiinfective, or waiting with equal probability. To apply the policy iteration, we use the method introduced by Puterman (2014). We use R software to extract the population from the EHR, create the states, and calculate the matrix of transition rates and probabilities. We use Python to implement the policy iteration algorithm."
+    },
+    {
+      "title": "4.7.. Treatment Policy Dominance",
+      "text": "By modeling this as a stopping problem, the optimal first treatment policy behaves as a treatment alert system and a treatment recommendation for patients at risk for developing sepsis. We examine the structure of the optimal policy from this perspective. Patients enter the hospital with little known about their condition; as more is discovered, our policy provides guidance for when to intervene and what treatment should be used. Because of potential noise in the optimal policy, we aggregate states by the number of organ dysfunctions, septic shock status, and location to identify the dominant action for each group. An action (anti-infective or fluid) is defined as the dominant action if it is more prevalent among states than the other treatment option and waiting. Waiting is the dominant action if it is more prevalent among states than the sum of anti-infective and fluid. Otherwise, the sum of anti-infective and fluid is more prevalent among states than waiting and an alert for treatment is dominant. The aggregation of states does not differentiate by the inflammation status because there is no cost associated with inflammation.\n\nWe examine two types of aggregation with notation Table  3 : (i) an unweighted count of states in the group and (ii) a weighted sum that captures the expected proportion of time spent in the states of the DTP TPM. For aggregation method (ii), the starting states are weighted by the number of times each state is observed in the DTP. The calculation of weight for each state W j is\n\nwhere D W ij is the (i, j) element of the D W (I -Q W ) -1 matrix, A j corresponds to the mean time spent in state j, and E i is the observed proportion of patient trajectories that begin with health state i. By weighting the states to study the structure of the optimal policy, we aim to capture the optimal policy structure of states that appear more often in patient visits."
+    },
+    {
+      "title": "5.. Results",
+      "text": "First, we summarize our analysis and characterize properties of the study population, emphasizing characterization of the DTP. Second, we discuss the structure of the optimal intervention policy under the baseline cost scenario and develop a heuristic for the initial treatment. Lastly, we compare the performance of the optimal policy to the care patients in NDTP received."
+    },
+    {
+      "title": "5.1.. Analysis of the Study Population",
+      "text": "Retrospective data from adult inpatient visits in a health system in the Northeast from July 2013 to April 2016 are used to create DTP and NDTP. There are 88,849 patient visits (corresponding to 53,411 unique patients). After exclusion, the resulting study population corresponds to 58,382 visits (related to 41,540 unique patients). In total, 672 visits meet the criteria for delayed treatment. The remaining patient population meets the study inclusion criteria and did not have delayed treatment, therefore, belonging to the NDTP. The NDTP is divided into groups by the first treatment received: anti-infective or fluid. There are 49,710 (33,547) and 8,000 (7,321) visits (patients) where the first treatment was anti-infective and fluids, respectively.\n\nTable  4  summarizes the age, demographic, and length of stay distribution of all visits by population type. The DTP is significantly older (p 2E-8) and has a significantly larger proportion of males (p 0.002) than the NDTP. There are no significant differences in race or ethnicity with \u03b1 0:05. The literature is conflicted on the impact of gender on sepsis outcomes  (Papathanassoglou et al. 2017 ). However, the difference in age is important from a clinical perspective. The age difference between populations may occur because older patients are more likely to experience atypical manifestations of sepsis, which make them harder to diagnose  (Girard et al. 2005 ). In addition, older patients are at a higher risk of severe outcome than younger patients and older patients' health can also deteriorate faster than young patients  (Martin et al. 2006 ). These factors may influence the data from the NDTP.\n\nTable  5  summarizes the number of health states and the number of unique transitions in the TPMs for the DTP and NDTP. There are 2,719 states observed in all three populations. These states will be referred to as the filtered states of the DTP.\n\n5.1.1. Analysis of the DTP. To better understand the evolution of sepsis in the DTP, we study the state transitions by location. Table  6  describes the number of unique state transitions and the total number of state transitions that occur between locations in the DTP Markov chain and the distribution of the patients' discharge dispositions. Table  6  shows that the ICU has the most unique and total transitions and the largest number of unique health states. The majority of transitions occur between states that are in the same location; only 2.9% of the transitions occur between locations. However, this accounts for 11% of the unique transitions. With respect to transitions to absorbing states, the majority (76%) of the health state transitions to death are from the ICU; the majority of transitions to Nonroutine and Routine Discharge come from the general floor, 67% and 81.5%, respectively. Of the 672 DTP patients, 38, 402, and 232 patients had a Routine Discharge, Nonroutine Discharge, or died in the hospital, respectively. Transient-to-transient TPM of\n\nProportion of DTP visits that start in state i W j\n\nExpected proportion of time that will be spent in state j given the set of starting states N\n\nTable  7  shows the average proportion of time a patient spent in each health state by the element and status. The median length of stay for the DTP is approximately 23 days. For each patient, the proportion of time spent in each health state is calculated by dividing the interarrival times between state changes by the patient's LOS. These portions are summed if the corresponding condition is met. The average of the proportions across all patients is then calculated. Patients spend the largest proportion of their visits with abnormal physiological inflammation (IP), respiratory organ system dysfunction (OR), and renal organ system dysfunction (OK) health state elements and the smallest proportion of their visit with abnormal hemopoietic organ system dysfunction (OH), metabolic organ system dysfunction (OM), and gastrointestinal organ system dysfunction (OG). SS occurs in the DTP on average for 41% of their LOS.\n\nIn Table  8 , the average proportion of time patients spent in health states by the number of organ system dysfunctions and presence of septic shock is shown by the patient's discharge disposition. This is calculated in a similar manner to Table  7 . Patients that died spent more time in health states with three or more organ system dysfunctions and in states with septic shock than patients who had a Routine or Nonroutine discharge. Patients who were discharged, routinely or nonroutinely, spent a majority of their time in states with two or fewer organ system dysfunctions. The optimal treatment policy is limited to health states observed in the DTP. The number of states for which an optimal treatment policy can be found is limited further by the states that occur in all three groups (i.e., the states observed in the wait-delayed population, anti-infective, and fluid CTMCs). If a state does not appear in the AI and F TPMs, then the health state progression postintervention cannot be determined. If a patient is in a health state that was not observed in either postintervention CTMC state space, no treatment is taken and the patient must wait. Because it is not possible to assess the impact of taking an action, no optimal action can be identified. An analysis, shown in Table  9 , compares the filtered states of the DTP to all states in the DTP that are not in the set of filtered states (i.e., complement of filtered states). We conduct hypothesis tests to determine if the difference of each statistic in the table is statistically significant. Table  9  indicates that there are no significant differences in the severity of the health states based on the average number of organ dysfunctions and proportion of states with septic shock. There are significant differences based on the location of the state. The filtered states of the DTP have a larger proportion of states in the General Floor and STEPDN. The complement of the filtered states of the DTP has a larger proportion of states in the ED and ICU."
+    },
+    {
+      "title": "5.2.. Structure of Optimal Policy",
+      "text": "The optimal policy defines the cost-minimizing treatment action (wait, administer fluid, or administer anti-infective) for each health state in the set of filtered states of the DTP. For the states that are not in the set of filtered states of the DTP states, the optimal action is assumed to be wait by setting the future expected cost of each action to infinity. Because waiting may not be the optimal action for these states, they are excluded from the optimal policy. An optimal policy is only identified for health states in the set of filtered states of the DTP.\n\nWe use a baseline set of cost parameters when finding the optimal initial treatment policy. General Floor, STEPDN, ED, and ICU have location costs 0, 1, 3, and 5, respectively; Routine, Nonroutine, and Death have discharge costs 0, 1,000, and 2,000, respectively; administering fluid and anti-infective both have a treatment cost of 200. The corresponding optimal policy assigns 307 states to wait and 375 and 2,036 states to treat with fluid and anti-infective, respectively. To understand the attributes of this baseline optimal policy, the Note. In each cell, the top value indicates the number of unique transitions and the bottom number indicates the total number of transitions.\n\nseverity of the health states (i.e., the number of organ system dysfunctions and the proportion of states with septic shock) for each optimal action group are studied.\n\nIntuitively, the wait group had the lowest average number of organ system dysfunctions and the lowest proportion of states with septic shock, 1.85 and 0.195, respectively. In comparison with anti-infective, fluid treatment did not have a statistically different average number of organ system dysfunctions but did have a statistically higher proportion of states with septic shock, 2.61 compared with 2.65 (p 0.55) and 0.38 compared with 0.30 (p 0.002), respectively. We examine aggregation of less severe health states to establish treatment guidance that is location and organ system specific using the notion of dominance described in Section 4.7. We begin by examining states with no organ dysfunction or septic shock and progress incrementally by adding organ dysfunction and septic shock combinations. Appendix A summarizes the analysis of more severe health states and different cost scenarios."
+    },
+    {
+      "title": "5.2.1.. States with No Organ System Dysfunction and",
+      "text": "No Septic Shock. Figure  1  shows the unweighted and weighted distribution of the optimal policy action under the baseline cost scenario for states with no organ dysfunction or SS by location. In the ED, waiting is the dominant action under the weighted aggregation; but under the unweighted aggregation, the number of states that take an action and wait are equivalent. The weighted aggregation considers the importance of the state within the Markovian network. Cases where no treatment dominates under the aggregations are important, as they highlight the potential importance of other patient attributes, for example, comorbidities.\n\nUnder both aggregation schemes, waiting is dominant in the General Floor. For the ICU and STEPDN locations, anti-infective treatment is dominant. If patients do not have organ dysfunction and septic shock, their location can inform treatment need. The optimal policy suggests that when patients with no organ dysfunction or SS are in an intensive treatment location, they should be considered for treatment with anti-infective."
+    },
+    {
+      "title": "5.2.2.. States with Septic Shock and No Additional",
+      "text": "Organ System Dysfunctions. Figure  2  shows the unweighted and weighted distribution of the optimal policy action under the baseline cost scenario for states with one organ dysfunction and SS by location. As defined in Table  2 , any state with SS also has cardiovascular organ system dysfunction (OC); however, not all OC includes SS. SS is a severe form of OC. This is studied to understand the treatment guidance\n\nTable 8. Average Proportion of Time Delayed Treatment Population Patients Spent in Health States by Severity if a patient develops SS without developing other organ system dysfunctions. Compared with Figure  1 , the introduction of SS warrants treatment in all locations. In the ED and STEPDN, anti-infective is dominant under both aggregations. For the ICU, it is never optimal to wait. Although anti-infective is the more common optimal treatment, fluid is a close second under the weighted aggregation. On the General Floor, the optimal policy structure differs based on the weighting of the states. Anti-infective is the dominant action in the unweighted aggregation compared with fluid in the weighted. This implies that a larger number of states in the General Floor are optimally treated with anti-infective, but they are collectively less likely to be visited than the states treated with fluid."
+    },
+    {
+      "title": "5.2.3.. States with One Organ System Dysfunction and",
+      "text": "No Septic Shock. Figure  3  shows the unweighted and weighted distribution of optimal policy action under the baseline cost scenario for states with one organ dysfunction and no SS by location. The weighted and unweighted aggregations of the optimal policy are largely in agreement for this subset of health states.\n\nOnce a patient develops a single organ dysfunction in any location, treatment is recommended and the optimal treatment recommendation is primarily antiinfective. The only difference in policy dominance between the unweighted and weighted aggregations is in the ED for OH. For patients in STEPDN and ICU with or without organ dysfunction, treatment is Note. Because SS is present, OC is also present."
+    },
+    {
+      "title": "Rosenstrom et al.: Optimizing the First Response to Sepsis",
+      "text": "Decision  Analysis, 2022 , vol. 19, no. 4, pp. 265-296, \u00a9 2022 INFORMS  recommended. In the General Floor and ED, if a patient has at least one organ system dysfunction, antiinfective is recommended. For OK and OR, fluid is a close second for patients in the ED and STEPDN.\n\nThere is one rare instance in which the weighted optimal policy is inconsistent with treatment for less severe health states in the ICU. For OM, the dominant action is wait. Clinical insight suggests that the metabolic organ dysfunction alone does not provide sufficient insight regarding how the patient's health will progress. Also, it is important to note that states with only OM are rare, with two unique health states occurring that both transition to another state with probability one. The average time spent in these two states is less than one minute. Because of the small amount of time in the states and certainty regarding where the state will transition next, a trade-off is being made directly in the future expected health cost. This is an example of rare states impacting the optimal treatment policy through a limited visibility of where these health states can transition to, what health states transition to them, and the time spent in the health state. This rarity of states is largely due to the sample size of data and the complexity of the state space."
+    },
+    {
+      "title": "5.2.4.. States with Septic Shock and One Additional",
+      "text": "Organ System Dysfunction. Figure  4  shows the unweighted and weighted distribution of optimal policy action under the baseline cost scenario for states with two organ system dysfunctions and SS by location. If a patient has SS, they also have OC, so this Note. Because SS is present, OC is present but not included in the x-axis."
+    },
+    {
+      "title": "Rosenstrom et al.: Optimizing the First Response to Sepsis",
+      "text": "Decision  Analysis, 2022 , vol. 19, no. 4, pp. 265-296, \u00a9 2022 INFORMS  analysis focuses on the second organ system dysfunction. For this set of states, the treatment policy is dominated by anti-infective in the ED, General Floor, ICU, and STEPDN. In the ED, SS is less likely to occur. 5.2.5. Initial Treatment Heuristic Policy. The structure of the optimal policy can be characterized as follows:\n\n1. If the patient has one or more organ dysfunctions or SS, treat a. If the patient only has OC and SS on the General Floor, treat with fluid.\n\nb. Otherwise, treat with anti-infective. 2. If the patient has no organ dysfunction and no SS, a. in the ED or General Floor, wait b. in ICU or STEPDN, treat with anti-infective. This policy is close to a heuristic policy of always treating a patient with at least one organ dysfunction or SS. However, it is more nuanced by providing a treatment recommendation and considering organ dysfunction type and location."
+    },
+    {
+      "title": "5.3.. Application of Optimal Treatment Policy",
+      "text": "In this section, we evaluate the performance of the baseline optimal policy on a sample of patients. As shown in Figure  5 , given a patient's full health state trajectory and the optimal first treatment policy derived from the MDP, when the patient reaches a health state in which the policy recommends treatment, the state and treatment are recorded. With this information, (i) the treatment location, (ii) the absorption probabilities of each discharge disposition, (iii) the time until treatment, (iv) the number of organ dysfunctions at the time of treatment, (v) the septic shock status at the time of treatment, and (vi) the proportion of optimal treatment actions are evaluated. The absorption probabilities are calculated from the postintervention TPMs, as discussed in Section 4.5.\n\nThe optimal policy is tested on 30 samples of 5,000 randomly selected patient trajectories from the NDTP. We compare the treatment characteristics of the optimal policy's first treatment recommendation to the first treatment the patient actually received. Subsequently, we calculate the differences in each treatment characteristic and determine if the differences between treatments are significant. Table  10 , panels A-F show the results of the six key performance metrics categorized by the treatment location under the optimal first treatment policy and the location of the observed first treatment. The average value across the 30 replications of each key performance metric is shown with the 95% confidence interval half-width and the significance level. Location combinations are defined in coordinate pairs, for example, (ED, GF) is the matrix element where the optimal policy recommends treatment in the ED and the observed treatment location is the General Floor.\n\nTable  10 , panel A shows the average number of patients categorized by their treatment location under the optimal first treatment policy and the observed first treatment. The upper triangular portion of this matrix shows regions in which the optimal policy recommends treating the patient in less or equally severe locations as the observed treatment location. Notes. Each panel compares optimal treatment policy (row) to the treatment the patient received in the hospital (column) by location. Each value has a significance level and 95% confidence interval half width. The statistics are calculated from randomly sampling 5,000 patients from the NDTP for 30 replications. Panel A: The distribution of patients' treatment locations under the optimal treatment policy and their observed treatment. The mean difference in (panel B) absorption to death probability, (panel C) time until treatment, (panel D) number of organ dysfunctions in the treatment state, and (panel E) proportion of patients with septic shock in their treatment state between the optimal first treatment policy and the observed treatment. Panel F: the proportion of states in which the optimal policy recommends anti-infective treatment. ***<0.01; ** <0.05; *<0.1.\n\nOn average, 93% of patients are in this area with the most in (ED, ED). If a patient receives treatment before entering a more severe location, they might be able to prevent a visit to the location. Table  10 , panel B shows the optimal first treatment policy significantly reduces the average absorption to death probability by 0.007 (p 1E-27) or 2.2% across the population. In the four most common location combinations, (ED, ED), (ED, GF), (GF, ED), and (GF, GF), the optimal policy significantly reduces the absorption to death probabilities. Table  10 , panel C shows the optimal policy reduces the time until treatment by 106 minutes (p 2E-16) and 98.2% of the patients are treated within 72 hours on average.\n\nTable  10 , panel D shows the average difference in the number of organ system dysfunctions between the optimal first treatment policy and the observed first treatment. The number of organ system dysfunctions at the time of treatment is an indicator of the severity of patient health before treatment. Under the optimal policy, approximately 85% of the patients are treated in less severe health states and the average number of organ system dysfunction is reduced by 0.19  (p 9E-35) .\n\nTable  10 , panel E shows the average difference in the number of patients with septic shock at the time of treatment. Across the 30 replications of 5,000 patients each, there is only a significant reduction in the number of patients with septic shock at the time of treatment under the optimal policy in the (ED, SD), (ED, ICU), (SD, SD), and (SD, ICU). Table  10 , panel F shows that the majority of patients are treated optimally with anti-infective first.\n\nWhen Table  10 , panel A-F are examined together, we observe that the optimal policy treats patients significantly quicker and in less severe health states than their observed treatment. The timing of the treatment is critical as delays in treatment are associated with increased mortality risk  (Kumar et al. 2006 , Andersson et al. 2019) . Treating in less severe health states is also important as the time with organ system dysfunction can impact patient outcomes. The optimal treatment policy performs significantly better for these metrics, and it treats patients in states with lower absorption to death probabilities. For all location coordinates, the optimal policy performs better than the actual treatment in at least one of the key performance indicators.\n\nThis analysis highlights the potential trade-offs in the treatment strategies. For example, when the optimal policy treats in the ED but the observed treatment location is in the STEPDN, the observed treatment had a lower absorption to death probability but the optimal policy treats 23 hours sooner and in a less severe health state. A similar trade-off can be examined for (ED, GF) and (GF, GF). Under the optimal policy, the absorption to death probability is lower; however, the treatment is delayed, and there is an increase in the severity of the health state.\n\nThere are some counterintuitive results. For example, a natural question arises regarding why, under the optimal policy, treatment does not occur until the patient gets to the ICU when the patient was actually treated in the ED. Intuitively, an optimal policy should treat before a patient enters a more severe health state. This occurs when health states in the patient trajectory have no known optimal policy. The health state only has a known optimal policy if it is in the filtered states of the DTP. States that are not in this set do not have a known optimal policy. Without a known optimal policy, we are forced to wait until a state with a known optimal policy is reached. Full information about the impact of the treatment is required to solve for an optimal treatment decision; an optimal policy could not be identified under partial information. Potential ways to address this issue are to use the optimal policy for a different location if it is available or to use the heuristic developed in Section 5.2."
+    },
+    {
+      "title": "5.3.1.. Performance of the Optimal Policy on the DTP.",
+      "text": "We perform the same analysis for the DTP. Among the four mean difference performance metrics, all are significantly lower under the optimal policy than the actual treatment they received.\n\n1. The mean difference in the absorption to death probability for the DTP is -0.027 (p 8.5E-11).\n\n2. The mean difference in time until treatment is -2,326 minutes or 38.7 hours (p 2.2E-16).\n\n3. The mean difference in the number of organ system dysfunctions is -0.61 (p 2.2E-16).\n\n4. The mean difference in the proportion of patients treated with SS is -0.103 (p 8.05E-11)."
+    },
+    {
+      "title": "5.3.2.. Performance of Optimal Policy Heuristic.",
+      "text": "Additionally, we perform the same analysis for the NDTP using the heuristic defined from the optimal policy structure in Section 5.2. The mean difference in the absorption to death probability for the NDTP is -0.008 (p 4E-27); the mean difference in time until treatment is -38 minutes (p 6.4E-9); the mean difference in the number of organ system dysfunctions is -0.27 (p 2.2E-27), and the mean difference in the proportion of patients treated with SS is -0.003 (p 5.2E-7). The heuristic is defined for all states, and the optimal policy is only defined for the filtered states of the DTP. This can lead to situations in which the treatment is to wait because optimal policy is not known for a state, but the heuristic can recommend a treatment action. Under the optimal policy, treatment recommendations are made 1.13 hours earlier than the heuristic on average, which translates to lower mortality risk  (Kumar et al. 2006) . The heuristic provides a good solution for the initial treatment of patients if the optimal policy cannot be referenced."
+    },
+    {
+      "title": "5.4.. Sensitivity Analysis on Cost Structure",
+      "text": "We test 39 different cost scenarios shown in Table  B .1 in Appendix B. We vary the terminal cost, the cost of treatment relative to the terminal cost, and the cost of anti-infective relative fluid. We find that the structure of the optimal policy is similar across cost scenarios. The primary difference between the structures is the optimal type of treatment; the general conditions of states for which treatment is optimal remain the same. We find that for all cost structures with terminal cost less than 10,000, each policy performs significantly better than the observed treatment policy for the absorption to death probability, time until treatment, and health state severity. When the terminal cost becomes large, the policy sacrifices the time until treatment and health state severity metrics for a greater reduction in the absorption to death probability."
+    },
+    {
+      "title": "5.5.. Limitations",
+      "text": "There are some limitations to our analysis. Given the nature of sepsis, patients with cardiovascular conditions are more difficult to treat, more likely to have worse health conditions, and more likely to suffer worse outcomes. To ensure that the results of the optimal policies are not biased by the underlying health conditions of the patient population, a CTMC for the subset of patients who received delayed treatment and had either congestive heart failure or valvular disease was developed. The state space of this subpopulation's CTMC was compared with the DTP states grouped by each optimal action. We found that there were no significant differences in the states in the cardiovascular comorbidity DTP state space and entire DTP state space.\n\nOne key challenge in a model like this is finding a comparison group without treatment to understand the counterfactual. Untreated patients with infection or sepsis are extremely rare among hospitalized patients. As discussed in the methods, our solution was to identify a group of patients with delayed treatment and use their clinical course as a proxy for an untreated or natural history group. However, a limitation is that this cohort of patients significantly differs from the NDTP in age and gender, which could bias the comparison. Additionally, there could be unobserved differences between the groups that may bias the results. This is a somewhat unavoidable situation, given that it would be unethical to leave patients with infection or sepsis knowingly untreated.\n\nThe size of the DTP and NDTP data sets is another limiting factor in this work that may have reduced the number of possible states represented and resulted in data sparseness. The size of the state space limits the number of states for which an optimal first treatment action can be found. Because it is unethical to delay treatment, alternative approaches (such as combining data from multiple hospital systems) should be explored to more fully characterize the optimal first treatment action for the entire possible state space.\n\nThe data sparseness, driven by the state space complexity and the data set size, creates instances of state transitions that occur a small number of times across all patient visits. This phenomenon results in some average transition times calculated with small sample sizes; approximately 20.4% of the states are visited 10 or more times. This may cause the average time until a transition to be uncertain. These transitions are not removed as removal would severely reduce the connectivity of the Markovian network. In general, hypothesis testing of the proportion of various attributes reveals that the proportion of low transition counts is greatest in the ED and originates in states with more missingness than higher transition count instances. These findings are intuitive as patients never reenter the ED and never lose information once gained. In future work, we will quantify the value of the stochastic solution gained by addressing the uncertainty in the transition rates.\n\nOne limitation of our approach is that our model does not have an option to recommend that both treatments be given at the same time. This option may be the optimal scenario in many clinical situations in which this is possible. However, as we mentioned in the introduction, it is not always possible because of limited nursing time and competing priorities with other patients.\n\nThe final limitation is the estimation of the costs for each state. It is difficult to quantify the costs of our parameters from the literature, so we rely on expert opinion. The cost assumptions are relative. Additionally, we perform extensive sensitivity analysis to explore the effect of different cost assumptions on the optimal policy. For future work, this framework could be applied to the SOFA for comparison. In addition, survival curves of the organ system dysfunctions could be used to determine the relative value of cost rates of the organ system dysfunction and septic shock."
+    },
+    {
+      "title": "6.. Conclusion and Future Work",
+      "text": "Sepsis is considered a medical emergency, and delays in initial treatment are associated with increased morbidity and mortality. Because there is no gold standard for diagnosis and treatment of sepsis, we present a generalizable framework to optimally design first treatment policies for patients with suspected infection who are at risk for sepsis. This framework addresses the uncertainty of timing and type of first treatment and provides an optimal first treatment policy that minimizes patients' expected morbidity and mortality. This framework models the stochastic progression of patient health from hospital admission using a CTMC constructed from a population of patients that received delayed treatment upon entering the hospital or during their stay. This CTMC is used to develop a stopping problem-based MDP to identify an optimal first treatment policy.\n\nThe optimal first treatment policy acts as an alert system for treatment that also provides a treatment recommendation. By examining the structural characteristics of the optimal policy, we find the dominant patterns for treatment in health states that are common amongst patients entering the hospital to develop a heuristic rule for initial treatment. This heuristic focuses on location, the number of organ system dysfunctions, and treatment type to identify rules for initial treatment. We find that having at least one organ dysfunction triggers treatment and that anti-infective is generally the best treatment option. We find when patients have no additional organ system dysfunction and septic shock that fluid is the best first treatment and that when patients are in the ICU or STEPDN, even without organ dysfunction, it is best to treat them. This heuristic structure of the optimal policy provides easily interpretable guidelines for the optimal first treatment. In addition, the treatment characteristics of the heuristic are robust to changes in cost structure.\n\nWhen the optimal policy is compared with observed treatment, we find that the optimal policy significantly reduces the absorption probability to death, time until treatment, and the number of organ dysfunctions at the time of treatment. This is critical as delays in treatment lead to increased mortality risk, and untreated organ dysfunction can have lifelong health implications. When treatments are disaggregated by location, we also observe that the optimal treatment policy treats most patients before they enter more severe locations. This is critical for preventing patients from entering the ICU, which is often a constrained resource. These metrics suggest that implementable first treatment policies can be identified that outperform observed treatment.\n\nWe use data to formulate this problem from a metropolitan regional Level 1 trauma center. The framework we develop to identify the improved first treatment policy is generalizable to other hospital systems. This system could act as an alert system for treatment that could be integrated into the EHR.\n\nThis framework can be personalized to the attributes of the patients. In future work, this framework will be applied to populations with comorbidity. This would facilitate personalized treatment for patients who enter the hospital with suspected infection, are at risk for sepsis, and have underlying health conditions. Another area for future work is developing a finite horizon model to find the first treatment that considers time-dependent thresholds for action. CMS time limits identify bounds within which intervention must occur after health state criteria are met. It would be possible to establish time limits informed by the infinite horizon policy and compare with the current CMS recommendations. value, we test 13 action cost combinations. The action costs ranged from 0%-20% of the terminal cost value. For each 5% increase in both fluid and anti-infective action cost, we test combinations in which fluid or anti-infective is 50% of the alternative. For each cost scenario, the MDP is formulated with the corresponding cost values, and solved, generating 39 optimal treatment policies.\n\nBecause the costs relativistically weigh different attributes of patient health, the cost scenarios take on interpretable meaning. When the terminal cost of death is lower, the cost rate associated with each health state has a larger relative weight; this emphasizes avoiding detrimental health states. Similarly, when the cost of death is greater, the terminal disposition has a greater weight compared with the cost rates and location cost of a health state; this emphasizes the discharge disposition of the patient above the health states they visit. By testing action costs that increase relative to the terminal cost, the value of treatment is observed. In\n\nTable B.1 Cost Scenarios for Sensitivity Analysis Discharge Costs Scenario Cost of Cost of Number Fluid Anti-Infective Routine: 0; Non-routine: 1,000; Death: 2,000 Baseline 200 200 Routine: 0; Non-routine: 250; Death: 500 1 0 0 2 25 12.5 3 12.5 25 4 2 5 2 5 5 5 0 2 5 6 2 5 5 0 7 5 0 5 0 8 75 37.5 9 37.5 75 10 75 75 11 100 50 12 50 100 13 100 100 Routine: 0; Non-routine: 1,000; Death: 2,000 14 0 0 15 100 50 16 50 100 17 100 100 18 200 100 19 100 200 20 200 200 21 300 150 22 150 300 23 300 300 24 400 200 25 200 400 26 400 400 Routine: 0; Non-routine: 5,000; Death: 10,000 27 0 0 28 500 250 29 250 500 30 500 500 31 1,000 500 32 500 1,000 33 1,000 1,000 34 1,500 750 35 750 1500 36 1,500 1,500 37 2,000 1,000 38 1,000 2,000 39 2,000 1,000\n\nNotes. The location are constant for all scenarios. They are 0, 1, 3, and 5 for the General Floor, STEPDN, ED, and ICU, respectively.\n\nscenarios in which the cost of treatment is large, the sensitivity analysis shows if the high cost of treatment is worth the benefits of the future expected health compared with the future of waiting. We explore if there is a threshold cost for initiating treatment. By testing action costs that vary relative to each other, we explore if there is a threshold for which a treatment is preferred and if there are conditions for which a treatment is always optimal. Establishing these thresholds informs treatment when treatment risk is uncertain.\n\nWe examine the policies generated by the different cost scenarios from the same perspective of policy dominance used in Section 5.2. We use the weighted aggregation for this analysis, as it accounts for the importance of the state in the DTP Markov chain. The objective is to identify where the policies are in agreement and where there are differences. The following sections compare the policies for the different sets of states as discussed in Section 5.2.\n\nThe figures in this section that describe which action is dominant are presented through a series of grouped scatter plots. The X and Y axes on each individual scatter plot represent the cost of fluid treatment and the cost of antiinfective treatment, respectively. The scatter plots are grouped by their organ dysfunction status, terminal cost, and location. Anti-infective or fluid is the dominant action if the sum of states' weights is greater than the other treatment option and waiting. Waiting is the dominant action if the sum of states' weights is greater than the sum of anti-infective and fluid. Otherwise, the sum of antiinfective and fluid is greater than waiting and an alert for treatment is dominant, which is referred to as action. Within the action region, the optimal policy should be used to identify the type of treatment."
+    },
+    {
+      "title": "B.1. States With No Organ System Dysfunction and No Septic Shock",
+      "text": "States with no organ system dysfunction and no septic shock are the healthiest states in the state space. Figure  B .1 shows the dominant action for each of the 39 optimal policies for this set of states. The optimal actions are equivalent and correspond to the dominance characteristics discussed in Section 5.2. Specifically, if the patient is on the General Floor or in the ED with no organ dysfunction, wait; if the patient is in the ICU or STEPDN with no organ dysfunction, treat with anti-infective. Figure B .2 shows the dominant action for the 39 cost scenarios for this set of states. In this figure, as would be expected, we observe that a treatment action is always dominant. This supports the results in Figure  2  and the heuristic in Section 5.2. Figure  2  shows that optimal treatment varies primarily by location and terminal cost. In the STEPDN location, anti-infective is the dominant optimal treatment for all cost scenarios. For the ED and ICU, we observe that as the terminal cost increases and fluid becomes the preferred treatment action. On the General Floor, we observe a similar pattern but with anti-infective and fluid reversed."
+    },
+    {
+      "title": "B.2. States With Cardiovascular Organ System Dysfunction and Septic Shock"
+    },
+    {
+      "title": "B.3 States With One Organ System Dysfunction and No Septic Shock",
+      "text": "We extend the graph in the previous section to examine multiple types of organ system dysfunction simultaneously. Figure  B .3 shows the dominant optimal policy for states with one organ system dysfunction and no septic shock. The columns of the matrix of graphs represent the type of organ system dysfunction present for the set of states. The rows correspond to the combination of terminal cost of death and location. For each subgraph, the cost of anti-infective and fluid varies according to the cost scenarios corresponding to the terminal costs. For example, the graph in the top left corner of the matrix represents a set of states with OC in the ED where the cost of death is 500.\n\nFirst, we examine how the policy structure changes in the ED. For terminal costs of 500 and 2,000, for all organ system dysfunction except OH, anti-infective is the dominant action. There is no organ system dysfunction with a single dominant action across all 39 cost scenarios. Once the cost of death is 10,000, and the discharge disposition is weighted more, the policy changes. Fluid and anti-infective become more competitive for the dominant as regions in which fluid is less costly are optimally treated by fluid for OG, OH, OM, OK, and OR. Except for the ON, the heuristic developed in Section 5.2 holds, that is, treatment should be given if the patient has an organ system dysfunction.\n\nOn the General Floor, anti-infective is the dominant action for OC, OG, OH, and OM organ system dysfunction for all 39 cost scenarios. We observe a similar trend as in the ED for the other three organ system dysfunctions for which anti-infective is largely dominant over all cost scenarios with terminal costs of 500 and 2,000. For ON, fluid is favored for some cost scenarios. Under the terminal cost of 10,000, when the discharge disposition is primarily weighted in the minimization problem, waiting becomes a more competitive action for neurological, renal, and respiratory organ system dysfunction. For OK and OR, if the treatment cost is a larger proportion of the terminal cost, the dominant action becomes waiting. This implies if the cost of treatment is expected to be high, treatment might not be warranted. In general, these policies support the heuristic developed in Section 5.2. For the ON, OK, and OR treatment, the potential cost of treatment should be carefully considered prior to treatment.\n\nFor the ICU, we observe that OG, OM, and neurological organ system dysfunction (ON) have a constant dominant optimal action across all 39 cost scenarios. We again observe that anti-infective is dominant for all organ system Notes. Each subgraph shows the 13 cost scenarios for each terminal cost parameter. Subgraphs are separated by terminal cost parameters and location. Notes. Each subgraph shows the 13 cost scenarios for each terminal cost parameter. Subgraphs are separated by terminal cost parameters and location. Because septic shock is present, cardiovascular organ dysfunction is the only possible single organ dysfunction. Notes. Each subgraph shows the 13 cost scenarios for each terminal cost parameter. Subgraphs are separated by terminal cost parameters and location. Notes. Each subgraph shows the 13 cost scenarios for each terminal cost parameter. Subgraphs are separated by terminal cost parameters and location. Because septic shock is present, cardiovascular is present in all states but not listed in the organ dysfunction columns. Rosenstrom et al.: Optimizing the First Response to Sepsis Decision Analysis  , 2022 , , vol. 19, no. 4, pp. 265-296, \u00a9 2022 INFORMS INFORMS  dysfunction at terminal costs of 500 and 2,000, except for OM. As discussed in Section 5.2, the ICU with OM is a rare state. We observe that fluid becomes the recommended optimal treatment when the terminal cost is 10,000. This supports the heuristic developed in Section 5.2 that one organ system dysfunction in the ICU warrants treatment. As the terminal cost increases, the discharge disposition is more heavily weighted. Because patients are at greater risk for death while in the ICU, the optimal policy with the highest terminal cost should be used. Fluid should be carefully considered for optimal treatment.\n\nFinally, in the STEPDN location, we observe that antiinfective is the dominant action for almost all cost scenarios and organ dysfunctions. For OC, OG, and ON, the policy structure is the same for all terminal costs indicating that antiinfective is always the dominant action. We observe that fluid becomes the recommended optimal treatment for OH, OM, OK, and OR under the 10,000 terminal cost when the cost of fluid is less than the cost of anti-infective. In general, the optimal policies support the heuristic developed in Section 5.2."
+    },
+    {
+      "title": "B.4. States With Two Organ System Dysfunction and Septic Shock",
+      "text": "For states with two organ system dysfunctions, Figure  B .4 shows the effect of the cost structure on the optimal policy similar to Figure B.3. For all cost/location/organ system dysfunction combinations except for the combinations of (10,000/ED/OR), (10,000/General Floor/OG), and (10,000/General Floor/OK), all cost scenarios support the heuristic developed in Section 5.2, once a patient has at least one organ system dysfunction and septic shock treatment needs to be administered; in most cases, treatment with anti-infective is the optimal first treatment. For the combinations listed, waiting becomes optimal at the terminal cost of 10,000."
+    },
+    {
+      "title": "B.5. Distribution of the Sojourn Time",
+      "text": "We test the appropriateness of the assumption that the sojourn time follows an exponential distribution using the Kolmogorov-Smirnov (KS) hypothesis test for exponentiality for states that are visited a sufficiently large (n \u2265 30) number of times in the DTP. Figure  B .5 shows a histogram of the KS-statistics for these states. Across all locations, 52% of states' time-until-transition distribution is statistically similar to an exponential distribution at alpha of 0.05. By location, the ICU had the fewest states with a time-until-transition distribution that is similar to an exponential distribution. This may be related to the censoring of the ICU data. Note. States are shown by location and must have n \u2265 30 instances of the state being visited in EHRs."
+    },
+    {
+      "text": "Figure 1. (Color online) Unweighted (a) and Weighted (b) Aggregations of States with No Organ Dysfunction and No SS"
+    },
+    {
+      "text": "Figure 2. (Color online) Unweighted (a) and Weighted (b) Aggregations of States with Septic Shock and No Additional Organ System Dysfunctions"
+    },
+    {
+      "text": "Figure 3. (Color online) Unweighted (a) and Weighted (b) Aggregations of States with One Organ Dysfunction and No SS"
+    },
+    {
+      "text": "Figure 4. (Color online) Unweighted (a) and Weighted (b) Aggregations of States Septic Shock and One Additional Organ System Dysfunction"
+    },
+    {
+      "text": "Figure 5. (Color online) Application of Optimal Policy to a Patient's Health Trajectory"
+    },
+    {
+      "text": "Figure B.1. (Color online) Dominant Action Under the Weighted Aggregation of States with No Organ Dysfunction and No Septic Shock"
+    },
+    {
+      "text": "Figure B.2. (Color online) Dominant Action Under the Weighted Aggregation of States with One Organ Dysfunction and Septic Shock"
+    },
+    {
+      "text": "Figure B.3. (Color online) Dominant Action Under the Weighted Aggregation of States with One Organ Dysfunction and No Septic Shock"
+    },
+    {
+      "text": "Figure B.4. (Color online) Dominant Action Under the Weighted Aggregation of States with Two Organ Dysfunction and Septic Shock"
+    },
+    {
+      "text": "Figure 12. (Color online) Distribution of the KS-Statistics of Exponential Goodness of Fit Tests on the Time to Leave a State"
+    },
+    {
+      "text": "Markov Decision Process Notation"
+    },
+    {
+      "text": "Health State Element Definition"
+    },
+    {
+      "text": "Treatment Policy Dominance Notation"
+    },
+    {
+      "text": "Demographic Distribution of the Delayed and Non-Delayed Treatment Populations"
+    },
+    {
+      "text": "Size Attributes of Delayed and Non-Delayed Treatment Population Markov Chains"
+    },
+    {
+      "text": "Average Proportion of Time Delayed Treatment Population Patients Spent in Health States During Their Stay by Element"
+    },
+    {
+      "text": "Unique and Total Health State Transitions of the Delayed Treatment Population"
+    },
+    {
+      "text": "Comparison of Optimal Treatment Policy and Observed Treatment"
+    },
+    {
+      "text": "This material is based upon work supported by the  National Science Foundation  [Grant  1522107  ( North Carolina State University ),  1522106  ( Mayo Clinic ), and  1833538  ( Drexel University )]."
+    },
+    {
+      "text": "show states aggregated by the number of organ system dysfunctions, location, and by optimal treatment action. In general, there is an agreement between unweighted and weighted dominance. There are three location/number of organ dysfunctions combinations that have differing dominant actions by weighting.\n\nUnder the weighted aggregation, states in the ED with three and four organ dysfunctions have dominant actions of waiting and fluid, respectively. Note that the weights in the ED are very small relative to the count of states. Because the states do not enter the ED once they have left, these states are transient with respect to changing location away from the ED, creating volatility compared with the unweighted.\n\nUnder both the weighted and unweighted aggregation, the state with seven organ system dysfunctions and septic shock in the ICU optimally waits. This state is rare in the DTP, occurring for one patient and transitioning to death with probability one. Waiting is due to an end of horizon effect."
+    },
+    {
+      "title": "Appendix B. Sensitivity Analysis on",
+      "text": "Cost Structure\n\nTable  B .1 shows 39 cost scenarios used for sensitivity analysis on the cost structure. For all scenarios, location costs and the routine discharge cost are held constant. We test three sets of terminal cost values; for each terminal cost   Her work and research focus on large-scale data analysis and optimization in areas such as healthcare, transportation, supply chain, and production. Her PhD dissertation involved analyzing K-12 students' performance and sepsis patient health conditions using statistical and optimization models.\n\nJulie Simmons Ivy is a professor in the Department of Industrial and Systems Engineering at North Carolina State University. She received her PhD in industrial and operations engineering from the University of Michigan. Her research interests are mathematical modeling of stochastic dynamic systems with an emphasis on statistics and decision analysis as applied to healthcare, public health, and humanitarian logistics.\n\nShadi Hassani Goodarzi is a data scientist at Citrix. She earned her PhD in industrial and systems engineering from the North Carolina State University in 2018. Her work and research focus on mathematical modeling of large-scale problems. In her PhD dissertation, she studied the treatment and natural history of breast cancer treatment using Markovian models and large-scale data analysis paired with simulation techniques, respectively.\n\nMuge Capan is an associate clinical professor at the decision sciences and management information systems department at LeBow College of Business. She received her PhD in industrial and systems engineering at North Carolina State University with a minor in operations research. Her research focuses on data science, statistical analysis, and decision modeling in healthcare to develop smart and connected clinical decision support systems.\n\nJeanne Huddleston, MD, MS is a physician and professor of medicine at Mayo Clinic, Rochester. She led the integration of engineering principles into clinical care, creating the first Clinical Engineering Learning Laboratory with the Department of Emergency Medicine at Mayo Clinic. Her research goal is the translation of engineering principles to healthcare delivery to improve the safety, efficiency, and reliability of the healthcare experience for patients, their families, and providers.\n\nSantiago Romero-Brufau, MD, PhD, MS is an assistant professor of healthcare systems engineering and medicine at Mayo Clinic, Rochester. He is also part-time instructor in health data science at the Harvard School of Public Health. His main areas of interest are in the application of machine learning for clinical decision support and bridging the implementation gap of machine learning models into clinical practice."
+    }
+  ],
+  "references": [
+    {
+      "title": "The antibiotics resistance crisis",
+      "authors": [
+        "E Abraham"
+      ],
+      "year": 2015,
+      "journal": "Comprehensive Biochemistry",
+      "volume": "11",
+      "issue": "4",
+      "raw": "The antibiotics resistance crisis \n\t\t \n\t\t\t E P Abraham \n\t\t \n\t \n\t \n\t\t Comprehensive Biochemistry \n\t\t \n\t\t\t 11 \n\t\t\t 4 \n\t\t\t \n\t\t\t 2015 \n\t\t \n\t \n\t Abraham EP (2015) The antibiotics resistance crisis. Comprehensive Biochemistry 11(4):181-224."
+    },
+    {
+      "title": "Systemic inflammatory response and progression to severe sepsis in critically ill infected patients",
+      "authors": [
+        "C Alberti",
+        "C Brun-Buisson",
+        "S Chevret",
+        "M Antonelli",
+        "S Goodman",
+        "C Martin",
+        "R Moreno"
+      ],
+      "year": 2005,
+      "doi": "10.1164/rccm.200403-324oc",
+      "journal": "Amer. J. Respiratory Critical Care Medicine",
+      "volume": "171",
+      "issue": "5",
+      "raw": "Systemic inflammatory response and progression to severe sepsis in critically ill infected patients \n\t\t \n\t\t\t C Alberti \n\t\t \n\t\t \n\t\t\t C Brun-Buisson \n\t\t \n\t\t \n\t\t\t S Chevret \n\t\t \n\t\t \n\t\t\t M Antonelli \n\t\t \n\t\t \n\t\t\t S V Goodman \n\t\t \n\t\t \n\t\t\t C Martin \n\t\t \n\t\t \n\t\t\t R Moreno \n\t\t \n\t\t 10.1164/rccm.200403-324oc \n\t \n\t \n\t\t Amer. J. Respiratory Critical Care Medicine \n\t\t \n\t\t\t 171 \n\t\t\t 5 \n\t\t\t \n\t\t\t 2005 \n\t\t \n\t \n\t Alberti C, Brun-Buisson C, Chevret S, Antonelli M, Goodman SV, Martin C, Moreno R, et al. (2005) Systemic inflammatory response and progression to severe sepsis in critically ill infected patients. Amer. J. Respiratory Critical Care Medicine 171(5):461-468."
+    },
+    {
+      "title": "Delay of appropriate antibiotic treatment is associated with high mortality in patients with community-onset sepsis in a Swedish setting",
+      "authors": [
+        "M Andersson",
+        "\u00c5 \u00d6stholm-Balkhed",
+        "M Fredrikson",
+        "M Holmbom",
+        "A H\u00e4llgren",
+        "S Berg",
+        "H Hanberger"
+      ],
+      "year": 2019,
+      "doi": "10.1007/s10096-019-03529-8",
+      "journal": "Eur. J. Clinical Microbiology Infectious Diseases",
+      "volume": "38",
+      "issue": "7",
+      "raw": "Delay of appropriate antibiotic treatment is associated with high mortality in patients with community-onset sepsis in a Swedish setting \n\t\t \n\t\t\t M Andersson \n\t\t \n\t\t \n\t\t\t \u00c5 \u00d6stholm-Balkhed \n\t\t \n\t\t \n\t\t\t M Fredrikson \n\t\t \n\t\t \n\t\t\t M Holmbom \n\t\t \n\t\t \n\t\t\t A H\u00e4llgren \n\t\t \n\t\t \n\t\t\t S Berg \n\t\t \n\t\t \n\t\t\t H Hanberger \n\t\t \n\t\t 10.1007/s10096-019-03529-8 \n\t \n\t \n\t\t Eur. J. Clinical Microbiology Infectious Diseases \n\t\t \n\t\t\t 38 \n\t\t\t 7 \n\t\t\t \n\t\t\t 2019 \n\t\t \n\t \n\t Andersson M, \u00d6stholm-Balkhed \u00c5, Fredrikson M, Holmbom M, H\u00e4llgren A, Berg S, Hanberger H (2019) Delay of appropriate antibiotic treatment is associated with high mortality in patients with community-onset sepsis in a Swedish setting. Eur. J. Clini- cal Microbiology Infectious Diseases 38(7):1223-1234."
+    },
+    {
+      "title": "Corticosteroids for severe sepsis and septic shock: A systematic review and meta-analysis",
+      "authors": [
+        "D Annane",
+        "E Bellissant",
+        "P Bollaert",
+        "J Briegel",
+        "D Keh",
+        "Y Kupfer"
+      ],
+      "year": 2004,
+      "doi": "10.1136/bmj.38181.482222.55",
+      "journal": "BMJ",
+      "volume": "329",
+      "issue": "7464",
+      "pages": "480",
+      "raw": "Corticosteroids for severe sepsis and septic shock: A systematic review and meta-analysis \n\t\t \n\t\t\t D Annane \n\t\t \n\t\t \n\t\t\t E Bellissant \n\t\t \n\t\t \n\t\t\t P E Bollaert \n\t\t \n\t\t \n\t\t\t J Briegel \n\t\t \n\t\t \n\t\t\t D Keh \n\t\t \n\t\t \n\t\t\t Y Kupfer \n\t\t \n\t\t 10.1136/bmj.38181.482222.55 \n\t \n\t \n\t\t BMJ \n\t\t \n\t\t\t 329 \n\t\t\t 7464 \n\t\t\t 480 \n\t\t\t 2004 \n\t\t \n\t \n\t Annane D, Bellissant E, Bollaert PE, Briegel J, Keh D, Kupfer Y (2004) Corticosteroids for severe sepsis and septic shock: A systematic review and meta-analysis. BMJ 329(7464):480."
+    },
+    {
+      "title": "To catch a killer: A data-driven personalized and compliance-aware sepsis alert system",
+      "authors": [
+        "M Ayvaci",
+        "Z Mobini",
+        "Z \u00d6zer"
+      ],
+      "year": 2021,
+      "raw": "To catch a killer: A data-driven personalized and compliance-aware sepsis alert system \n\t\t \n\t\t\t M Ayvaci \n\t\t \n\t\t \n\t\t\t Z Mobini \n\t\t \n\t\t \n\t\t\t Z \u00d6zer \n\t\t \n\t\t \n\t\t\t 2021 \n\t\t\t Dallas, TX \n\t\t \n\t\t \n\t\t\t The University of Texas \n\t\t \n\t \n\t Working paper \n\t Ayvaci M, Mobini Z, \u00d6zer Z (2021) To catch a killer: A data-driven personalized and compliance-aware sepsis alert system. Work- ing paper, The University of Texas, Dallas, TX."
+    },
+    {
+      "title": "Mortality in sepsis and septic shock in Europe, North America and Australia between 2009 and 2019: Results from a systematic review and meta-analysis",
+      "authors": [
+        "M Bauer",
+        "H Gerlach",
+        "T Vogelmann",
+        "F Preissing",
+        "J Stiefel",
+        "D Adam"
+      ],
+      "year": 2020,
+      "doi": "10.1186/s13054-020-02950-2",
+      "journal": "Critical Care",
+      "volume": "24",
+      "issue": "1",
+      "pages": "239",
+      "raw": "Mortality in sepsis and septic shock in Europe, North America and Australia between 2009 and 2019: Results from a systematic review and meta-analysis \n\t\t \n\t\t\t M Bauer \n\t\t \n\t\t \n\t\t\t H Gerlach \n\t\t \n\t\t \n\t\t\t T Vogelmann \n\t\t \n\t\t \n\t\t\t F Preissing \n\t\t \n\t\t \n\t\t\t J Stiefel \n\t\t \n\t\t \n\t\t\t D Adam \n\t\t \n\t\t 10.1186/s13054-020-02950-2 \n\t \n\t \n\t\t Critical Care \n\t\t \n\t\t\t 24 \n\t\t\t 1 \n\t\t\t 239 \n\t\t\t 2020 \n\t\t \n\t \n\t Bauer M, Gerlach H, Vogelmann T, Preissing F, Stiefel J, Adam D (2020) Mortality in sepsis and septic shock in Europe, North America and Australia between 2009 and 2019: Results from a systematic review and meta-analysis. Critical Care 24(1):239."
+    },
+    {
+      "title": "Sepsis syndrome: A valid clinical entity",
+      "authors": [
+        "R Bone",
+        "C Fisher",
+        "T Clemmer",
+        "G Slotman",
+        "C Metz",
+        "R Balk"
+      ],
+      "year": 1989,
+      "doi": "10.1097/00003246-198905000-00002",
+      "journal": "Critical Care Medicine",
+      "volume": "17",
+      "issue": "5",
+      "raw": "Sepsis syndrome: A valid clinical entity \n\t\t \n\t\t\t R C Bone \n\t\t \n\t\t \n\t\t\t C J Fisher \n\t\t \n\t\t \n\t\t\t Jr \n\t\t \n\t\t \n\t\t\t T P Clemmer \n\t\t \n\t\t \n\t\t\t G J Slotman \n\t\t \n\t\t \n\t\t\t C A Metz \n\t\t \n\t\t \n\t\t\t R A Balk \n\t\t \n\t\t 10.1097/00003246-198905000-00002 \n\t \n\t \n\t\t Critical Care Medicine \n\t\t \n\t\t\t 17 \n\t\t\t 5 \n\t\t\t \n\t\t\t 1989 \n\t\t \n\t \n\t Bone RC, Fisher CJ Jr, Clemmer TP, Slotman GJ, Metz CA, Balk RA (1989) Sepsis syndrome: A valid clinical entity. Critical Care Med- icine 17(5):389-393."
+    },
+    {
+      "title": "Sepsis among Medicare beneficiaries: 1. The burdens of sepsis, 2012-2018",
+      "authors": [
+        "T Buchman",
+        "S Simpson",
+        "K Sciarretta",
+        "K Finne",
+        "N Sowers",
+        "M Collier",
+        "S Chavan"
+      ],
+      "year": 2020,
+      "journal": "Critical Care Medicine",
+      "volume": "48",
+      "issue": "3",
+      "raw": "Sepsis among Medicare beneficiaries: 1. The burdens of sepsis, 2012-2018 \n\t\t \n\t\t\t T G Buchman \n\t\t \n\t\t \n\t\t\t S Q Simpson \n\t\t \n\t\t \n\t\t\t K L Sciarretta \n\t\t \n\t\t \n\t\t\t K P Finne \n\t\t \n\t\t \n\t\t\t N Sowers \n\t\t \n\t\t \n\t\t\t M Collier \n\t\t \n\t\t \n\t\t\t S Chavan \n\t\t \n\t \n\t \n\t\t Critical Care Medicine \n\t\t \n\t\t\t 48 \n\t\t\t 3 \n\t\t\t \n\t\t\t 2020 \n\t\t \n\t \n\t Buchman TG, Simpson SQ, Sciarretta KL, Finne KP, Sowers N, Collier M, Chavan S, et al. (2020) Sepsis among Medicare beneficiaries: 1. The burdens of sepsis, 2012-2018. Critical Care Medicine 48(3):276-288."
+    },
+    {
+      "title": "A stochastic model of acute-care decisions based on patient and provider heterogeneity",
+      "authors": [
+        "M Capan",
+        "J Ivy",
+        "J Wilson",
+        "J Huddleston"
+      ],
+      "year": 2017,
+      "doi": "10.1007/s10729-015-9347-x",
+      "journal": "Health Care Management Sci",
+      "volume": "20",
+      "issue": "2",
+      "raw": "A stochastic model of acute-care decisions based on patient and provider heterogeneity \n\t\t \n\t\t\t M Capan \n\t\t \n\t\t \n\t\t\t J S Ivy \n\t\t \n\t\t \n\t\t\t J R Wilson \n\t\t \n\t\t \n\t\t\t J M Huddleston \n\t\t \n\t\t 10.1007/s10729-015-9347-x \n\t \n\t \n\t\t Health Care Management Sci \n\t\t \n\t\t\t 20 \n\t\t\t 2 \n\t\t\t \n\t\t\t 2017 \n\t\t \n\t \n\t Capan M, Ivy JS, Wilson JR, Huddleston JM (2017) A stochastic model of acute-care decisions based on patient and provider heterogeneity. Health Care Management Sci. 20(2):187-206."
+    },
+    {
+      "title": "Centers for Disease Control and Prevention",
+      "year": 2019,
+      "raw": "Centers for Disease Control and Prevention \n\t\t \n\t\t \n\t\t\t 2019. July 22, 2019. 2021. March 25, 2022 \n\t\t\t CDC \n\t\t \n\t \n\t How antibiotic resistance happens \n\t CDC (2019) Centers for Disease Control and Prevention. Accessed July 22, 2019, https://www.cdc.gov/sepsis/datareports/index. html. CDC (2021) How antibiotic resistance happens. Accessed March 25, 2022, https://www.cdc.gov/drugresistance/about/how-resi stance-happens.html."
+    },
+    {
+      "title": "Development and validation of a parsimonious and pragmatic CHARM score to predict mortality in patients with suspected sepsis",
+      "authors": [
+        "K Chen",
+        "S Liu",
+        "C Li",
+        "C Wu",
+        "C Chaou",
+        "I Tzeng",
+        "Y Hsieh"
+      ],
+      "year": 2017,
+      "doi": "10.1016/j.ajem.2016.10.075",
+      "journal": "Amer. J. Emergency Medicine",
+      "volume": "35",
+      "issue": "4",
+      "raw": "Development and validation of a parsimonious and pragmatic CHARM score to predict mortality in patients with suspected sepsis \n\t\t \n\t\t\t K F Chen \n\t\t \n\t\t \n\t\t\t S H Liu \n\t\t \n\t\t \n\t\t\t C H Li \n\t\t \n\t\t \n\t\t\t C C Wu \n\t\t \n\t\t \n\t\t\t C H Chaou \n\t\t \n\t\t \n\t\t\t I S Tzeng \n\t\t \n\t\t \n\t\t\t Y H Hsieh \n\t\t \n\t\t 10.1016/j.ajem.2016.10.075 \n\t \n\t \n\t\t Amer. J. Emergency Medicine \n\t\t \n\t\t\t 35 \n\t\t\t 4 \n\t\t\t \n\t\t\t 2017 \n\t\t \n\t \n\t Chen KF, Liu SH, Li CH, Wu CC, Chaou CH, Tzeng IS, Hsieh YH, et al. (2017) Development and validation of a parsimonious and pragmatic CHARM score to predict mortality in patients with suspected sepsis. Amer. J. Emergency Medicine 35(4):640-646."
+    },
+    {
+      "title": "Predicting intervention onset in the ICU with switching state space models",
+      "authors": [
+        "M Ghassemi",
+        "M Wu",
+        "M Hughes",
+        "P Szolovits",
+        "F Doshi-Velez"
+      ],
+      "year": 2017,
+      "volume": "2017",
+      "raw": "Predicting intervention onset in the ICU with switching state space models \n\t\t \n\t\t\t M Ghassemi \n\t\t \n\t\t \n\t\t\t M Wu \n\t\t \n\t\t \n\t\t\t M C Hughes \n\t\t \n\t\t \n\t\t\t P Szolovits \n\t\t \n\t\t \n\t\t\t F Doshi-Velez \n\t\t \n\t \n\t \n\t\t AMIA Joint Summits Translational Sci. Proc \n\t\t \n\t\t\t 2017 \n\t\t\t 2017 \n\t\t\t \n\t\t \n\t \n\t Ghassemi M, Wu M, Hughes MC, Szolovits P, Doshi-Velez F (2017) Predicting intervention onset in the ICU with switching state space models. AMIA Joint Summits Translational Sci. Proc. 2017: 82-91."
+    },
+    {
+      "title": "Septic shock prediction for ICU patients via coupled HMM walking on sequential contrast patterns",
+      "authors": [
+        "S Ghosh",
+        "J Li",
+        "L Cao",
+        "K Ramamohanarao"
+      ],
+      "year": 2017,
+      "journal": "J. Biomedical Inform",
+      "volume": "66",
+      "raw": "Septic shock prediction for ICU patients via coupled HMM walking on sequential contrast patterns \n\t\t \n\t\t\t S Ghosh \n\t\t \n\t\t \n\t\t\t J Li \n\t\t \n\t\t \n\t\t\t L Cao \n\t\t \n\t\t \n\t\t\t K Ramamohanarao \n\t\t \n\t \n\t \n\t\t J. Biomedical Inform \n\t\t \n\t\t\t 66 \n\t\t\t \n\t\t\t 2017 \n\t\t \n\t \n\t Ghosh S, Li J, Cao L, Ramamohanarao K (2017) Septic shock predic- tion for ICU patients via coupled HMM walking on sequential contrast patterns. J. Biomedical Inform. 66:19-31."
+    },
+    {
+      "title": "Insights into severe sepsis in older patients: From epidemiology to evidence-based management",
+      "authors": [
+        "T Girard",
+        "S Opal",
+        "E Ely"
+      ],
+      "year": 2005,
+      "journal": "Clinical Infectious Diseases",
+      "volume": "40",
+      "issue": "5",
+      "raw": "Insights into severe sepsis in older patients: From epidemiology to evidence-based management \n\t\t \n\t\t\t T D Girard \n\t\t \n\t\t \n\t\t\t S M Opal \n\t\t \n\t\t \n\t\t\t E W Ely \n\t\t \n\t \n\t \n\t\t Clinical Infectious Diseases \n\t\t \n\t\t\t 40 \n\t\t\t 5 \n\t\t\t \n\t\t\t 2005 \n\t\t \n\t \n\t Girard TD, Opal SM, Ely EW (2005) Insights into severe sepsis in older patients: From epidemiology to evidence-based manage- ment. Clinical Infectious Diseases 40(5):719-727."
+    },
+    {
+      "title": "Utilizing time series data embedded in electronic health records to develop continuous mortality risk prediction models using hidden Markov models: A sepsis case study",
+      "authors": [
+        "A Gupta",
+        "T Liu",
+        "C Crick"
+      ],
+      "year": 2020,
+      "doi": "10.1177/0962280220929045",
+      "journal": "Statist. Methods Medical Res",
+      "volume": "29",
+      "issue": "11",
+      "raw": "Utilizing time series data embedded in electronic health records to develop continuous mortality risk prediction models using hidden Markov models: A sepsis case study \n\t\t \n\t\t\t A Gupta \n\t\t \n\t\t \n\t\t\t T Liu \n\t\t \n\t\t \n\t\t\t C Crick \n\t\t \n\t\t 10.1177/0962280220929045 \n\t \n\t \n\t\t Statist. Methods Medical Res \n\t\t \n\t\t\t 29 \n\t\t\t 11 \n\t\t\t \n\t\t\t 2020 \n\t\t \n\t \n\t Gupta A, Liu T, Crick C (2020) Utilizing time series data embedded in electronic health records to develop continuous mortality risk prediction models using hidden Markov models: A sepsis case study. Statist. Methods Medical Res. 29(11):3409-3423."
+    },
+    {
+      "title": "Sepsis and septic shock",
+      "authors": [
+        "R Hotchkiss",
+        "L Moldawer",
+        "S Opal",
+        "K Reinhart",
+        "I Turnbull",
+        "J Vincent"
+      ],
+      "year": 2016,
+      "journal": "Nature Rev. Disease Primers",
+      "volume": "2",
+      "pages": "16045",
+      "raw": "Sepsis and septic shock \n\t\t \n\t\t\t R S Hotchkiss \n\t\t \n\t\t \n\t\t\t L L Moldawer \n\t\t \n\t\t \n\t\t\t S M Opal \n\t\t \n\t\t \n\t\t\t K Reinhart \n\t\t \n\t\t \n\t\t\t I R Turnbull \n\t\t \n\t\t \n\t\t\t J L Vincent \n\t\t \n\t \n\t \n\t\t Nature Rev. Disease Primers \n\t\t \n\t\t\t 2 \n\t\t\t 16045 \n\t\t\t 2016 \n\t\t \n\t \n\t Hotchkiss RS, Moldawer LL, Opal SM, Reinhart K, Turnbull IR, Vincent JL (2016) Sepsis and septic shock. Nature Rev. Disease Primers 2:16045."
+    },
+    {
+      "title": "Implementation of early goal-directed therapy for severe sepsis and septic shock: A decision analysis",
+      "authors": [
+        "D Huang",
+        "G Clermont",
+        "T Dremsizov",
+        "D Angus"
+      ],
+      "year": 2007,
+      "doi": "10.1097/01.ccm.0000281636.82971.92",
+      "journal": "Critical Care Medicine",
+      "volume": "35",
+      "issue": "9",
+      "raw": "Implementation of early goal-directed therapy for severe sepsis and septic shock: A decision analysis \n\t\t \n\t\t\t D T Huang \n\t\t \n\t\t \n\t\t\t G Clermont \n\t\t \n\t\t \n\t\t\t T T Dremsizov \n\t\t \n\t\t \n\t\t\t D C Angus \n\t\t \n\t\t 10.1097/01.ccm.0000281636.82971.92 \n\t \n\t \n\t\t Critical Care Medicine \n\t\t \n\t\t\t 35 \n\t\t\t 9 \n\t\t\t \n\t\t\t 2007 \n\t\t \n\t \n\t ProCESS Investigators \n\t Huang DT, Clermont G, Dremsizov TT, Angus DC, ProCESS Inves- tigators (2007) Implementation of early goal-directed therapy for severe sepsis and septic shock: A decision analysis. Critical Care Medicine 35(9):2090-2100."
+    },
+    {
+      "title": "MIMIC-III, a freely accessible critical care database",
+      "authors": [
+        "A Johnson",
+        "T Pollard",
+        "L Shen",
+        "L Lehman",
+        "M Feng",
+        "M Ghassemi",
+        "B Moody",
+        "P Szolovits",
+        "L Celi",
+        "R Mark"
+      ],
+      "year": 2016,
+      "journal": "Sci. Data",
+      "volume": "3",
+      "pages": "160035",
+      "raw": "MIMIC-III, a freely accessible critical care database \n\t\t \n\t\t\t A E Johnson \n\t\t \n\t\t \n\t\t\t T J Pollard \n\t\t \n\t\t \n\t\t\t L Shen \n\t\t \n\t\t \n\t\t\t L W Lehman \n\t\t \n\t\t \n\t\t\t M Feng \n\t\t \n\t\t \n\t\t\t M Ghassemi \n\t\t \n\t\t \n\t\t\t B Moody \n\t\t \n\t\t \n\t\t\t P Szolovits \n\t\t \n\t\t \n\t\t\t L A Celi \n\t\t \n\t\t \n\t\t\t R G Mark \n\t\t \n\t \n\t \n\t\t Sci. Data \n\t\t \n\t\t\t 3 \n\t\t\t 160035 \n\t\t\t 2016 \n\t\t \n\t \n\t Johnson AE, Pollard TJ, Shen L, Lehman LW, Feng M, Ghassemi M, Moody B, Szolovits P, Celi LA, Mark RG (2016) MIMIC-III, a freely accessible critical care database. Sci. Data 3:160035."
+    },
+    {
+      "title": "The artificial intelligence clinician learns optimal treatment strategies for sepsis in intensive care",
+      "authors": [
+        "M Komorowski",
+        "L Celi",
+        "O Badawi",
+        "A Gordon",
+        "A Faisal"
+      ],
+      "year": 2018,
+      "doi": "10.1038/s41591-018-0213-5",
+      "journal": "Nature Medicine",
+      "volume": "24",
+      "issue": "11",
+      "raw": "The artificial intelligence clinician learns optimal treatment strategies for sepsis in intensive care \n\t\t \n\t\t\t M Komorowski \n\t\t \n\t\t \n\t\t\t L A Celi \n\t\t \n\t\t \n\t\t\t O Badawi \n\t\t \n\t\t \n\t\t\t A C Gordon \n\t\t \n\t\t \n\t\t\t A A Faisal \n\t\t \n\t\t 10.1038/s41591-018-0213-5 \n\t \n\t \n\t\t Nature Medicine \n\t\t \n\t\t\t 24 \n\t\t\t 11 \n\t\t\t \n\t\t\t 2018 \n\t\t \n\t \n\t Komorowski M, Celi LA, Badawi O, Gordon AC, Faisal AA (2018) The artificial intelligence clinician learns optimal treat- ment strategies for sepsis in intensive care. Nature Medicine 24(11):1716-1720."
+    },
+    {
+      "title": "Duration of hypotension before initiation of effective antimicrobial therapy is the critical determinant of survival in human septic shock",
+      "authors": [
+        "A Kumar",
+        "D Roberts",
+        "K Wood",
+        "B Light",
+        "J Parrillo",
+        "S Sharma",
+        "R Suppes"
+      ],
+      "year": 2006,
+      "doi": "10.1097/01.ccm.0000217961.75225.e9",
+      "journal": "Critical Care Medicine",
+      "volume": "34",
+      "issue": "6",
+      "raw": "Duration of hypotension before initiation of effective antimicrobial therapy is the critical determinant of survival in human septic shock \n\t\t \n\t\t\t A Kumar \n\t\t \n\t\t \n\t\t\t D Roberts \n\t\t \n\t\t \n\t\t\t K E Wood \n\t\t \n\t\t \n\t\t\t B Light \n\t\t \n\t\t \n\t\t\t J E Parrillo \n\t\t \n\t\t \n\t\t\t S Sharma \n\t\t \n\t\t \n\t\t\t R Suppes \n\t\t \n\t\t 10.1097/01.ccm.0000217961.75225.e9 \n\t \n\t \n\t\t Critical Care Medicine \n\t\t \n\t\t\t 34 \n\t\t\t 6 \n\t\t\t \n\t\t\t 2006 \n\t\t \n\t \n\t Kumar A, Roberts D, Wood KE, Light B, Parrillo JE, Sharma S, Suppes R, et al. (2006) Duration of hypotension before initiation of effective antimicrobial therapy is the critical determinant of survival in human septic shock. Critical Care Medicine 34(6): 1589-1596."
+    },
+    {
+      "title": "Early changes in organ function predict eventual survival in severe sepsis",
+      "authors": [
+        "M Levy",
+        "W Macias",
+        "J Vincent",
+        "J Russell",
+        "E Silva",
+        "B Trzaskoma",
+        "M Williams"
+      ],
+      "year": 2005,
+      "doi": "10.1097/01.ccm.0000182798.39709.84",
+      "journal": "Critical Care Medicine",
+      "volume": "33",
+      "issue": "10",
+      "raw": "Early changes in organ function predict eventual survival in severe sepsis \n\t\t \n\t\t\t M M Levy \n\t\t \n\t\t \n\t\t\t W L Macias \n\t\t \n\t\t \n\t\t\t J L Vincent \n\t\t \n\t\t \n\t\t\t J A Russell \n\t\t \n\t\t \n\t\t\t E Silva \n\t\t \n\t\t \n\t\t\t B Trzaskoma \n\t\t \n\t\t \n\t\t\t M D Williams \n\t\t \n\t\t 10.1097/01.ccm.0000182798.39709.84 \n\t \n\t \n\t\t Critical Care Medicine \n\t\t \n\t\t\t 33 \n\t\t\t 10 \n\t\t\t \n\t\t\t 2005 \n\t\t \n\t \n\t Levy MM, Macias WL, Vincent JL, Russell JA, Silva E, Trzaskoma B, Williams MD (2005) Early changes in organ function predict eventual survival in severe sepsis. Critical Care Medicine 33(10): 2194-2201."
+    },
+    {
+      "title": "Deciding when to intervene: A Markov decision process approach",
+      "authors": [
+        "P Magni",
+        "S Quaglini",
+        "M Marchetti",
+        "G Barosi"
+      ],
+      "year": 2000,
+      "doi": "10.1016/s1386-5056(00)00099-x",
+      "journal": "Internat. J. Medical Inform",
+      "volume": "60",
+      "issue": "3",
+      "raw": "Deciding when to intervene: A Markov decision process approach \n\t\t \n\t\t\t P Magni \n\t\t \n\t\t \n\t\t\t S Quaglini \n\t\t \n\t\t \n\t\t\t M Marchetti \n\t\t \n\t\t \n\t\t\t G Barosi \n\t\t \n\t\t 10.1016/s1386-5056(00)00099-x \n\t \n\t \n\t\t Internat. J. Medical Inform \n\t\t \n\t\t\t 60 \n\t\t\t 3 \n\t\t\t \n\t\t\t 2000 \n\t\t \n\t \n\t Magni P, Quaglini S, Marchetti M, Barosi G (2000) Deciding when to intervene: A Markov decision process approach. Internat. J. Medical Inform. 60(3):237-253."
+    },
+    {
+      "title": "Preclinical models of shock and sepsis: What can they tell us?",
+      "authors": [
+        "J Marshall",
+        "E Deitch",
+        "L Moldawer",
+        "S Opal",
+        "H Redl",
+        "T Van Der Poll"
+      ],
+      "year": 2005,
+      "doi": "10.1097/01.shk.0000191383.34066.4b",
+      "journal": "Shock",
+      "volume": "24",
+      "issue": "Suppl 1",
+      "raw": "Preclinical models of shock and sepsis: What can they tell us? \n\t\t \n\t\t\t J C Marshall \n\t\t \n\t\t \n\t\t\t E Deitch \n\t\t \n\t\t \n\t\t\t L L Moldawer \n\t\t \n\t\t \n\t\t\t S Opal \n\t\t \n\t\t \n\t\t\t H Redl \n\t\t \n\t\t \n\t\t\t T Van Der Poll \n\t\t \n\t\t 10.1097/01.shk.0000191383.34066.4b \n\t \n\t \n\t\t Shock \n\t\t \n\t\t\t 24 \n\t\t\t Suppl 1 \n\t\t\t \n\t\t\t 2005 \n\t\t \n\t \n\t Marshall JC, Deitch E, Moldawer LL, Opal S, Redl H, van der Poll T (2005) Preclinical models of shock and sepsis: What can they tell us? Shock 24(Suppl 1):1-6."
+    },
+    {
+      "title": "The effect of age on the development and outcome of adult sepsis",
+      "authors": [
+        "G Martin",
+        "D Mannino",
+        "M Moss"
+      ],
+      "year": 2006,
+      "doi": "10.1097/01.ccm.0000194535.82812.ba",
+      "journal": "Critical Care Medicine",
+      "volume": "34",
+      "issue": "1",
+      "raw": "The effect of age on the development and outcome of adult sepsis \n\t\t \n\t\t\t G S Martin \n\t\t \n\t\t \n\t\t\t D M Mannino \n\t\t \n\t\t \n\t\t\t M Moss \n\t\t \n\t\t 10.1097/01.ccm.0000194535.82812.ba \n\t \n\t \n\t\t Critical Care Medicine \n\t\t \n\t\t\t 34 \n\t\t\t 1 \n\t\t\t \n\t\t\t 2006 \n\t\t \n\t \n\t Martin GS, Mannino DM, Moss M (2006) The effect of age on the development and outcome of adult sepsis. Critical Care Medicine 34(1):15-21."
+    },
+    {
+      "title": "Sepsis",
+      "year": 2019,
+      "raw": "Sepsis \n\t\t \n\t\t\t Nih \n\t\t \n\t\t \n\t\t \n\t\t\t 2019. July 22, 2019 \n\t\t \n\t \n\t NIH (2019) Sepsis. Accessed July 22, 2019, https://www.nigms.nih. gov/education/pages/factsheet_sepsis.aspx."
+    },
+    {
+      "title": "Systematic review of gender-dependent outcomes in sepsis",
+      "authors": [
+        "E Papathanassoglou",
+        "N Middleton",
+        "J Benbenishty",
+        "G Williams",
+        "M Christofi",
+        "K Hegadoren"
+      ],
+      "year": 2017,
+      "journal": "Nursing Critical Care",
+      "volume": "22",
+      "issue": "5",
+      "raw": "Systematic review of gender-dependent outcomes in sepsis \n\t\t \n\t\t\t E Papathanassoglou \n\t\t \n\t\t \n\t\t\t N Middleton \n\t\t \n\t\t \n\t\t\t J Benbenishty \n\t\t \n\t\t \n\t\t\t G Williams \n\t\t \n\t\t \n\t\t\t M D Christofi \n\t\t \n\t\t \n\t\t\t K Hegadoren \n\t\t \n\t \n\t \n\t\t Nursing Critical Care \n\t\t \n\t\t\t 22 \n\t\t\t 5 \n\t\t\t \n\t\t\t 2017 \n\t\t \n\t \n\t Papathanassoglou E, Middleton N, Benbenishty J, Williams G, Christofi MD, Hegadoren K (2017) Systematic review of gender-dependent outcomes in sepsis. Nursing Critical Care 22(5):284-292."
+    },
+    {
+      "title": "High inter-patient variability in sepsis evolution: A hidden Markov model analysis",
+      "authors": [
+        "J Parente",
+        "J Chase",
+        "K Moeller",
+        "G Shaw"
+      ],
+      "year": 2021,
+      "doi": "10.1016/j.cmpb.2021.105956",
+      "journal": "Comput. Methods Programs Biomedicine",
+      "volume": "201",
+      "pages": "105956",
+      "raw": "High inter-patient variability in sepsis evolution: A hidden Markov model analysis \n\t\t \n\t\t\t J D Parente \n\t\t \n\t\t \n\t\t\t J G Chase \n\t\t \n\t\t \n\t\t\t K Moeller \n\t\t \n\t\t \n\t\t\t G M Shaw \n\t\t \n\t\t 10.1016/j.cmpb.2021.105956 \n\t \n\t \n\t\t Comput. Methods Programs Biomedicine \n\t\t \n\t\t\t 201 \n\t\t\t 105956 \n\t\t\t 2021 \n\t\t \n\t \n\t Parente JD, Chase JG, Moeller K, Shaw GM (2021) High inter-patient variability in sepsis evolution: A hidden Markov model analy- sis. Comput. Methods Programs Biomedicine 201:105956."
+    },
+    {
+      "title": "Developing predictive models using electronic medical records: Challenges and pitfalls",
+      "authors": [
+        "C Paxton",
+        "A Niculescu-Mizil",
+        "S Saria"
+      ],
+      "year": 2013,
+      "volume": "2013",
+      "raw": "Developing predictive models using electronic medical records: Challenges and pitfalls \n\t\t \n\t\t\t C Paxton \n\t\t \n\t\t \n\t\t\t A Niculescu-Mizil \n\t\t \n\t\t \n\t\t\t S Saria \n\t\t \n\t \n\t \n\t\t AMIA Annual Symp. Proc \n\t\t \n\t\t\t 2013 \n\t\t\t 2013 \n\t\t\t \n\t\t \n\t \n\t Paxton C, Niculescu-Mizil A, Saria S (2013) Developing predictive models using electronic medical records: Challenges and pit- falls. AMIA Annual Symp. Proc. 2013:1109-1115."
+    },
+    {
+      "title": "Markov Decision Processes: Discrete Stochastic Dynamic Programming",
+      "authors": [
+        "M Puterman"
+      ],
+      "year": 2014,
+      "doi": "10.1002/9780470316887",
+      "raw": "Markov Decision Processes: Discrete Stochastic Dynamic Programming \n\t\t \n\t\t\t M L Puterman \n\t\t \n\t\t 10.1002/9780470316887 \n\t\t \n\t\t\t 2014 \n\t\t\t John Wiley & Sons \n\t\t\t Hoboken, NJ) \n\t\t \n\t \n\t Puterman ML (2014) Markov Decision Processes: Discrete Stochastic Dynamic Programming (John Wiley & Sons, Hoboken, NJ)."
+    },
+    {
+      "title": "Continuous state-space models for optimal sepsis treatment: A deep reinforcement learning approach",
+      "authors": [
+        "A Raghu",
+        "M Komorowski",
+        "L Celi",
+        "P Szolovits",
+        "M Ghassemi"
+      ],
+      "year": 2017,
+      "volume": "68",
+      "raw": "Continuous state-space models for optimal sepsis treatment: A deep reinforcement learning approach \n\t\t \n\t\t\t A Raghu \n\t\t \n\t\t \n\t\t\t M Komorowski \n\t\t \n\t\t \n\t\t\t L A Celi \n\t\t \n\t\t \n\t\t\t P Szolovits \n\t\t \n\t\t \n\t\t\t M Ghassemi \n\t\t \n\t \n\t \n\t\t Proc. 2nd Machine Learn. Healthcare Conf., Proceedings of Machine Learning Research \n\t\t \n\t\t\t F Doshi-Velez \n\t\t \n\t\t \n\t\t\t J Fackler \n\t\t \n\t\t \n\t\t\t D Kale \n\t\t \n\t\t \n\t\t\t R Ranganath \n\t\t \n\t\t \n\t\t\t B Wallace \n\t\t \n\t\t \n\t\t\t J Wiens \n\t\t \n\t\t 2nd Machine Learn. Healthcare Conf., eedings of Machine Learning Research Cambridge, MA \n\t\t \n\t\t\t PMLR \n\t\t\t 2017 \n\t\t\t 68 \n\t\t\t \n\t\t \n\t \n\t Raghu A, Komorowski M, Celi LA, Szolovits P, Ghassemi M (2017) Continuous state-space models for optimal sepsis treatment: A deep reinforcement learning approach. Doshi-Velez F, Fackler J, Kale D, Ranganath R, Wallace B, Wiens J, eds. Proc. 2nd Machine Learn. Healthcare Conf., Proceedings of Machine Learning Research, vol. 68 (PMLR, Cambridge, MA), 147-163."
+    },
+    {
+      "title": "The dynamics of disease progression in sepsis: Markov modeling describing the natural history and the likely impact of effective antisepsis agents",
+      "authors": [
+        "M Rangel-Frausto",
+        "D Pittet",
+        "T Hwang",
+        "R Woolson",
+        "R Wenzel"
+      ],
+      "year": 1998,
+      "doi": "10.1086/514630",
+      "journal": "Clinical Infectious Diseases",
+      "volume": "27",
+      "issue": "1",
+      "raw": "The dynamics of disease progression in sepsis: Markov modeling describing the natural history and the likely impact of effective antisepsis agents \n\t\t \n\t\t\t M S Rangel-Frausto \n\t\t \n\t\t \n\t\t\t D Pittet \n\t\t \n\t\t \n\t\t\t T Hwang \n\t\t \n\t\t \n\t\t\t R F Woolson \n\t\t \n\t\t \n\t\t\t R P Wenzel \n\t\t \n\t\t 10.1086/514630 \n\t \n\t \n\t\t Clinical Infectious Diseases \n\t\t \n\t\t\t 27 \n\t\t\t 1 \n\t\t\t \n\t\t\t 1998 \n\t\t \n\t \n\t Rangel-Frausto MS, Pittet D, Hwang T, Woolson RF, Wenzel RP (1998) The dynamics of disease progression in sepsis: Mar- kov modeling describing the natural history and the likely impact of effective antisepsis agents. Clinical Infectious Dis- eases 27(1):185-190."
+    },
+    {
+      "title": "Surviving sepsis campaign: International guidelines for management of sepsis and septic shock: 2016",
+      "authors": [
+        "A Rhodes",
+        "L Evans",
+        "W Alhazzani",
+        "M Levy",
+        "M Antonelli",
+        "R Ferrer",
+        "A Kumar"
+      ],
+      "year": 2017,
+      "doi": "10.1097/ccm.0000000000000192",
+      "journal": "Critical Care Medicine",
+      "volume": "45",
+      "issue": "3",
+      "raw": "Surviving sepsis campaign: International guidelines for management of sepsis and septic shock: 2016 \n\t\t \n\t\t\t A Rhodes \n\t\t \n\t\t \n\t\t\t L E Evans \n\t\t \n\t\t \n\t\t\t W Alhazzani \n\t\t \n\t\t \n\t\t\t M M Levy \n\t\t \n\t\t \n\t\t\t M Antonelli \n\t\t \n\t\t \n\t\t\t R Ferrer \n\t\t \n\t\t \n\t\t\t A Kumar \n\t\t \n\t\t 10.1097/ccm.0000000000000192 \n\t \n\t \n\t\t Critical Care Medicine \n\t\t \n\t\t\t 45 \n\t\t\t 3 \n\t\t\t \n\t\t\t 2017 \n\t\t \n\t \n\t Rhodes A, Evans LE, Alhazzani W, Levy MM, Antonelli M, Ferrer R, Kumar A, et al. (2017) Surviving sepsis campaign: Interna- tional guidelines for management of sepsis and septic shock: 2016. Critical Care Medicine 45(3):486-552."
+    },
+    {
+      "title": "Severe sepsis mortality prediction with logistic regression over latent factors",
+      "authors": [
+        "V Ribas",
+        "A Vellido",
+        "J Ruiz-Rodr\u00edguez",
+        "J Rello"
+      ],
+      "year": 2012,
+      "doi": "10.1016/j.eswa.2011.08.054",
+      "journal": "Expert Systems Appl",
+      "volume": "39",
+      "issue": "2",
+      "raw": "Severe sepsis mortality prediction with logistic regression over latent factors \n\t\t \n\t\t\t V J Ribas \n\t\t \n\t\t \n\t\t\t A Vellido \n\t\t \n\t\t \n\t\t\t J C Ruiz-Rodr\u00edguez \n\t\t \n\t\t \n\t\t\t J Rello \n\t\t \n\t\t 10.1016/j.eswa.2011.08.054 \n\t \n\t \n\t\t Expert Systems Appl \n\t\t \n\t\t\t 39 \n\t\t\t 2 \n\t\t\t \n\t\t\t 2012 \n\t\t \n\t \n\t Ribas VJ, Vellido A, Ruiz-Rodr\u00edguez JC, Rello J (2012) Severe sepsis mortality prediction with logistic regression over latent factors. Expert Systems Appl. 39(2):1937-1943."
+    },
+    {
+      "title": "Optimizing the First Response to Sepsis Decision Analysis",
+      "year": 2022,
+      "doi": "10.1287/deca.2022.0455",
+      "journal": "INFORMS",
+      "volume": "19",
+      "issue": "4",
+      "raw": "Optimizing the First Response to Sepsis Decision Analysis \n\t\t \n\t\t\t Rosenstrom \n\t\t \n\t\t 10.1287/deca.2022.0455 \n\t \n\t \n\t\t INFORMS \n\t\t \n\t\t\t 19 \n\t\t\t 4 \n\t\t\t \n\t\t\t 2022. 2022 \n\t\t \n\t \n\t Rosenstrom et al.: Optimizing the First Response to Sepsis Decision Analysis, 2022, vol. 19, no. 4, pp. 265-296, \u00a9 2022 INFORMS"
+    },
+    {
+      "title": "Predisposition, insult/infection, response, and organ dysfunction: A new model for staging severe sepsis",
+      "authors": [
+        "F Rubulotta",
+        "J Marshall",
+        "G Ramsay",
+        "D Nelson",
+        "M Levy",
+        "M Williams"
+      ],
+      "year": 2009,
+      "journal": "Critical Care Medicine",
+      "volume": "37",
+      "issue": "4",
+      "raw": "Predisposition, insult/infection, response, and organ dysfunction: A new model for staging severe sepsis \n\t\t \n\t\t\t F Rubulotta \n\t\t \n\t\t \n\t\t\t J C Marshall \n\t\t \n\t\t \n\t\t\t G Ramsay \n\t\t \n\t\t \n\t\t\t D Nelson \n\t\t \n\t\t \n\t\t\t M Levy \n\t\t \n\t\t \n\t\t\t M Williams \n\t\t \n\t \n\t \n\t\t Critical Care Medicine \n\t\t \n\t\t\t 37 \n\t\t\t 4 \n\t\t\t \n\t\t\t 2009 \n\t\t \n\t \n\t Rubulotta F, Marshall JC, Ramsay G, Nelson D, Levy M, Williams M (2009) Predisposition, insult/infection, response, and organ dysfunction: A new model for staging severe sepsis. Critical Care Medicine 37(4):1329-1335."
+    },
+    {
+      "title": "Use of dynamic microsimulation to predict disease progression in patients with pneumonia-related sepsis",
+      "authors": [
+        "G Saka",
+        "J Kreke",
+        "A Schaefer",
+        "Cch Chang",
+        "M Roberts",
+        "D Angus"
+      ],
+      "year": 2007,
+      "doi": "10.1186/cc5942",
+      "journal": "Critical Care",
+      "volume": "11",
+      "issue": "3",
+      "pages": "65",
+      "raw": "Use of dynamic microsimulation to predict disease progression in patients with pneumonia-related sepsis \n\t\t \n\t\t\t G Saka \n\t\t \n\t\t \n\t\t\t J E Kreke \n\t\t \n\t\t \n\t\t\t A J Schaefer \n\t\t \n\t\t \n\t\t\t Cch Chang \n\t\t \n\t\t \n\t\t\t M S Roberts \n\t\t \n\t\t \n\t\t\t D C Angus \n\t\t \n\t\t 10.1186/cc5942 \n\t \n\t \n\t\t Critical Care \n\t\t \n\t\t\t 11 \n\t\t\t 3 \n\t\t\t 65 \n\t\t\t 2007 \n\t\t \n\t \n\t GenIMS Investigators \n\t Saka G, Kreke JE, Schaefer AJ, Chang CCH, Roberts MS, Angus DC; GenIMS Investigators (2007) Use of dynamic microsimulation to predict disease progression in patients with pneumonia-related sepsis. Critical Care 11(3):R65."
+    },
+    {
+      "title": "Outcome of patients with sepsis and septic shock after ICU treatment",
+      "authors": [
+        "M Schoenberg",
+        "M Weiss",
+        "P Radermacher"
+      ],
+      "year": 1998,
+      "doi": "10.1007/s004230050090",
+      "journal": "Langenbecks Arch. Surgery",
+      "volume": "383",
+      "issue": "1",
+      "raw": "Outcome of patients with sepsis and septic shock after ICU treatment \n\t\t \n\t\t\t M H Schoenberg \n\t\t \n\t\t \n\t\t\t M Weiss \n\t\t \n\t\t \n\t\t\t P Radermacher \n\t\t \n\t\t 10.1007/s004230050090 \n\t \n\t \n\t\t Langenbecks Arch. Surgery \n\t\t \n\t\t\t 383 \n\t\t\t 1 \n\t\t\t \n\t\t\t 1998 \n\t\t \n\t \n\t Schoenberg MH, Weiss M, Radermacher P (1998) Outcome of patients with sepsis and septic shock after ICU treatment. Lan- genbecks Arch. Surgery 383(1):44-48."
+    },
+    {
+      "title": "Sepsis Definitions Task Force (2016) Developing a new definition and assessing new clinical criteria for septic shock: For the third international consensus definitions for sepsis and septic shock (sepsis-3)",
+      "authors": [
+        "M Shankar-Hari",
+        "G Phillips",
+        "M Levy",
+        "C Seymour",
+        "V Liu",
+        "C Deutschman",
+        "D Angus",
+        "G Rubenfeld",
+        "M Singer"
+      ],
+      "journal": "JAMA",
+      "volume": "315",
+      "issue": "8",
+      "raw": "Sepsis Definitions Task Force (2016) Developing a new definition and assessing new clinical criteria for septic shock: For the third international consensus definitions for sepsis and septic shock (sepsis-3) \n\t\t \n\t\t\t M Shankar-Hari \n\t\t \n\t\t \n\t\t\t G S Phillips \n\t\t \n\t\t \n\t\t\t M L Levy \n\t\t \n\t\t \n\t\t\t C W Seymour \n\t\t \n\t\t \n\t\t\t V X Liu \n\t\t \n\t\t \n\t\t\t C S Deutschman \n\t\t \n\t\t \n\t\t\t D C Angus \n\t\t \n\t\t \n\t\t\t G D Rubenfeld \n\t\t \n\t\t \n\t\t\t M Singer \n\t\t \n\t \n\t \n\t\t JAMA \n\t\t \n\t\t\t 315 \n\t\t\t 8 \n\t\t\t \n\t\t \n\t \n\t Shankar-Hari M, Phillips GS, Levy ML, Seymour CW, Liu VX, Deutschman CS, Angus DC, Rubenfeld GD, Singer M, Sepsis Definitions Task Force (2016) Developing a new definition and assessing new clinical criteria for septic shock: For the third international consensus definitions for sepsis and septic shock (sepsis-3). JAMA 315(8):775-787."
+    },
+    {
+      "title": "Mortality in emergency department sepsis (MEDS) score predicts 1-year mortality",
+      "authors": [
+        "N Shapiro",
+        "M Howell",
+        "D Talmor",
+        "M Donnino",
+        "L Ngo",
+        "D Bates"
+      ],
+      "year": 2007,
+      "journal": "Critical Care Medicine",
+      "volume": "35",
+      "issue": "1",
+      "raw": "Mortality in emergency department sepsis (MEDS) score predicts 1-year mortality \n\t\t \n\t\t\t N I Shapiro \n\t\t \n\t\t \n\t\t\t M D Howell \n\t\t \n\t\t \n\t\t\t D Talmor \n\t\t \n\t\t \n\t\t\t M Donnino \n\t\t \n\t\t \n\t\t\t L Ngo \n\t\t \n\t\t \n\t\t\t D W Bates \n\t\t \n\t \n\t \n\t\t Critical Care Medicine \n\t\t \n\t\t\t 35 \n\t\t\t 1 \n\t\t\t \n\t\t\t 2007 \n\t\t \n\t \n\t Shapiro NI, Howell MD, Talmor D, Donnino M, Ngo L, Bates DW (2007) Mortality in emergency department sepsis (MEDS) score predicts 1-year mortality. Critical Care Medicine 35(1):192-198."
+    },
+    {
+      "title": "The optimal time to initiate HIV therapy under ordered health states",
+      "authors": [
+        "S Shechter",
+        "M Bailey",
+        "A Schaefer",
+        "M Roberts"
+      ],
+      "year": 2008,
+      "doi": "10.1287/opre.1070.0480",
+      "journal": "Oper. Res",
+      "volume": "56",
+      "issue": "1",
+      "raw": "The optimal time to initiate HIV therapy under ordered health states \n\t\t \n\t\t\t S M Shechter \n\t\t \n\t\t \n\t\t\t M D Bailey \n\t\t \n\t\t \n\t\t\t A J Schaefer \n\t\t \n\t\t \n\t\t\t M S Roberts \n\t\t \n\t\t 10.1287/opre.1070.0480 \n\t \n\t \n\t\t Oper. Res \n\t\t \n\t\t\t 56 \n\t\t\t 1 \n\t\t\t \n\t\t\t 2008 \n\t\t \n\t \n\t Shechter SM, Bailey MD, Schaefer AJ, Roberts MS (2008) The opti- mal time to initiate HIV therapy under ordered health states. Oper. Res. 56(1):20-33."
+    },
+    {
+      "title": "The third international consensus definitions for sepsis and septic shock (sepsis-3)",
+      "authors": [
+        "M Singer",
+        "C Deutschman",
+        "C Seymour",
+        "M Shankar-Hari",
+        "D Annane",
+        "M Bauer",
+        "R Bellomo"
+      ],
+      "year": 2016,
+      "doi": "10.1001/jama.2016.0287",
+      "journal": "JAMA",
+      "volume": "315",
+      "issue": "8",
+      "raw": "The third international consensus definitions for sepsis and septic shock (sepsis-3) \n\t\t \n\t\t\t M Singer \n\t\t \n\t\t \n\t\t\t C S Deutschman \n\t\t \n\t\t \n\t\t\t C W Seymour \n\t\t \n\t\t \n\t\t\t M Shankar-Hari \n\t\t \n\t\t \n\t\t\t D Annane \n\t\t \n\t\t \n\t\t\t M Bauer \n\t\t \n\t\t \n\t\t\t R Bellomo \n\t\t \n\t\t 10.1001/jama.2016.0287 \n\t \n\t \n\t\t JAMA \n\t\t \n\t\t\t 315 \n\t\t\t 8 \n\t\t\t \n\t\t\t 2016 \n\t\t \n\t \n\t Singer M, Deutschman CS, Seymour CW, Shankar-Hari M, Annane D, Bauer M, Bellomo R, et al. (2016) The third international con- sensus definitions for sepsis and septic shock (sepsis-3). JAMA 315(8):801-810."
+    },
+    {
+      "title": "Markov models in medical decision making: A practical guide",
+      "authors": [
+        "F Sonnenberg",
+        "J Beck"
+      ],
+      "year": 1993,
+      "doi": "10.1177/0272989x9301300409",
+      "journal": "Medical Decision Making",
+      "volume": "13",
+      "issue": "4",
+      "raw": "Markov models in medical decision making: A practical guide \n\t\t \n\t\t\t F A Sonnenberg \n\t\t \n\t\t \n\t\t\t J R Beck \n\t\t \n\t\t 10.1177/0272989x9301300409 \n\t \n\t \n\t\t Medical Decision Making \n\t\t \n\t\t\t 13 \n\t\t\t 4 \n\t\t\t \n\t\t\t 1993 \n\t\t \n\t \n\t Sonnenberg FA, Beck JR (1993) Markov models in medical de- cision making: A practical guide. Medical Decision Making 13(4):322-338."
+    },
+    {
+      "title": "SSC guidelines",
+      "year": 2016,
+      "doi": "10.2305/ngxz1962",
+      "raw": "SSC guidelines \n\t\t \n\t\t\t Ssc \n\t\t \n\t\t 10.2305/ngxz1962 \n\t\t \n\t\t \n\t\t\t 2016. July 22, 2019 \n\t\t \n\t \n\t SSC (2016) SSC guidelines. Accessed July 22, 2019, http://www. survivingsepsis.org/Guidelines/Pages/default.aspx."
+    },
+    {
+      "title": "From data to optimal decision making: A data-driven, probabilistic machine learning approach to decision support for patients with sepsis",
+      "authors": [
+        "A Tsoukalas",
+        "T Albertson",
+        "I Tagkopoulos"
+      ],
+      "year": 2015,
+      "journal": "JMIR Medical Inform",
+      "volume": "3",
+      "issue": "1",
+      "pages": "e11",
+      "raw": "From data to optimal decision making: A data-driven, probabilistic machine learning approach to decision support for patients with sepsis \n\t\t \n\t\t\t A Tsoukalas \n\t\t \n\t\t \n\t\t\t T Albertson \n\t\t \n\t\t \n\t\t\t I Tagkopoulos \n\t\t \n\t \n\t \n\t\t JMIR Medical Inform \n\t\t \n\t\t\t 3 \n\t\t\t 1 \n\t\t\t e11 \n\t\t\t 2015 \n\t\t \n\t \n\t Tsoukalas A, Albertson T, Tagkopoulos I (2015) From data to opti- mal decision making: A data-driven, probabilistic machine learning approach to decision support for patients with sepsis. JMIR Medical Inform. 3(1):e11."
+    },
+    {
+      "title": "A minimal set of physiomarkers in continuous high frequency data streams predict adult sepsis onset earlier",
+      "authors": [
+        "F Van Wyk",
+        "A Khojandi",
+        "A Mohammed",
+        "E Begoli",
+        "R Davis",
+        "R Kamaleswaran"
+      ],
+      "year": 2019,
+      "doi": "10.1016/j.ijmedinf.2018.12.002",
+      "journal": "Internat. J. Medical Inform",
+      "volume": "122",
+      "raw": "A minimal set of physiomarkers in continuous high frequency data streams predict adult sepsis onset earlier \n\t\t \n\t\t\t F Van Wyk \n\t\t \n\t\t \n\t\t\t A Khojandi \n\t\t \n\t\t \n\t\t\t A Mohammed \n\t\t \n\t\t \n\t\t\t E Begoli \n\t\t \n\t\t \n\t\t\t R L Davis \n\t\t \n\t\t \n\t\t\t R Kamaleswaran \n\t\t \n\t\t 10.1016/j.ijmedinf.2018.12.002 \n\t \n\t \n\t\t Internat. J. Medical Inform \n\t\t \n\t\t\t 122 \n\t\t\t \n\t\t\t 2019 \n\t\t \n\t \n\t van Wyk F, Khojandi A, Mohammed A, Begoli E, Davis RL, Kama- leswaran R (2019) A minimal set of physiomarkers in continu- ous high frequency data streams predict adult sepsis onset ear- lier. Internat. J. Medical Inform. 122:55-62."
+    },
+    {
+      "title": "Recognizing and managing sepsis: What needs to be done?",
+      "authors": [
+        "D Yealy",
+        "D Huang",
+        "A Delaney",
+        "M Knight",
+        "A Randolph",
+        "R Daniels",
+        "T Nutbeam"
+      ],
+      "year": 2015,
+      "journal": "BMC Medicine",
+      "volume": "13",
+      "issue": "1",
+      "pages": "98",
+      "raw": "Recognizing and managing sepsis: What needs to be done? \n\t\t \n\t\t\t D M Yealy \n\t\t \n\t\t \n\t\t\t D T Huang \n\t\t \n\t\t \n\t\t\t A Delaney \n\t\t \n\t\t \n\t\t\t M Knight \n\t\t \n\t\t \n\t\t\t A G Randolph \n\t\t \n\t\t \n\t\t\t R Daniels \n\t\t \n\t\t \n\t\t\t T Nutbeam \n\t\t \n\t \n\t \n\t\t BMC Medicine \n\t\t \n\t\t\t 13 \n\t\t\t 1 \n\t\t\t 98 \n\t\t\t 2015 \n\t\t \n\t \n\t Yealy DM, Huang DT, Delaney A, Knight M, Randolph AG, Daniels R, Nutbeam T (2015) Recognizing and managing sepsis: What needs to be done? BMC Medicine 13(1):98."
+    }
+  ],
+  "num_references": 46,
+  "figures": [
+    {
+      "caption": "Figure 1 .",
+      "description": "Figure 1. (Color online) Unweighted (a) and Weighted (b) Aggregations of States with No Organ Dysfunction and No SS"
+    },
+    {
+      "caption": "Figure 2 .",
+      "description": "Figure 2. (Color online) Unweighted (a) and Weighted (b) Aggregations of States with Septic Shock and No Additional Organ System Dysfunctions"
+    },
+    {
+      "caption": "Figure 3 .",
+      "description": "Figure 3. (Color online) Unweighted (a) and Weighted (b) Aggregations of States with One Organ Dysfunction and No SS"
+    },
+    {
+      "caption": "Figure 4 .",
+      "description": "Figure 4. (Color online) Unweighted (a) and Weighted (b) Aggregations of States Septic Shock and One Additional Organ System Dysfunction"
+    },
+    {
+      "caption": "Figure 5 .",
+      "description": "Figure 5. (Color online) Application of Optimal Policy to a Patient's Health Trajectory"
+    },
+    {
+      "caption": "Figure",
+      "description": "Figure B.1. (Color online) Dominant Action Under the Weighted Aggregation of States with No Organ Dysfunction and No Septic Shock"
+    },
+    {
+      "caption": "Figure",
+      "description": "Figure B.2. (Color online) Dominant Action Under the Weighted Aggregation of States with One Organ Dysfunction and Septic Shock"
+    },
+    {
+      "caption": "Figure",
+      "description": "Figure B.3. (Color online) Dominant Action Under the Weighted Aggregation of States with One Organ Dysfunction and No Septic Shock"
+    },
+    {
+      "caption": "Figure",
+      "description": "Figure B.4. (Color online) Dominant Action Under the Weighted Aggregation of States with Two Organ Dysfunction and Septic Shock"
+    },
+    {
+      "caption": "Figure 12 .",
+      "description": "Figure 12. (Color online) Distribution of the KS-Statistics of Exponential Goodness of Fit Tests on the Time to Leave a State"
+    },
+    {
+      "type": "table",
+      "caption": "Table 1 .",
+      "description": "Markov Decision Process Notation"
+    },
+    {
+      "type": "table",
+      "caption": "Table 2 .",
+      "description": "Health State Element Definition"
+    },
+    {
+      "type": "table",
+      "caption": "Table 3 .",
+      "description": "Treatment Policy Dominance Notation"
+    },
+    {
+      "type": "table",
+      "caption": "Table 4 .",
+      "description": "Demographic Distribution of the Delayed and Non-Delayed Treatment Populations"
+    },
+    {
+      "type": "table",
+      "caption": "Table 5 .",
+      "description": "Size Attributes of Delayed and Non-Delayed Treatment Population Markov Chains"
+    },
+    {
+      "type": "table",
+      "caption": "Table 7 .",
+      "description": "Average Proportion of Time Delayed Treatment Population Patients Spent in Health States During Their Stay by Element"
+    },
+    {
+      "type": "table",
+      "caption": "Table 6 .",
+      "description": "Unique and Total Health State Transitions of the Delayed Treatment Population"
+    },
+    {
+      "type": "table",
+      "caption": "Table 10 .",
+      "description": "Comparison of Optimal Treatment Policy and Observed Treatment"
+    }
+  ],
+  "num_figures": 18,
+  "tables": [
+    {
+      "content": "Notation Description State Space S \u03c9 Set of states in CTMC \u03c9, \u03c9 \u2208 \u03a9 { W (Delayed), F (Post Intervention Fluid), AI (Post-Intervention Anti-Infective)} q \u03c9 Set of transient states, q \u03c9 \u2282 S \u03c9 , Probability Transition Matrix p( j |s, d(s)) Probability of transitioning to state j given action d(s) is taken in the current state s \u03b2(s, d(s)) Transition rate from state s under action d(s) p( j |t, s, d(s)) Probability that the process occupies state j, t time units after a decision epoch, given that action d(s) was chosen in state s at the current decision epoch has not occurred prior to time t. If the state of the process does not change until the next decision epoch, p( j| t, s, d(s)) 1 F( j |t, s, d(s)) Probability that a transition from state s to state j occurs within t time after action d(s) M(s, \u015d) Mean time to transition from state s to \u015d observed in EHRs T Uniformized transition probability matrix (TPM) T(s | s, \u03c0(s))"
+    },
+    {
+      "content": "Health state element Abbreviation Criteria for abnormal indicator Cellular Inflammation IC White blood cell count (>12,000 cells/mL) OR Bandemia (>10%) OR Sedimentation rate (>20 mm/h) OR C reactive protein (>8 mg/L) OR Procalcitonin (>15 ng/mL) Physiological Inflammation IP [ Heart rate (\u226590 beats/min) AND Respiration rate (\u226520 breaths/min)] OR Temperature (\u2265100.4 F or <96.8 F) Cardiovascular Organ System Dysfunction OC Systolic blood pressure (<90 mmHg) OR Mean arterial pressure (<65 mmHg) OR Decrease in SBP >40 mmHg in eight-hour period Gastrointestinal Organ System Dysfunction OG Bilirubin (>2 mg/dL) Hemopoietic Organ System Dysfunction OH White blood cell count (<4,000 cells/mL) OR Platelets (<100,000 cells/mL) Renal Organ System Dysfunction OK Creatinine (>1.2 mg/dL) OR Urine output (<500 mL) OR Blood urea nitrogen (>20 mg/dL) Metabolic Organ System Dysfunction OM Lactate (>2.0 mmol/L) Neurological Organ System Dysfunction ON Glasgow coma score (<14) Respiratory Organ System Dysfunction OR Pulse oximetry (<90%) OR Fraction of inspired oxygen (>21%) Septic Shock"
+    },
+    {
+      "content": "Notation Description S W Set of states in the DTP TPM N Set of the first health states observed for each visit in the DTP, N \u2282 S W Q W"
+    },
+    {
+      "content": "Delayed treatment Nondelayed treatment Attribute Response population population P-value Age Minimum 20 18 1st Quartile 55 48 Median 65 63 3E-6 Mean 64.3 61.7 2E-08 3rd Quartile 77 76 Maximum 90 90 Gender Male 330 (49.1%) 17,614 (43.1%) 0.002 Female 342 (50.9%) 23,254 (56.9%) 0.002 Race/ethnicity Non-Hispanic White 460 (68.5%) 29,098 (71.2%) 0.175 Non-Hispanic Black 169 (25.2%) 8,991 (22.0%) 0.075 Non-Hispanic Asian 14 (2.1%) 572 (1.4%) 0.119 Non-Hispanic American 2 (0.3%) 82 (0.2%) 0.371 Indian Non-Hispanic Hawaiian/ 0 (0.0%) 16 (0.04%) 0.611 Pacific Islander Hispanic 22 (3.2%) 1,798 (4.4%) 0.185 Other 3 (0.4%) 159 (0.4%) 0.861 Unknown 2 (0.3%) 152 (0.4%) 0.393 Length of stay in days Minimum 2.75 0.1 1st Quartile 12.6 2.3 Median 23.3 4.1 1E-17 Mean 29.9 6.3 2E-16 3rd Quartile 37.6 7.2 Maximum 336.8 292.4"
+    },
+    {
+      "content": "Delayed treatment Nondelayed treatment Nondelayed treatment population populations: post anti-infective population: post fluid Number of health states 3,637 8,945 5,768 Number of unique transitions 12,162 49,083 22,576 Total number of visits 672 49,710 8,000"
+    },
+    {
+      "content": "Health state element Status IC IP OC OG OH OK OM ON OR SS Normal 0.500 0.406 0.554 0.698 0.841 0.355 0.615 0.000 0.196 0.580 Abnormal 0.493 0.593 0.438 0.095 0.152 0.637 0.145 0.266 0.801 0.410 Not measured 0.007 0.001 0.008 0.207 0.007 0.008 0.240 0.734 0.003 0.010"
+    },
+    {
+      "content": "Current Next location Discharge disposition Location ED General floor STEPDN ICU Routine Nonroutine Death ED 1,805 133 102 212 0 0 2 (966 states) 3,381 182 118 249 0 0 2 General floor 0 2,615 130 267 24 137 16 (822 states) 0 22,217 259 335 31 270 17 STEPDN 0 207 2,556 171 5 74 27 (789 states) 0 319 24,400 224 5 120 36 ICU 0 185 206 3,190 2 11 83 (1,051 states) 0 260 411 26,578 2 12 177"
+    },
+    {
+      "content": "Panel A: Mean count by treatment location Optimal treatment location Observed treatment location ED General floor STEPDN ICU ED 2,912.5 (12.3) 665.1 (9.1) 187.1 (4.6) 94.0 (3.2) General Floor 199.3 (5.3) 564.6 (9.0) 7.0 (0.9) 9.0 (1.1) STEPDN 38.7 (1.8) 21.3 (2.1) 87.0 (2.9) 13.6 (1.1) ICU 36.9 (2.4) 21.1 (2.3) 6.7 (1.0) 136.1 (4.6) Panel B: Mean difference in absorption to death probability ED -0.003***(0.0003) -0.008***(0.001) 0.016***(0.002) -0.105***(0.005) General Floor -0.008***(0.001) -0.004***(0.001) 0.008** (0.008) -0.097***(0.012) STEPDN -0.021***(0.006) -0.004***(0.002) -0.008***(0.002) -0.135***(0.007) ICU 0.010** (0.008) 0.028***(0.005) 0.071***(0.019) -0.046***(0.003) Panel C: Mean difference in time until treatment ED -49*** (1.10) -1,157***(23.7) -1,408***(42.7) -1,385***(83.0) General Floor 1,381***(51.0) 898*** (44.1) -1,578***(674.7) 398 (963.7) STEPDN 823*** (82.6) 1,109***(188.3) -466*** (66.1) -1,117** (918.5) ICU 704*** (64.5) -2,541***(529.9) -4,351***(1,007.2) -14 (61.5) Panel D: Mean difference in number of organ dysfunction at time of treatment ED -0.30***(0.005) -0.22***(0.009) -0.40***(0.023) -1.15***(0.039) General Floor 0.40***(0.021) 0.50***(0.014) 0.03 (0.133) -0.48***(0.102) STEPDN -0.18***(0.039) -0.00 (0.032) -0.28***(0.025) -0.91***(0.094) ICU 0.28***(0.059) -0.26***(0.082) -0.45***(0.166) -0.40***(0.029) Panel E: Mean difference in proportion with septic shock at time of treatment ED 0.017***(0.001) 0.006** (0.003) -0.008***(0.005) 0.020***(0.009) General Floor 0.019***(0.004) 0.010***(0.003) 0.000 (0.000) 0.084***(0.032) STEPDN 0.083***(0.019) 0.014** (0.010) -0.007* (0.007) 0.040***(0.026) ICU 0.228***(0.027) -0.000 (0.017) -0.022 (0.061) 0.056***(0.008) Panel F: Proportion of states that use anti-infection define stars ED 0.80 (0.003) 0.79 (0.007) 0.83 (0.011) 0.82 (0.013) General Floor 0.80 (0.011) 0.84 (0.005) 0.90 (0.048) 0.99 (0.013) STEPDN 0.87 (0.021) 0.56 (0.038) 0.55 (0.021) 0.59 (0.047) ICU 0.86 (0.020) 0.90 (0.026) 0.92 (0.048) 0.85 (0.010)"
+    }
+  ],
+  "num_tables": 8,
+  "formulas": [
+    {
+      "text": "P \u03c9 TPM of the CTMC \u03c9, \u03c9 \u2208 \u03a9 Q \u03c9 Transient-to-transient TPM of P \u03c9 , \u03c9 \u2208 {F, AI} R \u03c9 Transient-to-recurrent TPM of P \u03c9 , \u03c9 \u2208 {F, AI} D \u03c9 (I -Q \u03c9 ) -1 , \u03c9 \u2208 {F, AI} B \u03c9 D \u03c9 R \u03c9 , \u03c9 \u2208 {F"
+    },
+    {
+      "text": "Rate(s, \u015d) 1 M(s, \u015d) : (1)"
+    },
+    {
+      "text": "P \u03c9 (s, \u015d)"
+    },
+    {
+      "text": "r(s, d(s)) k(s, d(s)) + H(s, d(s)) + \u221e 0 j\u2208S c(s, d(s)) u 0 e -\u03b1t p( j |t, s, d(s))dtF(du |s, d(s)) (3)"
+    },
+    {
+      "text": "k(s, d(s)) 0 for wait \u03ba for Fluid (0% to 20% of the cost of death) \u03b4 for Anti-infective (0% to 20% of the cost of death) \u23a7 \u23aa \u23aa \u23aa \u23aa \u23aa \u23a8 \u23aa \u23aa \u23aa \u23aa \u23aa \u23a9 (4)"
+    },
+    {
+      "text": "c(s, d(s)) (c i (s) + c l (s))m d(s) + c e (s): (5)"
+    },
+    {
+      "text": "c i (s) i \u2200i \u2208 I {1, 2, : : : , 7} (6)"
+    },
+    {
+      "text": "c l (s) 9 if septic shock is present 0 otherwise (7)"
+    },
+    {
+      "text": "m d(s) 1 for d(s) Wait 0:9u(s) + 1:5(1 -u(s)) for d(s) Fluid 0:8q(s) + 2(1 -q(s)) for d(s) Anti-infective: \u23a7 \u23aa \u23aa \u23aa \u23aa \u23aa \u23a8 \u23aa \u23aa \u23aa \u23aa \u23aa \u23a9 (8)"
+    },
+    {
+      "text": "0 for GENERALFLOOR 1 for STEPDN 3 for ED 5 for ICU 0 for Routine discharge \u0394 2 for Nonroutine discharge \u0394 for Death \u23a7 \u23aa \u23aa \u23aa \u23aa \u23aa \u23aa \u23aa \u23aa \u23aa \u23aa \u23aa \u23aa \u23aa \u23aa \u23aa \u23aa \u23aa \u23aa \u23aa \u23aa \u23aa \u23aa \u23aa \u23aa \u23aa \u23aa \u23aa \u23aa \u23aa \u23aa \u23aa \u23aa \u23a8 \u23aa \u23aa \u23aa \u23aa \u23aa \u23aa \u23aa \u23aa \u23aa \u23aa \u23aa \u23aa \u23aa \u23aa \u23aa \u23aa \u23aa \u23aa \u23aa \u23aa \u23aa \u23aa \u23aa \u23aa \u23aa \u23aa \u23aa \u23aa \u23aa \u23aa \u23aa \u23aa \u23a9 (9)"
+    },
+    {
+      "text": "t \u03c9 (s, s ) is an element of the D \u03c9 (I -Q \u03c9 ) -1 matrix (Puterman 2014)."
+    },
+    {
+      "text": "H(s, d(s)) s \u2208q F (c i (s ) + c l (s ))t F (s, s ) + B F \u0393 for d(s) Administer Fluid s \u2208q AI (c i (s ) + c l (s ))t AI (s, s ) + B AI \u0393 for d(s) Administer Anti-Infective 0 f o r d(s) Wait, \u23a7 \u23aa \u23aa \u23aa \u23aa \u23aa \u23aa \u23aa \u23aa \u23aa \u23aa \u23aa \u23aa \u23aa \u23aa \u23aa \u23aa \u23aa \u23aa \u23aa \u23aa \u23aa \u23aa \u23aa \u23aa \u23aa \u23a8 \u23aa \u23aa \u23aa \u23aa \u23aa \u23aa \u23aa \u23aa \u23aa \u23aa \u23aa \u23aa \u23aa \u23aa \u23aa \u23aa \u23aa \u23aa \u23aa \u23aa \u23aa \u23aa \u23aa \u23aa \u23aa \u23a9 ( 10"
+    },
+    {
+      "text": ")"
+    },
+    {
+      "text": "[1 -p( j |s, d(s))] \u03b2(s, d(s)) \u2264 c < \u221e \u2200s \u2208 S, (11)"
+    },
+    {
+      "text": "T( j|s, d(s)) \u2248 1 - [1 -p( j|s, d(s))]\u03b2(s, d(s)) c , j s p( j|s, d(s))\u03b2(s, d(s)) c , j \u2260 s, \u23a7 \u23aa \u23aa \u23aa \u23aa \u23aa \u23aa \u23aa \u23a8 \u23aa \u23aa \u23aa \u23aa \u23aa \u23aa \u23aa \u23a9 (12) and R(s, d(s)) \u2248 r(s, d(s)) \u03b1 + \u03b2(s, d(s)) \u03b1 + c : (13)"
+    },
+    {
+      "text": "V \u03c0(s) R(s, \u03c0(s)) + \u03b2(s, \u03c0(s)) \u03b2(s, \u03c0(s)) + \u03b1 j\u2208S T( j|s, \u03c0(s))V \u03c0( j) \u2200s \u2208 S: (14)"
+    },
+    {
+      "text": "V \u03c0 ? (s) min d(s) R(s, d(s)) + \u03b2(s, \u03c0(s)) \u03b2(s, \u03c0(s)) + \u03b1 j\u2208S T( j| s, d(s))V \u03c0 ? ( j) \u2200s \u2208 S: (15)"
+    },
+    {
+      "text": "W j i\u2208N D W ij A j E i k\u2208S W i\u2208N D W ik A k E i , ( 16"
+    },
+    {
+      "text": ")"
+    },
+    {
+      "text": "P W D W (I -Q W ) -1 A Meantime spent in state j E i"
+    }
+  ],
+  "num_formulas": 20,
+  "num_citations": 82,
+  "cited_references": [
+    "b3",
+    "b39",
+    "b13",
+    "b41",
+    "b18",
+    "b44",
+    "b2",
+    "b14",
+    "b17",
+    "b36",
+    "b25",
+    "b1",
+    "b35",
+    "b20",
+    "b43",
+    "b21",
+    "b40",
+    "b12",
+    "b42",
+    "b30",
+    "b31",
+    "b29",
+    "b16",
+    "b15",
+    "b23",
+    "b32",
+    "b5",
+    "b19",
+    "b28",
+    "b45",
+    "b10",
+    "b38",
+    "b24",
+    "b4",
+    "b6",
+    "b33",
+    "b7",
+    "b8",
+    "b22",
+    "b34",
+    "b27",
+    "b0",
+    "b26"
+  ],
+  "notes": [
+    "[raw_affiliation] a  Department of Industrial and Systems Engineering , North Carolina State University , Raleigh , North Carolina 27606 ;",
+    "[raw_affiliation] a  Department of Industrial and Systems Engineering , North Carolina State University , Raleigh , North Carolina 27606 ;",
+    "[raw_affiliation] b  Dynamic Ideas LLC , Waltham , Massachusetts 02452 ;",
+    "[raw_affiliation] a  Department of Industrial and Systems Engineering , North Carolina State University , Raleigh , North Carolina 27606 ;",
+    "[raw_affiliation] a  Department of Industrial and Systems Engineering , North Carolina State University , Raleigh , North Carolina 27606 ;",
+    "[raw_affiliation] c  Department of Mechanical and Industrial Engineering , University of Massachusetts Amherst , Amherst , Massachusetts 01003 ;",
+    "[raw_affiliation] d  Center for the Science of Health Care Delivery , Mayo Clinic , Rochester , Minnesota 55902 ;",
+    "[raw_affiliation] e  Department of Otolaryngology (ENT) / Head and Neck Surgery , Mayo Clinic , Rochester , Minnesota 55902 ;",
+    "[raw_affiliation] f  Department of Biostatistics , Harvard T.H. Chan School of Public Health , Harvard University , Boston , Massachusetts 02115",
+    "[submission] Received: December 28, 2020 Revised: September 24, 2021; March 27, 2022 Accepted: April 19, 2022",
+    "SS Persistent hypotension shown through two consecutive readings (\u2265 30 min apart) of (i) SBP < 90 mmHg, (ii) MAP < 65mmHg, (iii) decrease in SBP > 40 mmHg in eight-hour period OR Vasopressor administration",
+    "DecisionAnalysis, 2022, vol. 19, no. 4, pp. 265-296, \u00a9 2022 INFORMS",
+    "[raw_reference] Abraham EP (2015) The antibiotics resistance crisis. Comprehensive Biochemistry 11(4):181-224.",
+    "[raw_reference] Alberti C, Brun-Buisson C, Chevret S, Antonelli M, Goodman SV, Martin C, Moreno R, et al. (2005) Systemic inflammatory response and progression to severe sepsis in critically ill infected patients. Amer. J. Respiratory Critical Care Medicine 171(5):461-468.",
+    "[raw_reference] Andersson M, \u00d6stholm-Balkhed \u00c5, Fredrikson M, Holmbom M, H\u00e4llgren A, Berg S, Hanberger H (2019) Delay of appropriate antibiotic treatment is associated with high mortality in patients with community-onset sepsis in a Swedish setting. Eur. J. Clini- cal Microbiology Infectious Diseases 38(7):1223-1234.",
+    "[raw_reference] Annane D, Bellissant E, Bollaert PE, Briegel J, Keh D, Kupfer Y (2004) Corticosteroids for severe sepsis and septic shock: A systematic review and meta-analysis. BMJ 329(7464):480.",
+    "[report_type] Working paper",
+    "[raw_reference] Ayvaci M, Mobini Z, \u00d6zer Z (2021) To catch a killer: A data-driven personalized and compliance-aware sepsis alert system. Work- ing paper, The University of Texas, Dallas, TX.",
+    "[raw_reference] Bauer M, Gerlach H, Vogelmann T, Preissing F, Stiefel J, Adam D (2020) Mortality in sepsis and septic shock in Europe, North America and Australia between 2009 and 2019: Results from a systematic review and meta-analysis. Critical Care 24(1):239.",
+    "[raw_reference] Bone RC, Fisher CJ Jr, Clemmer TP, Slotman GJ, Metz CA, Balk RA (1989) Sepsis syndrome: A valid clinical entity. Critical Care Med- icine 17(5):389-393.",
+    "[raw_reference] Buchman TG, Simpson SQ, Sciarretta KL, Finne KP, Sowers N, Collier M, Chavan S, et al. (2020) Sepsis among Medicare beneficiaries: 1. The burdens of sepsis, 2012-2018. Critical Care Medicine 48(3):276-288.",
+    "[raw_reference] Capan M, Ivy JS, Wilson JR, Huddleston JM (2017) A stochastic model of acute-care decisions based on patient and provider heterogeneity. Health Care Management Sci. 20(2):187-206.",
+    "How antibiotic resistance happens",
+    "[raw_reference] CDC (2019) Centers for Disease Control and Prevention. Accessed July 22, 2019, https://www.cdc.gov/sepsis/datareports/index. html. CDC (2021) How antibiotic resistance happens. Accessed March 25, 2022, https://www.cdc.gov/drugresistance/about/how-resi stance-happens.html.",
+    "[raw_reference] Chen KF, Liu SH, Li CH, Wu CC, Chaou CH, Tzeng IS, Hsieh YH, et al. (2017) Development and validation of a parsimonious and pragmatic CHARM score to predict mortality in patients with suspected sepsis. Amer. J. Emergency Medicine 35(4):640-646.",
+    "[raw_reference] Ghassemi M, Wu M, Hughes MC, Szolovits P, Doshi-Velez F (2017) Predicting intervention onset in the ICU with switching state space models. AMIA Joint Summits Translational Sci. Proc. 2017: 82-91.",
+    "[raw_reference] Ghosh S, Li J, Cao L, Ramamohanarao K (2017) Septic shock predic- tion for ICU patients via coupled HMM walking on sequential contrast patterns. J. Biomedical Inform. 66:19-31.",
+    "[raw_reference] Girard TD, Opal SM, Ely EW (2005) Insights into severe sepsis in older patients: From epidemiology to evidence-based manage- ment. Clinical Infectious Diseases 40(5):719-727.",
+    "[raw_reference] Gupta A, Liu T, Crick C (2020) Utilizing time series data embedded in electronic health records to develop continuous mortality risk prediction models using hidden Markov models: A sepsis case study. Statist. Methods Medical Res. 29(11):3409-3423.",
+    "[raw_reference] Hotchkiss RS, Moldawer LL, Opal SM, Reinhart K, Turnbull IR, Vincent JL (2016) Sepsis and septic shock. Nature Rev. Disease Primers 2:16045.",
+    "ProCESS Investigators",
+    "[raw_reference] Huang DT, Clermont G, Dremsizov TT, Angus DC, ProCESS Inves- tigators (2007) Implementation of early goal-directed therapy for severe sepsis and septic shock: A decision analysis. Critical Care Medicine 35(9):2090-2100.",
+    "[raw_reference] Johnson AE, Pollard TJ, Shen L, Lehman LW, Feng M, Ghassemi M, Moody B, Szolovits P, Celi LA, Mark RG (2016) MIMIC-III, a freely accessible critical care database. Sci. Data 3:160035.",
+    "[raw_reference] Komorowski M, Celi LA, Badawi O, Gordon AC, Faisal AA (2018) The artificial intelligence clinician learns optimal treat- ment strategies for sepsis in intensive care. Nature Medicine 24(11):1716-1720.",
+    "[raw_reference] Kumar A, Roberts D, Wood KE, Light B, Parrillo JE, Sharma S, Suppes R, et al. (2006) Duration of hypotension before initiation of effective antimicrobial therapy is the critical determinant of survival in human septic shock. Critical Care Medicine 34(6): 1589-1596.",
+    "[raw_reference] Levy MM, Macias WL, Vincent JL, Russell JA, Silva E, Trzaskoma B, Williams MD (2005) Early changes in organ function predict eventual survival in severe sepsis. Critical Care Medicine 33(10): 2194-2201.",
+    "[raw_reference] Magni P, Quaglini S, Marchetti M, Barosi G (2000) Deciding when to intervene: A Markov decision process approach. Internat. J. Medical Inform. 60(3):237-253.",
+    "[raw_reference] Marshall JC, Deitch E, Moldawer LL, Opal S, Redl H, van der Poll T (2005) Preclinical models of shock and sepsis: What can they tell us? Shock 24(Suppl 1):1-6.",
+    "[raw_reference] Martin GS, Mannino DM, Moss M (2006) The effect of age on the development and outcome of adult sepsis. Critical Care Medicine 34(1):15-21.",
+    "[raw_reference] NIH (2019) Sepsis. Accessed July 22, 2019, https://www.nigms.nih. gov/education/pages/factsheet_sepsis.aspx.",
+    "[raw_reference] Papathanassoglou E, Middleton N, Benbenishty J, Williams G, Christofi MD, Hegadoren K (2017) Systematic review of gender-dependent outcomes in sepsis. Nursing Critical Care 22(5):284-292.",
+    "[raw_reference] Parente JD, Chase JG, Moeller K, Shaw GM (2021) High inter-patient variability in sepsis evolution: A hidden Markov model analy- sis. Comput. Methods Programs Biomedicine 201:105956.",
+    "[raw_reference] Paxton C, Niculescu-Mizil A, Saria S (2013) Developing predictive models using electronic medical records: Challenges and pit- falls. AMIA Annual Symp. Proc. 2013:1109-1115.",
+    "[raw_reference] Puterman ML (2014) Markov Decision Processes: Discrete Stochastic Dynamic Programming (John Wiley & Sons, Hoboken, NJ).",
+    "[raw_reference] Raghu A, Komorowski M, Celi LA, Szolovits P, Ghassemi M (2017) Continuous state-space models for optimal sepsis treatment: A deep reinforcement learning approach. Doshi-Velez F, Fackler J, Kale D, Ranganath R, Wallace B, Wiens J, eds. Proc. 2nd Machine Learn. Healthcare Conf., Proceedings of Machine Learning Research, vol. 68 (PMLR, Cambridge, MA), 147-163.",
+    "[raw_reference] Rangel-Frausto MS, Pittet D, Hwang T, Woolson RF, Wenzel RP (1998) The dynamics of disease progression in sepsis: Mar- kov modeling describing the natural history and the likely impact of effective antisepsis agents. Clinical Infectious Dis- eases 27(1):185-190.",
+    "[raw_reference] Rhodes A, Evans LE, Alhazzani W, Levy MM, Antonelli M, Ferrer R, Kumar A, et al. (2017) Surviving sepsis campaign: Interna- tional guidelines for management of sepsis and septic shock: 2016. Critical Care Medicine 45(3):486-552.",
+    "[raw_reference] Ribas VJ, Vellido A, Ruiz-Rodr\u00edguez JC, Rello J (2012) Severe sepsis mortality prediction with logistic regression over latent factors. Expert Systems Appl. 39(2):1937-1943.",
+    "[raw_reference] Rosenstrom et al.: Optimizing the First Response to Sepsis Decision Analysis, 2022, vol. 19, no. 4, pp. 265-296, \u00a9 2022 INFORMS",
+    "[raw_reference] Rubulotta F, Marshall JC, Ramsay G, Nelson D, Levy M, Williams M (2009) Predisposition, insult/infection, response, and organ dysfunction: A new model for staging severe sepsis. Critical Care Medicine 37(4):1329-1335.",
+    "GenIMS Investigators",
+    "[raw_reference] Saka G, Kreke JE, Schaefer AJ, Chang CCH, Roberts MS, Angus DC; GenIMS Investigators (2007) Use of dynamic microsimulation to predict disease progression in patients with pneumonia-related sepsis. Critical Care 11(3):R65.",
+    "[raw_reference] Schoenberg MH, Weiss M, Radermacher P (1998) Outcome of patients with sepsis and septic shock after ICU treatment. Lan- genbecks Arch. Surgery 383(1):44-48.",
+    "[raw_reference] Shankar-Hari M, Phillips GS, Levy ML, Seymour CW, Liu VX, Deutschman CS, Angus DC, Rubenfeld GD, Singer M, Sepsis Definitions Task Force (2016) Developing a new definition and assessing new clinical criteria for septic shock: For the third international consensus definitions for sepsis and septic shock (sepsis-3). JAMA 315(8):775-787.",
+    "[raw_reference] Shapiro NI, Howell MD, Talmor D, Donnino M, Ngo L, Bates DW (2007) Mortality in emergency department sepsis (MEDS) score predicts 1-year mortality. Critical Care Medicine 35(1):192-198.",
+    "[raw_reference] Shechter SM, Bailey MD, Schaefer AJ, Roberts MS (2008) The opti- mal time to initiate HIV therapy under ordered health states. Oper. Res. 56(1):20-33.",
+    "[raw_reference] Singer M, Deutschman CS, Seymour CW, Shankar-Hari M, Annane D, Bauer M, Bellomo R, et al. (2016) The third international con- sensus definitions for sepsis and septic shock (sepsis-3). JAMA 315(8):801-810.",
+    "[raw_reference] Sonnenberg FA, Beck JR (1993) Markov models in medical de- cision making: A practical guide. Medical Decision Making 13(4):322-338.",
+    "[raw_reference] SSC (2016) SSC guidelines. Accessed July 22, 2019, http://www. survivingsepsis.org/Guidelines/Pages/default.aspx.",
+    "[raw_reference] Tsoukalas A, Albertson T, Tagkopoulos I (2015) From data to opti- mal decision making: A data-driven, probabilistic machine learning approach to decision support for patients with sepsis. JMIR Medical Inform. 3(1):e11.",
+    "[raw_reference] van Wyk F, Khojandi A, Mohammed A, Begoli E, Davis RL, Kama- leswaran R (2019) A minimal set of physiomarkers in continu- ous high frequency data streams predict adult sepsis onset ear- lier. Internat. J. Medical Inform. 122:55-62.",
+    "[raw_reference] Yealy DM, Huang DT, Delaney A, Knight M, Randolph AG, Daniels R, Nutbeam T (2015) Recognizing and managing sepsis: What needs to be done? BMC Medicine 13(1):98."
+  ],
+  "editors": [
+    "F Doshi-Velez",
+    "J Fackler",
+    "D Kale",
+    "R Ranganath",
+    "B Wallace",
+    "J Wiens"
+  ],
+  "processing_software": {
+    "GROBID": "0.8.2"
+  }
+}

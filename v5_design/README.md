@@ -143,6 +143,21 @@ This directory contains the complete design documentation for Research Assistant
     - Key insight: GROBID's two-pass retry (90s + 180s) IS the fallback mechanism
     - Performance exceeds industry standards across all metrics
 
+21. **[21_post_enrichment_processing.md](21_post_enrichment_processing.md)** - Original post-enrichment processing design (Sep 1)
+    - Initial 8-stage pipeline design with parallel processing
+    - Complex quality scoring with 10 sub-components
+    - Multiple configuration profiles and monitoring
+    - See document 22 for simplified production version
+
+22. **[22_simplified_post_processing_final.md](22_simplified_post_processing_final.md)** - Production post-processing pipeline (CURRENT)
+    - Simplified always-incremental architecture
+    - First run starts from empty, no special modes
+    - Version-aware caching for software updates
+    - Sequential processing for simplicity
+    - 4-factor quality scoring
+    - Optimized for real usage: one ~3hr build, then ~5min updates
+    - No config files, parallel processing, or monitoring complexity
+
 ### Reference Implementations
 
 - **[grobid_config.py](grobid_config.py)** - Maximum extraction configuration

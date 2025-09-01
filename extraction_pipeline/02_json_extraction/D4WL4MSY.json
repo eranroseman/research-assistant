@@ -1,0 +1,1054 @@
+{
+  "paper_id": "D4WL4MSY",
+  "title": "From Ads to Interventions: Contextual Bandits in Mobile Health",
+  "abstract": "The first paper on contextual bandits was written by Michael Woodroofe in 1979 (Journal of the American Statistical Association, 74(",
+  "year": 2011,
+  "date": "2011",
+  "authors": [
+    {
+      "name": "Ambuj Tewari",
+      "email": "tewaria@umich.edu",
+      "affiliation": {
+        "organization": "University of Michigan",
+        "institution": "University of Michigan",
+        "address": "Ann Arbor, MI, USA"
+      }
+    },
+    {
+      "name": "Susan Murphy",
+      "email": "samurphy@umich.edu",
+      "affiliation": {
+        "organization": "University of Michigan",
+        "institution": "University of Michigan",
+        "address": "Ann Arbor, MI, USA"
+      }
+    }
+  ],
+  "doi": "10.1007/978-3-319-51394-2_25",
+  "md5": "8FD2F400A74D4343661509AFBB26C5D4",
+  "publication": {
+    "journal": "The Annals of Statistics",
+    "journal_inferred": true
+  },
+  "funding": [
+    "",
+    "",
+    "",
+    "",
+    "Acknowledgements This work was supported by awards  R01 AA023187  and  R01 HL125440  from the  National Institutes of Health , and  CAREER  award  IIS-1452099  from the  National Science Foundation ."
+  ],
+  "sections": [
+    {
+      "title": "Introduction",
+      "text": "The classic multi-armed bandit problem (see, e.g.,  [1] ) is perhaps the simplest model of a sequential decision making problem where one wishes to maximize the cumulative sum of rewards received over some time horizon. Faced with a finite number of alternatives, called actions or arms, the decision maker must choose between them at every time point. One has to balance the exploration of actions that have hitherto yielded low rewards, with exploitation of current knowledge about actions have yielded high rewards so far.\n\nWoodroofe  [2]  noted that, in most sequential decision making scenarios, there is likely to be some additional information available that can be useful for decision making. For example, in a clinical trial with two drugs, we might have people's genetic or demographic information available as features. If so, then rather than thinking about a two-armed bandit problem, one should think about the clinical trial as a contextual bandit problem where we want to learn how to map user features into one of the available actions, i.e., one of the two drugs in this case. Woodroofe defined this problem, albeit in the case of just one feature, but he did not call it a \"contextual bandit\" problem. Instead he called it a \"bandit problem with a concomitant variable\".\n\nAs it sometimes the case with broadly useful problems, contextual bandit problems have been considered by many different communities by many different names. They have been called \"bandit problems with side observations\"  [3, 4] , \"bandit problems with side information\"  [5] , \"associative reinforcement learning\"  [6] [7] [8] , \"reinforcement learning with immediate reward\"  [9] , \"associative bandit problems\"  [10] , and \"bandit problems with covariates\"  [11] [12] [13] [14] . The term \"contextual bandits\" was coined by Langford and Zhang  [15]  and we stick to it because it is descriptive yet short.\n\nRecent interest in contextual bandits has been driven to a large extent by personalization problems arising on the web. How to use user and webpage features to select the best ad to show to the user on a given webpage  [16] ? How to show personalized news articles to web users based on their interests  [17] ? With the emergence of mobile health, we expect that many ideas developed to show personalized ads to users on the web will be found useful in personalizing mobile health interventions to a specific person in a particular context.\n\nThe framework of Just-In-Time Adaptive Interventions  [18]  has recently been put forward to unify a number of decision making problems that arise in mobile health across a variety of behavior change domains including alcohol abuse, depression, obesity, and substance abuse. There are five keys components of JITAIs: decision points, decision rules, tailoring variables, intervention options, and proximal outcomes. Contextual bandit algorithms can be used for personalizing JITAIs. The tailoring variables, such as GPS location, calendar busyness, and heartrate, form the context. The intervention options are the actions. For simplicity, we assume throughout this chapter, that there are only two intervention options: whether to intervene or not. For example, in a physical activity JITAI, the two intervention options might be whether or not to send an activity encouraging message. Once an intervention option is chosen, a proximal outcome (i.e., reward) is obtained. Again, to use the example of the physical activity JITAI, our proximal outcome might be the number of steps the person walked in the 1 h following the decision point. In JITAIs, the fundamental pattern that repeats over time is the following. mobile phone records the proximal outcome (interpreted as a reward, so higher is better) 5: done\n\nIn the rest of this chapter, we will see how the contextual bandit problem is a good way to think about the problem of personalizing JITAIs in a mobile health setting. We will look at online learning algorithms that learn good decision rules (policies) over time by interacting with the environment using a protocol very similar to the fundamental temporally-repeating pattern described above. We will first survey existing contextual bandit frameworks and algorithms to give the reader a sense of the breadth of work that has occurred in this area across several different fields including computer science, electrical engineering, operations research, and statistics. Then we will highlight the unique challenges that arise in mobile health and discuss how existing contextual bandit algorithms will need to be modified before they can be used successfully in mobile health."
+    },
+    {
+      "title": "Online Learning in Contextual Bandits",
+      "text": "In this section we will review the online learning literature on contextual bandit problems. The focus will be on algorithms that minimize their regret. Regret measures the difference between the reward that could have been accumulated with prior knowledge of the problem, and the reward accumulated by the learning algorithm. The precise definition depends on the setting in which one is analyzing the learning algorithm. We will consider three settings that make increasingly weaker assumptions about the data generating process. In the first setting, contexts and rewards are all stochastically generated from an iid process. In the second setting, contexts are arbitrary but rewards are stochastic. Finally, in the third setting, contexts and rewards are all arbitrary."
+    },
+    {
+      "title": "Stochastic Contextual Bandits",
+      "text": "In the stochastic setting, we assume that the context and reward triples f.X t ; R 0 t ; R 1 t /g T tD1 are generated by sampling independently from an underlying distribution D. The following online learning protocol is followed.\n\n1: for t D 1 to T do 2: receive context X t 3: algorithm takes action A t 4: receive reward R t D R A t t 5: end for\n\nThe contexts X t are drawn from some context space X . Unless otherwise specified, we will assume that the context X t 2 R p is a vector with p components so that X \u00c2 R p . The literature has considered situations both less general (e.g., finite context space  [19] ) and more general (e.g., contexts in a general metric space  [20] ). The actions A t lie an action space A which we will assume, unless indicated otherwise, to be f0; 1g with 1 corresponding to the option of providing an intervention and 0 to not providing.\n\nA policy or decision rule W X ! A decides which action gets taken in which contexts. The value of a policy is defined as the expected reward obtained when actions are chosen according to :\n\nThe value of a policy, in turn, depends on the expected reward functions \u00c1 a ; a 2 A , defined as:\n\nNote that the value of a policy and the expected reward functions are related to each other as follows:\n\nHere D X is the marginal distribution of contexts. The optimal policy ? , among all possible policies, is given by\n\nAn online learning algorithm L is a sequence of maps L t ; 1 \u00c4 t \u00c4 T, where L t maps the history just prior to time t, f.X s ; A s ; R s /g t 1 sD1 , along with the current context X t to an action A t 2 A . If any of the maps L t are stochastic, i.e., the algorithm uses some internal randomization, then we call it a randomized online learning algorithm. Otherwise, we call it a deterministic online learning algorithm.\n\nWe will look at several different notions of regret. All of them will be of the form:\n\n\"best expected cumulative reward in a comparison class\"\n\nwhere the first term, referred to as the \"benchmark\" or \"comparator\" term measures the total expected reward that would have been obtained with advanced knowledge of the distributions (in the stochastic case) or nature's moves (in the adversarial case). The second term is the expected reward accumulated by the online learning algorithm. Note that this expectation is taken with respect to any randomness in nature's generation of contexts and rewards, as well as any randomness used by the algorithm (if it is a randomized online learning algorithm). Contextual bandit problems can be approached through several perspectives. We can adopt a regression perspective and view the problem as one of estimating the expected reward functions \u00c1 a .x/. Given estimates b \u00c1 a , we can choose the corresponding \"greedy\" policy GREEDY.b \u00c1 a / defined as GREEDY.b \u00c1 a /.x/ D argmax a2A b \u00c1 a .x/:\n\nNote that the optimal policy defined in (1) is nothing but GREEDY.\u00c1 a /.\n\nIn the case of two actions, one can also adopt a binary classification perspective and fix a set \u02d8of policies that can also be thought of as a set of classifiers. The best policy in this class is In the rest of this section, we first review approaches, both parametric and nonparametric, based on the regression perspective. Then we will consider classification based approaches that search for good policies in a restricted class."
+    },
+    {
+      "title": "Parametric Estimation of Expected Reward Functions",
+      "text": "In addition to assuming that the triples .X t ; R 0 t ; R 1 t / are iid, let us also assume that\n\nwhere X t ; \u02c7> a 2 R p and a t are iid mean-zero random variables. This implies that the expected reward functions \u00c1 a .x/ D \u02c7> a x are linear in the context x. Under this assumption, the best policy takes the form ? .x/ D GREEDY.\u02c7a/.x/ D argmax a2A \u02c7> a x:\n\nExpected reward of this optimal policy over T time steps is T V. ? /. The expected regret of a learning algorithm is defined as\n\nA simple approach for online learning in this setting is to adopt what has been called a \"certainty equivalence with forcing\" strategy in the adaptive control literature  [21] .\n\nThe idea is to choose a predetermined sequence of time points when the learning algorithm simply explores different actions. On rounds other than the exploration rounds, the algorithm \"exploits\" the current knowledge. \"Greedy\" or \"certainty equivalent\" exploitation means that the algorithm believes its current estimates of the expected reward function and takes the optimal action according to those estimates.\n\nAlgorithm 1 Linear Response Bandit Algorithm  [22]  Inputs: n 0 (initial exploration length), T a (exploration times for action a), h (localization parameter to decide which estimates to use)\n\nt D 1 to 2n 0 do Take action A t D 0 or A t D 1 depending on whether t is odd or even end for for t D 2n 0 C 1 to T do if t 2 T a then =? Exploration round ?= Take action A t D a Update b \u02c7a using least squares on previous rounds when action a was taken Update e \u02c7a using least squares on previous exploration rounds when action a was taken else =? Exploitation round ?= if j. e \u02c71 e \u02c70/ > X t j > h=2 then Take action A t D argmax a . e \u02c7a/ > X t else Take action A t D argmax a . b \u02c7a/ > X t end if end if end for\n\nThe algorithm of Goldenshluger and Zeevi  [22]  (Algorithm 1) adopts such an approach with a slight twist: it maintains two sets of estimates for the expected reward functions. The first set of estimates, e \u02c7a, are computed from data obtained during forced exploration rounds and the second set of estimates, b \u02c7a, are computed from data obtained in all previous rounds. At an exploitation round, the algorithm checks to see if there is enough gap between the quality of the two actions according to e \u02c7a. If there is enough gap, then it selects an action using the policy GREEDY. e \u02c7a/, otherwise it uses the policy GREEDY. b \u02c7a/. Goldenshluger and Zeevi establish an O.p 3 log T/ regret bound for Algorithm 1 under several assumptions including the assumption that a t are normally distributed and that a \"margin\" condition holds. Goldenshluger and Zeevi had earlier brought the margin condition from the classification literature into the contextual bandit literature  [23] . The margin condition ensures that the contexts X t are distributed such that, with high probability, the treatment effect magnitude j.\u02c71 \u02c70/ > X t j is large enough. A margin assumption is problematic in a mobile health setting where treatment effects are often expected to be small.\n\nRecently, Bastani and Bayati  [24]  have extended Algorithm 1 to the high dimensional case where the vectors \u02c7a are sparse, i.e., the number k\u02c7ak 0 of nonzero elements in \u02c7a satisfies k\u02c7ak 0 D s p. They improve the O.p 3 log T/ regret rate to O.s 2 log 2 T C s 2 log T log p/ after making assumptions similar to those made by Goldenshluger and Zeevi.\n\nLinearity of the expected reward function is not the only case that been considered for modeling the expected reward. Agarwal et al.  [25]  consider a setting where the expected reward function is assumed to lie in a general class with finitely many members. However, extending their results to general, finite dimensional, expected reward function classes is an open problem."
+    },
+    {
+      "title": "Nonparametric Estimation of Expected Reward Functions",
+      "text": "Instead of assuming the linear model (  2 ), we can consider the model\n\nwhere f a are functions chosen from a non-parametric class of functions, say, those satisfying certain smoothness conditions, and a t are iid mean-zero random variables. Assume that the contexts are normalized such that X t 2 OE0; 1 p . Algorithm 2 Randomized Allocation with Nonparametric Estimation  [13]  Inputs: n 0 (initial exploration length), NPR (nonparametric regression procedure such as nearest neighbor regression), t (sequence of exploration probabilities) for t D 1 to 2n 0 do Take action A t D 0 or A t D 1 depending on whether t is odd or even end for Get initial estimates b f a by feeding data from previous rounds to NPR\n\ngreedy action Let E t D action selected at random // random exploration With probability .1 t / take action A t D G t , else A t D E t // -greedy Collect reward R t and feed into NPR to get updated estimate b f a for a D A t end for\n\nYang and Zhu  [13]  initiated the study of contextual bandits in this non-parametric setting and looked at the \"competitive ratio\":\n\nTheir algorithm, given as Algorithm 2, estimates the functions f a using some non-parametric procedure such as the histogram method or the nearest neighbor method. It selects actions using the so-called -greedy strategy. That is, with some small probability a random action is selected. Otherwise, the action that looks best according to the current estimates b f a is taken.\n\nAssuming that f a is non-negative and continuous on OE0; 1 p and that D X has a density bounded away from zero, Yang and Zhu show that the competitive ratio of their contextual bandit algorithm converges to 1 almost surely, for both the histogram and nearest neighbor methods provided that the width of histograms and number of nearest neighbors are chosen in an appropriate manner as T ! 1.\n\nThe results of Yang and Zhu are asymptotic and assume only continuity of the function f a . Assuming a smoothness condition of the form 8x; x 0 ; a; kf a .x/ f a .x 0 /j \u00c4 L kx x 0 k \u02c7;\n\nRigollet and Zeevi  [14]  gave finite sample expected regret bounds where the expected regret is still defined as in  (3)  except that now\n\nThey also assumed a margin condition that controls the probability of observing a context where the treatment effect is non-zero but too small: there exists \u0131 0 2 .0; 1/ such that 8\u0131 2 OE0; \u0131 0 /; 9C \u0131 s:t:\n\nIf \u02db\u02c7> 1 then the optimal policy ? does not depend on x and always pulls the same arm. Therefore, to ensure a non-trivial optimal policy, they assume that \u02db\u02c7\u00c4 1. Their expected regret guarantees are polynomial in T where the exponent depends on the dimension p of the contexts, the margin parameter \u02dband the smoothness parameter \u02c7. They also provide almost matching lower bounds. Note these polynomial in T regret rates are much worse than the logarithmic rates in T achievable in the parametric case under margin assumptions.\n\nPerchet and Rigollet  [26]  extend the work of Rigollet and Zeevi to the case when the number of arms might be (much) larger than 2. They also extend the range of the margin parameter where the bounds hold and eliminate logarithmic gaps between upper and lower bounds. However, their algorithm requires knowledge of the smoothness parameter \u02c7. In practice, the smoothness parameter is not known. Qian and Yang  [27]  show how to use \"Lepski-type\" procedures from the nonparametric function estimation literature to select the smoothness parameter \u02c7in a data-dependent way and still achieve (near) minimax regret bounds that would be obtained assuming that the smoothness is known in advance."
+    },
+    {
+      "title": "Competing Against a Policy Class",
+      "text": "In this section, we consider approaches that dispense entirely with the task of estimating the expected reward function. Instead they fix a class \u02d8of policies and aim to minimize the expected regret relative to the class \u02d8, which is defined as\n\nwhere ? \u02d8is the best policy in \u02d8."
+    },
+    {
+      "title": "Algorithm 3 Epoch Greedy Algorithm [15]",
+      "text": "Inputs: Function `.D/ that given a data set D, outputs the number of exploitation rounds to do next\n\n1 for Epoch j D 1; 2; : : : do t D t j =? Single exploration step ?= Select A t uniformly at random from A D j D D j 1 [ f.X t ; A t ; R t /g =? Update policy ?= Compute b j D argmax 2\u02d8P.x;a;r/2Dj r1 OE .x/ D a =? Exploitation phase ?= t jC1 D t j C s.D j / C 1 for t D t j C 1 to t jC1 1 do Take action A t D b j .X t / end for end for\n\nIf the policy class \u02d8is finite (j\u02d8j < 1) and small enough that one enumerate all the policies at every time step, then the Exp4 algorithm, given later in section \"Competing Against a Fixed Class of Policies\", can be used. With two actions, it enjoys an expected regret bound of O.\n\np T log j\u02d8j/ in the fully adversarial setting where the context and reward triples are assumed to be completely arbitrary. If an algorithm enjoys an regret bound in the adversarial setting, it can be shown that it will also satisfy the same bound when the stochastic setting, i.e., when the contexts and rewards are generated by an iid process and regret is measured as in  (5)  above.\n\nIf the policy class is huge or infinite, then enumeration of all policies is infeasible and Exp4 cannot be applied. However, in the stochastic setting, one can use the \"certainty equivalence with forcing\" idea described in section \"Parametric Estimation of Expected Reward Functions\" above. Langford and Zhang's  [15]  Epoch-Greedy algorithm (Algorithm 3) does just that. On an exploration round, it takes one of the two actions at random with probability 1=2. After an exploration round, it builds an unbiased estimator of the value of any policy as:\n\nwhere D is the dataset consisting of context, action, reward triples from exploration rounds so far. Since each action is selected at random with probability 1=2 on exploration rounds, it is easy to see that E\n\n/ where the expectation is taken over the distribution of contexts and rewards as well as with respect to the algorithm's uniform randomization to select the actions on exploration rounds. The policy selected for the next exploitation phase is then simply\n\nThis is where the computational advantage of Epoch-Greedy comes in. It never accesses the policies in \u02d8except via the operation above. All we need is a computational blackbox or \"oracle\" that can answer the \"argmax\" queries above.\n\nLet us call such an oracle an AMO (for Arg Max Oracle). If a cost-sensitive classifier implementation exists for the class \u02d8then it can serve as an AMO. Therefore, can even be infinite as long as an efficient AMO is available for it. The regret bound of Epoch-Greedy, with a finite class \u02d8, is O.T 2=3 .log j\u02d8j/ 1=3 /. This is obtained by having O.T 2=3 .log j\u02d8j/ 1=3 / epochs till time T resulting in the same number of AMO calls since exactly one AMO call is made per epoch. Langford and Zhang note that \u02d8need not be finite and that a similar regret bound can be shown for an infinite class with finite VC (Vapnik-Chervonenkis) dimension. Note that for such policy classes, the regret bound of any algorithm that depends on the cardinality of the policy class (such as the one for the Exp4 algorithm in section \"Competing Against a Fixed Class of Policies\" below) becomes vacuous.\n\nEpoch-Greedy's regret guarantee of O.T 2=3 .log j\u02d8j/ 1=3 / might appear to be much worse than logarithmic regret guarantees presented in section \"Parametric Estimation of Expected Reward Functions\" above. Recall that those guarantees were under additional assumptions such as margin conditions and the constants hidden in the O. / notation depend on distribution dependent parameters such as the margin parameter. Logarithmic regret guarantees for Epoch-Greedy are possible if one is willing to make additional assumptions and allow distribution dependent constants to appear in the regret guarantee. For instance, consider a finite policy class \u02d8such that there is a unique maximizer ? of the value V. / over in \u02d8. Let > 0 denote the gap between the value of ? and that of the second-best policy:\n\nLangford and Zhang show that Epoch-Greedy also enjoys a regret bound of O..log j\u02d8j C log T/= 2 /. Note that this bound is logarithmic in T but blows up as ! 0.\n\nDudik et al.  [28]  gave an algorithm called RandomizedUCB that achieves\n\nregret with probability at least 1 \u0131. Moreover, it requires only polynomially many calls to the AMO at every round. However, its practical utility is still limited as the polynomial involved is of moderately high degree (it invokes the AMO Q O.T 5 / times per round where Q O hides logarithmic factors). More recent work of Agarwal et al.  [29]  has managed to bring down the total number of AMO calls to just O.\n\np T= log.j\u02d8j=\u0131// over all T rounds, with probability at least 1 \u0131, while still preserving the regret bound of RandomizedUCB.\n\nThe bandit algorithms discussed above appear quite attractive for use in mobile health due to the fast rate at which the regret decreases to 0. That is, user aggravation and disruption due to inappropriately timed delivery of intervention options would be minimized due to the fast rate at which the algorithm learns the best action for a given context. This is a critical point due to the high levels of app abandonment present in mobile health  [30] . However these algorithms achieve these high learning rates under the assumption that the contexts and rewards are all generated from an iid process. Suppose the context includes the user's stress level; user stress at different time points are clearly not independent. That is, a user who was stressed during the morning is more likely to be stressed in the afternoon than a user who was not stressed during the morning. Also, stress at different time points are unlikely to be identically distributed. For example, the probability that a smoker is stressed on the day before she quits smoking is probably quite different from the probability that the same smoker is stressed on the day after she has quit smoking. However, it may be that the noise level in the dynamics of the context will be sufficiently high so that a model assuming iid contexts and rewards provides a good approximation. Indeed Lei  [31]  found that in simulated experiments mimicking mobile health studies, the regret of a bandit algorithm similar to those above is robust to dependence between contexts at different times."
+    },
+    {
+      "title": "Adversarial Contexts with Stochastic Rewards",
+      "text": "The assumption that the contexts are drawn iid from a fixed distribution is quite unrealistic in a lot of practical settings, including mobile health. Researchers have therefore considered a model where the contexts are arbitrary but the reward given context and action is still stochastic in the following sense. Let fD a . jx/ W x 2 X g, for a 2 f0; 1g, be two families of distributions over rewards indexed by the context x. Note that we are considering the case of two actions, i.e., A D f0; 1g. The following online protocol is followed. The contexts are denoted by lower case letters to emphasize that they are not random variables but from an arbitrary deterministic sequence.\n\n1: nature generates fx t g T tD1 in advance 2: for t D 1 to T do 3: receive context x t 4: algorithm takes action A t 5:\n\nreceive reward R t which is drawn from D A t . jx t / 6: end for Let \u00c1 a .x/ be the expected value of the distribution D a . jx/. The optimal policy is given by: ? .x/ D argmax a2A \u00c1 a .x/; and we define the expected regret of an online learning algorithm as:\n\nAll regret bounds mentioned in this subsection hold uniformly over all possible sequences fx t g T tD1 of contexts (with some mild restrictions like boundedness of the contexts).\n\nLi et al.  [17]  gave an algorithm called LinUCB that is based on the following linearity assumption: \u00c1 a .x/ D \u02c7> a x;  (7)  where x; \u02c7a 2 R p . LinUCB is here presented as Algorithm 4. It follows a long line of work in bandit algorithms that use upper confidence bounds for action selection.\n\nTo each action's current estimate, it adds a confidence term which reflects the algorithm's current uncertainty about that estimate. The action selected is the one that maximizes the sum of the estimated reward and the confidence bound.\n\nAlgorithm 4 LinUCB Algorithm  [15]  Inputs: \u02db(tuning parameter used in computing upper confidence bounds)\n\na D I p p ; b a D 0 p 1 for all a for t D 1 to T do Compute O \u02c7a D .A a / 1 b a for all a // ridge regression Compute U a D . O \u02c7a/ > x t C \u02dbpx > t .A a / 1 x t for all a // upper confidence bound Take action A t D argmax a U a and observe reward R t For a D A t , update A a D A a C x t x > t , b a D b a C R t x t end for\n\nLinUCB performs well empirically as demonstrated by Li et al. in the context of personalized news article recommendations on the web. However, its theoretical analysis is complicated by the fact that its estimates are not based on iid samples (recall the reward depends on the action and the action is selected using data on prior rewards and prior actions) and there are no known regret bounds. Chu et al.  [32]  provide an algorithm called SupLinUCB that calls BaseLinUCB as a subroutine and show that it enjoys a regret bound of O p Tp log 3 .T log T=\u0131/ \u00c1 with probability at least 1 \u0131. The idea of taking a basic procedure like BaseLinUCB, whose statistical analysis is simplified by assuming independence among the samples, and then using a master algorithm SupLinUCB to ensure the assumption holds, goes back to the work of Auer  [33] . His work also considered arbitrary context vectors with linear expected reward functions as in  (7)  and followed some early line of work in the computer science literature  [6] [7] [8] 34] . His basic and master algorithms were called LinRel and SupLinRel. SupLinRel was also shown to enjoy a regret bound of O.\n\np Tp log 3 .T log T=\u0131// with probability at least 1 \u0131. However, LinUCB has practical advantages over LinRel. It is easier to implement and numerically more stable as it relies on ridge regression as its computational core and not on full eigendecompositions like LinRel. We would like to also point out that LinUCB has been generalized from the standard linear setting as in  (7)  to the generalized linear setting  [35]  for use with non-continuous rewards such as binary rewards."
+    },
+    {
+      "title": "Nonlinear Expected Reward Functions",
+      "text": "Readers familiar with the literature on kernel methods and support vector machines in machine learning will recall that these methods deal with non-linearity by embedding the contexts x t into a high, or even infinite, dimensional space via a feature mapping .x t / 2 H K , where H K is a reproducing kernel Hilbert space (RKHS) corresponding to the kernel K.x; x 0 / D h .x/; .x 0 /i. The kernel K thus measures similarity between contexts using the inner product in a higher dimensional space. LinUCB has been extended to the RKHS setting by Valko et al.  [36] . They also provided regret bounds that depend on the \"effective dimension\" which is, roughly speaking, the number of principal dimensions in which the embedded data points in the RKHS are mostly contained.\n\nOther work on contextual bandits with arbitrary contexts and non-linear expected reward functions includes the Query-ad clustering algorithm of Lu et al.  [37]  and the RELEAF algorithm of Tekin and van der Schaar  [38] ."
+    },
+    {
+      "title": "Thompson Sampling",
+      "text": "Thompson sampling, also called \"posterior sampling\"  [39]  or \"probability matching\"  [40] , is a Bayesian approach to designing online learning algorithms for bandit problems. In the linear setup as in  (7)  above, it involves choosing prior distributions for the unknown reward parameters \u02c7a and choosing conditional distributions for the rewards given context and action. Algorithm 5 chooses the prior to be a multivariate normal distribution with mean zero and covariance matrix 2 I p p . It also assumes that the reward given context x and action a is drawn from a normal distribution with mean \u02c7> a x and variance 2 . At every time step, it draws samples e \u02c7a from the posterior distribution for \u02c7a and chooses the action with the highest mean e \u02c7> a x t according to the drawn posterior samples. Once the action is taken and the corresponding reward observed, it updates the posterior distribution for the corresponding reward parameter.\n\nAgrawal and Goyal  [41]  analyze Algorithm 5 and prove a regret bound of O \u00c2 p q T 1C .log T log.1=\u0131// \u00c3 with probability 1 \u0131. Here 2 .0; 1/ is a tuning parameter. Thompson sampling had been applied to contextual bandits [42] before Agrawal and Goyal's work but finite time regret bounds were not available. Agrawal and Goyal's regret analysis holds under much weaker assumptions that made to derive the Thompson Sampling algorithm itself. First, the regret analysis itself Algorithm 5 Thompson Sampling Algorithm [15] Inputs: 2 (variance parameter used in the prior and in the reward linear model) A a D I p p ; b a D 0 p 1 for all a for t D 1 to T do Compute O \u02c7a D .A a / 1 b a for all a Sample e \u02c7a from NORMAL. O \u02c7a; 2 .A a / 1 / for all a // Sample from the posterior Take action A t D argmax a . e \u02c7a/ > x t and observe reward R t For a D A t , update A a D A a C x t x > t , b a D b a C R t x t end for\n\nmakes no use of the prior. It holds for every \u02c7a choice as long as it is bounded. Second, it does not assume that the rewards are actually drawn from a normal distribution. It does require the linearity assumption in  (7)  to hold but the rewards are only assumed to be sub-gaussian.\n\nAs discussed above, this section does not require that the contexts are iid. Thus the bandit algorithms considered here can accommodate settings in which the contexts can have arbitrary relationships one with another. Despite this, as discussed above, for some algorithms one can guarantee how fast the algorithm learns with time. This may be useful in mobile health particularly in areas of science where the dynamic evolution of the contexts over time are not yet well understood, for example when the context includes craving for substances or alternately physiological and perceived stress. However, this setting continues to be potentially problematic in that how users respond to interventions (e.g., reward distribution given context) can change with time. For example, the relationship between self-efficacy and relapse to smoking appears to change as time increases from the quit date  [43] ; this is likely to mean that the distribution of the reward as a function of an intervention option and a context involving self-efficacy is likely to change with time as well."
+    },
+    {
+      "title": "Fully Adversarial Contextual Bandits",
+      "text": "In this section, we further relax our assumptions on how the contexts and rewards are generated. First, we consider a setting where the adversary chooses a sequence of contexts and reward distributions. In this setting, the aim is do well with respect to a policy that knows the sequence of distributions in advance. Second, we consider a setting where the adversary chooses a sequence of contexts and reward values. In this setting, the aim is do well with respect to a pre-defined class \u02d8of policies."
+    },
+    {
+      "title": "Competing Against Greedy Policies with Changing Reward Distributions",
+      "text": "Here the context sequence as well as the sequence of reward distributions given context and action are chosen arbitrarily. Denote the choice of the action a's reward distribution given context x at time t by D a t . jx/. Denote the expected reward under this distribution by \u00c1 a t .x/. Consider the following online protocol.\n\n1: nature generates f.x t ; D 0 t . jx/; D 1 t . jx//g T tD1 in advance 2: for t D 1 to T do 3: receive context x t 4: algorithm takes action A t 5:\n\nreceive reward R t drawn from the distribution D A t . jx t / with expectation \u00c1 A t t .x t / 6: end for At the end of T rounds, the time-average of the expected reward functions for action a played by nature is\n\nx/. The regret definition below compares the learning algorithm's expected reward to that of the greedy policy with respect to N \u00c1 a :\n\nx/:\n\nRegret is now defined as\n\nNote that in the protocol above, there are two sources of randomness. First, there is randomness in nature's realization of the rewards unless the distributions D a t . jx/ are point masses. Second, the online learning algorithm may be a randomized one and could be using additional randomization to select its actions A t . The expectation above is with respect both possible sources of randomness.\n\nWe know of only one paper that gives bandit algorithms in this setting. Slivkins  [20]  considers this setting in Section 7 of his paper. In this chapter, we have mostly focused on the case of two actions, i.e., A D f0; 1g and our context space X has often been a subset of R p . He considers a much more general case when A ; X are metric spaces. In our specific setting, his assumptions on the expected reward functions is that they are Lipschitz with respect to some norm k k defined on R p : 8t; x; x 0 ; a; a 0 ; j\u00c1 a t .x/ \u00c1 a t .x 0 /j \u00c4 kx x 0 k:\n\nHis algorithm achieves a regret bound of O.T 1 1=.2Cd X / .log T// where d X is the covering dimension of the context space X under the metric kx x 0 k. Note that the covering dimension of a metric space is defined as the smallest integer d such that the number of balls of radius r required to cover the space is O.r d /. When X \u00c2 R p is a bounded set, we always have d X \u00c4 p.\n\n1: nature generates f.x t ; r 0 t ; r 1 t /g T tD1 in advance 2: for t D 1 to T do 3: receive context x t 4: algorithm takes action A t 5: receive reward R t D r A t t 6: end for Regret is now defined as max 2\u02d8T X tD1 r .x t / t T X tD1 EOER t :\n\nRegret bounds in the adversarial setting hold uniformly over all choices of the context, reward sequence f.x t ; r 0 t ; r 1 t /g T tD1 . A special case of the above setup when there is only one unchanging context, x t D x, reduces to the adversarial multi-armed bandit problem with K arms (we have focused on the K D 2 case in this chapter). This problem was first considered by Auer et al.  [44] . Their Exp3 algorithm obtains an expected regret bound of O.\n\np KT log K/ which can be improved to O. p KT/ using a different algorithm  [45, 46] . They also present a variant Exp3.P that enjoys a bound on the regret not just in expectation but with high probability. More interesting in the contextual bandit setting is their Exp4 algorithm. Exp4 applies in the case when there are a finite number of \"experts\" each suggesting an action to take at a given round. We can identify their experts with policies in the set \u02d8if the set is finite. We present the Exp4 algorithm as Algorithm 6. They prove an expected regret bound of O.\n\np KT log.j\u02d8j// for Exp4 which reduces to O. p T log j\u02d8j/ when K D 2. Even though the regret bound can tolerate very large policy classes, the implementation of the algorithm itself is practical only for very small policy classes since Exp4 maintains a weight for each policy in the class.\n\nHigh probability guarantees matching those of Exp4 have been obtained by Beygelzimer et al.  [47]  using their Exp4.P algorithm. Note that the same paper also presents an algorithm VE for the stochastic setting when the context and reward tuples are drawn iid from a fixed distribution. Even if \u02d8is an infinite class but the VC dimension of \u02d8is d < 1, VE enjoys a regret bound of O. p dT log.T=.d\u0131/// with probability at least 1 \u0131.\n\nAt least conceptually, the Exp family algorithms provided in this section appear rather promising because they require the least restrictive assumptions on the rewards in order to learn. However these algorithms, because they are designed to Algorithm 6 Exp4 Algorithm  [15]  Inputs: 2 .0; 1 (learning rate/step size; also used an exploration parameter)\n\nD 1 for all 2 \u02d8// set equal weights for all policies initially for t D 1 to T do Compute W D P 2\u02d8w =? convert policy weight into action probabilities ?= For all a, compute p a D .1 / 1 W P 2\u02d8w 1 OE .x t / D a C =2 Choose A t D a with probability p a and observe reward R t Set O r a D R t =p a if A t D a and 0 otherwise // estimate rewards for both actions For all 2 \u02d8, set w D w exp O r .xt/ =2 // update policy weights end for\n\nwork in the worst cases, may learn too slowly for a large subset of a particular population such as the population of smokers who are trying to quit. At this time, we do not have good rules of thumb for selecting the type of algorithm to employ for optimizing mobile health interventions depending on the type of populations and behavior change problem."
+    },
+    {
+      "title": "Challenges in Mobile Health Applications",
+      "text": "We have seen that a wide variety of contextual bandit algorithms and theoretical frameworks to analyze them already exist in the literature. These ideas serve as useful starting points for the design of online learning algorithms in mobile health. However, to truly make an impact in mobile health, significant work needs to be done to deal with challenges that arise in the mobile health setting. In this section, we consider some of these challenges and explore ways to start addressing them."
+    },
+    {
+      "title": "Finding a Good Initial Policy",
+      "text": "Good initialization of the learning process is very important. If the algorithm chooses very bad actions in the beginning, it can have a negative impact on health outcomes and user engagement. One possibility is to consult domain experts and use an expert derived policy at the start. However, it might turn out to be difficult to turn intuitive judgements of domain experts into a precisely stated policy. Moreover, mobile health is a relatively new area and often domain experts lack sufficient knowledge of what works and what does not when interventions are delivered through mobile devices and wearables.\n\nWe think that it is much better to proceed in an evidence-based manner and initialize the policy using data previously gathered, say in a microrandomized trial  [48] . Data from a microrandomized trial can be used for a variety of purposes including estimation of the value of a policy in question. If candidate policies can be evaluated then a good one can be selected from a set of policies. Microrandomized trials offer very high-quality data. But even less high quality data can be useful. For example, if the policy that generated data in a mobile health study is exactly or partially known then one can still form reasonable estimates of the value of a given policy. The problem of using an existing batch of data gathered under one policy to reason about the value of another policy is called the problem of \"offline learning\" or \"offline evaluation\". There is work in both the computer science  [49] [50] [51] [52] [53] , as well as the statistics literature on this problem  [54] [55] [56] [57] ."
+    },
+    {
+      "title": "Interpretability of the Learned Policy",
+      "text": "Progress in mobile health will occur when human-computer interface researchers, machine learning researchers and statisticians work in close collaboration with domain scientists such as behavioral scientists. On the one hand, we need guidance from theories of behavior change to guide the development of mobile health interventions. On the other hand, the policy learned using online learning algorithms needs to be communicated back to behavioral scientists so that they can interpret it in light of their theories or use it to change and refine existing theories. This communication is facilitated by learning interpretable policies. Using policies represented by large decision trees, deep neural networks or kernel methods may not lend themselves easily to interpretation.\n\nLei  [31]  has explored the use of actor-critic methods from the reinforcement learning literature in setting of contextual bandits. The critic part is responsible for estimating the expected reward function and can use very flexible non-parametric and non-linear regression methods. The actor part is responsible for generating a policy using the estimates provided by the critic. Since only the policy needs to be communicated to the domain scientist, we just need to keep the actor architecture simple by choosing a low-dimensional interpretable policy parameterization."
+    },
+    {
+      "title": "Assessing Usefulness of Contextual Variables",
+      "text": "Contextual variables in mobile health are often costly to acquire. If they are passively sensed by the phone (e.g., GPS location) or a wearable (e.g., heartrate), acquiring them drains the battery. If they are actively acquired by asking the user a self-report question (e.g., about their mood), acquiring them incurs user burden. Therefore, it is important to develop methods that enable researchers to decide whether or not a contextual variable is useful for deciding which intervention to deliver. For example, suppose we use the following interpretable parameterization for a stochastic policy .x/ D exp.\u02c7>x/ 1 C exp.\u02c7>x/ :\n\nNote that maps the context to OE0; 1 instead of f0; 1g and should be interpreted as the probability to taking action 1. This is called the \"Gibbs\" or the \"expit\" parameterization. If we simply output an estimate b \u02c7at the end of the learning process, it is not very useful for assessing usefulness of variables. We need to provide confidence intervals for these estimates. Then, we can see whether a 95% confidence interval for, say, b \u02c71, contains zero or not. This will provide researchers with an evidence-based method to decide whether the first contextual variable in the context x is useful or not. We have not seen many tools to enable such reasoning in existing contextual bandit algorithms. An exception is the work of Lei  [31]  mentioned above that does construct confidence intervals for the policy parameters estimated using their actor-critic online learning algorithm."
+    },
+    {
+      "title": "Computational Considerations",
+      "text": "Computation on mobile phones consumes resources. If we perform computations on the phone we need to think about implementing the learning algorithms very efficiently in order to not put an undue burden on the phone's performance and battery life. If we perform computations on the cloud, we need to minimize data transfer between the phone and the cloud to save the phone's resources. We also need to take into account occasional failures, due to a bad network reception or drained battery. These failures can cause the learning algorithm to not be able to push fresh data to the cloud or pull the latest policy or action recommendation from the cloud. There is little work on designing and proving guarantees about contextual bandit algorithms that are resilient to such failures.\n\nAnother question that needs work is how to tradeoff the frequency of learning with the noise level in the data. All algorithms presented above make an update whenever an action is selected and a reward is observed. If the data is very noisy then we might have the learning algorithm update its policy at larger time intervals so as to acquire more information. What should be the time intervals at which our learning algorithm updates the policy? To answer this question, one will have to consider the computational complexity of the update as well the amount (governed perhaps by a step size parameter) by which a single update changes the policy."
+    },
+    {
+      "title": "Robustness to Failure of Assumptions",
+      "text": "Algorithms designed for the worst-case adversarial framework can perform suboptimally when data is actually generated stochastically. Algorithms that have guarantees under stochastic assumptions can behave badly when the specific stochastic assumptions underlying their analysis are not met. In mobile health, where the consequence of such non-robustness is worse health outcomes for people, we need to pay serious attention to such issues. Three assumptions that make repeated appearance in the theoretical analyses of contextual bandit algorithms are independence, stationarity, and absence of the impact of actions on the user's future contexts. Any candidate online learning algorithm needs to be tested for reasonable departures from these ideal assumptions in simulations before being deployed in a real study with users. Existing algorithms need to be analyzed under weaker assumptions, if possible. Otherwise, attempts should be made to quantify the degradation in performance in non-ideal settings. New algorithms that are more robust to failure of assumptions need to be designed and associated guarantees provided.\n\nSome contextual bandit algorithms enjoy regret guarantees only in expectation. But an algorithm whose regret is small in expectation, but has high variance, can have very serious consequences in mobile health. High variance in regret means that occasionally, the algorithm performs very poorly and its regret is much larger than the provided guarantee. The will translate into adverse health outcomes for some people in the cohort being studied. High probability guarantees on the regret are better than guarantees in expectation but they are simply the first step in the direction of designing learning algorithms that better manage the risk of hurting people's health outcomes. There is some work on risk-aversion in multi-armed bandit problems  [58, 59] . It is possible that some of the techniques developed there can be useful for contextual bandit learning algorithms too."
+    },
+    {
+      "title": "Costly to Acquire or Missing Contexts and Rewards",
+      "text": "As noted above, contextual variables can be costly to acquire in a mobile health setting. Even rewards can be costly to acquire especially if they cannot be passively sensed and we have to rely on user self-reports. If a variable is indeed useful for decision-making then choosing not to acquire it will lead to sub-optimal decisions. Similarly, we cannot simply decide to not acquire the reward variable because doing so will hamper the ability of the learning algorithm to learn from observed rewards. The key is to acquire costly variables judiciously. We can maintain predictions of such variables and acquire them only when uncertainty about them increases beyond a threshold. If the costs associated with acquisition can be quantified then it can be formally included in the definition of regret. Currently, we do not have much guidance on how to deal with costly to acquire contexts and rewards.\n\nAnother aspect not treated properly in the existing literature is missingness of contextual variables and rewards. Maintaining predictions of variables that can be potentially missing, of course, helps. However, missingness of self-reported data can also indicate one or more of the following: high user stress, high user busyness and low user engagement. Thus, missingness can itself be used as a contextual variable to use in decision-making. More research is needed to fully integrate support for missing data in existing contextual bandit algorithms."
+    },
+    {
+      "text": "mobile phone collects tailoring variables (the context) 3: a decision rule (or policy) maps the tailoring variables into an intervention option (the action) 4:"
+    },
+    {
+      "text": "Instead of estimating the underlying expected reward function, one can instead simply try to compete with ? \u02d8."
+    },
+    {
+      "text": "Acknowledgements This work was supported by awards  R01 AA023187  and  R01 HL125440  from the  National Institutes of Health , and  CAREER  award  IIS-1452099  from the  National Science Foundation ."
+    },
+    {
+      "title": "Competing Against a Fixed Class of Policies",
+      "text": "In the previous section, the policy we compete against was indirectly defined by the expected reward functions played by nature. Here we fix a class \u02d8of policies in advance and try to compete with the best policy in \u02d8. The protocol is now as follows. Note that now nature generates arbitrary contexts and reward values for the two actions."
+    }
+  ],
+  "references": [
+    {
+      "title": "Multi-armed bandit allocation indices",
+      "authors": [
+        "John Gittins",
+        "Kevin Glazebrook",
+        "Richard Weber"
+      ],
+      "year": 2011,
+      "doi": "10.1002/9780470980033",
+      "raw": "Multi-armed bandit allocation indices \n\t\t \n\t\t\t John Gittins \n\t\t \n\t\t \n\t\t\t Kevin Glazebrook \n\t\t \n\t\t \n\t\t\t Richard Weber \n\t\t \n\t\t 10.1002/9780470980033 \n\t\t \n\t\t\t 2011 \n\t\t\t John Wiley & Sons \n\t\t \n\t \n\t John Gittins, Kevin Glazebrook, and Richard Weber. Multi-armed bandit allocation indices. John Wiley & Sons, 2011."
+    },
+    {
+      "title": "A one-armed bandit problem with a concomitant variable",
+      "authors": [
+        "Michael Woodroofe"
+      ],
+      "year": 1979,
+      "doi": "10.1080/01621459.1979.10481033",
+      "journal": "Journal of the American Statistical Association",
+      "volume": "74",
+      "issue": "368",
+      "raw": "A one-armed bandit problem with a concomitant variable \n\t\t \n\t\t\t Michael Woodroofe \n\t\t \n\t\t 10.1080/01621459.1979.10481033 \n\t \n\t \n\t\t Journal of the American Statistical Association \n\t\t \n\t\t\t 74 \n\t\t\t 368 \n\t\t\t \n\t\t\t 1979 \n\t\t \n\t \n\t Michael Woodroofe. A one-armed bandit problem with a concomitant variable. Journal of the American Statistical Association, 74(368):799-806, 1979."
+    },
+    {
+      "title": "Bandit problems with side observations",
+      "authors": [
+        "Chih-Chun Wang",
+        "Sanjeev Kulkarni",
+        "H Vincent Poor"
+      ],
+      "year": 2005,
+      "journal": "IEEE Transactions on",
+      "volume": "50",
+      "issue": "3",
+      "raw": "Bandit problems with side observations \n\t\t \n\t\t\t Chih-Chun Wang \n\t\t \n\t\t \n\t\t\t Sanjeev R Kulkarni \n\t\t \n\t\t \n\t\t\t H Vincent Poor \n\t\t \n\t \n\t \n\t\t IEEE Transactions on \n\t\t \n\t\t\t 50 \n\t\t\t 3 \n\t\t\t \n\t\t\t 2005 \n\t\t \n\t \n\t Automatic Control \n\t Chih-Chun Wang, Sanjeev R. Kulkarni, and H. Vincent Poor. Bandit problems with side observations. Automatic Control, IEEE Transactions on, 50(3):338-355, 2005."
+    },
+    {
+      "title": "Arbitrary side observations in bandit problems",
+      "authors": [
+        "Chih-Chun Wang",
+        "Sanjeev Kulkarni",
+        "H Vincent Poor"
+      ],
+      "year": 2005,
+      "doi": "10.1016/j.aam.2004.10.004",
+      "journal": "Advances in Applied Mathematics",
+      "volume": "34",
+      "issue": "4",
+      "raw": "Arbitrary side observations in bandit problems \n\t\t \n\t\t\t Chih-Chun Wang \n\t\t \n\t\t \n\t\t\t Sanjeev R Kulkarni \n\t\t \n\t\t \n\t\t\t H Vincent Poor \n\t\t \n\t\t 10.1016/j.aam.2004.10.004 \n\t \n\t \n\t\t Advances in Applied Mathematics \n\t\t \n\t\t\t 34 \n\t\t\t 4 \n\t\t\t \n\t\t\t 2005 \n\t\t \n\t \n\t Chih-Chun Wang, Sanjeev R. Kulkarni, and H. Vincent Poor. Arbitrary side observations in bandit problems. Advances in Applied Mathematics, 34(4):903-938, 2005."
+    },
+    {
+      "title": "A note on performance limitations in bandit problems with side information",
+      "authors": [
+        "Alexander Goldenshluger",
+        "Assaf Zeevi"
+      ],
+      "year": 2011,
+      "doi": "10.1109/tit.2011.2104450",
+      "journal": "IEEE Transactions on",
+      "volume": "57",
+      "issue": "3",
+      "raw": "A note on performance limitations in bandit problems with side information \n\t\t \n\t\t\t Alexander Goldenshluger \n\t\t \n\t\t \n\t\t\t Assaf Zeevi \n\t\t \n\t\t 10.1109/tit.2011.2104450 \n\t \n\t \n\t\t IEEE Transactions on \n\t\t \n\t\t\t 57 \n\t\t\t 3 \n\t\t\t \n\t\t\t 2011 \n\t\t \n\t \n\t Information Theory \n\t Alexander Goldenshluger and Assaf Zeevi. A note on performance limitations in bandit problems with side information. Information Theory, IEEE Transactions on, 57(3):1707-1713, 2011."
+    },
+    {
+      "title": "Associative reinforcement learning using linear probabilistic concepts",
+      "authors": [
+        "Naoki Abe",
+        "Philip Long"
+      ],
+      "year": 1999,
+      "raw": "Associative reinforcement learning using linear probabilistic concepts \n\t\t \n\t\t\t Naoki Abe \n\t\t \n\t\t \n\t\t\t Philip M Long \n\t\t \n\t \n\t \n\t\t Proceedings of the Sixteenth International Conference on Machine Learning \n\t\t the Sixteenth International Conference on Machine Learning \n\t\t \n\t\t\t 1999 \n\t\t\t \n\t\t \n\t \n\t Naoki Abe and Philip M. Long. Associative reinforcement learning using linear probabilistic concepts. In Proceedings of the Sixteenth International Conference on Machine Learning, pages 3-11, 1999."
+    },
+    {
+      "title": "Associative reinforcement learning: A generate and test algorithm",
+      "authors": [
+        "Leslie Kaelbling"
+      ],
+      "year": 1994,
+      "doi": "10.1023/a:1022642026684",
+      "journal": "Machine Learning",
+      "volume": "15",
+      "issue": "3",
+      "raw": "Associative reinforcement learning: A generate and test algorithm \n\t\t \n\t\t\t Leslie P Kaelbling \n\t\t \n\t\t 10.1023/a:1022642026684 \n\t \n\t \n\t\t Machine Learning \n\t\t \n\t\t\t 15 \n\t\t\t 3 \n\t\t\t \n\t\t\t 1994 \n\t\t \n\t \n\t Leslie P. Kaelbling. Associative reinforcement learning: A generate and test algorithm. Machine Learning, 15(3):299-319, 1994."
+    },
+    {
+      "title": "Associative reinforcement learning: Functions in k-DNF",
+      "authors": [
+        "Leslie Kaelbling"
+      ],
+      "year": 1994,
+      "doi": "10.1023/a:1022689909846",
+      "journal": "Machine Learning",
+      "volume": "15",
+      "issue": "3",
+      "raw": "Associative reinforcement learning: Functions in k-DNF \n\t\t \n\t\t\t Leslie P Kaelbling \n\t\t \n\t\t 10.1023/a:1022689909846 \n\t \n\t \n\t\t Machine Learning \n\t\t \n\t\t\t 15 \n\t\t\t 3 \n\t\t\t \n\t\t\t 1994 \n\t\t \n\t \n\t Leslie P. Kaelbling. Associative reinforcement learning: Functions in k-DNF. Machine Learning, 15(3):279-298, 1994."
+    },
+    {
+      "title": "Reinforcement learning with immediate rewards and linear hypotheses",
+      "authors": [
+        "Naoki Abe",
+        "Alan Biermann",
+        "Philip Long"
+      ],
+      "year": 2003,
+      "doi": "10.1007/s00453-003-1038-1",
+      "journal": "Algorithmica",
+      "volume": "37",
+      "issue": "4",
+      "raw": "Reinforcement learning with immediate rewards and linear hypotheses \n\t\t \n\t\t\t Naoki Abe \n\t\t \n\t\t \n\t\t\t Alan W Biermann \n\t\t \n\t\t \n\t\t\t Philip M Long \n\t\t \n\t\t 10.1007/s00453-003-1038-1 \n\t \n\t \n\t\t Algorithmica \n\t\t \n\t\t\t 37 \n\t\t\t 4 \n\t\t\t \n\t\t\t 2003 \n\t\t \n\t \n\t Naoki Abe, Alan W. Biermann, and Philip M. Long. Reinforcement learning with immediate rewards and linear hypotheses. Algorithmica, 37(4):263-293, 2003."
+    },
+    {
+      "title": "Experienceefficient learning in associative bandit problems",
+      "authors": [
+        "Alexander Strehl",
+        "Chris Mesterharm",
+        "Michael Littman",
+        "Haym Hirsh"
+      ],
+      "year": 2006,
+      "raw": "Experienceefficient learning in associative bandit problems \n\t\t \n\t\t\t Alexander L Strehl \n\t\t \n\t\t \n\t\t\t Chris Mesterharm \n\t\t \n\t\t \n\t\t\t Michael L Littman \n\t\t \n\t\t \n\t\t\t Haym Hirsh \n\t\t \n\t \n\t \n\t\t Proceedings of the 23rd international conference on Machine learning \n\t\t the 23rd international conference on Machine learning \n\t\t \n\t\t\t ACM \n\t\t\t 2006 \n\t\t\t \n\t\t \n\t \n\t Alexander L. Strehl, Chris Mesterharm, Michael L. Littman, and Haym Hirsh. Experience- efficient learning in associative bandit problems. In Proceedings of the 23rd international conference on Machine learning, pages 889-896. ACM, 2006."
+    },
+    {
+      "title": "Covariate models for Bernoulli bandits",
+      "authors": [
+        "Murray Clayton"
+      ],
+      "year": 1989,
+      "journal": "Sequential Analysis",
+      "volume": "8",
+      "issue": "4",
+      "raw": "Covariate models for Bernoulli bandits \n\t\t \n\t\t\t Murray K Clayton \n\t\t \n\t \n\t \n\t\t Sequential Analysis \n\t\t \n\t\t\t 8 \n\t\t\t 4 \n\t\t\t \n\t\t\t 1989 \n\t\t \n\t \n\t Murray K. Clayton. Covariate models for Bernoulli bandits. Sequential Analysis, 8(4):405-426, 1989."
+    },
+    {
+      "title": "One-armed bandit problems with covariates",
+      "authors": [
+        "Jyotirmoy Sarkar"
+      ],
+      "year": 1991,
+      "journal": "The Annals of Statistics",
+      "raw": "One-armed bandit problems with covariates \n\t\t \n\t\t\t Jyotirmoy Sarkar \n\t\t \n\t \n\t \n\t\t The Annals of Statistics \n\t\t \n\t\t\t \n\t\t\t 1991 \n\t\t \n\t \n\t Jyotirmoy Sarkar. One-armed bandit problems with covariates. The Annals of Statistics, pages 1978-2002, 1991."
+    },
+    {
+      "title": "Randomized allocation with nonparametric estimation for a multiarmed bandit problem with covariates",
+      "authors": [
+        "Yuhong Yang",
+        "Dan Zhu"
+      ],
+      "year": 2002,
+      "doi": "10.1214/aos/1015362186",
+      "journal": "The Annals of Statistics",
+      "volume": "30",
+      "issue": "1",
+      "raw": "Randomized allocation with nonparametric estimation for a multiarmed bandit problem with covariates \n\t\t \n\t\t\t Yuhong Yang \n\t\t \n\t\t \n\t\t\t Dan Zhu \n\t\t \n\t\t 10.1214/aos/1015362186 \n\t \n\t \n\t\t The Annals of Statistics \n\t\t \n\t\t\t 30 \n\t\t\t 1 \n\t\t\t \n\t\t\t 2002 \n\t\t \n\t \n\t Yuhong Yang and Dan Zhu. Randomized allocation with nonparametric estimation for a multi- armed bandit problem with covariates. The Annals of Statistics, 30(1):100-121, 2002."
+    },
+    {
+      "title": "Nonparametric bandits with covariates",
+      "authors": [
+        "Philippe Rigollet",
+        "Assaf Zeevi"
+      ],
+      "year": 2010,
+      "raw": "Nonparametric bandits with covariates \n\t\t \n\t\t\t Philippe Rigollet \n\t\t \n\t\t \n\t\t\t Assaf Zeevi \n\t\t \n\t \n\t \n\t\t Proceedings of the 23rd Conference on Learning Theory \n\t\t \n\t\t\t Adam Tauman \n\t\t \n\t\t \n\t\t\t Kalai \n\t\t \n\t\t \n\t\t\t Mehryar Mohri \n\t\t \n\t\t the 23rd Conference on Learning Theory \n\t\t \n\t\t\t 2010 \n\t\t\t \n\t\t \n\t \n\t Philippe Rigollet and Assaf Zeevi. Nonparametric bandits with covariates. In Adam Tauman Kalai and Mehryar Mohri, editors, Proceedings of the 23rd Conference on Learning Theory, pages 54-66, 2010."
+    },
+    {
+      "title": "The epoch-greedy algorithm for multi-armed bandits with side information",
+      "authors": [
+        "John Langford",
+        "Tong Zhang"
+      ],
+      "year": 2008,
+      "raw": "The epoch-greedy algorithm for multi-armed bandits with side information \n\t\t \n\t\t\t John Langford \n\t\t \n\t\t \n\t\t\t Tong Zhang \n\t\t \n\t \n\t \n\t\t Advances in neural information processing systems \n\t\t \n\t\t\t 2008 \n\t\t\t \n\t\t \n\t \n\t John Langford and Tong Zhang. The epoch-greedy algorithm for multi-armed bandits with side information. In Advances in neural information processing systems, pages 817-824, 2008."
+    },
+    {
+      "title": "Learning to optimally schedule internet banner advertisements",
+      "authors": [
+        "Naoki Abe",
+        "Atsuyoshi Nakamura"
+      ],
+      "raw": "Learning to optimally schedule internet banner advertisements \n\t\t \n\t\t\t Naoki Abe \n\t\t \n\t\t \n\t\t\t Atsuyoshi Nakamura \n\t\t \n\t \n\t \n\t\t Proceedings of the Sixteenth International Conference on Machine Learning \n\t\t the Sixteenth International Conference on Machine Learning \n\t\t \n\t\t\t \n\t\t \n\t \n\t Naoki Abe and Atsuyoshi Nakamura. Learning to optimally schedule internet banner adver- tisements. In Proceedings of the Sixteenth International Conference on Machine Learning, pages 12-21."
+    },
+    {
+      "title": "A contextual-bandit approach to personalized news article recommendation",
+      "authors": [
+        "Lihong Li",
+        "Wei Chu",
+        "John Langford",
+        "Robert Schapire"
+      ],
+      "year": 2010,
+      "doi": "10.1145/1772690.1772758",
+      "raw": "A contextual-bandit approach to personalized news article recommendation \n\t\t \n\t\t\t Lihong Li \n\t\t \n\t\t \n\t\t\t Wei Chu \n\t\t \n\t\t \n\t\t\t John Langford \n\t\t \n\t\t \n\t\t\t Robert E Schapire \n\t\t \n\t\t 10.1145/1772690.1772758 \n\t \n\t \n\t\t Proceedings of the 19th International Conference on World Wide Web \n\t\t the 19th International Conference on World Wide Web \n\t\t \n\t\t\t ACM \n\t\t\t 2010 \n\t\t\t \n\t\t \n\t \n\t Lihong Li, Wei Chu, John Langford, and Robert E. Schapire. A contextual-bandit approach to personalized news article recommendation. In Proceedings of the 19th International Conference on World Wide Web, pages 661-670. ACM, 2010."
+    },
+    {
+      "title": "Just-in-time adaptive interventions (JITAIs) in mobile health: Key components and design principles for ongoing health behavior support",
+      "authors": [
+        "Inbal Nahum-Shani",
+        "Shawna Smith",
+        "Bonnie Spring",
+        "Linda Collins",
+        "Katie Witkiewitz",
+        "Ambuj Tewari",
+        "Susan Murphy"
+      ],
+      "year": 2016,
+      "journal": "Annals of Behavioral Medicine",
+      "raw": "Just-in-time adaptive interventions (JITAIs) in mobile health: Key components and design principles for ongoing health behavior support \n\t\t \n\t\t\t Inbal Nahum-Shani \n\t\t \n\t\t \n\t\t\t Shawna N Smith \n\t\t \n\t\t \n\t\t\t Bonnie J Spring \n\t\t \n\t\t \n\t\t\t Linda M Collins \n\t\t \n\t\t \n\t\t\t Katie Witkiewitz \n\t\t \n\t\t \n\t\t\t Ambuj Tewari \n\t\t \n\t\t \n\t\t\t Susan A Murphy \n\t\t \n\t \n\t \n\t\t Annals of Behavioral Medicine \n\t\t \n\t\t\t 2016 \n\t\t \n\t \n\t accepted subject to revisions \n\t Inbal Nahum-Shani, Shawna N. Smith, Bonnie J. Spring, Linda M. Collins, Katie Witkiewitz, Ambuj Tewari, and Susan A. Murphy. Just-in-time adaptive interventions (JITAIs) in mobile health: Key components and design principles for ongoing health behavior support. Annals of Behavioral Medicine, 2016. accepted subject to revisions."
+    },
+    {
+      "title": "PAC-Bayesian analysis of contextual bandits",
+      "authors": [
+        "Yevgeny Seldin",
+        "Peter Auer",
+        "John Shawe-Taylor",
+        "Ronald Ortner",
+        "Fran\u00e7ois Laviolette"
+      ],
+      "year": 2011,
+      "doi": "10.1109/tit.2012.2211334",
+      "raw": "PAC-Bayesian analysis of contextual bandits \n\t\t \n\t\t\t Yevgeny Seldin \n\t\t \n\t\t \n\t\t\t Peter Auer \n\t\t \n\t\t \n\t\t\t John S Shawe-Taylor \n\t\t \n\t\t \n\t\t\t Ronald Ortner \n\t\t \n\t\t \n\t\t\t Fran\u00e7ois Laviolette \n\t\t \n\t\t 10.1109/tit.2012.2211334 \n\t \n\t \n\t\t Advances in Neural Information Processing Systems \n\t\t \n\t\t\t 2011 \n\t\t\t \n\t\t \n\t \n\t Yevgeny Seldin, Peter Auer, John S. Shawe-Taylor, Ronald Ortner, and Fran\u00e7ois Laviolette. PAC-Bayesian analysis of contextual bandits. In Advances in Neural Information Processing Systems, pages 1683-1691, 2011."
+    },
+    {
+      "title": "Contextual bandits with similarity information",
+      "authors": [
+        "Aleksandrs Slivkins"
+      ],
+      "year": 2014,
+      "doi": "10.1561/2200000068",
+      "journal": "The Journal of Machine Learning Research",
+      "volume": "15",
+      "issue": "1",
+      "raw": "Contextual bandits with similarity information \n\t\t \n\t\t\t Aleksandrs Slivkins \n\t\t \n\t\t 10.1561/2200000068 \n\t \n\t \n\t\t The Journal of Machine Learning Research \n\t\t \n\t\t\t 15 \n\t\t\t 1 \n\t\t\t \n\t\t\t 2014 \n\t\t \n\t \n\t Aleksandrs Slivkins. Contextual bandits with similarity information. The Journal of Machine Learning Research, 15(1):2533-2568, 2014."
+    },
+    {
+      "title": "Certainty equivalence control with forcing: revisited",
+      "authors": [
+        "Rajeev Agrawal",
+        "Demosthenis Teneketzis"
+      ],
+      "year": 1989,
+      "doi": "10.1016/0167-6911(89)90107-2",
+      "journal": "Systems & control letters",
+      "volume": "13",
+      "issue": "5",
+      "raw": "Certainty equivalence control with forcing: revisited \n\t\t \n\t\t\t Rajeev Agrawal \n\t\t \n\t\t \n\t\t\t Demosthenis Teneketzis \n\t\t \n\t\t 10.1016/0167-6911(89)90107-2 \n\t \n\t \n\t\t Systems & control letters \n\t\t \n\t\t\t 13 \n\t\t\t 5 \n\t\t\t \n\t\t\t 1989 \n\t\t \n\t \n\t Rajeev Agrawal and Demosthenis Teneketzis. Certainty equivalence control with forcing: revisited. Systems & control letters, 13(5):405-412, 1989."
+    },
+    {
+      "title": "A linear response bandit problem",
+      "authors": [
+        "Alexander Goldenshluger",
+        "Assaf Zeevi"
+      ],
+      "year": 2013,
+      "journal": "Stochastic Systems",
+      "volume": "3",
+      "issue": "1",
+      "raw": "A linear response bandit problem \n\t\t \n\t\t\t Alexander Goldenshluger \n\t\t \n\t\t \n\t\t\t Assaf Zeevi \n\t\t \n\t \n\t \n\t\t Stochastic Systems \n\t\t \n\t\t\t 3 \n\t\t\t 1 \n\t\t\t \n\t\t\t 2013 \n\t\t \n\t \n\t Alexander Goldenshluger and Assaf Zeevi. A linear response bandit problem. Stochastic Systems, 3(1):230-261, 2013."
+    },
+    {
+      "title": "Woodroofe's one-armed bandit problem revisited",
+      "authors": [
+        "Alexander Goldenshluger",
+        "Assaf Zeevi"
+      ],
+      "year": 2009,
+      "doi": "10.1214/08-aap589",
+      "journal": "The Annals of Applied Probability",
+      "volume": "19",
+      "issue": "4",
+      "raw": "Woodroofe's one-armed bandit problem revisited \n\t\t \n\t\t\t Alexander Goldenshluger \n\t\t \n\t\t \n\t\t\t Assaf Zeevi \n\t\t \n\t\t 10.1214/08-aap589 \n\t \n\t \n\t\t The Annals of Applied Probability \n\t\t \n\t\t\t 19 \n\t\t\t 4 \n\t\t\t \n\t\t\t 2009 \n\t\t \n\t \n\t Alexander Goldenshluger and Assaf Zeevi. Woodroofe's one-armed bandit problem revisited. The Annals of Applied Probability, 19(4):1603-1633, 2009."
+    },
+    {
+      "title": "Online decision-making with high-dimensional covariates",
+      "authors": [
+        "Hamsa Bastani",
+        "Mohsen Bayati"
+      ],
+      "year": 2015,
+      "doi": "10.2139/ssrn.2661896",
+      "raw": "Online decision-making with high-dimensional covariates \n\t\t \n\t\t\t Hamsa Bastani \n\t\t \n\t\t \n\t\t\t Mohsen Bayati \n\t\t \n\t\t 10.2139/ssrn.2661896 \n\t\t SSRN 2661896 \n\t\t \n\t\t\t 2015 \n\t\t \n\t \n\t Hamsa Bastani and Mohsen Bayati. Online decision-making with high-dimensional covariates. Available at SSRN 2661896, 2015."
+    },
+    {
+      "title": "Contextual bandit learning with predictable rewards",
+      "authors": [
+        "Alekh Agarwal",
+        "Miroslav Dud\u00edk",
+        "Satyen Kale",
+        "John Langford",
+        "Robert Schapire"
+      ],
+      "year": 2012,
+      "raw": "Contextual bandit learning with predictable rewards \n\t\t \n\t\t\t Alekh Agarwal \n\t\t \n\t\t \n\t\t\t Miroslav Dud\u00edk \n\t\t \n\t\t \n\t\t\t Satyen Kale \n\t\t \n\t\t \n\t\t\t John Langford \n\t\t \n\t\t \n\t\t\t Robert E Schapire \n\t\t \n\t \n\t \n\t\t International Conference on Artificial Intelligence and Statistics \n\t\t \n\t\t\t 2012 \n\t\t\t \n\t\t \n\t \n\t Alekh Agarwal, Miroslav Dud\u00edk, Satyen Kale, John Langford, and Robert E. Schapire. Contextual bandit learning with predictable rewards. In International Conference on Artificial Intelligence and Statistics, pages 19-26, 2012."
+    },
+    {
+      "title": "The multi-armed bandit problem with covariates",
+      "authors": [
+        "Vianney Perchet",
+        "Philippe Rigollet"
+      ],
+      "year": 2013,
+      "doi": "10.1214/13-aos1101",
+      "journal": "The Annals of Statistics",
+      "volume": "41",
+      "issue": "2",
+      "raw": "The multi-armed bandit problem with covariates \n\t\t \n\t\t\t Vianney Perchet \n\t\t \n\t\t \n\t\t\t Philippe Rigollet \n\t\t \n\t\t 10.1214/13-aos1101 \n\t \n\t \n\t\t The Annals of Statistics \n\t\t \n\t\t\t 41 \n\t\t\t 2 \n\t\t\t \n\t\t\t 2013 \n\t\t \n\t \n\t Vianney Perchet and Philippe Rigollet. The multi-armed bandit problem with covariates. The Annals of Statistics, 41(2):693-721, 2013."
+    },
+    {
+      "title": "Randomized allocation with arm elimination in a bandit problem with covariates",
+      "authors": [
+        "Wei Qian",
+        "Yuhong Yang"
+      ],
+      "year": 2016,
+      "journal": "Electronic Journal of Statistics",
+      "volume": "10",
+      "issue": "1",
+      "raw": "Randomized allocation with arm elimination in a bandit problem with covariates \n\t\t \n\t\t\t Wei Qian \n\t\t \n\t\t \n\t\t\t Yuhong Yang \n\t\t \n\t \n\t \n\t\t Electronic Journal of Statistics \n\t\t \n\t\t\t 10 \n\t\t\t 1 \n\t\t\t \n\t\t\t 2016 \n\t\t \n\t \n\t Wei Qian and Yuhong Yang. Randomized allocation with arm elimination in a bandit problem with covariates. Electronic Journal of Statistics, 10(1):242-270, 2016."
+    },
+    {
+      "title": "Efficient optimal learning for contextual bandits",
+      "authors": [
+        "Miroslav Dudik",
+        "Daniel Hsu",
+        "Satyen Kale",
+        "Nikos Karampatziakis",
+        "John Langford",
+        "Lev Reyzin",
+        "Tong Zhang"
+      ],
+      "year": 2011,
+      "raw": "Efficient optimal learning for contextual bandits \n\t\t \n\t\t\t Miroslav Dudik \n\t\t \n\t\t \n\t\t\t Daniel Hsu \n\t\t \n\t\t \n\t\t\t Satyen Kale \n\t\t \n\t\t \n\t\t\t Nikos Karampatziakis \n\t\t \n\t\t \n\t\t\t John Langford \n\t\t \n\t\t \n\t\t\t Lev Reyzin \n\t\t \n\t\t \n\t\t\t Tong Zhang \n\t\t \n\t \n\t \n\t\t Proceedings of the Twenty-Seventh Conference Annual Conference on Uncertainty in Artificial Intelligence \n\t\t the Twenty-Seventh Conference Annual Conference on Uncertainty in Artificial Intelligence \n\t\t \n\t\t\t AUAI Press \n\t\t\t 2011 \n\t\t\t \n\t\t \n\t \n\t Miroslav Dudik, Daniel Hsu, Satyen Kale, Nikos Karampatziakis, John Langford, Lev Reyzin, and Tong Zhang. Efficient optimal learning for contextual bandits. In Proceedings of the Twenty-Seventh Conference Annual Conference on Uncertainty in Artificial Intelligence, pages 169-178. AUAI Press, 2011."
+    },
+    {
+      "title": "Taming the monster: A fast and simple algorithm for contextual bandits",
+      "authors": [
+        "Alekh Agarwal",
+        "Daniel Hsu",
+        "Satyen Kale",
+        "John Langford",
+        "Lihong Li",
+        "Robert Schapire"
+      ],
+      "year": 2014,
+      "raw": "Taming the monster: A fast and simple algorithm for contextual bandits \n\t\t \n\t\t\t Alekh Agarwal \n\t\t \n\t\t \n\t\t\t Daniel Hsu \n\t\t \n\t\t \n\t\t\t Satyen Kale \n\t\t \n\t\t \n\t\t\t John Langford \n\t\t \n\t\t \n\t\t\t Lihong Li \n\t\t \n\t\t \n\t\t\t Robert Schapire \n\t\t \n\t \n\t \n\t\t Proceedings of the 31st International Conference on Machine Learning \n\t\t the 31st International Conference on Machine Learning \n\t\t \n\t\t\t 2014 \n\t\t\t \n\t\t \n\t \n\t Alekh Agarwal, Daniel Hsu, Satyen Kale, John Langford, Lihong Li, and Robert Schapire. Taming the monster: A fast and simple algorithm for contextual bandits. In Proceedings of the 31st International Conference on Machine Learning, pages 1638-1646, 2014."
+    },
+    {
+      "title": "Motivating patients to use smartphone health apps",
+      "year": 2011,
+      "raw": "Motivating patients to use smartphone health apps \n\t\t \n\t\t\t 2011. June 30, 2016 \n\t\t \n\t\t \n\t\t\t Consumer Health Information Corporation \n\t\t \n\t \n\t Consumer Health Information Corporation. Motivating patients to use smartphone health apps, 2011. URL: http://www.consumer-health.com/motivating-patients-to-use-smartphone-health- apps/, accessed: June 30, 2016."
+    },
+    {
+      "title": "An Online Actor Critic Algorithm and a Statistical Decision Procedure for Personalizing Intervention",
+      "authors": [
+        "Huitian Lei"
+      ],
+      "year": 2016,
+      "raw": "An Online Actor Critic Algorithm and a Statistical Decision Procedure for Personalizing Intervention \n\t\t \n\t\t\t Huitian Lei \n\t\t \n\t\t \n\t\t\t 2016 \n\t\t \n\t\t \n\t\t\t University of Michigan \n\t\t \n\t \n\t PhD thesis \n\t Huitian Lei. An Online Actor Critic Algorithm and a Statistical Decision Procedure for Personalizing Intervention. PhD thesis, University of Michigan, 2016."
+    },
+    {
+      "title": "Contextual bandits with linear payoff functions",
+      "authors": [
+        "Wei Chu",
+        "Lihong Li",
+        "Lev Reyzin",
+        "Robert Schapire"
+      ],
+      "year": 2011,
+      "raw": "Contextual bandits with linear payoff functions \n\t\t \n\t\t\t Wei Chu \n\t\t \n\t\t \n\t\t\t Lihong Li \n\t\t \n\t\t \n\t\t\t Lev Reyzin \n\t\t \n\t\t \n\t\t\t Robert E Schapire \n\t\t \n\t \n\t \n\t\t International Conference on Artificial Intelligence and Statistics \n\t\t \n\t\t\t 2011 \n\t\t\t \n\t\t \n\t \n\t Wei Chu, Lihong Li, Lev Reyzin, and Robert E. Schapire. Contextual bandits with linear payoff functions. In International Conference on Artificial Intelligence and Statistics, pages 208-214, 2011."
+    },
+    {
+      "title": "Using confidence bounds for exploitation-exploration trade-offs",
+      "authors": [
+        "Peter Auer"
+      ],
+      "year": 2003,
+      "journal": "The Journal of Machine Learning Research",
+      "volume": "3",
+      "raw": "Using confidence bounds for exploitation-exploration trade-offs \n\t\t \n\t\t\t Peter Auer \n\t\t \n\t \n\t \n\t\t The Journal of Machine Learning Research \n\t\t \n\t\t\t 3 \n\t\t\t \n\t\t\t 2003 \n\t\t \n\t \n\t Peter Auer. Using confidence bounds for exploitation-exploration trade-offs. The Journal of Machine Learning Research, 3:397-422, 2003."
+    },
+    {
+      "title": "On-line evaluation and prediction using linear functions",
+      "authors": [
+        "Philip Long"
+      ],
+      "year": 1997,
+      "doi": "10.1145/267460.267471",
+      "raw": "On-line evaluation and prediction using linear functions \n\t\t \n\t\t\t Philip M Long \n\t\t \n\t\t 10.1145/267460.267471 \n\t \n\t \n\t\t Proceedings of the tenth annual conference on Computational learning theory \n\t\t the tenth annual conference on Computational learning theory \n\t\t \n\t\t\t ACM \n\t\t\t 1997 \n\t\t\t \n\t\t \n\t \n\t Philip M. Long. On-line evaluation and prediction using linear functions. In Proceedings of the tenth annual conference on Computational learning theory, pages 21-31. ACM, 1997."
+    },
+    {
+      "title": "Parametric bandits: The generalized linear case",
+      "authors": [
+        "Sarah Filippi",
+        "Olivier Cappe",
+        "Aur\u00e9lien Garivier",
+        "Csaba Szepesv\u00e1ri"
+      ],
+      "year": 2010,
+      "raw": "Parametric bandits: The generalized linear case \n\t\t \n\t\t\t Sarah Filippi \n\t\t \n\t\t \n\t\t\t Olivier Cappe \n\t\t \n\t\t \n\t\t\t Aur\u00e9lien Garivier \n\t\t \n\t\t \n\t\t\t Csaba Szepesv\u00e1ri \n\t\t \n\t \n\t \n\t\t Advances in Neural Information Processing Systems \n\t\t \n\t\t\t 2010 \n\t\t\t \n\t\t \n\t \n\t Sarah Filippi, Olivier Cappe, Aur\u00e9lien Garivier, and Csaba Szepesv\u00e1ri. Parametric bandits: The generalized linear case. In Advances in Neural Information Processing Systems, pages 586-594, 2010."
+    },
+    {
+      "title": "Finite-time analysis of kernelised contextual bandits",
+      "authors": [
+        "Michal Valko",
+        "Nathan Korda",
+        "R\u00e9mi Munos",
+        "Ilias Flaounas",
+        "Nello Cristianini"
+      ],
+      "year": 2013,
+      "pages": "654",
+      "raw": "Finite-time analysis of kernelised contextual bandits \n\t\t \n\t\t\t Michal Valko \n\t\t \n\t\t \n\t\t\t Nathan Korda \n\t\t \n\t\t \n\t\t\t R\u00e9mi Munos \n\t\t \n\t\t \n\t\t\t Ilias Flaounas \n\t\t \n\t\t \n\t\t\t Nello Cristianini \n\t\t \n\t \n\t \n\t\t Uncertainty in Artificial Intelligence \n\t\t \n\t\t\t 2013 \n\t\t\t 654 \n\t\t \n\t \n\t Michal Valko, Nathan Korda, R\u00e9mi Munos, Ilias Flaounas, and Nello Cristianini. Finite-time analysis of kernelised contextual bandits. In Uncertainty in Artificial Intelligence, page 654, 2013."
+    },
+    {
+      "title": "Contextual multi-armed bandits",
+      "authors": [
+        "Tyler Lu",
+        "D\u00e1vid P\u00e1l",
+        "Martin P\u00e1l"
+      ],
+      "year": 2010,
+      "raw": "Contextual multi-armed bandits \n\t\t \n\t\t\t Tyler Lu \n\t\t \n\t\t \n\t\t\t D\u00e1vid P\u00e1l \n\t\t \n\t\t \n\t\t\t Martin P\u00e1l \n\t\t \n\t \n\t \n\t\t International Conference on Artificial Intelligence and Statistics \n\t\t \n\t\t\t 2010 \n\t\t\t \n\t\t \n\t \n\t Tyler Lu, D\u00e1vid P\u00e1l, and Martin P\u00e1l. Contextual multi-armed bandits. In International Conference on Artificial Intelligence and Statistics, pages 485-492, 2010."
+    },
+    {
+      "title": "RELEAF: An algorithm for learning and exploiting relevance",
+      "authors": [
+        "Cem Tekin",
+        "Mihaela Van Der Schaar"
+      ],
+      "year": 2015,
+      "doi": "10.1109/jstsp.2015.2402646",
+      "journal": "IEEE Journal of Selected Topics in Signal Processing",
+      "volume": "9",
+      "issue": "4",
+      "raw": "RELEAF: An algorithm for learning and exploiting relevance \n\t\t \n\t\t\t Cem Tekin \n\t\t \n\t\t \n\t\t\t Mihaela Van Der Schaar \n\t\t \n\t\t 10.1109/jstsp.2015.2402646 \n\t \n\t \n\t\t IEEE Journal of Selected Topics in Signal Processing \n\t\t \n\t\t\t 9 \n\t\t\t 4 \n\t\t\t \n\t\t\t June 2015 \n\t\t \n\t \n\t Cem Tekin and Mihaela van der Schaar. RELEAF: An algorithm for learning and exploiting relevance. IEEE Journal of Selected Topics in Signal Processing, 9(4):716-727, June 2015."
+    },
+    {
+      "title": "Learning to optimize via posterior sampling",
+      "authors": [
+        "Daniel Russo",
+        "Benjamin Van"
+      ],
+      "year": 2014,
+      "doi": "10.1287/moor.2014.0650",
+      "journal": "Mathematics of Operations Research",
+      "volume": "39",
+      "issue": "4",
+      "raw": "Learning to optimize via posterior sampling \n\t\t \n\t\t\t Daniel Russo \n\t\t \n\t\t \n\t\t\t Benjamin Van \n\t\t \n\t\t \n\t\t\t Roy \n\t\t \n\t\t 10.1287/moor.2014.0650 \n\t \n\t \n\t\t Mathematics of Operations Research \n\t\t \n\t\t\t 39 \n\t\t\t 4 \n\t\t\t \n\t\t\t 2014 \n\t\t \n\t \n\t Daniel Russo and Benjamin Van Roy. Learning to optimize via posterior sampling. Mathe- matics of Operations Research, 39(4):1221-1243, 2014."
+    },
+    {
+      "title": "A modern Bayesian look at the multi-armed bandit",
+      "authors": [
+        "Steven Scott"
+      ],
+      "year": 2010,
+      "journal": "Applied Stochastic Models in Business and Industry",
+      "volume": "26",
+      "issue": "6",
+      "raw": "A modern Bayesian look at the multi-armed bandit \n\t\t \n\t\t\t Steven L Scott \n\t\t \n\t \n\t \n\t\t Applied Stochastic Models in Business and Industry \n\t\t \n\t\t\t 26 \n\t\t\t 6 \n\t\t\t \n\t\t\t 2010 \n\t\t \n\t \n\t Steven L. Scott. A modern Bayesian look at the multi-armed bandit. Applied Stochastic Models in Business and Industry, 26(6):639-658, 2010."
+    },
+    {
+      "title": "Thompson sampling for contextual bandits with linear payoffs",
+      "authors": [
+        "Shipra Agrawal",
+        "Navin Goyal"
+      ],
+      "year": 2013,
+      "raw": "Thompson sampling for contextual bandits with linear payoffs \n\t\t \n\t\t\t Shipra Agrawal \n\t\t \n\t\t \n\t\t\t Navin Goyal \n\t\t \n\t \n\t \n\t\t Proceedings of the 30th International Conference on Machine Learning (ICML-13) \n\t\t the 30th International Conference on Machine Learning (ICML-13) \n\t\t \n\t\t\t 2013 \n\t\t\t \n\t\t \n\t \n\t Shipra Agrawal and Navin Goyal. Thompson sampling for contextual bandits with linear payoffs. In Proceedings of the 30th International Conference on Machine Learning (ICML- 13), pages 127-135, 2013."
+    },
+    {
+      "title": "Optimistic Bayesian sampling in contextual-bandit problems",
+      "authors": [
+        "Benedict May",
+        "Nathan Korda",
+        "Anthony Lee",
+        "David Leslie"
+      ],
+      "year": 2012,
+      "journal": "The Journal of Machine Learning Research",
+      "volume": "13",
+      "issue": "1",
+      "raw": "Optimistic Bayesian sampling in contextual-bandit problems \n\t\t \n\t\t\t Benedict C May \n\t\t \n\t\t \n\t\t\t Nathan Korda \n\t\t \n\t\t \n\t\t\t Anthony Lee \n\t\t \n\t\t \n\t\t\t David S Leslie \n\t\t \n\t \n\t \n\t\t The Journal of Machine Learning Research \n\t\t \n\t\t\t 13 \n\t\t\t 1 \n\t\t\t \n\t\t\t 2012 \n\t\t \n\t \n\t Benedict C. May, Nathan Korda, Anthony Lee, and David S. Leslie. Optimistic Bayesian sampling in contextual-bandit problems. The Journal of Machine Learning Research, 13(1):2069-2106, 2012."
+    },
+    {
+      "title": "Dynamic influences on smoking relapse process",
+      "authors": [
+        "Saul Shiffman"
+      ],
+      "year": 2005,
+      "journal": "Journal of Personality",
+      "volume": "73",
+      "issue": "6",
+      "raw": "Dynamic influences on smoking relapse process \n\t\t \n\t\t\t Saul Shiffman \n\t\t \n\t \n\t \n\t\t Journal of Personality \n\t\t \n\t\t\t 73 \n\t\t\t 6 \n\t\t\t \n\t\t\t 2005 \n\t\t \n\t \n\t Saul Shiffman. Dynamic influences on smoking relapse process. Journal of Personality, 73(6):1715-1748, 2005."
+    },
+    {
+      "title": "The nonstochastic multiarmed bandit problem",
+      "authors": [
+        "Peter Auer",
+        "Nicolo Cesa-Bianchi",
+        "Yoav Freund",
+        "Robert Schapire"
+      ],
+      "year": 2002,
+      "journal": "SIAM Journal on Computing",
+      "volume": "32",
+      "issue": "1",
+      "raw": "The nonstochastic multiarmed bandit problem \n\t\t \n\t\t\t Peter Auer \n\t\t \n\t\t \n\t\t\t Nicolo Cesa-Bianchi \n\t\t \n\t\t \n\t\t\t Yoav Freund \n\t\t \n\t\t \n\t\t\t Robert E Schapire \n\t\t \n\t \n\t \n\t\t SIAM Journal on Computing \n\t\t \n\t\t\t 32 \n\t\t\t 1 \n\t\t\t \n\t\t\t 2002 \n\t\t \n\t \n\t Peter Auer, Nicolo Cesa-Bianchi, Yoav Freund, and Robert E. Schapire. The nonstochastic multiarmed bandit problem. SIAM Journal on Computing, 32(1):48-77, 2002."
+    },
+    {
+      "title": "Minimax policies for adversarial and stochastic bandits",
+      "authors": [
+        "Jean-Yves Audibert",
+        "S\u00e9bastien Bubeck"
+      ],
+      "year": 2004,
+      "raw": "Minimax policies for adversarial and stochastic bandits \n\t\t \n\t\t\t Jean-Yves Audibert \n\t\t \n\t\t \n\t\t\t S\u00e9bastien Bubeck \n\t\t \n\t \n\t \n\t\t Proceedings of the 22nd Annual Conference on Learning Theory \n\t\t the 22nd Annual Conference on Learning Theory \n\t\t \n\t\t\t 2004 \n\t\t \n\t \n\t Jean-Yves Audibert and S\u00e9bastien Bubeck. Minimax policies for adversarial and stochastic bandits. In Proceedings of the 22nd Annual Conference on Learning Theory, 2004."
+    },
+    {
+      "title": "Fighting bandits with a new kind of smoothness",
+      "authors": [
+        "Jacob Abernethy",
+        "Chansoo Lee",
+        "Ambuj Tewari"
+      ],
+      "year": 2015,
+      "volume": "28",
+      "raw": "Fighting bandits with a new kind of smoothness \n\t\t \n\t\t\t Jacob Abernethy \n\t\t \n\t\t \n\t\t\t Chansoo Lee \n\t\t \n\t\t \n\t\t\t Ambuj Tewari \n\t\t \n\t \n\t \n\t\t Advances in Neural Information Processing Systems \n\t\t \n\t\t\t 2015 \n\t\t\t 28 \n\t\t\t \n\t\t \n\t \n\t Jacob Abernethy, Chansoo Lee, and Ambuj Tewari. Fighting bandits with a new kind of smoothness. In Advances in Neural Information Processing Systems 28, pages 2188-2196, 2015."
+    },
+    {
+      "title": "Contextual bandit algorithms with supervised learning guarantees",
+      "authors": [
+        "Alina Beygelzimer",
+        "John Langford",
+        "Lihong Li",
+        "Lev Reyzin",
+        "Robert Schapire"
+      ],
+      "year": 2011,
+      "volume": "15",
+      "raw": "Contextual bandit algorithms with supervised learning guarantees \n\t\t \n\t\t\t Alina Beygelzimer \n\t\t \n\t\t \n\t\t\t John Langford \n\t\t \n\t\t \n\t\t\t Lihong Li \n\t\t \n\t\t \n\t\t\t Lev Reyzin \n\t\t \n\t\t \n\t\t\t Robert E Schapire \n\t\t \n\t \n\t \n\t\t Proceedings of the 14th International Conference on Artificial Intelligence and Statistics \n\t\t the 14th International Conference on Artificial Intelligence and Statistics \n\t\t \n\t\t\t 2011 \n\t\t\t 15 \n\t\t\t \n\t\t \n\t \n\t JMLR Workshop and Conference Proceedings \n\t Alina Beygelzimer, John Langford, Lihong Li, Lev Reyzin, and Robert E. Schapire. Contextual bandit algorithms with supervised learning guarantees. In Proceedings of the 14th International Conference on Artificial Intelligence and Statistics, volume 15 of JMLR Workshop and Conference Proceedings, pages 19-26, 2011."
+    },
+    {
+      "title": "Microrandomized trials: An experimental design for developing just-in-time adaptive interventions",
+      "authors": [
+        "Predrag Klasnja",
+        "Eric Hekler",
+        "Saul Shiffman",
+        "Audrey Boruvka",
+        "Daniel Almirall",
+        "Ambuj Tewari",
+        "Susan Murphy"
+      ],
+      "year": 2015,
+      "journal": "Health Psychology",
+      "volume": "34",
+      "raw": "Microrandomized trials: An experimental design for developing just-in-time adaptive interventions \n\t\t \n\t\t\t Predrag Klasnja \n\t\t \n\t\t \n\t\t\t Eric B Hekler \n\t\t \n\t\t \n\t\t\t Saul Shiffman \n\t\t \n\t\t \n\t\t\t Audrey Boruvka \n\t\t \n\t\t \n\t\t\t Daniel Almirall \n\t\t \n\t\t \n\t\t\t Ambuj Tewari \n\t\t \n\t\t \n\t\t\t Susan A Murphy \n\t\t \n\t \n\t \n\t\t Health Psychology \n\t\t \n\t\t\t 34 \n\t\t\t \n\t\t\t Dec 2015 \n\t\t \n\t \n\t Suppl \n\t Predrag Klasnja, Eric B. Hekler, Saul Shiffman, Audrey Boruvka, Daniel Almirall, Ambuj Tewari, and Susan A. Murphy. Microrandomized trials: An experimental design for developing just-in-time adaptive interventions. Health Psychology, 34(Suppl):1220-1228, Dec 2015."
+    },
+    {
+      "title": "Exploration scavenging",
+      "authors": [
+        "John Langford",
+        "Alexander Strehl",
+        "Jennifer Wortman"
+      ],
+      "year": 2008,
+      "doi": "10.1145/1390156.1390223",
+      "raw": "Exploration scavenging \n\t\t \n\t\t\t John Langford \n\t\t \n\t\t \n\t\t\t Alexander Strehl \n\t\t \n\t\t \n\t\t\t Jennifer Wortman \n\t\t \n\t\t 10.1145/1390156.1390223 \n\t \n\t \n\t\t Proceedings of the 25th international conference on Machine learning \n\t\t the 25th international conference on Machine learning \n\t\t \n\t\t\t ACM \n\t\t\t 2008 \n\t\t\t \n\t\t \n\t \n\t John Langford, Alexander Strehl, and Jennifer Wortman. Exploration scavenging. In Proceedings of the 25th international conference on Machine learning, pages 528-535. ACM, 2008."
+    },
+    {
+      "title": "Learning from logged implicit exploration data",
+      "authors": [
+        "Alex Strehl",
+        "John Langford",
+        "Lihong Li",
+        "Sham Kakade"
+      ],
+      "year": 2010,
+      "raw": "Learning from logged implicit exploration data \n\t\t \n\t\t\t Alex Strehl \n\t\t \n\t\t \n\t\t\t John Langford \n\t\t \n\t\t \n\t\t\t Lihong Li \n\t\t \n\t\t \n\t\t\t Sham M Kakade \n\t\t \n\t \n\t \n\t\t Advances in Neural Information Processing Systems \n\t\t \n\t\t\t 2010 \n\t\t\t \n\t\t \n\t \n\t Alex Strehl, John Langford, Lihong Li, and Sham M. Kakade. Learning from logged implicit exploration data. In Advances in Neural Information Processing Systems, pages 2217-2225, 2010."
+    },
+    {
+      "title": "Unbiased offline evaluation of contextual-bandit-based news article recommendation algorithms",
+      "authors": [
+        "Lihong Li",
+        "Wei Chu",
+        "John Langford",
+        "Xuanhui Wang"
+      ],
+      "year": 2011,
+      "raw": "Unbiased offline evaluation of contextual-bandit-based news article recommendation algorithms \n\t\t \n\t\t\t Lihong Li \n\t\t \n\t\t \n\t\t\t Wei Chu \n\t\t \n\t\t \n\t\t\t John Langford \n\t\t \n\t\t \n\t\t\t Xuanhui Wang \n\t\t \n\t \n\t \n\t\t Proceedings of the fourth ACM international conference on Web search and data mining \n\t\t the fourth ACM international conference on Web search and data mining \n\t\t \n\t\t\t ACM \n\t\t\t 2011 \n\t\t\t \n\t\t \n\t \n\t Lihong Li, Wei Chu, John Langford, and Xuanhui Wang. Unbiased offline evaluation of contextual-bandit-based news article recommendation algorithms. In Proceedings of the fourth ACM international conference on Web search and data mining, pages 297-306. ACM, 2011."
+    },
+    {
+      "title": "An unbiased offline evaluation of contextual bandit algorithms with generalized linear models",
+      "authors": [
+        "Lihong Li",
+        "Wei Chu",
+        "John Langford",
+        "Taesup Moon",
+        "Xuanhui Wang"
+      ],
+      "year": 2011,
+      "volume": "26",
+      "raw": "An unbiased offline evaluation of contextual bandit algorithms with generalized linear models \n\t\t \n\t\t\t Lihong Li \n\t\t \n\t\t \n\t\t\t Wei Chu \n\t\t \n\t\t \n\t\t\t John Langford \n\t\t \n\t\t \n\t\t\t Taesup Moon \n\t\t \n\t\t \n\t\t\t Xuanhui Wang \n\t\t \n\t \n\t \n\t\t Proceedings of the Workshop on On-line Trading of Exploration and Exploitation 2 \n\t\t the Workshop on On-line Trading of Exploration and Exploitation 2 Bellevue, Washington, USA \n\t\t \n\t\t\t July 2, 2011. 2012 \n\t\t\t 26 \n\t\t\t \n\t\t \n\t \n\t JMLR Workshop and Conference Proceedings \n\t Lihong Li, Wei Chu, John Langford, Taesup Moon, and Xuanhui Wang. An unbiased offline evaluation of contextual bandit algorithms with generalized linear models. In Proceedings of the Workshop on On-line Trading of Exploration and Exploitation 2 July 2, 2011, Bellevue, Washington, USA, volume 26 of JMLR Workshop and Conference Proceedings, pages 19-36, 2012."
+    },
+    {
+      "title": "Doubly robust policy evaluation and learning",
+      "authors": [
+        "Miroslav Dud\u00edk",
+        "John Langford",
+        "Lihong Li"
+      ],
+      "year": 2011,
+      "raw": "Doubly robust policy evaluation and learning \n\t\t \n\t\t\t Miroslav Dud\u00edk \n\t\t \n\t\t \n\t\t\t John Langford \n\t\t \n\t\t \n\t\t\t Lihong Li \n\t\t \n\t \n\t \n\t\t Proceedings of the 28th International Conference on Machine Learning \n\t\t the 28th International Conference on Machine Learning \n\t\t \n\t\t\t 2011 \n\t\t\t \n\t\t \n\t \n\t Miroslav Dud\u00edk, John Langford, and Lihong Li. Doubly robust policy evaluation and learning. In Proceedings of the 28th International Conference on Machine Learning, pages 1097-1104, 2011."
+    },
+    {
+      "title": "Performance guarantees for individualized treatment rules",
+      "authors": [
+        "Min Qian",
+        "Susan Murphy"
+      ],
+      "year": 2011,
+      "journal": "Annals of Statistics",
+      "volume": "39",
+      "issue": "2",
+      "pages": "1180",
+      "raw": "Performance guarantees for individualized treatment rules \n\t\t \n\t\t\t Min Qian \n\t\t \n\t\t \n\t\t\t Susan A Murphy \n\t\t \n\t \n\t \n\t\t Annals of Statistics \n\t\t \n\t\t\t 39 \n\t\t\t 2 \n\t\t\t 1180 \n\t\t\t 2011 \n\t\t \n\t \n\t Min Qian and Susan A. Murphy. Performance guarantees for individualized treatment rules. Annals of Statistics, 39(2):1180, 2011."
+    },
+    {
+      "title": "Estimating individualized treatment rules using outcome weighted learning",
+      "authors": [
+        "Yingqi Zhao",
+        "Donglin Zeng",
+        "A Rush",
+        "Michael Kosorok"
+      ],
+      "year": 2012,
+      "doi": "10.1080/01621459.2012.695674",
+      "journal": "Journal of the American Statistical Association",
+      "volume": "107",
+      "issue": "499",
+      "raw": "Estimating individualized treatment rules using outcome weighted learning \n\t\t \n\t\t\t Yingqi Zhao \n\t\t \n\t\t \n\t\t\t Donglin Zeng \n\t\t \n\t\t \n\t\t\t A John Rush \n\t\t \n\t\t \n\t\t\t Michael R Kosorok \n\t\t \n\t\t 10.1080/01621459.2012.695674 \n\t \n\t \n\t\t Journal of the American Statistical Association \n\t\t \n\t\t\t 107 \n\t\t\t 499 \n\t\t\t \n\t\t\t 2012 \n\t\t \n\t \n\t Yingqi Zhao, Donglin Zeng, A. John Rush, and Michael R. Kosorok. Estimating individualized treatment rules using outcome weighted learning. Journal of the American Statistical Association, 107(499):1106-1118, 2012."
+    },
+    {
+      "title": "A robust method for estimating optimal treatment regimes",
+      "authors": [
+        "Baqun Zhang",
+        "Anastasios Tsiatis",
+        "Eric Laber",
+        "Marie Davidian"
+      ],
+      "year": 2012,
+      "journal": "Biometrics",
+      "volume": "68",
+      "issue": "4",
+      "raw": "A robust method for estimating optimal treatment regimes \n\t\t \n\t\t\t Baqun Zhang \n\t\t \n\t\t \n\t\t\t Anastasios A Tsiatis \n\t\t \n\t\t \n\t\t\t Eric B Laber \n\t\t \n\t\t \n\t\t\t Marie Davidian \n\t\t \n\t \n\t \n\t\t Biometrics \n\t\t \n\t\t\t 68 \n\t\t\t 4 \n\t\t\t \n\t\t\t 2012 \n\t\t \n\t \n\t Baqun Zhang, Anastasios A. Tsiatis, Eric B. Laber, and Marie Davidian. A robust method for estimating optimal treatment regimes. Biometrics, 68(4):1010-1018, 2012."
+    },
+    {
+      "title": "Estimating optimal treatment regimes from a classification perspective",
+      "authors": [
+        "Baqun Zhang",
+        "Anastasios Tsiatis",
+        "Marie Davidian",
+        "Min Zhang",
+        "Eric Laber"
+      ],
+      "year": 2012,
+      "doi": "10.1002/sta.411",
+      "journal": "Stat",
+      "volume": "1",
+      "issue": "1",
+      "raw": "Estimating optimal treatment regimes from a classification perspective \n\t\t \n\t\t\t Baqun Zhang \n\t\t \n\t\t \n\t\t\t Anastasios A Tsiatis \n\t\t \n\t\t \n\t\t\t Marie Davidian \n\t\t \n\t\t \n\t\t\t Min Zhang \n\t\t \n\t\t \n\t\t\t Eric Laber \n\t\t \n\t\t 10.1002/sta.411 \n\t \n\t \n\t\t Stat \n\t\t \n\t\t\t 1 \n\t\t\t 1 \n\t\t\t \n\t\t\t 2012 \n\t\t \n\t \n\t Baqun Zhang, Anastasios A. Tsiatis, Marie Davidian, Min Zhang, and Eric Laber. Estimating optimal treatment regimes from a classification perspective. Stat, 1(1):103-114, 2012."
+    },
+    {
+      "title": "Risk-aversion in multi-armed bandits",
+      "authors": [
+        "Amir Sani",
+        "Alessandro Lazaric",
+        "R\u00e9mi Munos"
+      ],
+      "year": 2012,
+      "raw": "Risk-aversion in multi-armed bandits \n\t\t \n\t\t\t Amir Sani \n\t\t \n\t\t \n\t\t\t Alessandro Lazaric \n\t\t \n\t\t \n\t\t\t R\u00e9mi Munos \n\t\t \n\t \n\t \n\t\t Advances in Neural Information Processing Systems \n\t\t \n\t\t\t 2012 \n\t\t\t \n\t\t \n\t \n\t Amir Sani, Alessandro Lazaric, and R\u00e9mi Munos. Risk-aversion in multi-armed bandits. In Advances in Neural Information Processing Systems, pages 3275-3283, 2012."
+    },
+    {
+      "title": "Mean-variance and value at risk in multi-armed bandit problems",
+      "authors": [
+        "Sattar Vakili",
+        "Qing Zhao"
+      ],
+      "year": 2015,
+      "raw": "Mean-variance and value at risk in multi-armed bandit problems \n\t\t \n\t\t\t Sattar Vakili \n\t\t \n\t\t \n\t\t\t Qing Zhao \n\t\t \n\t \n\t \n\t\t 2015 53rd Annual Allerton Conference on Communication, Control, and Computing (Allerton) \n\t\t \n\t\t\t IEEE \n\t\t\t 2015 \n\t\t\t \n\t\t \n\t \n\t Sattar Vakili and Qing Zhao. Mean-variance and value at risk in multi-armed bandit problems. In 2015 53rd Annual Allerton Conference on Communication, Control, and Computing (Allerton), pages 1330-1335. IEEE, 2015."
+    }
+  ],
+  "num_references": 59,
+  "figures": [
+    {
+      "caption": "1: at a given decision point do 2 :",
+      "description": "mobile phone collects tailoring variables (the context) 3: a decision rule (or policy) maps the tailoring variables into an intervention option (the action) 4:"
+    },
+    {
+      "description": "Instead of estimating the underlying expected reward function, one can instead simply try to compete with ? \u02d8."
+    }
+  ],
+  "num_figures": 2,
+  "formulas": [
+    {
+      "text": "V. / D E .X;R 0 ;R 1 / D R .X/ :"
+    },
+    {
+      "text": "\u00c1 a .x/ D E .X;R 0 ;R 1 / D OER a jX D x:"
+    },
+    {
+      "text": "V. / D E X D X \u00c1 .X/ .X/ :"
+    },
+    {
+      "text": "? .x/ D argmax a2A \u00c1 a .x/: (1)"
+    },
+    {
+      "text": "T X tD1 EOER t"
+    },
+    {
+      "text": "R a t D \u02c7> a X t C a t ; (2)"
+    },
+    {
+      "text": "T V. ? / T X tD1 EOER t : (3)"
+    },
+    {
+      "text": "for"
+    },
+    {
+      "text": "R a t D f a .X t / C a t ; (4)"
+    },
+    {
+      "text": "for t D 2n 0 C 1 to T do Let G t D argmax a b f a .X t / //"
+    },
+    {
+      "text": "P T tD1 f A t .X t / P T tD1 max a2A f a .X t / :"
+    },
+    {
+      "text": "? .x/ D GREEDY.f a /.x/ D argmax a2A f a .x/:"
+    },
+    {
+      "text": "P X D X OE0 < jf 0 .X/ f 1 .X/j < \u0131 \u00c4 C \u0131 \u0131 \u02db:"
+    },
+    {
+      "text": "T V. ? \u02d8/ T X tD1 EOER t ; (5)"
+    },
+    {
+      "text": "D 0 D fg; t 1 D"
+    },
+    {
+      "text": "b V. jD/ D 1 jDj X .x;a;r/2D 2r1 OE .x/ D a"
+    },
+    {
+      "text": "h b V. jD/ i D V."
+    },
+    {
+      "text": "argmax 2\u02d8b V. jD/ D argmax 2\u02d8X .x;a;r/2D r1 OE .x/ D a : (6)"
+    },
+    {
+      "text": "D V. ? / max \u00a4 ? V. /:"
+    },
+    {
+      "text": "O. p T log.Tj\u02d8j=\u0131/ C log.j\u02d8j=\u0131//"
+    },
+    {
+      "text": "T X tD1 \u00c1 ? .x t / .x t / T X tD1 EOER t :"
+    },
+    {
+      "text": "A"
+    },
+    {
+      "text": "N \u00c1 a .x/ D 1 T P T tD1 \u00c1 a t ."
+    },
+    {
+      "text": "? .x/ D GREEDY. N \u00c1 a /.x/ D argmax a2A T X tD1 \u00c1 a t ."
+    },
+    {
+      "text": "T X tD1 \u00c1 ? .x t / t .x t / T X tD1 EOER t :"
+    },
+    {
+      "text": "w"
+    }
+  ],
+  "num_formulas": 26,
+  "num_citations": 79,
+  "cited_references": [
+    "b3",
+    "b57",
+    "b13",
+    "b39",
+    "b18",
+    "b44",
+    "b49",
+    "b2",
+    "b58",
+    "b14",
+    "b17",
+    "b36",
+    "b25",
+    "b9",
+    "b1",
+    "b35",
+    "b20",
+    "b43",
+    "b21",
+    "b51",
+    "b47",
+    "b40",
+    "b12",
+    "b42",
+    "b30",
+    "b31",
+    "b54",
+    "b52",
+    "b29",
+    "b16",
+    "b37",
+    "b46",
+    "b15",
+    "b23",
+    "b32",
+    "b5",
+    "b19",
+    "b28",
+    "b45",
+    "b10",
+    "b38",
+    "b27",
+    "b24",
+    "b4",
+    "b55",
+    "b56",
+    "b50",
+    "b33",
+    "b7",
+    "b48",
+    "b11",
+    "b8",
+    "b53",
+    "b22",
+    "b34",
+    "b6",
+    "b0",
+    "b26"
+  ],
+  "notes": [
+    "[raw_affiliation] University of Michigan , Ann Arbor , MI , USA",
+    "[raw_affiliation] University of Michigan , Ann Arbor , MI , USA",
+    "[raw_affiliation] University of Michigan , Ann Arbor , MI , USA",
+    "[raw_affiliation] University of Michigan , Ann Arbor , MI , USA",
+    "[raw_reference] John Gittins, Kevin Glazebrook, and Richard Weber. Multi-armed bandit allocation indices. John Wiley & Sons, 2011.",
+    "[raw_reference] Michael Woodroofe. A one-armed bandit problem with a concomitant variable. Journal of the American Statistical Association, 74(368):799-806, 1979.",
+    "Automatic Control",
+    "[raw_reference] Chih-Chun Wang, Sanjeev R. Kulkarni, and H. Vincent Poor. Bandit problems with side observations. Automatic Control, IEEE Transactions on, 50(3):338-355, 2005.",
+    "[raw_reference] Chih-Chun Wang, Sanjeev R. Kulkarni, and H. Vincent Poor. Arbitrary side observations in bandit problems. Advances in Applied Mathematics, 34(4):903-938, 2005.",
+    "Information Theory",
+    "[raw_reference] Alexander Goldenshluger and Assaf Zeevi. A note on performance limitations in bandit problems with side information. Information Theory, IEEE Transactions on, 57(3):1707-1713, 2011.",
+    "[raw_reference] Naoki Abe and Philip M. Long. Associative reinforcement learning using linear probabilistic concepts. In Proceedings of the Sixteenth International Conference on Machine Learning, pages 3-11, 1999.",
+    "[raw_reference] Leslie P. Kaelbling. Associative reinforcement learning: A generate and test algorithm. Machine Learning, 15(3):299-319, 1994.",
+    "[raw_reference] Leslie P. Kaelbling. Associative reinforcement learning: Functions in k-DNF. Machine Learning, 15(3):279-298, 1994.",
+    "[raw_reference] Naoki Abe, Alan W. Biermann, and Philip M. Long. Reinforcement learning with immediate rewards and linear hypotheses. Algorithmica, 37(4):263-293, 2003.",
+    "[raw_reference] Alexander L. Strehl, Chris Mesterharm, Michael L. Littman, and Haym Hirsh. Experience- efficient learning in associative bandit problems. In Proceedings of the 23rd international conference on Machine learning, pages 889-896. ACM, 2006.",
+    "[raw_reference] Murray K. Clayton. Covariate models for Bernoulli bandits. Sequential Analysis, 8(4):405-426, 1989.",
+    "[raw_reference] Jyotirmoy Sarkar. One-armed bandit problems with covariates. The Annals of Statistics, pages 1978-2002, 1991.",
+    "[raw_reference] Yuhong Yang and Dan Zhu. Randomized allocation with nonparametric estimation for a multi- armed bandit problem with covariates. The Annals of Statistics, 30(1):100-121, 2002.",
+    "[raw_reference] Philippe Rigollet and Assaf Zeevi. Nonparametric bandits with covariates. In Adam Tauman Kalai and Mehryar Mohri, editors, Proceedings of the 23rd Conference on Learning Theory, pages 54-66, 2010.",
+    "[raw_reference] John Langford and Tong Zhang. The epoch-greedy algorithm for multi-armed bandits with side information. In Advances in neural information processing systems, pages 817-824, 2008.",
+    "[raw_reference] Naoki Abe and Atsuyoshi Nakamura. Learning to optimally schedule internet banner adver- tisements. In Proceedings of the Sixteenth International Conference on Machine Learning, pages 12-21.",
+    "[raw_reference] Lihong Li, Wei Chu, John Langford, and Robert E. Schapire. A contextual-bandit approach to personalized news article recommendation. In Proceedings of the 19th International Conference on World Wide Web, pages 661-670. ACM, 2010.",
+    "accepted subject to revisions",
+    "[raw_reference] Inbal Nahum-Shani, Shawna N. Smith, Bonnie J. Spring, Linda M. Collins, Katie Witkiewitz, Ambuj Tewari, and Susan A. Murphy. Just-in-time adaptive interventions (JITAIs) in mobile health: Key components and design principles for ongoing health behavior support. Annals of Behavioral Medicine, 2016. accepted subject to revisions.",
+    "[raw_reference] Yevgeny Seldin, Peter Auer, John S. Shawe-Taylor, Ronald Ortner, and Fran\u00e7ois Laviolette. PAC-Bayesian analysis of contextual bandits. In Advances in Neural Information Processing Systems, pages 1683-1691, 2011.",
+    "[raw_reference] Aleksandrs Slivkins. Contextual bandits with similarity information. The Journal of Machine Learning Research, 15(1):2533-2568, 2014.",
+    "[raw_reference] Rajeev Agrawal and Demosthenis Teneketzis. Certainty equivalence control with forcing: revisited. Systems & control letters, 13(5):405-412, 1989.",
+    "[raw_reference] Alexander Goldenshluger and Assaf Zeevi. A linear response bandit problem. Stochastic Systems, 3(1):230-261, 2013.",
+    "[raw_reference] Alexander Goldenshluger and Assaf Zeevi. Woodroofe's one-armed bandit problem revisited. The Annals of Applied Probability, 19(4):1603-1633, 2009.",
+    "[raw_reference] Hamsa Bastani and Mohsen Bayati. Online decision-making with high-dimensional covariates. Available at SSRN 2661896, 2015.",
+    "[raw_reference] Alekh Agarwal, Miroslav Dud\u00edk, Satyen Kale, John Langford, and Robert E. Schapire. Contextual bandit learning with predictable rewards. In International Conference on Artificial Intelligence and Statistics, pages 19-26, 2012.",
+    "[raw_reference] Vianney Perchet and Philippe Rigollet. The multi-armed bandit problem with covariates. The Annals of Statistics, 41(2):693-721, 2013.",
+    "[raw_reference] Wei Qian and Yuhong Yang. Randomized allocation with arm elimination in a bandit problem with covariates. Electronic Journal of Statistics, 10(1):242-270, 2016.",
+    "[raw_reference] Miroslav Dudik, Daniel Hsu, Satyen Kale, Nikos Karampatziakis, John Langford, Lev Reyzin, and Tong Zhang. Efficient optimal learning for contextual bandits. In Proceedings of the Twenty-Seventh Conference Annual Conference on Uncertainty in Artificial Intelligence, pages 169-178. AUAI Press, 2011.",
+    "[raw_reference] Alekh Agarwal, Daniel Hsu, Satyen Kale, John Langford, Lihong Li, and Robert Schapire. Taming the monster: A fast and simple algorithm for contextual bandits. In Proceedings of the 31st International Conference on Machine Learning, pages 1638-1646, 2014.",
+    "[raw_reference] Consumer Health Information Corporation. Motivating patients to use smartphone health apps, 2011. URL: http://www.consumer-health.com/motivating-patients-to-use-smartphone-health- apps/, accessed: June 30, 2016.",
+    "[report_type] PhD thesis",
+    "[raw_reference] Huitian Lei. An Online Actor Critic Algorithm and a Statistical Decision Procedure for Personalizing Intervention. PhD thesis, University of Michigan, 2016.",
+    "[raw_reference] Wei Chu, Lihong Li, Lev Reyzin, and Robert E. Schapire. Contextual bandits with linear payoff functions. In International Conference on Artificial Intelligence and Statistics, pages 208-214, 2011.",
+    "[raw_reference] Peter Auer. Using confidence bounds for exploitation-exploration trade-offs. The Journal of Machine Learning Research, 3:397-422, 2003.",
+    "[raw_reference] Philip M. Long. On-line evaluation and prediction using linear functions. In Proceedings of the tenth annual conference on Computational learning theory, pages 21-31. ACM, 1997.",
+    "[raw_reference] Sarah Filippi, Olivier Cappe, Aur\u00e9lien Garivier, and Csaba Szepesv\u00e1ri. Parametric bandits: The generalized linear case. In Advances in Neural Information Processing Systems, pages 586-594, 2010.",
+    "[raw_reference] Michal Valko, Nathan Korda, R\u00e9mi Munos, Ilias Flaounas, and Nello Cristianini. Finite-time analysis of kernelised contextual bandits. In Uncertainty in Artificial Intelligence, page 654, 2013.",
+    "[raw_reference] Tyler Lu, D\u00e1vid P\u00e1l, and Martin P\u00e1l. Contextual multi-armed bandits. In International Conference on Artificial Intelligence and Statistics, pages 485-492, 2010.",
+    "[raw_reference] Cem Tekin and Mihaela van der Schaar. RELEAF: An algorithm for learning and exploiting relevance. IEEE Journal of Selected Topics in Signal Processing, 9(4):716-727, June 2015.",
+    "[raw_reference] Daniel Russo and Benjamin Van Roy. Learning to optimize via posterior sampling. Mathe- matics of Operations Research, 39(4):1221-1243, 2014.",
+    "[raw_reference] Steven L. Scott. A modern Bayesian look at the multi-armed bandit. Applied Stochastic Models in Business and Industry, 26(6):639-658, 2010.",
+    "[raw_reference] Shipra Agrawal and Navin Goyal. Thompson sampling for contextual bandits with linear payoffs. In Proceedings of the 30th International Conference on Machine Learning (ICML- 13), pages 127-135, 2013.",
+    "[raw_reference] Benedict C. May, Nathan Korda, Anthony Lee, and David S. Leslie. Optimistic Bayesian sampling in contextual-bandit problems. The Journal of Machine Learning Research, 13(1):2069-2106, 2012.",
+    "[raw_reference] Saul Shiffman. Dynamic influences on smoking relapse process. Journal of Personality, 73(6):1715-1748, 2005.",
+    "[raw_reference] Peter Auer, Nicolo Cesa-Bianchi, Yoav Freund, and Robert E. Schapire. The nonstochastic multiarmed bandit problem. SIAM Journal on Computing, 32(1):48-77, 2002.",
+    "[raw_reference] Jean-Yves Audibert and S\u00e9bastien Bubeck. Minimax policies for adversarial and stochastic bandits. In Proceedings of the 22nd Annual Conference on Learning Theory, 2004.",
+    "[raw_reference] Jacob Abernethy, Chansoo Lee, and Ambuj Tewari. Fighting bandits with a new kind of smoothness. In Advances in Neural Information Processing Systems 28, pages 2188-2196, 2015.",
+    "JMLR Workshop and Conference Proceedings",
+    "[raw_reference] Alina Beygelzimer, John Langford, Lihong Li, Lev Reyzin, and Robert E. Schapire. Contextual bandit algorithms with supervised learning guarantees. In Proceedings of the 14th International Conference on Artificial Intelligence and Statistics, volume 15 of JMLR Workshop and Conference Proceedings, pages 19-26, 2011.",
+    "Suppl",
+    "[raw_reference] Predrag Klasnja, Eric B. Hekler, Saul Shiffman, Audrey Boruvka, Daniel Almirall, Ambuj Tewari, and Susan A. Murphy. Microrandomized trials: An experimental design for developing just-in-time adaptive interventions. Health Psychology, 34(Suppl):1220-1228, Dec 2015.",
+    "[raw_reference] John Langford, Alexander Strehl, and Jennifer Wortman. Exploration scavenging. In Proceedings of the 25th international conference on Machine learning, pages 528-535. ACM, 2008.",
+    "[raw_reference] Alex Strehl, John Langford, Lihong Li, and Sham M. Kakade. Learning from logged implicit exploration data. In Advances in Neural Information Processing Systems, pages 2217-2225, 2010.",
+    "[raw_reference] Lihong Li, Wei Chu, John Langford, and Xuanhui Wang. Unbiased offline evaluation of contextual-bandit-based news article recommendation algorithms. In Proceedings of the fourth ACM international conference on Web search and data mining, pages 297-306. ACM, 2011.",
+    "JMLR Workshop and Conference Proceedings",
+    "[raw_reference] Lihong Li, Wei Chu, John Langford, Taesup Moon, and Xuanhui Wang. An unbiased offline evaluation of contextual bandit algorithms with generalized linear models. In Proceedings of the Workshop on On-line Trading of Exploration and Exploitation 2 July 2, 2011, Bellevue, Washington, USA, volume 26 of JMLR Workshop and Conference Proceedings, pages 19-36, 2012.",
+    "[raw_reference] Miroslav Dud\u00edk, John Langford, and Lihong Li. Doubly robust policy evaluation and learning. In Proceedings of the 28th International Conference on Machine Learning, pages 1097-1104, 2011.",
+    "[raw_reference] Min Qian and Susan A. Murphy. Performance guarantees for individualized treatment rules. Annals of Statistics, 39(2):1180, 2011.",
+    "[raw_reference] Yingqi Zhao, Donglin Zeng, A. John Rush, and Michael R. Kosorok. Estimating individualized treatment rules using outcome weighted learning. Journal of the American Statistical Association, 107(499):1106-1118, 2012.",
+    "[raw_reference] Baqun Zhang, Anastasios A. Tsiatis, Eric B. Laber, and Marie Davidian. A robust method for estimating optimal treatment regimes. Biometrics, 68(4):1010-1018, 2012.",
+    "[raw_reference] Baqun Zhang, Anastasios A. Tsiatis, Marie Davidian, Min Zhang, and Eric Laber. Estimating optimal treatment regimes from a classification perspective. Stat, 1(1):103-114, 2012.",
+    "[raw_reference] Amir Sani, Alessandro Lazaric, and R\u00e9mi Munos. Risk-aversion in multi-armed bandits. In Advances in Neural Information Processing Systems, pages 3275-3283, 2012.",
+    "[raw_reference] Sattar Vakili and Qing Zhao. Mean-variance and value at risk in multi-armed bandit problems. In 2015 53rd Annual Allerton Conference on Communication, Control, and Computing (Allerton), pages 1330-1335. IEEE, 2015."
+  ],
+  "editors": [
+    "Adam Tauman",
+    "Kalai",
+    "Mehryar Mohri"
+  ],
+  "processing_software": {
+    "GROBID": "0.8.2"
+  }
+}

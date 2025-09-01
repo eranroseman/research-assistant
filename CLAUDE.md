@@ -1,134 +1,157 @@
-# Research Assistant v4.6
+# Research Assistant v5.0
 
-Literature search with Multi-QA MPNet embeddings and enhanced quality scoring. KB: ~2,000+ papers, ~305MB.
+Advanced literature extraction and enrichment pipeline with GROBID TEI processing and multi-source metadata enrichment.
 
 ## Quick Start
 
 ```bash
 # Setup
 pip install -r requirements.txt
-python src/build_kb.py --demo  # 5-paper test
 
-# Build KB
-python src/build_kb.py         # Safe incremental update (adds new papers only)
-python src/build_kb.py --rebuild  # Full rebuild (requires confirmation)
+# V5 Pipeline - Full extraction and enrichment
+python src/v5_extraction_pipeline.py         # Main pipeline
+python src/extraction_pipeline_runner_checkpoint.py  # With checkpoint recovery
 
-# Search
-python src/cli.py search "diabetes" --quality-min 70 --show-quality
-python src/cli.py smart-search "digital health" -k 30
-python src/cli.py cite 0001 0234 1426  # Generate IEEE citations
-
-# Gap Analysis
-python src/analyze_gaps.py  # Auto-prompted after builds
-
-# External Discovery
-python src/discover.py --keywords "diabetes,mobile health"
+# Enrichment tools
+python src/crossref_batch_enrichment_checkpoint.py  # DOI metadata
+python src/openalex_enricher.py              # OpenAlex enrichment
+python src/v5_unpaywall_pipeline.py          # Open access status
 ```
 
 ## Architecture Overview
 
 ```text
-Zotero → PyMuPDF → Full Text → Multi-QA MPNet → FAISS Index
-                ↓
-        Semantic Scholar API → Quality Scores → Gap Analysis
+Zotero Library → GROBID Server → TEI XML → JSON Extraction
+                                     ↓
+         CrossRef/S2/OpenAlex/Unpaywall → Enriched Metadata
+                                     ↓
+                        Final Quality-Filtered Dataset
 
-kb_data/
-├── index.faiss, metadata.json, sections_index.json
-├── .pdf_text_cache.json, .embedding_cache.json, .embedding_data.npy
-└── papers/paper_XXXX.md  # 4-digit IDs (0001-XXXX)
+extraction_pipeline/
+├── 01_tei_xml/        # GROBID TEI XML (2,210 papers, ~10 hours)
+├── 02_json_extraction/
+├── 03_zotero_recovery/
+├── 04_crossref_enrichment/
+├── 05_s2_enrichment/
+├── 06_openalex_enrichment/
+├── 07_unpaywall_enrichment/
+├── 08_pubmed_enrichment/
+├── 09_arxiv_enrichment/
+└── 10_final_output/
 ```
 
 ## Key Features
 
 | Feature | Description |
 |---------|------------|
-| **External Discovery** | 214M papers via Semantic Scholar (85% digital health coverage) |
-| **Quality Scoring** | 0-100 score with API enrichment (citations, venues, h-index) |
-| **Smart Caching** | Quality upgrades preserve embeddings (30x faster) |
-| **Checkpoint Recovery** | Saves every 50 papers, resume from interruption |
-| **GPU Auto-Detection** | 10x speedup when CUDA available |
-| **Full Content** | No truncation, 50KB per section limit |
+| **GROBID Processing** | Full-text extraction with TEI XML structure preservation |
+| **Multi-API Enrichment** | CrossRef, S2, OpenAlex, Unpaywall, PubMed, arXiv |
+| **Checkpoint Recovery** | Resume from any stage after interruption |
+| **Quality Filtering** | Automatic removal of non-articles, duplicates |
+| **Batch Processing** | Efficient API calls with rate limiting |
+| **Completeness Analysis** | Track extraction success rates per stage |
 
-## Commands Reference
+## V5 Pipeline Commands
 
-### KB Management
-
-```bash
-python src/build_kb.py [--rebuild|--demo|--export FILE|--import FILE]
-```
-
-### Search & Discovery
+### Core Extraction
 
 ```bash
-python src/cli.py search "topic" [--show-quality] [--quality-min N]
-python src/cli.py smart-search "topic" -k 30
-python src/cli.py author "Smith J" --exact
-python src/cli.py get 0001 [--sections abstract methods]
-python src/cli.py cite 0001 0002 0003
-python src/discover.py --keywords "AI,diagnostics" --year-from 2022
+# Extract from Zotero and process with GROBID
+python src/extract_zotero_library.py
+python src/grobid_overnight_runner.py --input pdfs/ --output tei_xml/
+
+# Post-process TEI XML to JSON
+python src/comprehensive_tei_extractor.py
+python src/grobid_post_processor.py
 ```
 
-### Development
+### Enrichment Pipeline
+
+```bash
+# Run complete enrichment with checkpoints
+python src/extraction_pipeline_runner_checkpoint.py
+
+# Individual enrichment stages
+python src/crossref_batch_enrichment_checkpoint.py
+python src/s2_batch_enrichment.py
+python src/openalex_enricher.py
+python src/v5_unpaywall_pipeline.py
+python src/pubmed_enricher.py
+python src/v5_arxiv_pipeline.py
+```
+
+### Analysis & Cleanup
+
+```bash
+# Analyze pipeline completeness
+python src/analyze_pipeline_completeness.py
+
+# Identify and fix problematic papers
+python src/analyze_problematic_papers.py
+python src/analyze_failed_papers.py
+
+# Quality filtering
+python src/filter_non_articles.py
+python src/final_cleanup_no_title.py
+```
+
+## Development
 
 ```bash
 mypy src/
-ruff check src/ tests/ --fix
-pytest tests/unit/ -v              # Fast unit tests
-pytest tests/integration/ -v       # Workflow tests
-pytest tests/e2e/test_e2e_cli_commands.py::TestCriticalE2EFunctionality -v
+ruff check src/ --fix
+pytest tests/ -v  # Tests in v4/tests/
 ```
 
 ## Troubleshooting
 
 | Issue | Solution |
 |-------|----------|
-| KB not found | `python src/build_kb.py --demo` |
-| Zotero connection | Start Zotero, enable API in Preferences → Advanced |
-| Invalid paper ID | Use 4-digit format (0001) |
-| GPU check | `python -c "import torch; print(torch.cuda.is_available())"` |
-| API failures | Run `python src/build_kb.py` to upgrade basic scores |
-| Corrupted KB | `python src/build_kb.py --rebuild` |
+| GROBID connection | Ensure GROBID server running on port 8070 |
+| TEI extraction fails | Check XML validity, use `comprehensive_tei_extractor.py` |
+| API rate limits | Adjust delays in enricher scripts |
+| Missing DOIs | Run `recover_dois_crossref.py` |
+| Checkpoint recovery | Check `*_checkpoint.json` files |
+| Memory issues | Process in smaller batches |
 
-## Quality Score System
+## Pipeline Performance
 
-**Score Composition (0-100)**:
+- **TEI Extraction**: ~10 hours for 2,210 papers (GROBID)
+- **JSON Processing**: ~30 minutes
+- **CrossRef Enrichment**: ~2 hours with rate limiting
+- **Full Pipeline**: ~15 hours total
+- **Success Rate**: ~85% papers fully enriched
 
-- Citation impact: 25 points
-- Venue prestige: 15 points
-- Author authority: 10 points
-- Cross-validation: 10 points
-- Core factors: 40 points (study type, recency, sample size, full text)
+## Quality Metrics
 
-**Visual Indicators**: A+ (85-100) A (70-84) B (60-69) C (45-59) D (30-44) F (0-29)
-
-## Performance Specs
-
-- **Processing**: ~17 min for 2,000 papers initial, ~2 min incremental
-- **Embeddings**: 768-dim Multi-QA MPNet vectors
-- **Rate Limiting**: Adaptive 100ms → 500ms+ delays
-- **Cache**: Preserves embeddings during quality upgrades
-- **Recovery**: Checkpoint every 50 papers
-
-## Test Organization
-
-```text
-tests/              # 193 total tests
-├── unit/           # 123 tests - Component testing
-├── integration/    # 40 tests - Workflow validation
-├── e2e/           # 23 tests - End-to-end functionality
-└── performance/    # 7 tests - Speed benchmarks
-```
+- **Input**: 2,210 Zotero papers
+- **TEI XML Generated**: 2,210 (100%)
+- **Successfully Extracted**: ~1,900 (86%)
+- **CrossRef Enriched**: ~1,600 (72%)
+- **Final Filtered**: ~1,500 research articles
 
 ## System Requirements
 
 - Python 3.11+
-- Internet for Semantic Scholar API
-- 4GB RAM minimum (8GB recommended)
-- Optional: CUDA GPU for 10x embedding speedup
+- GROBID server (Docker recommended)
+- 16GB RAM recommended
+- ~10GB disk space for full pipeline
+- Internet for API enrichment
+
+## Migration from v4
+
+```bash
+# V4 code and data preserved in v4/ directory
+v4/
+├── src/          # V4 source code
+├── kb_data/      # V4 knowledge base
+├── tests/        # V4 tests
+└── docs/         # V4 documentation
+```
 
 ## Notes
 
-- **v4.6 Improvements**: Fixed parallel processing HTTP 429 errors, added checkpoint recovery
-- **Breaking Change**: v3.x KBs incompatible, rebuild required
-- **Security**: No pickle, path validation, input sanitization
-- **Priorities**: Data integrity > Performance > Features
+- **v5.0 Changes**: Complete rewrite with GROBID extraction, multi-API enrichment
+- **Data Preservation**: TEI XML in `extraction_pipeline/01_tei_xml/` (10 hours work)
+- **Checkpoint System**: Automatic recovery from any stage
+- **API Best Practices**: Rate limiting, retry logic, batch processing

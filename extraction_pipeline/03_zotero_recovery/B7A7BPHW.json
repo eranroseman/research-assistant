@@ -1,0 +1,621 @@
+{
+  "paper_id": "B7A7BPHW",
+  "title": "Wearables in the Wet Lab: A Laboratory System for Capturing and Guiding Experiments",
+  "abstract": "Wet Laboratories are highly dynamic, shared environments full of tubes, racks, compounds, and dedicated machinery. The recording of experiments, despite the fact that several ubiquitous computing systems have been suggested in the past decades, still relies predominantly on hand-written notes. Similarly, the information retrieval capabilities inside a laboratory are limited to traditional computing interfaces, which due to safety regulations are sometimes not usable at all. In this paper, Google Glass is combined with a wrist-worn gesture sensor to support Wetlab experimenters. Taking \"in-situ\" documentation while an experiment is performed, as well as contextualizing the protocol at hand can be implemented on top of the proposed system. After an analysis of current practices and needs through a series of explorative deployments in wet labs, we motivate the need for a wearable hands-free system, and introduce our specific design to guide experimenters. Finally, using a study with 22 participants evaluating the system on a benchmark DNA extraction experiment, we explore the use of gesture recognition for enabling the system to track where the user might be in the experiment.",
+  "year": 2008,
+  "date": "2008",
+  "authors": [
+    {
+      "name": "Philipp Scholl",
+      "email": "pscholl@ese.uni-freiburg.de"
+    },
+    {
+      "name": "Matthias Wille",
+      "email": "dr.matthias.wille@gmail.com"
+    },
+    {
+      "name": "Kristof Van Laerhoven",
+      "email": "kristof@ese.uni-freiburg.de"
+    },
+    {
+      "affiliation": {
+        "organization": "Embedded Systems",
+        "institution": "Albert- Ludwigs-Universit\u00e4t Freiburg",
+        "address": "Germany"
+      }
+    },
+    {
+      "affiliation": {
+        "organization": "Embedded Systems",
+        "institution": "Albert- Ludwigs-Universit\u00e4t Freiburg"
+      }
+    }
+  ],
+  "doi": "10.1145/2750858.2807547",
+  "md5": "A2C47C6E3E63797B6DFACE1BF07AD07B",
+  "publication": {
+    "journal": "IEEE Pervasive Comput",
+    "journal_inferred": true
+  },
+  "keywords": [
+    "Life Science",
+    "Hands-free Documentation",
+    "Google Glass",
+    "Wrist-Worn Inertial Sensors",
+    "Wet Lab",
+    "Activity Recognition ACM Classification H.5.m. [Information Interfaces and Presentation (e.g. HCI)]: Miscellaneous"
+  ],
+  "funding": [
+    "ACKNOWLEDGMENTS We thank all study participants for performing the lab studies, as well as the research staff at  Cardoso Lab of the Technical University Darmstadt  for their kind assistance and helpful discussions during the analysis phase of their microbiology experiments. Furthermore we like to thank all participants of the DNA Extraction study at the  Federal Institute for Occupational Safety and Health Dortmund, Germany , and the staff for their kind assistance (especially  Ulrich Hold  and  Nina Schelter ) and execution of the study."
+  ],
+  "sections": [
+    {
+      "title": "INTRODUCTION",
+      "text": "Much of the experimental research in life sciences is performed in wet labs. These laboratories are highly dynamic in nature and contain benches packed with equipment such as tubes, racks, compounds, specialized machinery and computers. Chemicals, organisms, liquids and other agents are experimented on. The experiments performed in such labs can take a few minutes up to several days, and need to suspended often for organism to grow, or until a sufficient amount of agents are incubated. To provide valid results, experiments are required to be reproducible, which is why experimenters rely on checklist-like documentation notes taken during or prior to their procedures. Off-the-shelf Kits, which implement common procedures, provide detailed usage instructions. Other details of procedures are either established from scratch, adapted from similar experiments, incrementally refined as experiments get repeated or executed as close as possible in an experiment reproduction cycle. The observations of the scientist and details of the procedure are recorded in so called protocols.\n\nMaintaining these lab protocols often ends up as a heavy burden for the experimenter, resulting subsequently in protocols that are routinely written \"offline\", after the experiment has been performed. Individual steps and details are mostly reconstructed from memory, if written down at all. One reason for this, is the large effort in putting down the experimentation equipment (e.g., pipettes, flasks, gloves, or containers) and moving to a different bench to take notes or retrieve information from a PC. Another more profound reason is the risk of contamination -laboratories are classified into four bio-safety levels with increasing precautions to contain harmful agents. Easily contaminated and absorbent materials like paper, lab notebooks, cameras and other utilities need to be sterilisable. Wrapping these into easily de-contaminated materials (e.g. shrink-wrapping), not allowing them to be taken out of the laboratory or requiring them to be used only with protective garments are common routines. Even when working with non-harmful agents, contamination can be an issue when materials are shared or compounds transferred between experiments via contaminated tools. Such contaminations can easily invalidate experimental results. Therefore, the taken safety pre-cautions serve a double purpose:  (1)  to protect the experimenter from the organism and (2) the organism under study from unwanted contaminations from the outside. These neccesary pre-cautions however hinder the on-the-spot documentation retrieval and generation abilities of scientists in the wet lab.\n\nWe follow in this paper a similar approach to that of a set of previous studies from ubiquitous computing research, which posit that assisting the experimenters with an interactive and augmented lab environment has strong potential to increase their efficiency, to decrease the probability of errors, and to allow for a comfortable recording of experimental parameters in biology or chemistry experiments. We present to this end a wearable system providing features such as a head-up display, point-of-view video recordings, voice recognition and hand gesture recognition which allows inconspicuous interaction with the laboratory. It also provides the opportunity to assist individual experimenters by equipping themselves rather than changing the environment for all its users. More specifically, we present in this paper a fully wearable system consisting of Google Glass and a wrist-worn accelerometer, to aid in documenting the experiment steps in a wet laboratory environment. Our core assumption is that the usefulness of continuous streams of video, audio or environmental sensor data is increased, when its searchable by human-understandable cues or can be retrieved automatically by current context. In this paper we ask wether wrist accelerations can provide such cues. The following three contributions are made:\n\n\u2022 A case study of a microbiology laboratory is introduced, which studies the challenges a wearable system needs to overcome, via a series of observations of point-of-view video recordings in different lab environments.\n\n\u2022 We present a hands-free system that enables wet lab scientists to record their work, or look up, navigate, and mark steps of an existing protocols through a head up display.\n\n\u2022 The feasibility of detecting common gestures with 22 novice users from wrist acceleration readings in a controlled laboratory study (DNA extraction) is shown. Fur-thermore reconstructing large parts of the experimental protocol based on key getures (such as mixing, stirring, or pouring) by a Hidden Markov Model is demonstrated.\n\nIn the remainder of this paper, the system with its individual components is described and a deployment of the system for capturing experiments in several types of wet laboratories is discussed. We then provide a study on what is achievable with gesture recognition algorithms alone as a capturing approach, followed by a discussion of the results with relation to future directions that this approach can take. First, we compare our wearable system to other systems for wet laboratories that have been proposed in the past years, and more generally to wearable assistant systems for other domains."
+    },
+    {
+      "title": "RELATED WORK",
+      "text": "The notebook, in which experimenters record their thoughts, results, and plans serves as one of the core parts during a life scientists' research. As such it has been the target of many research efforts, as well as targeted by commercial endeavours. Subsequently, electronic laboratory notebooks (ELNs) are often sought to replace or enhance their pen and paper counterparts. Even when offering clear advantages, like searchability of records, direct addition of multimedia, eased collaboration  [1] [2] [3] , edit-ability  [4]  and capturing of instrument measurements  [5] , their usage is still limited. Since these notebooks are used for tracing and claiming inventions, as well as checking conformance to established protocols, liability and legal issues arise with their usage. For electronic records, only a limited legal framework is available  [6, 7] , limiting possible usage scenarios only to some laboratories.\n\nPen and paper solutions are also preferred because of the flexibility and freedom over visual structure they provide  [8] . This has lead to several efforts which try to combine physical and electronic notes. The a-book  [9]  combines a tablet and PDA to capture paper notebook writing. Based on a fiducial marker, entries could be augmented with additional media and easily shared. A system to support biologists in the field was presented in the ButterflyNet  [10]  project. Handwritten notes are captured (with an Anoto pen) and combined with visual and audio information for later access. This allowed the biologist to capture information in the field, and augment it with other sensory clues -a task that previously had to be done manually. The Prism  [1]  project reports on a study of biologists' work practices and presents a hybrid system using hand-written notes as well as digital content to capture, visualise and interact with activity streams in the laboratory. Forcing too much structure has been found to be too inflexible. An open design based on linking and searching information bits was adopted, similar to the MyLifeBits design  [11]  but specific to the experimenters workflow.\n\nOther type of systems are focussed on providing a more formal specification of single experimental workflows, on which user interfaces are built. These systems also augment the lab itself to provide these user interfaces. The Lab-Scape  [12]  project was an early investigation in a ubiquitous computing platform to help scientists and students to access and capture information in the laboratory. It uses interactive flowchart diagrams to visualize and annotate ongoing procedures that are accessed via a touch-tablet, barcode scanner, RFID tags  [13] , numeric keypad and wireless keyboard.\n\nDuring the Combechem project the idea of a digitized flowchart was enhanced to a Semantic Smart Laboratory  [14] , a system for supporting chemistry experiments focusing on providing a flexible ontology for describing experiments and storing them for later retrieval. A formal definition of chemical experiments is presented as part of the Labtrove project  [15]  as well. The eLabBench  [16]  and Biotisch  [17]  takes the integration in the laboratory further by replacing the traditional workbench with a tabletop system that presents information on the bench's surface, also allowing interaction, sensing of augmented objects (e.g, racks of test tubes) and taking pictures of the whole setup with an overhead camera. The gathered digital information is stored in a wiki-like notebook for later retrieval.\n\nIn contrast, the system that is proposed in this paper focuses on the largely unexplored area of supporting and augmenting such laboratory tasks by means of a lightweight, exclusively wearable system. The setup requires little to no interference with the laboratory environment and its inventory, and offers hands-free operation. We argue that this approach of augmenting the researchers instead of the laboratory, has many advantages, not in the least the fact that every user in existing laboratories can still opt to keep on documenting their experiments with the traditional methods alone  [18] .\n\nAs has been shown by some of the above research, a formal workflow tends to be valued by experimenters and can be exploited as a structure for information capture as well. We investigate in particular whether a wrist-worn accelerometer unit can be used to capture such pre-defined structure, for instance in order to index associated video and audio recordings. This concept of automated journal building has been introduced previously, where activities were extracted in an unsupervised fashion  [19] . In the case of the life science laboratory, these workflows tend to be frequently predefined, and actions can be extracted from available textual descriptions, leading to a semi-supervised approach.\n\nThe concepts of wearable workflow monitoring, documentation access, and assistance have been thoroughly explored by research in other domains  [20] , especially in maintenance  [21] , manufacturing  [22]  and inspection tasks  [23] . Key components of the envisioned system in this paper were also inspired by the Remembrance Agent (Remem) project at the MIT more than a decade ago. The proposed system is however focused on the specific scenario of documenting and assisting wet laboratory tasks, where contextual knowledge is well-defined, and tasks and information have additional constraints that the lab environment poses."
+    },
+    {
+      "title": "SYSTEM DESIGN",
+      "text": "For the work presented in this paper, we implemented the basics of a voice-interacted task guidance and logging system. (cf. Figure  2 ) The system is able to display workflow steps, and navigate or mark steps as done through voice interaction.\n\nIt also includes the ability to capture audio and video from Glass , and interactions with Glass in the background. Additionally gestures made by the dominant hand from a lowpower inertial sensing unit (cf. Figure  3 ) are recorded. The data of both systems is merged offline, as this implementation was only used for this particular experiment. We will present both system components in this section and detail their implementations."
+    },
+    {
+      "title": "The Wrist-Worn Unit",
+      "text": "A wrist watch-like 3D acceleration sensing unit is used to capture motion sequences from the experimenter's dominant hand  [24] . It consists of a low-power micro-controller connected to an ADXL345 3D-accelerometer. Acceleration data is logged in a compressed format to an on-board microSDcard and the included 180mAh-battery can keep the system running for at least 2 weeks continuously. The data from the wrist-worn unit is in the system's current implementation retrieved after the experiment are completed via USB, and analyzed offline for gestures that can be correlated to certain experiment steps. The device is reprogrammable via USB and protected by a plastic enclosure, visible in the lowerright section of Figure  1 . The sampling rate was set to 50Hz, and collected in \u00b14g range, for the studies described in the deployment and experiment sections hereafter."
+    },
+    {
+      "title": "Google's Glass",
+      "text": "Glass was used to capture experiments via its side-mounted video camera and microphone. Additionally, an application was designed to guide experimenters through predetermined experiment protocols. For the latter, an example user interface presented to participants can be seen in Figure  2  and shows some of the steps of the DNA extraction protocol that was used during this paper's study. Single steps in the protocol are shown in a timeline, that could be navigated to the left (for past steps) and to the right (for future steps). The wearer has the choice to navigate the protocol using either the swipe gestures on the touchpad foot_0  on the Glass, or by voice commands. The subset of voice commands chosen for this were \"previous\", \"next slide\", \"check this step\" and \"mark as done\". These commands were chosen by experimenting with their recognition rates, trying to increase their phonetic dissimilarity for multiple speakers. By saying \"check this step\", \"mark as done\" or by tapping the touchpad, the user can let the system know that the step was performed, which is visualized by striking the current item through. The \"ok, glass\" guard phrase, which is usually required for Glass apps, was removed to minimize interaction time. If this item was the last step on the slide, the system automatically displays the next step. The application was implemented using the Android Framework, and works on Google's Glass as well as on Tablets and Smartphones.\n\nThe guiding part of our system is designed to be easily adaptable to different protocols. For this, we decided to use a document-driven approach, in which a human-readable and machine-parseable document contains the steps of a procedural protocol. These steps are written down in Markdown  [25]  documents. This allows experimenters to modify and present these workflow steps on different personal computing accessories (like PCs, laptops, Smartphones, and Wear-ables) without much implementation effort. It furthermore allows for linking documents, and referencing additional media files. However, the major reason for using a documentdriven design is that modification of the protocol can be captured easily in a distributed fashion. Only the transformations of the document need to be transported to a central repository. The protocols can then be shared cross-device and can be scoped on a per-user basis. This provides the means to share, collaborate on and synchronize the experimental protocol.\n\nThe interaction design of a wearable system for recording biology experiments is another important aspect. It should be possible to operate in a hands-free manner and stay out of the user's way most of the time (after all, the experimenter is interested in the outcome of his/her experiment and not recording his efforts in all detail). Explicit interaction can, for example, be achieved through voice recognition, or touch-free action/gesture/motion recognition. Since such an explicit interaction requires the user's full attention it should be used only when necessary. This is the reason why we also take into account any possible implicit interactions, through continuously monitoring the user's wrist movement to infer his or her context to provide additional information. Such contextual information can also be used to provide cues from large bodies of recorded data, similar to life-logging applications  [11] . For example, imagine an experimenter videorecording all of his experiments and afterwards being able to efficiently jump to all sequences where something was pipet-ted or to particular steps in his protocols that have been detected via his wrist movements."
+    },
+    {
+      "title": "DEPLOYMENT AS A RECORDING TOOL",
+      "text": "The system as described in the previous section was deployed for recording the users at work in three different wet laboratory environments: an academic training laboratory, an academic research laboratory, and a commercial laboratory. Four recording sessions of up to a full day were held.\n\nIn each recording, up to five microbiology researchers or students were wearing the system simultaneously, working within groups of up to four persons. Figure  4  shows some examples of the video footage taken with Glass. All users were at all times aware of the recordings (Glass showing the current recording) and were encouraged to discuss their experimentation steps and methods, and to provide feedback of the system and its possible advantages and disadvantages.\n\nThe sound recording's quality of Glass was good enough in all environments to understand both the user and the people in the immediate proximity. After the system was handed out and activated, we did not remain present in the laboratories, and examined the contents of the videos afterwards.\n\nIn general, the acceptance of wearing the system was high, and even in the teaching laboratory, where approximately 20 fellow students were working in the same immediate environment of the user, nobody expressed concerns about the possibility of them being recorded. The latter observation might be due to the fact that experimenters do frequently take their personal cameras with them to photograph or record important experiment results. Apart from a few remarks made towards the end of the teaching sessions (which lasted over three hours each), we did not note any big signs of discomfort in wearing the system: Glass was at two occasions taken off to concentrate on using a microscope, and once to demonstrate it to a fellow user. One of the wrist-worn accelerometer sensors did not record consistent data as it was not strapped on tight enough and had rotated along the wrist during the course of the experiments. The video quality of Glass (at 720p) tends to be good enough to be able to read most compound labels and handwritten notes.\n\nSeveral findings that emerged from the video footage are especially noteworthy: (1) Even in laboratories with a lower safety clearance which implies minimal contamination risks and therefore does not require gloves, the option of taking pictures or videos hands-free is a strong advantage. On many occasions, users required both hands simultaneously to handle instruments and the fact that Glass was able to record from a first-person perspective was at several occasions mentioned as a great feature. (2) The use of pen and paper notes is still largely preferred as a primary capturing system. Partly, this is due to its flexibility, but the videos also made clear that ad-hoc written notes, labels, instructions and lab books are truly ubiquitous in the wet lab. A digital system for providing assistance in these surroundings, apart perhaps from some tightly-regulated laboratories, has more chance of adoption when introduced as a complementary technology.\n\n( for instance, several users used their Glass' display to make a recording through the eyepiece. Instead of taking immediate notes on compound quantities, e.g., to record how many millilitres of a solution were obtained, users would hover it closely to Glass' camera. Both during and after the deployments, many of the users were interested in using the system for subsequent times and expressed that they could envision continuing using it for capturing their experiment work.\n\nThe idea for this deployment was to get first insight into the working environment of experimental biologists, and also get a first idea of the usability of using Glass for recording only. To this end, we elicited challenges from several pointof-view video recordings from several laboratories. One specific challenge, that was also mentionend by participants, is the navigation of such continuous recordings. In the remainder of this paper we will look at the possibility of using typical hand gestures to detect the actions conducted during an experiment. These actions, extracted from a procotol's description, will then be used to extract time-codes than can index such continuous recordings -serving as the cues to navigate these recordings and providing guidance just-in-time."
+    },
+    {
+      "title": "EVALUATIONS IN EXPERIMENT GUIDANCE",
+      "text": "We chose DNA extraction, a common entry-level laboratory experiment, for testing the feasibility of our system for both guiding novice users through an experiment and recognizing single activities in an experimental procedure using the wrist-worn sensor. The experiment is guided by a protocol, visualized as a textual step-by-step guide on the Google Glass display. It contains a sequence of two extractions of DNA, first that of an onion and second the DNA of a tomato, with the basic procedure being identical for both. This way all actions are repeated at least once with different material. The two experimental procedures were interleaved to save time, and each participant had to complete 18 steps in total, containing 9 different protocol steps to identify (shown in Table  1 ) and executed two times per participant. Each protocol step was described and displayed when activating the screen of Google Glass (by tilting the head up or tapping Glass' swipe area). Participants were instructed to primarly interact with Glass by speech and to move through the experiment protocol by marking each single step as done. In case the speech recognition would prove to be impractical, touch interaction (tapping) and swiping back and forth for moving between steps was kept as a backup option. The time for which a step was active on Glass' display was recorded in a log file, and is assumed to be the time it took to go through the displayed instructions. Figure  3  shows the experimental setting before and during the experiment, as recorded from a camera that was mounted at the ceiling.\n\nIn total, 22 participants took part in our experiments. Participants were recruited via advertisements in a local newspaper, representing persons with no prior experience in biology experiments and no affiliation to our research. The experiment was run in an environment for performing user studies, with video cameras recording the working bench. Before the task started, the participants were introduced to the functionality of the Google Glass and how they should use it during the DNA Extraction, what the different ingredients are e.g. ethanol or detergent, and where to find them. The participants were then fitted with Glass and the wrist-worn sensor, and asked to follow each displayed step and mark them as done as soon as they are completed. Following an experiment protocol took the participants between 18 and 45 minutes. A successful experiment would result in the DNA becoming visible as a set of small stripes in a test tube, although for our evaluation it did not matter whether the DNA extraction was successful in the end.\n\nThe choice of novice users instead of professional experimenters might be suprising. The goal of this study however, was to show that hand motion sequences can be used to detect protocol steps and actions. Especially to create a dataset that can serve as a benchmark for different detection algorithms. It is therefore important to have a high variabilty in executing different actions, as this is the case also for professional experimenters, i.e. everybody has their own styles. More execution variabilty also means a harder challenge for the detection system, so if it works for untrained personell it will most likely work for trained personell as well. Also, since participants were non-trained, they also adhere stricter to the protocol, a professional in turn might take shortcuts in the experiment since he is aware of the overall goal and working of the experiment. This would create datasets with different execution that are harder to compare. The recorded dataset can therefore be used as a baseline benchmark for recognizing actions that are related to those in a wet laboratory -in a systematic manner.\n\nThe goals of this study were threefold: First, we looked into the specific interactions with the guidance applications to see different usage patterns of participants. Second, we want to show how well actions (defined as repeated motion sequences) can be detected through wrist movement measured by an accelerometer -or put differently, how discriminative the measured data is when applied to typical workbench activities. Third, we wanted to know whether the detectable motion sequences (or action sets) correlate with specific protocol steps. Our interest is first and foremost in knowing how well a system could detect the combination of recording interactions, while guiding people through a wet laboratory experiment, and wrist movements. This could be used to automatically detect steps in wet laboratory workflows. . A (typical) page in laboratory notebook and the possibly extracted recognition and guidance system. An action database contains recordings of wrist motion samples. This database will be used for action detection, which in turn serves as the observations of a Hidden Markov Model, which contains each step in the protocol as a hidden state. Each protocol steps contains the to be detected actions. Time is implicitly encoded via the number of made observations. Each protocol step can be displayed on Glass for guidance."
+    },
+    {
+      "title": "User Interaction with the Glass Application",
+      "text": "During the whole experiment, every interaction (both voice commands and swipes) with the Google Glass application was logged for later investigation. As this was done in the background, participants were unaware of this during the experiment, though they were informed about the interaction logging beforehand. A first observation is that most of the participants did not follow the protocol in a strict linear fashion. Sometimes this was due to instructions, that have not been clearly understood, but became apparent on future steps. Though sometimes this was also because of slight delays in the voice recognition with Glass, leading to commands which were given twice. To still extract the currently active step, the interaction log was filtered to include only steps that were visible for more than a few seconds.\n\nFrom this data, it is possible to extract which step of the DNA extraction experiment was viewed at which time, and the duration for which this instruction was visible on the display. Figure  5  visualizes the resulting workflow for each participant, as well as the mean interaction time per step. It can be seen that the overall interaction time ranges from 18 to 45 minutes for all participants, and the experiment was completed in 35 minutes on average. Furthermore, a larger break can be observed in the middle of the experimental workflow (cf. the two consecutive water bath steps), which matches the instruction from the experiment protocol: During these steps, participants had to wait until both the onion and tomato mixture had been cooled or heated up respectively, and no experiment task could be performed during that period. While interpreting these figures it should be kept in mind that the increasing variety in later steps is an artefact of the cumulative display of this particular step's duration. The figure to the bottom right contains the color-coded steps which are the same for both the tomato and onion extraction, i.e. the steps which are repeated for each participants. For example, preparing a solvent agent needs to be done twice, and is encoded in yellow in this figure . A large variety for solvent preparation time, in the duration of keeping the mixtures in the water baths, for filtrating and pestling can be observed.\n\nBased on the data from these interaction logs in combination with video footage made during the evaluation study (for which a summary is depicted in Figure  5 ), the following three observations stand out especially:\n\n\u2022 There is first of all a large cross-user variety concerning the duration of each step, most critically for the steps where participants were instructed to keep a fixed time (e.g. keeping the mixture in the water bath for a certain amount of time). For several participants, browsing through the steps using Glass' voice commands was too time-consuming and they switched to swiping gestures, mid-experiment. This large variety in performance times has as a consequence that timing within an experiment and duration of single steps are important parameters, though they are also less valuable for automatic detection or reconstruction of the experiment protocol.\n\n\u2022 Even though participants were asked, for steps that consisted out of multiple items, to mark each item with a special voice command before the study, several found this too cumbersome and did not adhere to this instruction -action precision recall F1-score cutting 0.23 \u00b1 0.12 0.29 \u00b1 0.17 0.25 \u00b1 0.12 inverting 0.60 \u00b1 0.21 0.64 \u00b1 0.34 0.58 \u00b1 0.25 peeling 0.04 \u00b1 0.04 0.12 \u00b1 0.15 0.06 \u00b1 0.06 pestling 0.62 \u00b1 0.21 0.42 \u00b1 0.13 0.47 \u00b1 0.12 pipetting 0.58 \u00b1 0.13 0.52 \u00b1 0.11 0.54 \u00b1 0.\n\n11 pouring 0.03 \u00b1 0.04 0.13 \u00b1 0.27 0.04 \u00b1 0.05 stirring 0.32 \u00b1 0.25 0.37 \u00b1 0.21 0.29 \u00b1 0.15 transfer 0.08 \u00b1 0.10 0.25 \u00b1 0.34 0.08 \u00b1 0.09 0.31 \u00b1 0.29 0.34 \u00b1 0.29 0.29 \u00b1 0.25 (a) cross-participant, i.e. leave-one-participant-out action precision recall F1-score cutting 0.62 \u00b1 0.20 0.75 \u00b1 0.11 0.66 \u00b1 0.16 inverting 0.80 \u00b1 0.21 0.93 \u00b1 0.16 0.84 \u00b1 0.18 peeling 0.26 \u00b1 0.17 0.51 \u00b1 0.21 0.32 \u00b1 0.17 pestling 0.87 \u00b1 0.08 0.80 \u00b1 0.07 0.83 \u00b1 0.07 pipetting 0.79 \u00b1 0.09 0.77 \u00b1 0.06 0.78 \u00b1 0.06 pouring 0.45 \u00b1 0.22 0.80 \u00b1 0.24 0.55 \u00b1 0.21 stirring 0.83 \u00b1 0.11 0.80 \u00b1 0.08 0.81 \u00b1 0.08 transfer 0.33 \u00b1 0.28 0.49 \u00b1 0.34 0.36 \u00b1 0.28 0.62 \u00b1 0.29 0.73 \u00b1 0.23 0.64 \u00b1 0.26 (b) per-participant, i.e. detecting gestures for one participant only Table  2 . Precision/Recall/F1-Scores based on 250 iterations of a stratified random split (for per-participant scores) and leave-one-out cross-fold validation for cross-participant scores.\n\nmost often, these participants worked through the whole instruction set for one such a particular information card, and then marked all items in one go.\n\n\u2022 Finally, it is important to note that all participants were able to finish their experiment with sole guidance of the wearable system, without abandoning the experiment, and extracting the DNA successfully. Figure  5  shows the time (in minutes) that all experiment steps took per participant."
+    },
+    {
+      "title": "Detecting Actions and Steps from Wrist-Movement",
+      "text": "For evaluating the detection of experiment steps by means of the wrist-worn accelerometer data, the ground truth was gathered by annotating the recordings of an external camera 2 , pointing at the manipulation area of the participant. By (manually) annotating the video we extracted 9 different actions, which had a high visual similarity and were repeated often during the experiment: The onion and the tomato were both cut, and the onion was also peeled. A pipette was used for combining different ingredients, e.g. pipetting the mixture into the test tube. The transfer activity describes using a spoon for putting, e.g. salt, in a beaker, but not using it for stirring for which a stirring rod was available. Pouring describes putting the mixture from one beaker to another or when pouring it into the filter. Pestling refers to mincing the mixture and inverting to putting the test tube upside down and back again. We refer to these video annotations as the ground truth in the following (cf. Table  2 ).\n\nWrist 3D-acceleration data was recorded throughout the experiment on the participant's dominant hand with a sampling rate of 50Hz, within a range of \u00b14g. In total, 1258mins of accelerometer data were recorded. Additionally, the interaction with Google Glass was logged during the experiments, i.e. the timestamps when users switched to the next steps, and this data has been stored locally on the device and was aggregated on a PC after the experiment. time synchronization we relied on the internal clocks of both Glass and the wristworn sensor. For video-annotated acceleration data, we additionally manually fine-tuned the alignment by matching the video and sensor data stream according to easily identified activities, such as stirring. 2 The camera on Glass was not used to make sure that the whole manipulation area was visible throughout the experiment."
+    },
+    {
+      "title": "Action Detection",
+      "text": "To recognize the activities listed in Table  2  from acceleration data, we chose a k-nearest Neighbour (k=8) classifier foot_2  with a 6D feature set, containing the mean and standard deviation of the 3D acceleration data during 20%-overlapping windows of 800ms duration. The video-annotated data was cross-validated cross-participant and per-participant. Cross-participant validation was achieved with a Leave-One-Participant-Out validation, while per-participant validation was done by a 250-times Stratified Shuffle Split. Precision, Recall, and F1-Scores for each evaluation are listed in Table 2. It is visible that cross-participant gesture recognition is much worse than per-participant: On average, the crossparticipant F1-Score is 36% worse than per-participant, which is most probably caused by participants performing gestures in a slightly different fashion or due to sensors not being firmly attached. Inverting, pestling and pipetting are the three actions that show a particular high F1-score perparticipant and comparable F1-scores across participants. In contrast to stirring, which is detectable per-participant but not cross-participant. Cutting, peeling, pouring and transferring (which in our case meant moving material with a spoon) are already hard to detect per-participant. The confusion matrices (cf. Figure  7 ) show that pipetting and pestling are most often confused with other actions, which therefore make it advisable to remove those if possible. From this we conclude that several characteristic actions can be detected with reasonable performance, when trained per-participant."
+    },
+    {
+      "title": "Protocol Step Detection",
+      "text": "Although some actions can be detected well enough to allow a system to estimate a reconstruction of known experiment steps afterwards, it is unclear whether our proposed system would reliably detect single protocol steps. More specifically, it would be interesting to obtain accurate detections, from wrist movements alone, that show in which step in the experiment a participant is in. can be an important cue when reviewing a video recording done in background and would allow the experimenter to jump to a specific point in the protocol during review. For investigating and evaluating this, we modeled the digitized protocol as a Hidden Markov Model (HMM), where hidden states correspond to steps in the experiment protocol, and observations map to the actions\n\nc u tt in g in v e r ti n g p e e li n g p e s tl in g p ip e tt in g p o u r in g s ti r r in g tr a n s fe r c u tt in g in v e r ti n g p e e li n g p e s tl in g p ip e tt in g p o u r in g s ti r r in g tr a n s fe r 34.92 5.25\n\n26.67 20.33 2.00 17.75 36.92 6.33 7.92 1.08 1.33 1.67 1.42 2.92 5.58 6.67 2.58 1.08 56.83 4.50 18.67 155.00 68.25 5.92 68.58 4.42 37.58 8.83 17.00 51.92 194.75 16.42 24.92 15.83 1.08 8.17\n\n1.25 13.00 10.75 5.75 7.08 55.50 18.08 5.25 54.17\n\n4.42 1.17  executed in that steps as defined in Table  1 . The Glass interaction log is split into equidistant timespans, which are marked with the current protocol step: This will serve as the ground truth and represents our detection target. The HMM's transition probabilities of the hidden states were set to mimic a linear chain, with a high probability for staying in the same state (workflow step) and a non-zero probability to switch to the next step. This models the linear nature of a protocol execution. The emission probabilities for each state can be generated by uniformly distributing the occurrence of each action in the state's action set. For example, the solvent step (cf. Table  1 ) has high emission probabilities for the pouring, transfer, pipetting and stirring actions. The detection step in contrast only has a high probability for inverting. To account for possible mis-classifications of the kNN-detector, each action has a low occurrence probability in each workflow step. This represent a layered approach, in which the first layer detects actions from wrist movement via a kNN-detector and the second layer detects the workflow steps of the protocol via a HMM.\n\nFor the evaluation, we detected the workflow of each participant with the above-described kNN-HMM approach. We compared this workflow with the data gathered by the interaction log, i.e. which step was looked at when. Assuming that participants had the currently executed step also active on their display, we could also say that we check whether the currently executed step was detectable. The result of this evaluation can be seen in Figure  8 . The confusion matrix shows that the mixing and solvent step are most often confused, which is due to the fact that they have almost the same action set. Only an additional transferring action distinguishes them, which is however hardly detectable by our kNN algorithm. With the presented layered approach, a mean F1-Score of 56% for detecting workflow steps from wrist movements is achievable. This however includes workflow steps which have an empty action set, and are therefore difficult to detect. These steps include the waterbath and filtrate step, which for instance did not have definable activities linked to them: Excluding these steps from the calculation improves the mean F1-score to 71%. It is important to note, however, that such steps do occur in real wet lab experiments and therefore demand complementary detection approaches (e.g. object detection through RFID-markers) .\n\nThe presented layered approach can not only be used to filter wrist movement data on a time-based scale, but also to integrate different sources of information. Therefore, it lends itself well to integrating further sensors. One shortcoming of the presented HMM approach is that the actions set is assumed to be not ordered, i.e. it does not matter in which order the actions are executed. This might be important information, that is not directly modeled. In this case, conditional random fields (CRF) might prove to be a more suitable alternative. To be practical, a system like the one presented here would need to be either continuously re-learning motion sequences, or limit itself to actions that have proven to be detectable across users such as inverting, pestling and pipetting."
+    },
+    {
+      "title": "FUTURE WORK",
+      "text": "As we now have a first implementation of a system that supports work flows in wet laboratory experiments, future work could integrate more sources of information and more means of support. One example is the use of object identification, for instance via RFID tags on the objects that are read out by a wrist-worn RFID reader  [27]  or by instrumented objects like a Bluetooth-enabled pipette. These features are also useful while establishing a protocol, e.g. instead of having to note down how much of a compound has been used, the pipette already \"told\" the system, similar to how the just used compound could be identified.\n\nc u tt in g d e te c t fi lt ra te m ix in g p e s tl in g p o u r in g s o lv e n t w a te rb a th c u tt in g d e te c t fi lt ra te m ix in g p e s tl in g p o u r in g s o lv e n t w a te rb a th 150.95 8.38 7.14 36.33 1.24\n\n4.52 4.43 2.19 109.29 12.57 16.48 6.38 57.14 61.33 6.76 206.76 2.38 2.33 20.14 1.19 149.24 7.33 3.14 4.19 151.48 12.38 3.33 2.05 0.0 0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 1.0 (a) mean per-participant confusion matrix # task precision recall F1-score 1 solvent 0.64 \u00b1 0.17 0.93 \u00b1 0.18 0.73 \u00b1 0.15 2 cutting 0.88 \u00b1 0.23 0.83 \u00b1 0.28 0.84 \u00b1 0.25 3 mixing 0.69 \u00b1 0.31 0.49 \u00b1 0.21 0.52 \u00b1 0.18 4,5 waterbath 0.27 \u00b1 0.37 0.09 \u00b1 0.19 0.10 \u00b1 0.20 6 pestling 0.64 \u00b1 0.30 0.88 \u00b1 0.25 0.72 \u00b1 0.27 7 filtrate 0.62 \u00b1 0.40 0.09 \u00b1 0.21 0.12 \u00b1 0.20 8 pouring 0.86 \u00b1 0.23 0.79 \u00b1 0.24 0.81 \u00b1 0.22 9 detection 0.62 \u00b1 0.36 0.75 \u00b1 0.40 0.65 \u00b1 0.35 0.65 \u00b1 0.35 0.61 \u00b1 0.41 0.56 \u00b1 0.36 (b) mean per-participant classification scores. Figure  8 . Scores for the workflow step detection based on a Hidden-Markov Model, which uses observations from the kNN-based action classification. It is visible that classification scores vary between participants. Some steps are not detectable (waterbath, filtrating) since they have no definable and therefore detectable actions/observations (cf. Table  1 ).\n\nThe system could integrate many other features such as maintenance and resource allocation (\"Is the centrifuge available for the next five hours?\", \"Is compound X in store?\") across multiple lab members, and tools such as reminders for lengthier procedures or concentration calculators. Provisions to avoid cross-contamination through shared lab equipment (e.g. flasks, pipettes) could be extended by recording their usage, which would also allow tracing back contaminations after they have been detected. Retrieval and editing of the workflows after a completed experiment, would provide an extra possibility for the biologist to reflect on the results in detail. A recording infrastructure, such as the one presented in this paper, can be extended to provide a memory extension, detected actions, protocol steps, or used tools can serve as searchable cues for other recordings like video or audio. Furthermore, these cues might be employed to compare repetitions of the same protocol, allowing to quickly spot differences in their execution."
+    },
+    {
+      "title": "CONCLUSIONS",
+      "text": "This paper presented a hands-free wearable system to support experimenters in a wet laboratory environment. A prototype, based on Google's Glass and a wrist-worn inertial data logger, was used to capture experiments and recall steps, navigate back and forth those steps, and mark them as done. An analysis of the challenges, as well as the acceptance and wearability of the system, based on \"in-situ\" observations in several different microbiology laboratories was conducted.\n\nThe original motivation of using Glass as a recording and guidance tool for an experimenter was tested for feasibility in the presented user study: 22 novice participants were asked to complete an interleaved entry-level DNA-extraction experiment. Participants solely relied on Glass for guidance on the procedure and were all able to finish their experiment successfully. Participants' wrist motions were recorded throughout all experiments for studying whether actions made during experiments can be recognized, as well as used, for example in navigating continuous video recordings of procedures. Actions were detected with a k-Nearest-Neighbor classifier, of which only a limited set could be detected reliably (per-participant, F1-score > 80%). A Hidden Markov Model, built by extracting action sets for each protocol step from the digitized protocol, was used for detecting the currently executed step. This layered approach allowed to reconstruct the majority of experiment steps afterwards.\n\nDetecting the executed steps in a protocol could serve as a cue for reviewing work post-experiment, or for automatically navigating a protocol on Glass while the experiment is performed. In this paper, we presented a benchmark dataset to evaluate detection strategies, with common actions found in many micro-biology experiments. Although our proposed system could be modified for use in other domains, e.g. following recipes in the kitchen, it is important to note that wet laboratories pose much stricter protocols. The ability to capture and review an experiment up to several weeks later is furthermore in wet labs more important than the actual guidance -when the experimeter finds out that something went wrong with the experiment, a detailed review of executed steps could shed light on the cause. Moreover, a wearable and touch-free system does not only decrease the chance of contamination, it also provides the means to interact with a computing system right on the spot, in turn minimizing the required interaction efforts."
+    },
+    {
+      "title": "REPRODUCIBILTY STATEMENT",
+      "text": "To allow reproduction of the presented results, all video material and sensor recordings is publically available at  http://es.informatik.uni-freiburg.de/index.php/   datasets/ubicomp2015/ ."
+    },
+    {
+      "text": "Figure 1. A hands-free wearable system combines Google's Glass (topleft) with a wrist-worn accelerometer logger (lower-right) to allow capturing and reviewing of experiments in a wet laboratory environment."
+    },
+    {
+      "text": "Figure 2. Examples of the user interface as presented to the participants while performing the study. Information cards are switched backwards and forwards, the current step can be marked as complete using speech commands. The second and fourth images are examples of checked /marked steps."
+    },
+    {
+      "text": "Figure 3. Four selected steps during the mock-up DNA Extraction study. The participants are wearing a wrist accelerometer and Google's Glass. The latter guides the participant through the experiment."
+    },
+    {
+      "text": "Figure 4. The deployment of the system combining Glass and the wrist-worn accelerometer, while continuously recording researchers at work in a wet lab. The environment is often simultaneously used by large groups of researchers or students and is equipped with a multitude of shared instruments and special safety zones, making it challenging to augment the environment (top half). Hands-free recording is a strong advantage: Often, experiments require gloves for minimizing contamination risks; Wet labs furthermore contain a large variety of compounds, instruments and lab equipment that require both hands to be used (bottom half). All these photos are unaltered frames taken from continuous Glass video recordings."
+    },
+    {
+      "text": "Figure 5. The mean duration of protocol steps per participants. The figure in the background shows the per-step mean duration across all participants (box-and-whisker) and the individual flow for each participant (lines). The figure in the bottom right shows the mean duration of each step per participant, color-coded to individual steps in the DNA Extraction protocol. Note that each step is repeated twice and interleaved during the experiment, once for the onion and once for the tomato. Markers on this figure show when an actual user interaction happened (when marking a step as done for example). The x-axis on both figures is the time taken in minutes."
+    },
+    {
+      "text": "Figure 6. A (typical) page in laboratory notebook and the possibly extracted recognition and guidance system. An action database contains recordings of wrist motion samples. This database will be used for action detection, which in turn serves as the observations of a Hidden Markov Model, which contains each step in the protocol as a hidden state. Each protocol steps contains the to be detected actions. Time is implicitly encoded via the number of made observations. Each protocol step can be displayed on Glass for guidance."
+    },
+    {
+      "text": "cross-participant, i.e. leave-one-participant-out c u tt in g in v e r ti n g p e e li n g p e s tl in g p ip e tt in g p o u r in g s ti r r in g tr a per-participant, i.e. only detecting gestures for one participant."
+    },
+    {
+      "text": "Confusion matrices for kNN detection based on 800ms-windowed mean and standard deviation features extracted from 3D-acceleration data. Cells contain the average absolute number of identified samples. The color designates the normalized total occurrence. Each stratified random split was repeated 250 times."
+    },
+    {
+      "text": "The (shortened) DNA extraction protocol as shown to participants on Google Glass. The protocol was interleaved for both an onion and tomato, creating 18 steps in total. Gestures used to detect each step in the protocol are show in the right column."
+    },
+    {
+      "title": "ACKNOWLEDGMENTS",
+      "text": "We thank all study participants for performing the lab studies, as well as the research staff at  Cardoso Lab of the Technical University Darmstadt  for their kind assistance and helpful discussions during the analysis phase of their microbiology experiments. Furthermore we like to thank all participants of the DNA Extraction study at the  Federal Institute for Occupational Safety and Health Dortmund, Germany , and the staff for their kind assistance (especially  Ulrich Hold  and  Nina Schelter ) and execution of the study."
+    }
+  ],
+  "references": [
+    {
+      "title": "From Individual to Collaborative: The Evolution of Prism, a Hybrid Laboratory Notebook",
+      "authors": [
+        "E Eastmond",
+        "W Mackay",
+        "A Tabard",
+        "E Eastmond",
+        "W Mackay"
+      ],
+      "year": 2008,
+      "journal": "Comput. Support. Coop. Work",
+      "raw": "From Individual to Collaborative: The Evolution of Prism, a Hybrid Laboratory Notebook \n\t\t \n\t\t\t E E Eastmond \n\t\t \n\t\t \n\t\t\t W E Mackay \n\t\t \n\t\t \n\t\t\t A Tabard \n\t\t \n\t\t \n\t\t\t E E Eastmond \n\t\t \n\t\t \n\t\t\t W E Mackay \n\t\t \n\t \n\t \n\t\t Comput. Support. Coop. Work \n\t\t \n\t\t\t 2008 \n\t\t \n\t \n\t Eastmond, E. E., Mackay, W. E., Tabard, A., East- mond, E. E., and Mackay, W. E. From Individual to Collaborative: The Evolution of Prism, a Hybrid Labo- ratory Notebook. Comput. Support. Coop. Work. 2008."
+    },
+    {
+      "title": "Laboratory notebooks in the digital era: the role of ELNs in record keeping for chemistry and other sciences",
+      "authors": [
+        "C Bird",
+        "C Willoughby",
+        "J Frey"
+      ],
+      "year": 2013,
+      "doi": "10.1039/c3cs60122f",
+      "journal": "Chem. Soc. Rev",
+      "volume": "42",
+      "raw": "Laboratory notebooks in the digital era: the role of ELNs in record keeping for chemistry and other sciences \n\t\t \n\t\t\t C L Bird \n\t\t \n\t\t \n\t\t\t C Willoughby \n\t\t \n\t\t \n\t\t\t J G Frey \n\t\t \n\t\t 10.1039/c3cs60122f \n\t \n\t \n\t\t Chem. Soc. Rev \n\t\t \n\t\t\t 42 \n\t\t\t \n\t\t\t 2013 \n\t\t \n\t \n\t Bird, C. L., Willoughby, C., and Frey, J. G. Laboratory notebooks in the digital era: the role of ELNs in record keeping for chemistry and other sciences. Chem. Soc. Rev. 42, 2013: 8157-75."
+    },
+    {
+      "title": "Putting the Lab in the Lab Book : Supporting Coordination in Large , Multi-site Research",
+      "authors": [
+        "F Roubert",
+        "M Perry"
+      ],
+      "year": 2002,
+      "doi": "10.14236/ewic/hci2013.18",
+      "raw": "Putting the Lab in the Lab Book : Supporting Coordination in Large , Multi-site Research \n\t\t \n\t\t\t F Roubert \n\t\t \n\t\t \n\t\t\t M Perry \n\t\t \n\t\t 10.14236/ewic/hci2013.18 \n\t \n\t \n\t\t Proc. 27th Int. BCS Hum. Comput. Interact. Conf \n\t\t 27th Int. BCS Hum. Comput. Interact. Conf \n\t\t \n\t\t\t 2002 \n\t\t\t \n\t\t \n\t \n\t Roubert, F., and Perry, M. Putting the Lab in the Lab Book : Supporting Coordination in Large , Multi-site Research. Proc. 27th Int. BCS Hum. Comput. Interact. Conf. 2002: 1-10."
+    },
+    {
+      "title": "Going paperless: The digital lab",
+      "authors": [
+        "J Giles"
+      ],
+      "year": 2012,
+      "doi": "10.1038/481430a",
+      "journal": "Nature",
+      "volume": "481",
+      "issue": "7382",
+      "raw": "Going paperless: The digital lab \n\t\t \n\t\t\t J Giles \n\t\t \n\t\t 10.1038/481430a \n\t \n\t \n\t\t Nature \n\t\t \n\t\t\t 481 \n\t\t\t 7382 \n\t\t\t \n\t\t\t Jan. 2012 \n\t\t \n\t \n\t Giles, J. Going paperless: The digital lab. Nature, 481(7382), Jan. 2012: 430-431."
+    },
+    {
+      "title": "Rethinking Laboratory Notebooks",
+      "authors": [
+        "C Klokmose",
+        "P.-O Zander"
+      ],
+      "year": 2010,
+      "doi": "10.1007/978-1-84996-211-7",
+      "raw": "Rethinking Laboratory Notebooks \n\t\t \n\t\t\t C N Klokmose \n\t\t \n\t\t \n\t\t\t P.-O Zander \n\t\t \n\t\t 10.1007/978-1-84996-211-7 \n\t\t \n\t\t\t 2010 \n\t\t\t \n\t\t \n\t \n\t Klokmose, C. N., and Zander, P.-O. Rethinking Labo- ratory Notebooks., 2010: 119-140."
+    },
+    {
+      "title": "Collaborative Electronic Notebooks as Electronic Records : Design Issues for the Secure Electronic Laboratory Notebook ( ELN )",
+      "authors": [
+        "J Myers"
+      ],
+      "year": 2003,
+      "doi": "10.7717/peerjcs.83/table-1",
+      "journal": "Simul. Ser",
+      "raw": "Collaborative Electronic Notebooks as Electronic Records : Design Issues for the Secure Electronic Laboratory Notebook ( ELN ) \n\t\t \n\t\t\t J D Myers \n\t\t \n\t\t 10.7717/peerjcs.83/table-1 \n\t \n\t \n\t\t Simul. Ser \n\t\t \n\t\t\t 2003 \n\t\t \n\t \n\t Myers, J. D. Collaborative Electronic Notebooks as Electronic Records : Design Issues for the Secure Elec- tronic Laboratory Notebook ( ELN ). Simul. Ser. 2003:"
+    },
+    {
+      "title": "The status of electronic laboratory notebooks for chemistry and biology",
+      "authors": [
+        "K Taylor"
+      ],
+      "year": 2006,
+      "doi": "10.1517/edc.2006.1.issue-2",
+      "journal": "Curr. Opin. Drug Discov. Devel",
+      "volume": "9",
+      "issue": "3",
+      "raw": "The status of electronic laboratory notebooks for chemistry and biology \n\t\t \n\t\t\t K T Taylor \n\t\t \n\t\t 10.1517/edc.2006.1.issue-2 \n\t \n\t \n\t\t Curr. Opin. Drug Discov. Devel \n\t\t \n\t\t\t 9 \n\t\t\t 3 \n\t\t\t \n\t\t\t 2006 \n\t\t \n\t \n\t Taylor, K. T. The status of electronic laboratory note- books for chemistry and biology. Curr. Opin. Drug Discov. Devel. 9(3), 2006: 348-353."
+    },
+    {
+      "title": "Information Scraps: How and Why Information Eludes our Personal Information Management Tools",
+      "authors": [
+        "M Bernstein",
+        "M Kleek",
+        "D Karger",
+        "M Schraefel"
+      ],
+      "year": 2008,
+      "doi": "10.1145/1402256.1402263",
+      "journal": "ACM Trans. Inf. Syst",
+      "volume": "26",
+      "issue": "4",
+      "pages": "24",
+      "raw": "Information Scraps: How and Why Information Eludes our Personal Information Management Tools \n\t\t \n\t\t\t M Bernstein \n\t\t \n\t\t \n\t\t\t M A X V A N Kleek \n\t\t \n\t\t \n\t\t\t D Karger \n\t\t \n\t\t \n\t\t\t M C Schraefel \n\t\t \n\t\t 10.1145/1402256.1402263 \n\t \n\t \n\t\t ACM Trans. Inf. Syst \n\t\t \n\t\t\t 26 \n\t\t\t 4 \n\t\t\t 24 \n\t\t\t 2008 \n\t\t \n\t \n\t Bernstein, M., Kleek, M. A. X. V. A. N., Karger, D., and Schraefel, M. C. Information Scraps: How and Why Information Eludes our Personal Information Management Tools. ACM Trans. Inf. Syst. 26(4), 2008: 24."
+    },
+    {
+      "title": "The Missing Link: Augmenting Biology Laboratory Notebooks",
+      "authors": [
+        "W Mackay",
+        "G Pothier",
+        "C Letondal"
+      ],
+      "year": 2002,
+      "doi": "10.1145/571985.571992",
+      "journal": "Symp. User Interface Softw. Technol",
+      "raw": "The Missing Link: Augmenting Biology Laboratory Notebooks \n\t\t \n\t\t\t W E Mackay \n\t\t \n\t\t \n\t\t\t G Pothier \n\t\t \n\t\t \n\t\t\t C Letondal \n\t\t \n\t\t 10.1145/571985.571992 \n\t \n\t \n\t\t Symp. User Interface Softw. Technol \n\t\t \n\t\t\t 2002 \n\t\t \n\t \n\t Mackay, W. E., Pothier, G., and Letondal, C. The Miss- ing Link: Augmenting Biology Laboratory Notebooks. Symp. User Interface Softw. Technol. 2002."
+    },
+    {
+      "title": "ButterflyNet: A Mobile Capture and Access System for Field Biology Research",
+      "authors": [
+        "R Yeh",
+        "C Liao",
+        "S Klemmer",
+        "B Lee",
+        "B Kakaradov",
+        "J Stamberger",
+        "A Paepcke",
+        "B Sciences"
+      ],
+      "year": 2006,
+      "doi": "10.1145/1124772.1124859",
+      "journal": "Hum. Factors Comput. Syst",
+      "raw": "ButterflyNet: A Mobile Capture and Access System for Field Biology Research \n\t\t \n\t\t\t R B Yeh \n\t\t \n\t\t \n\t\t\t C Liao \n\t\t \n\t\t \n\t\t\t S R Klemmer \n\t\t \n\t\t \n\t\t\t B Lee \n\t\t \n\t\t \n\t\t\t B Kakaradov \n\t\t \n\t\t \n\t\t\t J Stamberger \n\t\t \n\t\t \n\t\t\t A Paepcke \n\t\t \n\t\t \n\t\t\t B Sciences \n\t\t \n\t\t 10.1145/1124772.1124859 \n\t \n\t \n\t\t Hum. Factors Comput. Syst \n\t\t \n\t\t\t \n\t\t\t 2006 \n\t\t \n\t \n\t Yeh, R. B., Liao, C., Klemmer, S. R., Lee, B., Kakaradov, B., Stamberger, J., Paepcke, A., and Sci- ences, B. ButterflyNet: A Mobile Capture and Ac- cess System for Field Biology Research. Hum. Factors Comput. Syst. 2006, 1-10."
+    },
+    {
+      "title": "Fulfilling the Memex Vision",
+      "authors": [
+        "J Gemmell",
+        "G Bell",
+        "R Lueder",
+        "S Drucker",
+        "C Wong"
+      ],
+      "year": 2002,
+      "doi": "10.1145/641043.641053",
+      "raw": "J Gemmell \n\t\t \n\t\t \n\t\t\t G Bell \n\t\t \n\t\t \n\t\t\t R Lueder \n\t\t \n\t\t \n\t\t\t S Drucker \n\t\t \n\t\t \n\t\t\t C Wong \n\t\t \n\t\t \n\t\t\t Mylifebits \n\t\t \n\t\t 10.1145/641043.641053 \n\t\t Fulfilling the Memex Vision \n\t\t \n\t\t\t 2002 \n\t\t \n\t \n\t Int. Conf. Multimed. \n\t Gemmell, J., Bell, G., Lueder, R., Drucker, S., and Wong, C. MyLifeBits: Fulfilling the Memex Vision. Int. Conf. Multimed. 2002."
+    },
+    {
+      "title": "Labscape: a smart environment for the cell biology laboratory",
+      "authors": [
+        "L Arnstein",
+        "R Franza",
+        "G Borriello",
+        "S Consolvo",
+        "C.-Y Hung",
+        "R Franza",
+        "Q Zhou",
+        "G Borriello",
+        "S Consolvo"
+      ],
+      "year": 2002,
+      "doi": "10.1109/mprv.2002.1037717",
+      "journal": "IEEE Pervasive Comput",
+      "volume": "1",
+      "issue": "3",
+      "raw": "Labscape: a smart environment for the cell biology laboratory \n\t\t \n\t\t\t L Arnstein \n\t\t \n\t\t \n\t\t\t R Franza \n\t\t \n\t\t \n\t\t\t G Borriello \n\t\t \n\t\t \n\t\t\t S Consolvo \n\t\t \n\t\t \n\t\t\t C.-Y Hung \n\t\t \n\t\t \n\t\t\t R Franza \n\t\t \n\t\t \n\t\t\t Q H Zhou \n\t\t \n\t\t \n\t\t\t G Borriello \n\t\t \n\t\t \n\t\t\t S Consolvo \n\t\t \n\t\t 10.1109/mprv.2002.1037717 \n\t \n\t \n\t\t IEEE Pervasive Comput \n\t\t \n\t\t\t 1 \n\t\t\t 3 \n\t\t\t \n\t\t\t July 2002 \n\t\t \n\t \n\t Arnstein, L., Franza, R., Borriello, G., Consolvo, S., Hung, C.-y., Franza, R., Zhou, Q. H., Borriello, G., and Consolvo, S. Labscape: a smart environment for the cell biology laboratory. IEEE Pervasive Comput. 1(3), July 2002: 13-21."
+    },
+    {
+      "title": "Invisible computing: automatically using the many bits of data we create",
+      "authors": [
+        "G Borriello"
+      ],
+      "doi": "10.1098/rsta.2008.0128",
+      "journal": "Philos. Trans. A. Math. Phys. Eng. Sci",
+      "volume": "366",
+      "raw": "Invisible computing: automatically using the many bits of data we create \n\t\t \n\t\t\t G Borriello \n\t\t \n\t\t 10.1098/rsta.2008.0128 \n\t \n\t \n\t\t Philos. Trans. A. Math. Phys. Eng. Sci \n\t\t \n\t\t\t 366 \n\t\t\t \n\t\t\t 1881. 2008 \n\t\t \n\t \n\t Borriello, G. Invisible computing: automatically using the many bits of data we create. Philos. Trans. A. Math. Phys. Eng. Sci. 366(1881), 2008: 3669-3683."
+    },
+    {
+      "title": "The semantic smart laboratory: a system for supporting the chemical eScientist",
+      "authors": [
+        "G Hughes",
+        "H Mills",
+        "D De Roure",
+        "J Frey",
+        "L Moreau",
+        "M Schraefel",
+        "G Smith",
+        "E Zaluska"
+      ],
+      "year": 2004,
+      "doi": "10.1039/b410075a",
+      "journal": "Org. Biomol. Chem",
+      "raw": "The semantic smart laboratory: a system for supporting the chemical eScientist \n\t\t \n\t\t\t G Hughes \n\t\t \n\t\t \n\t\t\t H Mills \n\t\t \n\t\t \n\t\t\t D De Roure \n\t\t \n\t\t \n\t\t\t J G Frey \n\t\t \n\t\t \n\t\t\t L Moreau \n\t\t \n\t\t \n\t\t\t M C Schraefel \n\t\t \n\t\t \n\t\t\t G Smith \n\t\t \n\t\t \n\t\t\t E Zaluska \n\t\t \n\t\t 10.1039/b410075a \n\t \n\t \n\t\t Org. Biomol. Chem \n\t\t \n\t\t\t Nov. 2004 \n\t\t \n\t \n\t Hughes, G., Mills, H., De Roure, D., Frey, J. G., Moreau, L., Schraefel, M. C., Smith, G., and Zaluska, E. The semantic smart laboratory: a system for sup- porting the chemical eScientist. Org. Biomol. Chem. Nov. 2004:"
+    },
+    {
+      "title": "First steps towards semantic descriptions of electronic laboratory notebook records",
+      "authors": [
+        "S Coles",
+        "J Frey",
+        "C Bird",
+        "R Whitby",
+        "A Day"
+      ],
+      "year": 2013,
+      "doi": "10.1186/1758-2946-5-52",
+      "journal": "J. Cheminform",
+      "volume": "5",
+      "pages": "52",
+      "raw": "First steps towards semantic descriptions of electronic laboratory notebook records \n\t\t \n\t\t\t S J Coles \n\t\t \n\t\t \n\t\t\t J G Frey \n\t\t \n\t\t \n\t\t\t C L Bird \n\t\t \n\t\t \n\t\t\t R J Whitby \n\t\t \n\t\t \n\t\t\t A E Day \n\t\t \n\t\t 10.1186/1758-2946-5-52 \n\t \n\t \n\t\t J. Cheminform \n\t\t \n\t\t\t 5 \n\t\t\t 52 \n\t\t\t 2013 \n\t\t \n\t \n\t Coles, S. J., Frey, J. G., Bird, C. L., Whitby, R. J., and Day, A. E. First steps towards semantic descriptions of electronic laboratory notebook records. J. Chemin- form. 5, 2013: 52."
+    },
+    {
+      "title": "The eLabBench in the wild: supporting exploration in a molecular biology lab",
+      "authors": [
+        "A Tabard",
+        "J Hincapi\u00e9-Ramos",
+        "J Bardram",
+        "J Ramos",
+        "J Bardram"
+      ],
+      "year": 2012,
+      "doi": "10.1145/2207676.2208718",
+      "journal": "Hum. Factors Comput. Syst",
+      "raw": "The eLabBench in the wild: supporting exploration in a molecular biology lab \n\t\t \n\t\t\t A Tabard \n\t\t \n\t\t \n\t\t\t J D Hincapi\u00e9-Ramos \n\t\t \n\t\t \n\t\t\t J E Bardram \n\t\t \n\t\t \n\t\t\t J H Ramos \n\t\t \n\t\t \n\t\t\t J E Bardram \n\t\t \n\t\t 10.1145/2207676.2208718 \n\t \n\t \n\t\t Hum. Factors Comput. Syst \n\t\t \n\t\t\t 2012 \n\t\t \n\t \n\t Tabard, A., Hincapi\u00e9-Ramos, J. D., Bardram, J. E., Ramos, J. H., and Bardram, J. E. The eLabBench in the wild: supporting exploration in a molecular biol- ogy lab. Hum. Factors Comput. Syst. 2012."
+    },
+    {
+      "title": "BioTISCH: the interactive molecular biology lab bench",
+      "authors": [
+        "F Echtler",
+        "G Klinker",
+        "M H\u00e4ussler",
+        "G Klinker"
+      ],
+      "doi": "10.1145/1753846.1753998",
+      "journal": "CHI Ext. Abstr. Hum. Factors Comput. Syst",
+      "volume": "10",
+      "raw": "BioTISCH: the interactive molecular biology lab bench \n\t\t \n\t\t\t F Echtler \n\t\t \n\t\t \n\t\t\t G Klinker \n\t\t \n\t\t \n\t\t\t M H\u00e4ussler \n\t\t \n\t\t \n\t\t\t G Klinker \n\t\t \n\t\t 10.1145/1753846.1753998 \n\t \n\t \n\t\t CHI Ext. Abstr. Hum. Factors Comput. Syst \n\t\t \n\t\t\t 10 \n\t\t\t \n\t\t \n\t \n\t Echtler, F., Klinker, G., H\u00e4ussler, M., and Klinker, G. BioTISCH: the interactive molecular biology lab bench. CHI Ext. Abstr. Hum. Factors Comput. Syst. 10, 5-10."
+    },
+    {
+      "title": "Wearable digitization of life science experiments",
+      "authors": [
+        "P Scholl",
+        "K Van Laerhoven"
+      ],
+      "doi": "10.1145/2638728.2641719",
+      "raw": "Wearable digitization of life science experiments \n\t\t \n\t\t\t P M Scholl \n\t\t \n\t\t \n\t\t\t K Van Laerhoven \n\t\t \n\t\t 10.1145/2638728.2641719 \n\t \n\t \n\t\t Proc. UbiComp '14 Adjunct \n\t\t UbiComp '14 Adjunct \n\t\t \n\t\t\t \n\t\t \n\t \n\t Scholl, P. M., and Van Laerhoven, K. Wearable digiti- zation of life science experiments. Proc. UbiComp '14 Adjunct, 1381-1388."
+    },
+    {
+      "title": "Recognizing And Discovering Human Actions From On-Body Sensor Data",
+      "authors": [
+        "D Minnen",
+        "T Starner",
+        "J Ward",
+        "P Lukowicz",
+        "G Tr\u00f6ster"
+      ],
+      "year": 2005,
+      "doi": "10.1109/icme.2005.1521728",
+      "raw": "Recognizing And Discovering Human Actions From On-Body Sensor Data \n\t\t \n\t\t\t D Minnen \n\t\t \n\t\t \n\t\t\t T Starner \n\t\t \n\t\t \n\t\t\t J A Ward \n\t\t \n\t\t \n\t\t\t P Lukowicz \n\t\t \n\t\t \n\t\t\t G Tr\u00f6ster \n\t\t \n\t\t 10.1109/icme.2005.1521728 \n\t\t ICME 2005 \n\t \n\t \n\t\t Multimed. Expo \n\t\t \n\t\t\t 2005. 2005 \n\t\t \n\t \n\t Minnen, D., Starner, T., Ward, J. A., Lukowicz, P., and Tr\u00f6ster, G. Recognizing And Discovering Human Ac- tions From On-Body Sensor Data. Multimed. Expo, 2005. ICME 2005, 2005:"
+    },
+    {
+      "title": "Toward Real-World Industrial Wearable Computing",
+      "authors": [
+        "P Lukowicz",
+        "A Timm-Giel",
+        "M Lawo",
+        "O Herzog"
+      ],
+      "year": 2007,
+      "doi": "10.1109/mprv.2007.89",
+      "journal": "IEEE Pervasive Comput",
+      "volume": "6",
+      "raw": "Toward Real-World Industrial Wearable Computing \n\t\t \n\t\t\t P Lukowicz \n\t\t \n\t\t \n\t\t\t A Timm-Giel \n\t\t \n\t\t \n\t\t\t M Lawo \n\t\t \n\t\t \n\t\t\t O Herzog \n\t\t \n\t\t \n\t\t\t Wearitwork \n\t\t \n\t\t 10.1109/mprv.2007.89 \n\t \n\t \n\t\t IEEE Pervasive Comput \n\t\t \n\t\t\t 6 \n\t\t\t \n\t\t\t 2007 \n\t\t \n\t \n\t Lukowicz, P., Timm-Giel, A., Lawo, M., and Herzog, O. WearITwork: Toward Real-World Industrial Wear- able Computing. IEEE Pervasive Comput. 6, 2007: 8- 13."
+    },
+    {
+      "title": "Wearable computing for aircraft maintenance: Simplifying the user interface",
+      "authors": [
+        "T Nicolai",
+        "T Sindt",
+        "H Witt"
+      ],
+      "year": 2006,
+      "journal": "Appl. Wearable Comput",
+      "raw": "Wearable computing for aircraft maintenance: Simplifying the user interface \n\t\t \n\t\t\t T Nicolai \n\t\t \n\t\t \n\t\t\t T Sindt \n\t\t \n\t\t \n\t\t\t H Witt \n\t\t \n\t \n\t \n\t\t Appl. Wearable Comput \n\t\t \n\t\t\t 2006 \n\t\t \n\t \n\t Nicolai, T., Sindt, T., and Witt, H. Wearable comput- ing for aircraft maintenance: Simplifying the user in- terface. Appl. Wearable Comput. 2006."
+    },
+    {
+      "title": "Wearable Activity Tracking in Car Manufacturing",
+      "authors": [
+        "T Stiefmeier",
+        "D Roggen",
+        "G Ogris",
+        "P Lukowicz",
+        "G Tr"
+      ],
+      "year": 2008,
+      "doi": "10.1109/mprv.2008.40",
+      "journal": "IEEE Pervasive Comput",
+      "volume": "7",
+      "issue": "2",
+      "raw": "Wearable Activity Tracking in Car Manufacturing \n\t\t \n\t\t\t T Stiefmeier \n\t\t \n\t\t \n\t\t\t D Roggen \n\t\t \n\t\t \n\t\t\t G Ogris \n\t\t \n\t\t \n\t\t\t P Lukowicz \n\t\t \n\t\t \n\t\t\t G Tr \n\t\t \n\t\t 10.1109/mprv.2008.40 \n\t \n\t \n\t\t IEEE Pervasive Comput \n\t\t \n\t\t\t 7 \n\t\t\t 2 \n\t\t\t \n\t\t\t Apr. 2008 \n\t\t \n\t \n\t Stiefmeier, T., Roggen, D., Ogris, G., Lukowicz, P., and Tr, G. Wearable Activity Tracking in Car Man- ufacturing. IEEE Pervasive Comput. 7(2), Apr. 2008: 42-50."
+    },
+    {
+      "title": "Preliminary investigation of wearable computers for task guidance in aircraft inspection",
+      "authors": [
+        "J Ockerman",
+        "A Pritchett"
+      ],
+      "year": 1998,
+      "doi": "10.1109/iswc.1998.729527",
+      "journal": "Int. Symp. Wearable Comput",
+      "raw": "Preliminary investigation of wearable computers for task guidance in aircraft inspection \n\t\t \n\t\t\t J Ockerman \n\t\t \n\t\t \n\t\t\t A R Pritchett \n\t\t \n\t\t 10.1109/iswc.1998.729527 \n\t \n\t \n\t\t Int. Symp. Wearable Comput \n\t\t \n\t\t\t \n\t\t\t 1998 \n\t\t \n\t \n\t Ockerman, J., and Pritchett, a.R. Preliminary investi- gation of wearable computers for task guidance in air- craft inspection. Int. Symp. Wearable Comput. 1998: 33-40."
+    },
+    {
+      "title": "Detecting leisure activities with dense motif discovery",
+      "authors": [
+        "E Berlin",
+        "K Van Laerhoven"
+      ],
+      "doi": "10.1145/2370216.2370257",
+      "volume": "12",
+      "raw": "Detecting leisure activities with dense motif discovery \n\t\t \n\t\t\t E Berlin \n\t\t \n\t\t \n\t\t\t K Van Laerhoven \n\t\t \n\t\t 10.1145/2370216.2370257 \n\t \n\t \n\t\t Proc. UbiComp ' \n\t\t UbiComp ' \n\t\t \n\t\t\t 12 \n\t\t\t \n\t\t \n\t \n\t Berlin, E., and Van Laerhoven, K. Detecting leisure activities with dense motif discovery. Proc. UbiComp '12, 250-259."
+    },
+    {
+      "title": "Markdown: Syntax",
+      "authors": [
+        "J Gruber"
+      ],
+      "raw": "Markdown: Syntax \n\t\t \n\t\t\t J Gruber \n\t\t \n\t\t \n\t\t \n\t \n\t Gruber, J. Markdown: Syntax. address: http : / / daringfireball.net/projects/markdown/syntax."
+    },
+    {
+      "title": "Scikit-learn: Machine Learning in Python",
+      "authors": [
+        "F Pedregosa",
+        "G Varoquaux",
+        "A Gramfort",
+        "V Michel",
+        "B Thirion",
+        "O Grisel",
+        "M Blondel",
+        "P Prettenhofer",
+        "R Weiss",
+        "V Dubourg",
+        "J Vanderplas",
+        "A Passos",
+        "D Cournapeau",
+        "M Brucher",
+        "M Perrot",
+        "E Duchesnay"
+      ],
+      "year": 2011,
+      "journal": "J. Mach. Learn. Res",
+      "volume": "12",
+      "raw": "Scikit-learn: Machine Learning in Python \n\t\t \n\t\t\t F Pedregosa \n\t\t \n\t\t \n\t\t\t G Varoquaux \n\t\t \n\t\t \n\t\t\t A Gramfort \n\t\t \n\t\t \n\t\t\t V Michel \n\t\t \n\t\t \n\t\t\t B Thirion \n\t\t \n\t\t \n\t\t\t O Grisel \n\t\t \n\t\t \n\t\t\t M Blondel \n\t\t \n\t\t \n\t\t\t P Prettenhofer \n\t\t \n\t\t \n\t\t\t R Weiss \n\t\t \n\t\t \n\t\t\t V Dubourg \n\t\t \n\t\t \n\t\t\t J Vanderplas \n\t\t \n\t\t \n\t\t\t A Passos \n\t\t \n\t\t \n\t\t\t D Cournapeau \n\t\t \n\t\t \n\t\t\t M Brucher \n\t\t \n\t\t \n\t\t\t M Perrot \n\t\t \n\t\t \n\t\t\t E Duchesnay \n\t\t \n\t \n\t \n\t\t J. Mach. Learn. Res \n\t\t \n\t\t\t 12 \n\t\t\t 2011 \n\t\t \n\t \n\t Pedregosa, F., Varoquaux, G., Gramfort, A., Michel, V., Thirion, B., Grisel, O., Blondel, M., Prettenhofer, P., Weiss, R., Dubourg, V., Vanderplas, J., Passos, A., and Cournapeau, D. and Brucher, M. and Perrot, M. and Duchesnay, E. Scikit-learn: Machine Learning in Python. J. Mach. Learn. Res. 12, 2011:"
+    },
+    {
+      "title": "Coming to Grips with the Objects We Grasp: Detecting Interactions with Efficient Wrist-Worn Sensors",
+      "authors": [
+        "E Berlin",
+        "J Liu",
+        "K Laerhoven",
+        "B Schiele"
+      ],
+      "year": 2010,
+      "doi": "10.1145/1709886.1709898",
+      "raw": "Coming to Grips with the Objects We Grasp: Detecting Interactions with Efficient Wrist-Worn Sensors \n\t\t \n\t\t\t E Berlin \n\t\t \n\t\t \n\t\t\t J Liu \n\t\t \n\t\t \n\t\t\t K V Laerhoven \n\t\t \n\t\t \n\t\t\t B Schiele \n\t\t \n\t\t 10.1145/1709886.1709898 \n\t\t \n\t\t\t 2010 \n\t\t\t Tangible \n\t\t \n\t \n\t Embed Embodied Interact \n\t Berlin, E., Liu, J., Laerhoven, K. V., and Schiele, B. Coming to Grips with the Objects We Grasp: Detecting Interactions with Efficient Wrist-Worn Sensors. Tangi- ble, Embed. Embodied Interact. 2010."
+    }
+  ],
+  "num_references": 27,
+  "figures": [
+    {
+      "caption": "Figure 1 .",
+      "description": "Figure 1. A hands-free wearable system combines Google's Glass (topleft) with a wrist-worn accelerometer logger (lower-right) to allow capturing and reviewing of experiments in a wet laboratory environment."
+    },
+    {
+      "caption": "Figure 2 .",
+      "description": "Figure 2. Examples of the user interface as presented to the participants while performing the study. Information cards are switched backwards and forwards, the current step can be marked as complete using speech commands. The second and fourth images are examples of checked /marked steps."
+    },
+    {
+      "caption": "Figure 3 .",
+      "description": "Figure 3. Four selected steps during the mock-up DNA Extraction study. The participants are wearing a wrist accelerometer and Google's Glass. The latter guides the participant through the experiment."
+    },
+    {
+      "caption": "Figure 4 .",
+      "description": "Figure 4. The deployment of the system combining Glass and the wrist-worn accelerometer, while continuously recording researchers at work in a wet lab. The environment is often simultaneously used by large groups of researchers or students and is equipped with a multitude of shared instruments and special safety zones, making it challenging to augment the environment (top half). Hands-free recording is a strong advantage: Often, experiments require gloves for minimizing contamination risks; Wet labs furthermore contain a large variety of compounds, instruments and lab equipment that require both hands to be used (bottom half). All these photos are unaltered frames taken from continuous Glass video recordings."
+    },
+    {
+      "caption": "Figure 5 .",
+      "description": "Figure 5. The mean duration of protocol steps per participants. The figure in the background shows the per-step mean duration across all participants (box-and-whisker) and the individual flow for each participant (lines). The figure in the bottom right shows the mean duration of each step per participant, color-coded to individual steps in the DNA Extraction protocol. Note that each step is repeated twice and interleaved during the experiment, once for the onion and once for the tomato. Markers on this figure show when an actual user interaction happened (when marking a step as done for example). The x-axis on both figures is the time taken in minutes."
+    },
+    {
+      "caption": "Figure 6",
+      "description": "Figure 6. A (typical) page in laboratory notebook and the possibly extracted recognition and guidance system. An action database contains recordings of wrist motion samples. This database will be used for action detection, which in turn serves as the observations of a Hidden Markov Model, which contains each step in the protocol as a hidden state. Each protocol steps contains the to be detected actions. Time is implicitly encoded via the number of made observations. Each protocol step can be displayed on Glass for guidance."
+    },
+    {
+      "description": "cross-participant, i.e. leave-one-participant-out c u tt in g in v e r ti n g p e e li n g p e s tl in g p ip e tt in g p o u r in g s ti r r in g tr a per-participant, i.e. only detecting gestures for one participant."
+    },
+    {
+      "caption": "Figure 7 .",
+      "description": "Confusion matrices for kNN detection based on 800ms-windowed mean and standard deviation features extracted from 3D-acceleration data. Cells contain the average absolute number of identified samples. The color designates the normalized total occurrence. Each stratified random split was repeated 250 times."
+    },
+    {
+      "type": "table",
+      "caption": "Table 1 .",
+      "description": "The (shortened) DNA extraction protocol as shown to participants on Google Glass. The protocol was interleaved for both an onion and tomato, creating 18 steps in total. Gestures used to detect each step in the protocol are show in the right column."
+    }
+  ],
+  "num_figures": 9,
+  "tables": [
+    {
+      "content": "task actions 1 solvent combine 50ml lukewarm water, pouring, 1/2 teaspoon salt and 3ml dishsoap in transfer, 200ml beaker and stir pipetting, stirring 2 cutting peel and cut onion/tomato peeling, cutting 3 mixing mix into 200ml beaker, add 1ml pouring, detergent, and stir pipetting, stirring 4 waterbath put 200ml beaker into hot wa- terbath for 10mins 5 waterbath put 200ml beaker into cold waterbath for 5mins 6 pestling pestle mixture pestling 7 filtrate put filter into funnel, funnel into 100ml beaker, push mixture through filter 8 pouring pour 1.5ml of mixture into test pouring, tube, mix in 5ml freezing ethanol pouring 9 detection carefully invert test tube multi- inverting ple times"
+    }
+  ],
+  "num_tables": 1,
+  "formulas": [
+    {
+      "text": ") 3"
+    }
+  ],
+  "num_formulas": 1,
+  "num_citations": 30,
+  "cited_references": [
+    "b4",
+    "b14",
+    "b17",
+    "b20",
+    "b24",
+    "b26",
+    "b13",
+    "b16",
+    "b7",
+    "b23",
+    "b19",
+    "b6",
+    "b18",
+    "b1",
+    "b9",
+    "b10",
+    "b3",
+    "b5",
+    "b8",
+    "b12",
+    "b15",
+    "b11",
+    "b25",
+    "b22",
+    "b0",
+    "b21",
+    "b2"
+  ],
+  "notes": [
+    "[raw_affiliation] Embedded Systems , Albert- Ludwigs-Universit\u00e4t Freiburg Unit Human Factors , Ergonomics Federal Institute for Occupational Safety and Health Dortmund , Germany",
+    "[raw_affiliation] Embedded Systems , Albert- Ludwigs-Universit\u00e4t Freiburg",
+    "The ability of following what is recorded by Glass in the peripheral display was at multiple times used to guide the capturing of the video. When looking through a microscope,",
+    "The touchpad was enabled in this study, to avoid problems with voice recognition for non-native english speakers.",
+    "UBICOMP'15, SEPTEMBER 7-11, 2015, OSAKA, JAPAN",
+    "the scikit-learn [26]  implementation was used.",
+    "[raw_reference] Eastmond, E. E., Mackay, W. E., Tabard, A., East- mond, E. E., and Mackay, W. E. From Individual to Collaborative: The Evolution of Prism, a Hybrid Labo- ratory Notebook. Comput. Support. Coop. Work. 2008.",
+    "[raw_reference] Bird, C. L., Willoughby, C., and Frey, J. G. Laboratory notebooks in the digital era: the role of ELNs in record keeping for chemistry and other sciences. Chem. Soc. Rev. 42, 2013: 8157-75.",
+    "[raw_reference] Roubert, F., and Perry, M. Putting the Lab in the Lab Book : Supporting Coordination in Large , Multi-site Research. Proc. 27th Int. BCS Hum. Comput. Interact. Conf. 2002: 1-10.",
+    "[raw_reference] Giles, J. Going paperless: The digital lab. Nature, 481(7382), Jan. 2012: 430-431.",
+    "[raw_reference] Klokmose, C. N., and Zander, P.-O. Rethinking Labo- ratory Notebooks., 2010: 119-140.",
+    "[raw_reference] Myers, J. D. Collaborative Electronic Notebooks as Electronic Records : Design Issues for the Secure Elec- tronic Laboratory Notebook ( ELN ). Simul. Ser. 2003:",
+    "[raw_reference] Taylor, K. T. The status of electronic laboratory note- books for chemistry and biology. Curr. Opin. Drug Discov. Devel. 9(3), 2006: 348-353.",
+    "[raw_reference] Bernstein, M., Kleek, M. A. X. V. A. N., Karger, D., and Schraefel, M. C. Information Scraps: How and Why Information Eludes our Personal Information Management Tools. ACM Trans. Inf. Syst. 26(4), 2008: 24.",
+    "[raw_reference] Mackay, W. E., Pothier, G., and Letondal, C. The Miss- ing Link: Augmenting Biology Laboratory Notebooks. Symp. User Interface Softw. Technol. 2002.",
+    "[raw_reference] Yeh, R. B., Liao, C., Klemmer, S. R., Lee, B., Kakaradov, B., Stamberger, J., Paepcke, A., and Sci- ences, B. ButterflyNet: A Mobile Capture and Ac- cess System for Field Biology Research. Hum. Factors Comput. Syst. 2006, 1-10.",
+    "Int. Conf. Multimed.",
+    "[raw_reference] Gemmell, J., Bell, G., Lueder, R., Drucker, S., and Wong, C. MyLifeBits: Fulfilling the Memex Vision. Int. Conf. Multimed. 2002.",
+    "[raw_reference] Arnstein, L., Franza, R., Borriello, G., Consolvo, S., Hung, C.-y., Franza, R., Zhou, Q. H., Borriello, G., and Consolvo, S. Labscape: a smart environment for the cell biology laboratory. IEEE Pervasive Comput. 1(3), July 2002: 13-21.",
+    "[raw_reference] Borriello, G. Invisible computing: automatically using the many bits of data we create. Philos. Trans. A. Math. Phys. Eng. Sci. 366(1881), 2008: 3669-3683.",
+    "[raw_reference] Hughes, G., Mills, H., De Roure, D., Frey, J. G., Moreau, L., Schraefel, M. C., Smith, G., and Zaluska, E. The semantic smart laboratory: a system for sup- porting the chemical eScientist. Org. Biomol. Chem. Nov. 2004:",
+    "[raw_reference] Coles, S. J., Frey, J. G., Bird, C. L., Whitby, R. J., and Day, A. E. First steps towards semantic descriptions of electronic laboratory notebook records. J. Chemin- form. 5, 2013: 52.",
+    "[raw_reference] Tabard, A., Hincapi\u00e9-Ramos, J. D., Bardram, J. E., Ramos, J. H., and Bardram, J. E. The eLabBench in the wild: supporting exploration in a molecular biol- ogy lab. Hum. Factors Comput. Syst. 2012.",
+    "[raw_reference] Echtler, F., Klinker, G., H\u00e4ussler, M., and Klinker, G. BioTISCH: the interactive molecular biology lab bench. CHI Ext. Abstr. Hum. Factors Comput. Syst. 10, 5-10.",
+    "[raw_reference] Scholl, P. M., and Van Laerhoven, K. Wearable digiti- zation of life science experiments. Proc. UbiComp '14 Adjunct, 1381-1388.",
+    "[raw_reference] Minnen, D., Starner, T., Ward, J. A., Lukowicz, P., and Tr\u00f6ster, G. Recognizing And Discovering Human Ac- tions From On-Body Sensor Data. Multimed. Expo, 2005. ICME 2005, 2005:",
+    "[raw_reference] Lukowicz, P., Timm-Giel, A., Lawo, M., and Herzog, O. WearITwork: Toward Real-World Industrial Wear- able Computing. IEEE Pervasive Comput. 6, 2007: 8- 13.",
+    "[raw_reference] Nicolai, T., Sindt, T., and Witt, H. Wearable comput- ing for aircraft maintenance: Simplifying the user in- terface. Appl. Wearable Comput. 2006.",
+    "[raw_reference] Stiefmeier, T., Roggen, D., Ogris, G., Lukowicz, P., and Tr, G. Wearable Activity Tracking in Car Man- ufacturing. IEEE Pervasive Comput. 7(2), Apr. 2008: 42-50.",
+    "[raw_reference] Ockerman, J., and Pritchett, a.R. Preliminary investi- gation of wearable computers for task guidance in air- craft inspection. Int. Symp. Wearable Comput. 1998: 33-40.",
+    "[raw_reference] Berlin, E., and Van Laerhoven, K. Detecting leisure activities with dense motif discovery. Proc. UbiComp '12, 250-259.",
+    "[raw_reference] Gruber, J. Markdown: Syntax. address: http : / / daringfireball.net/projects/markdown/syntax.",
+    "[raw_reference] Pedregosa, F., Varoquaux, G., Gramfort, A., Michel, V., Thirion, B., Grisel, O., Blondel, M., Prettenhofer, P., Weiss, R., Dubourg, V., Vanderplas, J., Passos, A., and Cournapeau, D. and Brucher, M. and Perrot, M. and Duchesnay, E. Scikit-learn: Machine Learning in Python. J. Mach. Learn. Res. 12, 2011:",
+    "Embed Embodied Interact",
+    "[raw_reference] Berlin, E., Liu, J., Laerhoven, K. V., and Schiele, B. Coming to Grips with the Objects We Grasp: Detecting Interactions with Efficient Wrist-Worn Sensors. Tangi- ble, Embed. Embodied Interact. 2010."
+  ],
+  "processing_software": {
+    "GROBID": "0.8.2"
+  },
+  "pages": "589-599"
+}

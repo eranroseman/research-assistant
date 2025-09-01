@@ -1,0 +1,1679 @@
+{
+  "paper_id": "BVDN6ENT",
+  "title": "Storyfier: Exploring Vocabulary Learning Support with Text Generation Models",
+  "abstract": "Vocabulary learning support tools have widely exploited existing materials, e.g., stories or video clips, as contexts to help users memorize each target word. However, these tools could not provide a coherent context for any target words of learners' interests, and they seldom help practice word usage. In this paper, we work with teachers and students to iteratively develop Storyfier, which leverages text generation models to enable learners to read a generated story that covers any target words, conduct a story cloze test, and use these words to write a new story with adaptive AI assistance. Our within-subjects study (N=28) shows that learners generally favor the generated stories for connecting target words and writing assistance for easing their learning workload. However, in the read-cloze-write learning sessions, participants using Storyfier perform worse in recalling and using target words than learning with a baseline tool without our AI features. We discuss insights into supporting learning tasks with generative models.",
+  "year": 2023,
+  "date": "2023-08-07",
+  "authors": [
+    {
+      "name": "Zhenhui Peng",
+      "orcid": "0000-0002-5700-3136"
+    },
+    {
+      "name": "Xingbo Wang",
+      "orcid": "0000-0001-5693-1128"
+    },
+    {
+      "name": "Qiushi Han"
+    },
+    {
+      "name": "Junkai Zhu",
+      "email": "zhujunkai@hotmail.com"
+    },
+    {
+      "name": "Xiaojuan Ma"
+    },
+    {
+      "name": "Huamin Qu",
+      "email": "huamin@cse.ust.hk"
+    },
+    {
+      "affiliation": {
+        "organization": "Sun Yat-sen University",
+        "institution": "Sun Yat-sen University",
+        "address": "Zhuhai, China"
+      }
+    },
+    {
+      "affiliation": {
+        "organization": "The Hong Kong University of Science and Technology Hong Kong",
+        "institution": "The Hong Kong University of Science and Technology Hong Kong",
+        "address": "China"
+      }
+    },
+    {
+      "affiliation": {
+        "organization": "Sun Yat-sen University",
+        "institution": "Sun Yat-sen University",
+        "address": "Zhuhai, China"
+      }
+    },
+    {
+      "affiliation": {
+        "organization": "Guangdong Polytechnic of Industry & Commerce",
+        "institution": "Guangdong Polytechnic of Industry & Commerce",
+        "address": "Guangzhou, China"
+      }
+    },
+    {
+      "affiliation": {
+        "organization": "The Hong Kong University of Science and Technology Hong Kong",
+        "institution": "The Hong Kong University of Science and Technology Hong Kong",
+        "address": "China"
+      }
+    },
+    {
+      "affiliation": {
+        "organization": "The Hong Kong University of Science and Technology Hong Kong",
+        "institution": "The Hong Kong University of Science and Technology Hong Kong",
+        "address": "China"
+      }
+    }
+  ],
+  "doi": "10.1145/3586183.3606786",
+  "orcid": "0000-0001-5693-1128",
+  "md5": "479D6885C21257F0354D464BA6A5803A",
+  "arxiv": "arXiv:2308.03864v1[cs.HC]",
+  "publication": {
+    "journal": "Computers & Education",
+    "journal_inferred": true
+  },
+  "keywords": [
+    "Human-centered computing \u2192 User interface design",
+    "\u2022 Computing methodologies \u2192 Natural language generation",
+    "\u2022 Applied computing \u2192 Computer-assisted instruction vocabulary learning, story generation, language models"
+  ],
+  "funding": [
+    "",
+    "",
+    "ACKNOWLEDGMENTS This work is supported by the  Young Scientists Fund of the National Natural Science Foundation of China  with Grant No.  62202509  and partially supported by the  Research Grants Council of the Hong Kong Special Administrative Region under General Research Fund (GRF)  with Grant No.  16203421 ."
+  ],
+  "sections": [
+    {
+      "title": "1. INTRODUCTION",
+      "text": "Learning vocabulary in meaningful contexts, such as stories and images in language learning textbooks, and video clips from movies, is a common and effective practice as it enables deep and active processing of vocabulary (e.g., word associations, logic)  [54] . Many existing vocabulary learning systems like VocabEncounter  [1]  and Smart Subtitles  [36]  have exploited a variety of materials to establish the contexts for words. These systems have demonstrated that the provided contexts can enhance vocabulary memorization  [1, 36] .\n\nHowever, these systems may fall short in two aspects. First, they largely leverage existing materials and could not provide a meaningful context for any set of target words that users wish to learn. In other words, previous systems lack the flexibility to offer a story, an article, or a video clip that covers the target words that teachers or learners specify. These coherent contexts that connect target words may make a difference to vocabulary learners. As suggested by Gu et al.  [25] , learning vocabulary in batches under coherent contexts could facilitate recalls of a larger amount of words compared to learning vocabulary in isolation. Second, previous systems primarily focus on helping users to understand and memorize the meanings of target words via meaning-focused input learning activities, e.g., reading and listening, that use language receptively  [48] . Few systems facilitate learners to master the usage of learned words via productive and fluency development tasks (e.g., writing and speaking) -typical activities that could help master the meanings and usage of target words in traditional courses  [48] . In offline courses, teachers can provide in-situ adaptive support like hints on word usage during these learning activities; however, this is often unavailable to individual learners outside classrooms.\n\nIn this work, we utilize stories generated by large language models (LLMs) as meaningful contexts that cover any target words and provide adaptive assistance in word usage practice. Our focus is motivated, on one hand, by the prevalent use of stories in language learning textbooks, and the proven efficacy of story-based learning in various scenarios such as programming  [13, 14, 73] , parent-child storytelling  [92] , and children's visual storytelling  [91] . On the other hand, LLMs can generate fluent and relevant texts given user specifications such as keywords, which have been used to support the writings of emails  [24] , articles or fiction  [10] , and poems  [71, 78] . However, little work, if any, has explored LLMs for story-based vocabulary learning where users should spend effort in mastering target words' meanings and usage. Questions arise such as 1) whether and how LLMs can generate the meaningful context of any target word set for vocabulary learning, 2) if so, what vocabulary learning activities can these generative models support, and 3) how would the support from generative models impact the users' vocabulary learning outcome and experience.\n\nTo this end, we seek to provide insights into these questions by designing, developing, and evaluating an AI-generated story-based vocabulary learning system, Storyfier, that can provide meaningful story contexts and adaptive assistance for learning any set of target words. Here, we choose English as the target language to learn and target ESL (English-as-the-Second-Language) Chinese learners, e.g., high-school or university students in China. We take an iterative design approach with insights from educational literature and the involvement of teachers, learners, and HCI researchers in this process. We first fine-tune a text-generation model on a shortstory corpus and validate its capability in producing meaningful story context given a set of target CET-4 English words  1  . We then present this model to three English teachers and five experienced ESL learners in an interview study to explore possible learning activities that Storyfier can support. Based on the insights from the interviews and educational literature, we develop a Storyfier prototype that supports three types of vocabulary learning activities: 1) reading an AI-generated story with target words, 2) solving story cloze tests on target words (i.e., fill blanks of the generated story by using target words), and 3) writing a story using target words with the AI models by turns. We seek feedback on Storyfier's design and refine it via a user study with twelve ESL learners and two co-design workshops with the three English teachers mentioned above and four HCI researchers.\n\nWe conduct a 2 \u00d7 2 within-subjects study with 28 university students to evaluate the impact of Storyfier's AI functions (with vs. without generative models) and learning activity (read-only vs. read-cloze-write) on the learning outcome and experience. The results show that in the read-only learning sessions, the generative stories do not help to improve learning gains in recalling target words' meanings and mastering their usage. In read-cloze-write learning sessions, participants with generated stories and AI assistance perform even worse compared to the condition without the generative models. However, most participants still indicate their preferences on Storyfier's generated stories for connecting target words and its writing assistance for reducing learning workload. Based on our findings, we highlight the value of generative models in offering meaningful materials and enjoyable experience for learning tasks. We also urge future AI-supported learning tools to ensure users to spend the necessary effort in their learning tasks.\n\nOur work makes three contributions. First, we present a vocabulary learning system Storyfier that facilitates users to master the meanings and usage of any target English words via AI-generated stories and writing assistance. Second, our design and evaluation of Storyfier provide first-hand findings on the feasibility, effectiveness, and user experience of applying generative models to vocabulary learning. Third, we offer insights and design considerations of leveraging generative models to support learning tasks."
+    },
+    {
+      "title": "2. RELATED WORK",
+      "text": "To situate our work, we start by reviewing the pedagogical strategies and activities for vocabulary learning. We then discuss previous vocabulary learning support systems. Lastly, we introduce related textual story-generation techniques that enable us to achieve the envisioned Storyfier."
+    },
+    {
+      "title": "2.1. Pedagogical Strategies and Activities For Vocabulary Learning",
+      "text": "According to the amount of context information used, vocabulary learning strategies can be categorized as decontextualized, partiallycontextualized, and fully-contextualized  [26, 52] . Decontexutualized techniques, including using word lists in alphabetical order or by part of speech, flashcards, dictionary, focus on learning isolated words without meaningful contexts. For example, dictionary provides detailed instructions on grammar, pronunciation, and brief usage examples. However, improper use of dictionary, e.g., checking every word's meaning during reading and failing to associate it with the current context, would result in poor learning outcomes  [74] .\n\nIn other words, decontextualized techniques may not aid long-term vocabulary retention and practical word usage  [25, 75] .\n\nEducators have argued that vocabulary is better learned through contextualized learning activities  [26] . Partially-contextualized techniques provide a certain amount of context information (e.g., word association). For instance, Word grouping organizes words according to different criteria, such as (dis)similarity and topic. Concept association (or \"elaboration\") constructs connections between new words and some familiar contexts, such as previously learned words, personal experience, or knowledge in learners' memory  [7] . Besides, keyword techniques  [59]  link words with visual  [2]  or aural  [16]  objects to improve vocabulary memorization. Fully contextualized techniques associate words in fully authentic communication contexts and connect them with a meaningful flow (e.g., logic), which are considered the peak of L2 vocabulary learning techniques  [52] . They use existing newspapers, articles, magazines, and novels as learning material. The most common activities are reading or listening to the stories in contextual inference tasks (e.g., cloze test)  [26] . Speaking and writing practices are regarded as the more effective but also challenging activities, which require turning receptive vocabulary knowledge into productive use in communication contexts  [53] . Nevertheless, contextualized methods are demanding and complex for individual learners and are usually adopted by teachers in classroom activities  [26, 69] .\n\nRegarding the learning activities in a traditional language course, Paul Nation, suggested that there should be roughly equal amounts of time given to each of the following four strands  [47] . The meaningfocused input strand involves learning through listening and reading -using language receptively. This strand mainly focuses on understanding what they listen to and read, e..g, stories, TVs, films, conversations, and so on. The meaning-focused output strand involves learning through speaking and writing -using language productively. Typical activities in this strand include talking in conversations, writing a letter or a note, keeping a diary, telling a story, etc. The language-focused learning strand involves the deliberate learning of language features such as pronunciation, spelling, vocabulary, grammar, and discourse. Lastly, the fluency development strand should involve four skills of listening, speaking, reading, and writing. In this strand, learners are helped to make the best use of what they have already known in typical activities like ten-minutes writing and listening to easy stories. These four strands can fit together in many different ways  [47, 48] . For example, a group collaborative writing activity in the high-school can combine the meaning-focused output and language-focused learning strands, if the output written work deliberately focuses on the vocabulary and grammar  [47] .\n\nOur work is motivated by the benefits of fully contextualized strategies and gets inspired by the four strands of activities for vocabulary learning. We use textual short stories as contextualized vocabulary learning materials. We support individual vocabulary learners with a proper integration of the four strands of learning activities based on the story contexts."
+    },
+    {
+      "title": "2.2. Vocabulary Learning Support Systems",
+      "text": "Researchers have proposed various approaches and systems to support vocabulary learning. For rote learning, a bunch of work manage to model users' memory cycles and plan the target words with proper difficulty level and repetition frequency  [8, 49, 50, 90] . As for our focused contextual learning, previous vocabulary learning systems have exploited materials in different mediums, such as images  [76] , physical locations  [88] , textual articles in webpage  [1] , subtitles of videos  [32, 36, 67] , and augmented/virtual reality  [31, 60, 68] . For instance, FinDo  [88]  is a mobile application that helps users understand the vocabulary about the surrounding objects with the contexts of users' current locations. Tangworakitthaworn et al.  [76]  used image processing techniques to extract visual objects in photos and matched them with the target vocabulary. VocabEncounter  [1]  encloses target vocabulary into reading materials to facilitate micro learning in daily life. Smart Subtitles  [36]  equips video subtitles with features like vocabulary definitions on hover and dialog-based video navigation.\n\nHowever, these systems largely make use of existing materials as contexts, which may not be able to provide a meaningful flow that covers any set of target words -a requirement of fully contextualized learning  [52] . We seek to mitigate this constraint by generating a short story for any target word set. Our decision to use stories as the context for words is inspired by their common usage in language learning textbooks and the proven efficacy of story-based learning in other scenarios  [13, 14, 73, 91, 92] . Further, previous vocabulary learning support systems mainly focus on supporting meaning-focused input activities that aim at understanding the words' meanings. Our work further supports other types of learning activities that help to master the usage of target words."
+    },
+    {
+      "title": "2.3. Textual Story Generation Techniques",
+      "text": "Recent advances in textual story generation offer potentials to support vocabulary learners with meaningful contexts that cover any word set and offer in-situ learning support. The textual story generation techniques aim at generating coherent and fluent narratives or ideas based on simple user inputs, such as a title  [46]  and prompts  [17] . Early computational work adopts symbolic approaches  [58, 64, 84]  that first select a sequence of characters and actions according to aesthetic, narrative conflicts, and logic, and then create a story with pre-defined templates. Another approach is case-based reasoning  [19, 77] , which extracts the story plots of existing stories and adapts them to new contexts. Yet, these methods are restricted by predefined story domains and styles. Recent story generation methods mainly adopt sequence-to-sequence language models  [17, 27, 44, 89] , which can learn complex and implicit relationships among story plots. Particularly, transformer-based models  [4, 35, 70]  are able to produce incredibly fluent texts after training on a large language corpus. These models can be finetuned to support downstream applications like writing assistants  [5, 6]  and health consultation  [82] .\n\nTo generate stories with desired properties (e.g., keywords, topic, styles), researchers apply techniques like decoding strategies, prompt controls, and finetuning to build controllable language models. Decoding strategies aim to restrict and influence the sampling process of generation to change the features of output texts. These features can describe the user preferences and are modeled by heuristics  [20] , supervised signals  [30] , and reinforcement learning  [40] . Prompt controls use natural language (e.g., \"translate to English\") to elicit desired contents  [4, 33, 39, 41, 43, 61, 72] . Finetuning methods investigate effective conditional training based on key words  [17] , story valence  [55] , character fortune  [9] , control codes  [35]  (e.g., , topic, sentiment), and simpler attribute models  [11, 37] .\n\nRecent intelligent systems have explored the usage of text generation techniques in a variety of scenarios, such as creative writing  [45, 57] , AI-mediated communication  [18] , and health intervention  [34] . In the story-based learning scenario, StoryBuddy  [92]  assists parents-children storytelling via a question-answer generation model, which consists of a rule-based answer generation module, a BART-based question generation module, and a ranking module. It can help parents create a storytelling bot that can tell stories, ask children questions, and provide feedback  [92] . However, these studies present a different focus compared to ours. We specifically investigate the use of and interaction with text generation models for story-based vocabulary learning.\n\nIn this paper, we first customize and evaluate a controllable language model for generating meaningful stories that cover given target word set. We then explore what vocabulary learning activities that this model can support with teachers and students."
+    },
+    {
+      "title": "3. PHASE 1: FEASIBILITY AND SUPPORTED ACTIVITIES OF STORY GENERATION MODELS FOR VOCABULARY LEARNING",
+      "text": "To help individual learners to master the meaning and usage of any target word sets, we design and develop Storyfier via a two-phase process (Figure  1 ). In this section, we present the first phase in which we 1) develop a story generation model, 2) validate its feasibility for providing meaningful contexts for vocabulary learning, and 3) explore what vocabulary learning activities this model could support."
+    },
+    {
+      "title": "3.1. Developing Story Generation Models",
+      "text": "Given the potential benefits of a meaningful story for learning a batch of words  [25] , we first seek to develop a controllable language model that can generate stories with given target word sets. Here, we target the vocabulary pool (4,827 in total) required by the College English Test Band 4 (CET-4), a mandatory national test for Chinese university students to obtain bachelor degrees.\n\n3.1.1 Dataset. We choose ROCStory corpus  [46]  to contextualize CET-4 words and build story generation models. ROCStory collects over 100,000 five-sentence commonsense human-written stories (Table  1   foot_1  ). The simple and short story form could help learners easily understand the story flow and mitigate diversion from vocabulary learning to story comprehension. The simplicity of the story structures and logic is also appreciated by English teachers who participate in the later studies (subsubsection 3.3.2). Though these stories are short, they are created by various human workers and have passed qualification tests to ensure story quality and creativity. In addition, these stories have causal and temporal commonsense relationships between story sentences and cover a wide range of everyday topics, such as movie, school, birthday, and music. Therefore, if there is a story that covers a set of target words, learners can easily associate a group of words with a common topic following a meaningful logic flow. With this dataset, we aim to develop a model that can generate meaningful stories like those in ROCStory given any set of target words in the CET-4 pool.\n\n3.1.2 Data Preprocessing and Model Building. Figure  2  summarizes our data preprocessing and model building procedure. Specifically, we follow recent story generation techniques  [9, 17, 55]  and formulate the problem as a sequence-to-sequence translation task. We first segment the stories into titles 3 and sentences. Then, using the CET-4 word list, we identify the occurrences of these words in each sentence of every story and sort them chronologically. This leads to the creation of a set of {story title, target words, story sentences}   2A ). For story generation, we leverage a state-of-theart open-source language model T5  [62]  as the base model. Our decision is made based on two reasons. First, T5 exhibits impressive performance across various NLP tasks (e.g., text generation and classification), which can be attributed to its unified text-to-text framework and its pretraining on a large language corpus. Moreover, it is freely available and adaptable to our application scenario compared to other impressive but closed-source language models (e.g., GPT-3  [4]  and GPT-4  [51] ).\n\nThen, we adopt a prompt-based approach to finetune and steer the model generation process to learn the mappings between target English words and a story (Figure  2B1 ). We formulate the input prompt as the concatenation of the story title and target words derived from story tuples of the processed dataset. According to our experiments, the title imposes a high-level control of story relevance and leads to faster and better convergence compared to training without the title signal. We finetune the pretrained T5large model offered in the HuggingFace on our dataset using Adam optimization algorithm with a 0.0001 learning rate. The training process lasts for five epochs and has a 0.9857 cross-entropy loss.\n\nAfter training, our model can generate complete stories rather than isolated sentences, thus creating meaningful contexts for the target words across multiple sentences. For instance, when given the words \"athlete\", \"avid\", and \"frequently\" (as shown in Figure  3 ), the model begins a narrative about an avid athlete who frequently participates in marathons."
+    },
+    {
+      "title": "3.2. Evaluating the Quality of Generative Stories",
+      "text": "While our model can generate a story given any word set with or without a title, at this stage, we would like to compare the quality of machine-generated and human-written stories in the corpus which cover the same target word set. This evaluation aims at validating if the generated stories were competent for vocabulary learning support. We will assess the perceived quality and helpfulness of generated stories given any target words in our later interviews with teachers (subsubsection 3.3.2) and experiments with learners (subsubsection 6.3.2). Following prior work  [9, 17, 55] , we conduct technical and human evaluations. We sample 20 stories from the ROCStory dataset with varied difficulty levels (i.e., word frequency) of contained CET-4 words. For each human-written story, we use our trained language models to generate a machine version based on the story title and contained CET-4 words. Thereafter, we create 20 human-machine story pairs (40 stories in total)."
+    },
+    {
+      "title": "3.2.1. Technical Evaluation.",
+      "text": "We assess the story content from grammatical accuracy, lexical diversity (i.e., number of unique words, and"
+    },
+    {
+      "title": "Data Preparation",
+      "text": "Story Title: Sammy Gets A Cramp CET-4 Words: Story Content: Sammy was doing sit-ups. He felt a sharp pain in his stomach. He was having a cramp on his sides. He grasped his stomach while rolling on the ground. The cramp went away after 5 minutes. We finetune T5 language models to 1) generate a story given a CET-4 word set with or without a title (presented in section 3.2) and 2) infill a sentence or n-grams given preceding and following sentences, unused target words, and story title (if any) (subsubsection 4.2.1). (C) We apply the models to support three kinds of story-based learning activities. Table 3: Average human ratings of machine-generated and human-written stories. (*: p < .05 using Wilcoxon Signedrank test) Coherence * Relevance * Interestingness Overall Human 4.53 4.58 4.08 4.26 Machine 3.92 4.33 3.97 4.01\n\ntype-token ratio: number of unique words/total number of words), and lexical coherence (i.e., trigram repetition, and sentence coherence 4 : average semantic similarities between sentences)  [22, 38, 65] .\n\nAs shown in Table  2 , both the machine-generated and humanwritten stories have no grammar issues. Moreover, the machine performance is commensurate with the human in terms of lexical diversity and coherence, as indicated by close scores of type-token ratio, trigram repetition, and sentence coherence. The results provide quantitative support that our model can generate grammartically correct and lexically coherent and diverse story texts."
+    },
+    {
+      "title": "3.2.2. Human Evaluation.",
+      "text": "We invite eight PhD students (four females and four males, mean age: 25.50 (SD = 2.07)) with English paper publications to rate their perceived quality of these 40 stories in random order. According to previous work  [23, 89] , we consider: 4 Cosine similarities (range 0-1) between sentence embeddings using sbert.\n\ncoherence (The story is logically consistent and coherent), relevance (The story is relevant to the title), interestingness (The story is interesting), and overall quality (Overall, it is a good story). Each aspect is rated on a standard five-point Likert Scale (1 for \"Strongly disagree\" and 5 for \"Strongly agree\"). As shown in Table  3 , the machine-generated stories achieve comparable performance with the human version regarding overall quality and interestingness. The human-written stories are considered significantly more coherent and relevant using the Wilcoxon Signed-rank test. Nevertheless, the machine-generated stories have average scores of around four points in terms of coherence and relevance. Therefore, we consider that our system could produce adequate story context given a set of target words for vocabulary learning."
+    },
+    {
+      "title": "3.3. Exploring Vocabulary Learning Activities with Story Generation Models",
+      "text": "After validating the feasibility of our model for generating meaningful context that covers a set of CET-4 English words, we explore possible vocabulary learning activities that the model can support. We conduct semi-structured interviews with three English teachers (E1-3, age: 27 -28) and five university students (S1-5, age: 21 -29) in China. E1 has two years of experience in teaching IELTS and half-ayear experience in teaching English in a higher vocational college. E2 has spent five years in high-school English teaching, and E3 has taught high-school students mainly about TOEFL writings for three years in an educational institution. S1-5 are well-experienced in using different English vocabulary learning software for Chinese (e.g., Liulishuo, Baicizhan, Shanbay).\n\n3.3.1 Procedure. Each interview starts with participants' practices (whether, why, and how) of story-based activities for teaching or learning vocabulary. Then, we show participants a web interface that allows users to input target English words and generate stories with those words based on our model. We prepare example CET-4 word sets, each with the top-five topic-relevant words (e.g., cable, complain, library, instruction, unfortunate)  5  under our specified titles (e.g., the internet) and the generated stories in the interface. We invite our participants to check the generated stories and have a trial using their specified words. During this process, we encourage them to brainstorm the vocabulary learning activities that our story generation model can support. Each interview lasts for about 30 minutes with about USD $3.5 for compensation."
+    },
+    {
+      "title": "3.3.2. Results",
+      "text": ". We transcribe the audio data into texts and group them into themes following the interview structure. Both groups of interviewees confirmed that learning English vocabulary via stories is a common and effective practice. For example, E1 mentioned that he usually asks students to first write sentences and then create a short story with newly learned words, which helps them master the usage of words. Three student participants regularly read English books and articles, which expands their vocabulary. In general, all participants agreed that our generative stories are suitable materials for learning target words. For instance, E3 tried the story generation model using \"health\" as title and \"tobacco, alcohol, abuse, dominate, harmful\" as target words. These words come from an article of her high-school text book. \"I like the generated story. It is generally coherent, and it is simpler than the one in the text book. My students would like it for vocabulary learning as they do not need to pay too much attentions on the long sentences\" (E3). Nevertheless, our three teachers pointed out that the generated stories lack explicit logic transition words like \"nevertheless\" and \"for example\", which can further improve the stories' coherence. This is probably due to the lack of these words in our training dataset ROCStory corpus. Our interviewees actively provide ideas for leveraging our generative model to support vocabulary learning. Together with the insights from pedagogical literature (e.g., those in subsection 2.1), we summarize three supported vocabulary learning activities.\n\nStory reading: learners can read the generated story to understand the meanings of the target words (E1-3, S1-5). This is also a typical meaning-focused input activity suggested by language educators  [47] .\n\nCloze test: learners can do a cloze test that fills blanks of the generated story using target words to strengthen their understandings (E2, S2, S3). \"Cloze test is a common vocabulary learning strategy in the textbook. I feel that it would be helpful to customize the generated stories into cloze tests for students\" (E2). Cloze test can be viewed as a language-focused learning activity with a focus on the usage of target words  [47] .\n\nTurn-taking writing: learners can take turns with the generative models to co-write a story using target words (E1, E3). This practice combines the meaning-focused output and fluency development learning activities, as it requires learners to use the learned words productively and fluently  [47] . \"It can generate a sentence using a target word as a start, and users write down the second sentence using another word. With such interaction, students can learn how to use the words in a successive manner\" (E1). \"The system can act as one student to do a turn-by-turn, co-writing practice\" (E3). The system can provide in-situ guidance and feedback on users' input in the writing process  [47] , e.g., \"are target words used correctly\" (E3) and \"is the story coherent and correct in grammar?\" (E1)."
+    },
+    {
+      "title": "4. PHASE 2: STORYFIER SYSTEM IMPLEMENTATION AND REFINEMENT",
+      "text": "After validating the feasibility of our story generation model and identifying promising ways to apply it, we present our secondphase design process about how we implement Storyfier and refine it with feedback from learners, teachers, and HCI researchers."
+    },
+    {
+      "title": "4.1. First Storyfier Prototype with Three Modes",
+      "text": "Based on the interview findings, we design and implement three modes of user interfaces to facilitate vocabulary learning via story reading (Figure  3B ), cloze test (C), and turn-taking writing (D).\n\n4.1.1 Interface Designs and User Workflow. All three modes share the following two features (Figure  3A ). [Target words setting] Users can manually add new words (\"+\") or delete them (\"x\") as they wish. They can also click the button to get a randomly sampled target word set. [Dictionary lookup] Users can click each target word to inspect its definition, part of speech, phonetic symbol, and usage example. The click on will lead to three vocabulary learning activities supported in the following interface variants. Story reading mode. This interface (Figure  3B ) presents the AIgenerated story with the target words highlighted in blue, which could help users quickly inspect their contextual use. In addition, users can conduct minor edits (e.g., , revise words) of the sentences to refine the story if they wish.\n\nCloze test mode. This interface (Figure  3C ) replaces the target words in the generated stories with blanks. Users are required to make contextual inferences about the missing words and choose the proper ones to fill the blanks. After they submit the results, Storyfier will check the correctness and highlight the misused words (if any) in red. Users can iteratively fix the errors if they wish.\n\nTurn-taking writing mode. This interface (Figure  3D ) encourages users to write a story with AI using the target words sentence by sentence. During the writing process, users can gain an overview of the used (gray) and unused (blue) target words at the top in Fig-  ure 3D . The used target words are highlighted in the corresponding sentences. To provide adaptive feedback to learners, in each turn, the system will check and alert the grammar issues of the written text using LanguageTool API  6  . Meanwhile, Storyfier provides writing feedback on the story sentences at the bottom regarding grammar errors, lexical diversity, and lexical coherence (in Figure  3 4 5 ). Red and green triangles indicate a decrease or increase in scores of all current story sentences compared to the one in the previous turn. Users can write and refine the story with Storyfier until all the target words are used. and story sentences as prompts (described in subsubsection 3.1.2). Meanwhile, for each story sentence, we randomly mask variedlength of text spans of this sentence, following prior work  [15] . Then, we train the model to predict the masked spans of the current sentence based on the prompts. We use a cross-entropy loss and finetune the pretrained T5-large model provided by Huggingface on our mask prediction task using adam optimization algorithm. We train 10 epochs, and the training loss is 1.0701.\n\nWith this finetuned model, Storyfier can write the next sentence using target words following the users' written ones. Furthermore, in our refined Storyfier presented below (subsection 4.3), it can also help users revise an existing sentence or complete the unfinished one via text infilling."
+    },
+    {
+      "title": "4.2. Testing Storyfier Prototype",
+      "text": "To seek feedback on the 1st Storyfier prototype, we conduct a usability test with ESL learners and two workshops with English teachers and HCI researchers."
+    },
+    {
+      "title": "4.2.1. Usability Test with 12 ESL Learners.",
+      "text": "To probe the user experience and perceived usefulness of the three activities supported by Storyfier, we conduct a within-subjects usability test with 12 junior undergraduate students (6 females, 6 males, mean age: 19.5 (SD = 0.52)) in a university in China. The baseline condition does not have the generated story contexts but provides a dictionary function that shows the meanings, synonyms/antonyms, and usage examples for each target word (Figure  3A1 ). All participants have passed the national English exam CET-4, with an average score 560.50 (SD = 37.75) 7 . We do not aim to evaluate Storyfier's effectiveness but seek to improve it with quick user feedback at this stage. These participants can provide us with valuable feedback as they have fresh CET-4 vocabulary learning experience.\n\n[Procedure] Participants use their own computers to remotely conduct the study following the instructions. They experience the four experiment conditions (i.e., Dictionary, Read, Cloze, Turn-taking Write) one by one in a Latin-Scale counterbalanced order. In each condition, they learn two prepared word sets, each with five CET-4 words sampled based on topic relevance. After each condition, participants rate their perceived usefulness, easiness to use, and intention to use  [79, 81]  of each interface in a 7-points Likert scale; 7 for a strong agreement. In the end, we ask for their comments and suggestions on Storyfier. They receive about USD $9.5 for around 50 minutes spent in the study. 7 425/710 points are considered passed for CET-4.\n\n[Results] We use repeated measured ANOVA test (Dictionary vs. Read vs. Cloze vs. Turn-taking Write) to evaluate the user experience of Storyfier's three modes. There is a significant difference in perceived usefulness of the four activities;  (3, 33) = 3.83,  < 0.05,  2 = 0.26. Specifically, they feel that the Read ( = 4.94,  = 1.15,  < 0.05) system is significantly more useful than the Dictionary one ( = 3.56,  = 1.45). Participants feel that the Read ( = 4.83,  = 1.12,  < 0.01) system is significantly easier to use than the Turn-taking one ( = 3.15,  = 0.85);  (3, 33) = 9.54,  < 0.001,  2 = 0.46; Bonferroni post-hoc test. Besides, the Cloze ( = 4.27,  = 1.13,  < 0.05) system is deemed significantly easier to use than the Turn-taking one. Lastly, participants have significantly higher intentions to use the Read ( = 4.71,  = 0.33) system for their vocabulary learning in the future, compared to the Dictionary ( = 2.96,  = 1.63,  < 0.01) and Turn-taking systems ( = 3.13,  = 1.40,  < 0.05);  (3, 33) = 5.80,  < 0.01,  2 = 0.35. In summary, ESL learners found that the three learning activities supported by Storyfier are more useful than the baseline without story context. However, the Storyfier's turn-taking writing mode should be further improved. For example, two students indicated that sometimes they found it difficult to use words to write the next story sentence in this activity."
+    },
+    {
+      "title": "4.2.2. Co-Design",
+      "text": "Workshops with English Teachers and HCI Researchers. Apart from the feedback from ESL learners, we conduct two co-design workshops to seek experts' feedback. The two workshops share a similar procedure but have a different focus. One is with the same three English teachers (E1-3) in Phase 1 and focuses on refining the vocabulary learning activities in Storyfier. The other is with four HCI researchers (H1-4, all males, age: 25-27) and mainly works on the interface and interaction design of Storyfier. All HCI researchers have experience in developing intelligent systems and have papers published in top venues like CHI and VIS. Each workshop starts with a warm-up activity in which participants share their experience of story-based vocabulary teaching or learning. Then, we show our Storyfier prototype to them, invite them to have a trial, and ask them to give comments on the system. Next, we organize a brainstorming session to discuss how to leverage the three learning activities of Storyfier for effective vocabulary learning support and how to improve the interaction and interface design. Each workshop lasts about one hour, and participants receive about USD $17 as compensation. We present their suggestions on Storyfier together with its refinement in the next subsection."
+    },
+    {
+      "title": "4.3. Refined Storyfier System",
+      "text": "Based on the collected feedback on the first Storyfier prototype, we refine its workflow and features (Figure  3 ).\n\nWorkflow. We unify the three separate learning activities into one workflow using step bars and next-step buttons (in Figure  3-2 ) to guide learners to read the story, do a cloze test, and write a new story. Our English teachers agree that all three learning activities would be generally helpful, but there could be a flow that chains these activities to maximize their values. They suggest that reading should be the first activity to help comprehend the target words. The cloze test should come next to strengthen their understanding, and the co-writing practice should be the last activity. \"Cloze test is a controlled practice, and co-writing is a free one\" (E3). To chain the three learning activities into a flow, S3 proposes to use a chatbot to guide users through the learning process, which could be engaging. This is similar to the chatbot interaction in StoryBuddy  [92] . However, the other three HCI researchers are concerned that it might distract users' attention from vocabulary learning to interaction with the chatbot. S1 suggests that we can use clear widgets (e.g., the right arrow and \"Next Turn\" buttons) to order the flow of the three activities.\n\nFeatures. First, we add the main Chinese meaning of each target word in the dictionary (Figure  3 -1) as suggested by E2. Second, we modify the turn-taking order by encouraging users write the first sentence of the story (Figure  3 -3), as suggested by E3 that we should encourage learners to spend effort first. Third, we add an inline sentence suggestion function that can infill a generated next sentence using target words (Figure  3 -4.1 and -4.2), to address learners' difficulties in story writing activity found in the usability test. This function can be triggered in real-time by the \"tab\" key on users' demands, as suggested by the HCI researcher H4. Third, we remove the technical metrics about sentence quality (Figure  3 4 5 ), as suggested by E1-3 that they are complicated for learners and not focused on the target words' usage. Fourth, we add the number of used target words and the number of words written by human/machine as writing feedback because it could encourage learners to write more."
+    },
+    {
+      "title": "5. EXPERIMENT",
+      "text": "To explore how would Storyfier impact the users' vocabulary learning outcome and experience, we conduct an experiment with 28 ESL (English-as-the-Second-Language) Chinese students. We adopt a 2 (with vs. without AI features) x 2 (read-only vs. read-cloze-write activities) within-subjects design. The first one -AI factor -aims to study the impacts of Storyfier's AI-generated story and adaptive writing support. We note the conditions with AI features with \"-AI\" and those without AI features with \"-sen\". The second oneactivity factor -identifies the value of additional cloze test and writing activities to the reading activity that previous vocabulary learning support systems focus on. We note the conditions with the read-only activity with \"Read-\" and those with read-cloze-write activities with \"Storyfier\". The four conditions are:\n\nRead-only\n\n\u2022 Read-sen interface only provides dictionary features with an example existing sentence for each target word (  without adaptive support, which can help us evaluate the impact of Storyfier's story generation model. Our research questions are: RQ1. How would Storyfier affect vocabulary learning outcome? RQ2. How would Storyfier affect the learning experience? RQ3. What are user perceptions towards Storyfier?"
+    },
+    {
+      "title": "5.1. Participants",
+      "text": "We recruit 28 second-year undergraduate students (P1-28, 24 females, 3 males, 1 prefer not to tell, mean age: 20.04 (SD = 0.69)) from a course in a college in mainland China. They are typical ESL learners who major in Business English. The course nature leads to the gender and major unbalance of our participants, which we will discuss in the Limitations subsection. Twelve of them have not passed the national English exam CET-4 in China, and the rest have passed it with an average score 493.8/710 ( = 35.8)  8 . Their self-assessed English vocabulary proficiency score is 4.39 (SD = 0.63; 1 -not proficient at all, 7 -very proficient)."
+    },
+    {
+      "title": "5.2. Procedure and Tasks",
+      "text": "We conduct the experiment remotely. In a similar manner as  [1] , the procedure of our experiment consists of three stages (Figure  4 ). First, after collecting the background information with consent, we ask each participant to take a pretest to identify the CET-4 words that they did not know. In the pretest, the participant needs to choose one of the five options, including four meanings written in Chinese and one indicating \"I do not know this word\", for each CET-4 word. We invite a postgraduate to prepare 170 CET-4 words that are not easy (e.g., excluding words like \"easy\" and \"feel\") from the English learning app Baicizhan and only include the intended participants who answer incorrectly or indicate lack of knowledge on at least 40 words. For each participant, we randomly select 40 of the identified unknown words and divide them into eight sets, each with five target words. After the pretest, we also have participants read the instructions of the learning tasks and the four interfaces. We inform them not to learn the words that appear in the pretest prior to learning sessions.\n\nThen, on the experiment day, participants log in to their learning sessions via their unique IDs. Participants are asked to learn two word sets with each Storyfier interface. We counterbalance the order of the four interfaces using Latine Square. After learning two word sets with an interface, participants rate their engagement and enjoyment in the learning process, perceived learning performance, and perceptions of the system in a questionnaire. Upon completion of four tasks, we further ask for their preferences on the interfaces, comments on the generated stories and AI's writing assistance, and suggestions for improving Storyfier.\n\nNext, two days after the experiment day, we ask the participants to take a posttest, which has a similar format as the pretest but only presents the 40 words they met in the learning sessions. In the posttest, participants also need to write a sentence for each target word if they do not choose \"I do not know this word\". They can write \"nothing\" if they feel hard to write the sentence. Each participant spends about 1.5 hours in total on the full procedure and gets around USD $12 as compensation."
+    },
+    {
+      "title": "5.3. Measurements",
+      "text": "RQ1. Learning Outcome. We measure participants' retention of target words' meanings via the number of correct answers to the multiple-choice questions in the posttest. To capture how well they learn the usage of target words, we invite one English teacher (E1 in our workshop) to rate the grammar correctness (e.g., tense and part of speech) and context appropriateness of the target word in each written sentence in the posttest using a three-point scale; 0not correct, 1 -partially correct, 2 -correct. For each participant in each system interface, we calculate i) the numbers (range: 0 -10) of sentences that use target words correctly in terms of both grammar and context and ii) the total score (0 -40) of sentences  9  .\n\nRQ2. Experience. We measure users' engagement and enjoyment during the learning process with each system interface (\"I was absorbed in using this interface to learn vocabulary\" and \"It is enjoyable to learn vocabulary with this interface\"  [80, 85] ). Besides, we measure the perceived task workload of learning sessions using items adapted from NASA Task Load Index  [28]  (e.g., \"I have to work hard to accomplish the writing activity. \"). Apart from the questionnaire data, we also log the i) task completion time of learning two word sets with each interface, as well as ii) the amount of time spent in reading, cloze-test, and writing activities and iii) written stories in Storyfier-sen and Storyfier-AI interfaces.\n\nRQ3. Perceptions towards Storyfier. We adapt the technology acceptance model  [79, 81]  to the perceived usefulness (four items, e.g., \"The use of this interface enables me to learn the vocabulary more efficiently\"; Cronbach's  = 0.944), easiness to use (four items, e.g., \"I would find this interface to be flexible to use\";  = 0.786), and intention to use (two items, e.g., \"If this interface is available there to help me learn vocabulary, I would use it\";  = 0.966) of each system. We average the ratings of multiple questions as the final score for each aspect. All statements in the questionnaire are rated on a standard 7-point Likert Scale, with 7 for a strong agreement."
+    },
+    {
+      "title": "6. ANALYSES AND RESULTS",
+      "text": "For the rated items, we first check whether the order of the four experienced interfaces affects our results via a set of mixed ANOVA tests (order as between-subjects, interfaces as within-subjects) on each rating. Neither the main effect of the order nor its interaction effect with the system interface is significant. Hence, except those with additional notations (e.g., one-way ANOVA), the statistic tests in this section are two-way repeated measured ANOVAs. For each ANOVA, the assumption of equal variance holds according to Macuchly's test of sphericity  [21] . For the participants' comments on Storyfier, two authors conduct an inductive thematic analysis  [3] . They first independently assign codes to the text data and then discuss the codes for several rounds. After that, they group the codes into categories, which are incorporated into the results below."
+    },
+    {
+      "title": "6.1. RQ1: Impact on Learning Outcome",
+      "text": "Figure  5  shows the results regarding learning outcomes."
+    },
+    {
+      "title": "6.1.1. Retention of target words' meanings.",
+      "text": "Our results indicate that neither the AI factor nor its interaction with the activity factor significantly affects the retention of target words in four conditions. However, the Storyfier-sen interface results in a better retention performance ( = 7.00,  = 2.16) than the Storyfier-AI interface ( = 6.07,  = 2.09);  = 0.049, one-way repeated-measures ANOVA. Besides, participants perform significantly better in target words' retention in the read-cloze-test (i.e., Storyfier-sen and Storyfier-AI) conditions ( = 6.54,  = 2.19) than that in the readonly (i.e., Read-sen and Read-AI) conditions ( = 5.46,  = 2.16);  = 9.605,  = 0.004. 6.1.2 Target words' usage in the sentences. Neither the AI factor nor its interaction with the activity factor has a significant impact on i) the number of sentences that correctly use target words and ii) the total scores of written sentences in four conditions. However, when comparing the means between the Storyfier-sen and Storyfier-AI interfaces, we observe that in the read-cloze-write learning sessions, Storyfier's AI features could reduce learning gains on target words' usage. As for the activity factor, our results show that participants with the read-cloze-write interfaces ( = 24.20,  = 8.66) perform significantly better in word usage in their written sentences than the cases with the read-only interfaces ( = 20.02,  = 7.92); e.g., for ii) total scores,  = 12.721,  = 0.001.\n\nIn all, we find that Storyfier's AI features reduce learning gains on the retention of target words' meanings in the read-cloze-write vocabulary learning sessions. Its supported additional cloze-test and writing practices improve learning gains on target words' meanings and usage compared to learning via reading-only activities.\n\n6.2 RQ2: Impact on Learning Experience 6.2.1 Engagement, enjoyment, and workload. As shown in Figure  6   foot_7  , neither the AI factor nor its interaction with activity factor significantly affects users' perceptions on their learning experience. When digging into each measured item in each condition, we have several interesting observations: a) in read-only sessions, participants with AI-generated stories could feel more engaged and enjoyed than the cases without these stories; b) Storyfier's AI features could increase mental demand and perceived performance in read-only learning sessions but decrease the ratings on these measures in read-cloze-write sessions; c) Storyfier's AI features could reduce temporal demand, i.e., how rushed is the pace of the task, and perceived spent effort in the vocabulary learning tasks. As for the activity factor, we found significant differences regarding the perceived mental demand ( = 0.002), physical demand ( = 0.029), and perceived performance ( = 0.025). Specifically, Storyfier's supported additional cloze-test and writing practices increase mental and physical demand and perceived performance compared to learning via reading-only activities. We also observe that these additional activities could increase engagement and spent effort in the vocabulary learning tasks.\n\n6.2.2 Task completion time and written stories. i) On average, participants spent 89.22( = 105.25) / 226.52(150.66) / 805.00(490.55) / 806. 61(368.19) seconds in the learning session with Read-sen, Read-AI, Storyfier-sen, or Storyfier-AI interface. This indicates that in the read-only vocabulary learning sessions, participants spent significantly more time when they were presented with AI-generated stories than when they were not ( < 0.001). However, as shown in Figure  5 , the learning gains do not increase accordingly. ii) When digging into the average amount of time spent in each learning activity for each word set in Storyfier-sen and -AI interfaces, we have 49.48 vs. 81.56 (read,  = 0.004), 30.76 vs. 43.84 (cloze,  = 0.004), and 263.46 vs. 208.71 (write,  = 0.09) seconds  11  . This shows that compared to the sessions with Storyfier-sen, participants with Storyfier-AI spent significantly more time in reading and cloze-test activities but less time in writing activities. This implies that in read-only learning sessions, participants would find Storyfier more useful and have a higher intention to use it if it provides AI-generated stories. As for the activity factor, participants feel that Storyfier is significantly more useful ( = 0.035) if it supports cloze test and writing practices in addition to the reading activities. There are no significant differences in the perceived easiness to use across the four interfaces."
+    },
+    {
+      "title": "6.3. RQ3: Perceptions on Storyfier"
+    },
+    {
+      "title": "6.3.2. Qualitative responses. Preference.",
+      "text": "In the open-response questions after four learning sessions, fifteen participants indicate their preferences for the Story-AI interface for vocabulary learning. They especially favor adaptive writing assistance ( = 9), generative stories  (5) , and useful practices  (4) . \"It (Storyfier-AI) not only provides the meaning, pronunciation, and example sentences of words, but more importantly, it has AI-generated short stories that can help me better understand the meanings of words and how to use them. In addition, the following cloze test and story writing practice can further consolidate my understanding. When I do not know how to write, AI will also provide prompts to help me find my weak points and mistakes so that I can pay more attention on them later on\" (P22).\n\nSix participants prefer the Story-sen interface, and three of them credit the writing practice without AI assistance. \"I prefer Storyfiersen as I need to rely on myself to think and write down the story, which would be more impressive for vocabulary learning\" (P8). Five participants prefer the Read-AI interface for its low task workload ( = 3), meaningful contexts for learning ( = 3), and enjoying the experience (2), while the rest two participants favor the Read-sen one as they are more used to the rote learning practices.\n\nGenerative stories. Regarding participants' comments on the generative stories, we found positive opinions that they are coherent  (8)  and novel/interesting/impressive  (9) . P26 gives us an example. \"At first, I could not remember the word 'veil'. Then, I checked the generated story, which tells that a veil blocked my vision when I was driving in traffic. This story is close to real life, and I felt terrified. It is impressive. I remembered the word 'veil' now. \" Nevertheless, there are six comments suggesting that the stories were not coherent, which may be due to the lack of semantic connections among the target words. \"When the five target words, e.g., 'hasten, infinity, jet, basin, and trolley' are not naturally relevant to each other, it would be hard to have a reasonable story that covers them, making it hard for memorizing the words in a batch\" (P27). Besides, three users comment that some target words in the generated stories have different meanings from the dictionary ones, and another three users mention that the stories contain some words that are unknown, which disturbs story comprehension.\n\nCloze test. Twenty users indicate their preferences on using generative stories for the cloze test, which can \"make it easy to connect the words in context\" ( = 10), \"enhance memory of target words\" (7), and \"train reading comprehension skills\" (2). The other eight participants, however, prefer the existing sentences provided by Storyfier-sen for cloze test materials, with four comments mentioning that \"separate sentences are easier to understand\".\n\nWriting practice. There are seventeen positive responses on the adaptive writing assistance from the generative AI models, suggesting that it can encourage writing  (8) , reduce writing workload  (5) , and provide example usage of target words for reference  (4) . \"I didn't feel confused when writing with Storyfier-AI. I can write a sentence first and then let the AI write the next one, and so on. It's like having a buddy to memorize words together, which is more interesting and not boring\" (P2). \"The AI's prompts inspire my writing exercises\" (P23). However, these prompts in the turn-taking writing process may not match the learners' idea flow (2) and language styles (1) and cause their reliance on AI for using target words  (1) .\n\nIn all, these qualitative responses reveal that participants generally favor Storyfier with AI generative models in Read-AI and Storyfier-AI learning sessions compared to the Read-sen and Storyfiersen interfaces. However, these models still need to be improved and customized regarding the coherence, complexity, and style of the generative content."
+    },
+    {
+      "title": "7. DISCUSSION",
+      "text": "7.1 Insights from our findings 7.1.1 Text generation models for vocabulary learning support. In Phase 1, we develop a story generation model and verify that it can generate comparably good stories with the human-written ones given target word sets and titles. We receive divided opinions on the generative stories regarding their coherence and interestingness in the experiment with 28 ESL learners. The main reason could be that if the target five words are not naturally relevant to each other, it would be difficult for the generative model to connect them to form a meaningful story. Besides, we get feedback from English teachers in Phase 1 that our generative stories have generally acceptable complexity for vocabulary learners. Yet, there are still cases that our stories contain unknown words in addition to the target ones."
+    },
+    {
+      "title": "7.1.2. Vocabulary learning activities.",
+      "text": "In Phase 1, we propose that our generative models can empower the cloze test and writing practices in addition to the traditional reading activities that previous vocabulary learning tools support. Our evaluation study with ESL learners reveals that they have significantly more learning gains in read-cloze-write (i.e., Storyfier-sen and Storyfier-AI) learning sessions compared to that in read-only (i.e., Read-sen and Read-AI) sessions. This is non-surprising as learners spent more effort in understanding target words and practicing their usage in the readcloze-write sessions. Participants' responses in the open-ended questions suggest that generative models can facilitate vocabulary learners by providing meaningful reading and cloze-test materials and adaptive prompts in writing practices.\n\n7.1.3 Impact of generative models on vocabulary learning. In the read-only sessions, we observe that the additional AI-generated stories improve learning engagement but do not improve learning gains. This does not support the Gu et al. 's implication that learning vocabulary in a batch under a coherent context could facilitate recalls of target words  [25] . One key reason could be the low semantic relevance among some target words in our experiment. Gu et al. 's implication could still be valid if the selected target words are topically relevant to each other, e.g., as organized in a typical language course book. Generative stories can explicitly reveal the words' relationship.\n\nIn the read-cloze-write sessions, we found that the AI support leads to reduced vocabulary learning gains. We attribute these results to the amount of effort spent in the writing practices. While participants mostly favor the assistance from our generative model, they spent less time in writing and wrote significantly fewer words in the story. This provides a lesson that the AI's assistance should encourage necessary effort in vocabulary learning instead of aiming to reduce learners' workload."
+    },
+    {
+      "title": "7.2. Design Considerations",
+      "text": "Based on our findings, we outline three directions for supporting vocabulary learning with generative models.\n\nSupport four strands of vocabulary learning activities with generative models. Our results (subsection 6.1) with 28 ESL learners show that Storyfier improves learning gains compared to the read-only baselines. This improvement can be due to the Storyfier's cloze test and writing activities that integrate the recommended four strands of learning activities  [47]  (subsection 2.1). We thus recommend that vocabulary learning tools should integrate multiple strands of activities. While prior language learning systems, e.g., Smart Titles  [36]  and EnglishBot  [66] , have explored vocabulary learning activities like watching videos and speaking to others, they largely leveraged existing learning materials. We suggest that generative techniques, such as the story generation model we developed, the text-to-image  [87] , the text-to-video  [42] , and the music generation  [29]  approaches, can enrich the learning materials and offer in-situ assistance in these vocabulary learning activities. For example, the learning support tool can generate an image based on the example sentence of each target word to help them understand the word's meaning. It can further offer generated music clips that use this sentence as listening resources.\n\nProvide adaptive learning feedback. Storyfier offers feedback on the correctness of cloze test results and grammar of written sentences. However, two participants comment that it could offer more adaptive learning feedback. For example, it can \"first let the learner draft a story and then assess its quality and usage of target words\" (P27). It can further \"recommend how to improve the written story\" (P25). Previous skills learning tools, such as ArgueTutor  [80] , Persua  [86]  and VoiceCoach  [83] , and writing support tools like MepsBot  [56]  also adopt a similar feedback flow, which can mitigate disturbance on the practicing process. Generative models can offer such learning feedback by generating polished versions of the written story for reference. However, based on the teachers' suggestions on our first Storyfier prototype (Figure  3D-5 ), the provided feedback should emphasize the vocabulary learning goal; otherwise, learners may chase for other objectives, e.g., trigram repetition and sentence coherence.\n\nBalance machine and human effort in learning tasks. Our results show that Storyfier's AI features reduce learning gains on the retention of target words' meanings in the read-cloze-write sessions (subsection 6.1). Participants report the need for increased workload and autonomy in the writing task for effective vocabulary learning (subsubsection 6.3.2). As such, we recommend that Storyfier should further motivate necessary user effort in learning. In the refinement of Storyfier (subsection 4.3), we have experienced a few features to encourage more user effort, e.g., users need to write the first sentence of the story. Future work could explore the inclusion of gamification features like badges, timers, and leader boards for promoting learners' efforts in educational scenarios  [12] ."
+    },
+    {
+      "title": "7.3. Generality of Storyfier",
+      "text": "While Storyfier presets the target words that participants are unknown in the experiment, we have equipped it with features like adding or deleting any words, suggesting words semantically related to the title, filtering words based on difficulty level, and editing the generated stories. In other words, Storyfier can support customized individual vocabulary learning beyond the controlled lab sessions. Besides, our English teachers in the design workshop express their interest in applying Storyfier in language teaching. One teacher, E2, had a trial on her offline course by inputting five words she just taught and asking students to have a cloze test on the generated story. Therefore, our Storyfier is promising for supporting customized vocabulary learning and teaching in the wild."
+    },
+    {
+      "title": "7.4. Limitations and Future Work",
+      "text": "Handle language ambiguity. Currently, our system does not consider language ambiguity when generating stories for target vocabulary. For example, one word can carry multiple meanings (i.e., polysemy) in different contexts, while our system only considers its most common meaning in practical usage. Comparative studies of the same word in different contexts can help disambiguate words and deepen the understanding of vocabulary.\n\nImprove story generation quality. To further improve the quality of story generation for vocabulary learning, we can consider two aspects: dataset and model. The simplicity of the ROCStory dataset, while appreciated by English teachers for vocabulary learning, has certain limitations. It lacks transition words, which makes it challenging for models to learn sentence transition logic. Additionally, the simplicity of the story structures can potentially compromise the richness of intra-sentence contexts. In the future, we can incorporate more complex stories with a wide range of narrative structures into our dataset for model training.\n\nBesides, we can investigate the use of more powerful language models (e.g., ChatGPT) to enhance the quality of the generated stories. For example, we have experimented with prompts (e.g., with \"simple\", \"CET-4\", \"within 50 words\", and/or \"no more complex words\") to steer ChatGPT towards generating stories that fulfill our specifications  12  . Notably, however, there is a trade-off between the simplicity and coherence of the generated stories. Future research can focus on refining prompting strategies to optimize the balance between these two elements for enhancing the efficacy of vocabulary learning.\n\nGenerate diverse and harmless stories. Storyfier presents one story at a time based on the generation models trained on ROCStory dataset, which contains simple and short stories. In the future, we can consider generating more diverse stories (e.g., in the form of newspapers, novels, poems, and humor) that have varied styles and lengths for vocabulary learning. Besides, while our participants did not report harmful content in the generated stories, Storyfier should include features like \"report\" and automatic detection of unwanted content to offer a healthy learning environment.\n\nIdentify helpful characteristics of stories for vocabulary learning. We evaluate the quality of our generated stories via coherence, relevance, and interestingness (Table  3 ) and collect qualitative feedback from participants on the stories' helpfulness. We call for future work to complement our evaluation studies by identifying what are the helpful characteristics of stories for vocabulary learning. For example, we can talk to English-learning textbook authors or conduct a content analysis on textbook stories. The identified characteristics can further guide us to customize story generation models and enhance our evaluation metrics of the stories.\n\nInvite diverse language learners. We conduct the experiment with Chinese students in an English learning course to evaluate Storyfier. Their CET-4 test scores and self-reported proficiency indicate that they are intermediate-level English learners. Further studies can explore whether and how Storyfier with generative models can support novices with no or little prior experience in learning English. Moreover, we can extend Storyfier to support users from different cultures to learn their foreign languages (e.g., English learners study Chinese).\n\nEvaluate cloze test and writing practices separately. In the experiment, we evaluate the impact of the cloze test and writing practices by comparing the participants' performance and experience in read-only and read-cloze-write sessions. This study design is to identify the value of the vocabulary learning activities beyond the meaning-focused input activities that previous systems support. However, we can not quantitatively tell how much the cloze test or writing practice contributes to the impact, which requires a future study that separately evaluates these two activities."
+    },
+    {
+      "title": "8. CONCLUSION",
+      "text": "In this paper, we designed and developed an interactive system, Storyfier, to support reading, cloze test, and writing activities for vocabulary learning. We power the system with controllable language models that can generate stories given any target words and provide adaptive assistance when using these words in the writing practices. We explore its supported vocabulary learning activities and interface design with teachers, learners, and Human-Computer Interaction researchers. Our two-by-two within-subjects experiment with 28 English-as-Second-Language Chinese students shows that participants generally favor the generated stories and writing assistance. However, their learning gains with Storyfier in the read-cloze-test sessions decrease compared to the cases they are with a baseline system without generative models. We discuss insights from our findings for leveraging generative models to support learning tasks."
+    },
+    {
+      "text": "Figure 1: Our two-phases design and development process of Storyfier with teachers, learners, and HCI researchers."
+    },
+    {
+      "text": "Gets A Cramp <SEP> cet-4 words: sharp pain cramp grasp stomach roll Mask He felt a sharp pain in his stomach [n-grams]: He felt [BLANK] in his stomach [sentence]: [BLANK]"
+    },
+    {
+      "text": "Figure2: The technical framework of Storyfier. We mainly adopt prompt-based fine-tuning strategies to build story generation models. (A) We derive CET-4 words from the stories in ROCStory dataset. (B) We finetune T5 language models to 1) generate a story given a CET-4 word set with or without a title (presented in section 3.2) and 2) infill a sentence or n-grams given preceding and following sentences, unused target words, and story title (if any) (subsubsection 4.2.1). (C) We apply the models to support three kinds of story-based learning activities."
+    },
+    {
+      "text": "Figure 3: The interface designs of Storyfier. (A) Users can specify target words and check their meanings. (B) Story reading: users can read a machined-generated story that contains target words. (C) Cloze test: users can conduct a cloze test by using target words on the generated story. (D) Story writing: users can take turns with Storyfier to write a new story using target words. (E) The interface for story writing without adaptive support in the Storyfier-sen baseline (section 5). Note that in the first Storyfier prototype, the three modes (B-D) are separated. In the refined Storyfier, we unify them into one flow and improve the system designs (1-5) based on feedback from learners and experts."
+    },
+    {
+      "text": "Figure 3A); \u2022 Read-AI interface additionally provides a generated story that covers target words (Figure 3A + B); Read-cloze-write \u2022 Storyfier-sen interface offers example sentences for target words, a cloze test on these sentences, and a writing exercise without AI's intervention (Figure 3A + B + D, but the stories in B and C are replaced by the example sentences of target words); \u2022 Storyfier-AI interface contains all features of Storyfier (Figure 3A + B + C).The Read-sen and Storyfier-sen interfaces simulate how individuals traditionally use existing materials to learn any target word set"
+    },
+    {
+      "text": "Figure 4: Procedure of the experiment. (A) Participants first took a pretest, and the words they did not know were target words. (B) On the experiment day, they used the four interfaces of Storyfier for vocabulary learning. (C) Two days later, they took the posttest on words' meanings and usage."
+    },
+    {
+      "text": "Figure 5: RQ1 results regarding numbers of correct choices on target words' meanings, numbers of sentences that correctly use target words, and total scores of the written sentences in each condition. ***:  < 0.001, **:  < 0.01, *:  < 0.05."
+    },
+    {
+      "text": "Figure 7 depicts users perceptions of each Storyfier interface.6.3.1 Quantitative items.In read-only sessions, there is a trend on the improved perceived usefulness and intention to use of the interfaces with AI-generative stories over those without the stories."
+    },
+    {
+      "text": "Figure 6: RQ2 results regarding perceived engagement, enjoyment, and workload in vocabulary learning sessions with Read-sen, Read-AI, Storyfier-sen, and Storyfier-AI interfaces. **:  < 0.01, *:  < 0.05, +:  < 0.1."
+    },
+    {
+      "text": "Figure 7: RQ3 results regarding user perceptions with each interface. *:  < 0.05, +:  < 0.1."
+    },
+    {
+      "text": "The statistics of ROCStory dataset."
+    },
+    {
+      "text": "Automated evaluation of human-written and machine-generated stories using lexical metrics."
+    },
+    {
+      "title": "ACKNOWLEDGMENTS",
+      "text": "This work is supported by the  Young Scientists Fund of the National Natural Science Foundation of China  with Grant No.  62202509  and partially supported by the  Research Grants Council of the Hong Kong Special Administrative Region under General Research Fund (GRF)  with Grant No.  16203421 ."
+    }
+  ],
+  "references": [
+    {
+      "title": "VocabEncounter: NMT-Powered Vocabulary Learning by Presenting Computer-Generated Usages of Foreign Words into Users' Daily Lives",
+      "authors": [
+        "Riku Arakawa",
+        "Hiromu Yakura",
+        "Sosuke Kobayashi"
+      ],
+      "year": 2022,
+      "doi": "10.1145/3491102.3501839",
+      "pages": "21",
+      "raw": "VocabEncounter: NMT-Powered Vocabulary Learning by Presenting Computer-Generated Usages of Foreign Words into Users' Daily Lives \n\t\t \n\t\t\t Riku Arakawa \n\t\t \n\t\t \n\t\t\t Hiromu Yakura \n\t\t \n\t\t \n\t\t\t Sosuke Kobayashi \n\t\t \n\t\t 10.1145/3491102.3501839 \n\t\t \n\t \n\t \n\t\t Proceedings of the 2022 CHI Conference on Human Factors in Computing Systems \n\t\t the 2022 CHI Conference on Human Factors in Computing Systems New Orleans, LA, USA; New York, NY, USA \n\t\t \n\t\t\t Association for Computing Machinery \n\t\t\t 2022 \n\t\t\t 21 \n\t\t \n\t \n\t ) (CHI '22) Article 6 \n\t Riku Arakawa, Hiromu Yakura, and Sosuke Kobayashi. 2022. VocabEncounter: NMT-Powered Vocabulary Learning by Presenting Computer-Generated Usages of Foreign Words into Users' Daily Lives. In Proceedings of the 2022 CHI Conference on Human Factors in Computing Systems (New Orleans, LA, USA) (CHI '22). Association for Computing Machinery, New York, NY, USA, Article 6, 21 pages. https://doi.org/10.1145/3491102.3501839"
+    },
+    {
+      "title": "Analysis of a mnemonic device: Modern psychology uncovers the powerful components of an ancient system for improving memory",
+      "authors": [
+        "H Gordon"
+      ],
+      "year": 1970,
+      "journal": "American Scientist",
+      "volume": "58",
+      "issue": "5",
+      "raw": "Analysis of a mnemonic device: Modern psychology uncovers the powerful components of an ancient system for improving memory \n\t\t \n\t\t\t H Gordon \n\t\t \n\t\t \n\t\t\t Bower \n\t\t \n\t \n\t \n\t\t American Scientist \n\t\t \n\t\t\t 58 \n\t\t\t 5 \n\t\t\t \n\t\t\t 1970. 1970 \n\t\t \n\t \n\t Gordon H Bower. 1970. Analysis of a mnemonic device: Modern psychology uncovers the powerful components of an ancient system for improving memory. American Scientist 58, 5 (1970), 496-510."
+    },
+    {
+      "title": "Using thematic analysis in psychology",
+      "authors": [
+        "Virginia Braun",
+        "Victoria Clarke"
+      ],
+      "year": 2006,
+      "doi": "10.1191/1478088706qp063oa",
+      "journal": "Qualitative Research in Psychology",
+      "volume": "3",
+      "issue": "2",
+      "raw": "Using thematic analysis in psychology \n\t\t \n\t\t\t Virginia Braun \n\t\t \n\t\t \n\t\t\t Victoria Clarke \n\t\t \n\t\t 10.1191/1478088706qp063oa \n\t\t \n\t \n\t \n\t\t Qualitative Research in Psychology \n\t\t \n\t\t\t 3 \n\t\t\t 2 \n\t\t\t \n\t\t\t 2006. 2006 \n\t\t \n\t \n\t Virginia Braun and Victoria Clarke. 2006. Using thematic analysis in psychology. Qualitative Research in Psychology 3, 2 (2006), 77-101. https://doi.org/10.1191/ 1478088706qp063oa"
+    },
+    {
+      "title": "Language models are few-shot learners",
+      "authors": [
+        "Tom Brown",
+        "Benjamin Mann",
+        "Nick Ryder",
+        "Melanie Subbiah",
+        "Jared Kaplan",
+        "Prafulla Dhariwal",
+        "Arvind Neelakantan",
+        "Pranav Shyam",
+        "Girish Sastry",
+        "Amanda Askell"
+      ],
+      "year": 2020,
+      "journal": "Advances in neural information processing systems",
+      "volume": "33",
+      "raw": "Language models are few-shot learners \n\t\t \n\t\t\t Tom Brown \n\t\t \n\t\t \n\t\t\t Benjamin Mann \n\t\t \n\t\t \n\t\t\t Nick Ryder \n\t\t \n\t\t \n\t\t\t Melanie Subbiah \n\t\t \n\t\t \n\t\t\t Jared D Kaplan \n\t\t \n\t\t \n\t\t\t Prafulla Dhariwal \n\t\t \n\t\t \n\t\t\t Arvind Neelakantan \n\t\t \n\t\t \n\t\t\t Pranav Shyam \n\t\t \n\t\t \n\t\t\t Girish Sastry \n\t\t \n\t\t \n\t\t\t Amanda Askell \n\t\t \n\t \n\t \n\t\t Advances in neural information processing systems \n\t\t \n\t\t\t 33 \n\t\t\t \n\t\t\t 2020. 2020 \n\t\t \n\t \n\t Tom Brown, Benjamin Mann, Nick Ryder, Melanie Subbiah, Jared D Kaplan, Prafulla Dhariwal, Arvind Neelakantan, Pranav Shyam, Girish Sastry, Amanda Askell, et al. 2020. Language models are few-shot learners. Advances in neural information processing systems 33 (2020), 1877-1901."
+    },
+    {
+      "title": "The impact of multiple parallel phrase suggestions on email input and composition behaviour of native and non-native english writers",
+      "authors": [
+        "Daniel Buschek",
+        "Martin Z\u00fcrn",
+        "Malin Eiband"
+      ],
+      "year": 2021,
+      "raw": "The impact of multiple parallel phrase suggestions on email input and composition behaviour of native and non-native english writers \n\t\t \n\t\t\t Daniel Buschek \n\t\t \n\t\t \n\t\t\t Martin Z\u00fcrn \n\t\t \n\t\t \n\t\t\t Malin Eiband \n\t\t \n\t \n\t \n\t\t Proceedings of the 2021 CHI Conference on Human Factors in Computing Systems \n\t\t the 2021 CHI Conference on Human Factors in Computing Systems \n\t\t \n\t\t\t 2021 \n\t\t\t \n\t\t \n\t \n\t Daniel Buschek, Martin Z\u00fcrn, and Malin Eiband. 2021. The impact of multiple parallel phrase suggestions on email input and composition behaviour of native and non-native english writers. In Proceedings of the 2021 CHI Conference on Human Factors in Computing Systems. 1-13."
+    },
+    {
+      "title": "How Novelists Use Generative Language Models: An Exploratory User Study",
+      "authors": [
+        "Alex Calderwood",
+        "Vivian Qiu",
+        "Katy Gero",
+        "Lydia Chilton"
+      ],
+      "year": 2020,
+      "raw": "How Novelists Use Generative Language Models: An Exploratory User Study \n\t\t \n\t\t\t Alex Calderwood \n\t\t \n\t\t \n\t\t\t Vivian Qiu \n\t\t \n\t\t \n\t\t\t Katy Ilonka Gero \n\t\t \n\t\t \n\t\t\t Lydia B Chilton \n\t\t \n\t \n\t \n\t\t HAI-GEN+ user2agent@ IUI \n\t\t \n\t\t\t 2020 \n\t\t \n\t \n\t Alex Calderwood, Vivian Qiu, Katy Ilonka Gero, and Lydia B Chilton. 2020. How Novelists Use Generative Language Models: An Exploratory User Study.. In HAI-GEN+ user2agent@ IUI."
+    },
+    {
+      "title": "Schema theory and ESL reading: Classroom implications and applications",
+      "authors": [
+        "Patricia Carrell"
+      ],
+      "year": 1984,
+      "journal": "The modern language journal",
+      "volume": "68",
+      "issue": "4",
+      "raw": "Schema theory and ESL reading: Classroom implications and applications \n\t\t \n\t\t\t Patricia L Carrell \n\t\t \n\t \n\t \n\t\t The modern language journal \n\t\t \n\t\t\t 68 \n\t\t\t 4 \n\t\t\t \n\t\t\t 1984. 1984 \n\t\t \n\t \n\t Patricia L Carrell. 1984. Schema theory and ESL reading: Classroom implications and applications. The modern language journal 68, 4 (1984), 332-343."
+    },
+    {
+      "title": "Personalized mobile English vocabulary learning system based on item response theory and learning memory cycle",
+      "authors": [
+        "Chih-Ming Chen",
+        "Ching-Ju Chung"
+      ],
+      "year": 2008,
+      "journal": "Computers & Education",
+      "volume": "51",
+      "issue": "2",
+      "raw": "Personalized mobile English vocabulary learning system based on item response theory and learning memory cycle \n\t\t \n\t\t\t Chih-Ming Chen \n\t\t \n\t\t \n\t\t\t Ching-Ju Chung \n\t\t \n\t \n\t \n\t\t Computers & Education \n\t\t \n\t\t\t 51 \n\t\t\t 2 \n\t\t\t \n\t\t\t 2008. 2008 \n\t\t \n\t \n\t Chih-Ming Chen and Ching-Ju Chung. 2008. Personalized mobile English vo- cabulary learning system based on item response theory and learning memory cycle. Computers & Education 51, 2 (2008), 624-645."
+    },
+    {
+      "title": "TaleBrush: Sketching Stories with Generative Pretrained Language Models",
+      "authors": [
+        "John Joon",
+        "Young Chung",
+        "Wooseok Kim",
+        "Min Kang",
+        "Hwaran Yoo",
+        "Eytan Lee",
+        "Minsuk Adar"
+      ],
+      "year": 2022,
+      "raw": "TaleBrush: Sketching Stories with Generative Pretrained Language Models \n\t\t \n\t\t\t John Joon \n\t\t \n\t\t \n\t\t\t Young Chung \n\t\t \n\t\t \n\t\t\t Wooseok Kim \n\t\t \n\t\t \n\t\t\t Min Kang \n\t\t \n\t\t \n\t\t\t Hwaran Yoo \n\t\t \n\t\t \n\t\t\t Eytan Lee \n\t\t \n\t\t \n\t\t\t Minsuk Adar \n\t\t \n\t\t \n\t\t\t Chang \n\t\t \n\t \n\t \n\t\t CHI Conference on Human Factors in Computing Systems \n\t\t \n\t\t\t 2022 \n\t\t\t \n\t\t \n\t \n\t John Joon Young Chung, Wooseok Kim, Kang Min Yoo, Hwaran Lee, Eytan Adar, and Minsuk Chang. 2022. TaleBrush: Sketching Stories with Generative Pretrained Language Models. In CHI Conference on Human Factors in Computing Systems. 1-19."
+    },
+    {
+      "title": "Beyond Text Generation: Supporting Writers with Continuous Automatic Text Summaries",
+      "authors": [
+        "Hai Dang",
+        "Karim Benharrak",
+        "Florian Lehmann",
+        "Daniel Buschek"
+      ],
+      "year": 2022,
+      "doi": "10.1145/3526113.3545672",
+      "raw": "Beyond Text Generation: Supporting Writers with Continuous Automatic Text Summaries \n\t\t \n\t\t\t Hai Dang \n\t\t \n\t\t \n\t\t\t Karim Benharrak \n\t\t \n\t\t \n\t\t\t Florian Lehmann \n\t\t \n\t\t \n\t\t\t Daniel Buschek \n\t\t \n\t\t 10.1145/3526113.3545672 \n\t \n\t \n\t\t Proceedings of the 35th Annual ACM Symposium on User Interface Software and Technology \n\t\t the 35th Annual ACM Symposium on User Interface Software and Technology \n\t\t \n\t\t\t 2022 \n\t\t\t \n\t\t \n\t \n\t Hai Dang, Karim Benharrak, Florian Lehmann, and Daniel Buschek. 2022. Beyond Text Generation: Supporting Writers with Continuous Automatic Text Summaries. In Proceedings of the 35th Annual ACM Symposium on User Interface Software and Technology. 1-13."
+    },
+    {
+      "title": "Plug and play language models: A simple approach to controlled text generation",
+      "authors": [
+        "Sumanth Dathathri",
+        "Andrea Madotto",
+        "Janice Lan",
+        "Jane Hung",
+        "Eric Frank",
+        "Piero Molino",
+        "Jason Yosinski",
+        "Rosanne Liu"
+      ],
+      "year": 2019,
+      "raw": "Plug and play language models: A simple approach to controlled text generation \n\t\t \n\t\t\t Sumanth Dathathri \n\t\t \n\t\t \n\t\t\t Andrea Madotto \n\t\t \n\t\t \n\t\t\t Janice Lan \n\t\t \n\t\t \n\t\t\t Jane Hung \n\t\t \n\t\t \n\t\t\t Eric Frank \n\t\t \n\t\t \n\t\t\t Piero Molino \n\t\t \n\t\t \n\t\t\t Jason Yosinski \n\t\t \n\t\t \n\t\t\t Rosanne Liu \n\t\t \n\t\t arXiv:1912.02164 \n\t\t \n\t\t\t 2019. 2019 \n\t\t \n\t \n\t arXiv preprint \n\t Sumanth Dathathri, Andrea Madotto, Janice Lan, Jane Hung, Eric Frank, Piero Molino, Jason Yosinski, and Rosanne Liu. 2019. Plug and play language models: A simple approach to controlled text generation. arXiv preprint arXiv:1912.02164 (2019)."
+    },
+    {
+      "title": "Empirical support for a causal relationship between gamification and learning outcomes",
+      "authors": [
+        "Paul Denny",
+        "Fiona Mcdonald",
+        "Ruth Empson",
+        "Philip Kelly",
+        "Andrew Petersen"
+      ],
+      "year": 2018,
+      "raw": "Empirical support for a causal relationship between gamification and learning outcomes \n\t\t \n\t\t\t Paul Denny \n\t\t \n\t\t \n\t\t\t Fiona Mcdonald \n\t\t \n\t\t \n\t\t\t Ruth Empson \n\t\t \n\t\t \n\t\t\t Philip Kelly \n\t\t \n\t\t \n\t\t\t Andrew Petersen \n\t\t \n\t \n\t \n\t\t Proceedings of the 2018 CHI conference on human factors in computing systems \n\t\t the 2018 CHI conference on human factors in computing systems \n\t\t \n\t\t\t 2018 \n\t\t\t \n\t\t \n\t \n\t Paul Denny, Fiona McDonald, Ruth Empson, Philip Kelly, and Andrew Petersen. 2018. Empirical support for a causal relationship between gamification and learning outcomes. In Proceedings of the 2018 CHI conference on human factors in computing systems. 1-13."
+    },
+    {
+      "title": "Storycoder: Teaching computational thinking concepts through storytelling in a voice-guided app for children",
+      "authors": [
+        "Griffin Dietz",
+        "Jimmy Le",
+        "Nadin Tamer",
+        "Jenny Han",
+        "Hyowon Gweon",
+        "Elizabeth Murnane",
+        "James Landay"
+      ],
+      "year": 2021,
+      "doi": "10.1145/3411764.3445039",
+      "raw": "Storycoder: Teaching computational thinking concepts through storytelling in a voice-guided app for children \n\t\t \n\t\t\t Griffin Dietz \n\t\t \n\t\t \n\t\t\t Jimmy K Le \n\t\t \n\t\t \n\t\t\t Nadin Tamer \n\t\t \n\t\t \n\t\t\t Jenny Han \n\t\t \n\t\t \n\t\t\t Hyowon Gweon \n\t\t \n\t\t \n\t\t\t Elizabeth L Murnane \n\t\t \n\t\t \n\t\t\t James A Landay \n\t\t \n\t\t 10.1145/3411764.3445039 \n\t \n\t \n\t\t Proceedings of the 2021 CHI Conference on Human Factors in Computing Systems \n\t\t the 2021 CHI Conference on Human Factors in Computing Systems \n\t\t \n\t\t\t 2021 \n\t\t\t \n\t\t \n\t \n\t Griffin Dietz, Jimmy K Le, Nadin Tamer, Jenny Han, Hyowon Gweon, Eliza- beth L Murnane, and James A Landay. 2021. Storycoder: Teaching computational thinking concepts through storytelling in a voice-guided app for children. In Proceedings of the 2021 CHI Conference on Human Factors in Computing Systems. 1-15."
+    },
+    {
+      "title": "Visual StoryCoder: A Multimodal Programming Environment for Children's Creation of Stories",
+      "authors": [
+        "Griffin Dietz",
+        "Nadin Tamer",
+        "Carina Ly",
+        "Jimmy Le",
+        "James Landay"
+      ],
+      "year": 2023,
+      "doi": "10.1145/3544548.3580981",
+      "raw": "Visual StoryCoder: A Multimodal Programming Environment for Children's Creation of Stories \n\t\t \n\t\t\t Griffin Dietz \n\t\t \n\t\t \n\t\t\t Nadin Tamer \n\t\t \n\t\t \n\t\t\t Carina Ly \n\t\t \n\t\t \n\t\t\t Jimmy K Le \n\t\t \n\t\t \n\t\t\t James A Landay \n\t\t \n\t\t 10.1145/3544548.3580981 \n\t \n\t \n\t\t Proceedings of the 2023 CHI Conference on Human Factors in Computing Systems \n\t\t the 2023 CHI Conference on Human Factors in Computing Systems \n\t\t \n\t\t\t 2023 \n\t\t\t \n\t\t \n\t \n\t Griffin Dietz, Nadin Tamer, Carina Ly, Jimmy K Le, and James A Landay. 2023. Visual StoryCoder: A Multimodal Programming Environment for Children's Creation of Stories. In Proceedings of the 2023 CHI Conference on Human Factors in Computing Systems. 1-16."
+    },
+    {
+      "title": "Enabling Language Models to Fill in the Blanks",
+      "authors": [
+        "Chris Donahue",
+        "Mina Lee",
+        "Percy Liang"
+      ],
+      "year": 2020,
+      "raw": "Enabling Language Models to Fill in the Blanks \n\t\t \n\t\t\t Chris Donahue \n\t\t \n\t\t \n\t\t\t Mina Lee \n\t\t \n\t\t \n\t\t\t Percy Liang \n\t\t \n\t\t ArXiv abs/2005.05339 \n\t\t \n\t\t\t 2020. 2020 \n\t\t \n\t \n\t Chris Donahue, Mina Lee, and Percy Liang. 2020. Enabling Language Models to Fill in the Blanks. ArXiv abs/2005.05339 (2020)."
+    },
+    {
+      "title": "Practical approaches to individualizing instructions: contracts and other effective teaching strategies",
+      "authors": [
+        "Rita Stafford",
+        "Kenneth Dunn"
+      ],
+      "year": 1972,
+      "raw": "Rita Stafford \n\t\t \n\t\t \n\t\t\t Dunn \n\t\t \n\t\t \n\t\t\t Kenneth J Dunn \n\t\t \n\t\t Practical approaches to individualizing instructions: contracts and other effective teaching strategies \n\t\t \n\t\t\t Parker Publishing \n\t\t\t 1972 \n\t\t \n\t \n\t Rita Stafford Dunn and Kenneth J Dunn. 1972. Practical approaches to indi- vidualizing instructions: contracts and other effective teaching strategies. Parker Publishing."
+    },
+    {
+      "title": "Hierarchical neural story generation",
+      "authors": [
+        "Angela Fan",
+        "Mike Lewis",
+        "Yann Dauphin"
+      ],
+      "year": 2018,
+      "doi": "10.18653/v1/p18-1082",
+      "raw": "Hierarchical neural story generation \n\t\t \n\t\t\t Angela Fan \n\t\t \n\t\t \n\t\t\t Mike Lewis \n\t\t \n\t\t \n\t\t\t Yann Dauphin \n\t\t \n\t\t 10.18653/v1/p18-1082 \n\t\t arXiv:1805.04833 \n\t\t \n\t\t\t 2018. 2018 \n\t\t \n\t \n\t arXiv preprint \n\t Angela Fan, Mike Lewis, and Yann Dauphin. 2018. Hierarchical neural story generation. arXiv preprint arXiv:1805.04833 (2018)."
+    },
+    {
+      "title": "Comparing Sentence-Level Suggestions to Message-Level Suggestions in AI-Mediated Communication",
+      "authors": [
+        "Liye Fu",
+        "Benjamin Newman",
+        "Maurice Jakesch",
+        "Sarah Kreps"
+      ],
+      "year": 2023,
+      "doi": "10.1145/3544548.3581351",
+      "volume": "103",
+      "pages": "13",
+      "raw": "Comparing Sentence-Level Suggestions to Message-Level Suggestions in AI-Mediated Communication \n\t\t \n\t\t\t Liye Fu \n\t\t \n\t\t \n\t\t\t Benjamin Newman \n\t\t \n\t\t \n\t\t\t Maurice Jakesch \n\t\t \n\t\t \n\t\t\t Sarah Kreps \n\t\t \n\t\t 10.1145/3544548.3581351 \n\t\t \n\t \n\t \n\t\t Proceedings of the 2023 CHI Conference on Human Factors in Computing Systems \n\t\t the 2023 CHI Conference on Human Factors in Computing Systems Hamburg, Germany; New York, NY, USA \n\t\t \n\t\t\t Association for Computing Machinery \n\t\t\t 2023 \n\t\t\t 103 \n\t\t\t 13 \n\t\t \n\t \n\t Liye Fu, Benjamin Newman, Maurice Jakesch, and Sarah Kreps. 2023. Compar- ing Sentence-Level Suggestions to Message-Level Suggestions in AI-Mediated Communication. In Proceedings of the 2023 CHI Conference on Human Fac- tors in Computing Systems (Hamburg, Germany) (CHI '23). Association for Computing Machinery, New York, NY, USA, Article 103, 13 pages. https: //doi.org/10.1145/3544548.3581351"
+    },
+    {
+      "title": "Story plot generation based on CBR",
+      "authors": [
+        "Pablo Gerv\u00e1s",
+        "Bel\u00e9n D\u00edaz-Agudo",
+        "Federico Peinado",
+        "Raquel Herv\u00e1s"
+      ],
+      "year": 2004,
+      "doi": "10.1007/1-84628-103-2_3",
+      "raw": "Story plot generation based on CBR \n\t\t \n\t\t\t Pablo Gerv\u00e1s \n\t\t \n\t\t \n\t\t\t Bel\u00e9n D\u00edaz-Agudo \n\t\t \n\t\t \n\t\t\t Federico Peinado \n\t\t \n\t\t \n\t\t\t Raquel Herv\u00e1s \n\t\t \n\t\t 10.1007/1-84628-103-2_3 \n\t \n\t \n\t\t International Conference on Innovative Techniques and Applications of Artificial Intelligence \n\t\t \n\t\t\t Springer \n\t\t\t 2004 \n\t\t\t \n\t\t \n\t \n\t Pablo Gerv\u00e1s, Bel\u00e9n D\u00edaz-Agudo, Federico Peinado, and Raquel Herv\u00e1s. 2004. Story plot generation based on CBR. In International Conference on Innovative Techniques and Applications of Artificial Intelligence. Springer, 33-46."
+    },
+    {
+      "title": "Hafez: an interactive poetry generation system",
+      "authors": [
+        "Marjan Ghazvininejad",
+        "Xing Shi",
+        "Jay Priyadarshi",
+        "Kevin Knight"
+      ],
+      "year": 2017,
+      "doi": "10.18653/v1/p17-4008",
+      "raw": "Hafez: an interactive poetry generation system \n\t\t \n\t\t\t Marjan Ghazvininejad \n\t\t \n\t\t \n\t\t\t Xing Shi \n\t\t \n\t\t \n\t\t\t Jay Priyadarshi \n\t\t \n\t\t \n\t\t\t Kevin Knight \n\t\t \n\t\t 10.18653/v1/p17-4008 \n\t \n\t \n\t\t Proceedings of ACL 2017, System Demonstrations \n\t\t ACL 2017, System Demonstrations \n\t\t \n\t\t\t 2017 \n\t\t\t \n\t\t \n\t \n\t Marjan Ghazvininejad, Xing Shi, Jay Priyadarshi, and Kevin Knight. 2017. Hafez: an interactive poetry generation system. In Proceedings of ACL 2017, System Demonstrations. 43-48."
+    },
+    {
+      "title": "ANOVA: Repeated measures",
+      "authors": [
+        "E Girden"
+      ],
+      "year": 1992,
+      "raw": "E R Girden \n\t\t \n\t\t ANOVA: Repeated measures \n\t\t Thousand Oaks, CA, US \n\t\t \n\t\t\t Sage Publications, Inc \n\t\t\t 1992 \n\t\t \n\t \n\t E.R. Girden. 1992. ANOVA: Repeated measures. Sage Publications, Inc., Thousand Oaks, CA, US."
+    },
+    {
+      "title": "Content planning for neural story generation with aristotelian rescoring",
+      "authors": [
+        "Seraphina Goldfarb-Tarrant",
+        "Tuhin Chakrabarty",
+        "Ralph Weischedel",
+        "Nanyun Peng"
+      ],
+      "year": 2020,
+      "doi": "10.18653/v1/2020.emnlp-main.351",
+      "raw": "Content planning for neural story generation with aristotelian rescoring \n\t\t \n\t\t\t Seraphina Goldfarb-Tarrant \n\t\t \n\t\t \n\t\t\t Tuhin Chakrabarty \n\t\t \n\t\t \n\t\t\t Ralph Weischedel \n\t\t \n\t\t \n\t\t\t Nanyun Peng \n\t\t \n\t\t 10.18653/v1/2020.emnlp-main.351 \n\t\t arXiv:2009.09870 \n\t\t \n\t\t\t 2020. 2020 \n\t\t \n\t \n\t arXiv preprint \n\t Seraphina Goldfarb-Tarrant, Tuhin Chakrabarty, Ralph Weischedel, and Nanyun Peng. 2020. Content planning for neural story generation with aristotelian rescoring. arXiv preprint arXiv:2009.09870 (2020)."
+    },
+    {
+      "title": "Plan, Write, and Revise: an Interactive System for Open-Domain Story Generation",
+      "authors": [
+        "Seraphina Goldfarb-Tarrant",
+        "Haining Feng",
+        "Nanyun Peng"
+      ],
+      "year": 2019,
+      "doi": "10.18653/v1/n19-4016",
+      "raw": "Plan, Write, and Revise: an Interactive System for Open-Domain Story Generation \n\t\t \n\t\t\t Seraphina Goldfarb-Tarrant \n\t\t \n\t\t \n\t\t\t Haining Feng \n\t\t \n\t\t \n\t\t\t Nanyun Peng \n\t\t \n\t\t 10.18653/v1/n19-4016 \n\t \n\t \n\t\t NAACL \n\t\t \n\t\t\t 2019 \n\t\t \n\t \n\t Seraphina Goldfarb-Tarrant, Haining Feng, and Nanyun Peng. 2019. Plan, Write, and Revise: an Interactive System for Open-Domain Story Generation. In NAACL."
+    },
+    {
+      "title": "LaMPost: Design and Evaluation of an AI-assisted Email Writing Prototype for Adults with Dyslexia",
+      "authors": [
+        "Erin Steven M Goodman",
+        "Patrick Buehler",
+        "Andy Clary",
+        "Aaron Coenen",
+        "Tiffanie Donsbach",
+        "Michal Horne",
+        "Robert Lahav",
+        "Rain Macdonald",
+        "Ajit Breaw Michaels"
+      ],
+      "year": 2022,
+      "raw": "LaMPost: Design and Evaluation of an AI-assisted Email Writing Prototype for Adults with Dyslexia \n\t\t \n\t\t\t Erin Steven M Goodman \n\t\t \n\t\t \n\t\t\t Patrick Buehler \n\t\t \n\t\t \n\t\t\t Andy Clary \n\t\t \n\t\t \n\t\t\t Aaron Coenen \n\t\t \n\t\t \n\t\t\t Tiffanie N Donsbach \n\t\t \n\t\t \n\t\t\t Michal Horne \n\t\t \n\t\t \n\t\t\t Robert Lahav \n\t\t \n\t\t \n\t\t\t Rain Macdonald \n\t\t \n\t\t \n\t\t\t Ajit Breaw Michaels \n\t\t \n\t\t \n\t\t\t Narayanan \n\t\t \n\t \n\t \n\t\t Proceedings of the 24th International ACM SIGACCESS Conference on Computers and Accessibility \n\t\t the 24th International ACM SIGACCESS Conference on Computers and Accessibility \n\t\t \n\t\t\t 2022 \n\t\t\t \n\t\t \n\t \n\t Steven M Goodman, Erin Buehler, Patrick Clary, Andy Coenen, Aaron Donsbach, Tiffanie N Horne, Michal Lahav, Robert MacDonald, Rain Breaw Michaels, Ajit Narayanan, et al. 2022. LaMPost: Design and Evaluation of an AI-assisted Email Writing Prototype for Adults with Dyslexia. In Proceedings of the 24th International ACM SIGACCESS Conference on Computers and Accessibility. 1-18."
+    },
+    {
+      "title": "Vocabulary Learning Strategies and Language Learning Outcomes",
+      "authors": [
+        "Yongqi Gu",
+        "Robert Keith"
+      ],
+      "year": 1996,
+      "doi": "10.1111/j.1467-1770.1996.tb01355.x",
+      "journal": "Language Learning",
+      "volume": "46",
+      "issue": "4",
+      "raw": "Vocabulary Learning Strategies and Language Learning Outcomes \n\t\t \n\t\t\t Yongqi Gu \n\t\t \n\t\t \n\t\t\t Robert Keith \n\t\t \n\t\t \n\t\t\t Johnson \n\t\t \n\t\t 10.1111/j.1467-1770.1996.tb01355.x \n\t\t \n\t \n\t \n\t\t Language Learning \n\t\t \n\t\t\t 46 \n\t\t\t 4 \n\t\t\t \n\t\t\t 1996. 1996 \n\t\t \n\t \n\t Yongqi Gu and Robert Keith Johnson. 1996. Vocabulary Learning Strategies and Language Learning Outcomes. Language Learning 46, 4 (1996), 643-679. https://doi.org/10.1111/j.1467-1770.1996.tb01355.x"
+    },
+    {
+      "title": "Vocabulary learning strategies and language learning outcomes",
+      "authors": [
+        "Yongqi Gu",
+        "Robert Keith"
+      ],
+      "year": 1996,
+      "doi": "10.1111/j.1467-1770.1996.tb01355.x",
+      "journal": "Language learning",
+      "volume": "46",
+      "issue": "4",
+      "raw": "Vocabulary learning strategies and language learning outcomes \n\t\t \n\t\t\t Yongqi Gu \n\t\t \n\t\t \n\t\t\t Robert Keith \n\t\t \n\t\t \n\t\t\t Johnson \n\t\t \n\t\t 10.1111/j.1467-1770.1996.tb01355.x \n\t \n\t \n\t\t Language learning \n\t\t \n\t\t\t 46 \n\t\t\t 4 \n\t\t\t \n\t\t\t 1996. 1996 \n\t\t \n\t \n\t Yongqi Gu and Robert Keith Johnson. 1996. Vocabulary learning strategies and language learning outcomes. Language learning 46, 4 (1996), 643-679."
+    },
+    {
+      "title": "Toward automated story generation with markov chain monte carlo methods and deep neural networks",
+      "authors": [
+        "Brent Harrison",
+        "Christopher Purdy",
+        "Mark Riedl"
+      ],
+      "year": 2017,
+      "doi": "10.1609/aiide.v13i2.13003",
+      "raw": "Toward automated story generation with markov chain monte carlo methods and deep neural networks \n\t\t \n\t\t\t Brent Harrison \n\t\t \n\t\t \n\t\t\t Christopher Purdy \n\t\t \n\t\t \n\t\t\t Mark O Riedl \n\t\t \n\t\t 10.1609/aiide.v13i2.13003 \n\t \n\t \n\t\t Thirteenth Artificial Intelligence and Interactive Digital Entertainment Conference \n\t\t \n\t\t\t 2017 \n\t\t \n\t \n\t Brent Harrison, Christopher Purdy, and Mark O Riedl. 2017. Toward automated story generation with markov chain monte carlo methods and deep neural net- works. In Thirteenth Artificial Intelligence and Interactive Digital Entertainment Conference."
+    },
+    {
+      "title": "NASA-task load index (NASA-TLX); 20 years later",
+      "authors": [
+        "G Sandra"
+      ],
+      "year": 2006,
+      "volume": "50",
+      "raw": "NASA-task load index (NASA-TLX); 20 years later \n\t\t \n\t\t\t G Sandra \n\t\t \n\t\t \n\t\t\t Hart \n\t\t \n\t \n\t \n\t\t Proceedings of the human factors and ergonomics society annual meeting \n\t\t the human factors and ergonomics society annual meeting Sage CA; Los Angeles, CA \n\t\t \n\t\t\t Sage \n\t\t\t 2006 \n\t\t\t 50 \n\t\t\t \n\t\t \n\t \n\t Sandra G Hart. 2006. NASA-task load index (NASA-TLX); 20 years later. In Proceedings of the human factors and ergonomics society annual meeting, Vol. 50. Sage publications Sage CA: Los Angeles, CA, 904-908."
+    },
+    {
+      "title": "A Functional Taxonomy of Music Generation Systems",
+      "authors": [
+        "Dorien Herremans",
+        "Ching-Hua Chuan",
+        "Elaine Chew"
+      ],
+      "year": 2017,
+      "doi": "10.1145/3108242",
+      "journal": "ACM Comput. Surv",
+      "volume": "50",
+      "issue": "5",
+      "pages": "30",
+      "raw": "A Functional Taxonomy of Music Generation Systems \n\t\t \n\t\t\t Dorien Herremans \n\t\t \n\t\t \n\t\t\t Ching-Hua Chuan \n\t\t \n\t\t \n\t\t\t Elaine Chew \n\t\t \n\t\t 10.1145/3108242 \n\t\t \n\t \n\t \n\t\t ACM Comput. Surv \n\t\t \n\t\t\t 50 \n\t\t\t 5 \n\t\t\t 30 \n\t\t\t 2017. sep 2017 \n\t\t \n\t \n\t Dorien Herremans, Ching-Hua Chuan, and Elaine Chew. 2017. A Functional Taxonomy of Music Generation Systems. ACM Comput. Surv. 50, 5, Article 69 (sep 2017), 30 pages. https://doi.org/10.1145/3108242"
+    },
+    {
+      "title": "Learning to write with cooperative discriminators",
+      "authors": [
+        "Ari Holtzman",
+        "Jan Buys",
+        "Maxwell Forbes",
+        "Antoine Bosselut",
+        "David Golub",
+        "Yejin Choi"
+      ],
+      "year": 2018,
+      "raw": "Ari Holtzman \n\t\t \n\t\t \n\t\t\t Jan Buys \n\t\t \n\t\t \n\t\t\t Maxwell Forbes \n\t\t \n\t\t \n\t\t\t Antoine Bosselut \n\t\t \n\t\t \n\t\t\t David Golub \n\t\t \n\t\t \n\t\t\t Yejin Choi \n\t\t \n\t\t arXiv:1805.06087 \n\t\t Learning to write with cooperative discriminators \n\t\t \n\t\t\t 2018. 2018 \n\t\t \n\t \n\t arXiv preprint \n\t Ari Holtzman, Jan Buys, Maxwell Forbes, Antoine Bosselut, David Golub, and Yejin Choi. 2018. Learning to write with cooperative discriminators. arXiv preprint arXiv:1805.06087 (2018)."
+    },
+    {
+      "title": "Interaction design based on augmented reality technologies for English vocabulary learning",
+      "authors": [
+        "Min-Chai Hsieh",
+        "Hao-Chiang Koong Lin"
+      ],
+      "year": 2006,
+      "volume": "1",
+      "raw": "Interaction design based on augmented reality technologies for English vocabulary learning \n\t\t \n\t\t\t Min-Chai Hsieh \n\t\t \n\t\t \n\t\t\t Hao-Chiang Koong Lin \n\t\t \n\t \n\t \n\t\t Proceedings of the 18th International Conference on Computers in Education \n\t\t the 18th International Conference on Computers in Education \n\t\t \n\t\t\t 2006 \n\t\t\t 1 \n\t\t\t \n\t\t \n\t \n\t Min-Chai Hsieh and Hao-Chiang Koong Lin. 2006. Interaction design based on augmented reality technologies for English vocabulary learning. In Proceedings of the 18th International Conference on Computers in Education, Vol. 1. 663-666."
+    },
+    {
+      "title": "A ubiquitous English vocabulary learning system: Evidence of active/passive attitudes vs. usefulness/ease-of-use",
+      "authors": [
+        "Yueh-Min Huang",
+        "Yong-Ming Huang",
+        "Shu-Hsien Huang",
+        "Yen-Ting Lin"
+      ],
+      "year": 2012,
+      "journal": "Computers & Education",
+      "volume": "58",
+      "issue": "1",
+      "raw": "A ubiquitous English vocabulary learning system: Evidence of active/passive attitudes vs. usefulness/ease-of-use \n\t\t \n\t\t\t Yueh-Min Huang \n\t\t \n\t\t \n\t\t\t Yong-Ming Huang \n\t\t \n\t\t \n\t\t\t Shu-Hsien Huang \n\t\t \n\t\t \n\t\t\t Yen-Ting Lin \n\t\t \n\t \n\t \n\t\t Computers & Education \n\t\t \n\t\t\t 58 \n\t\t\t 1 \n\t\t\t \n\t\t\t 2012. 2012 \n\t\t \n\t \n\t Yueh-Min Huang, Yong-Ming Huang, Shu-Hsien Huang, and Yen-Ting Lin. 2012. A ubiquitous English vocabulary learning system: Evidence of active/passive attitudes vs. usefulness/ease-of-use. Computers & Education 58, 1 (2012), 273-282."
+    },
+    {
+      "title": "How can we know what language models know",
+      "authors": [
+        "Zhengbao Jiang",
+        "Frank Xu",
+        "Jun Araki",
+        "Graham Neubig"
+      ],
+      "year": 2020,
+      "journal": "Transactions of the Association for Computational Linguistics",
+      "volume": "8",
+      "raw": "How can we know what language models know \n\t\t \n\t\t\t Zhengbao Jiang \n\t\t \n\t\t \n\t\t\t Frank F Xu \n\t\t \n\t\t \n\t\t\t Jun Araki \n\t\t \n\t\t \n\t\t\t Graham Neubig \n\t\t \n\t \n\t \n\t\t Transactions of the Association for Computational Linguistics \n\t\t \n\t\t\t 8 \n\t\t\t \n\t\t\t 2020. 2020 \n\t\t \n\t \n\t Zhengbao Jiang, Frank F Xu, Jun Araki, and Graham Neubig. 2020. How can we know what language models know? Transactions of the Association for Computa- tional Linguistics 8 (2020), 423-438."
+    },
+    {
+      "title": "Understanding the Benefits and Challenges of Deploying Conversational AI Leveraging Large Language Models for Public Health Intervention",
+      "authors": [
+        "Eunkyung Jo",
+        "Daniel Epstein",
+        "Hyunhoon Jung",
+        "Young-Ho Kim"
+      ],
+      "year": 2023,
+      "doi": "10.1145/3544548.3581503",
+      "pages": "16",
+      "raw": "Understanding the Benefits and Challenges of Deploying Conversational AI Leveraging Large Language Models for Public Health Intervention \n\t\t \n\t\t\t Eunkyung Jo \n\t\t \n\t\t \n\t\t\t Daniel A Epstein \n\t\t \n\t\t \n\t\t\t Hyunhoon Jung \n\t\t \n\t\t \n\t\t\t Young-Ho Kim \n\t\t \n\t\t 10.1145/3544548.3581503 \n\t\t \n\t \n\t \n\t\t Proceedings of the 2023 CHI Conference on Human Factors in Computing Systems \n\t\t the 2023 CHI Conference on Human Factors in Computing Systems Hamburg, Germany; New York, NY, USA \n\t\t \n\t\t\t Association for Computing Machinery \n\t\t\t 2023 \n\t\t\t 16 \n\t\t \n\t \n\t Article 18 \n\t Eunkyung Jo, Daniel A. Epstein, Hyunhoon Jung, and Young-Ho Kim. 2023. Understanding the Benefits and Challenges of Deploying Conversational AI Leveraging Large Language Models for Public Health Intervention. In Proceedings of the 2023 CHI Conference on Human Factors in Computing Systems (Hamburg, Germany) (CHI '23). Association for Computing Machinery, New York, NY, USA, Article 18, 16 pages. https://doi.org/10.1145/3544548.3581503"
+    },
+    {
+      "title": "Ctrl: A conditional transformer language model for controllable generation",
+      "authors": [
+        "Nitish Shirish Keskar",
+        "Bryan Mccann",
+        "R Lav",
+        "Caiming Varshney",
+        "Richard Xiong"
+      ],
+      "year": 2019,
+      "raw": "Ctrl: A conditional transformer language model for controllable generation \n\t\t \n\t\t\t Nitish Shirish Keskar \n\t\t \n\t\t \n\t\t\t Bryan Mccann \n\t\t \n\t\t \n\t\t\t R Lav \n\t\t \n\t\t \n\t\t\t Caiming Varshney \n\t\t \n\t\t \n\t\t\t Richard Xiong \n\t\t \n\t\t \n\t\t\t Socher \n\t\t \n\t\t arXiv:1909.05858 \n\t\t \n\t\t\t 2019. 2019 \n\t\t \n\t \n\t arXiv preprint \n\t Nitish Shirish Keskar, Bryan McCann, Lav R Varshney, Caiming Xiong, and Richard Socher. 2019. Ctrl: A conditional transformer language model for con- trollable generation. arXiv preprint arXiv:1909.05858 (2019)."
+    },
+    {
+      "title": "Smart subtitles for vocabulary learning",
+      "authors": [
+        "Geza Kovacs",
+        "Robert Miller"
+      ],
+      "year": 2014,
+      "raw": "Smart subtitles for vocabulary learning \n\t\t \n\t\t\t Geza Kovacs \n\t\t \n\t\t \n\t\t\t Robert C Miller \n\t\t \n\t \n\t \n\t\t Proceedings of the SIGCHI Conference on Human Factors in Computing Systems \n\t\t the SIGCHI Conference on Human Factors in Computing Systems \n\t\t \n\t\t\t 2014 \n\t\t\t \n\t\t \n\t \n\t Geza Kovacs and Robert C Miller. 2014. Smart subtitles for vocabulary learning. In Proceedings of the SIGCHI Conference on Human Factors in Computing Systems. 853-862."
+    },
+    {
+      "title": "Gedi: Generative discriminator guided sequence generation",
+      "authors": [
+        "Ben Krause",
+        "Akhilesh Deepak Gotmare",
+        "Bryan Mccann",
+        "Nitish Shirish Keskar",
+        "Shafiq Joty",
+        "Richard Socher",
+        "Nazneen Fatema"
+      ],
+      "year": 2020,
+      "raw": "Gedi: Generative discriminator guided sequence generation \n\t\t \n\t\t\t Ben Krause \n\t\t \n\t\t \n\t\t\t Akhilesh Deepak Gotmare \n\t\t \n\t\t \n\t\t\t Bryan Mccann \n\t\t \n\t\t \n\t\t\t Nitish Shirish Keskar \n\t\t \n\t\t \n\t\t\t Shafiq Joty \n\t\t \n\t\t \n\t\t\t Richard Socher \n\t\t \n\t\t \n\t\t\t Nazneen Fatema \n\t\t \n\t\t \n\t\t\t Rajani \n\t\t \n\t\t arXiv:2009.06367 \n\t\t \n\t\t\t 2020. 2020 \n\t\t \n\t \n\t arXiv preprint \n\t Ben Krause, Akhilesh Deepak Gotmare, Bryan McCann, Nitish Shirish Keskar, Shafiq Joty, Richard Socher, and Nazneen Fatema Rajani. 2020. Gedi: Generative discriminator guided sequence generation. arXiv preprint arXiv:2009.06367 (2020)."
+    },
+    {
+      "title": "Automatic evaluation of text coherence: Models and representations",
+      "authors": [
+        "Mirella Lapata",
+        "Regina Barzilay"
+      ],
+      "year": 2005,
+      "volume": "5",
+      "raw": "Automatic evaluation of text coherence: Models and representations \n\t\t \n\t\t\t Mirella Lapata \n\t\t \n\t\t \n\t\t\t Regina Barzilay \n\t\t \n\t \n\t \n\t\t IJCAI \n\t\t \n\t\t\t Citeseer \n\t\t\t 2005 \n\t\t\t 5 \n\t\t\t \n\t\t \n\t \n\t Mirella Lapata, Regina Barzilay, et al. 2005. Automatic evaluation of text coher- ence: Models and representations. In IJCAI, Vol. 5. Citeseer, 1085-1090."
+    },
+    {
+      "title": "The power of scale for parameter-efficient prompt tuning",
+      "authors": [
+        "Brian Lester",
+        "Rami Al-Rfou",
+        "Noah Constant"
+      ],
+      "year": 2021,
+      "raw": "Brian Lester \n\t\t \n\t\t \n\t\t\t Rami Al-Rfou \n\t\t \n\t\t \n\t\t\t Noah Constant \n\t\t \n\t\t arXiv:2104.08691 \n\t\t The power of scale for parameter-efficient prompt tuning \n\t\t \n\t\t\t 2021. 2021 \n\t\t \n\t \n\t arXiv preprint \n\t Brian Lester, Rami Al-Rfou, and Noah Constant. 2021. The power of scale for parameter-efficient prompt tuning. arXiv preprint arXiv:2104.08691 (2021)."
+    },
+    {
+      "title": "Learning to decode for future success",
+      "authors": [
+        "Jiwei Li",
+        "Will Monroe",
+        "Dan Jurafsky"
+      ],
+      "year": 2017,
+      "raw": "Jiwei Li \n\t\t \n\t\t \n\t\t\t Will Monroe \n\t\t \n\t\t \n\t\t\t Dan Jurafsky \n\t\t \n\t\t arXiv:1701.06549 \n\t\t Learning to decode for future success \n\t\t \n\t\t\t 2017. 2017 \n\t\t \n\t \n\t arXiv preprint \n\t Jiwei Li, Will Monroe, and Dan Jurafsky. 2017. Learning to decode for future success. arXiv preprint arXiv:1701.06549 (2017)."
+    },
+    {
+      "title": "Prefix-tuning: Optimizing continuous prompts for generation",
+      "authors": [
+        "Lisa Xiang",
+        "Percy Li"
+      ],
+      "year": 2021,
+      "raw": "Prefix-tuning: Optimizing continuous prompts for generation \n\t\t \n\t\t\t Lisa Xiang \n\t\t \n\t\t \n\t\t\t Percy Li \n\t\t \n\t\t \n\t\t\t Liang \n\t\t \n\t\t arXiv:2101.00190 \n\t\t \n\t\t\t 2021. 2021 \n\t\t \n\t \n\t arXiv preprint \n\t Xiang Lisa Li and Percy Liang. 2021. Prefix-tuning: Optimizing continuous prompts for generation. arXiv preprint arXiv:2101.00190 (2021)."
+    },
+    {
+      "title": "Video generation from text",
+      "authors": [
+        "Yitong Li",
+        "Martin Min",
+        "Dinghan Shen",
+        "David Carlson",
+        "Lawrence Carin"
+      ],
+      "year": 2018,
+      "volume": "32",
+      "raw": "Video generation from text \n\t\t \n\t\t\t Yitong Li \n\t\t \n\t\t \n\t\t\t Martin Min \n\t\t \n\t\t \n\t\t\t Dinghan Shen \n\t\t \n\t\t \n\t\t\t David Carlson \n\t\t \n\t\t \n\t\t\t Lawrence Carin \n\t\t \n\t \n\t \n\t\t Proceedings of the AAAI Conference on Artificial Intelligence \n\t\t the AAAI Conference on Artificial Intelligence \n\t\t \n\t\t\t 2018 \n\t\t\t 32 \n\t\t \n\t \n\t Yitong Li, Martin Min, Dinghan Shen, David Carlson, and Lawrence Carin. 2018. Video generation from text. In Proceedings of the AAAI Conference on Artificial Intelligence, Vol. 32."
+    },
+    {
+      "title": "GPT understands, too",
+      "authors": [
+        "Xiao Liu",
+        "Yanan Zheng",
+        "Zhengxiao Du",
+        "Ming Ding",
+        "Yujie Qian",
+        "Zhilin Yang",
+        "Jie Tang"
+      ],
+      "year": 2021,
+      "raw": "Xiao Liu \n\t\t \n\t\t \n\t\t\t Yanan Zheng \n\t\t \n\t\t \n\t\t\t Zhengxiao Du \n\t\t \n\t\t \n\t\t\t Ming Ding \n\t\t \n\t\t \n\t\t\t Yujie Qian \n\t\t \n\t\t \n\t\t\t Zhilin Yang \n\t\t \n\t\t \n\t\t\t Jie Tang \n\t\t \n\t\t arXiv:2103.10385 \n\t\t GPT understands, too \n\t\t \n\t\t\t 2021. 2021 \n\t\t \n\t \n\t arXiv preprint \n\t Xiao Liu, Yanan Zheng, Zhengxiao Du, Ming Ding, Yujie Qian, Zhilin Yang, and Jie Tang. 2021. GPT understands, too. arXiv preprint arXiv:2103.10385 (2021)."
+    },
+    {
+      "title": "Event representations for automated story generation with deep neural nets",
+      "authors": [
+        "Lara Martin",
+        "Prithviraj Ammanabrolu",
+        "Xinyu Wang",
+        "William Hancock",
+        "Shruti Singh",
+        "Brent Harrison",
+        "Mark Riedl"
+      ],
+      "year": 2018,
+      "volume": "32",
+      "raw": "Event representations for automated story generation with deep neural nets \n\t\t \n\t\t\t Lara Martin \n\t\t \n\t\t \n\t\t\t Prithviraj Ammanabrolu \n\t\t \n\t\t \n\t\t\t Xinyu Wang \n\t\t \n\t\t \n\t\t\t William Hancock \n\t\t \n\t\t \n\t\t\t Shruti Singh \n\t\t \n\t\t \n\t\t\t Brent Harrison \n\t\t \n\t\t \n\t\t\t Mark Riedl \n\t\t \n\t \n\t \n\t\t Proceedings of the AAAI Conference on Artificial Intelligence \n\t\t the AAAI Conference on Artificial Intelligence \n\t\t \n\t\t\t 2018 \n\t\t\t 32 \n\t\t \n\t \n\t Lara Martin, Prithviraj Ammanabrolu, Xinyu Wang, William Hancock, Shruti Singh, Brent Harrison, and Mark Riedl. 2018. Event representations for automated story generation with deep neural nets. In Proceedings of the AAAI Conference on Artificial Intelligence, Vol. 32."
+    },
+    {
+      "title": "Co-Writing Screenplays and Theatre Scripts with Language Models: Evaluation by Industry Professionals",
+      "authors": [
+        "Piotr Mirowski",
+        "Kory Mathewson",
+        "Jaylen Pittman",
+        "Richard Evans"
+      ],
+      "year": 2023,
+      "doi": "10.1145/3544548.3581225",
+      "volume": "355",
+      "pages": "34",
+      "raw": "Co-Writing Screenplays and Theatre Scripts with Language Models: Evaluation by Industry Professionals \n\t\t \n\t\t\t Piotr Mirowski \n\t\t \n\t\t \n\t\t\t Kory W Mathewson \n\t\t \n\t\t \n\t\t\t Jaylen Pittman \n\t\t \n\t\t \n\t\t\t Richard Evans \n\t\t \n\t\t 10.1145/3544548.3581225 \n\t\t \n\t \n\t \n\t\t Proceedings of the 2023 CHI Conference on Human Factors in Computing Systems \n\t\t the 2023 CHI Conference on Human Factors in Computing Systems Hamburg, Germany; New York, NY, USA \n\t\t \n\t\t\t Association for Computing Machinery \n\t\t\t 2023 \n\t\t\t 355 \n\t\t\t 34 \n\t\t \n\t \n\t Piotr Mirowski, Kory W. Mathewson, Jaylen Pittman, and Richard Evans. 2023. Co-Writing Screenplays and Theatre Scripts with Language Models: Evaluation by Industry Professionals. In Proceedings of the 2023 CHI Conference on Human Factors in Computing Systems (Hamburg, Germany) (CHI '23). Association for Computing Machinery, New York, NY, USA, Article 355, 34 pages. https://doi. org/10.1145/3544548.3581225"
+    },
+    {
+      "title": "A Corpus and Cloze Evaluation for Deeper Understanding of Commonsense Stories",
+      "authors": [
+        "Nasrin Mostafazadeh",
+        "Nathanael Chambers",
+        "Xiaodong He",
+        "Devi Parikh",
+        "Dhruv Batra",
+        "Lucy Vanderwende",
+        "Pushmeet Kohli",
+        "James Allen"
+      ],
+      "year": 2016,
+      "doi": "10.18653/v1/N16-1098",
+      "raw": "A Corpus and Cloze Evaluation for Deeper Understanding of Commonsense Stories \n\t\t \n\t\t\t Nasrin Mostafazadeh \n\t\t \n\t\t \n\t\t\t Nathanael Chambers \n\t\t \n\t\t \n\t\t\t Xiaodong He \n\t\t \n\t\t \n\t\t\t Devi Parikh \n\t\t \n\t\t \n\t\t\t Dhruv Batra \n\t\t \n\t\t \n\t\t\t Lucy Vanderwende \n\t\t \n\t\t \n\t\t\t Pushmeet Kohli \n\t\t \n\t\t \n\t\t\t James Allen \n\t\t \n\t\t 10.18653/v1/N16-1098 \n\t\t \n\t \n\t \n\t\t Proceedings of the 2016 Conference of the North American Chapter of the Association for Computational Linguistics: Human Language Technologies. Association for Computational Linguistics \n\t\t the 2016 Conference of the North American Chapter of the Association for Computational Linguistics: Human Language Technologies. Association for Computational Linguistics San Diego, California \n\t\t \n\t\t\t 2016 \n\t\t\t \n\t\t \n\t \n\t Nasrin Mostafazadeh, Nathanael Chambers, Xiaodong He, Devi Parikh, Dhruv Batra, Lucy Vanderwende, Pushmeet Kohli, and James Allen. 2016. A Corpus and Cloze Evaluation for Deeper Understanding of Commonsense Stories. In Proceedings of the 2016 Conference of the North American Chapter of the Association for Computational Linguistics: Human Language Technologies. Association for Computational Linguistics, San Diego, California, 839-849. https://doi.org/10. 18653/v1/N16-1098"
+    },
+    {
+      "title": "The four strands",
+      "authors": [
+        "Paul Nation"
+      ],
+      "year": 2007,
+      "journal": "International Journal of Innovation in Language Learning and Teaching",
+      "volume": "1",
+      "issue": "1",
+      "raw": "The four strands \n\t\t \n\t\t\t Paul Nation \n\t\t \n\t \n\t \n\t\t International Journal of Innovation in Language Learning and Teaching \n\t\t \n\t\t\t 1 \n\t\t\t 1 \n\t\t\t \n\t\t\t 2007. 2007 \n\t\t \n\t \n\t Paul Nation. 2007. The four strands. International Journal of Innovation in Language Learning and Teaching 1, 1 (2007), 2-13."
+    },
+    {
+      "title": "Teaching and testing vocabulary",
+      "authors": [
+        "Paul Nation",
+        "Teresa Chung"
+      ],
+      "year": 2009,
+      "raw": "Teaching and testing vocabulary \n\t\t \n\t\t\t Paul Nation \n\t\t \n\t\t \n\t\t\t Teresa Chung \n\t\t \n\t \n\t \n\t\t The handbook of language teaching \n\t\t \n\t\t\t 2009. 2009 \n\t\t\t \n\t\t \n\t \n\t Paul Nation and Teresa Chung. 2009. Teaching and testing vocabulary. The handbook of language teaching (2009), 543-559."
+    },
+    {
+      "title": "Improving artificial teachers by considering how people learn and forget",
+      "authors": [
+        "Aur\u00e9lien Nioche",
+        "Pierre-Alexandre Murena",
+        "Carlos De La Torre-Ortiz",
+        "Antti Oulasvirta"
+      ],
+      "year": 2021,
+      "raw": "Improving artificial teachers by considering how people learn and forget \n\t\t \n\t\t\t Aur\u00e9lien Nioche \n\t\t \n\t\t \n\t\t\t Pierre-Alexandre Murena \n\t\t \n\t\t \n\t\t\t Carlos De La Torre-Ortiz \n\t\t \n\t\t \n\t\t\t Antti Oulasvirta \n\t\t \n\t \n\t \n\t\t 26th International Conference on Intelligent User Interfaces \n\t\t \n\t\t\t 2021 \n\t\t\t \n\t\t \n\t \n\t Aur\u00e9lien Nioche, Pierre-Alexandre Murena, Carlos de la Torre-Ortiz, and Antti Oulasvirta. 2021. Improving artificial teachers by considering how people learn and forget. In 26th International Conference on Intelligent User Interfaces. 445-453."
+    },
+    {
+      "title": "Improving Artificial Teachers by Considering How People Learn and Forget",
+      "authors": [
+        "Aurelien Nioche",
+        "Pierre-Alexandre Murena",
+        "Carlos De La Torre-Ortiz",
+        "Antti Oulasvirta"
+      ],
+      "year": 2021,
+      "doi": "10.1145/3397481.3450696",
+      "raw": "Improving Artificial Teachers by Considering How People Learn and Forget \n\t\t \n\t\t\t Aurelien Nioche \n\t\t \n\t\t \n\t\t\t Pierre-Alexandre Murena \n\t\t \n\t\t \n\t\t\t Carlos De La Torre-Ortiz \n\t\t \n\t\t \n\t\t\t Antti Oulasvirta \n\t\t \n\t\t 10.1145/3397481.3450696 \n\t\t \n\t \n\t \n\t\t 26th International Conference on Intelligent User Interfaces \n\t\t College Station, TX, USA; New York, NY, USA \n\t\t \n\t\t\t Association for Computing Machinery \n\t\t\t 2021 \n\t\t\t \n\t\t \n\t \n\t ) (IUI '21) \n\t Aurelien Nioche, Pierre-Alexandre Murena, Carlos de la Torre-Ortiz, and Antti Oulasvirta. 2021. Improving Artificial Teachers by Considering How People Learn and Forget. In 26th International Conference on Intelligent User Interfaces (College Station, TX, USA) (IUI '21). Association for Computing Machinery, New York, NY, USA, 445-453. https://doi.org/10.1145/3397481.3450696"
+    },
+    {
+      "year": 2023,
+      "raw": "Openai \n\t\t \n\t\t arXiv:2303.08774 \n\t\t \n\t\t\t 2023 \n\t\t \n\t \n\t GPT-4 Technical Report \n\t cs.CL \n\t OpenAI. 2023. GPT-4 Technical Report. arXiv:2303.08774 [cs.CL]"
+    },
+    {
+      "title": "Vocabulary learning: A critical analysis of techniques",
+      "authors": [
+        "Rebecca Oxford",
+        "David Crookall"
+      ],
+      "year": 1990,
+      "journal": "TESL Canada Journal",
+      "raw": "Vocabulary learning: A critical analysis of techniques \n\t\t \n\t\t\t Rebecca Oxford \n\t\t \n\t\t \n\t\t\t David Crookall \n\t\t \n\t \n\t \n\t\t TESL Canada Journal \n\t\t \n\t\t\t \n\t\t\t 1990. 1990 \n\t\t \n\t \n\t Rebecca Oxford and David Crookall. 1990. Vocabulary learning: A critical analysis of techniques. TESL Canada Journal (1990), 09-30."
+    },
+    {
+      "title": "Language learning strategies, the communicative approach, and their classroom implications",
+      "authors": [
+        "Rebecca Oxford",
+        "Roberta Lavine",
+        "David Crookall"
+      ],
+      "year": 1989,
+      "journal": "Foreign Language Annals",
+      "volume": "22",
+      "issue": "1",
+      "raw": "Language learning strategies, the communicative approach, and their classroom implications \n\t\t \n\t\t\t Rebecca L Oxford \n\t\t \n\t\t \n\t\t\t Roberta Z Lavine \n\t\t \n\t\t \n\t\t\t David Crookall \n\t\t \n\t \n\t \n\t\t Foreign Language Annals \n\t\t \n\t\t\t 22 \n\t\t\t 1 \n\t\t\t \n\t\t\t 1989. 1989 \n\t\t \n\t \n\t Rebecca L Oxford, Roberta Z Lavine, and David Crookall. 1989. Language learning strategies, the communicative approach, and their classroom implications. Foreign Language Annals 22, 1 (1989), 29-39."
+    },
+    {
+      "title": "Second language vocabulary learning among adults: State of the art in vocabulary instruction",
+      "authors": [
+        "L Rebecca",
+        "Robin Oxford"
+      ],
+      "year": 1994,
+      "journal": "System",
+      "volume": "22",
+      "issue": "2",
+      "raw": "Second language vocabulary learning among adults: State of the art in vocabulary instruction \n\t\t \n\t\t\t L Rebecca \n\t\t \n\t\t \n\t\t\t Robin C Oxford \n\t\t \n\t\t \n\t\t\t Scarcella \n\t\t \n\t \n\t \n\t\t System \n\t\t \n\t\t\t 22 \n\t\t\t 2 \n\t\t\t \n\t\t\t 1994. 1994 \n\t\t \n\t \n\t Rebecca L Oxford and Robin C Scarcella. 1994. Second language vocabulary learning among adults: State of the art in vocabulary instruction. System 22, 2 (1994), 231-243."
+    },
+    {
+      "title": "Towards controllable story generation",
+      "authors": [
+        "Nanyun Peng",
+        "Marjan Ghazvininejad",
+        "Jonathan May",
+        "Kevin Knight"
+      ],
+      "year": 2018,
+      "doi": "10.18653/v1/w18-1505",
+      "raw": "Towards controllable story generation \n\t\t \n\t\t\t Nanyun Peng \n\t\t \n\t\t \n\t\t\t Marjan Ghazvininejad \n\t\t \n\t\t \n\t\t\t Jonathan May \n\t\t \n\t\t \n\t\t\t Kevin Knight \n\t\t \n\t\t 10.18653/v1/w18-1505 \n\t \n\t \n\t\t Proceedings of the First Workshop on Storytelling \n\t\t the First Workshop on Storytelling \n\t\t \n\t\t\t 2018 \n\t\t\t \n\t\t \n\t \n\t Nanyun Peng, Marjan Ghazvininejad, Jonathan May, and Kevin Knight. 2018. Towards controllable story generation. In Proceedings of the First Workshop on Storytelling. 43-49."
+    },
+    {
+      "title": "Exploring the Effects of Technological Writing Assistance for Support Providers in Online Mental Health Community",
+      "authors": [
+        "Zhenhui Peng",
+        "Qingyu Guo",
+        "Ka Tsang",
+        "Xiaojuan Ma"
+      ],
+      "year": 2020,
+      "doi": "10.1145/3313831.3376695",
+      "raw": "Exploring the Effects of Technological Writing Assistance for Support Providers in Online Mental Health Community \n\t\t \n\t\t\t Zhenhui Peng \n\t\t \n\t\t \n\t\t\t Qingyu Guo \n\t\t \n\t\t \n\t\t\t Ka Wing Tsang \n\t\t \n\t\t \n\t\t\t Xiaojuan Ma \n\t\t \n\t\t 10.1145/3313831.3376695 \n\t\t \n\t \n\t \n\t\t Proceedings of the 2020 CHI Conference on Human Factors in Computing Systems \n\t\t the 2020 CHI Conference on Human Factors in Computing Systems Honolulu, HI, USA; New York, NY, USA \n\t\t \n\t\t\t Association for Computing Machinery \n\t\t\t 2020 \n\t\t\t \n\t\t \n\t \n\t ) (CHI '20) \n\t Zhenhui Peng, Qingyu Guo, Ka Wing Tsang, and Xiaojuan Ma. 2020. Exploring the Effects of Technological Writing Assistance for Support Providers in Online Mental Health Community. In Proceedings of the 2020 CHI Conference on Human Factors in Computing Systems (Honolulu, HI, USA) (CHI '20). Association for Computing Machinery, New York, NY, USA, 1-15. https://doi.org/10.1145/ 3313831.3376695"
+    },
+    {
+      "title": "AngleKindling: Supporting Journalistic Angle Ideation with Large Language Models",
+      "authors": [
+        "Savvas Petridis",
+        "Nicholas Diakopoulos",
+        "Kevin Crowston",
+        "Mark Hansen",
+        "Keren Henderson",
+        "Stan Jastrzebski",
+        "Jeffrey Nickerson",
+        "Lydia Chilton"
+      ],
+      "year": 2023,
+      "doi": "10.1145/3544548.3580907",
+      "pages": "16",
+      "raw": "AngleKindling: Supporting Journalistic Angle Ideation with Large Language Models \n\t\t \n\t\t\t Savvas Petridis \n\t\t \n\t\t \n\t\t\t Nicholas Diakopoulos \n\t\t \n\t\t \n\t\t\t Kevin Crowston \n\t\t \n\t\t \n\t\t\t Mark Hansen \n\t\t \n\t\t \n\t\t\t Keren Henderson \n\t\t \n\t\t \n\t\t\t Stan Jastrzebski \n\t\t \n\t\t \n\t\t\t Jeffrey V Nickerson \n\t\t \n\t\t \n\t\t\t Lydia B Chilton \n\t\t \n\t\t 10.1145/3544548.3580907 \n\t\t \n\t \n\t \n\t\t Proceedings of the 2023 CHI Conference on Human Factors in Computing Systems \n\t\t the 2023 CHI Conference on Human Factors in Computing Systems Hamburg, Germany; New York, NY, USA \n\t\t \n\t\t\t Association for Computing Machinery \n\t\t\t 2023 \n\t\t\t 16 \n\t\t \n\t \n\t Article 225 \n\t Savvas Petridis, Nicholas Diakopoulos, Kevin Crowston, Mark Hansen, Keren Henderson, Stan Jastrzebski, Jeffrey V Nickerson, and Lydia B Chilton. 2023. AngleKindling: Supporting Journalistic Angle Ideation with Large Language Models. In Proceedings of the 2023 CHI Conference on Human Factors in Computing Systems (Hamburg, Germany) (CHI '23). Association for Computing Machinery, New York, NY, USA, Article 225, 16 pages. https://doi.org/10.1145/3544548. 3580907"
+    },
+    {
+      "title": "Controlling narrative generation with planning trajectories: the role of constraints",
+      "authors": [
+        "Julie Porteous",
+        "Marc Cavazza"
+      ],
+      "year": 2009,
+      "raw": "Controlling narrative generation with planning trajectories: the role of constraints \n\t\t \n\t\t\t Julie Porteous \n\t\t \n\t\t \n\t\t\t Marc Cavazza \n\t\t \n\t \n\t \n\t\t Joint International Conference on Interactive Digital Storytelling \n\t\t \n\t\t\t Springer \n\t\t\t 2009 \n\t\t\t \n\t\t \n\t \n\t Julie Porteous and Marc Cavazza. 2009. Controlling narrative generation with planning trajectories: the role of constraints. In Joint International Conference on Interactive Digital Storytelling. Springer, 234-245."
+    },
+    {
+      "title": "The mnemonic keyword method",
+      "authors": [
+        "Michael Pressley",
+        "Joel Levin",
+        "Harold Delaney"
+      ],
+      "year": 1982,
+      "doi": "10.3102/00346543052001061",
+      "journal": "Review of Educational Research",
+      "volume": "52",
+      "issue": "1",
+      "raw": "The mnemonic keyword method \n\t\t \n\t\t\t Michael Pressley \n\t\t \n\t\t \n\t\t\t Joel R Levin \n\t\t \n\t\t \n\t\t\t Harold D Delaney \n\t\t \n\t\t 10.3102/00346543052001061 \n\t \n\t \n\t\t Review of Educational Research \n\t\t \n\t\t\t 52 \n\t\t\t 1 \n\t\t\t \n\t\t\t 1982. 1982 \n\t\t \n\t \n\t Michael Pressley, Joel R Levin, and Harold D Delaney. 1982. The mnemonic keyword method. Review of Educational Research 52, 1 (1982), 61-91."
+    },
+    {
+      "title": "Development of a situational interaction game for improving preschool children'performance in English-vocabulary learning",
+      "authors": [
+        "Mei Pu",
+        "Zheng Zhong"
+      ],
+      "year": 2018,
+      "doi": "10.1145/3231848.3231851",
+      "raw": "Development of a situational interaction game for improving preschool children'performance in English-vocabulary learning \n\t\t \n\t\t\t Mei Pu \n\t\t \n\t\t \n\t\t\t Zheng Zhong \n\t\t \n\t\t 10.1145/3231848.3231851 \n\t \n\t \n\t\t Proceedings of the 2018 international conference on distance education and learning \n\t\t the 2018 international conference on distance education and learning \n\t\t \n\t\t\t 2018 \n\t\t\t \n\t\t \n\t \n\t Mei Pu and Zheng Zhong. 2018. Development of a situational interaction game for improving preschool children'performance in English-vocabulary learning. In Proceedings of the 2018 international conference on distance education and learning. 88-92."
+    },
+    {
+      "title": "Language models are unsupervised multitask learners",
+      "authors": [
+        "Alec Radford",
+        "Jeffrey Wu",
+        "Rewon Child",
+        "David Luan",
+        "Dario Amodei",
+        "Ilya Sutskever"
+      ],
+      "year": 2019,
+      "journal": "OpenAI blog",
+      "volume": "1",
+      "issue": "8",
+      "pages": "9",
+      "raw": "Language models are unsupervised multitask learners \n\t\t \n\t\t\t Alec Radford \n\t\t \n\t\t \n\t\t\t Jeffrey Wu \n\t\t \n\t\t \n\t\t\t Rewon Child \n\t\t \n\t\t \n\t\t\t David Luan \n\t\t \n\t\t \n\t\t\t Dario Amodei \n\t\t \n\t\t \n\t\t\t Ilya Sutskever \n\t\t \n\t \n\t \n\t\t OpenAI blog \n\t\t \n\t\t\t 1 \n\t\t\t 8 \n\t\t\t 9 \n\t\t\t 2019. 2019 \n\t\t \n\t \n\t Alec Radford, Jeffrey Wu, Rewon Child, David Luan, Dario Amodei, Ilya Sutskever, et al. 2019. Language models are unsupervised multitask learners. OpenAI blog 1, 8 (2019), 9."
+    },
+    {
+      "title": "Exploring the limits of transfer learning with a unified text-to-text transformer",
+      "authors": [
+        "Colin Raffel",
+        "Noam Shazeer",
+        "Adam Roberts",
+        "Katherine Lee",
+        "Sharan Narang",
+        "Michael Matena",
+        "Yanqi Zhou",
+        "Wei Li",
+        "Peter Liu"
+      ],
+      "year": 2019,
+      "raw": "Colin Raffel \n\t\t \n\t\t \n\t\t\t Noam Shazeer \n\t\t \n\t\t \n\t\t\t Adam Roberts \n\t\t \n\t\t \n\t\t\t Katherine Lee \n\t\t \n\t\t \n\t\t\t Sharan Narang \n\t\t \n\t\t \n\t\t\t Michael Matena \n\t\t \n\t\t \n\t\t\t Yanqi Zhou \n\t\t \n\t\t \n\t\t\t Wei Li \n\t\t \n\t\t \n\t\t\t Peter J Liu \n\t\t \n\t\t arXiv:1910.10683 \n\t\t Exploring the limits of transfer learning with a unified text-to-text transformer \n\t\t \n\t\t\t 2019. 2019 \n\t\t \n\t \n\t arXiv preprint \n\t Colin Raffel, Noam Shazeer, Adam Roberts, Katherine Lee, Sharan Narang, Michael Matena, Yanqi Zhou, Wei Li, and Peter J Liu. 2019. Exploring the lim- its of transfer learning with a unified text-to-text transformer. arXiv preprint arXiv:1910.10683 (2019)."
+    },
+    {
+      "title": "Sentence-bert: Sentence embeddings using siamese bert-networks",
+      "authors": [
+        "Nils Reimers",
+        "Iryna Gurevych"
+      ],
+      "year": 2019,
+      "raw": "Nils Reimers \n\t\t \n\t\t \n\t\t\t Iryna Gurevych \n\t\t \n\t\t arXiv:1908.10084 \n\t\t Sentence-bert: Sentence embeddings using siamese bert-networks \n\t\t \n\t\t\t 2019. 2019 \n\t\t \n\t \n\t arXiv preprint \n\t Nils Reimers and Iryna Gurevych. 2019. Sentence-bert: Sentence embeddings using siamese bert-networks. arXiv preprint arXiv:1908.10084 (2019)."
+    },
+    {
+      "title": "Narrative planning: Balancing plot and character",
+      "authors": [
+        "O Mark",
+        "Robert Riedl",
+        "Young Michael"
+      ],
+      "year": 2010,
+      "journal": "Journal of Artificial Intelligence Research",
+      "volume": "39",
+      "raw": "Narrative planning: Balancing plot and character \n\t\t \n\t\t\t O Mark \n\t\t \n\t\t \n\t\t\t Robert Riedl \n\t\t \n\t\t \n\t\t\t Young Michael \n\t\t \n\t \n\t \n\t\t Journal of Artificial Intelligence Research \n\t\t \n\t\t\t 39 \n\t\t\t \n\t\t\t 2010. 2010 \n\t\t \n\t \n\t Mark O Riedl and Robert Michael Young. 2010. Narrative planning: Balancing plot and character. Journal of Artificial Intelligence Research 39 (2010), 217-268."
+    },
+    {
+      "title": "Evaluating story generation systems using automated linguistic analyses",
+      "authors": [
+        "Melissa Roemmele",
+        "Andrew Gordon",
+        "Reid Swanson"
+      ],
+      "year": 2017,
+      "raw": "Evaluating story generation systems using automated linguistic analyses \n\t\t \n\t\t\t Melissa Roemmele \n\t\t \n\t\t \n\t\t\t Andrew S Gordon \n\t\t \n\t\t \n\t\t\t Reid Swanson \n\t\t \n\t \n\t \n\t\t SIGKDD 2017 Workshop on Machine Learning for Creativity \n\t\t \n\t\t\t 2017 \n\t\t\t \n\t\t \n\t \n\t Melissa Roemmele, Andrew S Gordon, and Reid Swanson. 2017. Evaluating story generation systems using automated linguistic analyses. In SIGKDD 2017 Workshop on Machine Learning for Creativity. 13-17."
+    },
+    {
+      "title": "Englishbot: An ai-powered conversational system for second language learning",
+      "authors": [
+        "Liwei Sherry Ruan",
+        "Qianyao Jiang",
+        "Zhiyuan Xu",
+        "Glenn Liu",
+        "Emma Davis",
+        "James Brunskill"
+      ],
+      "year": 2021,
+      "raw": "Englishbot: An ai-powered conversational system for second language learning \n\t\t \n\t\t\t Liwei Sherry Ruan \n\t\t \n\t\t \n\t\t\t Qianyao Jiang \n\t\t \n\t\t \n\t\t\t Zhiyuan Xu \n\t\t \n\t\t \n\t\t\t Glenn M Liu \n\t\t \n\t\t \n\t\t\t Emma Davis \n\t\t \n\t\t \n\t\t\t James A Brunskill \n\t\t \n\t\t \n\t\t\t Landay \n\t\t \n\t \n\t \n\t\t 26th international conference on intelligent user interfaces \n\t\t \n\t\t\t 2021 \n\t\t\t \n\t\t \n\t \n\t Sherry Ruan, Liwei Jiang, Qianyao Xu, Zhiyuan Liu, Glenn M Davis, Emma Brunskill, and James A Landay. 2021. Englishbot: An ai-powered conversational system for second language learning. In 26th international conference on intelligent user interfaces. 434-444."
+    },
+    {
+      "title": "Gliflix: Using movie subtitles for language learning",
+      "authors": [
+        "Nathan Sakunkoo",
+        "Pattie Sakunkoo"
+      ],
+      "year": 2013,
+      "doi": "10.1145/2501988",
+      "raw": "Gliflix: Using movie subtitles for language learning \n\t\t \n\t\t\t Nathan Sakunkoo \n\t\t \n\t\t \n\t\t\t Pattie Sakunkoo \n\t\t \n\t\t 10.1145/2501988 \n\t \n\t \n\t\t Proceedings of the 26th Symposium on User Interface Software and Technology \n\t\t the 26th Symposium on User Interface Software and Technology \n\t\t \n\t\t\t ACM \n\t\t\t 2013 \n\t\t \n\t \n\t Nathan Sakunkoo and Pattie Sakunkoo. 2013. Gliflix: Using movie subtitles for language learning. In Proceedings of the 26th Symposium on User Interface Software and Technology. ACM."
+    },
+    {
+      "title": "Augmented reality as multimedia: the case for situated vocabulary learning",
+      "authors": [
+        "Marc Ericson",
+        "C Santos",
+        "Takafumi Taketomi",
+        "Goshiro Yamamoto",
+        "Ma Rodrigo",
+        "T Mercedes",
+        "Christian Sandor",
+        "Hirokazu Kato"
+      ],
+      "year": 2016,
+      "journal": "Research and Practice in Technology Enhanced Learning",
+      "volume": "11",
+      "issue": "1",
+      "raw": "Augmented reality as multimedia: the case for situated vocabulary learning \n\t\t \n\t\t\t Marc Ericson \n\t\t \n\t\t \n\t\t\t C Santos \n\t\t \n\t\t \n\t\t\t Takafumi Taketomi \n\t\t \n\t\t \n\t\t\t Goshiro Yamamoto \n\t\t \n\t\t \n\t\t\t Ma Rodrigo \n\t\t \n\t\t \n\t\t\t T Mercedes \n\t\t \n\t\t \n\t\t\t Christian Sandor \n\t\t \n\t\t \n\t\t\t Hirokazu Kato \n\t\t \n\t \n\t \n\t\t Research and Practice in Technology Enhanced Learning \n\t\t \n\t\t\t 11 \n\t\t\t 1 \n\t\t\t \n\t\t\t 2016. 2016 \n\t\t \n\t \n\t Marc Ericson C Santos, Takafumi Taketomi, Goshiro Yamamoto, Ma Rodrigo, T Mercedes, Christian Sandor, Hirokazu Kato, et al. 2016. Augmented reality as multimedia: the case for situated vocabulary learning. Research and Practice in Technology Enhanced Learning 11, 1 (2016), 1-23."
+    },
+    {
+      "title": "Instructed second language vocabulary learning",
+      "authors": [
+        "Norbert Schmitt"
+      ],
+      "year": 2008,
+      "journal": "Language teaching research",
+      "volume": "12",
+      "issue": "3",
+      "raw": "Instructed second language vocabulary learning \n\t\t \n\t\t\t Norbert Schmitt \n\t\t \n\t \n\t \n\t\t Language teaching research \n\t\t \n\t\t\t 12 \n\t\t\t 3 \n\t\t\t \n\t\t\t 2008. 2008 \n\t\t \n\t \n\t Norbert Schmitt. 2008. Instructed second language vocabulary learning. Language teaching research 12, 3 (2008), 329-363."
+    },
+    {
+      "title": "Do massively pretrained language models make better storytellers?",
+      "authors": [
+        "Abigail See",
+        "Aneesh Pappu",
+        "Rohun Saxena",
+        "Akhila Yerukola",
+        "Christopher Manning"
+      ],
+      "year": 2019,
+      "doi": "10.18653/v1/k19-1079",
+      "raw": "Abigail See \n\t\t \n\t\t \n\t\t\t Aneesh Pappu \n\t\t \n\t\t \n\t\t\t Rohun Saxena \n\t\t \n\t\t \n\t\t\t Akhila Yerukola \n\t\t \n\t\t \n\t\t\t Christopher D Manning \n\t\t \n\t\t 10.18653/v1/k19-1079 \n\t\t arXiv:1909.10705 \n\t\t Do massively pretrained language models make better storytellers? \n\t\t \n\t\t\t 2019. 2019 \n\t\t \n\t \n\t arXiv preprint \n\t Abigail See, Aneesh Pappu, Rohun Saxena, Akhila Yerukola, and Christopher D Manning. 2019. Do massively pretrained language models make better story- tellers? arXiv preprint arXiv:1909.10705 (2019)."
+    },
+    {
+      "title": "A sentiment and style controllable approach for chinese poetry generation",
+      "authors": [
+        "Yizhan Shao",
+        "Tong Shao",
+        "Minghao Wang",
+        "Peng Wang",
+        "Jie Gao"
+      ],
+      "year": 2021,
+      "raw": "A sentiment and style controllable approach for chinese poetry generation \n\t\t \n\t\t\t Yizhan Shao \n\t\t \n\t\t \n\t\t\t Tong Shao \n\t\t \n\t\t \n\t\t\t Minghao Wang \n\t\t \n\t\t \n\t\t\t Peng Wang \n\t\t \n\t\t \n\t\t\t Jie Gao \n\t\t \n\t \n\t \n\t\t Proceedings of the 30th ACM International Conference on Information & Knowledge Management \n\t\t the 30th ACM International Conference on Information & Knowledge Management \n\t\t \n\t\t\t 2021 \n\t\t\t \n\t\t \n\t \n\t Yizhan Shao, Tong Shao, Minghao Wang, Peng Wang, and Jie Gao. 2021. A sentiment and style controllable approach for chinese poetry generation. In Proceedings of the 30th ACM International Conference on Information & Knowledge Management. 4784-4788."
+    },
+    {
+      "title": "Autoprompt: Eliciting knowledge from language models with automatically generated prompts",
+      "authors": [
+        "Taylor Shin",
+        "Yasaman Razeghi",
+        "Robert Logan",
+        "Eric Wallace",
+        "Sameer Singh"
+      ],
+      "year": 2020,
+      "raw": "Autoprompt: Eliciting knowledge from language models with automatically generated prompts \n\t\t \n\t\t\t Taylor Shin \n\t\t \n\t\t \n\t\t\t Yasaman Razeghi \n\t\t \n\t\t \n\t\t\t Robert L Logan \n\t\t \n\t\t \n\t\t\t I V \n\t\t \n\t\t \n\t\t\t Eric Wallace \n\t\t \n\t\t \n\t\t\t Sameer Singh \n\t\t \n\t\t arXiv:2010.15980 \n\t\t \n\t\t\t 2020. 2020 \n\t\t \n\t \n\t arXiv preprint \n\t Taylor Shin, Yasaman Razeghi, Robert L Logan IV, Eric Wallace, and Sameer Singh. 2020. Autoprompt: Eliciting knowledge from language models with automatically generated prompts. arXiv preprint arXiv:2010.15980 (2020)."
+    },
+    {
+      "title": "Codetoon: Story ideation, auto comic generation, and structure mapping for code-driven storytelling",
+      "authors": [
+        "Sangho Suh",
+        "Jian Zhao",
+        "Edith Law"
+      ],
+      "year": 2022,
+      "raw": "Codetoon: Story ideation, auto comic generation, and structure mapping for code-driven storytelling \n\t\t \n\t\t\t Sangho Suh \n\t\t \n\t\t \n\t\t\t Jian Zhao \n\t\t \n\t\t \n\t\t\t Edith Law \n\t\t \n\t \n\t \n\t\t Proceedings of the 35th Annual ACM Symposium on User Interface Software and Technology \n\t\t the 35th Annual ACM Symposium on User Interface Software and Technology \n\t\t \n\t\t\t 2022 \n\t\t\t \n\t\t \n\t \n\t Sangho Suh, Jian Zhao, and Edith Law. 2022. Codetoon: Story ideation, auto comic generation, and structure mapping for code-driven storytelling. In Proceedings of the 35th Annual ACM Symposium on User Interface Software and Technology. 1-16."
+    },
+    {
+      "title": "Readers, texts, and second languages: The interactive processes",
+      "authors": [
+        "Janet Swaffar"
+      ],
+      "year": 1988,
+      "journal": "The Modern Language Journal",
+      "volume": "72",
+      "issue": "2",
+      "raw": "Readers, texts, and second languages: The interactive processes \n\t\t \n\t\t\t Janet K Swaffar \n\t\t \n\t \n\t \n\t\t The Modern Language Journal \n\t\t \n\t\t\t 72 \n\t\t\t 2 \n\t\t\t \n\t\t\t 1988. 1988 \n\t\t \n\t \n\t Janet K Swaffar. 1988. Readers, texts, and second languages: The interactive processes. The Modern Language Journal 72, 2 (1988), 123-149."
+    },
+    {
+      "title": "Vocabulary learning strategies and foreign language acquisition",
+      "authors": [
+        "Pavii Vi\u0161nja"
+      ],
+      "year": 2008,
+      "journal": "Multilingual Matters",
+      "raw": "Vocabulary learning strategies and foreign language acquisition \n\t\t \n\t\t\t Pavii Vi\u0161nja \n\t\t \n\t\t \n\t\t\t Taka \n\t\t \n\t \n\t \n\t\t Multilingual Matters \n\t\t \n\t\t\t 2008 \n\t\t \n\t \n\t Vi\u0161nja Pavii Taka. 2008. Vocabulary learning strategies and foreign language acquisition. Multilingual Matters."
+    },
+    {
+      "title": "An Image-Based Vocabulary Learning System Based on Multi-Agent System",
+      "authors": [
+        "Preecha Tangworakitthaworn",
+        "Preeyapol Owatsuwan",
+        "Nutsima Nongyai",
+        "Nongnapas Arayapong"
+      ],
+      "year": 2019,
+      "raw": "An Image-Based Vocabulary Learning System Based on Multi-Agent System \n\t\t \n\t\t\t Preecha Tangworakitthaworn \n\t\t \n\t\t \n\t\t\t Preeyapol Owatsuwan \n\t\t \n\t\t \n\t\t\t Nutsima Nongyai \n\t\t \n\t\t \n\t\t\t Nongnapas Arayapong \n\t\t \n\t \n\t \n\t\t 2019 16th International Joint Conference on Computer Science and Software Engineering (JCSSE) \n\t\t \n\t\t\t IEEE \n\t\t\t 2019 \n\t\t\t \n\t\t \n\t \n\t Preecha Tangworakitthaworn, Preeyapol Owatsuwan, Nutsima Nongyai, and Nongnapas Arayapong. 2019. An Image-Based Vocabulary Learning System Based on Multi-Agent System. In 2019 16th International Joint Conference on Computer Science and Software Engineering (JCSSE). IEEE, 324-329."
+    },
+    {
+      "title": "The creative process: A computer model of storytelling and creativity",
+      "year": 2014,
+      "raw": "The creative process: A computer model of storytelling and creativity \n\t\t \n\t\t\t Scott R Turner \n\t\t \n\t\t \n\t\t\t 2014 \n\t\t\t Psychology Press \n\t\t \n\t \n\t Scott R Turner. 2014. The creative process: A computer model of storytelling and creativity. Psychology Press."
+    },
+    {
+      "title": "Automatic poetry generation from prosaic text",
+      "authors": [
+        "Tim Van De Cruys"
+      ],
+      "year": 2020,
+      "raw": "Automatic poetry generation from prosaic text \n\t\t \n\t\t\t Tim Van De Cruys \n\t\t \n\t \n\t \n\t\t Proceedings of the 58th annual meeting of the association for computational linguistics \n\t\t the 58th annual meeting of the association for computational linguistics \n\t\t \n\t\t\t 2020 \n\t\t\t \n\t\t \n\t \n\t Tim Van de Cruys. 2020. Automatic poetry generation from prosaic text. In Pro- ceedings of the 58th annual meeting of the association for computational linguistics. 2471-2480."
+    },
+    {
+      "title": "Technology Acceptance Model 3 and a Research Agenda on Interventions",
+      "authors": [
+        "Viswanath Venkatesh",
+        "Hillol Bala"
+      ],
+      "year": 2008,
+      "doi": "10.1111/j.1540-5915.2008.00192.x",
+      "journal": "Decision Sciences",
+      "volume": "39",
+      "issue": "2",
+      "raw": "Technology Acceptance Model 3 and a Research Agenda on Interventions \n\t\t \n\t\t\t Viswanath Venkatesh \n\t\t \n\t\t \n\t\t\t Hillol Bala \n\t\t \n\t\t 10.1111/j.1540-5915.2008.00192.x \n\t\t \n\t \n\t \n\t\t Decision Sciences \n\t\t \n\t\t\t 39 \n\t\t\t 2 \n\t\t\t \n\t\t\t 2008. 2008 \n\t\t \n\t \n\t Viswanath Venkatesh and Hillol Bala. 2008. Technology Acceptance Model 3 and a Research Agenda on Interventions. Decision Sciences 39, 2 (2008), 273-315. https://doi.org/10.1111/j.1540-5915.2008.00192.x arXiv:https://onlinelibrary.wiley.com/doi/pdf/10.1111/j.1540-5915.2008.00192.x"
+    },
+    {
+      "title": "ArgueTutor: An Adaptive Dialog-Based Learning System for Argumentation Skills",
+      "authors": [
+        "Thiemo Wambsganss",
+        "Tobias Kueng",
+        "Matthias Soellner",
+        "Jan Leimeister"
+      ],
+      "year": 2021,
+      "doi": "10.1145/3411764.3445781",
+      "volume": "683",
+      "pages": "13",
+      "raw": "ArgueTutor: An Adaptive Dialog-Based Learning System for Argumentation Skills \n\t\t \n\t\t\t Thiemo Wambsganss \n\t\t \n\t\t \n\t\t\t Tobias Kueng \n\t\t \n\t\t \n\t\t\t Matthias Soellner \n\t\t \n\t\t \n\t\t\t Jan Marco Leimeister \n\t\t \n\t\t 10.1145/3411764.3445781 \n\t\t \n\t \n\t \n\t\t Proceedings of the 2021 CHI Conference on Human Factors in Computing Systems \n\t\t the 2021 CHI Conference on Human Factors in Computing Systems Yokohama, Japan; New York, NY, USA \n\t\t \n\t\t\t Association for Computing Machinery \n\t\t\t 2021 \n\t\t\t 683 \n\t\t\t 13 \n\t\t \n\t \n\t Thiemo Wambsganss, Tobias Kueng, Matthias Soellner, and Jan Marco Leimeister. 2021. ArgueTutor: An Adaptive Dialog-Based Learning System for Argumen- tation Skills. In Proceedings of the 2021 CHI Conference on Human Factors in Computing Systems (Yokohama, Japan) (CHI '21). Association for Computing Machinery, New York, NY, USA, Article 683, 13 pages. https://doi.org/10.1145/ 3411764.3445781"
+    },
+    {
+      "title": "AL: An Adaptive Learning Support System for Argumentation Skills",
+      "authors": [
+        "Thiemo Wambsganss",
+        "Christina Niklaus",
+        "Matthias Cetto",
+        "Matthias S\u00f6llner",
+        "Siegfried Handschuh",
+        "Jan Leimeister"
+      ],
+      "year": 2020,
+      "doi": "10.1145/3313831.3376732",
+      "raw": "AL: An Adaptive Learning Support System for Argumentation Skills \n\t\t \n\t\t\t Thiemo Wambsganss \n\t\t \n\t\t \n\t\t\t Christina Niklaus \n\t\t \n\t\t \n\t\t\t Matthias Cetto \n\t\t \n\t\t \n\t\t\t Matthias S\u00f6llner \n\t\t \n\t\t \n\t\t\t Siegfried Handschuh \n\t\t \n\t\t \n\t\t\t Jan Marco Leimeister \n\t\t \n\t\t 10.1145/3313831.3376732 \n\t\t \n\t \n\t \n\t\t Proceedings of the 2020 CHI Conference on Human Factors in Computing Systems \n\t\t the 2020 CHI Conference on Human Factors in Computing Systems Honolulu, HI, USA; New York, NY, USA \n\t\t \n\t\t\t Association for Computing Machinery \n\t\t\t 2020 \n\t\t\t \n\t\t \n\t \n\t ) (CHI '20) \n\t Thiemo Wambsganss, Christina Niklaus, Matthias Cetto, Matthias S\u00f6llner, Siegfried Handschuh, and Jan Marco Leimeister. 2020. AL: An Adaptive Learn- ing Support System for Argumentation Skills. In Proceedings of the 2020 CHI Conference on Human Factors in Computing Systems (Honolulu, HI, USA) (CHI '20). Association for Computing Machinery, New York, NY, USA, 1-14. https: //doi.org/10.1145/3313831.3376732"
+    },
+    {
+      "title": "An Evaluation of Generative Pre-Training Model-based Therapy Chatbot for Caregivers",
+      "authors": [
+        "Lu Wang",
+        "Munif Ishad Mujib",
+        "Jake Williams",
+        "George Demiris",
+        "Jina Huh-Yoo"
+      ],
+      "year": 2021,
+      "raw": "An Evaluation of Generative Pre-Training Model-based Therapy Chatbot for Caregivers \n\t\t \n\t\t\t Lu Wang \n\t\t \n\t\t \n\t\t\t Munif Ishad Mujib \n\t\t \n\t\t \n\t\t\t Jake Williams \n\t\t \n\t\t \n\t\t\t George Demiris \n\t\t \n\t\t \n\t\t\t Jina Huh-Yoo \n\t\t \n\t\t arXiv:2107.13115 \n\t\t \n\t\t\t 2021. 2021 \n\t\t \n\t \n\t arXiv preprint \n\t Lu Wang, Munif Ishad Mujib, Jake Williams, George Demiris, and Jina Huh-Yoo. 2021. An Evaluation of Generative Pre-Training Model-based Therapy Chatbot for Caregivers. arXiv preprint arXiv:2107.13115 (2021)."
+    },
+    {
+      "title": "Voicecoach: Interactive evidence-based training for voice modulation skills in public speaking",
+      "authors": [
+        "Haipeng Xingbo ; Wang",
+        "Yong Zeng",
+        "Aoyu Wang",
+        "Zhida Wu",
+        "Xiaojuan Sun",
+        "Huamin Ma"
+      ],
+      "year": 2020,
+      "raw": "Voicecoach: Interactive evidence-based training for voice modulation skills in public speaking \n\t\t \n\t\t\t Haipeng Xingbo ; Wang \n\t\t \n\t\t \n\t\t\t Yong Zeng \n\t\t \n\t\t \n\t\t\t Aoyu Wang \n\t\t \n\t\t \n\t\t\t Zhida Wu \n\t\t \n\t\t \n\t\t\t Xiaojuan Sun \n\t\t \n\t\t \n\t\t\t Huamin Ma \n\t\t \n\t\t \n\t\t\t Qu \n\t\t \n\t \n\t \n\t\t Proceedings of the 2020 CHI Conference on Human Factors in Computing Systems \n\t\t the 2020 CHI Conference on Human Factors in Computing Systems \n\t\t \n\t\t\t 2020 \n\t\t\t \n\t\t \n\t \n\t Xingbo Wang, Haipeng Zeng, Yong Wang, Aoyu Wu, Zhida Sun, Xiaojuan Ma, and Huamin Qu. 2020. Voicecoach: Interactive evidence-based training for voice modulation skills in public speaking. In Proceedings of the 2020 CHI Conference on Human Factors in Computing Systems. 1-12."
+    },
+    {
+      "title": "A computational model of plan-based narrative conflict at the fabula level",
+      "authors": [
+        "R Stephen G Ware",
+        "Brent Michael Young",
+        "David Harrison"
+      ],
+      "year": 2013,
+      "journal": "IEEE Transactions on Computational Intelligence and AI in Games",
+      "volume": "6",
+      "issue": "3",
+      "raw": "A computational model of plan-based narrative conflict at the fabula level \n\t\t \n\t\t\t R Stephen G Ware \n\t\t \n\t\t \n\t\t\t Brent Michael Young \n\t\t \n\t\t \n\t\t\t David L Harrison \n\t\t \n\t\t \n\t\t\t Roberts \n\t\t \n\t \n\t \n\t\t IEEE Transactions on Computational Intelligence and AI in Games \n\t\t \n\t\t\t 6 \n\t\t\t 3 \n\t\t\t \n\t\t\t 2013. 2013 \n\t\t \n\t \n\t Stephen G Ware, R Michael Young, Brent Harrison, and David L Roberts. 2013. A computational model of plan-based narrative conflict at the fabula level. IEEE Transactions on Computational Intelligence and AI in Games 6, 3 (2013), 271-288."
+    },
+    {
+      "title": "Predicting and Diagnosing User Engagement with Mobile UI Animation via a Data-Driven Approach",
+      "authors": [
+        "Ziming Wu",
+        "Yulun Jiang",
+        "Yiding Liu",
+        "Xiaojuan Ma"
+      ],
+      "year": 2020,
+      "doi": "10.1145/3313831.3376324",
+      "raw": "Predicting and Diagnosing User Engagement with Mobile UI Animation via a Data-Driven Approach \n\t\t \n\t\t\t Ziming Wu \n\t\t \n\t\t \n\t\t\t Yulun Jiang \n\t\t \n\t\t \n\t\t\t Yiding Liu \n\t\t \n\t\t \n\t\t\t Xiaojuan Ma \n\t\t \n\t\t 10.1145/3313831.3376324 \n\t\t \n\t\t \n\t\t\t 2020 \n\t\t\t Association for Computing Machinery \n\t\t\t \n\t\t\t New York, NY, USA \n\t\t \n\t \n\t Ziming Wu, Yulun Jiang, Yiding Liu, and Xiaojuan Ma. 2020. Predicting and Diagnosing User Engagement with Mobile UI Animation via a Data-Driven Ap- proach. Association for Computing Machinery, New York, NY, USA, 1-13. https://doi.org/10.1145/3313831.3376324"
+    },
+    {
+      "title": "Persua: A visual interactive system to enhance the persuasiveness of arguments in online discussion",
+      "authors": [
+        "Meng Xia",
+        "Qian Zhu",
+        "Xingbo Wang",
+        "Fei Nie",
+        "Huamin Qu",
+        "Xiaojuan Ma"
+      ],
+      "year": 2022,
+      "volume": "6",
+      "raw": "Persua: A visual interactive system to enhance the persuasiveness of arguments in online discussion \n\t\t \n\t\t\t Meng Xia \n\t\t \n\t\t \n\t\t\t Qian Zhu \n\t\t \n\t\t \n\t\t\t Xingbo Wang \n\t\t \n\t\t \n\t\t\t Fei Nie \n\t\t \n\t\t \n\t\t\t Huamin Qu \n\t\t \n\t\t \n\t\t\t Xiaojuan Ma \n\t\t \n\t \n\t \n\t\t Proceedings of the ACM on Human-Computer Interaction \n\t\t the ACM on Human-Computer Interaction \n\t\t \n\t\t\t 2022. 2022 \n\t\t\t 6 \n\t\t\t \n\t\t \n\t \n\t Meng Xia, Qian Zhu, Xingbo Wang, Fei Nie, Huamin Qu, and Xiaojuan Ma. 2022. Persua: A visual interactive system to enhance the persuasiveness of arguments in online discussion. Proceedings of the ACM on Human-Computer Interaction 6, CSCW2 (2022), 1-30."
+    },
+    {
+      "title": "Attngan: Fine-grained text to image generation with attentional generative adversarial networks",
+      "authors": [
+        "Tao Xu",
+        "Pengchuan Zhang",
+        "Qiuyuan Huang",
+        "Han Zhang",
+        "Zhe Gan",
+        "Xiaolei Huang",
+        "Xiaodong He"
+      ],
+      "year": 2018,
+      "doi": "10.1109/cvpr.2018.00143",
+      "raw": "Attngan: Fine-grained text to image generation with attentional generative adversarial networks \n\t\t \n\t\t\t Tao Xu \n\t\t \n\t\t \n\t\t\t Pengchuan Zhang \n\t\t \n\t\t \n\t\t\t Qiuyuan Huang \n\t\t \n\t\t \n\t\t\t Han Zhang \n\t\t \n\t\t \n\t\t\t Zhe Gan \n\t\t \n\t\t \n\t\t\t Xiaolei Huang \n\t\t \n\t\t \n\t\t\t Xiaodong He \n\t\t \n\t\t 10.1109/cvpr.2018.00143 \n\t \n\t \n\t\t Proceedings of the IEEE conference on computer vision and pattern recognition \n\t\t the IEEE conference on computer vision and pattern recognition \n\t\t \n\t\t\t 2018 \n\t\t\t \n\t\t \n\t \n\t Tao Xu, Pengchuan Zhang, Qiuyuan Huang, Han Zhang, Zhe Gan, Xiaolei Huang, and Xiaodong He. 2018. Attngan: Fine-grained text to image generation with attentional generative adversarial networks. In Proceedings of the IEEE conference on computer vision and pattern recognition. 1316-1324."
+    },
+    {
+      "title": "FinDo: A Foreign Language Vocabulary Learning System Based on Location-Context",
+      "authors": [
+        "Keiko Yamamoto",
+        "Jesus Rodriguez",
+        "Yoshihiro Tsujino"
+      ],
+      "year": 2019,
+      "doi": "10.1109/snpd.2019.8935794",
+      "raw": "FinDo: A Foreign Language Vocabulary Learning System Based on Location-Context \n\t\t \n\t\t\t Keiko Yamamoto \n\t\t \n\t\t \n\t\t\t Jesus Rodriguez \n\t\t \n\t\t \n\t\t\t Yoshihiro Tsujino \n\t\t \n\t\t 10.1109/snpd.2019.8935794 \n\t \n\t \n\t\t 20th IEEE/ACIS International Conference on Software Engineering, Artificial Intelligence, Networking and Parallel/Distributed Computing (SNPD) \n\t\t \n\t\t\t IEEE \n\t\t\t 2019. 2019 \n\t\t\t \n\t\t \n\t \n\t Keiko Yamamoto, Jesus Rodriguez, and Yoshihiro Tsujino. 2019. FinDo: A Foreign Language Vocabulary Learning System Based on Location-Context. In 2019 20th IEEE/ACIS International Conference on Software Engineering, Artificial Intelligence, Networking and Parallel/Distributed Computing (SNPD). IEEE, 302-307."
+    },
+    {
+      "title": "Plan-and-write: Towards better automatic storytelling",
+      "authors": [
+        "Lili Yao",
+        "Nanyun Peng",
+        "Ralph Weischedel",
+        "Kevin Knight",
+        "Dongyan Zhao",
+        "Rui Yan"
+      ],
+      "year": 2019,
+      "volume": "33",
+      "raw": "Plan-and-write: Towards better automatic storytelling \n\t\t \n\t\t\t Lili Yao \n\t\t \n\t\t \n\t\t\t Nanyun Peng \n\t\t \n\t\t \n\t\t\t Ralph Weischedel \n\t\t \n\t\t \n\t\t\t Kevin Knight \n\t\t \n\t\t \n\t\t\t Dongyan Zhao \n\t\t \n\t\t \n\t\t\t Rui Yan \n\t\t \n\t \n\t \n\t\t Proceedings of the AAAI Conference on Artificial Intelligence \n\t\t the AAAI Conference on Artificial Intelligence \n\t\t \n\t\t\t 2019 \n\t\t\t 33 \n\t\t\t \n\t\t \n\t \n\t Lili Yao, Nanyun Peng, Ralph Weischedel, Kevin Knight, Dongyan Zhao, and Rui Yan. 2019. Plan-and-write: Towards better automatic storytelling. In Proceedings of the AAAI Conference on Artificial Intelligence, Vol. 33. 7378-7385."
+    },
+    {
+      "title": "An interactive vocabulary learning system based on word frequency lists and Ebbinghaus' curve of forgetting",
+      "authors": [
+        "Liren Zeng",
+        "Ling Lin"
+      ],
+      "year": 2011,
+      "doi": "10.1109/dmdcm.2011.71",
+      "raw": "An interactive vocabulary learning system based on word frequency lists and Ebbinghaus' curve of forgetting \n\t\t \n\t\t\t Liren Zeng \n\t\t \n\t\t \n\t\t\t Ling Lin \n\t\t \n\t\t 10.1109/dmdcm.2011.71 \n\t \n\t \n\t\t Workshop on Digital Media and Digital Content Management \n\t\t \n\t\t\t IEEE \n\t\t\t 2011. 2011 \n\t\t\t \n\t\t \n\t \n\t Liren Zeng and Ling Lin. 2011. An interactive vocabulary learning system based on word frequency lists and Ebbinghaus' curve of forgetting. In 2011 Workshop on Digital Media and Digital Content Management. IEEE, 313-317."
+    },
+    {
+      "title": "StoryDrawer: A Child-AI Collaborative Drawing System to Support Children's Creative Visual Storytelling",
+      "authors": [
+        "Chao Zhang",
+        "Cheng Yao",
+        "Jiayi Wu",
+        "Weijia Lin",
+        "Lijuan Liu",
+        "Ge Yan",
+        "Fangtian Ying"
+      ],
+      "year": 2022,
+      "doi": "10.1145/3491102.3501914",
+      "raw": "StoryDrawer: A Child-AI Collaborative Drawing System to Support Children's Creative Visual Storytelling \n\t\t \n\t\t\t Chao Zhang \n\t\t \n\t\t \n\t\t\t Cheng Yao \n\t\t \n\t\t \n\t\t\t Jiayi Wu \n\t\t \n\t\t \n\t\t\t Weijia Lin \n\t\t \n\t\t \n\t\t\t Lijuan Liu \n\t\t \n\t\t \n\t\t\t Ge Yan \n\t\t \n\t\t \n\t\t\t Fangtian Ying \n\t\t \n\t\t 10.1145/3491102.3501914 \n\t \n\t \n\t\t Proceedings of the 2022 CHI Conference on Human Factors in Computing Systems \n\t\t the 2022 CHI Conference on Human Factors in Computing Systems \n\t\t \n\t\t\t 2022 \n\t\t\t \n\t\t \n\t \n\t Chao Zhang, Cheng Yao, Jiayi Wu, Weijia Lin, Lijuan Liu, Ge Yan, and Fangtian Ying. 2022. StoryDrawer: A Child-AI Collaborative Drawing System to Support Children's Creative Visual Storytelling. In Proceedings of the 2022 CHI Conference on Human Factors in Computing Systems. 1-15."
+    },
+    {
+      "title": "Storybuddy: A human-ai collaborative chatbot for parent-child interactive storytelling with flexible parental involvement",
+      "authors": [
+        "Zheng Zhang",
+        "Ying Xu",
+        "Yanhao Wang",
+        "Bingsheng Yao",
+        "Daniel Ritchie",
+        "Tongshuang Wu",
+        "Mo Yu",
+        "Dakuo Wang",
+        "Toby Jia-Jun Li"
+      ],
+      "year": 2022,
+      "doi": "10.1145/3491102.3517479",
+      "raw": "Storybuddy: A human-ai collaborative chatbot for parent-child interactive storytelling with flexible parental involvement \n\t\t \n\t\t\t Zheng Zhang \n\t\t \n\t\t \n\t\t\t Ying Xu \n\t\t \n\t\t \n\t\t\t Yanhao Wang \n\t\t \n\t\t \n\t\t\t Bingsheng Yao \n\t\t \n\t\t \n\t\t\t Daniel Ritchie \n\t\t \n\t\t \n\t\t\t Tongshuang Wu \n\t\t \n\t\t \n\t\t\t Mo Yu \n\t\t \n\t\t \n\t\t\t Dakuo Wang \n\t\t \n\t\t \n\t\t\t Toby Jia-Jun Li \n\t\t \n\t\t 10.1145/3491102.3517479 \n\t \n\t \n\t\t Proceedings of the 2022 CHI Conference on Human Factors in Computing Systems \n\t\t the 2022 CHI Conference on Human Factors in Computing Systems \n\t\t \n\t\t\t 2022 \n\t\t\t \n\t\t \n\t \n\t Zheng Zhang, Ying Xu, Yanhao Wang, Bingsheng Yao, Daniel Ritchie, Tong- shuang Wu, Mo Yu, Dakuo Wang, and Toby Jia-Jun Li. 2022. Storybuddy: A human-ai collaborative chatbot for parent-child interactive storytelling with flex- ible parental involvement. In Proceedings of the 2022 CHI Conference on Human Factors in Computing Systems. 1-21."
+    }
+  ],
+  "num_references": 92,
+  "figures": [
+    {
+      "caption": "Figure 1 :",
+      "description": "Figure 1: Our two-phases design and development process of Storyfier with teachers, learners, and HCI researchers."
+    },
+    {
+      "description": "Gets A Cramp <SEP> cet-4 words: sharp pain cramp grasp stomach roll Mask He felt a sharp pain in his stomach [n-grams]: He felt [BLANK] in his stomach [sentence]: [BLANK]"
+    },
+    {
+      "caption": "Figure 2 :",
+      "description": "Figure2: The technical framework of Storyfier. We mainly adopt prompt-based fine-tuning strategies to build story generation models. (A) We derive CET-4 words from the stories in ROCStory dataset. (B) We finetune T5 language models to 1) generate a story given a CET-4 word set with or without a title (presented in section 3.2) and 2) infill a sentence or n-grams given preceding and following sentences, unused target words, and story title (if any) (subsubsection 4.2.1). (C) We apply the models to support three kinds of story-based learning activities."
+    },
+    {
+      "caption": "4. 1 . 2 Figure 3 :",
+      "description": "Figure 3: The interface designs of Storyfier. (A) Users can specify target words and check their meanings. (B) Story reading: users can read a machined-generated story that contains target words. (C) Cloze test: users can conduct a cloze test by using target words on the generated story. (D) Story writing: users can take turns with Storyfier to write a new story using target words. (E) The interface for story writing without adaptive support in the Storyfier-sen baseline (section 5). Note that in the first Storyfier prototype, the three modes (B-D) are separated. In the refined Storyfier, we unify them into one flow and improve the system designs (1-5) based on feedback from learners and experts."
+    },
+    {
+      "description": "Figure 3A); \u2022 Read-AI interface additionally provides a generated story that covers target words (Figure 3A + B); Read-cloze-write \u2022 Storyfier-sen interface offers example sentences for target words, a cloze test on these sentences, and a writing exercise without AI's intervention (Figure 3A + B + D, but the stories in B and C are replaced by the example sentences of target words); \u2022 Storyfier-AI interface contains all features of Storyfier (Figure 3A + B + C).The Read-sen and Storyfier-sen interfaces simulate how individuals traditionally use existing materials to learn any target word set"
+    },
+    {
+      "caption": "Figure 4 :",
+      "description": "Figure 4: Procedure of the experiment. (A) Participants first took a pretest, and the words they did not know were target words. (B) On the experiment day, they used the four interfaces of Storyfier for vocabulary learning. (C) Two days later, they took the posttest on words' meanings and usage."
+    },
+    {
+      "caption": "Figure 5 :",
+      "description": "Figure 5: RQ1 results regarding numbers of correct choices on target words' meanings, numbers of sentences that correctly use target words, and total scores of the written sentences in each condition. ***:  < 0.001, **:  < 0.01, *:  < 0.05."
+    },
+    {
+      "caption": "Figure 7",
+      "description": "Figure 7 depicts users perceptions of each Storyfier interface.6.3.1 Quantitative items.In read-only sessions, there is a trend on the improved perceived usefulness and intention to use of the interfaces with AI-generative stories over those without the stories."
+    },
+    {
+      "caption": "Figure 6 :",
+      "description": "Figure 6: RQ2 results regarding perceived engagement, enjoyment, and workload in vocabulary learning sessions with Read-sen, Read-AI, Storyfier-sen, and Storyfier-AI interfaces. **:  < 0.01, *:  < 0.05, +:  < 0.1."
+    },
+    {
+      "caption": "Figure 7 :",
+      "description": "Figure 7: RQ3 results regarding user perceptions with each interface. *:  < 0.05, +:  < 0.1."
+    },
+    {
+      "type": "table",
+      "caption": "Table 1 :",
+      "description": "The statistics of ROCStory dataset."
+    },
+    {
+      "type": "table",
+      "caption": "Table 2 :",
+      "description": "Automated evaluation of human-written and machine-generated stories using lexical metrics."
+    }
+  ],
+  "num_figures": 12,
+  "tables": [
+    {
+      "content": "Attributes Values # of stories 101,661 # of words 4,640,319 Average story length 45.65 Average sentence length 7.80 Average readability 57.14 Coverage of CET-4 words 89.52% tuples (Figure"
+    },
+    {
+      "content": "Grammar Type-token ratio Trigram repetition Sentence coherence Human 1.00 0.75 0.01 0.42 Machine 1.00 0.77 0.01 0.43"
+    }
+  ],
+  "num_tables": 2,
+  "license": "In The 36th Annual ACM Symposium on User Interface * Both authors contributed equally to this research. Permission to make digital or hard copies of all or part of this work for personal or classroom use is granted without fee provided that copies are not made or distributed for profit or commercial advantage and that copies bear this notice and the full citation on the first page. Copyrights for components of this work owned by others than the author(s) must be honored. Abstracting with credit is permitted. To copy otherwise, or republish, to post on servers or to redistribute to lists, requires prior specific permission and/or a fee. Request permissions from permissions@acm.org. \u00a9 2023 Copyright held by the owner/author(s). Publication rights licensed to ACM. ACM",
+  "license_type": "unknown",
+  "num_citations": 153,
+  "cited_references": [
+    "b72",
+    "b13",
+    "b79",
+    "b65",
+    "b41",
+    "b44",
+    "b14",
+    "b25",
+    "b1",
+    "b35",
+    "b20",
+    "b90",
+    "b71",
+    "b74",
+    "b51",
+    "b42",
+    "b30",
+    "b29",
+    "b28",
+    "b83",
+    "b4",
+    "b56",
+    "b85",
+    "b50",
+    "b62",
+    "b11",
+    "b22",
+    "b34",
+    "b58",
+    "b6",
+    "b0",
+    "b73",
+    "b2",
+    "b17",
+    "b77",
+    "b60",
+    "b43",
+    "b66",
+    "b68",
+    "b12",
+    "b78",
+    "b52",
+    "b75",
+    "b82",
+    "b84",
+    "b89",
+    "b81",
+    "b33",
+    "b8",
+    "b27",
+    "b57",
+    "b39",
+    "b49",
+    "b36",
+    "b59",
+    "b21",
+    "b64",
+    "b40",
+    "b54",
+    "b91",
+    "b16",
+    "b46",
+    "b32",
+    "b45",
+    "b10",
+    "b67",
+    "b55",
+    "b7",
+    "b76",
+    "b3",
+    "b86",
+    "b18",
+    "b87",
+    "b9",
+    "b69",
+    "b47",
+    "b31",
+    "b70",
+    "b61",
+    "b37",
+    "b15",
+    "b5",
+    "b19",
+    "b38",
+    "b88",
+    "b24",
+    "b48",
+    "b53",
+    "b63",
+    "b80",
+    "b23",
+    "b26"
+  ],
+  "notes": [
+    "[raw_affiliation] Sun Yat-sen University Zhuhai , China",
+    "[raw_affiliation] The Hong Kong University of Science and Technology Hong Kong , China",
+    "[raw_affiliation] Sun Yat-sen University Zhuhai , China",
+    "[raw_affiliation] Guangdong Polytechnic of Industry & Commerce Guangzhou , China",
+    "[raw_affiliation] The Hong Kong University of Science and Technology Hong Kong , China",
+    "[raw_affiliation] The Hong Kong University of Science and Technology Hong Kong , China",
+    "Short for College English Test Band 4, a mandatory test for acquiring bachelor degrees in China.",
+    "Readability is measured by Flesch Reading-Ease, and CET-4 is",
+    "34.23 on average. 3 For the stories without titles, we represent their title features as \"no title\".",
+    "We use sentence-bert [63]  to encode the words into vectors and rank them based on their cosine similarities with the vector of the encoded title.",
+    "https://languagetool.org/http-api/",
+    "425/710 points are considered passed for CET-4.",
+    "In each interface, participants learn ten words and write at most ten sentences in posttest. The maximum score for each sentence is 2 + 2 = 4.",
+    "The full statistics are attached in the supplementary materials.",
+    "The total time does not match task completion time as it does not include time spent on checking each word's meaning.",
+    "For example, we queried ChatGPT using \"write a five-sentences simple story using words: hasten, infinity, jet, basin, and trolley\". This results in a 71-word coherent story but contains more complex sentence structure and words like \"marvel\", \"exhilarated\", and \"adventure\".",
+    ") (CHI '22) Article 6",
+    "[raw_reference] Riku Arakawa, Hiromu Yakura, and Sosuke Kobayashi. 2022. VocabEncounter: NMT-Powered Vocabulary Learning by Presenting Computer-Generated Usages of Foreign Words into Users' Daily Lives. In Proceedings of the 2022 CHI Conference on Human Factors in Computing Systems (New Orleans, LA, USA) (CHI '22). Association for Computing Machinery, New York, NY, USA, Article 6, 21 pages. https://doi.org/10.1145/3491102.3501839",
+    "[raw_reference] Gordon H Bower. 1970. Analysis of a mnemonic device: Modern psychology uncovers the powerful components of an ancient system for improving memory. American Scientist 58, 5 (1970), 496-510.",
+    "[raw_reference] Virginia Braun and Victoria Clarke. 2006. Using thematic analysis in psychology. Qualitative Research in Psychology 3, 2 (2006), 77-101. https://doi.org/10.1191/ 1478088706qp063oa",
+    "[raw_reference] Tom Brown, Benjamin Mann, Nick Ryder, Melanie Subbiah, Jared D Kaplan, Prafulla Dhariwal, Arvind Neelakantan, Pranav Shyam, Girish Sastry, Amanda Askell, et al. 2020. Language models are few-shot learners. Advances in neural information processing systems 33 (2020), 1877-1901.",
+    "[raw_reference] Daniel Buschek, Martin Z\u00fcrn, and Malin Eiband. 2021. The impact of multiple parallel phrase suggestions on email input and composition behaviour of native and non-native english writers. In Proceedings of the 2021 CHI Conference on Human Factors in Computing Systems. 1-13.",
+    "[raw_reference] Alex Calderwood, Vivian Qiu, Katy Ilonka Gero, and Lydia B Chilton. 2020. How Novelists Use Generative Language Models: An Exploratory User Study.. In HAI-GEN+ user2agent@ IUI.",
+    "[raw_reference] Patricia L Carrell. 1984. Schema theory and ESL reading: Classroom implications and applications. The modern language journal 68, 4 (1984), 332-343.",
+    "[raw_reference] Chih-Ming Chen and Ching-Ju Chung. 2008. Personalized mobile English vo- cabulary learning system based on item response theory and learning memory cycle. Computers & Education 51, 2 (2008), 624-645.",
+    "[raw_reference] John Joon Young Chung, Wooseok Kim, Kang Min Yoo, Hwaran Lee, Eytan Adar, and Minsuk Chang. 2022. TaleBrush: Sketching Stories with Generative Pretrained Language Models. In CHI Conference on Human Factors in Computing Systems. 1-19.",
+    "[raw_reference] Hai Dang, Karim Benharrak, Florian Lehmann, and Daniel Buschek. 2022. Beyond Text Generation: Supporting Writers with Continuous Automatic Text Summaries. In Proceedings of the 35th Annual ACM Symposium on User Interface Software and Technology. 1-13.",
+    "[report_type] arXiv preprint",
+    "[raw_reference] Sumanth Dathathri, Andrea Madotto, Janice Lan, Jane Hung, Eric Frank, Piero Molino, Jason Yosinski, and Rosanne Liu. 2019. Plug and play language models: A simple approach to controlled text generation. arXiv preprint arXiv:1912.02164 (2019).",
+    "[raw_reference] Paul Denny, Fiona McDonald, Ruth Empson, Philip Kelly, and Andrew Petersen. 2018. Empirical support for a causal relationship between gamification and learning outcomes. In Proceedings of the 2018 CHI conference on human factors in computing systems. 1-13.",
+    "[raw_reference] Griffin Dietz, Jimmy K Le, Nadin Tamer, Jenny Han, Hyowon Gweon, Eliza- beth L Murnane, and James A Landay. 2021. Storycoder: Teaching computational thinking concepts through storytelling in a voice-guided app for children. In Proceedings of the 2021 CHI Conference on Human Factors in Computing Systems. 1-15.",
+    "[raw_reference] Griffin Dietz, Nadin Tamer, Carina Ly, Jimmy K Le, and James A Landay. 2023. Visual StoryCoder: A Multimodal Programming Environment for Children's Creation of Stories. In Proceedings of the 2023 CHI Conference on Human Factors in Computing Systems. 1-16.",
+    "[raw_reference] Chris Donahue, Mina Lee, and Percy Liang. 2020. Enabling Language Models to Fill in the Blanks. ArXiv abs/2005.05339 (2020).",
+    "[raw_reference] Rita Stafford Dunn and Kenneth J Dunn. 1972. Practical approaches to indi- vidualizing instructions: contracts and other effective teaching strategies. Parker Publishing.",
+    "[report_type] arXiv preprint",
+    "[raw_reference] Angela Fan, Mike Lewis, and Yann Dauphin. 2018. Hierarchical neural story generation. arXiv preprint arXiv:1805.04833 (2018).",
+    "[raw_reference] Liye Fu, Benjamin Newman, Maurice Jakesch, and Sarah Kreps. 2023. Compar- ing Sentence-Level Suggestions to Message-Level Suggestions in AI-Mediated Communication. In Proceedings of the 2023 CHI Conference on Human Fac- tors in Computing Systems (Hamburg, Germany) (CHI '23). Association for Computing Machinery, New York, NY, USA, Article 103, 13 pages. https: //doi.org/10.1145/3544548.3581351",
+    "[raw_reference] Pablo Gerv\u00e1s, Bel\u00e9n D\u00edaz-Agudo, Federico Peinado, and Raquel Herv\u00e1s. 2004. Story plot generation based on CBR. In International Conference on Innovative Techniques and Applications of Artificial Intelligence. Springer, 33-46.",
+    "[raw_reference] Marjan Ghazvininejad, Xing Shi, Jay Priyadarshi, and Kevin Knight. 2017. Hafez: an interactive poetry generation system. In Proceedings of ACL 2017, System Demonstrations. 43-48.",
+    "[raw_reference] E.R. Girden. 1992. ANOVA: Repeated measures. Sage Publications, Inc., Thousand Oaks, CA, US.",
+    "[report_type] arXiv preprint",
+    "[raw_reference] Seraphina Goldfarb-Tarrant, Tuhin Chakrabarty, Ralph Weischedel, and Nanyun Peng. 2020. Content planning for neural story generation with aristotelian rescoring. arXiv preprint arXiv:2009.09870 (2020).",
+    "[raw_reference] Seraphina Goldfarb-Tarrant, Haining Feng, and Nanyun Peng. 2019. Plan, Write, and Revise: an Interactive System for Open-Domain Story Generation. In NAACL.",
+    "[raw_reference] Steven M Goodman, Erin Buehler, Patrick Clary, Andy Coenen, Aaron Donsbach, Tiffanie N Horne, Michal Lahav, Robert MacDonald, Rain Breaw Michaels, Ajit Narayanan, et al. 2022. LaMPost: Design and Evaluation of an AI-assisted Email Writing Prototype for Adults with Dyslexia. In Proceedings of the 24th International ACM SIGACCESS Conference on Computers and Accessibility. 1-18.",
+    "[raw_reference] Yongqi Gu and Robert Keith Johnson. 1996. Vocabulary Learning Strategies and Language Learning Outcomes. Language Learning 46, 4 (1996), 643-679. https://doi.org/10.1111/j.1467-1770.1996.tb01355.x",
+    "[raw_reference] Yongqi Gu and Robert Keith Johnson. 1996. Vocabulary learning strategies and language learning outcomes. Language learning 46, 4 (1996), 643-679.",
+    "[raw_reference] Brent Harrison, Christopher Purdy, and Mark O Riedl. 2017. Toward automated story generation with markov chain monte carlo methods and deep neural net- works. In Thirteenth Artificial Intelligence and Interactive Digital Entertainment Conference.",
+    "[raw_reference] Sandra G Hart. 2006. NASA-task load index (NASA-TLX); 20 years later. In Proceedings of the human factors and ergonomics society annual meeting, Vol. 50. Sage publications Sage CA: Los Angeles, CA, 904-908.",
+    "[raw_reference] Dorien Herremans, Ching-Hua Chuan, and Elaine Chew. 2017. A Functional Taxonomy of Music Generation Systems. ACM Comput. Surv. 50, 5, Article 69 (sep 2017), 30 pages. https://doi.org/10.1145/3108242",
+    "[report_type] arXiv preprint",
+    "[raw_reference] Ari Holtzman, Jan Buys, Maxwell Forbes, Antoine Bosselut, David Golub, and Yejin Choi. 2018. Learning to write with cooperative discriminators. arXiv preprint arXiv:1805.06087 (2018).",
+    "[raw_reference] Min-Chai Hsieh and Hao-Chiang Koong Lin. 2006. Interaction design based on augmented reality technologies for English vocabulary learning. In Proceedings of the 18th International Conference on Computers in Education, Vol. 1. 663-666.",
+    "[raw_reference] Yueh-Min Huang, Yong-Ming Huang, Shu-Hsien Huang, and Yen-Ting Lin. 2012. A ubiquitous English vocabulary learning system: Evidence of active/passive attitudes vs. usefulness/ease-of-use. Computers & Education 58, 1 (2012), 273-282.",
+    "[raw_reference] Zhengbao Jiang, Frank F Xu, Jun Araki, and Graham Neubig. 2020. How can we know what language models know? Transactions of the Association for Computa- tional Linguistics 8 (2020), 423-438.",
+    "Article 18",
+    "[raw_reference] Eunkyung Jo, Daniel A. Epstein, Hyunhoon Jung, and Young-Ho Kim. 2023. Understanding the Benefits and Challenges of Deploying Conversational AI Leveraging Large Language Models for Public Health Intervention. In Proceedings of the 2023 CHI Conference on Human Factors in Computing Systems (Hamburg, Germany) (CHI '23). Association for Computing Machinery, New York, NY, USA, Article 18, 16 pages. https://doi.org/10.1145/3544548.3581503",
+    "[report_type] arXiv preprint",
+    "[raw_reference] Nitish Shirish Keskar, Bryan McCann, Lav R Varshney, Caiming Xiong, and Richard Socher. 2019. Ctrl: A conditional transformer language model for con- trollable generation. arXiv preprint arXiv:1909.05858 (2019).",
+    "[raw_reference] Geza Kovacs and Robert C Miller. 2014. Smart subtitles for vocabulary learning. In Proceedings of the SIGCHI Conference on Human Factors in Computing Systems. 853-862.",
+    "[report_type] arXiv preprint",
+    "[raw_reference] Ben Krause, Akhilesh Deepak Gotmare, Bryan McCann, Nitish Shirish Keskar, Shafiq Joty, Richard Socher, and Nazneen Fatema Rajani. 2020. Gedi: Generative discriminator guided sequence generation. arXiv preprint arXiv:2009.06367 (2020).",
+    "[raw_reference] Mirella Lapata, Regina Barzilay, et al. 2005. Automatic evaluation of text coher- ence: Models and representations. In IJCAI, Vol. 5. Citeseer, 1085-1090.",
+    "[report_type] arXiv preprint",
+    "[raw_reference] Brian Lester, Rami Al-Rfou, and Noah Constant. 2021. The power of scale for parameter-efficient prompt tuning. arXiv preprint arXiv:2104.08691 (2021).",
+    "[report_type] arXiv preprint",
+    "[raw_reference] Jiwei Li, Will Monroe, and Dan Jurafsky. 2017. Learning to decode for future success. arXiv preprint arXiv:1701.06549 (2017).",
+    "[report_type] arXiv preprint",
+    "[raw_reference] Xiang Lisa Li and Percy Liang. 2021. Prefix-tuning: Optimizing continuous prompts for generation. arXiv preprint arXiv:2101.00190 (2021).",
+    "[raw_reference] Yitong Li, Martin Min, Dinghan Shen, David Carlson, and Lawrence Carin. 2018. Video generation from text. In Proceedings of the AAAI Conference on Artificial Intelligence, Vol. 32.",
+    "[report_type] arXiv preprint",
+    "[raw_reference] Xiao Liu, Yanan Zheng, Zhengxiao Du, Ming Ding, Yujie Qian, Zhilin Yang, and Jie Tang. 2021. GPT understands, too. arXiv preprint arXiv:2103.10385 (2021).",
+    "[raw_reference] Lara Martin, Prithviraj Ammanabrolu, Xinyu Wang, William Hancock, Shruti Singh, Brent Harrison, and Mark Riedl. 2018. Event representations for automated story generation with deep neural nets. In Proceedings of the AAAI Conference on Artificial Intelligence, Vol. 32.",
+    "[raw_reference] Piotr Mirowski, Kory W. Mathewson, Jaylen Pittman, and Richard Evans. 2023. Co-Writing Screenplays and Theatre Scripts with Language Models: Evaluation by Industry Professionals. In Proceedings of the 2023 CHI Conference on Human Factors in Computing Systems (Hamburg, Germany) (CHI '23). Association for Computing Machinery, New York, NY, USA, Article 355, 34 pages. https://doi. org/10.1145/3544548.3581225",
+    "[raw_reference] Nasrin Mostafazadeh, Nathanael Chambers, Xiaodong He, Devi Parikh, Dhruv Batra, Lucy Vanderwende, Pushmeet Kohli, and James Allen. 2016. A Corpus and Cloze Evaluation for Deeper Understanding of Commonsense Stories. In Proceedings of the 2016 Conference of the North American Chapter of the Association for Computational Linguistics: Human Language Technologies. Association for Computational Linguistics, San Diego, California, 839-849. https://doi.org/10. 18653/v1/N16-1098",
+    "[raw_reference] Paul Nation. 2007. The four strands. International Journal of Innovation in Language Learning and Teaching 1, 1 (2007), 2-13.",
+    "[raw_reference] Paul Nation and Teresa Chung. 2009. Teaching and testing vocabulary. The handbook of language teaching (2009), 543-559.",
+    "[raw_reference] Aur\u00e9lien Nioche, Pierre-Alexandre Murena, Carlos de la Torre-Ortiz, and Antti Oulasvirta. 2021. Improving artificial teachers by considering how people learn and forget. In 26th International Conference on Intelligent User Interfaces. 445-453.",
+    ") (IUI '21)",
+    "[raw_reference] Aurelien Nioche, Pierre-Alexandre Murena, Carlos de la Torre-Ortiz, and Antti Oulasvirta. 2021. Improving Artificial Teachers by Considering How People Learn and Forget. In 26th International Conference on Intelligent User Interfaces (College Station, TX, USA) (IUI '21). Association for Computing Machinery, New York, NY, USA, 445-453. https://doi.org/10.1145/3397481.3450696",
+    "[report_type] GPT-4 Technical Report",
+    "cs.CL",
+    "[raw_reference] OpenAI. 2023. GPT-4 Technical Report. arXiv:2303.08774 [cs.CL]",
+    "[raw_reference] Rebecca Oxford and David Crookall. 1990. Vocabulary learning: A critical analysis of techniques. TESL Canada Journal (1990), 09-30.",
+    "[raw_reference] Rebecca L Oxford, Roberta Z Lavine, and David Crookall. 1989. Language learning strategies, the communicative approach, and their classroom implications. Foreign Language Annals 22, 1 (1989), 29-39.",
+    "[raw_reference] Rebecca L Oxford and Robin C Scarcella. 1994. Second language vocabulary learning among adults: State of the art in vocabulary instruction. System 22, 2 (1994), 231-243.",
+    "[raw_reference] Nanyun Peng, Marjan Ghazvininejad, Jonathan May, and Kevin Knight. 2018. Towards controllable story generation. In Proceedings of the First Workshop on Storytelling. 43-49.",
+    ") (CHI '20)",
+    "[raw_reference] Zhenhui Peng, Qingyu Guo, Ka Wing Tsang, and Xiaojuan Ma. 2020. Exploring the Effects of Technological Writing Assistance for Support Providers in Online Mental Health Community. In Proceedings of the 2020 CHI Conference on Human Factors in Computing Systems (Honolulu, HI, USA) (CHI '20). Association for Computing Machinery, New York, NY, USA, 1-15. https://doi.org/10.1145/ 3313831.3376695",
+    "Article 225",
+    "[raw_reference] Savvas Petridis, Nicholas Diakopoulos, Kevin Crowston, Mark Hansen, Keren Henderson, Stan Jastrzebski, Jeffrey V Nickerson, and Lydia B Chilton. 2023. AngleKindling: Supporting Journalistic Angle Ideation with Large Language Models. In Proceedings of the 2023 CHI Conference on Human Factors in Computing Systems (Hamburg, Germany) (CHI '23). Association for Computing Machinery, New York, NY, USA, Article 225, 16 pages. https://doi.org/10.1145/3544548. 3580907",
+    "[raw_reference] Julie Porteous and Marc Cavazza. 2009. Controlling narrative generation with planning trajectories: the role of constraints. In Joint International Conference on Interactive Digital Storytelling. Springer, 234-245.",
+    "[raw_reference] Michael Pressley, Joel R Levin, and Harold D Delaney. 1982. The mnemonic keyword method. Review of Educational Research 52, 1 (1982), 61-91.",
+    "[raw_reference] Mei Pu and Zheng Zhong. 2018. Development of a situational interaction game for improving preschool children'performance in English-vocabulary learning. In Proceedings of the 2018 international conference on distance education and learning. 88-92.",
+    "[raw_reference] Alec Radford, Jeffrey Wu, Rewon Child, David Luan, Dario Amodei, Ilya Sutskever, et al. 2019. Language models are unsupervised multitask learners. OpenAI blog 1, 8 (2019), 9.",
+    "[report_type] arXiv preprint",
+    "[raw_reference] Colin Raffel, Noam Shazeer, Adam Roberts, Katherine Lee, Sharan Narang, Michael Matena, Yanqi Zhou, Wei Li, and Peter J Liu. 2019. Exploring the lim- its of transfer learning with a unified text-to-text transformer. arXiv preprint arXiv:1910.10683 (2019).",
+    "[report_type] arXiv preprint",
+    "[raw_reference] Nils Reimers and Iryna Gurevych. 2019. Sentence-bert: Sentence embeddings using siamese bert-networks. arXiv preprint arXiv:1908.10084 (2019).",
+    "[raw_reference] Mark O Riedl and Robert Michael Young. 2010. Narrative planning: Balancing plot and character. Journal of Artificial Intelligence Research 39 (2010), 217-268.",
+    "[raw_reference] Melissa Roemmele, Andrew S Gordon, and Reid Swanson. 2017. Evaluating story generation systems using automated linguistic analyses. In SIGKDD 2017 Workshop on Machine Learning for Creativity. 13-17.",
+    "[raw_reference] Sherry Ruan, Liwei Jiang, Qianyao Xu, Zhiyuan Liu, Glenn M Davis, Emma Brunskill, and James A Landay. 2021. Englishbot: An ai-powered conversational system for second language learning. In 26th international conference on intelligent user interfaces. 434-444.",
+    "[raw_reference] Nathan Sakunkoo and Pattie Sakunkoo. 2013. Gliflix: Using movie subtitles for language learning. In Proceedings of the 26th Symposium on User Interface Software and Technology. ACM.",
+    "[raw_reference] Marc Ericson C Santos, Takafumi Taketomi, Goshiro Yamamoto, Ma Rodrigo, T Mercedes, Christian Sandor, Hirokazu Kato, et al. 2016. Augmented reality as multimedia: the case for situated vocabulary learning. Research and Practice in Technology Enhanced Learning 11, 1 (2016), 1-23.",
+    "[raw_reference] Norbert Schmitt. 2008. Instructed second language vocabulary learning. Language teaching research 12, 3 (2008), 329-363.",
+    "[report_type] arXiv preprint",
+    "[raw_reference] Abigail See, Aneesh Pappu, Rohun Saxena, Akhila Yerukola, and Christopher D Manning. 2019. Do massively pretrained language models make better story- tellers? arXiv preprint arXiv:1909.10705 (2019).",
+    "[raw_reference] Yizhan Shao, Tong Shao, Minghao Wang, Peng Wang, and Jie Gao. 2021. A sentiment and style controllable approach for chinese poetry generation. In Proceedings of the 30th ACM International Conference on Information & Knowledge Management. 4784-4788.",
+    "[report_type] arXiv preprint",
+    "[raw_reference] Taylor Shin, Yasaman Razeghi, Robert L Logan IV, Eric Wallace, and Sameer Singh. 2020. Autoprompt: Eliciting knowledge from language models with automatically generated prompts. arXiv preprint arXiv:2010.15980 (2020).",
+    "[raw_reference] Sangho Suh, Jian Zhao, and Edith Law. 2022. Codetoon: Story ideation, auto comic generation, and structure mapping for code-driven storytelling. In Proceedings of the 35th Annual ACM Symposium on User Interface Software and Technology. 1-16.",
+    "[raw_reference] Janet K Swaffar. 1988. Readers, texts, and second languages: The interactive processes. The Modern Language Journal 72, 2 (1988), 123-149.",
+    "[raw_reference] Vi\u0161nja Pavii Taka. 2008. Vocabulary learning strategies and foreign language acquisition. Multilingual Matters.",
+    "[raw_reference] Preecha Tangworakitthaworn, Preeyapol Owatsuwan, Nutsima Nongyai, and Nongnapas Arayapong. 2019. An Image-Based Vocabulary Learning System Based on Multi-Agent System. In 2019 16th International Joint Conference on Computer Science and Software Engineering (JCSSE). IEEE, 324-329.",
+    "[raw_reference] Scott R Turner. 2014. The creative process: A computer model of storytelling and creativity. Psychology Press.",
+    "[raw_reference] Tim Van de Cruys. 2020. Automatic poetry generation from prosaic text. In Pro- ceedings of the 58th annual meeting of the association for computational linguistics. 2471-2480.",
+    "[raw_reference] Viswanath Venkatesh and Hillol Bala. 2008. Technology Acceptance Model 3 and a Research Agenda on Interventions. Decision Sciences 39, 2 (2008), 273-315. https://doi.org/10.1111/j.1540-5915.2008.00192.x arXiv:https://onlinelibrary.wiley.com/doi/pdf/10.1111/j.1540-5915.2008.00192.x",
+    "[raw_reference] Thiemo Wambsganss, Tobias Kueng, Matthias Soellner, and Jan Marco Leimeister. 2021. ArgueTutor: An Adaptive Dialog-Based Learning System for Argumen- tation Skills. In Proceedings of the 2021 CHI Conference on Human Factors in Computing Systems (Yokohama, Japan) (CHI '21). Association for Computing Machinery, New York, NY, USA, Article 683, 13 pages. https://doi.org/10.1145/ 3411764.3445781",
+    ") (CHI '20)",
+    "[raw_reference] Thiemo Wambsganss, Christina Niklaus, Matthias Cetto, Matthias S\u00f6llner, Siegfried Handschuh, and Jan Marco Leimeister. 2020. AL: An Adaptive Learn- ing Support System for Argumentation Skills. In Proceedings of the 2020 CHI Conference on Human Factors in Computing Systems (Honolulu, HI, USA) (CHI '20). Association for Computing Machinery, New York, NY, USA, 1-14. https: //doi.org/10.1145/3313831.3376732",
+    "[report_type] arXiv preprint",
+    "[raw_reference] Lu Wang, Munif Ishad Mujib, Jake Williams, George Demiris, and Jina Huh-Yoo. 2021. An Evaluation of Generative Pre-Training Model-based Therapy Chatbot for Caregivers. arXiv preprint arXiv:2107.13115 (2021).",
+    "[raw_reference] Xingbo Wang, Haipeng Zeng, Yong Wang, Aoyu Wu, Zhida Sun, Xiaojuan Ma, and Huamin Qu. 2020. Voicecoach: Interactive evidence-based training for voice modulation skills in public speaking. In Proceedings of the 2020 CHI Conference on Human Factors in Computing Systems. 1-12.",
+    "[raw_reference] Stephen G Ware, R Michael Young, Brent Harrison, and David L Roberts. 2013. A computational model of plan-based narrative conflict at the fabula level. IEEE Transactions on Computational Intelligence and AI in Games 6, 3 (2013), 271-288.",
+    "[raw_reference] Ziming Wu, Yulun Jiang, Yiding Liu, and Xiaojuan Ma. 2020. Predicting and Diagnosing User Engagement with Mobile UI Animation via a Data-Driven Ap- proach. Association for Computing Machinery, New York, NY, USA, 1-13. https://doi.org/10.1145/3313831.3376324",
+    "[raw_reference] Meng Xia, Qian Zhu, Xingbo Wang, Fei Nie, Huamin Qu, and Xiaojuan Ma. 2022. Persua: A visual interactive system to enhance the persuasiveness of arguments in online discussion. Proceedings of the ACM on Human-Computer Interaction 6, CSCW2 (2022), 1-30.",
+    "[raw_reference] Tao Xu, Pengchuan Zhang, Qiuyuan Huang, Han Zhang, Zhe Gan, Xiaolei Huang, and Xiaodong He. 2018. Attngan: Fine-grained text to image generation with attentional generative adversarial networks. In Proceedings of the IEEE conference on computer vision and pattern recognition. 1316-1324.",
+    "[raw_reference] Keiko Yamamoto, Jesus Rodriguez, and Yoshihiro Tsujino. 2019. FinDo: A Foreign Language Vocabulary Learning System Based on Location-Context. In 2019 20th IEEE/ACIS International Conference on Software Engineering, Artificial Intelligence, Networking and Parallel/Distributed Computing (SNPD). IEEE, 302-307.",
+    "[raw_reference] Lili Yao, Nanyun Peng, Ralph Weischedel, Kevin Knight, Dongyan Zhao, and Rui Yan. 2019. Plan-and-write: Towards better automatic storytelling. In Proceedings of the AAAI Conference on Artificial Intelligence, Vol. 33. 7378-7385.",
+    "[raw_reference] Liren Zeng and Ling Lin. 2011. An interactive vocabulary learning system based on word frequency lists and Ebbinghaus' curve of forgetting. In 2011 Workshop on Digital Media and Digital Content Management. IEEE, 313-317.",
+    "[raw_reference] Chao Zhang, Cheng Yao, Jiayi Wu, Weijia Lin, Lijuan Liu, Ge Yan, and Fangtian Ying. 2022. StoryDrawer: A Child-AI Collaborative Drawing System to Support Children's Creative Visual Storytelling. In Proceedings of the 2022 CHI Conference on Human Factors in Computing Systems. 1-15.",
+    "[raw_reference] Zheng Zhang, Ying Xu, Yanhao Wang, Bingsheng Yao, Daniel Ritchie, Tong- shuang Wu, Mo Yu, Dakuo Wang, and Toby Jia-Jun Li. 2022. Storybuddy: A human-ai collaborative chatbot for parent-child interactive storytelling with flex- ible parental involvement. In Proceedings of the 2022 CHI Conference on Human Factors in Computing Systems. 1-21."
+  ],
+  "processing_software": {
+    "GROBID": "0.8.2"
+  }
+}

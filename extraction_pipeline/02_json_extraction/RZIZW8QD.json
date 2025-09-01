@@ -1,0 +1,1235 @@
+{
+  "paper_id": "RZIZW8QD",
+  "title": "Personalized Physical Activity Coaching: A Machine Learning Approach",
+  "abstract": "Living a sedentary lifestyle is one of the major causes of numerous health problems. To encourage employees to lead a less sedentary life, the Hanze University started a health promotion program. One of the interventions in the program was the use of an activity tracker to record participants' daily step count. The daily step count served as input for a fortnightly coaching session. In this paper, we investigate the possibility of automating part of the coaching procedure on physical activity by providing personalized feedback throughout the day on a participant's progress in achieving a personal step goal. The gathered step count data was used to train eight different machine learning algorithms to make hourly estimations of the probability of achieving a personalized, daily steps threshold. In 80% of the individual cases, the Random Forest algorithm was the best performing algorithm (mean accuracy = 0.93, range = 0.88-0.99, and mean F1-score = 0.90, range = 0.87-0.94). To demonstrate the practical usefulness of these models, we developed a proof-of-concept Web application that provides personalized feedback about whether a participant is expected to reach his or her daily threshold. We argue that the use of machine learning could become an invaluable asset in the process of automated personalized coaching. The individualized algorithms allow for predicting physical activity during the day and provides the possibility to intervene in time.",
+  "year": 2018,
+  "date": "2018-02-19",
+  "authors": [
+    {
+      "name": "Talko Dijkh",
+      "email": "t.dijkhuis@rug.nl",
+      "orcid": "0000-0002-0764-2124",
+      "affiliation": {
+        "organization": "Johann Bernoulli Institute for Mathematics and Computer Science",
+        "department": "Johann Bernoulli Institute for Mathematics and Computer Science",
+        "institution": "University of Groningen",
+        "address": "Nijenborgh 9, 9747 AG, Groningen, The Netherlands"
+      }
+    },
+    {
+      "name": "Frank Blaauw",
+      "email": "f.j.blaauw@rug.nl",
+      "orcid": "0000-0002-6588-5079",
+      "affiliation": {
+        "organization": "Johann Bernoulli Institute for Mathematics and Computer Science",
+        "department": "Johann Bernoulli Institute for Mathematics and Computer Science",
+        "institution": "University of Groningen",
+        "address": "Nijenborgh 9, 9747 AG, Groningen, The Netherlands"
+      }
+    },
+    {
+      "name": "Miriam Id",
+      "orcid": "0000-0002-6588-5079"
+    },
+    {
+      "email": "m.w.van.ittersum@pl.hanze.nl",
+      "affiliation": {
+        "organization": "School for Health Care Studies",
+        "department": "School for Health Care Studies",
+        "institution": "Hanze University of Applied Sciences",
+        "address": "Petrus Driessenstraat 3, 9714 CA, Groningen, The Netherlands;"
+      }
+    },
+    {
+      "name": "Hugo Velthuijsen",
+      "email": "h.velthuijsen@pl.hanze.nl",
+      "affiliation": {
+        "organization": "Institute of Communication",
+        "department": "Institute of Communication",
+        "institution": "Hanze University of Applied Sciences",
+        "address": "Zernikeplein 11, 9746 AS, Groningen, The Netherlands"
+      }
+    },
+    {
+      "name": "Marco Aiello",
+      "email": "m.aiello@rug.nl",
+      "orcid": "0000-0002-0764-2124",
+      "affiliation": {
+        "organization": "Johann Bernoulli Institute for Mathematics and Computer Science",
+        "department": "Johann Bernoulli Institute for Mathematics and Computer Science",
+        "institution": "University of Groningen",
+        "address": "Nijenborgh 9, 9747 AG, Groningen, The Netherlands"
+      }
+    }
+  ],
+  "doi": "10.3390/s18020623",
+  "orcid": "0000-0002-0764-2124",
+  "md5": "F1E40FF75220829231491566271961FD",
+  "publication": {
+    "journal": "J. Med. Internet Res",
+    "journal_inferred": true
+  },
+  "keywords": [
+    "physical activity",
+    "machine learning",
+    "coaching",
+    "sedentary lifestyle"
+  ],
+  "funding": [
+    "",
+    "Acknowledgments: We thank the  Hanze University Health Program  for providing the physical activity data of the  Health Program  and all the participants in the experiment."
+  ],
+  "sections": [
+    {
+      "title": "1.. Introduction",
+      "text": "Unhealthy lifestyles lead to increased premature mortality and are a risk factor for sustaining noncommunicable diseases (NCDs) such as cardiovascular diseases, cancers, chronic respiratory diseases, and diabetes  [1] . NCDs caused 63% of all deaths that occurred globally in 2008  [1] . There are four behavioral factors that have a significant influence on the prevention of NDCs: healthy nutrition, not smoking, maintaining a healthy body weight, and sufficient physical activity. Insufficient physical activity is one of the leading risk factors for the major NCDs and not meeting the recommended level of physical activity is associated with approximately 5.3 million deaths that occurred globally in 2008  [2] .\n\nA high amount of sedentary time without sufficient daily physical activity leads to a higher rate of all-cause mortality  [3] . Besides the increased risk of premature mortality in the long term, the short-term quality of life, being able to work, and social participation is also threatened by insufficient physical activity  [4] . Fortunately, these risks are eliminated when this sedentary time is compensated for with sufficient physical activity of moderate intensity  [3] .\n\nIn Western civilization, living a sedentary lifestyle is the rule rather than the exception, as many people work in office environments. In pursuance of preventing the negative effects of insufficient physical activity in the workplace, the Hanze University of Applied Sciences Groningen (HUAS), a large university in the northern part of the Netherlands, started a novel initiative named (in Dutch): 'Het Nieuwe Gezonde Werken' (The New Healthy Way of Working; HNGW). With HNGW, the HUAS aims to promote a healthy lifestyle and physical activity during the workday. HNGW consists of providing participants with educational group meetings, food boxes with healthy recipes, and individual coaching sessions supplemented with an activity tracker. Despite the fact that participants are coached every two weeks and measured continuously, it remains difficult for a coach to provide timely personalized feedback. The manual task of creating personalized feedback is time consuming, and as such it is not always possible for the participants to get in-depth and timely daily feedback on their progression. Furthermore, current activity trackers do not provide a prediction for reaching the daily goal.\n\nIn order to fill this gap, we propose a novel, personalized, and flexible machine-learning-based procedure that can automate a part of the coaching process and serve as a source of information on a participant's progress with physical activity during the day. The personalized model provides, throughout the day, information on the probability of the participant meeting his or her daily physical activity goal. We demonstrate the accuracy and effectiveness of this solution in practice by training different machine learning algorithms and evaluating their performance using a train-test split dataset from the HNGW data. We apply techniques like grid search and cross-validation to optimize each model in order to find their best configuration. To show the applicability of this research in practice, we developed a proof of concept Web application, which has, to the best of our knowledge, not been done before. With the personalized actionable information the application provides, we demonstrate that machine learning automating is feasible as a part of the coaching process. The techniques described in this work could serve two goals in the field of personalized coaching. Firstly, we envision how coaches can use such applications and how these applications can provide them with detailed insight about the participants' activity during the day. Secondly, the tool could be used as a self-support tool, in which the participants' engagement with their lifestyle might increase as a result of the extra feedback."
+    },
+    {
+      "title": "2.. Related Work",
+      "text": "A number of studies have been performed on physical activity over days, where the sources of variance in activity is related to the subject, the day of the week, the season, and occupational and non-occupational days  [5] . Tudor-Locke et al.  (2005)  showed that the individual is the main source of variability in physical activity next to the difference between the Sunday and the rest of the week  [6] . Another study identified physical inactivity being lower on weekend days, and Saturday was the most active day of the week for both men and women  [5] .\n\nTo reduce sedentary time and increase physical activity levels, individuals need to change their behavior and daily routines. This is hard to achieve because of various reasons, and requires interventions and coaching strategies that use well-established techniques to induce a behavior change. A review by  Gardner et al. (2016)  found that self-monitoring, problem solving, and restructuring the social or physical environment were the most promising behavior change strategies, and-although the evidence base is quite weak-advises environmental restructuring, persuasion, and education to enhance self-regulatory skills  [7] . Interventions aimed at increasing physical activity levels or reducing sedentary time varies widely in content and in effectiveness. For example, studies focusing on exercise training and behavioral approaches have demonstrated conflicting results, whereas interventions focusing on reducing sedentary time seem to be more promising  [8] [9] [10] [11] [12] . The use of active video games seems to be effective in increasing physical activity, but has inconsistent findings on whether they are suitable to meet the recommended levels  [13] . Also, interventions targeting recreational screen time reduction might be effective when using health promotion curricula or counseling  [14] . Web-or app-based interventions to improve diet, physical activity, and sedentary behavior can be effective. Multi-component interventions appear to be more effective than stand-alone app interventions, although the optimal number and combination of app features and level of participant contact needed remain to be confirmed  [15, 16] . The workplace is often used for health promotion interventions. Recent reviews on workplace interventions for reducing sitting at work found initial evidence that the use of alternative workstations (sit-stand desks or treadmills) can decrease workplace sitting by thirty minutes to two hours. In addition, one review found that interventions promoting stair use and personalized behavioral interventions increase physical activity, while the other found no considerable or inconsistent effects of various interventions  [17, 18] .\n\nStep counters provide an objective measure of activity levels and enable self-monitoring. Furthermore, most modern consumer-based activity trackers already contain several behavior change models or theories  [19, 20] . Therefore, based on the aforementioned, using activity trackers in interventions to promote healthy lifestyles is promising. From meta-analyses by  Qiu et al. and Stephenson et al. it  was concluded that step counter use was indeed associated with small but significant effects in reducing sedentary time  [21, 22] . Adding an activity tracker to physical therapy or counseling was effective in some populations  [23] [24] [25] . Besides collecting activity data for therapy or counseling, it is known that the Fitbit itself also serves as an intervention mechanism  [26] . The mere fact of wearing an activity tracker (even without any form of coaching) could motivate physical activity and improve health-related quality of life  [27, 28] . On the other hand, studies on workplace interventions using activity trackers report conflicting results  [29] [30] [31] [32] [33] .\n\nThere are several studies that use sensor or activity tracker data to build a custom-made application to support research. An example is the social computer game, Fish'n'Steps, which connects the daily steps of an employee to the growth and activity of the individual avatar fish in a virtual fish tank. The more one is active, the faster the fish grows and prospers  [34] . Another example is the study on increased physical activity as the effect of social support groups using pedometers and an app  [35] .\n\nAlthough applying machine learning to coaching is new, machine learning techniques in combination with sensors have been applied before to identify the type of activity. Identifying human activity using machine learning and sensor data have been studied, for example, by Wang et al. for recognizing human daily activities from an accelerometer signal  [36] , by Li et al. on the quantification of the lifetime circadian rhythm of physical activity  [37] , or by Catal et al. on the use of an ensemble of classifiers for accelerometer-based activity recognition  [38] . Only a few studies have investigated the use of actionable, data-driven predictive models. A study on creating a predictive physical fatigue model based on sensors identified relevant features for predicting physical fatigue, however the model was not proven to be predictive enough to be applied  [39] .\n\nIn order to improve physical activity in combination with activity trackers, a coaching feature is helpful, but only when the messages are personal and placed in context  [40] . Perceiving the coaching information as personal and relevant is crucial for the effectiveness of (e)Coaching  [41] . Such tailored (e)Coaching has many aspects, two of which are personalization and timing  [42] . Timeliness of information is important for participants to be able to process the information and apply the advice while it is still relevant for them. In order to provide such advice, access to real-time predictions is vital, as it allows for timing the moment of coaching, either virtual or in real life and as flexible as needed. To the best of our knowledge, no studies exist about the use of sensor data combined with machine learning techniques for creating validated and individualized predictive models on physical activity. The individualized models could help the coach and the participant in the process of behavior change and increased physical activity."
+    },
+    {
+      "title": "3.. Materials and Methods",
+      "text": "The present work revolves around the HNGW project. This project was started in 2015 and focuses on promoting a healthy lifestyle. We describe the design of this study and how the resulting data is used in the present work. Next we describe our analysis pipeline. We describe the conversion of the raw data set into a feature set, the evaluation methods of the predictive models, and the choice of the algorithms. Finally we shed light on the proof of concept application we created to demonstrate how these techniques could be used in practice."
+    },
+    {
+      "title": "3.1.. Study Design",
+      "text": "The goal of the workplace health promotion intervention HNGW at the HUAS was to increase physical activity during workdays, by improving both physical and mental health, and several work-related variables. In the study, several performance-based tests and self-reported questionnaires were used to assess its effectiveness on a group level.\n\nForty-eight eligible participants from the HUAS were randomized into two groups, stratified according to age, gender, BMI, and baseline self-reported health. One group followed a twelve-week workplace health promotion intervention; the other served as a control during the first twelve weeks and thereafter received the twelve-week workplace health promotion intervention.\n\nDuring the study, minutely step count data of the participants was collected.\n\nStep count was measured using a wrist-worn activity tracker, the Fitbit Flex. The Fitbit Flex has been shown to be a reliable and valid device for step count and suitable for health enhancement programs  [13] . Further details of the trial design on HNGW at the HUAS are represented in the manuscript of van Ittersum et al.  [43] ."
+    },
+    {
+      "title": "3.2.. Data Set",
+      "text": "The anonymized data used in the present study was collected from participants during their participation in the HNGW health promotion program. All participants provided informed consent for participation in the HNGW study and for the use of their anonymized data for research purposes.\n\nWe used the steps per minute of each participant, resulting in a total of 349,920 measurements across all participants. We only considered the step data collected during the intervention period. That is, for both the intervention and the control group, we used the last twelve weeks of available step data. By focusing on the intervention period, we have a more homogeneous sample than we would have when including both the intervention and control data.\n\nWhile the Fitbit platform provides us with several minutely measures (e.g., steps, metabolic equivalent of tasks [METs], calories, and distance), in our analysis we only included the steps variable. We used the steps variable as we expect it to be the most accurate and relevant, as all other variables are by-products derived using approximation algorithms."
+    },
+    {
+      "title": "3.3.. Data Processing, Transformation, and Performance",
+      "text": "To prepare the available minutely step data as input for training the algorithms, we first performed a data cleaning, reformatting, and pre-processing step. First, we removed incomplete days from the data set. We also removed all days with zero steps and weekend days. We then converted all provided variables in a format that could be used by our algorithms, by augmenting our initial data set with several new augmented variables, such as hour of the workday, the number of steps for that hour, and a cumulative sum of the number of steps till that hour.\n\nNote that we define a workday as the weekdays Monday to Friday. The normal working hours at the university are between 8:00 AM and 5:00 PM. The HNGW tried to motivate the participants to walk at least a part of the distance they commute daily. As a consequence, the hours of interest are the combination of the working hours and the period of commuting. Therefore we only considered the number of steps per hour between 7:00 AM and 6:00 PM. As features for training the algorithms, we used the hour per workday (ranged from 7:00 AM to 6:00 PM), the number of steps of that hour, and the cumulative sum of the number of steps till that hour.\n\nAs the outcome measure, we calculated the average number of steps for all workdays over all weeks. That is, for each individual, we calculated one average for all workdays. We considered the number of steps between 7:00 AM and 6:00 PM. Note that this outcome measure is not used as input in the training process. We constructed a binary outcome variable represented by the indicator variable Y j = s j \u2265 \u03b8 j , in which s j refers to the number of steps on a workday for individual j, and \u03b8 j refers to the specific step goal for that j. The indicator function returns one (the 'true' label) when the inside condition holds, and zero (the 'false' label) otherwise.\n\nThree days of repeated measures are necessary to represent adults' usual activity levels with an 80% confidence  [6] . Forty-four participants met the criteria. The processing and transformation for these forty-four participants resulted in a total of 120,480 data blocks (for the number of steps, mean = 9031, median = 8543, range = 0-47,121). The total number of positives when the threshold is met at 6:00 PM, is 1528. The total number of negatives when the threshold is not met at 6:00 PM, is 1879.\n\nNote that we did not include any of the group level/baseline variables like age or gender, as we only considered personalized models. Although these variables might affect the outcome, they do not vary within the individual and as such do not add information."
+    },
+    {
+      "title": "3.4.. Evaluation of the Performance of Algorithms and Models",
+      "text": "We trained eight different machine learning algorithms. To compare their performance, we used a method known as 'confusion matrices'. The confusion matrices give an overview of the true positives (TP; the model predicted a 'true' label and the actual data contained a 'true' label), true negatives (TN; the model predicted a 'false' label and the actual data turned out to have a 'false' label), false positives (FP; the model predicted a 'true' label, but the actual data contained a 'false' label), and false negatives (FN; the model predicted a 'false' label, but in fact the data contained a 'true' label) of a model. An example of a confusion matrix is provided in Table  1 . These confusion matrices served as a basis for the calculation of two other performance measures: The accuracy and the F1-score  [15] . True Positive: the threshold of daily steps was met and predicted; True Negative: the threshold of daily steps was not met and predicted; False Negative: the threshold of daily steps was met and not predicted; False Positive: the threshold of daily steps was not met and not predicted.\n\nAccuracy is a metric to determine the nearness of the prediction to the true value. A value of the accuracy close to one indicates the best performance. It calculates the ratio between the correctly classified cases and all cases as Accuracy = TP+TN TP+TN+FP+FN . Besides the accuracy metric, we calculated the F1-score for each model. Similar to the accuracy metric, the F1-score takes its values from between zero and one, one corresponding to the best performance. To calculate the F1-score, we use two other metrics known as the precision and the recall of the model. Precision is the proportion of the true positives and the false negatives, and is calculated as Precision = TP TP+FN . Recall is the true positive rate, which is calculated as Recall = TP TP+FP . Using these definitions of precision and recall, the F1-score can be calculated as F1-score = 2 \u00d7 Precision\u00d7Recall Precision+Recall ."
+    },
+    {
+      "title": "3.5.. Computing the Personalized Predictive Model",
+      "text": "We aim to predict (throughout the day) whether or not an individual will meet his or her daily step goal. Prediction of meeting a set goal is a supervised two-class classification problem. Nowadays, many different algorithms for performing such classifications are available. Unfortunately, it is generally considered impossible to determine a priori which algorithm will perform best on any given data set  [44] . Although distinct algorithms are better suited for different types of data and problems, the type of algorithm is merely an indication of the most suitable algorithm. Currently, the preferred way to find the best-performing algorithm is by empirically testing each of them  [45] . Nevertheless, there exist general guidelines to direct the search for specific algorithms for the problem at hand. One of the leading organizations on open source machine learning library, scikit-learn.org, offers a flowchart about which algorithms can be chosen in which situation  [46] . Also, Microsoft provides a 'cheat sheet' on their Azure machine learning platform  [47] . The flow chart and \u00b4cheat sheet\u00b4served as a basis for our selection process and we chose the following machine learning classification algorithms: (i) AdaBoost (ADA), (ii) Decision Trees (DT), (iii) KNeighborsClassifier (KNN), (iv) Logistic Regression (LR), (v) Neural Networking(NN), (vi) Stochastic Gradient Descent (SGD), (vii) Random Forest (RF), and (viii) Support Vector Classification (SVC). The performance of each of these algorithms was first determined for seventy percent of the whole dataset including five-fold cross-validation with scaling of the factors for KNN, NN, SGD, and SVC. Subsequently, for every participant we individualized the algorithms with five-fold cross-validation and grid search on selected hyperparameters. Seventy percent of the available individual data was used as training data. After training the algorithms, the algorithms were turned into persistent predictive models per participant. We used the individual models to construct confusion matrices, which in turn served as a basis for the F1-score and the accuracy per individual predictive model. To compare the performance of the machine learning models, we included a baseline model. This baseline model checks the cumulative step count. If this cumulative step count equals or exceeds the average personalized goal, the model returns true and false otherwise. We ranked all machine learning models (including the baseline model) using the average of the F1-score and the accuracy."
+    },
+    {
+      "title": "3.6.. Proof of Concept",
+      "text": "We designed and implemented a Web application to demonstrate how the personalized prediction based on machine learning and activity tracker data could be used in practice. We developed this application as a Web application, which can be accessed on  http://personalized-coaching.compsy.nl/ . In this application, the user can input the values 'Hour of the day', 'Steps previous hour', 'Total steps till the Hour', combined with the participant's ID and the algorithm to use. The Web application then uses the individualized model and input data to predict the outcome together with the probability thereof."
+    },
+    {
+      "title": "3.7.. Implementation Details",
+      "text": "We used scikit-learn (v0. 18, [48] ) to establish the best predictive model for the individual. Scikit-learn is an open-source Python module integrating a wide range of machine learning algorithms. Scikit learn was integrated in Anaconda (v4.2.13,  [49] ) and Jupyter Notebooks (4.0.6,  [50] ) was used in combination with Python (v3.5.2,  [49] ) for creating the data processing and machine learning pipeline. Jupyter Notebooks is an interactive method to write and run various programming languages, such as Python. The participants, their physical activity data, and the results of the performance of the algorithms and models were saved in an Oracle database (v11g2 XE;  [51] ). The Oracle database management system is a widely-used SQL-based system for persisting data. The source code and corresponding notebooks of the machine learning procedure is available as open-source software on Github ( https://github.com/compsy/personalized-coaching-ml ).\n\nFor the Web application, we used Flask (Version 0.10.1,  [52] ), a Python-based Web application microframework for developing Web applications. We used a PostgreSQL database to store information regarding the models and the participants. The machine learning models resulting from the pipeline are exported as Python Pickle files, which were imported into the Web application. The infrastructure-as-a-service provider Heroku is used to host a demo version of the Web application. This Web application is available at  http://personalized-coaching.compsy.nl . The Web application is available as open-source software on Github ( https://github.com/compsy/personalized-coaching-app )."
+    },
+    {
+      "title": "4.. Results",
+      "text": "After optimizing our machine learning models by applying grid search in combination with cross-validation, we assessed the models using the test set. The results are presented here."
+    },
+    {
+      "title": "4.1.. Accuracy and F1-Score on Group Level",
+      "text": "Table  2  presents the F1-score and accuracy of the eight different algorithms at the group level. The top three group algorithms based on the mean accuracy and F1-score are: AdaBoost, Neural Networking, and Support Vector Classifier. We visualized the accuracy and F1-score per algorithm using boxplots in Figures  1  and  2 . The box represents the second and third quartile groups and the red line indicates the median. The upper whisker visualizes the fourth quartile group and the lower whisker visualizes the first quartile group. Finally, the plus sign indicates outliers on either side of both whiskers.\n\nSensors 2018, 18, 623 7 of 16 the pipeline are exported as Python Pickle files, which were imported into the Web application. The infrastructure-as-a-service provider Heroku is used to host a demo version of the Web application. This Web application is available at  http://personalized-coaching.compsy.nl . The Web application is available as open-source software on Github ( https://github.com/compsy/personalized-coaching-app )."
+    },
+    {
+      "title": "4.. Results",
+      "text": "After optimizing our machine learning models by applying grid search in combination with cross-validation, we assessed the models using the test set. The results are presented here."
+    },
+    {
+      "title": "4.1.. Accuracy and F1-Score on Group Level",
+      "text": "Table  2  presents the F1-score and accuracy of the eight different algorithms at the group level. The top three group algorithms based on the mean accuracy and F1-score are:\n\nAdaBoost, Neural Networking, and Support Vector Classifier. We visualized the accuracy and F1-score per algorithm using boxplots in Figures  1  and  2 . The box represents the second and third quartile groups and the red line indicates the median. The upper whisker visualizes the fourth quartile group and the lower whisker visualizes the first quartile group. Finally, the plus sign indicates outliers on either side of both whiskers. Sensors 2018, 18, 623 7 of 16 the pipeline are exported as Python Pickle files, which were imported into the Web application. The infrastructure-as-a-service provider Heroku is used to host a demo version of the Web application. This Web application is available at  http://personalized-coaching.compsy.nl . The Web application is available as open-source software on Github ( https://github.com/compsy/personalized-coaching-app )."
+    },
+    {
+      "title": "4.. Results",
+      "text": "After optimizing our machine learning models by applying grid search in combination with cross-validation, we assessed the models using the test set. The results are presented here."
+    },
+    {
+      "title": "4.1.. Accuracy and F1-Score on Group Level",
+      "text": "Table  2  presents the F1-score and accuracy of the eight different algorithms at the group level. The top three group algorithms based on the mean accuracy and F1-score are:\n\nAdaBoost, Neural Networking, and Support Vector Classifier. We visualized the accuracy and F1-score per algorithm using boxplots in Figures  1  and  2 . The box represents the second and third quartile groups and the red line indicates the median. The upper whisker visualizes the fourth quartile group and the lower whisker visualizes the first quartile group. Finally, the plus sign indicates outliers on either side of both whiskers."
+    },
+    {
+      "title": "4.2.. Individual Algorithms",
+      "text": "We trained all algorithms on the training set of each individual and performed cross-validation to tune the hyperparameters. Table  3  lists the used machine learning algorithms, the set of tested hyperparameters, and the selected grid search values. The accuracy and F1-score of the individual algorithms differ. Figure  3  visualizes the results of the average of the individual scores.\n\nSensors 2018, 18, 623 9 of 16\n\nThe accuracy and F1-score of the individual algorithms differ. Figure  3  visualizes the results of the average of the individual scores. For thirty-five subjects, the best-performing individual model was the Random Forest algorithm, in eight cases this was the Decision Tree algorithm, and for one subject the AdaBoost algorithm performed best. The average accuracy of the Random Forest algorithm is 0.93 (range 0.88-0.99). Thus, in terms of accuracy, the individual Random Forest models score better than its counterpart that was generalized over all individuals (mean personalized accuracy = 0.93 versus mean generalized accuracy = 0.82). The average accuracy of the Decision Tree model is 0.93 (range 0.91-0.97) and For thirty-five subjects, the best-performing individual model was the Random Forest algorithm, in eight cases this was the Decision Tree algorithm, and for one subject the AdaBoost algorithm performed best. The average accuracy of the Random Forest algorithm is 0.93 (range 0.88-0.99). Thus, in terms of accuracy, the individual Random Forest models score better than its counterpart that was generalized over all individuals (mean personalized accuracy = 0.93 versus mean generalized accuracy = 0.82). The average accuracy of the Decision Tree model is 0.93 (range 0.91-0.97) and outperforms the generalized, group-based Decision Tree accuracy of 0.75. The accuracy of the single AdaBoost model is 0.98, which outperforms the group accuracy of 0.85.\n\nThe mean F1-score of the Random Forest model is 0.90 (range 0.87-0.94). The mean F1-score of the Decision Tree model based on the eight best performing models is 0.90 (range 0.87-0.93). Finally, the best AdaBoost model has an F1-score of 0.92, while the group accuracy for the AdaBoost algorithm was 0.77.\n\nThe use of grid search to tune the hyperparameters of the algorithms led to several optimized models per individual. To demonstrate the difference this optimization operation can have, we present an example of two individual models with different hyperparameter configurations in Table  4 . Table  5  gives an overview of the number of occurrences of a value for the Random Forest hyperparameters. The accuracy and F1-score of the various machine learning algorithms increase slightly during the day. The size of this increase differs slightly per machine learning algorithm. For instance, the F1-score of Random Forest increases with 10% during the day, starting with an F1-score of 0.89 at 7:00 AM and ending with an F1-score of 0.97 at 6:00 PM. Both Figures  4  and  5  also show the increase in accuracy and F1-score of the baseline algorithm during the day. Its accuracy starts with 0.55 and ends at 1 at the end of the workday, while the F1-score starts at 0 and ends at 1. The accuracy increases for Random Forest, Logistic Regression, and AdaBoost, whereas the accuracy of Neural Networking is best at 11:00 AM and Stochastic Gradient Descent remains the same.\n\nF1-score of Random Forest increases with 10% during the day, starting with an F1-score of 0.89 at 7:00 AM and ending with an F1-score of 0.97 at 6:00 PM. Both Figures  4  and  5  also show the increase in accuracy and F1-score of the baseline algorithm during the day. Its accuracy starts with 0.55 and ends at 1 at the end of the workday, while the F1-score starts at 0 and ends at 1. The accuracy increases for Random Forest, Logistic Regression, and AdaBoost, whereas the accuracy of Neural Networking is best at 11:00 AM and Stochastic Gradient Descent remains the same. 0 0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 1 7 8 9 10 11 12 13 14 15 16 17 18 F1-score AdaBoost Decision Tree KNeighborsClassifier Logistic Regression Neural Networking Random Forest Stochastic Gradient Descent Support Vector Classifier Baseline Hour Figure 4. Average F1-Score per algorithm, per hour based on the individual scores. Sensors 2018, 18, 623 11 of 16 Figure 5. Average accuracy per algorithm, per hour based on the individual scores."
+    },
+    {
+      "title": "4.3.. The Web Application",
+      "text": "The Web application is a demonstration of how the aforementioned machine learning techniques could be used in practice, from the perspective of both the coach and the participant. The application allows the user to determine whether a participant will achieve his or her goal for the day, during the day, by applying the individualized algorithms. The procedure for predicting this goal is as follows. First, the user selects a participant identifier from the dropdown menu. After this selection had been made, the application selects the best and personalized machine learning algorithm for this specific participant. Then the user can fill out a form, providing the necessary details to base the prediction on (hour of day, the number of steps so far, and the number of steps in the past hour). Finally, when the user submits the form, the application returns advice personalized for the individual selected from the dropdown menu. The demo application is available at  http://personalized-coaching.compsy.nl/ . Figure  6  provides a screenshot of both the input fields of the application and the generated prediction and advice.\n\n0.5 0.55 0.6 0.65 0.7 0.75 0.8 0.85 0.9 0.95 1 7 8 9 10 11 12 13 14 15 16 17 18 Accuracy Hour AdaBoost Decision Tree KNeighborsClassifier Logistic Regression Neural Networking Random Forest Stochastic Gradient Descent Support Vector Classifier Baseline"
+    },
+    {
+      "title": "4.3.. The Web Application",
+      "text": "The Web application is a demonstration of how the aforementioned machine learning techniques could be used in practice, from the perspective of both the coach and the participant. The application allows the user to determine whether a participant will achieve his or her goal for the day, during the day, by applying the individualized algorithms. The procedure for predicting this goal is as follows. First, the user selects a participant identifier from the dropdown menu. After this selection had been made, the application selects the best and personalized machine learning algorithm for this specific participant. Then the user can fill out a form, providing the necessary details to base the prediction on (hour of day, the number of steps so far, and the number of steps in the past hour). Finally, when the user submits the form, the application returns advice personalized for the individual selected from the dropdown menu. The demo application is available at  http://personalized-coaching.compsy.nl/ . Figure  6  provides a screenshot of both the input fields of the application and the generated prediction and advice."
+    },
+    {
+      "title": "4.. Discussion",
+      "text": "We investigated machine learning as a means to support personalized coaching on physical activity. We demonstrated that for our particular data sets, the tree algorithms and tree-based ensemble algorithms performed especially well. To demonstrate how the results of machine learning techniques could be used in practice, an application was used to aid the coaching of the physical activity process. Furthermore, the analysis shows that selecting the right algorithm, using the dataset of the individual participant, and tuning its individual algorithm parameters, can lead to significant improvements in predictive performance and is a critical step in machine learning application. All source code, including the different notebooks and the proof-of-concept Web application is available online as open-source software. The source code can serve as a blueprint for other researchers when aiming to apply machine learning for coaching.\n\nAlthough Random Forest outperformed most of the other algorithms, it is problematic to provide a generalized recommendation for specific algorithms, parameters, or parameter settings  [44] . Presumably due to individually different physical activity patterns, different algorithms and parameters have to be considered. As a starting point, we selected the algorithms based on well-established sources  [41, 42] , applied cross-validation, and grid-searched the values of the selected parameters. Nevertheless, it's important to note that these algorithms, parameters, and grid search values might not work best on all individual physical patterns, and the algorithms, parameters, and grid search values should only be used as starting points. Future work might consist of investigating the underlying mechanisms to be able to choose the best algorithm beforehand.\n\nWe based the prediction solely on the hour of the day and the number of steps. These steps are naturally increasing over the day, and as such, not independent from each other. By including the cumulative number of steps for each block of data, and by including the number of steps made in the"
+    },
+    {
+      "title": "5.. Discussion",
+      "text": "We investigated machine learning as a means to support personalized coaching on physical activity. We demonstrated that for our particular data sets, the tree algorithms and tree-based ensemble algorithms performed especially well. To demonstrate how the results of machine learning techniques could be used in practice, an application was used to aid the coaching of the physical activity process. Furthermore, the analysis shows that selecting the right algorithm, using the dataset of the individual participant, and tuning its individual algorithm parameters, can lead to significant improvements in predictive performance and is a critical step in machine learning application. All source code, including the different notebooks and the proof-of-concept Web application is available online as open-source software. The source code can serve as a blueprint for other researchers when aiming to apply machine learning for coaching.\n\nAlthough Random Forest outperformed most of the other algorithms, it is problematic to provide a generalized recommendation for specific algorithms, parameters, or parameter settings  [44] . Presumably due to individually different physical activity patterns, different algorithms and parameters have to be considered. As a starting point, we selected the algorithms based on well-established sources  [41, 42] , applied cross-validation, and grid-searched the values of the selected parameters. Nevertheless, it's important to note that these algorithms, parameters, and grid search values might not work best on all individual physical patterns, and the algorithms, parameters, and grid search values should only be used as starting points. Future work might consist of investigating the underlying mechanisms to be able to choose the best algorithm beforehand.\n\nWe based the prediction solely on the hour of the day and the number of steps. These steps are naturally increasing over the day, and as such, not independent from each other. By including the cumulative number of steps for each block of data, and by including the number of steps made in the past hour, we assume each block to be independent from the other blocks, and as such, are still able to use the regular machine learning methods.\n\nA limitation of the present work is that all participants included in this study participated in an intervention. This intervention might have made the participants more aware and engaged with the project, and as such, the individualized models might be biased towards the best scenario. When people are not extrinsically motivated to meet their daily physical activity goal, and lower their physical activity, the predictive power of the models and therefor the effect of automated intervention will lessen. On the other hand, when an intervention like the health promotion program ends, the individualized models check the participant on his or her performance as if the program is supporting the participant.\n\nAs presented in the state of the art literature, the total number of steps differ significantly between Sunday and rest of the weekdays  [5, 6, 48] . Within this health promotion program, the focus was on improving physical activity during working hours and commuting. Therefore, the machine learning models were trained based on the normal workweek. Only one model per participant, based on the five weekdays, is adequate to predict whether or not a participant will meet his or her threshold. It may be necessary to conduct different models for the weekend and weekdays when a health promotion program is expanded to weekends. A reason to establish more than one or two models per participant is found in the variances between weekdays  [5] . Examples of different factors that could influence the level of physical activity are weekly sport obligations, weekly meetings, or lunch walks on certain days. Constructing a model per weekday might establish an even more personalized and precise prediction.\n\nIn the present work, we only train our machine learning algorithms on variables provided by the activity tracker, extending this set of variables with other (exogenous) variables from other data sources. For example, the data can be extended to include information on the changes in the weather conditions and/or season, which are known to correlate with the day-to-day activity  [5, 53] , or non-working time during weekdays like national holidays and free time, or part-time working schedule, for the activity level differs between non-occupational and occupational time, or the influence and effectiveness of coaching and interventions. Adding the mentioned factors to the dataset might improve the predictive accuracy of the model and might increase the effectiveness of the coaching process.\n\nTo apply the personalized machine learning models effectively, they have to become a part of a larger ecosystem. An ideal coaching process is fully tailored to the individual participant. One of the most important characteristics of the personalization of a coaching strategy consists in the timing and ease to execute triggers to change behavior  [54] . To support these two aspects of coaching, timely information on the participant and the effectiveness of the coaching strategy are needed. Coaching might not be limited to a personal real life coach but also may include virtual coaching. An example of a possible use of the system is: at the moment the participant doesn't score a 'yes' for two hours in a row on the prediction of meeting his threshold, a notification is sent out to both the participant and the coach. On the basis of this notification, the participant and the coach can take action; the coach can timely intervene to stimulate his client to become physically active and the participant can become instantly more active. Blok et al. proposed a system which combines the real-time analysis of activity tracker data and other personal streaming data as well as the evaluation of virtual coaching strategies, which enables it to tune the coaching to the person  [55] . The present work could serve as a central component of a virtual coach system like that envisioned by Blok et al.  [55] .\n\nTo make the information even more personal and relevant, a promising direction for future work is to include a prediction of the actual number of steps at the end of the day. Adding more (and personalized) information might strengthen the effectiveness of the system. To do so, we could apply a similar procedure to the one presented in this study, but instead replace our classification algorithms with regression machine learning algorithms. The predicted number of steps could be a valuable extension in addition to the currently implemented classification of the step goal.\n\nTo conclude, machine learning is a viable asset to automate personalized daily physical activity prediction. Coaching can provide accurate and timely information on the participants' physical activity, even early in the day. This is the result of applying machine learning to the behavior of the individual participant as precisely and frequently measured by wearable sensors. The prediction of the participant meeting his goal in combination with the probability of such achievement allows for early intervention and can be used to provide support for personalized coaching. Also, the motivation for self-coaching might be increased, while every model is personalized and the results are better fitted to the situation. Furthermore, machine learning techniques empower automated coaching and personalization."
+    },
+    {
+      "text": "Figure 1. Algorithm accuracy comparison."
+    },
+    {
+      "text": "Figure 2. Algorithm F1-score comparison."
+    },
+    {
+      "text": "Figure 1. Algorithm accuracy comparison."
+    },
+    {
+      "text": "Figure 1. Algorithm accuracy comparison."
+    },
+    {
+      "text": "Figure 2. Algorithm F1-score comparison."
+    },
+    {
+      "text": "Figure 2. Algorithm F1-score comparison."
+    },
+    {
+      "text": "Figure 3. Average accuracy and F1-score per model."
+    },
+    {
+      "text": "Figure 3. Average and F1-score per model."
+    },
+    {
+      "text": "Figure 4. Average F1-Score per algorithm, per hour based on the individual scores."
+    },
+    {
+      "text": "Figure 5. Average accuracy per algorithm, per hour based on the individual scores."
+    },
+    {
+      "text": "Figure 6. Screenshot of the Personalized Coach Web Application."
+    },
+    {
+      "text": "Figure 6. Screenshot of the Personalized Coach Web Application."
+    },
+    {
+      "text": "Confusion matrix."
+    },
+    {
+      "text": "Algorithms and their scores for the whole dataset."
+    },
+    {
+      "text": "Algorithms and their scores for the whole dataset."
+    },
+    {
+      "text": "Algorithms and their scores for the whole dataset."
+    },
+    {
+      "text": "Algorithms, used parameters, and grid search values."
+    },
+    {
+      "text": "Example of different tuned personalized Random Forest models."
+    },
+    {
+      "text": "The number of different values per Random Forest hyperparameter."
+    },
+    {
+      "title": "Acknowledgments:",
+      "text": "We thank the  Hanze University Health Program  for providing the physical activity data of the  Health Program  and all the participants in the experiment."
+    },
+    {
+      "text": "Author Contributions: Miriam van Ittersum conceived and designed the study of the health promotion program; Talko Dijkhuis developed the database, notebooks and performed the experiments; Talko Dijkhuis analyzed the data; Frank Blaauw developed the Web application. All authors have participated in writing the manuscript."
+    },
+    {
+      "title": "Conflicts of Interest:",
+      "text": "The authors declare no conflict of interest."
+    }
+  ],
+  "references": [
+    {
+      "title": "Global Action Plan for the Prevention and Control of Noncommunicable Diseases 2013-2020",
+      "year": 2013,
+      "doi": "10.2471/b09488",
+      "pages": "102",
+      "raw": "WHO \n\t\t \n\t\t 10.2471/b09488 \n\t\t Global Action Plan for the Prevention and Control of Noncommunicable Diseases 2013-2020 \n\t\t Gen\u00e8ve, Switzerland \n\t\t \n\t\t\t World Health Organization \n\t\t\t 2013 \n\t\t\t 102 \n\t\t \n\t \n\t WHO. Global Action Plan for the Prevention and Control of Noncommunicable Diseases 2013-2020; World Health Organization: Gen\u00e8ve, Switzerland, 2013; p. 102."
+    },
+    {
+      "title": "Effect of physical inactivity on major non-communicable diseases worldwide: An analysis of burden of disease and life expectancy",
+      "authors": [
+        "I Shiroma",
+        "E Lobelo",
+        "F Puska",
+        "P Blair",
+        "S Katzmarzyk",
+        "P Alkandari",
+        "J Andersen",
+        "L Bauman",
+        "A Brownson"
+      ],
+      "year": 2012,
+      "journal": "Lancet",
+      "volume": "380",
+      "raw": "Effect of physical inactivity on major non-communicable diseases worldwide: An analysis of burden of disease and life expectancy \n\t\t \n\t\t\t Min-Lee \n\t\t \n\t\t \n\t\t\t I Shiroma \n\t\t \n\t\t \n\t\t\t E J Lobelo \n\t\t \n\t\t \n\t\t\t F Puska \n\t\t \n\t\t \n\t\t\t P Blair \n\t\t \n\t\t \n\t\t\t S N Katzmarzyk \n\t\t \n\t\t \n\t\t\t P T Alkandari \n\t\t \n\t\t \n\t\t\t J R Andersen \n\t\t \n\t\t \n\t\t\t L B Bauman \n\t\t \n\t\t \n\t\t\t A E Brownson \n\t\t \n\t\t \n\t\t\t R C \n\t\t \n\t \n\t \n\t\t Lancet \n\t\t \n\t\t\t 380 \n\t\t\t \n\t\t\t 2012 \n\t\t \n\t \n\t Min-Lee, I.; Shiroma, E.J.; Lobelo, F.; Puska, P.; Blair, S.N.; Katzmarzyk, P.T.; Alkandari, J.R.; Andersen, L.B.; Bauman, A.E.; Brownson, R.C.; et al. Effect of physical inactivity on major non-communicable diseases worldwide: An analysis of burden of disease and life expectancy. Lancet 2012, 380, 219-229."
+    },
+    {
+      "title": "Does physical activity attenuate, or even eliminate, the detrimental association of sitting time with mortality? A harmonised meta-analysis of data from more than 1 million men and women",
+      "authors": [
+        "U Ekelund",
+        "J Steene-Johannessen",
+        "W Brown",
+        "M Fagerland",
+        "N Owen",
+        "K Powell",
+        "A Bauman",
+        "I Lee"
+      ],
+      "year": 2016,
+      "doi": "10.1016/s0140-6736(16)30370-1",
+      "journal": "Lancet",
+      "volume": "388",
+      "raw": "Does physical activity attenuate, or even eliminate, the detrimental association of sitting time with mortality? A harmonised meta-analysis of data from more than 1 million men and women \n\t\t \n\t\t\t U Ekelund \n\t\t \n\t\t \n\t\t\t J Steene-Johannessen \n\t\t \n\t\t \n\t\t\t W J Brown \n\t\t \n\t\t \n\t\t\t M W Fagerland \n\t\t \n\t\t \n\t\t\t N Owen \n\t\t \n\t\t \n\t\t\t K E Powell \n\t\t \n\t\t \n\t\t\t A Bauman \n\t\t \n\t\t \n\t\t\t I M Lee \n\t\t \n\t\t 10.1016/s0140-6736(16)30370-1 \n\t \n\t \n\t\t Lancet \n\t\t \n\t\t\t 388 \n\t\t\t \n\t\t\t 2016 \n\t\t \n\t \n\t Ekelund, U.; Steene-Johannessen, J.; Brown, W.J.; Fagerland, M.W.; Owen, N.; Powell, K.E.; Bauman, A.; Lee, I.M. Does physical activity attenuate, or even eliminate, the detrimental association of sitting time with mortality? A harmonised meta-analysis of data from more than 1 million men and women. Lancet 2016, 388, 1302-1310. [PubMed]"
+    },
+    {
+      "title": "Physical activity and unplanned illness-related work absenteeism: Data from an employee wellness program",
+      "authors": [
+        "E Losina",
+        "H Yang",
+        "B Deshpande",
+        "J Katz",
+        "J Collins"
+      ],
+      "year": 2017,
+      "doi": "10.1371/journal.pone.0176872",
+      "journal": "PLoS ONE",
+      "volume": "12",
+      "pages": "176872",
+      "raw": "Physical activity and unplanned illness-related work absenteeism: Data from an employee wellness program \n\t\t \n\t\t\t E Losina \n\t\t \n\t\t \n\t\t\t H Y Yang \n\t\t \n\t\t \n\t\t\t B R Deshpande \n\t\t \n\t\t \n\t\t\t J N Katz \n\t\t \n\t\t \n\t\t\t J E Collins \n\t\t \n\t\t 10.1371/journal.pone.0176872 \n\t \n\t \n\t\t PLoS ONE \n\t\t \n\t\t\t 12 \n\t\t\t 176872 \n\t\t\t 2017 \n\t\t \n\t \n\t Losina, E.; Yang, H.Y.; Deshpande, B.R.; Katz, J.N.; Collins, J.E. Physical activity and unplanned illness-related work absenteeism: Data from an employee wellness program. PLoS ONE 2017, 12, e0176872. [CrossRef] [PubMed]"
+    },
+    {
+      "title": "Sources of Variance in Daily Physical Activity Levels in the Seasonal Variation of Blood Cholesterol Study",
+      "authors": [
+        "C Matthews",
+        "J Hebert",
+        "P Freedson",
+        "E Iii",
+        "P Merriam",
+        "B Cara",
+        "I Ockene"
+      ],
+      "year": 2001,
+      "doi": "10.1093/aje/153.10.987",
+      "journal": "Am. J. Epidemiol",
+      "volume": "153",
+      "raw": "Sources of Variance in Daily Physical Activity Levels in the Seasonal Variation of Blood Cholesterol Study \n\t\t \n\t\t\t C E Matthews \n\t\t \n\t\t \n\t\t\t J R Hebert \n\t\t \n\t\t \n\t\t\t P S Freedson \n\t\t \n\t\t \n\t\t\t E J S Iii \n\t\t \n\t\t \n\t\t\t P A Merriam \n\t\t \n\t\t \n\t\t\t B Cara \n\t\t \n\t\t \n\t\t\t I S Ockene \n\t\t \n\t\t 10.1093/aje/153.10.987 \n\t \n\t \n\t\t Am. J. Epidemiol \n\t\t \n\t\t\t 153 \n\t\t\t \n\t\t\t 2001 \n\t\t \n\t \n\t Matthews, C.E.; Hebert, J.R.; Freedson, P.S.; Iii, E.J.S.; Merriam, P.A.; Cara, B.; Ockene, I.S. Sources of Variance in Daily Physical Activity Levels in the Seasonal Variation of Blood Cholesterol Study. Am. J. Epidemiol. 2001, 153, 987-995. [CrossRef] [PubMed]"
+    },
+    {
+      "title": "How many days of pedometer monitoring predict weekly physical activity in adults",
+      "authors": [
+        "C Tudor-Locke",
+        "L Burkett",
+        "J Reis",
+        "B Ainsworth",
+        "C Macera",
+        "D Wilson"
+      ],
+      "year": 2005,
+      "doi": "10.1016/j.ypmed.2004.06.003",
+      "journal": "Prev. Med",
+      "volume": "40",
+      "raw": "How many days of pedometer monitoring predict weekly physical activity in adults \n\t\t \n\t\t\t C Tudor-Locke \n\t\t \n\t\t \n\t\t\t L Burkett \n\t\t \n\t\t \n\t\t\t J P Reis \n\t\t \n\t\t \n\t\t\t B E Ainsworth \n\t\t \n\t\t \n\t\t\t C A Macera \n\t\t \n\t\t \n\t\t\t D K Wilson \n\t\t \n\t\t 10.1016/j.ypmed.2004.06.003 \n\t \n\t \n\t\t Prev. Med \n\t\t \n\t\t\t 40 \n\t\t\t \n\t\t\t 2005 \n\t\t\t Baltim \n\t\t \n\t \n\t Tudor-Locke, C.; Burkett, L.; Reis, J.P.; Ainsworth, B.E.; Macera, C.A.; Wilson, D.K. How many days of pedometer monitoring predict weekly physical activity in adults. Prev. Med. (Baltim.) 2005, 40, 293-298. [CrossRef] [PubMed]"
+    },
+    {
+      "title": "How to reduce sitting time? A review of behaviour change strategies used in sedentary behaviour reduction interventions among adults",
+      "authors": [
+        "B Gardner",
+        "L Smith",
+        "F Lorencatto",
+        "M Hamer",
+        "S Biddle"
+      ],
+      "year": 2016,
+      "doi": "10.1080/17437199.2015.1082146",
+      "journal": "Health Psychol. Rev",
+      "volume": "10",
+      "raw": "How to reduce sitting time? A review of behaviour change strategies used in sedentary behaviour reduction interventions among adults \n\t\t \n\t\t\t B Gardner \n\t\t \n\t\t \n\t\t\t L Smith \n\t\t \n\t\t \n\t\t\t F Lorencatto \n\t\t \n\t\t \n\t\t\t M Hamer \n\t\t \n\t\t \n\t\t\t S J Biddle \n\t\t \n\t\t 10.1080/17437199.2015.1082146 \n\t \n\t \n\t\t Health Psychol. Rev \n\t\t \n\t\t\t 10 \n\t\t\t \n\t\t\t 2016 \n\t\t \n\t \n\t Gardner, B.; Smith, L.; Lorencatto, F.; Hamer, M.; Biddle, S.J. How to reduce sitting time? A review of behaviour change strategies used in sedentary behaviour reduction interventions among adults. Health Psychol. Rev. 2016, 10, 89-112. [PubMed]"
+    },
+    {
+      "title": "Community wide interventions for increasing physical activity",
+      "authors": [
+        "P Baker",
+        "D Francis",
+        "J Soares",
+        "A Weightman",
+        "C Foster"
+      ],
+      "year": 2011,
+      "doi": "10.1590/s1516-31802011000600013",
+      "journal": "Sao Paulo Med. J",
+      "volume": "129",
+      "raw": "Community wide interventions for increasing physical activity \n\t\t \n\t\t\t P R A Baker \n\t\t \n\t\t \n\t\t\t D P Francis \n\t\t \n\t\t \n\t\t\t J Soares \n\t\t \n\t\t \n\t\t\t A L Weightman \n\t\t \n\t\t \n\t\t\t C Foster \n\t\t \n\t\t 10.1590/s1516-31802011000600013 \n\t \n\t \n\t\t Sao Paulo Med. J \n\t\t \n\t\t\t 129 \n\t\t\t \n\t\t\t 2011 \n\t\t \n\t \n\t Baker, P.R.A.; Francis, D.P.; Soares, J.; Weightman, A.L.; Foster, C. Community wide interventions for increasing physical activity. Sao Paulo Med. J. 2011, 129, 436-437. [CrossRef]"
+    },
+    {
+      "title": "Lifestyle intervention effects on the frequency and duration of daily moderate-vigorous physical activity and leisure screen time",
+      "authors": [
+        "D Conroy",
+        "D Hedeker",
+        "H Mcfadden",
+        "C Pellegrini",
+        "A Pfammatter",
+        "S Phillips",
+        "J Siddique",
+        "B Spring"
+      ],
+      "year": 2017,
+      "doi": "10.1037/hea0000418",
+      "journal": "Heal. Psychol",
+      "volume": "36",
+      "raw": "Lifestyle intervention effects on the frequency and duration of daily moderate-vigorous physical activity and leisure screen time \n\t\t \n\t\t\t D E Conroy \n\t\t \n\t\t \n\t\t\t D Hedeker \n\t\t \n\t\t \n\t\t\t H G Mcfadden \n\t\t \n\t\t \n\t\t\t C A Pellegrini \n\t\t \n\t\t \n\t\t\t A F Pfammatter \n\t\t \n\t\t \n\t\t\t S M Phillips \n\t\t \n\t\t \n\t\t\t J Siddique \n\t\t \n\t\t \n\t\t\t B Spring \n\t\t \n\t\t 10.1037/hea0000418 \n\t \n\t \n\t\t Heal. Psychol \n\t\t \n\t\t\t 36 \n\t\t\t \n\t\t\t 2017 \n\t\t \n\t \n\t Conroy, D.E.; Hedeker, D.; McFadden, H.G.; Pellegrini, C.A.; Pfammatter, A.F.; Phillips, S.M.; Siddique, J.; Spring, B. Lifestyle intervention effects on the frequency and duration of daily moderate-vigorous physical activity and leisure screen time. Heal. Psychol. 2017, 36, 299-308. [CrossRef] [PubMed]"
+    },
+    {
+      "title": "Does exercise training change physical activity in people with COPD? A systematic review and meta-analysis",
+      "authors": [
+        "L Ng",
+        "J Mackney",
+        "S Jenkins",
+        "K Hill"
+      ],
+      "year": 2012,
+      "journal": "Chron. Respir. Dis",
+      "volume": "9",
+      "raw": "Does exercise training change physical activity in people with COPD? A systematic review and meta-analysis \n\t\t \n\t\t\t L W C Ng \n\t\t \n\t\t \n\t\t\t J Mackney \n\t\t \n\t\t \n\t\t\t S Jenkins \n\t\t \n\t\t \n\t\t\t K Hill \n\t\t \n\t \n\t \n\t\t Chron. Respir. Dis \n\t\t \n\t\t\t 9 \n\t\t\t \n\t\t\t 2012 \n\t\t \n\t \n\t Ng, L.W.C.; Mackney, J.; Jenkins, S.; Hill, K. Does exercise training change physical activity in people with COPD? A systematic review and meta-analysis. Chron. Respir. Dis. 2012, 9, 17-26."
+    },
+    {
+      "title": "Effectiveness of interventions to promote physical activity and/or decrease sedentary behaviour among rural adults: A systematic review and meta-analysis",
+      "authors": [
+        "V Cleland",
+        "K Squibb",
+        "L Stephens",
+        "J Dalby",
+        "A Timperio",
+        "T Winzenberg",
+        "K Ball",
+        "J Dollman"
+      ],
+      "year": 2017,
+      "doi": "10.1111/obr.12533",
+      "journal": "Obes. Rev",
+      "volume": "18",
+      "raw": "Effectiveness of interventions to promote physical activity and/or decrease sedentary behaviour among rural adults: A systematic review and meta-analysis \n\t\t \n\t\t\t V Cleland \n\t\t \n\t\t \n\t\t\t K Squibb \n\t\t \n\t\t \n\t\t\t L Stephens \n\t\t \n\t\t \n\t\t\t J Dalby \n\t\t \n\t\t \n\t\t\t A Timperio \n\t\t \n\t\t \n\t\t\t T Winzenberg \n\t\t \n\t\t \n\t\t\t K Ball \n\t\t \n\t\t \n\t\t\t J Dollman \n\t\t \n\t\t 10.1111/obr.12533 \n\t \n\t \n\t\t Obes. Rev \n\t\t \n\t\t\t 18 \n\t\t\t \n\t\t\t 2017 \n\t\t \n\t \n\t Cleland, V.; Squibb, K.; Stephens, L.; Dalby, J.; Timperio, A.; Winzenberg, T.; Ball, K.; Dollman, J. Effectiveness of interventions to promote physical activity and/or decrease sedentary behaviour among rural adults: A systematic review and meta-analysis. Obes. Rev. 2017, 18, 727-741. [CrossRef] [PubMed]"
+    },
+    {
+      "title": "A comparison of the effectiveness of physical activity and sedentary behaviour interventions in reducing sedentary time in adults: A systematic review and meta-analysis of controlled trials",
+      "authors": [
+        "S Prince",
+        "T Saunders",
+        "K Gresty",
+        "R Reid"
+      ],
+      "year": 2014,
+      "doi": "10.1111/obr.12215",
+      "journal": "Obes. Rev",
+      "volume": "15",
+      "raw": "A comparison of the effectiveness of physical activity and sedentary behaviour interventions in reducing sedentary time in adults: A systematic review and meta-analysis of controlled trials \n\t\t \n\t\t\t S A Prince \n\t\t \n\t\t \n\t\t\t T J Saunders \n\t\t \n\t\t \n\t\t\t K Gresty \n\t\t \n\t\t \n\t\t\t R D Reid \n\t\t \n\t\t 10.1111/obr.12215 \n\t \n\t \n\t\t Obes. Rev \n\t\t \n\t\t\t 15 \n\t\t\t \n\t\t\t 2014 \n\t\t \n\t \n\t Prince, S.A.; Saunders, T.J.; Gresty, K.; Reid, R.D. A comparison of the effectiveness of physical activity and sedentary behaviour interventions in reducing sedentary time in adults: A systematic review and meta-analysis of controlled trials. Obes. Rev. 2014, 15, 905-919. [CrossRef] [PubMed]"
+    },
+    {
+      "title": "Effects of Exergaming on Physical Activity in Overweight Individuals",
+      "authors": [
+        "C H\u00f6chsmann",
+        "M Sch\u00fcpbach",
+        "A Schmidt-Trucks\u00e4ss"
+      ],
+      "year": 2016,
+      "doi": "10.1007/s40279-015-0455-z",
+      "journal": "Sports Med",
+      "volume": "46",
+      "raw": "Effects of Exergaming on Physical Activity in Overweight Individuals \n\t\t \n\t\t\t C H\u00f6chsmann \n\t\t \n\t\t \n\t\t\t M Sch\u00fcpbach \n\t\t \n\t\t \n\t\t\t A Schmidt-Trucks\u00e4ss \n\t\t \n\t\t 10.1007/s40279-015-0455-z \n\t \n\t \n\t\t Sports Med \n\t\t \n\t\t\t 46 \n\t\t\t \n\t\t\t 2016 \n\t\t \n\t \n\t H\u00f6chsmann, C.; Sch\u00fcpbach, M.; Schmidt-Trucks\u00e4ss, A. Effects of Exergaming on Physical Activity in Overweight Individuals. Sports Med. 2016, 46, 845-860. [CrossRef] [PubMed]"
+    },
+    {
+      "title": "The effect of interventions targeting screen time reduction: A systematic review and meta-analysis",
+      "authors": [
+        "L Wu",
+        "S Sun",
+        "Y He",
+        "B Jiang"
+      ],
+      "year": 2016,
+      "doi": "10.1097/MD.0000000000004029",
+      "journal": "Medicine",
+      "volume": "95",
+      "pages": "4029",
+      "raw": "The effect of interventions targeting screen time reduction: A systematic review and meta-analysis \n\t\t \n\t\t\t L Wu \n\t\t \n\t\t \n\t\t\t S Sun \n\t\t \n\t\t \n\t\t\t Y He \n\t\t \n\t\t \n\t\t\t B Jiang \n\t\t \n\t\t 10.1097/MD.0000000000004029 \n\t \n\t \n\t\t Medicine \n\t\t \n\t\t\t 95 \n\t\t\t 4029 \n\t\t\t 2016 \n\t\t\t Baltimore) \n\t\t \n\t \n\t Wu, L.; Sun, S.; He, Y.; Jiang, B. The effect of interventions targeting screen time reduction: A systematic review and meta-analysis. Medicine (Baltimore). 2016, 95, e4029. [CrossRef] [PubMed]"
+    },
+    {
+      "title": "Efficacy of interventions that use apps to improve diet, physical activity and sedentary behaviour: A systematic review",
+      "authors": [
+        "S Schoeppe",
+        "S Alley",
+        "W Van Lippevelde",
+        "N Bray",
+        "S Williams",
+        "M Duncan",
+        "C Vandelanotte"
+      ],
+      "year": 2016,
+      "doi": "10.1186/s12966-016-0454-y",
+      "journal": "Int. J. Behav. Nutr. Phys. Act",
+      "volume": "13",
+      "pages": "127",
+      "raw": "Efficacy of interventions that use apps to improve diet, physical activity and sedentary behaviour: A systematic review \n\t\t \n\t\t\t S Schoeppe \n\t\t \n\t\t \n\t\t\t S Alley \n\t\t \n\t\t \n\t\t\t W Van Lippevelde \n\t\t \n\t\t \n\t\t\t N A Bray \n\t\t \n\t\t \n\t\t\t S L Williams \n\t\t \n\t\t \n\t\t\t M J Duncan \n\t\t \n\t\t \n\t\t\t C Vandelanotte \n\t\t \n\t\t 10.1186/s12966-016-0454-y \n\t \n\t \n\t\t Int. J. Behav. Nutr. Phys. Act \n\t\t \n\t\t\t 13 \n\t\t\t 127 \n\t\t\t 2016 \n\t\t \n\t \n\t Schoeppe, S.; Alley, S.; van Lippevelde, W.; Bray, N.A.; Williams, S.L.; Duncan, M.J.; Vandelanotte, C. Efficacy of interventions that use apps to improve diet, physical activity and sedentary behaviour: A systematic review. Int. J. Behav. Nutr. Phys. Act. 2016, 13, 127. [CrossRef] [PubMed]"
+    },
+    {
+      "title": "Web-Based Interventions Targeting Cardiovascular Risk Factors in Middle-Aged and Older People: A Systematic Review and Meta-Analysis",
+      "authors": [
+        "C Beishuizen",
+        "B Stephan",
+        "W Van Gool",
+        "C Brayne",
+        "R Peters",
+        "S Andrieu",
+        "M Kivipelto",
+        "H Soininen",
+        "W Busschers",
+        "E Van Charante"
+      ],
+      "year": 2016,
+      "doi": "10.2196/jmir.5218",
+      "journal": "J. Med. Internet Res",
+      "volume": "18",
+      "pages": "55",
+      "raw": "Web-Based Interventions Targeting Cardiovascular Risk Factors in Middle-Aged and Older People: A Systematic Review and Meta-Analysis \n\t\t \n\t\t\t C R L Beishuizen \n\t\t \n\t\t \n\t\t\t B C M Stephan \n\t\t \n\t\t \n\t\t\t W A Van Gool \n\t\t \n\t\t \n\t\t\t C Brayne \n\t\t \n\t\t \n\t\t\t R J G Peters \n\t\t \n\t\t \n\t\t\t S Andrieu \n\t\t \n\t\t \n\t\t\t M Kivipelto \n\t\t \n\t\t \n\t\t\t H Soininen \n\t\t \n\t\t \n\t\t\t W B Busschers \n\t\t \n\t\t \n\t\t\t E P M Van Charante \n\t\t \n\t\t 10.2196/jmir.5218 \n\t \n\t \n\t\t J. Med. Internet Res \n\t\t \n\t\t\t 18 \n\t\t\t 55 \n\t\t\t 2016 \n\t\t \n\t \n\t Beishuizen, C.R.L.; Stephan, B.C.M.; van Gool, W.A.; Brayne, C.; Peters, R.J.G.; Andrieu, S.; Kivipelto, M.; Soininen, H.; Busschers, W.B.; van Charante, E.P.M.; et al. Web-Based Interventions Targeting Cardiovascular Risk Factors in Middle-Aged and Older People: A Systematic Review and Meta-Analysis. J. Med. Internet Res. 2016, 18, e55."
+    },
+    {
+      "title": "Workplace interventions for reducing sitting at work (Review)",
+      "authors": [
+        "N Shrestha",
+        "K Kt",
+        "V Jh",
+        "S Ijaz",
+        "V Hermans",
+        "S Bhaumik"
+      ],
+      "year": 2016,
+      "doi": "10.1002/14651858.cd010912.pub3",
+      "journal": "Cochrane Database Syst. Rev",
+      "volume": "14",
+      "pages": "105",
+      "raw": "Workplace interventions for reducing sitting at work (Review) \n\t\t \n\t\t\t N Shrestha \n\t\t \n\t\t \n\t\t\t K Kt \n\t\t \n\t\t \n\t\t\t V Jh \n\t\t \n\t\t \n\t\t\t S Ijaz \n\t\t \n\t\t \n\t\t\t V Hermans \n\t\t \n\t\t \n\t\t\t S Bhaumik \n\t\t \n\t\t 10.1002/14651858.cd010912.pub3 \n\t \n\t \n\t\t Cochrane Database Syst. Rev \n\t\t \n\t\t\t 14 \n\t\t\t 105 \n\t\t\t 2016 \n\t\t \n\t \n\t Shrestha, N.; Kt, K.; Jh, V.; Ijaz, S.; Hermans, V.; Bhaumik, S. Workplace interventions for reducing sitting at work (Review). Cochrane Database Syst. Rev. 2016, 14, 105."
+    },
+    {
+      "title": "Interventions to reduce sedentary behavior and increase physical activity during productive work: A systematic review",
+      "authors": [
+        "D Commissaris",
+        "M Huysmans",
+        "S Mathiassen",
+        "D Srinivasan",
+        "L Koppes",
+        "I Hendriksen"
+      ],
+      "year": 2016,
+      "doi": "10.5271/sjweh.3544",
+      "journal": "Scand. J. Work. Environ. Health",
+      "volume": "42",
+      "raw": "Interventions to reduce sedentary behavior and increase physical activity during productive work: A systematic review \n\t\t \n\t\t\t D A Commissaris \n\t\t \n\t\t \n\t\t\t M A Huysmans \n\t\t \n\t\t \n\t\t\t S E Mathiassen \n\t\t \n\t\t \n\t\t\t D Srinivasan \n\t\t \n\t\t \n\t\t\t L L Koppes \n\t\t \n\t\t \n\t\t\t I J Hendriksen \n\t\t \n\t\t 10.5271/sjweh.3544 \n\t \n\t \n\t\t Scand. J. Work. Environ. Health \n\t\t \n\t\t\t 42 \n\t\t\t \n\t\t\t 2016 \n\t\t \n\t \n\t Commissaris, D.A.; Huysmans, M.A.; Mathiassen, S.E.; Srinivasan, D.; Koppes, L.L.; Hendriksen, I.J. Interventions to reduce sedentary behavior and increase physical activity during productive work: A systematic review. Scand. J. Work. Environ. Health 2016, 42, 181-191. [CrossRef] [PubMed]"
+    },
+    {
+      "title": "Behavior Change Techniques Present in Wearable Activity Trackers: A Critical Analysis",
+      "authors": [
+        "K Mercer",
+        "M Li",
+        "L Giangregorio",
+        "C Burns",
+        "K Grindrod"
+      ],
+      "year": 2016,
+      "doi": "10.2196/mhealth.4461",
+      "journal": "JMIR mHealth uHealth",
+      "volume": "4",
+      "raw": "Behavior Change Techniques Present in Wearable Activity Trackers: A Critical Analysis \n\t\t \n\t\t\t K Mercer \n\t\t \n\t\t \n\t\t\t M Li \n\t\t \n\t\t \n\t\t\t L Giangregorio \n\t\t \n\t\t \n\t\t\t C Burns \n\t\t \n\t\t \n\t\t\t K Grindrod \n\t\t \n\t\t 10.2196/mhealth.4461 \n\t \n\t \n\t\t JMIR mHealth uHealth \n\t\t \n\t\t\t 4 \n\t\t\t 2016 \n\t\t \n\t \n\t Mercer, K.; Li, M.; Giangregorio, L.; Burns, C.; Grindrod, K. Behavior Change Techniques Present in Wearable Activity Trackers: A Critical Analysis. JMIR mHealth uHealth 2016, 4, e40. [CrossRef] [PubMed]"
+    },
+    {
+      "title": "Activity Trackers Implement Different Behavior Change Techniques for Activity, Sleep, and Sedentary Behaviors",
+      "authors": [
+        "M Duncan",
+        "B Murawski",
+        "C Short",
+        "A Rebar",
+        "S Schoeppe",
+        "S Alley",
+        "C Vandelanotte",
+        "M Kirwan"
+      ],
+      "year": 2017,
+      "doi": "10.2196/ijmr.6685",
+      "journal": "Interact. J. Med. Res",
+      "volume": "6",
+      "raw": "Activity Trackers Implement Different Behavior Change Techniques for Activity, Sleep, and Sedentary Behaviors \n\t\t \n\t\t\t M Duncan \n\t\t \n\t\t \n\t\t\t B Murawski \n\t\t \n\t\t \n\t\t\t C E Short \n\t\t \n\t\t \n\t\t\t A L Rebar \n\t\t \n\t\t \n\t\t\t S Schoeppe \n\t\t \n\t\t \n\t\t\t S Alley \n\t\t \n\t\t \n\t\t\t C Vandelanotte \n\t\t \n\t\t \n\t\t\t M Kirwan \n\t\t \n\t\t 10.2196/ijmr.6685 \n\t \n\t \n\t\t Interact. J. Med. Res \n\t\t \n\t\t\t 6 \n\t\t\t 2017 \n\t\t \n\t \n\t Duncan, M.; Murawski, B.; Short, C.E.; Rebar, A.L.; Schoeppe, S.; Alley, S.; Vandelanotte, C.; Kirwan, M. Activity Trackers Implement Different Behavior Change Techniques for Activity, Sleep, and Sedentary Behaviors. Interact. J. Med. Res. 2017, 6, e13. [CrossRef] [PubMed]"
+    },
+    {
+      "title": "Step Counter Use and Sedentary Time in Adults: A Meta-Analysis",
+      "authors": [
+        "S Qiu",
+        "X Cai",
+        "C Ju",
+        "Z Sun",
+        "H Yin",
+        "M Z\u00fcgel",
+        "S Otto",
+        "J Steinacker",
+        "U Schumann"
+      ],
+      "year": 2015,
+      "doi": "10.1097/MD.0000000000001412",
+      "journal": "Medicine",
+      "volume": "94",
+      "pages": "1412",
+      "raw": "Step Counter Use and Sedentary Time in Adults: A Meta-Analysis \n\t\t \n\t\t\t S Qiu \n\t\t \n\t\t \n\t\t\t X Cai \n\t\t \n\t\t \n\t\t\t C Ju \n\t\t \n\t\t \n\t\t\t Z Sun \n\t\t \n\t\t \n\t\t\t H Yin \n\t\t \n\t\t \n\t\t\t M Z\u00fcgel \n\t\t \n\t\t \n\t\t\t S Otto \n\t\t \n\t\t \n\t\t\t J M Steinacker \n\t\t \n\t\t \n\t\t\t U Schumann \n\t\t \n\t\t 10.1097/MD.0000000000001412 \n\t \n\t \n\t\t Medicine \n\t\t \n\t\t\t 94 \n\t\t\t 1412 \n\t\t\t 2015 \n\t\t\t Baltimore \n\t\t \n\t \n\t Qiu, S.; Cai, X.; Ju, C.; Sun, Z.; Yin, H.; Z\u00fcgel, M.; Otto, S.; Steinacker, J.M.; Schumann, U. Step Counter Use and Sedentary Time in Adults: A Meta-Analysis. Medicine (Baltimore) 2015, 94, e1412. [CrossRef] [PubMed]"
+    },
+    {
+      "title": "Using computer, mobile and wearable technology enhanced interventions to reduce sedentary behaviour: A systematic review and meta-analysis",
+      "authors": [
+        "A Stephenson",
+        "S Mcdonough",
+        "M Murphy",
+        "C Nugent",
+        "J Mair"
+      ],
+      "year": 2017,
+      "doi": "10.1186/s12966-017-0561-4",
+      "journal": "Int. J. Behav. Nutr. Phys. Act",
+      "volume": "14",
+      "pages": "105",
+      "raw": "Using computer, mobile and wearable technology enhanced interventions to reduce sedentary behaviour: A systematic review and meta-analysis \n\t\t \n\t\t\t A Stephenson \n\t\t \n\t\t \n\t\t\t S M Mcdonough \n\t\t \n\t\t \n\t\t\t M H Murphy \n\t\t \n\t\t \n\t\t\t C D Nugent \n\t\t \n\t\t \n\t\t\t J L Mair \n\t\t \n\t\t 10.1186/s12966-017-0561-4 \n\t \n\t \n\t\t Int. J. Behav. Nutr. Phys. Act \n\t\t \n\t\t\t 14 \n\t\t\t 105 \n\t\t\t 2017 \n\t\t \n\t \n\t Stephenson, A.; McDonough, S.M.; Murphy, M.H.; Nugent, C.D.; Mair, J.L. Using computer, mobile and wearable technology enhanced interventions to reduce sedentary behaviour: A systematic review and meta-analysis. Int. J. Behav. Nutr. Phys. Act. 2017, 14, 105. [CrossRef] [PubMed]"
+    },
+    {
+      "title": "Do activity monitors increase physical activity in adults with overweight or obesity? A systematic review and meta-analysis",
+      "authors": [
+        "H De Vries",
+        "T Kooiman",
+        "M Van Ittersum",
+        "M Van Brussel",
+        "M De Groot"
+      ],
+      "year": 2016,
+      "doi": "10.1002/oby.21619",
+      "journal": "Obesity",
+      "volume": "24",
+      "raw": "Do activity monitors increase physical activity in adults with overweight or obesity? A systematic review and meta-analysis \n\t\t \n\t\t\t H J De Vries \n\t\t \n\t\t \n\t\t\t T J M Kooiman \n\t\t \n\t\t \n\t\t\t M W Van Ittersum \n\t\t \n\t\t \n\t\t\t M Van Brussel \n\t\t \n\t\t \n\t\t\t M De Groot \n\t\t \n\t\t 10.1002/oby.21619 \n\t \n\t \n\t\t Obesity \n\t\t \n\t\t\t 24 \n\t\t\t \n\t\t\t 2016 \n\t\t \n\t \n\t de Vries, H.J.; Kooiman, T.J.M.; van Ittersum, M.W.; van Brussel, M.; de Groot, M. Do activity monitors increase physical activity in adults with overweight or obesity? A systematic review and meta-analysis. Obesity 2016, 24, 2078-2091. [PubMed]"
+    },
+    {
+      "title": "A Community-Based Physical Activity Counselling Program for People With Knee Osteoarthritis: Feasibility and Preliminary Efficacy of the Track-OA Study",
+      "authors": [
+        "L Li",
+        "E Sayre",
+        "H Xie",
+        "C Clayton",
+        "L Feehan"
+      ],
+      "year": 2017,
+      "doi": "10.2196/mhealth.7863",
+      "journal": "JMIR mHealth uHealth",
+      "volume": "5",
+      "raw": "A Community-Based Physical Activity Counselling Program for People With Knee Osteoarthritis: Feasibility and Preliminary Efficacy of the Track-OA Study \n\t\t \n\t\t\t L C Li \n\t\t \n\t\t \n\t\t\t E C Sayre \n\t\t \n\t\t \n\t\t\t H Xie \n\t\t \n\t\t \n\t\t\t C Clayton \n\t\t \n\t\t \n\t\t\t L M Feehan \n\t\t \n\t\t 10.2196/mhealth.7863 \n\t \n\t \n\t\t JMIR mHealth uHealth \n\t\t \n\t\t\t 5 \n\t\t\t 2017 \n\t\t \n\t \n\t Li, L.C.; Sayre, E.C.; Xie, H.; Clayton, C.; Feehan, L.M. A Community-Based Physical Activity Counselling Program for People With Knee Osteoarthritis: Feasibility and Preliminary Efficacy of the Track-OA Study. JMIR mHealth uHealth 2017, 5, e86. [CrossRef] [PubMed]"
+    },
+    {
+      "title": "Exercise Therapy for Management of Type 2 Diabetes Mellitus: Superior Efficacy of Activity Monitors over Pedometers",
+      "authors": [
+        "M Miyauchi",
+        "M Toyoda",
+        "N Kaneyama",
+        "H Miyatake",
+        "E Tanaka",
+        "M Kimura",
+        "T Umezono",
+        "M Fukagawa"
+      ],
+      "year": 2016,
+      "doi": "10.1155/2016/5043964",
+      "journal": "J. Diabetes Res",
+      "raw": "Exercise Therapy for Management of Type 2 Diabetes Mellitus: Superior Efficacy of Activity Monitors over Pedometers \n\t\t \n\t\t\t M Miyauchi \n\t\t \n\t\t \n\t\t\t M Toyoda \n\t\t \n\t\t \n\t\t\t N Kaneyama \n\t\t \n\t\t \n\t\t\t H Miyatake \n\t\t \n\t\t \n\t\t\t E Tanaka \n\t\t \n\t\t \n\t\t\t M Kimura \n\t\t \n\t\t \n\t\t\t T Umezono \n\t\t \n\t\t \n\t\t\t M Fukagawa \n\t\t \n\t\t 10.1155/2016/5043964 \n\t \n\t \n\t\t J. Diabetes Res \n\t\t \n\t\t\t \n\t\t\t 2016. 2016 \n\t\t \n\t \n\t Miyauchi, M.; Toyoda, M.; Kaneyama, N.; Miyatake, H.; Tanaka, E.; Kimura, M.; Umezono, T.; Fukagawa, M. Exercise Therapy for Management of Type 2 Diabetes Mellitus: Superior Efficacy of Activity Monitors over Pedometers. J. Diabetes Res. 2016, 2016, 1-7. [CrossRef] [PubMed]"
+    },
+    {
+      "title": "Randomized Trial of a Fitbit-Based Physical Activity Intervention for Women",
+      "authors": [
+        "L Cadmus-Bertram",
+        "B Marcus",
+        "R Patterson",
+        "B Parker",
+        "B Morey"
+      ],
+      "year": 2015,
+      "doi": "10.1016/j.amepre.2015.01.020",
+      "journal": "Am. J. Prev. Med",
+      "volume": "49",
+      "raw": "Randomized Trial of a Fitbit-Based Physical Activity Intervention for Women \n\t\t \n\t\t\t L A Cadmus-Bertram \n\t\t \n\t\t \n\t\t\t B H Marcus \n\t\t \n\t\t \n\t\t\t R E Patterson \n\t\t \n\t\t \n\t\t\t B A Parker \n\t\t \n\t\t \n\t\t\t B L Morey \n\t\t \n\t\t 10.1016/j.amepre.2015.01.020 \n\t \n\t \n\t\t Am. J. Prev. Med \n\t\t \n\t\t\t 49 \n\t\t\t \n\t\t\t 2015 \n\t\t \n\t \n\t Cadmus-Bertram, L.A.; Marcus, B.H.; Patterson, R.E.; Parker, B.A.; Morey, B.L. Randomized Trial of a Fitbit-Based Physical Activity Intervention for Women. Am. J. Prev. Med. 2015, 49, 414-418. [CrossRef] [PubMed]"
+    },
+    {
+      "title": "Investigating the effect of a 3-month workplace-based pedometer-driven walking programme on health-related quality of life in meat processing workers: a feasibility study within a randomized controlled trial",
+      "authors": [
+        "S Mansi",
+        "S Milosavljevic",
+        "S Tumilty",
+        "P Hendrick",
+        "C Higgs",
+        "D Baxter"
+      ],
+      "year": 2015,
+      "doi": "10.1186/s12889-015-1736-z",
+      "journal": "BMC Public Health",
+      "volume": "15",
+      "pages": "410",
+      "raw": "Investigating the effect of a 3-month workplace-based pedometer-driven walking programme on health-related quality of life in meat processing workers: a feasibility study within a randomized controlled trial \n\t\t \n\t\t\t S Mansi \n\t\t \n\t\t \n\t\t\t S Milosavljevic \n\t\t \n\t\t \n\t\t\t S Tumilty \n\t\t \n\t\t \n\t\t\t P Hendrick \n\t\t \n\t\t \n\t\t\t C Higgs \n\t\t \n\t\t \n\t\t\t D G Baxter \n\t\t \n\t\t 10.1186/s12889-015-1736-z \n\t \n\t \n\t\t BMC Public Health \n\t\t \n\t\t\t 15 \n\t\t\t 410 \n\t\t\t 2015 \n\t\t \n\t \n\t Mansi, S.; Milosavljevic, S.; Tumilty, S.; Hendrick, P.; Higgs, C.; Baxter, D.G. Investigating the effect of a 3-month workplace-based pedometer-driven walking programme on health-related quality of life in meat processing workers: a feasibility study within a randomized controlled trial. BMC Public Health 2015, 15, 410. [CrossRef] [PubMed]"
+    },
+    {
+      "title": "Using an electronic activity monitor system as an intervention modality: A systematic review",
+      "authors": [
+        "Z Lewis",
+        "E Lyons",
+        "J Jarvis",
+        "J Baillargeon"
+      ],
+      "year": 2015,
+      "doi": "10.1186/s12889-015-1947-3",
+      "journal": "BMC Public Health",
+      "volume": "15",
+      "pages": "585",
+      "raw": "Using an electronic activity monitor system as an intervention modality: A systematic review \n\t\t \n\t\t\t Z H Lewis \n\t\t \n\t\t \n\t\t\t E J Lyons \n\t\t \n\t\t \n\t\t\t J M Jarvis \n\t\t \n\t\t \n\t\t\t J Baillargeon \n\t\t \n\t\t 10.1186/s12889-015-1947-3 \n\t \n\t \n\t\t BMC Public Health \n\t\t \n\t\t\t 15 \n\t\t\t 585 \n\t\t\t 2015 \n\t\t \n\t \n\t Lewis, Z.H.; Lyons, E.J.; Jarvis, J.M.; Baillargeon, J. Using an electronic activity monitor system as an intervention modality: A systematic review. BMC Public Health 2015, 15, 585. [CrossRef] [PubMed]"
+    },
+    {
+      "title": "Workplace pedometer interventions for increasing physical activity (Review)",
+      "authors": [
+        "R Freak-Poli",
+        "M Cumpston",
+        "A Peeters",
+        "S Clemes"
+      ],
+      "year": 2013,
+      "doi": "10.1002/14651858.cd009209",
+      "journal": "Cochrane Database Syst. Rev",
+      "volume": "4",
+      "pages": "9209",
+      "raw": "Workplace pedometer interventions for increasing physical activity (Review) \n\t\t \n\t\t\t R Freak-Poli \n\t\t \n\t\t \n\t\t\t M Cumpston \n\t\t \n\t\t \n\t\t\t A Peeters \n\t\t \n\t\t \n\t\t\t S Clemes \n\t\t \n\t\t 10.1002/14651858.cd009209 \n\t \n\t \n\t\t Cochrane Database Syst. Rev \n\t\t \n\t\t\t 4 \n\t\t\t 9209 \n\t\t\t 2013 \n\t\t \n\t \n\t Freak-poli, R.; Cumpston, M.; Peeters, A.; Clemes, S. Workplace pedometer interventions for increasing physical activity (Review). Cochrane Database Syst. Rev. 2013, 4, CD009209."
+    },
+    {
+      "title": "Effectiveness of a web-based, computer-tailored, pedometer-based physical activity intervention for adults: a cluster randomized controlled trial",
+      "authors": [
+        "S Compernolle",
+        "C Vandelanotte",
+        "G Cardon",
+        "I De Bourdeaudhuij",
+        "K De Cocker"
+      ],
+      "year": 2015,
+      "doi": "10.2196/jmir.3402",
+      "journal": "J. Med. Internet Res",
+      "volume": "17",
+      "pages": "38",
+      "raw": "Effectiveness of a web-based, computer-tailored, pedometer-based physical activity intervention for adults: a cluster randomized controlled trial \n\t\t \n\t\t\t S Compernolle \n\t\t \n\t\t \n\t\t\t C Vandelanotte \n\t\t \n\t\t \n\t\t\t G Cardon \n\t\t \n\t\t \n\t\t\t I De Bourdeaudhuij \n\t\t \n\t\t \n\t\t\t K De Cocker \n\t\t \n\t\t 10.2196/jmir.3402 \n\t \n\t \n\t\t J. Med. Internet Res \n\t\t \n\t\t\t 17 \n\t\t\t 38 \n\t\t\t 2015 \n\t\t \n\t \n\t Compernolle, S.; Vandelanotte, C.; Cardon, G.; de Bourdeaudhuij, I.; de Cocker, K. Effectiveness of a web-based, computer-tailored, pedometer-based physical activity intervention for adults: a cluster randomized controlled trial. J. Med. Internet Res. 2015, 17, e38. [CrossRef] [PubMed]"
+    },
+    {
+      "title": "Feasibility and Effectiveness of Online Physical Activity Advice Based on a Personal Activity Monitor: Randomized Controlled Trial",
+      "authors": [
+        "S Slootmaker",
+        "M Chinapaw",
+        "A Schuit",
+        "J Seidell",
+        "W Van Mechelen"
+      ],
+      "year": 2009,
+      "doi": "10.2196/jmir.1139",
+      "journal": "J. Med. Internet Res",
+      "volume": "11",
+      "pages": "27",
+      "raw": "Feasibility and Effectiveness of Online Physical Activity Advice Based on a Personal Activity Monitor: Randomized Controlled Trial \n\t\t \n\t\t\t S M Slootmaker \n\t\t \n\t\t \n\t\t\t M J M Chinapaw \n\t\t \n\t\t \n\t\t\t A J Schuit \n\t\t \n\t\t \n\t\t\t J C Seidell \n\t\t \n\t\t \n\t\t\t W Van Mechelen \n\t\t \n\t\t 10.2196/jmir.1139 \n\t \n\t \n\t\t J. Med. Internet Res \n\t\t \n\t\t\t 11 \n\t\t\t 27 \n\t\t\t 2009 \n\t\t \n\t \n\t Slootmaker, S.M.; Chinapaw, M.J.M.; Schuit, A.J.; Seidell, J.C.; van Mechelen, W. Feasibility and Effectiveness of Online Physical Activity Advice Based on a Personal Activity Monitor: Randomized Controlled Trial. J. Med. Internet Res. 2009, 11, e27. [CrossRef] [PubMed]"
+    },
+    {
+      "title": "Effectiveness of an Activity Tracker-and Internet-Based Adaptive Walking Program for Adults: A Randomized Controlled Trial",
+      "authors": [
+        "J Poirier",
+        "W Bennett",
+        "G Jerome",
+        "N Shah",
+        "M Lazo",
+        "H.-C Yeh",
+        "J Clark",
+        "N Cobb"
+      ],
+      "year": 2016,
+      "doi": "10.2196/jmir.5295",
+      "journal": "J. Med. Internet Res",
+      "volume": "18",
+      "pages": "34",
+      "raw": "Effectiveness of an Activity Tracker-and Internet-Based Adaptive Walking Program for Adults: A Randomized Controlled Trial \n\t\t \n\t\t\t J Poirier \n\t\t \n\t\t \n\t\t\t W L Bennett \n\t\t \n\t\t \n\t\t\t G J Jerome \n\t\t \n\t\t \n\t\t\t N G Shah \n\t\t \n\t\t \n\t\t\t M Lazo \n\t\t \n\t\t \n\t\t\t H.-C Yeh \n\t\t \n\t\t \n\t\t\t J M Clark \n\t\t \n\t\t \n\t\t\t N K Cobb \n\t\t \n\t\t 10.2196/jmir.5295 \n\t \n\t \n\t\t J. Med. Internet Res \n\t\t \n\t\t\t 18 \n\t\t\t 34 \n\t\t\t 2016 \n\t\t \n\t \n\t Poirier, J.; Bennett, W.L.; Jerome, G.J.; Shah, N.G.; Lazo, M.; Yeh, H.-C.; Clark, J.M.; Cobb, N.K. Effectiveness of an Activity Tracker-and Internet-Based Adaptive Walking Program for Adults: A Randomized Controlled Trial. J. Med. Internet Res. 2016, 18, e34."
+    },
+    {
+      "title": "Effectiveness of activity trackers with and without incentives to increase physical activity (TRIPPA): A randomised controlled trial",
+      "authors": [
+        "E Finkelstein",
+        "B Haaland",
+        "M Bilger",
+        "A Sahasranaman",
+        "R Sloan",
+        "E Nang",
+        "K Evenson"
+      ],
+      "year": 2016,
+      "doi": "10.1016/s2213-8587(16)30284-4",
+      "journal": "Lancet Diabetes Endocrinol",
+      "volume": "4",
+      "raw": "Effectiveness of activity trackers with and without incentives to increase physical activity (TRIPPA): A randomised controlled trial \n\t\t \n\t\t\t E A Finkelstein \n\t\t \n\t\t \n\t\t\t B A Haaland \n\t\t \n\t\t \n\t\t\t M Bilger \n\t\t \n\t\t \n\t\t\t A Sahasranaman \n\t\t \n\t\t \n\t\t\t R A Sloan \n\t\t \n\t\t \n\t\t\t E E K Nang \n\t\t \n\t\t \n\t\t\t K R Evenson \n\t\t \n\t\t 10.1016/s2213-8587(16)30284-4 \n\t \n\t \n\t\t Lancet Diabetes Endocrinol \n\t\t \n\t\t\t 4 \n\t\t\t \n\t\t\t 2016 \n\t\t \n\t \n\t Finkelstein, E.A.; Haaland, B.A.; Bilger, M.; Sahasranaman, A.; Sloan, R.A.; Nang, E.E.K.; Evenson, K.R. Effectiveness of activity trackers with and without incentives to increase physical activity (TRIPPA): A randomised controlled trial. Lancet Diabetes Endocrinol. 2016, 4, 983-995. [CrossRef]"
+    },
+    {
+      "title": "n'Steps: Encouraging Physical Activity with an Interactive Computer Game",
+      "authors": [
+        "L Mamykina",
+        "S Lindtner",
+        "J Lin",
+        "L Mamykina",
+        "S Lindtner",
+        "G Delajoux",
+        "H Strub"
+      ],
+      "year": 2006,
+      "pages": "4206",
+      "raw": "n'Steps: Encouraging Physical Activity with an Interactive Computer Game \n\t\t \n\t\t\t L Mamykina \n\t\t \n\t\t \n\t\t\t S Lindtner \n\t\t \n\t\t \n\t\t\t J J Lin \n\t\t \n\t\t \n\t\t\t L Mamykina \n\t\t \n\t\t \n\t\t\t S Lindtner \n\t\t \n\t\t \n\t\t\t G Delajoux \n\t\t \n\t\t \n\t\t\t H B Strub \n\t\t \n\t\t \n\t\t\t Fish \n\t\t \n\t \n\t \n\t\t Ubicomp 2006: Ubiquitous Computing \n\t\t Berlin/Heidelberg, Germany \n\t\t \n\t\t\t Springer-Verlag \n\t\t\t 2006 \n\t\t\t 4206 \n\t\t \n\t \n\t Mamykina, L.; Lindtner, S.; Lin, J.J.; Mamykina, L.; Lindtner, S.; Delajoux, G.; Strub, H.B. Fish'n'Steps: Encouraging Physical Activity with an Interactive Computer Game. In Ubicomp 2006: Ubiquitous Computing; Springer-Verlag: Berlin/Heidelberg, Germany, 2006; Volume 4206."
+    },
+    {
+      "title": "Encouraging physical activity in teens. Can technology help reduce barriers to physical activity in adolescent girls? In Pervasive Computing Technologies for Healthcare",
+      "authors": [
+        "T Toscos",
+        "A Faber",
+        "K Connelly",
+        "A Upoma"
+      ],
+      "year": 2008,
+      "volume": "3",
+      "raw": "Encouraging physical activity in teens. Can technology help reduce barriers to physical activity in adolescent girls? In Pervasive Computing Technologies for Healthcare \n\t\t \n\t\t\t T Toscos \n\t\t \n\t\t \n\t\t\t A Faber \n\t\t \n\t\t \n\t\t\t K Connelly \n\t\t \n\t\t \n\t\t\t A M Upoma \n\t\t \n\t\t \n\t\t\t 2008. 2008 \n\t\t\t IEEE \n\t\t\t 3 \n\t\t\t \n\t\t\t Tampere, Finland \n\t\t \n\t \n\t Toscos, T.; Faber, A.; Connelly, K.; Upoma, A.M. Encouraging physical activity in teens. Can technology help reduce barriers to physical activity in adolescent girls? In Pervasive Computing Technologies for Healthcare, 2008; IEEE: Tampere, Finland, 2008; Volume 3, pp. 218-221."
+    },
+    {
+      "title": "Recognizing human daily activities from accelerometer signal",
+      "authors": [
+        "J Wang",
+        "R Chen",
+        "X Sun",
+        "M She",
+        "Y Wu"
+      ],
+      "year": 2011,
+      "doi": "10.1016/j.proeng.2011.08.331",
+      "journal": "Procedia Eng",
+      "volume": "15",
+      "raw": "Recognizing human daily activities from accelerometer signal \n\t\t \n\t\t\t J Wang \n\t\t \n\t\t \n\t\t\t R Chen \n\t\t \n\t\t \n\t\t\t X Sun \n\t\t \n\t\t \n\t\t\t M F H She \n\t\t \n\t\t \n\t\t\t Y Wu \n\t\t \n\t\t 10.1016/j.proeng.2011.08.331 \n\t \n\t \n\t\t Procedia Eng \n\t\t \n\t\t\t 15 \n\t\t\t \n\t\t\t 2011 \n\t\t \n\t \n\t Wang, J.; Chen, R.; Sun, X.; She, M.F.H.; Wu, Y. Recognizing human daily activities from accelerometer signal. Procedia Eng. 2011, 15, 1780-1786. [CrossRef]"
+    },
+    {
+      "title": "Digital Health: Tracking Physiomes and Activity Using Wearable Biosensors Reveals Useful Health-Related Information",
+      "authors": [
+        "X Li",
+        "J Dunn",
+        "D Salins",
+        "G Zhou",
+        "W Zhou",
+        "S Rose",
+        "D Perelman",
+        "E Colbert",
+        "R Runge",
+        "S Rego"
+      ],
+      "year": 2017,
+      "doi": "10.1371/journal.pbio.2001402",
+      "journal": "PLoS Biol",
+      "volume": "15",
+      "pages": "2001402",
+      "raw": "Digital Health: Tracking Physiomes and Activity Using Wearable Biosensors Reveals Useful Health-Related Information \n\t\t \n\t\t\t X Li \n\t\t \n\t\t \n\t\t\t J Dunn \n\t\t \n\t\t \n\t\t\t D Salins \n\t\t \n\t\t \n\t\t\t G Zhou \n\t\t \n\t\t \n\t\t\t W Zhou \n\t\t \n\t\t \n\t\t\t S M S Rose \n\t\t \n\t\t \n\t\t\t D Perelman \n\t\t \n\t\t \n\t\t\t E Colbert \n\t\t \n\t\t \n\t\t\t R Runge \n\t\t \n\t\t \n\t\t\t S Rego \n\t\t \n\t\t 10.1371/journal.pbio.2001402 \n\t \n\t \n\t\t PLoS Biol \n\t\t \n\t\t\t 15 \n\t\t\t 2001402 \n\t\t\t 2017 \n\t\t \n\t \n\t Li, X.; Dunn, J.; Salins, D.; Zhou, G.; Zhou, W.; Rose, S.M.S.; Perelman, D.; Colbert, E.; Runge, R.; Rego, S.; et al. Digital Health: Tracking Physiomes and Activity Using Wearable Biosensors Reveals Useful Health-Related Information. PLoS Biol. 2017, 15, e2001402. [CrossRef] [PubMed]"
+    },
+    {
+      "title": "On the use of ensemble of classifiers for accelerometer-based activity recognition",
+      "authors": [
+        "C Catal",
+        "S Tufekci",
+        "E Pirmit",
+        "G Kocabag"
+      ],
+      "year": 2015,
+      "doi": "10.1016/j.asoc.2015.01.025",
+      "journal": "Appl. Soft Comput. J",
+      "volume": "37",
+      "raw": "On the use of ensemble of classifiers for accelerometer-based activity recognition \n\t\t \n\t\t\t C Catal \n\t\t \n\t\t \n\t\t\t S Tufekci \n\t\t \n\t\t \n\t\t\t E Pirmit \n\t\t \n\t\t \n\t\t\t G Kocabag \n\t\t \n\t\t 10.1016/j.asoc.2015.01.025 \n\t \n\t \n\t\t Appl. Soft Comput. J \n\t\t \n\t\t\t 37 \n\t\t\t \n\t\t\t 2015 \n\t\t \n\t \n\t Catal, C.; Tufekci, S.; Pirmit, E.; Kocabag, G. On the use of ensemble of classifiers for accelerometer-based activity recognition. Appl. Soft Comput. J. 2015, 37, 1018-1022. [CrossRef]"
+    },
+    {
+      "title": "A data-driven approach to modeling physical fatigue in the workplace using wearable sensors",
+      "authors": [
+        "Z Maman",
+        "M Yazdi",
+        "L Cavuoto",
+        "F Megahed"
+      ],
+      "year": 2017,
+      "doi": "10.1016/j.apergo.2017.02.001",
+      "journal": "Appl. Ergon",
+      "volume": "65",
+      "raw": "A data-driven approach to modeling physical fatigue in the workplace using wearable sensors \n\t\t \n\t\t\t Z S Maman \n\t\t \n\t\t \n\t\t\t M A A Yazdi \n\t\t \n\t\t \n\t\t\t L A Cavuoto \n\t\t \n\t\t \n\t\t\t F M Megahed \n\t\t \n\t\t 10.1016/j.apergo.2017.02.001 \n\t \n\t \n\t\t Appl. Ergon \n\t\t \n\t\t\t 65 \n\t\t\t \n\t\t\t 2017 \n\t\t \n\t \n\t Maman, Z.S.; Yazdi, M.A.A.; Cavuoto, L.A.; Megahed, F.M. A data-driven approach to modeling physical fatigue in the workplace using wearable sensors. Appl. Ergon. 2017, 65, 515-529. [CrossRef] [PubMed]"
+    },
+    {
+      "title": "Evaluation of a personalized coaching system for physical activity: User appreciation and adherence",
+      "authors": [
+        "J Mollee",
+        "A Middelweerd",
+        "S Te Velde",
+        "M Klein"
+      ],
+      "year": 2017,
+      "doi": "10.1145/3154862.3154933",
+      "raw": "Evaluation of a personalized coaching system for physical activity: User appreciation and adherence \n\t\t \n\t\t\t J S Mollee \n\t\t \n\t\t \n\t\t\t A Middelweerd \n\t\t \n\t\t \n\t\t\t S J Te Velde \n\t\t \n\t\t \n\t\t\t M C A Klein \n\t\t \n\t\t 10.1145/3154862.3154933 \n\t \n\t \n\t\t Proceedings of ACM 11th EAI International Conference on Pervasive Computing Technologies for Healthcare \n\t\t ACM 11th EAI International Conference on Pervasive Computing Technologies for Healthcare Barcelona, Spain \n\t\t \n\t\t\t 23-26 May 2017 \n\t\t \n\t \n\t Mollee, J.S.; Middelweerd, A.; te Velde, S.J.; Klein, M.C.A. Evaluation of a personalized coaching system for physical activity: User appreciation and adherence. In Proceedings of ACM 11th EAI International Conference on Pervasive Computing Technologies for Healthcare, Barcelona, Spain, 23-26 May 2017."
+    },
+    {
+      "title": "Conceptualization of a Personalized eCoach for Wellness Promotion",
+      "authors": [
+        "M Gerdes",
+        "S Martinez",
+        "D Tjondronegoro"
+      ],
+      "year": 2017,
+      "doi": "10.1145/3154862.3154930",
+      "raw": "Conceptualization of a Personalized eCoach for Wellness Promotion \n\t\t \n\t\t\t M Gerdes \n\t\t \n\t\t \n\t\t\t S Martinez \n\t\t \n\t\t \n\t\t\t D Tjondronegoro \n\t\t \n\t\t 10.1145/3154862.3154930 \n\t \n\t \n\t\t Proceedings of ACM 11th EAI International Conference on Pervasive Computing \n\t\t ACM 11th EAI International Conference on Pervasive Computing Barcelona, Spain \n\t\t \n\t\t\t 23-26 May 2017 \n\t\t \n\t \n\t Gerdes, M.; Martinez, S.; Tjondronegoro, D. Conceptualization of a Personalized eCoach for Wellness Promotion. In Proceedings of ACM 11th EAI International Conference on Pervasive Computing, Barcelona, Spain, 23-26 May 2017."
+    },
+    {
+      "title": "Tailoring real-time physical activity coaching systems: A literature survey and model",
+      "authors": [
+        "H Den Akker",
+        "V Jones",
+        "H Hermens"
+      ],
+      "year": 2014,
+      "doi": "10.1007/s11257-014-9146-y",
+      "journal": "User Model. User-Adapt. Interact",
+      "volume": "24",
+      "raw": "Tailoring real-time physical activity coaching systems: A literature survey and model \n\t\t \n\t\t\t H O Den Akker \n\t\t \n\t\t \n\t\t\t V M Jones \n\t\t \n\t\t \n\t\t\t H J Hermens \n\t\t \n\t\t 10.1007/s11257-014-9146-y \n\t \n\t \n\t\t User Model. User-Adapt. Interact \n\t\t \n\t\t\t 24 \n\t\t\t \n\t\t\t 2014 \n\t\t \n\t \n\t den Akker, H.O.; Jones, V.M.; Hermens, H.J. Tailoring real-time physical activity coaching systems: A literature survey and model. User Model. User-Adapt. Interact. 2014, 24, 351-392. [CrossRef]"
+    },
+    {
+      "title": "Self-Tracking-Supported Health Promotion: A Randomized Trial among Dutch Employees",
+      "authors": [
+        "M Van",
+        "H Ittersum",
+        "M De Groot"
+      ],
+      "year": 2017,
+      "journal": "Eur. J. Public Heal",
+      "raw": "Self-Tracking-Supported Health Promotion: A Randomized Trial among Dutch Employees \n\t\t \n\t\t\t M W Van \n\t\t \n\t\t \n\t\t\t H K E O Ittersum \n\t\t \n\t\t \n\t\t\t M De Groot \n\t\t \n\t \n\t \n\t\t Eur. J. Public Heal \n\t\t \n\t\t\t 2017 \n\t\t \n\t \n\t in press \n\t van, M.W.; Ittersum, H.K.E.O.; de Groot, M. Self-Tracking-Supported Health Promotion: A Randomized Trial among Dutch Employees. Eur. J. Public Heal. 2017, in press."
+    },
+    {
+      "title": "The Lack of A Priori Distinctions Between Learning Algorithms",
+      "authors": [
+        "D Wolpert"
+      ],
+      "year": 1996,
+      "doi": "10.1162/neco.1996.8.7.1341",
+      "journal": "Neural Comput",
+      "volume": "8",
+      "raw": "The Lack of A Priori Distinctions Between Learning Algorithms \n\t\t \n\t\t\t D H Wolpert \n\t\t \n\t\t 10.1162/neco.1996.8.7.1341 \n\t \n\t \n\t\t Neural Comput \n\t\t \n\t\t\t 8 \n\t\t\t \n\t\t\t 1996 \n\t\t \n\t \n\t Wolpert, D.H. The Lack of A Priori Distinctions Between Learning Algorithms. Neural Comput. 1996, 8, 1341-1390. [CrossRef]"
+    },
+    {
+      "title": "Python Machine Learning",
+      "authors": [
+        "S Raschka",
+        "V Mirjalili"
+      ],
+      "year": 2015,
+      "raw": "Python Machine Learning \n\t\t \n\t\t\t S Raschka \n\t\t \n\t\t \n\t\t\t V Mirjalili \n\t\t \n\t\t \n\t\t\t 2015 \n\t\t\t Packt Publishing Ltd \n\t\t\t Birmingham, UK \n\t\t \n\t \n\t Raschka, S.; Mirjalili, V. Python Machine Learning; Packt Publishing Ltd.: Birmingham, UK, 2015."
+    },
+    {
+      "title": "Choosing the Right Estimator",
+      "authors": [
+        "Scikit Learn"
+      ],
+      "year": 2018,
+      "raw": "Scikit Learn \n\t\t \n\t\t \n\t\t Choosing the Right Estimator \n\t\t \n\t\t\t 15 February 2018 \n\t\t \n\t \n\t Scikit Learn, Choosing the Right Estimator. Available online: http://scikit-learn.org/stable/tutorial/ machine_learning_map/index.html (accessed on 15 February 2018)."
+    },
+    {
+      "title": "Machine Learning Algorithm Cheat Sheet for Microsoft Azure Machine Learning Studio",
+      "year": 2018,
+      "doi": "10.1142/9789811228155_0005",
+      "raw": "Machine Learning Algorithm Cheat Sheet for Microsoft Azure Machine Learning Studio \n\t\t 10.1142/9789811228155_0005 \n\t\t \n\t\t \n\t\t\t 15 February 2018 \n\t\t \n\t \n\t Machine Learning Algorithm Cheat Sheet for Microsoft Azure Machine Learning Studio. Available online: https: //docs.microsoft.com/en-us/azure/machine-learning/studio/algorithm-cheat-sheet (accessed on 15 February 2018)."
+    },
+    {
+      "year": 2018,
+      "doi": "10.26616/nioshhhe73164169",
+      "raw": "Anaconda \n\t\t \n\t\t 10.26616/nioshhhe73164169 \n\t\t \n\t\t \n\t\t\t 15 February 2018 \n\t\t \n\t \n\t Anaconda. Available online: www.anaconda.com (accessed on 15 February 2018)."
+    },
+    {
+      "title": "Jupyter Notebooks",
+      "year": 2018,
+      "doi": "10.25369/ll.v2i2.52",
+      "raw": "10.25369/ll.v2i2.52 \n\t\t \n\t\t Jupyter Notebooks \n\t\t \n\t\t\t 15 February 2018 \n\t\t \n\t \n\t Jupyter Notebooks. Available online: https://jupyter.org (accessed on 15 February 2018)."
+    },
+    {
+      "year": 2018,
+      "journal": "Oracle Express Edition",
+      "volume": "11",
+      "issue": "2",
+      "raw": "Oracle Express Edition \n\t\t \n\t\t\t 11 \n\t\t\t 2 \n\t\t\t 15 February 2018 \n\t\t \n\t \n\t Oracle Express Edition 11g2. Available online: http://www.oracle.com/technetwork/database/database- technologies/express-edition/overview/index.html (accessed on 15 February 2018)."
+    },
+    {
+      "year": 2018,
+      "raw": "Flask \n\t\t \n\t\t \n\t\t \n\t\t\t 15 February 2018 \n\t\t \n\t \n\t Flask. Available online: http://flask.pocoo.org/ (accessed on 15 February 2018)."
+    },
+    {
+      "title": "Relationship between objective measures of physical activity and weather: a longitudinal study",
+      "authors": [
+        "C Chan",
+        "D Ryan",
+        "C Tudor-Locke"
+      ],
+      "year": 2006,
+      "doi": "10.1186/1479-5868-3-21",
+      "journal": "Int. J. Behav. Nutr. Phys. Act",
+      "volume": "3",
+      "pages": "21",
+      "raw": "Relationship between objective measures of physical activity and weather: a longitudinal study \n\t\t \n\t\t\t C B Chan \n\t\t \n\t\t \n\t\t\t D A Ryan \n\t\t \n\t\t \n\t\t\t C Tudor-Locke \n\t\t \n\t\t 10.1186/1479-5868-3-21 \n\t \n\t \n\t\t Int. J. Behav. Nutr. Phys. Act \n\t\t \n\t\t\t 3 \n\t\t\t 21 \n\t\t\t 2006 \n\t\t \n\t \n\t Chan, C.B.; Ryan, D.A.; Tudor-Locke, C. Relationship between objective measures of physical activity and weather: a longitudinal study. Int. J. Behav. Nutr. Phys. Act. 2006, 3, 21. [CrossRef] [PubMed]"
+    },
+    {
+      "title": "A behavior model for persuasive design",
+      "authors": [
+        "B Fogg"
+      ],
+      "year": 2009,
+      "doi": "10.1145/1541948.1541999",
+      "pages": "1",
+      "raw": "A behavior model for persuasive design \n\t\t \n\t\t\t B Fogg \n\t\t \n\t\t 10.1145/1541948.1541999 \n\t \n\t \n\t\t Proceedings of the 4th International Conference on Persuasive Technology (Persuasive '09) \n\t\t the 4th International Conference on Persuasive Technology (Persuasive '09) Claremont, CA, USA \n\t\t \n\t\t\t April 2009 \n\t\t\t 1 \n\t\t \n\t \n\t Fogg, B. A behavior model for persuasive design. In Proceedings of the 4th International Conference on Persuasive Technology (Persuasive '09), Claremont, CA, USA, 26-29 April 2009; p. 1."
+    },
+    {
+      "title": "Toward a Generic Personalized Virtual Coach for Self-management: A Proposal for an Architecture",
+      "authors": [
+        "J Blok",
+        "A Dol",
+        "T Dijkhuis"
+      ],
+      "year": 2017,
+      "raw": "Toward a Generic Personalized Virtual Coach for Self-management: A Proposal for an Architecture \n\t\t \n\t\t\t J Blok \n\t\t \n\t\t \n\t\t\t A Dol \n\t\t \n\t\t \n\t\t\t T Dijkhuis \n\t\t \n\t \n\t \n\t\t Proceedings of eTELEMED 2017, the Ninth International Conference on eHealth, Telemedicine, and Social Medicine \n\t\t eTELEMED 2017, the Ninth International Conference on eHealth, Telemedicine, and Social Medicine Nice, France \n\t\t \n\t\t\t 19-23 March 2017 \n\t\t \n\t \n\t Blok, J.; Dol, A.; Dijkhuis, T. Toward a Generic Personalized Virtual Coach for Self-management: A Proposal for an Architecture. In Proceedings of eTELEMED 2017, the Ninth International Conference on eHealth, Telemedicine, and Social Medicine, Nice, France, 19-23 March 2017."
+    }
+  ],
+  "num_references": 54,
+  "figures": [
+    {
+      "caption": "Figure 1 .",
+      "description": "Figure 1. Algorithm accuracy comparison."
+    },
+    {
+      "caption": "Figure 2 .",
+      "description": "Figure 2. Algorithm F1-score comparison."
+    },
+    {
+      "caption": "Figure 1 .",
+      "description": "Figure 1. Algorithm accuracy comparison."
+    },
+    {
+      "caption": "Figure 1 .",
+      "description": "Figure 1. Algorithm accuracy comparison."
+    },
+    {
+      "caption": "Figure 2 .",
+      "description": "Figure 2. Algorithm F1-score comparison."
+    },
+    {
+      "caption": "Figure 2 .",
+      "description": "Figure 2. Algorithm F1-score comparison."
+    },
+    {
+      "caption": "Figure 3 .",
+      "description": "Figure 3. Average accuracy and F1-score per model."
+    },
+    {
+      "caption": "Figure 3 .",
+      "description": "Figure 3. Average and F1-score per model."
+    },
+    {
+      "caption": "Figure 4 .Figure 4 . 16 Figure 5 .",
+      "description": "Figure 4. Average F1-Score per algorithm, per hour based on the individual scores."
+    },
+    {
+      "caption": "Figure 5 .",
+      "description": "Figure 5. Average accuracy per algorithm, per hour based on the individual scores."
+    },
+    {
+      "caption": "Figure 6 .",
+      "description": "Figure 6. Screenshot of the Personalized Coach Web Application."
+    },
+    {
+      "caption": "Figure 6 .",
+      "description": "Figure 6. Screenshot of the Personalized Coach Web Application."
+    },
+    {
+      "type": "table",
+      "caption": "Table 1 .",
+      "description": "Confusion matrix."
+    },
+    {
+      "type": "table",
+      "caption": "Table 2 .",
+      "description": "Algorithms and their scores for the whole dataset."
+    },
+    {
+      "type": "table",
+      "caption": "Table 2 .",
+      "description": "Algorithms and their scores for the whole dataset."
+    },
+    {
+      "type": "table",
+      "caption": "Table 2 .",
+      "description": "Algorithms and their scores for the whole dataset."
+    },
+    {
+      "type": "table",
+      "caption": "Table 3 .",
+      "description": "Algorithms, used parameters, and grid search values."
+    },
+    {
+      "type": "table",
+      "caption": "Table 4 .",
+      "description": "Example of different tuned personalized Random Forest models."
+    },
+    {
+      "type": "table",
+      "caption": "Table 5 .",
+      "description": "The number of different values per Random Forest hyperparameter."
+    }
+  ],
+  "num_figures": 19,
+  "tables": [
+    {
+      "content": "True Class Yes No Predicted class Yes True Positives (TP) False Negatives (FN) No False Positives (FP) True Negatives (TN)"
+    },
+    {
+      "content": "Algorithm Name Mean Accuracy (Standard Deviation) Mean F1 (Standard Deviation) Rank AdaBoost (ADA) 0.776623 (0.002080) 0.854157 (0.001626) 1 Neural Networking (NN) 0.777774 (0.001545) 0.852797 (0.002938) 2 Support Vector Classifier (SVC) 0.770728 (0.002505) 0.856341 (0.002405) 3 Stochastic Gradient Descent (SGD) 0.767623 (0.005490) 0.853575 (0.004574) 4 KNeighborsClassifier (KNN) 0.749171 (0.005683) 0.829826 (0.005544) 5 Logistic Regression (LR) 0.742125 (0.009821) 0.825725 (0.008487) 6 Random Forest (RF) 0.737451 (0.003210) 0.819065 (0.003840) 7 Decision Tree (DT) 0.720535 (0.004787) 0.804220 (0.003006) 8"
+    },
+    {
+      "content": "Algorithm Name Mean Accuracy (standard deviation) Mean F1 (standard deviation) Rank AdaBoost (ADA) 0.776623 (0.002080) 0.854157 (0.001626) 1 Neural Networking (NN) 0.777774 (0.001545) 0.852797 (0.002938) 2 Support Vector Classifier (SVC) 0.770728 (0.002505) 0.856341 (0.002405) 3 Stochastic Gradient Descent (SGD) 0.767623 (0.005490) 0.853575 (0.004574) 4 KNeighborsClassifier (KNN) 0.749171 (0.005683) 0.829826 (0.005544) 5 Logistic Regression (LR) 0.742125 (0.009821) 0.825725 (0.008487) 6 Random Forest (RF) 0.737451 (0.003210) 0.819065 (0.003840) 7 Decision Tree (DT) 0.720535 (0.004787) 0.804220 (0.003006) 8"
+    },
+    {
+      "content": "Algorithm Name Mean Accuracy (standard deviation) Mean F1 (standard deviation) Rank AdaBoost (ADA) 0.776623 (0.002080) 0.854157 (0.001626) 1 Neural Networking (NN) 0.777774 (0.001545) 0.852797 (0.002938) 2 Support Vector Classifier (SVC) 0.770728 (0.002505) 0.856341 (0.002405) 3 Stochastic Gradient Descent (SGD) 0.767623 (0.005490) 0.853575 (0.004574) 4 KNeighborsClassifier (KNN) 0.749171 (0.005683) 0.829826 (0.005544) 5 Logistic Regression (LR) 0.742125 (0.009821) 0.825725 (0.008487) 6 Random Forest (RF) 0.737451 (0.003210) 0.819065 (0.003840) 7 Decision Tree (DT) 0.720535 (0.004787) 0.804220 (0.003006) 8"
+    },
+    {
+      "content": "Algorithm name Hyperparameters Values AdaBoost (ADA) n_estimators: number of decision trees in the ensemble [10,50] learning rate: the shrink of the contribution of each successive decision tree in the ensemble [0.1, 0.5, 1.0, 10.0] Decision Tree (DT) criterion: the algorithm to use to decide on split ['gini', 'entropy'] max_features: the number of features to consider when to split ['auto','sqrt','log2'] KNeighborsClassifier (KNN) metrics: the distance metric to use ['minkowski','euclidean','manhattan'] weights: weight function used ['uniform','distance'] n_neighbors: number of neighbors to use for queries [5, 6, 7, 8, 9] Neural Networking (NN) learning_rate_init: the control of the step-size in updating the weights ['constant', 'invscaling', 'adaptive'] activation: the activation function for the hidden layer ['identity', 'logistic', 'tanh', 'relu'] learning_rate: the rate for the weight of the updates 0.05, 0.1, 0.5, 1.0] Logistic Regression (LR) C: regularization strength [0.001, 0.01, 0.1, 1, 10, 100, 1000] penalty: whether to use Lasso (L1) or Ridge (L2) regularization ['l1', 'l2'] fit_intercept: whether or not to compute the intercept of the linear classifier [True, False] Stochastic Gradient Descent (SGD) fit_intercept: whether or not the intercept should be computed [True, False] l1_ratio: the penalty is set to L1 or L2 [0,0.15,1] loss: quantification of the loss ['log','modified_huber'] Support Vector Classifier (SVM) kernel: the kernel type to be used in the algorithm ['linear','rbf'] Random Forest (RF) n_estimators:number of decision trees [10, 50, 100, 500] max_features: the number of features to consider when [0.1, 0.25, 0.5, 0.75, 'sqrt', 'log2', to split None] criterion: which algorithm should be used to decide on split ['gini', 'entropy']"
+    },
+    {
+      "content": "Participant Parameters Values criterion gini 1119 max_features sqrt n_estimators 50 criterion entropy 1121 max_features log2 n_estimators 50"
+    },
+    {
+      "content": "Hyperparameter Value Number of Occurrences criterion entropy 7 gini 37 max_features 0.1 4 0.25 5 0.5 7 0.75 15 log2 2 sqrt 2 null 9 n_estimators 10 3 100 17 50 16 500 6"
+    }
+  ],
+  "num_tables": 7,
+  "license": "\u00a9 2018 by the authors. Licensee MDPI, Basel, Switzerland. This article is an open access article distributed under the terms and conditions of the Creative Commons Attribution (CC BY) license (http://creativecommons.org/licenses/by/4.0/).",
+  "license_type": "unknown",
+  "num_citations": 77,
+  "cited_references": [
+    "b3",
+    "b13",
+    "b39",
+    "b41",
+    "b18",
+    "b44",
+    "b49",
+    "b2",
+    "b14",
+    "b17",
+    "b36",
+    "b25",
+    "b9",
+    "b1",
+    "b35",
+    "b20",
+    "b43",
+    "b21",
+    "b51",
+    "b47",
+    "b40",
+    "b12",
+    "b42",
+    "b30",
+    "b31",
+    "b52",
+    "b29",
+    "b16",
+    "b37",
+    "b46",
+    "b15",
+    "b23",
+    "b32",
+    "b5",
+    "b19",
+    "b28",
+    "b45",
+    "b10",
+    "b38",
+    "b27",
+    "b24",
+    "b4",
+    "b50",
+    "b33",
+    "b7",
+    "b48",
+    "b11",
+    "b8",
+    "b53",
+    "b22",
+    "b34",
+    "b6",
+    "b0",
+    "b26"
+  ],
+  "notes": [
+    "[raw_affiliation] 1  Johann Bernoulli Institute for Mathematics and Computer Science , Faculty of Science and Engineering (FSE) , University of Groningen , Nijenborgh 9 , 9747 AG Groningen , The Netherlands ;",
+    "[raw_affiliation] 2  Institute of Communication , Hanze University of Applied Sciences , Media and ICT , Zernikeplein 11 , 9746 AS Groningen , The Netherlands ;",
+    "[raw_affiliation] 1  Johann Bernoulli Institute for Mathematics and Computer Science , Faculty of Science and Engineering (FSE) , University of Groningen , Nijenborgh 9 , 9747 AG Groningen , The Netherlands ;",
+    "[raw_affiliation] 3  Developmental Psychology , University of Groningen , Grote Kruisstraat 2/1 , 9712 TS Groningen , The Netherlands",
+    "[raw_affiliation] 4  School for Health Care Studies , Hanze University of Applied Sciences , Petrus Driessenstraat 3 , 9714 CA Groningen , The Netherlands;",
+    "[raw_affiliation] 2  Institute of Communication , Hanze University of Applied Sciences , Media and ICT , Zernikeplein 11 , 9746 AS Groningen , The Netherlands ;",
+    "[raw_affiliation] 1  Johann Bernoulli Institute for Mathematics and Computer Science , Faculty of Science and Engineering (FSE) , University of Groningen , Nijenborgh 9 , 9747 AG Groningen , The Netherlands ;",
+    "[submission] Received: 7 February 2018; Accepted: 15 February 2018;",
+    "[raw_reference] WHO. Global Action Plan for the Prevention and Control of Noncommunicable Diseases 2013-2020; World Health Organization: Gen\u00e8ve, Switzerland, 2013; p. 102.",
+    "[raw_reference] Min-Lee, I.; Shiroma, E.J.; Lobelo, F.; Puska, P.; Blair, S.N.; Katzmarzyk, P.T.; Alkandari, J.R.; Andersen, L.B.; Bauman, A.E.; Brownson, R.C.; et al. Effect of physical inactivity on major non-communicable diseases worldwide: An analysis of burden of disease and life expectancy. Lancet 2012, 380, 219-229.",
+    "[raw_reference] Ekelund, U.; Steene-Johannessen, J.; Brown, W.J.; Fagerland, M.W.; Owen, N.; Powell, K.E.; Bauman, A.; Lee, I.M. Does physical activity attenuate, or even eliminate, the detrimental association of sitting time with mortality? A harmonised meta-analysis of data from more than 1 million men and women. Lancet 2016, 388, 1302-1310. [PubMed]",
+    "[raw_reference] Losina, E.; Yang, H.Y.; Deshpande, B.R.; Katz, J.N.; Collins, J.E. Physical activity and unplanned illness-related work absenteeism: Data from an employee wellness program. PLoS ONE 2017, 12, e0176872. [CrossRef] [PubMed]",
+    "[raw_reference] Matthews, C.E.; Hebert, J.R.; Freedson, P.S.; Iii, E.J.S.; Merriam, P.A.; Cara, B.; Ockene, I.S. Sources of Variance in Daily Physical Activity Levels in the Seasonal Variation of Blood Cholesterol Study. Am. J. Epidemiol. 2001, 153, 987-995. [CrossRef] [PubMed]",
+    "[raw_reference] Tudor-Locke, C.; Burkett, L.; Reis, J.P.; Ainsworth, B.E.; Macera, C.A.; Wilson, D.K. How many days of pedometer monitoring predict weekly physical activity in adults. Prev. Med. (Baltim.) 2005, 40, 293-298. [CrossRef] [PubMed]",
+    "[raw_reference] Gardner, B.; Smith, L.; Lorencatto, F.; Hamer, M.; Biddle, S.J. How to reduce sitting time? A review of behaviour change strategies used in sedentary behaviour reduction interventions among adults. Health Psychol. Rev. 2016, 10, 89-112. [PubMed]",
+    "[raw_reference] Baker, P.R.A.; Francis, D.P.; Soares, J.; Weightman, A.L.; Foster, C. Community wide interventions for increasing physical activity. Sao Paulo Med. J. 2011, 129, 436-437. [CrossRef]",
+    "[raw_reference] Conroy, D.E.; Hedeker, D.; McFadden, H.G.; Pellegrini, C.A.; Pfammatter, A.F.; Phillips, S.M.; Siddique, J.; Spring, B. Lifestyle intervention effects on the frequency and duration of daily moderate-vigorous physical activity and leisure screen time. Heal. Psychol. 2017, 36, 299-308. [CrossRef] [PubMed]",
+    "[raw_reference] Ng, L.W.C.; Mackney, J.; Jenkins, S.; Hill, K. Does exercise training change physical activity in people with COPD? A systematic review and meta-analysis. Chron. Respir. Dis. 2012, 9, 17-26.",
+    "[raw_reference] Cleland, V.; Squibb, K.; Stephens, L.; Dalby, J.; Timperio, A.; Winzenberg, T.; Ball, K.; Dollman, J. Effectiveness of interventions to promote physical activity and/or decrease sedentary behaviour among rural adults: A systematic review and meta-analysis. Obes. Rev. 2017, 18, 727-741. [CrossRef] [PubMed]",
+    "[raw_reference] Prince, S.A.; Saunders, T.J.; Gresty, K.; Reid, R.D. A comparison of the effectiveness of physical activity and sedentary behaviour interventions in reducing sedentary time in adults: A systematic review and meta-analysis of controlled trials. Obes. Rev. 2014, 15, 905-919. [CrossRef] [PubMed]",
+    "[raw_reference] H\u00f6chsmann, C.; Sch\u00fcpbach, M.; Schmidt-Trucks\u00e4ss, A. Effects of Exergaming on Physical Activity in Overweight Individuals. Sports Med. 2016, 46, 845-860. [CrossRef] [PubMed]",
+    "[raw_reference] Wu, L.; Sun, S.; He, Y.; Jiang, B. The effect of interventions targeting screen time reduction: A systematic review and meta-analysis. Medicine (Baltimore). 2016, 95, e4029. [CrossRef] [PubMed]",
+    "[raw_reference] Schoeppe, S.; Alley, S.; van Lippevelde, W.; Bray, N.A.; Williams, S.L.; Duncan, M.J.; Vandelanotte, C. Efficacy of interventions that use apps to improve diet, physical activity and sedentary behaviour: A systematic review. Int. J. Behav. Nutr. Phys. Act. 2016, 13, 127. [CrossRef] [PubMed]",
+    "[raw_reference] Beishuizen, C.R.L.; Stephan, B.C.M.; van Gool, W.A.; Brayne, C.; Peters, R.J.G.; Andrieu, S.; Kivipelto, M.; Soininen, H.; Busschers, W.B.; van Charante, E.P.M.; et al. Web-Based Interventions Targeting Cardiovascular Risk Factors in Middle-Aged and Older People: A Systematic Review and Meta-Analysis. J. Med. Internet Res. 2016, 18, e55.",
+    "[raw_reference] Shrestha, N.; Kt, K.; Jh, V.; Ijaz, S.; Hermans, V.; Bhaumik, S. Workplace interventions for reducing sitting at work (Review). Cochrane Database Syst. Rev. 2016, 14, 105.",
+    "[raw_reference] Commissaris, D.A.; Huysmans, M.A.; Mathiassen, S.E.; Srinivasan, D.; Koppes, L.L.; Hendriksen, I.J. Interventions to reduce sedentary behavior and increase physical activity during productive work: A systematic review. Scand. J. Work. Environ. Health 2016, 42, 181-191. [CrossRef] [PubMed]",
+    "[raw_reference] Mercer, K.; Li, M.; Giangregorio, L.; Burns, C.; Grindrod, K. Behavior Change Techniques Present in Wearable Activity Trackers: A Critical Analysis. JMIR mHealth uHealth 2016, 4, e40. [CrossRef] [PubMed]",
+    "[raw_reference] Duncan, M.; Murawski, B.; Short, C.E.; Rebar, A.L.; Schoeppe, S.; Alley, S.; Vandelanotte, C.; Kirwan, M. Activity Trackers Implement Different Behavior Change Techniques for Activity, Sleep, and Sedentary Behaviors. Interact. J. Med. Res. 2017, 6, e13. [CrossRef] [PubMed]",
+    "[raw_reference] Qiu, S.; Cai, X.; Ju, C.; Sun, Z.; Yin, H.; Z\u00fcgel, M.; Otto, S.; Steinacker, J.M.; Schumann, U. Step Counter Use and Sedentary Time in Adults: A Meta-Analysis. Medicine (Baltimore) 2015, 94, e1412. [CrossRef] [PubMed]",
+    "[raw_reference] Stephenson, A.; McDonough, S.M.; Murphy, M.H.; Nugent, C.D.; Mair, J.L. Using computer, mobile and wearable technology enhanced interventions to reduce sedentary behaviour: A systematic review and meta-analysis. Int. J. Behav. Nutr. Phys. Act. 2017, 14, 105. [CrossRef] [PubMed]",
+    "[raw_reference] de Vries, H.J.; Kooiman, T.J.M.; van Ittersum, M.W.; van Brussel, M.; de Groot, M. Do activity monitors increase physical activity in adults with overweight or obesity? A systematic review and meta-analysis. Obesity 2016, 24, 2078-2091. [PubMed]",
+    "[raw_reference] Li, L.C.; Sayre, E.C.; Xie, H.; Clayton, C.; Feehan, L.M. A Community-Based Physical Activity Counselling Program for People With Knee Osteoarthritis: Feasibility and Preliminary Efficacy of the Track-OA Study. JMIR mHealth uHealth 2017, 5, e86. [CrossRef] [PubMed]",
+    "[raw_reference] Miyauchi, M.; Toyoda, M.; Kaneyama, N.; Miyatake, H.; Tanaka, E.; Kimura, M.; Umezono, T.; Fukagawa, M. Exercise Therapy for Management of Type 2 Diabetes Mellitus: Superior Efficacy of Activity Monitors over Pedometers. J. Diabetes Res. 2016, 2016, 1-7. [CrossRef] [PubMed]",
+    "[raw_reference] Cadmus-Bertram, L.A.; Marcus, B.H.; Patterson, R.E.; Parker, B.A.; Morey, B.L. Randomized Trial of a Fitbit-Based Physical Activity Intervention for Women. Am. J. Prev. Med. 2015, 49, 414-418. [CrossRef] [PubMed]",
+    "[raw_reference] Mansi, S.; Milosavljevic, S.; Tumilty, S.; Hendrick, P.; Higgs, C.; Baxter, D.G. Investigating the effect of a 3-month workplace-based pedometer-driven walking programme on health-related quality of life in meat processing workers: a feasibility study within a randomized controlled trial. BMC Public Health 2015, 15, 410. [CrossRef] [PubMed]",
+    "[raw_reference] Lewis, Z.H.; Lyons, E.J.; Jarvis, J.M.; Baillargeon, J. Using an electronic activity monitor system as an intervention modality: A systematic review. BMC Public Health 2015, 15, 585. [CrossRef] [PubMed]",
+    "[raw_reference] Freak-poli, R.; Cumpston, M.; Peeters, A.; Clemes, S. Workplace pedometer interventions for increasing physical activity (Review). Cochrane Database Syst. Rev. 2013, 4, CD009209.",
+    "[raw_reference] Compernolle, S.; Vandelanotte, C.; Cardon, G.; de Bourdeaudhuij, I.; de Cocker, K. Effectiveness of a web-based, computer-tailored, pedometer-based physical activity intervention for adults: a cluster randomized controlled trial. J. Med. Internet Res. 2015, 17, e38. [CrossRef] [PubMed]",
+    "[raw_reference] Slootmaker, S.M.; Chinapaw, M.J.M.; Schuit, A.J.; Seidell, J.C.; van Mechelen, W. Feasibility and Effectiveness of Online Physical Activity Advice Based on a Personal Activity Monitor: Randomized Controlled Trial. J. Med. Internet Res. 2009, 11, e27. [CrossRef] [PubMed]",
+    "[raw_reference] Poirier, J.; Bennett, W.L.; Jerome, G.J.; Shah, N.G.; Lazo, M.; Yeh, H.-C.; Clark, J.M.; Cobb, N.K. Effectiveness of an Activity Tracker-and Internet-Based Adaptive Walking Program for Adults: A Randomized Controlled Trial. J. Med. Internet Res. 2016, 18, e34.",
+    "[raw_reference] Finkelstein, E.A.; Haaland, B.A.; Bilger, M.; Sahasranaman, A.; Sloan, R.A.; Nang, E.E.K.; Evenson, K.R. Effectiveness of activity trackers with and without incentives to increase physical activity (TRIPPA): A randomised controlled trial. Lancet Diabetes Endocrinol. 2016, 4, 983-995. [CrossRef]",
+    "[raw_reference] Mamykina, L.; Lindtner, S.; Lin, J.J.; Mamykina, L.; Lindtner, S.; Delajoux, G.; Strub, H.B. Fish'n'Steps: Encouraging Physical Activity with an Interactive Computer Game. In Ubicomp 2006: Ubiquitous Computing; Springer-Verlag: Berlin/Heidelberg, Germany, 2006; Volume 4206.",
+    "[raw_reference] Toscos, T.; Faber, A.; Connelly, K.; Upoma, A.M. Encouraging physical activity in teens. Can technology help reduce barriers to physical activity in adolescent girls? In Pervasive Computing Technologies for Healthcare, 2008; IEEE: Tampere, Finland, 2008; Volume 3, pp. 218-221.",
+    "[raw_reference] Wang, J.; Chen, R.; Sun, X.; She, M.F.H.; Wu, Y. Recognizing human daily activities from accelerometer signal. Procedia Eng. 2011, 15, 1780-1786. [CrossRef]",
+    "[raw_reference] Li, X.; Dunn, J.; Salins, D.; Zhou, G.; Zhou, W.; Rose, S.M.S.; Perelman, D.; Colbert, E.; Runge, R.; Rego, S.; et al. Digital Health: Tracking Physiomes and Activity Using Wearable Biosensors Reveals Useful Health-Related Information. PLoS Biol. 2017, 15, e2001402. [CrossRef] [PubMed]",
+    "[raw_reference] Catal, C.; Tufekci, S.; Pirmit, E.; Kocabag, G. On the use of ensemble of classifiers for accelerometer-based activity recognition. Appl. Soft Comput. J. 2015, 37, 1018-1022. [CrossRef]",
+    "[raw_reference] Maman, Z.S.; Yazdi, M.A.A.; Cavuoto, L.A.; Megahed, F.M. A data-driven approach to modeling physical fatigue in the workplace using wearable sensors. Appl. Ergon. 2017, 65, 515-529. [CrossRef] [PubMed]",
+    "[raw_reference] Mollee, J.S.; Middelweerd, A.; te Velde, S.J.; Klein, M.C.A. Evaluation of a personalized coaching system for physical activity: User appreciation and adherence. In Proceedings of ACM 11th EAI International Conference on Pervasive Computing Technologies for Healthcare, Barcelona, Spain, 23-26 May 2017.",
+    "[raw_reference] Gerdes, M.; Martinez, S.; Tjondronegoro, D. Conceptualization of a Personalized eCoach for Wellness Promotion. In Proceedings of ACM 11th EAI International Conference on Pervasive Computing, Barcelona, Spain, 23-26 May 2017.",
+    "[raw_reference] den Akker, H.O.; Jones, V.M.; Hermens, H.J. Tailoring real-time physical activity coaching systems: A literature survey and model. User Model. User-Adapt. Interact. 2014, 24, 351-392. [CrossRef]",
+    "in press",
+    "[raw_reference] van, M.W.; Ittersum, H.K.E.O.; de Groot, M. Self-Tracking-Supported Health Promotion: A Randomized Trial among Dutch Employees. Eur. J. Public Heal. 2017, in press.",
+    "[raw_reference] Wolpert, D.H. The Lack of A Priori Distinctions Between Learning Algorithms. Neural Comput. 1996, 8, 1341-1390. [CrossRef]",
+    "[raw_reference] Raschka, S.; Mirjalili, V. Python Machine Learning; Packt Publishing Ltd.: Birmingham, UK, 2015.",
+    "[raw_reference] Scikit Learn, Choosing the Right Estimator. Available online: http://scikit-learn.org/stable/tutorial/ machine_learning_map/index.html (accessed on 15 February 2018).",
+    "[raw_reference] Machine Learning Algorithm Cheat Sheet for Microsoft Azure Machine Learning Studio. Available online: https: //docs.microsoft.com/en-us/azure/machine-learning/studio/algorithm-cheat-sheet (accessed on 15 February 2018).",
+    "[raw_reference] Anaconda. Available online: www.anaconda.com (accessed on 15 February 2018).",
+    "[raw_reference] Jupyter Notebooks. Available online: https://jupyter.org (accessed on 15 February 2018).",
+    "[raw_reference] Oracle Express Edition 11g2. Available online: http://www.oracle.com/technetwork/database/database- technologies/express-edition/overview/index.html (accessed on 15 February 2018).",
+    "[raw_reference] Flask. Available online: http://flask.pocoo.org/ (accessed on 15 February 2018).",
+    "[raw_reference] Chan, C.B.; Ryan, D.A.; Tudor-Locke, C. Relationship between objective measures of physical activity and weather: a longitudinal study. Int. J. Behav. Nutr. Phys. Act. 2006, 3, 21. [CrossRef] [PubMed]",
+    "[raw_reference] Fogg, B. A behavior model for persuasive design. In Proceedings of the 4th International Conference on Persuasive Technology (Persuasive '09), Claremont, CA, USA, 26-29 April 2009; p. 1.",
+    "[raw_reference] Blok, J.; Dol, A.; Dijkhuis, T. Toward a Generic Personalized Virtual Coach for Self-management: A Proposal for an Architecture. In Proceedings of eTELEMED 2017, the Ninth International Conference on eHealth, Telemedicine, and Social Medicine, Nice, France, 19-23 March 2017."
+  ],
+  "processing_software": {
+    "GROBID": "0.8.2"
+  }
+}

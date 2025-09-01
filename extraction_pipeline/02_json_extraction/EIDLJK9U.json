@@ -1,0 +1,1852 @@
+{
+  "paper_id": "EIDLJK9U",
+  "title": "Federated Learning for Healthcare Informatics",
+  "abstract": "With the rapid development of computer software and hardware technologies, more and more healthcare data are becoming readily available from clinical institutions, patients, insurance companies, and pharmaceutical industries, among others. This access provides an unprecedented opportunity for data science technologies to derive data-driven insights and improve the quality of care delivery. Healthcare data, however, are usually fragmented and private making it difficult to generate robust results across populations. For example, different hospitals own the electronic health records (EHR) of different patient populations and these records are difficult to share across hospitals because of their sensitive nature. This creates a big barrier for developing effective analytical approaches that are generalizable, which need diverse, \"big data.\" Federated learning, a mechanism of training a shared global model with a central server while keeping all the sensitive data in local institutions where the data belong, provides great promise to connect the fragmented healthcare data sources with privacy-preservation. The goal of this survey is to provide a review for federated learning technologies, particularly within the biomedical space. In particular, we summarize the general solutions to the statistical challenges, system challenges, and privacy issues in federated learning, and point out the implications and potentials in healthcare.",
+  "year": 2020,
+  "date": "2020-11-12",
+  "authors": [
+    {
+      "name": "Jie Xu",
+      "affiliation": {
+        "organization": "Department of Population Health Sciences",
+        "department": "Department of Population Health Sciences",
+        "institution": "Weill Cornell Medicine",
+        "address": "New York, NY, USA"
+      }
+    },
+    {
+      "name": "Benjamin Glicksberg",
+      "affiliation": {
+        "organization": "Institute for Digital Health",
+        "department": "Institute for Digital Health",
+        "institution": "Icahn School of Medicine at Mount Sinai",
+        "address": "New York, NY, USA"
+      }
+    },
+    {
+      "name": "Chang Su",
+      "affiliation": {
+        "organization": "Department of Population Health Sciences",
+        "department": "Department of Population Health Sciences",
+        "institution": "Weill Cornell Medicine",
+        "address": "New York, NY, USA"
+      }
+    },
+    {
+      "name": "Peter Walker",
+      "affiliation": {
+        "organization": "U.S. Department of Defense Joint Artificial Intelligence Center",
+        "department": "U.S. Department of Defense Joint Artificial Intelligence Center",
+        "address": "Washington, D.C, USA"
+      }
+    },
+    {
+      "name": "Jiang Bian",
+      "affiliation": {
+        "organization": "Department of Health Outcomes and Biomedical Informatics",
+        "department": "Department of Health Outcomes and Biomedical Informatics",
+        "institution": "University of Florida",
+        "address": "Gainesville, FL, USA"
+      }
+    },
+    {
+      "name": "Fei Wang",
+      "affiliation": {
+        "organization": "Department of Population Health Sciences",
+        "department": "Department of Population Health Sciences",
+        "institution": "Weill Cornell Medicine",
+        "address": "New York, NY, USA"
+      }
+    }
+  ],
+  "doi": "10.1007/s41666-020-00082-4",
+  "md5": "48DA9253E468C6584A95B092C29E4AAE",
+  "publication": {
+    "journal": "Sci Data",
+    "journal_inferred": true
+  },
+  "keywords": [
+    "Federated learning",
+    "Healthcare",
+    "Privacy"
+  ],
+  "funding": [
+    "",
+    "",
+    "",
+    ""
+  ],
+  "sections": [
+    {
+      "title": "1. Introduction",
+      "text": "The recent years have witnessed a surge of interest related to healthcare data analytics, due to the fact that more and more such data are becoming readily available from various sources including clinical institutions, patient individuals, insurance companies, and pharmaceutical industries, among others. This provides an unprecedented opportunity for the development of computational techniques to dig data-driven insights for improving the quality of care delivery  [72, 105] .\n\nHealthcare data are typically fragmented because of the complicated nature of the healthcare system and processes. For example, different hospitals may be able to access the clinical records of their own patient populations only. These records are highly sensitive with protected health information (PHI) of individuals. Rigorous regulations, such as the Health Insurance Portability and Accountability Act (HIPAA)  [32] , have been developed to regulate the process of accessing and analyzing such data. This creates a big challenge for modern data mining and machine learning (ML) technologies, such as deep learning  [61] , which typically requires a large amount of training data.\n\nFederated learning is a paradigm with a recent surge in popularity as it holds great promise on learning with fragmented sensitive data. Instead of aggregating data from different places all together, or relying on the traditional discovery then replication design, it enables training a shared global model with a central server while keeping the data in local institutions where the they originate.\n\nThe term \"federated learning\" is not new. In 1976, Patrick Hill, a philosophy professor, first developed the Federated Learning Community (FLC) to bring people together to jointly learn, which helped students overcome the anonymity and isolation in large research universities  [42] . Subsequently, there were several efforts aiming at building federations of learning content and content repositories  [6, 74, 83] . In 2005, Rehak et al.  [83]  developed a reference model describing how to establish an interoperable repository infrastructure by creating federations of repositories, where the metadata are collected from the contributing repositories into a central registry provided with a single point of discovery and access. The ultimate goal of this model is to enable learning from diverse content repositories. These practices in federated learning community or federated search service have provided effective references for the development of federated learning algorithms.\n\nFederated learning holds great promises on healthcare data analytics. For both provider (e.g., building a model for predicting the hospital readmission risk with patient Electronic Health Records (EHR)  [71] ) and consumer (patient)-based applications (e.g., screening atrial fibrillation with electrocardiograms captured by smartwatch  [79] ), the sensitive patient data can stay either in local institutions or with individual consumers without going out during the federated model learning process, which effectively protects the patient privacy. The goal of this paper is to review the setup of federated learning, discuss the general solutions and challenges, and envision its applications in healthcare.\n\nIn this review, after a formal overview of federated learning, we summarize the main challenges and recent progress in this field. Then we illustrate the potential of federated learning methods in healthcare by describing the successful recent research.\n\nAt last, we discuss the main opportunities and open questions for future applications in healthcare."
+    },
+    {
+      "title": "Difference with Existing Reviews",
+      "text": "There has been a few review articles on federated learning recently. For example,  Yang et al. [109]  wrote the early federated learning survey summarizing the general privacy-preserving techniques that can be applied to federated learning. Some researchers surveyed sub-problems of federated learning, e.g., personalization techniques  [59] , semi-supervised learning algorithms  [49] , threat models  [68] , and mobile edge networks  [66] . Kairouz et al. [51]  discussed recent advances and presented an extensive collection of open problems and challenges. Li et al.  [63]  conducted the review on federated learning from a system viewpoint. Different from those reviews, this paper provided the potential of federated learning to be applied in healthcare. We summarized the general solution to the challenges in federated learning scenario and surveyed a set of representative federated learning methods for healthcare. In the last part of this review, we outlined some directions or open questions in federated learning for healthcare. An early version of this paper is available on arXiv [107]."
+    },
+    {
+      "title": "2. Federated Learning",
+      "text": "Federated learning is a problem of training a high-quality shared global model with a central server from decentralized data scattered among large number of different clients (Fig.  1 ). Mathematically, assume there are K activated clients where the data reside in (a client could be a mobile phone, a wearable device, or a clinical institution data warehouse, etc.). Let D k denote the data distribution associated with client k and n k the number of samples available from that client. n = K k=1 n k is the total sample size. Federated learning problem boils down to solving a empirical risk minimization problem of the form  [56, 57, 69] :\n\nwhere w is the model parameter to be learned. The function f i is specified via a loss function dependent on a pair of input-output data pair {x i , y i }. Typically, x i \u2208 R d and y i \u2208 R or y i \u2208 {-1, 1}. Simple examples include:\n\n-linear regression:\n\nIn particular, algorithms for federated learning face with a number of challenges  [13, 96] , specifically:\n\n-Statistical Challenge: The data distribution among all clients differ greatly, i.e., \u2200k = k, we have\n\nIt is such that any data points available locally are far from being a representative sample of the overall distribution, i.e., E x i \u223cD k [f i (w; x i )] = F (w). -Communication Efficiency: The number of clients K is large and can be much bigger than the average number of training sample stored in the activated clients, i.e., K (n/K). -Privacy and Security: Additional privacy protections are needed for unreliable participating clients. It is impossible to ensure all clients are equally reliable.\n\nNext, we will survey, in detail, the existing federated learning related works on handling such challenges."
+    },
+    {
+      "title": "2.1. Statistical Challenges of Federated Learning",
+      "text": "The naive way to solve the federated learning problem is through Federated Averaging (FedAvg)  [69] . It is demonstrated can work with certain non independent identical distribution (non-IID) data by requiring all the clients to share the same model. However, FedAvg does not address the statistical challenge of strongly skewed data distributions. The performance of convolutional neural networks trained with FedAvg algorithm can reduce significantly due to the weight divergence  [111] . Existing research on dealing with the statistical challenge of federated learning can be grouped into two fields, i.e., consensus solution and pluralistic solution."
+    },
+    {
+      "title": "2.1.1. Consensus Solution",
+      "text": "Most centralized models are trained on the aggregated training samples obtained from the samples drawn from the local clients  [96, 111] . Intrinsically, the centralized model is trained to minimize the loss with respect to the uniform distribution  [73] :\n\nwhere D is the target data distribution for the learning model. However, this specific uniform distribution is not an adequate solution in most scenarios.\n\nTo address this issue, the recent proposed solution is to model the target distribution or force the data adapt to the uniform distribution  [73, 111] . Specifically, Mohri et al.  [73]  proposed a minimax optimization scheme, i.e., agnostic federated learning (AFL), where the centralized model is optimized for any possible target distribution formed by a mixture of the client distributions. This method has only been applied at small scales. Compared to AFL, Li et al.  [64]  proposed q-Fair Federated Learning (q-FFL), assigning higher weight to devices with poor performance, so that the distribution of accuracy in the network reduces in variance. They empirically demonstrate the improved flexibility and scalability of q-FFL compared to AFL.\n\nAnother commonly used method is globally sharing a small portion of data between all the clients  [75, 111] . The shared subset is required containing a uniform distribution over classes from the central server to the clients. In addition to handle non-IID issue, sharing information of a small portion of trusted instances and noise patterns can guide the local agents to select compact training subset, while the clients learn to add changes to selected data samples, in order to improve the test performance of the global model  [38] ."
+    },
+    {
+      "title": "2.1.2. Pluralistic Solution",
+      "text": "Generally, it is difficult to find a consensus solution w that is good for all components D i . Instead of wastefully insisting on a consensus solution, many researchers choose to embracing this heterogeneity.\n\nMulti-task learning (MTL) is a natural way to deal with the data drawn from different distributions. It directly captures relationships among non-IID and unbalanced data by leveraging the relatedness between them in comparison to learn a single global model. In order to do this, it is necessary to target a particular way in which tasks are related, e.g., sharing sparsity, sharing low-rank structure, and graphbased relatedness. Recently, Smith et al.  [96]  empirically demonstrated this point on real-world federated datasets and proposed a novel method MOCHA to solve a general convex MTL problem with handling the system challenges at the same time. Later, Corinzia et al.  [22]  introduced VIRTUAL, an algorithm for federated multi-task learning with non-convex models. They consider the federation of central server and clients as a Bayesian network and perform training using approximated variational inference. This work bridges the frameworks of federated and transfer/continuous learning.\n\nThe success of multi-task learning rests on whether the chosen relatedness assumptions hold. Compared to this, pluralism can be a critical tool for dealing with heterogeneous data without any additional or even low-order terms that depend on the relatedness as in MTL  [28] . Eichner et al.  [28]  considered training in the presence of block-cyclic data and showed that a remarkably simple pluralistic approach can entirely resolve the source of data heterogeneity. When the component distributions are actually different, pluralism can outperform the \"ideal\" IID baseline."
+    },
+    {
+      "title": "2.2. Communication Efficiency of Federated Learning",
+      "text": "In federated learning setting, training data remain distributed over a large number of clients each with unreliable and relatively slow network connections. Naively for synchronous protocol in federated learning  [58, 96] , the total number of bits that required during uplink (clinets \u2192 server) and downlink (server \u2192 clients) communication by each of the K clients during training is given by:\n\nwhere U is the total number of updates performed by each client, |w| is the size of the model and H ( w up/down ) is the entropy of the weight updates exchanged during transmitting process. \u03b2 is the difference between the true update size and the minimal update size (which is given by the entropy)  [89] . Apparently, we can consider three ways to reduce the communication cost: (a) reduce the number of clients K, (b) reduce the update size, (c) reduce the number of updates U . Starting at these three points, we can organize existing research on communication-efficient federated learning into four groups, i.e., model compression, client selection, updates reducing, and peer-to-peer learning (Fig.  2 )."
+    },
+    {
+      "title": "2.2.1. Client Selection",
+      "text": "The most natural and rough way for reducing communication cost is to restrict the participated clients or choose a fraction of parameters to be updated at each round. Shokri et al.  [92]  use the selective stochastic gradient descent protocol, where the selection can be completely random or only the parameters whose current values are farther away from their local optima are selected, i.e., those that have a larger gradient. Nishio et al.  [75]  proposed a new protocol referred to as FedCS, where the central server manages the resources of heterogeneous clients and determines which clients should participate the current training task by analyzing the resource information of each client, such as wireless channel states, computational capacities, and the size of data resources relevant to the current task. Here, the server should decide how much data, energy, and CPU resources used by the mobile devices such that the energy consumption, training latency, and bandwidth cost are minimized while meeting requirements of the training tasks. Anh  [5]  thus proposes to use the Deep Q-Learning  [102]  technique that enables the server to find the optimal data and energy management for the mobile devices participating in the mobile crowdmachine learning through federated learning without any prior knowledge of network dynamics."
+    },
+    {
+      "title": "2.2.2. Model Compression",
+      "text": "The goal of model compression is to compress the server-to-client exchanges to reduce uplink/downlink communication cost. The first way is through structured updates, where the update is directly learned from a restricted space parameterized using a smaller number of variables, e.g., sparse, low-rank  [58] , or more specifically, pruning the least useful connections in a network  [37, 113] , weight quantization  [17, 89] , and model distillation  [43] . The second way is lossy compression, where a full model update is first learned and then compressed using a combination of quantization, random rotations, and subsampling before sending it to the server  [2, 58] . Then the server decodes the updates before doing the aggregation. Federated dropout, in which each client, instead of locally training an update to the whole global model, trains an update to a smaller sub-model  [12] . These submodels are subsets of the global model and, as such, the computed local updates have a natural interpretation as updates to the larger global model. Federated dropout not only reduces the downlink communication but also reduces the size of uplink updates. Moreover, the local computational costs is correspondingly reduced since the local training procedure dealing with parameters with smaller dimensions."
+    },
+    {
+      "title": "2.2.3. Updates Reduction",
+      "text": "Kamp et al.  [52]  proposed to average models dynamically depending on the utility of the communication, which leads to a reduction of communication by an order of magnitude compared to periodically communicating state-of-the-art approaches. This facet is well suited for massively distributed systems with limited communication infrastructure. Bui et al.  [11]  improved federated learning for Bayesian neural networks using partitioned variational inference, where the client can decide to upload the parameters back to the central server after multiple passes through its data, after one local epoch, or after just one mini-batch. Guha et al.  [35]  focused on techniques for one-shot federated learning, in which they learn a global model from data in the network using only a single round of communication between the devices and the central server. Besides above works, Ren et al. [84] theoretically analyzed the detailed expression of the learning efficiency in the CPU scenario and formulate a training acceleration problem under both communication and learning resource budget. Reinforcement learning and round robin learning are widely used to manage the communication and computation resources [5, 46, 106, 114]."
+    },
+    {
+      "title": "2.2.4. Peer-to-Peer Learning",
+      "text": "In federated learning, a central server is required to coordinate the training process of the global model. However, the communication cost to the central server may be not affordable since a large number of clients are usually involved. Also, many practical peer-to-peer networks are usually dynamic, and it is not possible to regularly access a fixed central server. Moreover, because of the dependence on central server, all clients are required to agree on one trusted central body, and whose failure would interrupt the training process for all clients. Therefore, some researches began to study fully decentralized framework where the central server is not required  [41, 60, 85, 91] . The local clients are distributed over the graph/network where they only communicate with their one-hop neighbors. Each client updates its local belief based on own data and then aggregates information from the one-hop neighbors."
+    },
+    {
+      "title": "2.3. Privacy and Security",
+      "text": "In federated learning, we usually assume the number of participated clients (e.g., phones, cars, clinical institutions...) is large, potentially in the thousands or millions. It is impossible to ensure none of the clients is malicious. The setting of federated learning, where the model is trained locally without revealing the input data or the model's output to any clients, prevents direct leakage while training or using the model. However, the clients may infer some information about another client's private dataset given the execution of f (w), or over the shared predictive model w [100]. To this end, there have been many efforts focus on privacy either from an individual point of view or multiparty views, especially in social media field which significantly exacerbated multiparty privacy (MP) conflicts  [97, 98]  (Fig.  3 )."
+    },
+    {
+      "title": "2.3.1. Secure Multi-party Computation",
+      "text": "Secure multi-party computation (SMC) has a natural application to federated learning scenarios, where each individual client uses a combination of cryptographic techniques and oblivious transfer to jointly compute a function of their private data  [8, 78] . Homomorphic encryption is a public key system, where any party can encrypt its data with a known public key and perform calculations with data encrypted by others with the same public key  [29] . Due to its success in cloud computing, it comes naturally into this realm, and it has certainly been used in many federated learning researches  [14, 40] .\n\nAlthough SMC guarantees that none of the parties shares anything with each other or with any third party, it can not prevent an adversary from learning some individual information, e.g., which clients' absence might change the decision boundary of a classifier, etc. Moreover, SMC protocols are usually computationally expensive even for the simplest problems, requiring iterated encryption/decryption and repeated communication between participants about some of the encrypted results  [78] ."
+    },
+    {
+      "title": "2.3.2. Differential Privacy",
+      "text": "Differential privacy (DP)  [26]  is an alternative theoretical model for protecting the privacy of individual data, which has been widely applied to many areas, not only traditional algorithms, e.g., boosting  [27] , principal component analysis  [15] , support vector machine  [86] , but also deep learning research  [1, 70] . It ensures that the addition or removal does not substantially affect the outcome of any analysis and is thus also widely studied in federated learning research to prevent the indirect leakage  [1, 70, 92] . However, DP only protects users from data leakage to a certain extent and may reduce performance in prediction accuracy because it is a lossy method  [18] . Thus, some researchers combine DP with SMC to reduce the growth of noise injection as the number of parties increases without sacrificing privacy while preserving provable privacy guarantees, protecting against extraction attacks and collusion threats  [18, 100] ."
+    },
+    {
+      "title": "3. Applications",
+      "text": "Federated learning has been incorporated and utilized in many domains. This widespread adoption is due in part by the fact that it enables a collaborative modeling mechanism that allows for efficient ML all while ensuring data privacy and legal compliance between multiple parties or multiple computing nodes. Some promising examples that highlight these capabilities are virtual keyboard prediction  [39, 70] , smart retail [112], finance  [109] , and vehicle-to-vehicle communication  [88] . In this section, we focus primarily on applications within the healthcare space and also discuss promising applications in other domains since some principles can be applied to healthcare."
+    },
+    {
+      "title": "3.1. Healthcare",
+      "text": "EHRs have emerged as a crucial source of real world healthcare data that has been used for an amalgamation of important biomedical research  [30, 47] , including for machine learning research  [72] . While providing a huge amount of patient data for analysis, EHRs contain systemic and random biases overall and specific to hospitals that limit the generalizability of results. For example, Obermeyer et al.  [76]  found that a commonly used algorithm to determine enrollment in specific health programs was biased against African Americans, assigning the same level of risk to healthier Caucasian patients. These improperly calibrated algorithms can arise due to a variety of reasons, such as differences in underlying access to care or low representation in training data. It is clear that one way to alleviate the risk for such biased algorithms is the ability to learn from EHR data that is more representative of the global population and which goes beyond a single hospital or site. Unfortunately, due to a myriad of reasons such as discrepant data schemes and privacy concerns, it is unlikely that data will eve be connected together in a single database to learn from all at once. The creation and utility of standardized common data models, such as OMOP  [44] , allow for more wide-spread replication analyses but it does not overcome the limitations of joint data access. As such, it is imperative that alternative strategies emerge for learning from multiple EHR data sources that go beyond the common discoveryreplication framework. Federated learning might be the tool to enable large-scale representative ML of EHR data and we discuss many studies which demonstrate this fact below.\n\nFederated learning is a viable method to connect EHR data from medical institutions, allowing them to share their experiences, and not their data, with a guarantee of privacy  [9, 25, 34, 45, 65, 82] . In these scenarios, the performance of ML model will be significantly improved by the iterative improvements of learning from large and diverse medical data sets. There have been some tasks were studied in federated learning setting in healthcare, e.g., patient similarity learning  [62] , patient representation learning, phenotyping  [55, 67] , and predictive modeling  [10, 45, 90] . Specifically, Lee et al.  [62]  presented a privacy-preserving platform in a federated setting for patient similarity learning across institutions. Their model can find similar patients from one hospital to another without sharing patient-level information. Kim et al.  [55]  used tensor factorization models to convert massive electronic health records into meaningful phenotypes for data analysis in federated learning setting. Liu et al.  [67]  conducted both patient representation learning and obesity comorbidity phenotyping in a federated manner and got good results. Vepakomma et al. [103]  built several configurations upon a distributed deep learning method called SplitNN  [36]  to facilitate the health entities collaboratively training deep learning models without sharing sensitive raw data or model details. Silva et al.  [93]  illustrated their federated learning framework by investigating brain structural relationships across diseases and clinical cohorts. Huang et al.  [45]  sought to tackle the challenge of non-IID ICU patient data by clustering patients into clinically meaningful communities that captured similar diagnoses and geological locations and simultaneously training one model per community.\n\nFederated learning has also enabled predictive modeling based on diverse sources, which can provide clinicians with additional insights into the risks and benefits of treating patients earlier  [9, 10, 90] . Brisimi et al.  [10]  aimed to predict future hospitalizations for patients with heart-related diseases using EHR data spread among various data sources/agents by solving the l 1 -regularized sparse Support Vector Machine classifier in federated learning environment. Owkin is using federated learning to predict patients' resistance to certain treatment and drugs, as well as their survival rates for certain diseases  [99] . Boughorbel et al.  [9]  proposed a federated uncertaintyaware learning algorithm for the prediction of preterm birth from distributed EHR, where the contribution of models with high uncertainty in the aggregation model is reduced. Pfohl et al.  [80]  considered the prediction of prolonged length of stay and in-hospital mortality across thirty-one hospitals in the eICU Collaborative Research Database. Sharma et al.  [90]  tested a privacy preserving framework for the task of in-hospital mortality prediction among patients admitted to the intensive care unit (ICU). Their results show that training the model in the federated learning framework leads to comparable performance to the traditional centralized learning setting. Summary of these work is listed in Table  1 ."
+    },
+    {
+      "title": "3.2. Others",
+      "text": "An important application of federated learning is for natural language processing (NLP) tasks. When Google first proposed federated learning concept in 2016, the application scenario is Gboard-a virtual keyboard of Google for touchscreen mobile devices with support for more than 600 language varieties  [39, 70] . Indeed, as users increasingly turn to mobile devices, fast mobile input methods with auto-correction, word completion, and next-word prediction features are becoming more and more important. For these NLP tasks, especially next-word prediction, typed text in mobile apps is usually better than the data from scanned books or speech-to-text in terms of aiding typing on a mobile keyboard. However, these language data often contain sensitive information, e.g., passwords, search queries, or text messages with personal information. Therefore, federated learning has a promising application in NLP like virtual keyboard prediction  [7, 39, 70] .\n\nOther applications include smart retail [112] and finance  [54] . Specifically, smart retail aims to use machine learning technology to provide personalized services to customers based on data like user purchasing power and product characteristics for product recommendation and sales services. In terms of financial applications, Tencent's WeBank leverages federated learning technologies for credit risk management, where several Banks could jointly generate a comprehensive credit score for a customer without sharing his or her data  [109] . With the growth and development of federated learning, there are many companies or research teams that have carried out various tools oriented to scientific research and product development. Popular ones are listed in Table  2 .\n\n1 Summary of recent work on federated learning for healthcare Problem ML method No. of clients Data Patient similarity learning [62] Hashing 3 MIMIC-III [50] Patient similarity learning [108] Hashing 20 MIMIC-III Phenotyping [55] TF 1-5 MIMIC-III, UCSD [104] Phenotyping [67] NLP 10 MIMIC-III Representation learning [93] PCA 10-100 ADNI, UK Biobank, PPMI, MIRIAD Mortality prediction [45] Autoencoder 5-50 eICU Collaborative Research Database [81] Hospitalization prediction [10] SVM 5, 10 Boston Medical Center Preterm-birth prediction [9] RNN 50 Cerner Health Facts Mortality prediction [80] LR, NN 31 eICU Collaborative Research Database Mortality prediction [90] LR, MLP 2 MIMIC-III Activity recognition [16] CNN 5 UCI Smartphone [4] Adverse drug reactions Prediction [19, 20] SVM, MLP, LR 10 LCED, MIMIC Arrhythmia detection [110] NN 16, 32, 64 PhysioNet Dataset [21] Disease prediction [33] NN 5, 10 Pima Indians Diabetes Dataset [95], Cleveland Heart Disease Database [23] Imaging data analysis VAE 4 MNIST, Brain Imaging Data Mortality prediction [101] LRR, MLP, LASSO 5 Mount Sinai COVID-19 Dataset TF tensor factorization, MLP multi-layer perceptron, VAE variational autoencoder, LCED Limited MarketScan Explorys Claims-EMR Data. https://www.ibm.com/downloads/cas/6KNYVVQ2"
+    },
+    {
+      "title": "4. Conclusions and Open Questions",
+      "text": "In this survey, we review the current progress on federated learning including, but not limited to healthcare field. We summarize the general solutions to the various challenges in federated learning and hope to provide a useful resource for researchers to refer. Besides the summarized general issues in federated learning setting, we list some probably encountered directions or open questions when federated learning is applied in healthcare area in the following.\n\n-Data Quality. Federated learning has the potential to connect all the isolated medical institutions, hospitals, or devices to make them share their experiences with privacy guarantee. However, most health systems suffer from data clutter and efficiency problems. The quality of data collected from multiple sources is uneven and there is no uniform data standard. The analyzed results are apparently worthless when dirty data are accidentally used as samples. The ability to strategically leverage medical data is critical. Therefore, how to clean, correct, and complete data and accordingly ensure data quality is a key to improve the machine learning model weather we are dealing with federated learning scenario or not. -Incorporating Expert Knowledge. In 2016, IBM introduced Watson for Oncology, a tool that uses the natural language processing system to summarize patients' electronic health records and search the powerful database behind it to advise doctors on treatments. Unfortunately, some oncologists say they trust their judgment more than Watson tells them what needs to be done.  1  Therefore, hopefully doctors will be involved in the training process. Since every data set collected here cannot be of high quality, so it will be very helpful if the standards of evidence-based machine are introduced, doctors will also see the diagnostic criteria of artificial intelligence. If wrong, doctors will give further guidance to artificial intelligence to improve the accuracy of machine learning model during training process.\" -Incentive Mechanisms. With the internet of things and the variety of third party portals, a growing number of smartphone healthcare apps are compatible with wearable devices. In addition to data accumulated in hospitals or medical centers, another type of data that is of great value is coming from wearable devices not only to the researchers but more importantly for the owners. However, during federated model training process, the clients suffer from considerable overhead in communication and computation. Without well-designed incentives, self-interested mobile or other wearable devices will be reluctant to participate learning tasks, which will hinder the adoption of federated learning  [53] . How to design an efficient incentive mechanism to attract devices with high-quality data to join federated learning is another important problem. -Personalization. Wearable devices are more focus on public health, which means helping people who are already healthy to improve their health, such as helping them exercise, practice meditation, and improve their sleep quality. How to assist patients to carry out scientifically designed personalized health management, correct the functional pathological state by examining indicators, and interrupt the pathological change process are very important. Reasonable chronic disease management can avoid emergency visits and hospitalization and reduce the number of visits. Cost and labor savings. Although there are some general work about federated learning personalization  [48, 94] , for healthcare informatics, how to combining the medical domain knowledge and make the global model be personalized for every medical institutions or wearable devices is another open question. -Model Precision. Federated tries to make isolated institutions or devices share their experiences, and the performance of machine learning model will be significantly improved by the formed large medical dataset. However, the prediction task is currently restricted and relatively simple. Medical treatment itself is a very professional and accurate field. Medical devices in hospitals have incomparable advantages over wearable devices. And the models of Doc.ai could predict the phenome collection of one's biometric data based on its selfie, such as height, weight, age, sex, and BMI.  2  How to improve the prediction model to predict future health conditions is definitely worth exploring."
+    },
+    {
+      "text": "Fig. 1 Schematic of the federated learning framework. The model is trained in a distributed manner: the institutions periodically communicate the local updates with a central server to learn a global model; the central server aggregates the updates and sends back the parameters of the updated global model"
+    },
+    {
+      "text": "Fig. 2 Communication efficient federated learning methods. Existing research on improving communication efficiency can be categorized into a model compression, b client selection, c updates reducing, and d peer-to-peer learning"
+    },
+    {
+      "text": "Fig. 3 Privacy-preserving schemes. a Secure multi-party computation. In security sharing, security values (blue and yellow pie) are split into any number of shares that are distributed among the computing nodes. During the computation, no computation node is able to recover the original value nor learn anything about the output (green pie). Any nodes can combine their shares to reconstruct the original value. b Differential privacy. It guarantees that anyone seeing the result of a differentially private analysis will make the same inference (answer 1 and answer 2 are nearly indistinguishable)"
+    },
+    {
+      "text": "Popular tools federated learning research"
+    },
+    {
+      "title": "Funding",
+      "text": "The work is supported by  ONR   N00014-18-1-2585  and  NSF   1750326 . FW would also like to acknowledge the support from  Amazon AWS Machine   Learning Research Award  and  Google Faculty Research Award ."
+    },
+    {
+      "title": "Compliance with Ethical Standards"
+    },
+    {
+      "title": "Conflict of Interest",
+      "text": "The authors declare that they have no conflict of interest.\n\nPublisher's Note Springer Nature remains neutral with regard to jurisdictional claims in published maps and institutional affiliations."
+    }
+  ],
+  "references": [
+    {
+      "title": "Deep learning with differential privacy",
+      "authors": [
+        "M Abadi",
+        "A Chu",
+        "I Goodfellow",
+        "H Mcmahan",
+        "I Mironov",
+        "K Talwar",
+        "L Zhang"
+      ],
+      "year": 2016,
+      "doi": "10.1145/2976749.2978318",
+      "raw": "Deep learning with differential privacy \n\t\t \n\t\t\t M Abadi \n\t\t \n\t\t \n\t\t\t A Chu \n\t\t \n\t\t \n\t\t\t I Goodfellow \n\t\t \n\t\t \n\t\t\t H B Mcmahan \n\t\t \n\t\t \n\t\t\t I Mironov \n\t\t \n\t\t \n\t\t\t K Talwar \n\t\t \n\t\t \n\t\t\t L Zhang \n\t\t \n\t\t 10.1145/2976749.2978318 \n\t \n\t \n\t\t Proceedings of the 2016 ACM SIGSAC conference on computer and communications security \n\t\t the 2016 ACM SIGSAC conference on computer and communications security \n\t\t \n\t\t\t ACM \n\t\t\t 2016 \n\t\t\t \n\t\t \n\t \n\t Abadi M, Chu A, Goodfellow I, McMahan HB, Mironov I, Talwar K, Zhang L (2016) Deep learning with differential privacy. In: Proceedings of the 2016 ACM SIGSAC conference on computer and communications security. ACM, pp 308-318"
+    },
+    {
+      "title": "cpsgd: communication-efficient and differentially-private distributed sgd",
+      "authors": [
+        "N Agarwal",
+        "A Suresh",
+        "Fxx Yu",
+        "S Kumar",
+        "B Mcmahan"
+      ],
+      "year": 2018,
+      "raw": "cpsgd: communication-efficient and differentially-private distributed sgd \n\t\t \n\t\t\t N Agarwal \n\t\t \n\t\t \n\t\t\t A T Suresh \n\t\t \n\t\t \n\t\t\t Fxx Yu \n\t\t \n\t\t \n\t\t\t S Kumar \n\t\t \n\t\t \n\t\t\t B Mcmahan \n\t\t \n\t \n\t \n\t\t Advances in neural information processing systems \n\t\t \n\t\t\t 2018 \n\t\t\t \n\t\t \n\t \n\t Agarwal N, Suresh AT, Yu FXX, Kumar S, McMahan B (2018) cpsgd: communication-efficient and differentially-private distributed sgd. In: Advances in neural information processing systems, pp 7564-7575"
+    },
+    {
+      "title": "Federated ai technology enabler",
+      "year": 2019,
+      "raw": "Ai W \n\t\t \n\t\t \n\t\t Federated ai technology enabler \n\t\t \n\t\t\t 2019 \n\t\t \n\t \n\t AI W (2019) Federated ai technology enabler. https://www.fedai.org/cn/"
+    },
+    {
+      "title": "Human activity recognition on smartphones using a multiclass hardware-friendly support vector machine",
+      "authors": [
+        "D Anguita",
+        "A Ghio",
+        "L Oneto",
+        "X Parra",
+        "Reyes-Ortiz Jl"
+      ],
+      "year": 2012,
+      "raw": "Human activity recognition on smartphones using a multiclass hardware-friendly support vector machine \n\t\t \n\t\t\t D Anguita \n\t\t \n\t\t \n\t\t\t A Ghio \n\t\t \n\t\t \n\t\t\t L Oneto \n\t\t \n\t\t \n\t\t\t X Parra \n\t\t \n\t\t \n\t\t\t Reyes-Ortiz Jl \n\t\t \n\t \n\t \n\t\t International workshop on ambient assisted living \n\t\t \n\t\t\t Springer \n\t\t\t 2012 \n\t\t\t \n\t\t \n\t \n\t Anguita D, Ghio A, Oneto L, Parra X, Reyes-Ortiz JL (2012) Human activity recognition on smart- phones using a multiclass hardware-friendly support vector machine. In: International workshop on ambient assisted living. Springer, pp 216-223"
+    },
+    {
+      "title": "Efficient training management for mobile crowd-machine learning: A deep reinforcement learning approach",
+      "authors": [
+        "T Anh",
+        "D Luong",
+        "D Kim",
+        "L Wang"
+      ],
+      "year": 2019,
+      "journal": "IEEE Wireless Communications Letters",
+      "volume": "8",
+      "issue": "5",
+      "raw": "Efficient training management for mobile crowd-machine learning: A deep reinforcement learning approach \n\t\t \n\t\t\t T T Anh \n\t\t \n\t\t \n\t\t\t D Luong \n\t\t \n\t\t \n\t\t\t D I Kim \n\t\t \n\t\t \n\t\t\t L C Wang \n\t\t \n\t \n\t \n\t\t IEEE Wireless Communications Letters \n\t\t \n\t\t\t 8 \n\t\t\t 5 \n\t\t\t \n\t\t\t 2019 \n\t\t \n\t \n\t Anh TT, Luong D, Kim DI, Wang LC (2019) Efficient training management for mobile crowd-machine learning: A deep reinforcement learning approach. IEEE Wireless Communications Letters 8(5):1345-1348"
+    },
+    {
+      "title": "An agent-based federated learning object search service",
+      "authors": [
+        "C Barcelos",
+        "J Gluz",
+        "R Vicari"
+      ],
+      "year": 2011,
+      "journal": "Interdisciplinary Journal of E-Learning and Learning Objects",
+      "volume": "7",
+      "issue": "1",
+      "raw": "An agent-based federated learning object search service \n\t\t \n\t\t\t C Barcelos \n\t\t \n\t\t \n\t\t\t J Gluz \n\t\t \n\t\t \n\t\t\t R Vicari \n\t\t \n\t \n\t \n\t\t Interdisciplinary Journal of E-Learning and Learning Objects \n\t\t \n\t\t\t 7 \n\t\t\t 1 \n\t\t\t \n\t\t\t 2011 \n\t\t \n\t \n\t Barcelos C, Gluz J, Vicari R (2011) An agent-based federated learning object search service. Interdisciplinary Journal of E-Learning and Learning Objects 7(1):37-54"
+    },
+    {
+      "title": "Towards federated learning at scale: System design",
+      "authors": [
+        "K Bonawitz",
+        "H Eichner",
+        "W Grieskamp",
+        "D Huba",
+        "A Ingerman",
+        "V Ivanov",
+        "C Kiddon",
+        "J Konecny",
+        "S Mazzocchi",
+        "H Mcmahan"
+      ],
+      "year": 2019,
+      "raw": "K Bonawitz \n\t\t \n\t\t \n\t\t\t H Eichner \n\t\t \n\t\t \n\t\t\t W Grieskamp \n\t\t \n\t\t \n\t\t\t D Huba \n\t\t \n\t\t \n\t\t\t A Ingerman \n\t\t \n\t\t \n\t\t\t V Ivanov \n\t\t \n\t\t \n\t\t\t C Kiddon \n\t\t \n\t\t \n\t\t\t J Konecny \n\t\t \n\t\t \n\t\t\t S Mazzocchi \n\t\t \n\t\t \n\t\t\t H B Mcmahan \n\t\t \n\t\t arXiv:1902.01046 \n\t\t Towards federated learning at scale: System design \n\t\t \n\t\t\t 2019 \n\t\t \n\t \n\t Bonawitz K, Eichner H, Grieskamp W, Huba D, Ingerman A, Ivanov V, Kiddon C, Konecny J, Mazzocchi S, McMahan HB, et al. (2019) Towards federated learning at scale: System design. arXiv:1902.01046"
+    },
+    {
+      "title": "Practical secure aggregation for privacy-preserving machine learning",
+      "authors": [
+        "K Bonawitz",
+        "V Ivanov",
+        "B Kreuter",
+        "A Marcedone",
+        "H Mcmahan",
+        "S Patel",
+        "D Ramage",
+        "A Segal",
+        "K Seth"
+      ],
+      "year": 2017,
+      "raw": "Practical secure aggregation for privacy-preserving machine learning \n\t\t \n\t\t\t K Bonawitz \n\t\t \n\t\t \n\t\t\t V Ivanov \n\t\t \n\t\t \n\t\t\t B Kreuter \n\t\t \n\t\t \n\t\t\t A Marcedone \n\t\t \n\t\t \n\t\t\t H B Mcmahan \n\t\t \n\t\t \n\t\t\t S Patel \n\t\t \n\t\t \n\t\t\t D Ramage \n\t\t \n\t\t \n\t\t\t A Segal \n\t\t \n\t\t \n\t\t\t K Seth \n\t\t \n\t \n\t \n\t\t Proceedings of the 2017 ACM SIGSAC conference on computer and communications security \n\t\t the 2017 ACM SIGSAC conference on computer and communications security \n\t\t \n\t\t\t ACM \n\t\t\t 2017 \n\t\t\t \n\t\t \n\t \n\t Bonawitz K, Ivanov V, Kreuter B, Marcedone A, McMahan HB, Patel S, Ramage D, Segal A, Seth K (2017) Practical secure aggregation for privacy-preserving machine learning. In: Proceedings of the 2017 ACM SIGSAC conference on computer and communications security. ACM, pp 1175-1191"
+    },
+    {
+      "title": "Federated uncertainty-aware learning for distributed hospital ehr data",
+      "authors": [
+        "S Boughorbel",
+        "F Jarray",
+        "N Venugopal",
+        "S Moosa",
+        "H Elhadi",
+        "M Makhlouf"
+      ],
+      "year": 2019,
+      "raw": "Federated uncertainty-aware learning for distributed hospital ehr data \n\t\t \n\t\t\t S Boughorbel \n\t\t \n\t\t \n\t\t\t F Jarray \n\t\t \n\t\t \n\t\t\t N Venugopal \n\t\t \n\t\t \n\t\t\t S Moosa \n\t\t \n\t\t \n\t\t\t H Elhadi \n\t\t \n\t\t \n\t\t\t M Makhlouf \n\t\t \n\t\t arXiv:1910.12191 \n\t\t \n\t\t\t 2019 \n\t\t \n\t \n\t Boughorbel S, Jarray F, Venugopal N, Moosa S, Elhadi H, Makhlouf M (2019) Federated uncertainty-aware learning for distributed hospital ehr data. arXiv:1910.12191"
+    },
+    {
+      "title": "Federated learning of predictive models from federated electronic health records",
+      "authors": [
+        "T Brisimi",
+        "R Chen",
+        "T Mela",
+        "A Olshevsky",
+        "I Paschalidis",
+        "W Shi"
+      ],
+      "year": 2018,
+      "doi": "10.1016/j.ijmedinf.2018.01.007",
+      "journal": "Int J Med Inform",
+      "volume": "112",
+      "raw": "Federated learning of predictive models from federated electronic health records \n\t\t \n\t\t\t T S Brisimi \n\t\t \n\t\t \n\t\t\t R Chen \n\t\t \n\t\t \n\t\t\t T Mela \n\t\t \n\t\t \n\t\t\t A Olshevsky \n\t\t \n\t\t \n\t\t\t I C Paschalidis \n\t\t \n\t\t \n\t\t\t W Shi \n\t\t \n\t\t 10.1016/j.ijmedinf.2018.01.007 \n\t \n\t \n\t\t Int J Med Inform \n\t\t \n\t\t\t 112 \n\t\t\t \n\t\t\t 2018 \n\t\t \n\t \n\t Brisimi TS, Chen R, Mela T, Olshevsky A, Paschalidis IC, Shi W (2018) Federated learning of predictive models from federated electronic health records. Int J Med Inform 112:59-67"
+    },
+    {
+      "title": "Partitioned variational inference: a unified framework encompassing federated and continual learning",
+      "authors": [
+        "T Bui",
+        "C Nguyen",
+        "S Swaroop",
+        "R Turner"
+      ],
+      "year": 2018,
+      "raw": "Partitioned variational inference: a unified framework encompassing federated and continual learning \n\t\t \n\t\t\t T D Bui \n\t\t \n\t\t \n\t\t\t C V Nguyen \n\t\t \n\t\t \n\t\t\t S Swaroop \n\t\t \n\t\t \n\t\t\t R E Turner \n\t\t \n\t\t arXiv:1811.11206 \n\t\t \n\t\t\t 2018 \n\t\t \n\t \n\t Bui TD, Nguyen CV, Swaroop S, Turner RE (2018) Partitioned variational inference: a unified framework encompassing federated and continual learning. arXiv:1811.11206"
+    },
+    {
+      "title": "Expanding the reach of federated learning by reducing client resource requirements",
+      "authors": [
+        "S Caldas",
+        "J Kone\u010dny",
+        "H Mcmahan",
+        "A Talwalkar"
+      ],
+      "year": 2018,
+      "raw": "Expanding the reach of federated learning by reducing client resource requirements \n\t\t \n\t\t\t S Caldas \n\t\t \n\t\t \n\t\t\t J Kone\u010dny \n\t\t \n\t\t \n\t\t\t H B Mcmahan \n\t\t \n\t\t \n\t\t\t A Talwalkar \n\t\t \n\t\t arXiv:1812.07210 \n\t\t \n\t\t\t 2018 \n\t\t \n\t \n\t Caldas S, Kone\u010dny J, McMahan HB, Talwalkar A (2018) Expanding the reach of federated learning by reducing client resource requirements. arXiv:1812.07210"
+    },
+    {
+      "title": "Leaf: a benchmark for federated settings",
+      "authors": [
+        "S Caldas",
+        "P Wu",
+        "T Li",
+        "J Kone\u010dn\u1ef3",
+        "H Mcmahan",
+        "V Smith",
+        "A Talwalkar"
+      ],
+      "year": 2018,
+      "raw": "S Caldas \n\t\t \n\t\t \n\t\t\t P Wu \n\t\t \n\t\t \n\t\t\t T Li \n\t\t \n\t\t \n\t\t\t J Kone\u010dn\u1ef3 \n\t\t \n\t\t \n\t\t\t H B Mcmahan \n\t\t \n\t\t \n\t\t\t V Smith \n\t\t \n\t\t \n\t\t\t A Talwalkar \n\t\t \n\t\t arXiv:1812.01097 \n\t\t Leaf: a benchmark for federated settings \n\t\t \n\t\t\t 2018 \n\t\t \n\t \n\t Caldas S, Wu P, Li T, Kone\u010dn\u1ef3 J, McMahan HB, Smith V, Talwalkar A (2018) Leaf: a benchmark for federated settings. arXiv:1812.01097"
+    },
+    {
+      "title": "Secure federated matrix factorization",
+      "authors": [
+        "D Chai",
+        "L Wang",
+        "K Chen",
+        "Q Yang"
+      ],
+      "year": 2020,
+      "doi": "10.14711/thesis-991013401041803412",
+      "raw": "Secure federated matrix factorization \n\t\t \n\t\t\t D Chai \n\t\t \n\t\t \n\t\t\t L Wang \n\t\t \n\t\t \n\t\t\t K Chen \n\t\t \n\t\t \n\t\t\t Q Yang \n\t\t \n\t\t 10.14711/thesis-991013401041803412 \n\t\t arXiv:1906.05108 \n\t\t \n\t\t\t 2020 \n\t\t \n\t \n\t arXiv preprint \n\t Chai D, Wang L, Chen K, Yang Q (2020) Secure federated matrix factorization. arXiv preprint arXiv:1906.05108"
+    },
+    {
+      "title": "A near-optimal algorithm for differentially-private principal components",
+      "authors": [
+        "K Chaudhuri",
+        "A Sarwate",
+        "K Sinha"
+      ],
+      "year": 2013,
+      "journal": "J Mach Learn Res",
+      "volume": "14",
+      "issue": "1",
+      "raw": "A near-optimal algorithm for differentially-private principal components \n\t\t \n\t\t\t K Chaudhuri \n\t\t \n\t\t \n\t\t\t A D Sarwate \n\t\t \n\t\t \n\t\t\t K Sinha \n\t\t \n\t \n\t \n\t\t J Mach Learn Res \n\t\t \n\t\t\t 14 \n\t\t\t 1 \n\t\t\t \n\t\t\t 2013 \n\t\t \n\t \n\t Chaudhuri K, Sarwate AD, Sinha K (2013) A near-optimal algorithm for differentially-private principal components. J Mach Learn Res 14(1):2905-2943"
+    },
+    {
+      "title": "Fedhealth: a federated transfer learning framework for wearable healthcare",
+      "authors": [
+        "Y Chen",
+        "X Qin",
+        "J Wang",
+        "C Yu",
+        "W Gao"
+      ],
+      "year": 2020,
+      "journal": "IEEE Intelligent Systems",
+      "volume": "17",
+      "raw": "Fedhealth: a federated transfer learning framework for wearable healthcare \n\t\t \n\t\t\t Y Chen \n\t\t \n\t\t \n\t\t\t X Qin \n\t\t \n\t\t \n\t\t\t J Wang \n\t\t \n\t\t \n\t\t\t C Yu \n\t\t \n\t\t \n\t\t\t W Gao \n\t\t \n\t \n\t \n\t\t IEEE Intelligent Systems \n\t\t \n\t\t\t 17 \n\t\t\t 2020 \n\t\t \n\t \n\t Chen Y, Qin X, Wang J, Yu C, Gao W (2020) Fedhealth: a federated transfer learning framework for wearable healthcare. IEEE Intelligent Systems 17"
+    },
+    {
+      "title": "Communication-efficient federated deep learning with asynchronous model update and temporally weighted aggregation",
+      "authors": [
+        "Y Chen",
+        "X Sun"
+      ],
+      "year": 2019,
+      "raw": "Communication-efficient federated deep learning with asynchronous model update and temporally weighted aggregation \n\t\t \n\t\t\t Y Chen \n\t\t \n\t\t \n\t\t\t X Sun \n\t\t \n\t\t \n\t\t\t Jin Y \n\t\t \n\t\t arXiv:1903.07424 \n\t\t \n\t\t\t 2019 \n\t\t \n\t \n\t Chen Y, Sun X, Jin Y (2019) Communication-efficient federated deep learning with asynchronous model update and temporally weighted aggregation. arXiv:1903.07424"
+    },
+    {
+      "title": "Secureboost: a lossless federated learning framework",
+      "authors": [
+        "K Cheng",
+        "T Fan",
+        "Jin Liu",
+        "Y Chen",
+        "T Yang"
+      ],
+      "year": 2019,
+      "raw": "Secureboost: a lossless federated learning framework \n\t\t \n\t\t\t K Cheng \n\t\t \n\t\t \n\t\t\t T Fan \n\t\t \n\t\t \n\t\t\t Jin Y Liu \n\t\t \n\t\t \n\t\t\t Y Chen \n\t\t \n\t\t \n\t\t\t T Yang \n\t\t \n\t\t \n\t\t\t Q \n\t\t \n\t\t arXiv:1901.08755 \n\t\t \n\t\t\t 2019 \n\t\t \n\t \n\t Cheng K, Fan T, Jin Y, Liu Y, Chen T, Yang Q (2019) Secureboost: a lossless federated learning framework. arXiv:1901.08755"
+    },
+    {
+      "title": "Differential privacy-enabled federated learning for sensitive health data",
+      "authors": [
+        "O Choudhury",
+        "A Gkoulalas-Divanis",
+        "T Salonidis",
+        "I Sylla",
+        "Y Park",
+        "G Hsu",
+        "A Das"
+      ],
+      "year": 2019,
+      "raw": "Differential privacy-enabled federated learning for sensitive health data \n\t\t \n\t\t\t O Choudhury \n\t\t \n\t\t \n\t\t\t A Gkoulalas-Divanis \n\t\t \n\t\t \n\t\t\t T Salonidis \n\t\t \n\t\t \n\t\t\t I Sylla \n\t\t \n\t\t \n\t\t\t Y Park \n\t\t \n\t\t \n\t\t\t G Hsu \n\t\t \n\t\t \n\t\t\t A Das \n\t\t \n\t\t arXiv:1910.02578 \n\t\t \n\t\t\t 2019 \n\t\t \n\t \n\t Choudhury O, Gkoulalas-Divanis A, Salonidis T, Sylla I, Park Y, Hsu G, Das A (2019) Differential privacy-enabled federated learning for sensitive health data. arXiv:1910.02578"
+    },
+    {
+      "title": "Predicting adverse drug reactions on distributed health data using federated learning",
+      "authors": [
+        "O Choudhury",
+        "Y Park",
+        "T Salonidis",
+        "A Gkoulalas-Divanis",
+        "I Sylla"
+      ],
+      "year": 2019,
+      "pages": "313",
+      "raw": "Predicting adverse drug reactions on distributed health data using federated learning \n\t\t \n\t\t\t O Choudhury \n\t\t \n\t\t \n\t\t\t Y Park \n\t\t \n\t\t \n\t\t\t T Salonidis \n\t\t \n\t\t \n\t\t\t A Gkoulalas-Divanis \n\t\t \n\t\t \n\t\t\t I Sylla \n\t\t \n\t \n\t \n\t\t AMIA Annual symposium proceedings \n\t\t \n\t\t\t American Medical Informatics Association \n\t\t\t 2019. 2019 \n\t\t\t 313 \n\t\t \n\t \n\t Choudhury O, Park Y, Salonidis T, Gkoulalas-Divanis A, Sylla I, et al. (2019) Predicting adverse drug reactions on distributed health data using federated learning. In: AMIA Annual symposium proceedings, vol 2019, p 313. American Medical Informatics Association"
+    },
+    {
+      "title": "The physionet/computing in cardiology challenge 2015: reducing false arrhythmia alarms in the icu",
+      "authors": [
+        "G Clifford",
+        "I Silva",
+        "B Moody",
+        "Q Li",
+        "D Kella",
+        "A Shahin",
+        "T Kooistra",
+        "D Perry",
+        "R Mark"
+      ],
+      "year": 2015,
+      "raw": "The physionet/computing in cardiology challenge 2015: reducing false arrhythmia alarms in the icu \n\t\t \n\t\t\t G D Clifford \n\t\t \n\t\t \n\t\t\t I Silva \n\t\t \n\t\t \n\t\t\t B Moody \n\t\t \n\t\t \n\t\t\t Q Li \n\t\t \n\t\t \n\t\t\t D Kella \n\t\t \n\t\t \n\t\t\t A Shahin \n\t\t \n\t\t \n\t\t\t T Kooistra \n\t\t \n\t\t \n\t\t\t D Perry \n\t\t \n\t\t \n\t\t\t R G Mark \n\t\t \n\t \n\t \n\t\t 2015 Computing in Cardiology Conference (CinC) \n\t\t \n\t\t\t IEEE \n\t\t\t 2015 \n\t\t\t \n\t\t \n\t \n\t Clifford GD, Silva I, Moody B, Li Q, Kella D, Shahin A, Kooistra T, Perry D, Mark RG (2015) The physionet/computing in cardiology challenge 2015: reducing false arrhythmia alarms in the icu. In: 2015 Computing in Cardiology Conference (CinC). IEEE, pp 273-276"
+    },
+    {
+      "title": "Variational federated multi-task learning",
+      "authors": [
+        "L Corinzia",
+        "J Buhmann"
+      ],
+      "year": 2019,
+      "raw": "Variational federated multi-task learning \n\t\t \n\t\t\t L Corinzia \n\t\t \n\t\t \n\t\t\t J M Buhmann \n\t\t \n\t\t arXiv:1906.06268 \n\t\t \n\t\t\t 2019 \n\t\t \n\t \n\t Corinzia L, Buhmann JM (2019) Variational federated multi-task learning. arXiv:1906.06268"
+    },
+    {
+      "title": "International application of a new probability algorithm for the diagnosis of coronary artery disease",
+      "authors": [
+        "R Detrano",
+        "A Janosi",
+        "W Steinbrunn",
+        "M Pfisterer",
+        "J Schmid",
+        "S Sandhu",
+        "K Guppy",
+        "S Lee",
+        "V Froelicher"
+      ],
+      "year": 1989,
+      "doi": "10.1016/0002-9149(89)90524-9",
+      "journal": "The American Journal of Cardiology",
+      "volume": "64",
+      "issue": "5",
+      "raw": "International application of a new probability algorithm for the diagnosis of coronary artery disease \n\t\t \n\t\t\t R Detrano \n\t\t \n\t\t \n\t\t\t A Janosi \n\t\t \n\t\t \n\t\t\t W Steinbrunn \n\t\t \n\t\t \n\t\t\t M Pfisterer \n\t\t \n\t\t \n\t\t\t J J Schmid \n\t\t \n\t\t \n\t\t\t S Sandhu \n\t\t \n\t\t \n\t\t\t K H Guppy \n\t\t \n\t\t \n\t\t\t S Lee \n\t\t \n\t\t \n\t\t\t V Froelicher \n\t\t \n\t\t 10.1016/0002-9149(89)90524-9 \n\t \n\t \n\t\t The American Journal of Cardiology \n\t\t \n\t\t\t 64 \n\t\t\t 5 \n\t\t\t \n\t\t\t 1989 \n\t\t \n\t \n\t Detrano R, Janosi A, Steinbrunn W, Pfisterer M, Schmid JJ, Sandhu S, Guppy KH, Lee S, Froelicher V (1989) International application of a new probability algorithm for the diagnosis of coronary artery disease. The American Journal of Cardiology 64(5):304-310 24"
+    },
+    {
+      "title": "ai: declarative, on-device machine learning for ios, android, and react native",
+      "year": 2019,
+      "raw": "ai: declarative, on-device machine learning for ios, android, and react native \n\t\t \n\t\t\t 2019 \n\t\t \n\t \n\t 2019). doc.ai: declarative, on-device machine learning for ios, android, and react native. https:// github.com/doc-ai/tensorio"
+    },
+    {
+      "title": "Learning from electronic health records across multiple sites: a communication-efficient and privacy-preserving distributed algorithm",
+      "authors": [
+        "R Duan",
+        "M Boland",
+        "Z Liu",
+        "Y Liu",
+        "H Chang",
+        "H Xu",
+        "H Chu",
+        "C Schmid",
+        "C Forrest",
+        "J Holmes"
+      ],
+      "year": 2020,
+      "doi": "10.1093/jamia/ocz199",
+      "journal": "J Am Med Inform Assoc",
+      "volume": "27",
+      "issue": "3",
+      "raw": "Learning from electronic health records across multiple sites: a communication-efficient and privacy-preserving distributed algorithm \n\t\t \n\t\t\t R Duan \n\t\t \n\t\t \n\t\t\t M R Boland \n\t\t \n\t\t \n\t\t\t Z Liu \n\t\t \n\t\t \n\t\t\t Y Liu \n\t\t \n\t\t \n\t\t\t H H Chang \n\t\t \n\t\t \n\t\t\t H Xu \n\t\t \n\t\t \n\t\t\t H Chu \n\t\t \n\t\t \n\t\t\t C H Schmid \n\t\t \n\t\t \n\t\t\t C B Forrest \n\t\t \n\t\t \n\t\t\t J H Holmes \n\t\t \n\t\t 10.1093/jamia/ocz199 \n\t \n\t \n\t\t J Am Med Inform Assoc \n\t\t \n\t\t\t 27 \n\t\t\t 3 \n\t\t\t \n\t\t\t 2020 \n\t\t \n\t \n\t Duan R, Boland MR, Liu Z, Liu Y, Chang HH, Xu H, Chu H, Schmid CH, Forrest CB, Holmes JH, et al. (2020) Learning from electronic health records across multiple sites: a communication-efficient and privacy-preserving distributed algorithm. J Am Med Inform Assoc 27(3):376-385"
+    },
+    {
+      "title": "Our data, ourselves: Privacy via distributed noise generation",
+      "authors": [
+        "C Dwork",
+        "K Kenthapadi",
+        "F Mcsherry",
+        "I Mironov",
+        "M Naor"
+      ],
+      "year": 2006,
+      "doi": "10.1007/11761679_29",
+      "raw": "Our data, ourselves: Privacy via distributed noise generation \n\t\t \n\t\t\t C Dwork \n\t\t \n\t\t \n\t\t\t K Kenthapadi \n\t\t \n\t\t \n\t\t\t F Mcsherry \n\t\t \n\t\t \n\t\t\t I Mironov \n\t\t \n\t\t \n\t\t\t M Naor \n\t\t \n\t\t 10.1007/11761679_29 \n\t \n\t \n\t\t Annual international conference on the theory and applications of cryptographic techniques \n\t\t \n\t\t\t Springer \n\t\t\t 2006 \n\t\t\t \n\t\t \n\t \n\t Dwork C, Kenthapadi K, McSherry F, Mironov I, Naor M (2006) Our data, ourselves: Privacy via distributed noise generation. In: Annual international conference on the theory and applications of cryptographic techniques. Springer, pp 486-503"
+    },
+    {
+      "title": "Boosting and differential privacy",
+      "authors": [
+        "C Dwork",
+        "G Rothblum",
+        "S Vadhan"
+      ],
+      "year": 2010,
+      "doi": "10.1109/focs.2010.12",
+      "raw": "Boosting and differential privacy \n\t\t \n\t\t\t C Dwork \n\t\t \n\t\t \n\t\t\t G N Rothblum \n\t\t \n\t\t \n\t\t\t S Vadhan \n\t\t \n\t\t 10.1109/focs.2010.12 \n\t \n\t \n\t\t IEEE 51st Annual symposium on foundations of computer science \n\t\t \n\t\t\t IEEE \n\t\t\t 2010. 2010 \n\t\t\t \n\t\t \n\t \n\t Dwork C, Rothblum GN, Vadhan S (2010) Boosting and differential privacy. In: 2010 IEEE 51st Annual symposium on foundations of computer science. IEEE, pp 51-60"
+    },
+    {
+      "title": "Semi-cyclic stochastic gradient descent",
+      "authors": [
+        "H Eichner",
+        "T Koren",
+        "H Mcmahan",
+        "N Srebro",
+        "K Talwar"
+      ],
+      "year": 2019,
+      "raw": "Semi-cyclic stochastic gradient descent \n\t\t \n\t\t\t H Eichner \n\t\t \n\t\t \n\t\t\t T Koren \n\t\t \n\t\t \n\t\t\t H B Mcmahan \n\t\t \n\t\t \n\t\t\t N Srebro \n\t\t \n\t\t \n\t\t\t K Talwar \n\t\t \n\t\t arXiv:1904.10120 \n\t\t \n\t\t\t 2019 \n\t\t \n\t \n\t Eichner H, Koren T, McMahan HB, Srebro N, Talwar K (2019) Semi-cyclic stochastic gradient descent. arXiv:1904.10120"
+    },
+    {
+      "title": "A survey of homomorphic encryption for nonspecialists",
+      "authors": [
+        "C Fontaine",
+        "F Galand"
+      ],
+      "year": 2007,
+      "journal": "EURASIP J Inf Secur",
+      "pages": "15",
+      "raw": "A survey of homomorphic encryption for nonspecialists \n\t\t \n\t\t\t C Fontaine \n\t\t \n\t\t \n\t\t\t F Galand \n\t\t \n\t \n\t \n\t\t EURASIP J Inf Secur \n\t\t \n\t\t\t 15 \n\t\t\t 2007. 2007 \n\t\t \n\t \n\t Fontaine C, Galand F (2007) A survey of homomorphic encryption for nonspecialists. EURASIP J Inf Secur 2007:15"
+    },
+    {
+      "title": "The next generation of precision medicine: observational studies, electronic health records, biobanks and continuous monitoring",
+      "authors": [
+        "K Johnson",
+        "J Dudley"
+      ],
+      "year": 2018,
+      "journal": "Hum Mol Genet",
+      "volume": "27",
+      "issue": "R1",
+      "raw": "The next generation of precision medicine: observational studies, electronic health records, biobanks and continuous monitoring \n\t\t \n\t\t\t K W Johnson \n\t\t \n\t\t \n\t\t\t J T Dudley \n\t\t \n\t \n\t \n\t\t Hum Mol Genet \n\t\t \n\t\t\t 27 \n\t\t\t R1 \n\t\t\t \n\t\t\t 2018 \n\t\t \n\t \n\t Johnson KW, Dudley JT (2018) The next generation of precision medicine: obser- vational studies, electronic health records, biobanks and continuous monitoring. Hum Mol Genet 27(R1):R56-R62 31"
+    },
+    {
+      "title": "Google: Tensorflow federated",
+      "year": 2019,
+      "raw": "Google: Tensorflow federated \n\t\t \n\t\t\t 2019 \n\t\t \n\t \n\t 2019). Google: Tensorflow federated. https://www.tensorflow.org/federated"
+    },
+    {
+      "title": "National health information privacy: regulations under the health insurance portability and accountability act",
+      "authors": [
+        "L Gostin"
+      ],
+      "year": 2001,
+      "journal": "JAMA",
+      "volume": "285",
+      "issue": "23",
+      "raw": "National health information privacy: regulations under the health insurance portability and accountability act \n\t\t \n\t\t\t L O Gostin \n\t\t \n\t \n\t \n\t\t JAMA \n\t\t \n\t\t\t 285 \n\t\t\t 23 \n\t\t\t \n\t\t\t 2001 \n\t\t \n\t \n\t Gostin LO (2001) National health information privacy: regulations under the health insurance portability and accountability act. JAMA 285(23):3015-3021"
+    },
+    {
+      "title": "Robust aggregation for adaptive privacy preserving federated learning in healthcare",
+      "authors": [
+        "M Grama",
+        "M Musat",
+        "L Mu\u00f1oz-Gonz\u00e1lez",
+        "J Passerat-Palmbach",
+        "D Rueckert",
+        "A Alansary"
+      ],
+      "year": 2020,
+      "raw": "Robust aggregation for adaptive privacy preserving federated learning in healthcare \n\t\t \n\t\t\t M Grama \n\t\t \n\t\t \n\t\t\t M Musat \n\t\t \n\t\t \n\t\t\t L Mu\u00f1oz-Gonz\u00e1lez \n\t\t \n\t\t \n\t\t\t J Passerat-Palmbach \n\t\t \n\t\t \n\t\t\t D Rueckert \n\t\t \n\t\t \n\t\t\t A Alansary \n\t\t \n\t\t arXiv:2009.08294 \n\t\t \n\t\t\t 2020 \n\t\t \n\t \n\t Grama M, Musat M, Mu\u00f1oz-Gonz\u00e1lez L, Passerat-Palmbach J, Rueckert D, Alansary A (2020) Robust aggregation for adaptive privacy preserving federated learning in healthcare. arXiv:2009.08294"
+    },
+    {
+      "title": "KETOS: Clinical decision support and machine learning as a service-A training and deployment platform based on Docker, OMOP-CDM, and FHIR Web Services",
+      "authors": [
+        "J Gruendner",
+        "T Schwachhofer",
+        "P Sippl",
+        "N Wolf",
+        "M Erpenbeck",
+        "C Gulden",
+        "L Kapsner",
+        "J Zierk",
+        "S Mate",
+        "M St\u00fcrzl"
+      ],
+      "year": 2019,
+      "doi": "10.1371/journal.pone.0225442",
+      "journal": "PloS one",
+      "volume": "14",
+      "issue": "10",
+      "raw": "KETOS: Clinical decision support and machine learning as a service-A training and deployment platform based on Docker, OMOP-CDM, and FHIR Web Services \n\t\t \n\t\t\t J Gruendner \n\t\t \n\t\t \n\t\t\t T Schwachhofer \n\t\t \n\t\t \n\t\t\t P Sippl \n\t\t \n\t\t \n\t\t\t N Wolf \n\t\t \n\t\t \n\t\t\t M Erpenbeck \n\t\t \n\t\t \n\t\t\t C Gulden \n\t\t \n\t\t \n\t\t\t L A Kapsner \n\t\t \n\t\t \n\t\t\t J Zierk \n\t\t \n\t\t \n\t\t\t S Mate \n\t\t \n\t\t \n\t\t\t M St\u00fcrzl \n\t\t \n\t\t 10.1371/journal.pone.0225442 \n\t \n\t \n\t\t PloS one \n\t\t \n\t\t\t 14 \n\t\t\t 10 \n\t\t\t \n\t\t\t 2019 \n\t\t \n\t \n\t Gruendner J, Schwachhofer T, Sippl P, Wolf N, Erpenbeck M, Gulden C, Kapsner LA, Zierk J, Mate S, St\u00fcrzl M, et al. (2019) KETOS: Clinical decision support and machine learning as a service-A training and deployment platform based on Docker, OMOP-CDM, and FHIR Web Services. PloS one 14(10):1-16"
+    },
+    {
+      "title": "One-shot federated learning",
+      "authors": [
+        "N Guha",
+        "A Talwalkar",
+        "V Smith"
+      ],
+      "year": 2019,
+      "raw": "One-shot federated learning \n\t\t \n\t\t\t N Guha \n\t\t \n\t\t \n\t\t\t A Talwalkar \n\t\t \n\t\t \n\t\t\t V Smith \n\t\t \n\t\t arXiv:1902.11175 \n\t\t \n\t\t\t 2019 \n\t\t \n\t \n\t Guha N, Talwalkar A, Smith V (2019) One-shot federated learning. arXiv:1902.11175"
+    },
+    {
+      "title": "Distributed learning of deep neural network over multiple agents",
+      "authors": [
+        "O Gupta",
+        "R Raskar"
+      ],
+      "year": 2018,
+      "doi": "10.1016/j.jnca.2018.05.003",
+      "journal": "J Netw Comput Appl",
+      "volume": "116",
+      "raw": "Distributed learning of deep neural network over multiple agents \n\t\t \n\t\t\t O Gupta \n\t\t \n\t\t \n\t\t\t R Raskar \n\t\t \n\t\t 10.1016/j.jnca.2018.05.003 \n\t \n\t \n\t\t J Netw Comput Appl \n\t\t \n\t\t\t 116 \n\t\t\t \n\t\t\t 2018 \n\t\t \n\t \n\t Gupta O, Raskar R (2018) Distributed learning of deep neural network over multiple agents. J Netw Comput Appl 116:1-8"
+    },
+    {
+      "title": "Deep compression: compressing deep neural networks with pruning, trained quantization and huffman coding",
+      "authors": [
+        "S Han",
+        "H Mao",
+        "W Dally"
+      ],
+      "year": 2015,
+      "raw": "Deep compression: compressing deep neural networks with pruning, trained quantization and huffman coding \n\t\t \n\t\t\t S Han \n\t\t \n\t\t \n\t\t\t H Mao \n\t\t \n\t\t \n\t\t\t W J Dally \n\t\t \n\t\t arXiv:1510.00149 \n\t\t \n\t\t\t 2015 \n\t\t \n\t \n\t Han S, Mao H, Dally WJ (2015) Deep compression: compressing deep neural networks with pruning, trained quantization and huffman coding. arXiv:1510.00149"
+    },
+    {
+      "title": "Robust federated training via collaborative machine teaching using trusted instances",
+      "authors": [
+        "Y Han",
+        "X Zhang"
+      ],
+      "year": 2019,
+      "raw": "Robust federated training via collaborative machine teaching using trusted instances \n\t\t \n\t\t\t Y Han \n\t\t \n\t\t \n\t\t\t X Zhang \n\t\t \n\t\t arXiv:1905.02941 \n\t\t \n\t\t\t 2019 \n\t\t \n\t \n\t Han Y, Zhang X (2019) Robust federated training via collaborative machine teaching using trusted instances. arXiv:1905.02941"
+    },
+    {
+      "title": "Federated learning for mobile keyboard prediction",
+      "authors": [
+        "A Hard",
+        "K Rao",
+        "R Mathews",
+        "F Beaufays",
+        "S Augenstein",
+        "H Eichner",
+        "C Kiddon",
+        "D Ramage"
+      ],
+      "year": 2018,
+      "doi": "10.21437/interspeech.2022-11050",
+      "raw": "Federated learning for mobile keyboard prediction \n\t\t \n\t\t\t A Hard \n\t\t \n\t\t \n\t\t\t K Rao \n\t\t \n\t\t \n\t\t\t R Mathews \n\t\t \n\t\t \n\t\t\t F Beaufays \n\t\t \n\t\t \n\t\t\t S Augenstein \n\t\t \n\t\t \n\t\t\t H Eichner \n\t\t \n\t\t \n\t\t\t C Kiddon \n\t\t \n\t\t \n\t\t\t D Ramage \n\t\t \n\t\t 10.21437/interspeech.2022-11050 \n\t\t arXiv:1811.03604 \n\t\t \n\t\t\t 2018 \n\t\t \n\t \n\t Hard A, Rao K, Mathews R, Beaufays F, Augenstein S, Eichner H, Kiddon C, Ramage D (2018) Federated learning for mobile keyboard prediction. arXiv:1811.03604"
+    },
+    {
+      "title": "Private federated learning on vertically partitioned data via entity resolution and additively homomorphic encryption",
+      "authors": [
+        "S Hardy",
+        "W Henecka",
+        "H Ivey-Law",
+        "R Nock",
+        "G Patrini",
+        "G Smith",
+        "B Thorne"
+      ],
+      "year": 2017,
+      "raw": "Private federated learning on vertically partitioned data via entity resolution and additively homomorphic encryption \n\t\t \n\t\t\t S Hardy \n\t\t \n\t\t \n\t\t\t W Henecka \n\t\t \n\t\t \n\t\t\t H Ivey-Law \n\t\t \n\t\t \n\t\t\t R Nock \n\t\t \n\t\t \n\t\t\t G Patrini \n\t\t \n\t\t \n\t\t\t G Smith \n\t\t \n\t\t \n\t\t\t B Thorne \n\t\t \n\t\t arXiv:1711.10677 \n\t\t \n\t\t\t 2017 \n\t\t \n\t \n\t Hardy S, Henecka W, Ivey-Law H, Nock R, Patrini G, Smith G, Thorne B (2017) Private federated learning on vertically partitioned data via entity resolution and additively homomorphic encryption. arXiv:1711.10677"
+    },
+    {
+      "title": "Central server free federated learning over single-sided trust social networks",
+      "authors": [
+        "C He",
+        "C Tan",
+        "H Tang",
+        "S Qiu",
+        "J Liu"
+      ],
+      "year": 2019,
+      "raw": "Central server free federated learning over single-sided trust social networks \n\t\t \n\t\t\t C He \n\t\t \n\t\t \n\t\t\t C Tan \n\t\t \n\t\t \n\t\t\t H Tang \n\t\t \n\t\t \n\t\t\t S Qiu \n\t\t \n\t\t \n\t\t\t J Liu \n\t\t \n\t\t arXiv:1910.04956 \n\t\t \n\t\t\t 2019 \n\t\t \n\t \n\t He C, Tan C, Tang H, Qiu S, Liu J (2019) Central server free federated learning over single-sided trust social networks. arXiv:1910.04956"
+    },
+    {
+      "title": "The Rationale for Learning Communities and Learning Community Models",
+      "authors": [
+        "P Hill"
+      ],
+      "year": 1985,
+      "raw": "The Rationale for Learning Communities and Learning Community Models \n\t\t \n\t\t\t P Hill \n\t\t \n\t\t \n\t\t\t 1985 \n\t\t\t ERIC \n\t\t \n\t \n\t Hill P (1985) The Rationale for Learning Communities and Learning Community Models. ERIC"
+    },
+    {
+      "title": "Distilling the knowledge in a neural network",
+      "authors": [
+        "G Hinton",
+        "O Vinyals",
+        "J Dean"
+      ],
+      "year": 2015,
+      "raw": "Distilling the knowledge in a neural network \n\t\t \n\t\t\t G Hinton \n\t\t \n\t\t \n\t\t\t O Vinyals \n\t\t \n\t\t \n\t\t\t J Dean \n\t\t \n\t\t arXiv:1503.02531 \n\t\t \n\t\t\t 2015 \n\t\t \n\t \n\t Hinton G, Vinyals O, Dean J (2015) Distilling the knowledge in a neural network. arXiv:1503.02531"
+    },
+    {
+      "title": "Observational health data sciences and informatics (ohdsi): opportunities for observational researchers",
+      "authors": [
+        "G Hripcsak",
+        "J Duke",
+        "N Shah",
+        "C Reich",
+        "V Huser",
+        "M Schuemie",
+        "M Suchard",
+        "R Park",
+        "Ick Wong",
+        "P Rijnbeek"
+      ],
+      "year": 2015,
+      "journal": "Stud Health Technol Inform",
+      "volume": "216",
+      "pages": "574",
+      "raw": "Observational health data sciences and informatics (ohdsi): opportunities for observational researchers \n\t\t \n\t\t\t G Hripcsak \n\t\t \n\t\t \n\t\t\t J D Duke \n\t\t \n\t\t \n\t\t\t N H Shah \n\t\t \n\t\t \n\t\t\t C G Reich \n\t\t \n\t\t \n\t\t\t V Huser \n\t\t \n\t\t \n\t\t\t M J Schuemie \n\t\t \n\t\t \n\t\t\t M A Suchard \n\t\t \n\t\t \n\t\t\t R W Park \n\t\t \n\t\t \n\t\t\t Ick Wong \n\t\t \n\t\t \n\t\t\t P R Rijnbeek \n\t\t \n\t \n\t \n\t\t Stud Health Technol Inform \n\t\t \n\t\t\t 216 \n\t\t\t 574 \n\t\t\t 2015 \n\t\t \n\t \n\t Hripcsak G, Duke JD, Shah NH, Reich CG, Huser V, Schuemie MJ, Suchard MA, Park RW, Wong ICK, Rijnbeek PR, et al. (2015) Observational health data sciences and informatics (ohdsi): opportunities for observational researchers. Stud Health Technol Inform 216:574"
+    },
+    {
+      "title": "Patient clustering improves efficiency of federated machine learning to predict mortality and hospital stay time using distributed electronic medical records",
+      "authors": [
+        "L Huang",
+        "D Liu"
+      ],
+      "year": 2019,
+      "doi": "10.1016/j.jbi.2019.103291",
+      "raw": "Patient clustering improves efficiency of federated machine learning to predict mortality and hospital stay time using distributed electronic medical records \n\t\t \n\t\t\t L Huang \n\t\t \n\t\t \n\t\t\t D Liu \n\t\t \n\t\t 10.1016/j.jbi.2019.103291 \n\t\t arXiv:1903.09296 \n\t\t \n\t\t\t 2019 \n\t\t \n\t \n\t Huang L, Liu D (2019) Patient clustering improves efficiency of federated machine learning to pre- dict mortality and hospital stay time using distributed electronic medical records. arXiv:1903.09296"
+    },
+    {
+      "title": "Privacy preserving qoe modeling using collaborative learning",
+      "authors": [
+        "S Ickin",
+        "K Vandikas",
+        "M Fiedler"
+      ],
+      "year": 2019,
+      "raw": "Privacy preserving qoe modeling using collaborative learning \n\t\t \n\t\t\t S Ickin \n\t\t \n\t\t \n\t\t\t K Vandikas \n\t\t \n\t\t \n\t\t\t M Fiedler \n\t\t \n\t\t arXiv:1906.09248 \n\t\t \n\t\t\t 2019 \n\t\t \n\t \n\t Ickin S, Vandikas K, Fiedler M (2019) Privacy preserving qoe modeling using collaborative learning. arXiv:1906.09248"
+    },
+    {
+      "title": "Mining electronic health records: towards better research applications and clinical care",
+      "authors": [
+        "P Jensen",
+        "L Jensen",
+        "S Brunak"
+      ],
+      "year": 2012,
+      "journal": "Nat Rev Genet",
+      "volume": "13",
+      "issue": "6",
+      "raw": "Mining electronic health records: towards better research applications and clinical care \n\t\t \n\t\t\t P B Jensen \n\t\t \n\t\t \n\t\t\t L J Jensen \n\t\t \n\t\t \n\t\t\t S Brunak \n\t\t \n\t \n\t \n\t\t Nat Rev Genet \n\t\t \n\t\t\t 13 \n\t\t\t 6 \n\t\t\t \n\t\t\t 2012 \n\t\t \n\t \n\t Jensen PB, Jensen LJ, Brunak S (2012) Mining electronic health records: towards better research applications and clinical care. Nat Rev Genet 13(6):395-405"
+    },
+    {
+      "title": "Improving federated learning personalization via model agnostic meta learning",
+      "authors": [
+        "Y Jiang",
+        "J Kone\u010dn\u1ef3",
+        "K Rush",
+        "S Kannan"
+      ],
+      "year": 2019,
+      "raw": "Improving federated learning personalization via model agnostic meta learning \n\t\t \n\t\t\t Y Jiang \n\t\t \n\t\t \n\t\t\t J Kone\u010dn\u1ef3 \n\t\t \n\t\t \n\t\t\t K Rush \n\t\t \n\t\t \n\t\t\t S Kannan \n\t\t \n\t\t arXiv:1909.12488v1 \n\t\t \n\t\t\t 2019 \n\t\t \n\t \n\t Jiang Y, Kone\u010dn\u1ef3 J, Rush K, Kannan S (2019) Improving federated learning personalization via model agnostic meta learning. arXiv:1909.12488v1"
+    },
+    {
+      "title": "A survey towards federated semi-supervised learning",
+      "authors": [
+        "Y Jin",
+        "X Wei",
+        "Y Liu",
+        "Q Yang"
+      ],
+      "year": 2020,
+      "raw": "Y Jin \n\t\t \n\t\t \n\t\t\t X Wei \n\t\t \n\t\t \n\t\t\t Y Liu \n\t\t \n\t\t \n\t\t\t Q Yang \n\t\t \n\t\t arXiv:2002.11545 \n\t\t A survey towards federated semi-supervised learning \n\t\t \n\t\t\t 2020 \n\t\t \n\t \n\t Jin Y, Wei X, Liu Y, Yang Q (2020) A survey towards federated semi-supervised learning. arXiv:2002.11545"
+    },
+    {
+      "title": "Mimic-iii, a freely accessible critical care database",
+      "authors": [
+        "A Johnson",
+        "T Pollard",
+        "L Shen",
+        "Li-Wei Hl",
+        "M Feng",
+        "M Ghassemi",
+        "B Moody",
+        "P Szolovits",
+        "L Celi",
+        "R Mark"
+      ],
+      "year": 2016,
+      "doi": "10.1038/sdata.2016.35",
+      "journal": "Sci Data",
+      "volume": "3",
+      "pages": "160035",
+      "raw": "Mimic-iii, a freely accessible critical care database \n\t\t \n\t\t\t A E Johnson \n\t\t \n\t\t \n\t\t\t T J Pollard \n\t\t \n\t\t \n\t\t\t L Shen \n\t\t \n\t\t \n\t\t\t Li-Wei Hl \n\t\t \n\t\t \n\t\t\t M Feng \n\t\t \n\t\t \n\t\t\t M Ghassemi \n\t\t \n\t\t \n\t\t\t B Moody \n\t\t \n\t\t \n\t\t\t P Szolovits \n\t\t \n\t\t \n\t\t\t L A Celi \n\t\t \n\t\t \n\t\t\t R G Mark \n\t\t \n\t\t 10.1038/sdata.2016.35 \n\t \n\t \n\t\t Sci Data \n\t\t \n\t\t\t 3 \n\t\t\t 160035 \n\t\t\t 2016 \n\t\t \n\t \n\t Johnson AE, Pollard TJ, Shen L, Li-wei HL, Feng M, Ghassemi M, Moody B, Szolovits P, Celi LA, Mark RG (2016) Mimic-iii, a freely accessible critical care database. Sci Data 3:160035"
+    },
+    {
+      "title": "Advances and open problems in federated learning",
+      "authors": [
+        "P Kairouz",
+        "H Mcmahan",
+        "B Avent",
+        "A Bellet",
+        "M Bennis",
+        "A Bhagoji",
+        "K Bonawitz",
+        "Z Charles",
+        "G Cormode",
+        "R Cummings"
+      ],
+      "year": 2019,
+      "doi": "10.1561/9781680837896",
+      "raw": "Advances and open problems in federated learning \n\t\t \n\t\t\t P Kairouz \n\t\t \n\t\t \n\t\t\t H B Mcmahan \n\t\t \n\t\t \n\t\t\t B Avent \n\t\t \n\t\t \n\t\t\t A Bellet \n\t\t \n\t\t \n\t\t\t M Bennis \n\t\t \n\t\t \n\t\t\t A N Bhagoji \n\t\t \n\t\t \n\t\t\t K Bonawitz \n\t\t \n\t\t \n\t\t\t Z Charles \n\t\t \n\t\t \n\t\t\t G Cormode \n\t\t \n\t\t \n\t\t\t R Cummings \n\t\t \n\t\t 10.1561/9781680837896 \n\t\t arXiv:1912.04977 \n\t\t \n\t\t\t 2019 \n\t\t \n\t \n\t Kairouz P, McMahan HB, Avent B, Bellet A, Bennis M, Bhagoji AN, Bonawitz K, Charles Z, Cormode G, Cummings R, et al. (2019) Advances and open problems in federated learning. arXiv:1912.04977"
+    },
+    {
+      "title": "Efficient decentralized deep learning by dynamic model averaging",
+      "authors": [
+        "M Kamp",
+        "L Adilova",
+        "J Sicking",
+        "F H\u00fcger",
+        "P Schlicht",
+        "T Wirtz",
+        "S Wrobel"
+      ],
+      "year": 2018,
+      "doi": "10.1007/978-3-030-10925-7_24",
+      "raw": "Efficient decentralized deep learning by dynamic model averaging \n\t\t \n\t\t\t M Kamp \n\t\t \n\t\t \n\t\t\t L Adilova \n\t\t \n\t\t \n\t\t\t J Sicking \n\t\t \n\t\t \n\t\t\t F H\u00fcger \n\t\t \n\t\t \n\t\t\t P Schlicht \n\t\t \n\t\t \n\t\t\t T Wirtz \n\t\t \n\t\t \n\t\t\t S Wrobel \n\t\t \n\t\t 10.1007/978-3-030-10925-7_24 \n\t \n\t \n\t\t Joint European conference on machine learning and knowledge discovery in databases \n\t\t \n\t\t\t Springer \n\t\t\t 2018 \n\t\t\t \n\t\t \n\t \n\t Kamp M, Adilova L, Sicking J, H\u00fcger F., Schlicht P, Wirtz T, Wrobel S (2018) Efficient decentral- ized deep learning by dynamic model averaging. In: Joint European conference on machine learning and knowledge discovery in databases. Springer, pp 393-409"
+    },
+    {
+      "title": "Incentive design for efficient federated learning in mobile networks: A contract theory approach",
+      "authors": [
+        "J Kang",
+        "Z Xiong",
+        "D Niyato",
+        "H Yu",
+        "Y Liang",
+        "D Kim"
+      ],
+      "year": 2019,
+      "doi": "10.1109/vts-apwcs.2019.8851649",
+      "raw": "Incentive design for efficient federated learning in mobile networks: A contract theory approach \n\t\t \n\t\t\t J Kang \n\t\t \n\t\t \n\t\t\t Z Xiong \n\t\t \n\t\t \n\t\t\t D Niyato \n\t\t \n\t\t \n\t\t\t H Yu \n\t\t \n\t\t \n\t\t\t Y C Liang \n\t\t \n\t\t \n\t\t\t D I Kim \n\t\t \n\t\t 10.1109/vts-apwcs.2019.8851649 \n\t\t arXiv:1905.07479 \n\t\t \n\t\t\t 2019 \n\t\t \n\t \n\t Kang J, Xiong Z, Niyato D, Yu H, Liang YC, Kim DI (2019) Incentive design for efficient federated learning in mobile networks: A contract theory approach. arXiv:1905.07479"
+    },
+    {
+      "title": "Credit risk assessment from combined bank records using federated learning",
+      "authors": [
+        "D Kawa",
+        "S Punyani",
+        "P Nayak",
+        "A Karkera",
+        "V Jyotinagar"
+      ],
+      "year": 2019,
+      "journal": "International Research Journal of Engineering and Technology (IRJET)",
+      "volume": "6",
+      "issue": "4",
+      "raw": "Credit risk assessment from combined bank records using federated learning \n\t\t \n\t\t\t D Kawa \n\t\t \n\t\t \n\t\t\t S Punyani \n\t\t \n\t\t \n\t\t\t P Nayak \n\t\t \n\t\t \n\t\t\t A Karkera \n\t\t \n\t\t \n\t\t\t V Jyotinagar \n\t\t \n\t \n\t \n\t\t International Research Journal of Engineering and Technology (IRJET) \n\t\t \n\t\t\t 6 \n\t\t\t 4 \n\t\t\t \n\t\t\t 2019 \n\t\t \n\t \n\t Kawa D, Punyani S, Nayak P, Karkera A, Jyotinagar V (2019) Credit risk assessment from com- bined bank records using federated learning. International Research Journal of Engineering and Technology (IRJET) 6(4):1355-1358"
+    },
+    {
+      "title": "Federated tensor factorization for computational phenotyping",
+      "authors": [
+        "Y Kim",
+        "H Yu",
+        "X Jiang"
+      ],
+      "year": 2017,
+      "raw": "Federated tensor factorization for computational phenotyping \n\t\t \n\t\t\t Y Kim \n\t\t \n\t\t \n\t\t\t H Yu \n\t\t \n\t\t \n\t\t\t X Jiang \n\t\t \n\t \n\t \n\t\t Proceedings of the 23rd ACM SIGKDD International conference on knowledge discovery and data mining \n\t\t the 23rd ACM SIGKDD International conference on knowledge discovery and data mining \n\t\t \n\t\t\t ACM \n\t\t\t 2017 \n\t\t\t \n\t\t \n\t \n\t Kim Y, Yu H, Jiang X (2017) Federated tensor factorization for computational phenotyping. In: Proceedings of the 23rd ACM SIGKDD International conference on knowledge discovery and data mining. ACM, pp 887-895"
+    },
+    {
+      "title": "Federated optimization: distributed optimization beyond the datacenter",
+      "authors": [
+        "J Kone\u010dn\u1ef3",
+        "B Mcmahan",
+        "D Ramage"
+      ],
+      "year": 2015,
+      "raw": "Federated optimization: distributed optimization beyond the datacenter \n\t\t \n\t\t\t J Kone\u010dn\u1ef3 \n\t\t \n\t\t \n\t\t\t B Mcmahan \n\t\t \n\t\t \n\t\t\t D Ramage \n\t\t \n\t\t arXiv:1511.03575 \n\t\t \n\t\t\t 2015 \n\t\t \n\t \n\t Kone\u010dn\u1ef3 J, McMahan B, Ramage D (2015) Federated optimization: distributed optimization beyond the datacenter. arXiv:1511.03575"
+    },
+    {
+      "title": "Federated optimization: distributed machine learning for on-device intelligence",
+      "authors": [
+        "J Kone\u010dn\u1ef3",
+        "H Mcmahan",
+        "D Ramage",
+        "P Richt\u00e1rik"
+      ],
+      "year": 2016,
+      "raw": "Federated optimization: distributed machine learning for on-device intelligence \n\t\t \n\t\t\t J Kone\u010dn\u1ef3 \n\t\t \n\t\t \n\t\t\t H B Mcmahan \n\t\t \n\t\t \n\t\t\t D Ramage \n\t\t \n\t\t \n\t\t\t P Richt\u00e1rik \n\t\t \n\t\t arXiv:1610.02527 \n\t\t \n\t\t\t 2016 \n\t\t \n\t \n\t Kone\u010dn\u1ef3 J, McMahan HB, Ramage D, Richt\u00e1rik P (2016) Federated optimization: distributed machine learning for on-device intelligence. arXiv:1610.02527"
+    },
+    {
+      "title": "Federated learning: strategies for improving communication efficiency",
+      "authors": [
+        "J Kone\u010dn\u1ef3",
+        "H Mcmahan",
+        "F Yu",
+        "P Richt\u00e1rik",
+        "A Suresh",
+        "D Bacon"
+      ],
+      "year": 2016,
+      "raw": "Federated learning: strategies for improving communication efficiency \n\t\t \n\t\t\t J Kone\u010dn\u1ef3 \n\t\t \n\t\t \n\t\t\t H B Mcmahan \n\t\t \n\t\t \n\t\t\t F X Yu \n\t\t \n\t\t \n\t\t\t P Richt\u00e1rik \n\t\t \n\t\t \n\t\t\t A T Suresh \n\t\t \n\t\t \n\t\t\t D Bacon \n\t\t \n\t\t arXiv:1610.05492 \n\t\t \n\t\t\t 2016 \n\t\t \n\t \n\t Kone\u010dn\u1ef3 J, McMahan HB, Yu FX, Richt\u00e1rik P, Suresh AT, Bacon D (2016) Federated learning: strategies for improving communication efficiency. arXiv:1610.05492"
+    },
+    {
+      "title": "Survey of personalization techniques for federated learning",
+      "authors": [
+        "V Kulkarni",
+        "M Kulkarni",
+        "A Pant"
+      ],
+      "year": 2020,
+      "doi": "10.1109/worlds450073.2020.9210355",
+      "raw": "Survey of personalization techniques for federated learning \n\t\t \n\t\t\t V Kulkarni \n\t\t \n\t\t \n\t\t\t M Kulkarni \n\t\t \n\t\t \n\t\t\t A Pant \n\t\t \n\t\t 10.1109/worlds450073.2020.9210355 \n\t\t arXiv:2003.08673 \n\t\t \n\t\t\t 2020 \n\t\t \n\t \n\t Kulkarni V, Kulkarni M, Pant A (2020) Survey of personalization techniques for federated learning. arXiv:2003.08673"
+    },
+    {
+      "title": "Peer-to-peer federated learning on graphs",
+      "authors": [
+        "A Lalitha",
+        "O Kilinc",
+        "T Javidi",
+        "F Koushanfar"
+      ],
+      "year": 2019,
+      "raw": "Peer-to-peer federated learning on graphs \n\t\t \n\t\t\t A Lalitha \n\t\t \n\t\t \n\t\t\t O C Kilinc \n\t\t \n\t\t \n\t\t\t T Javidi \n\t\t \n\t\t \n\t\t\t F Koushanfar \n\t\t \n\t\t arXiv:1901.11173 \n\t\t \n\t\t\t 2019 \n\t\t \n\t \n\t Lalitha A, Kilinc OC, Javidi T, Koushanfar F (2019) Peer-to-peer federated learning on graphs. arXiv:1901.11173"
+    },
+    {
+      "title": "Deep learning",
+      "authors": [
+        "Y Lecun",
+        "Y Bengio",
+        "G Hinton"
+      ],
+      "year": 2015,
+      "doi": "10.1038/nature14539",
+      "journal": "Nature",
+      "volume": "521",
+      "issue": "7553",
+      "raw": "Deep learning \n\t\t \n\t\t\t Y Lecun \n\t\t \n\t\t \n\t\t\t Y Bengio \n\t\t \n\t\t \n\t\t\t G Hinton \n\t\t \n\t\t 10.1038/nature14539 \n\t \n\t \n\t\t Nature \n\t\t \n\t\t\t 521 \n\t\t\t 7553 \n\t\t\t \n\t\t\t 2015 \n\t\t \n\t \n\t LeCun Y, Bengio Y, Hinton G (2015) Deep learning. Nature 521(7553):436-444"
+    },
+    {
+      "title": "Privacy-preserving patient similarity learning in a federated environment: development and analysis",
+      "authors": [
+        "J Lee",
+        "J Sun",
+        "F Wang",
+        "S Wang",
+        "C Jun",
+        "X Jiang"
+      ],
+      "year": 2018,
+      "journal": "JMIR Medical Informatics",
+      "volume": "6",
+      "issue": "2",
+      "pages": "e20",
+      "raw": "Privacy-preserving patient similarity learning in a federated environment: development and analysis \n\t\t \n\t\t\t J Lee \n\t\t \n\t\t \n\t\t\t J Sun \n\t\t \n\t\t \n\t\t\t F Wang \n\t\t \n\t\t \n\t\t\t S Wang \n\t\t \n\t\t \n\t\t\t C H Jun \n\t\t \n\t\t \n\t\t\t X Jiang \n\t\t \n\t \n\t \n\t\t JMIR Medical Informatics \n\t\t \n\t\t\t 6 \n\t\t\t 2 \n\t\t\t e20 \n\t\t\t 2018 \n\t\t \n\t \n\t Lee J, Sun J, Wang F, Wang S, Jun CH, Jiang X (2018) Privacy-preserving patient similarity learning in a federated environment: development and analysis. JMIR Medical Informatics 6(2):e20"
+    },
+    {
+      "title": "Federated optimization for heterogeneous networks",
+      "authors": [
+        "T Li",
+        "A Sahu",
+        "M Zaheer",
+        "M Sanjabi",
+        "A Talwalkar",
+        "V Smith1"
+      ],
+      "year": 2019,
+      "raw": "Federated optimization for heterogeneous networks \n\t\t \n\t\t\t T Li \n\t\t \n\t\t \n\t\t\t A K Sahu \n\t\t \n\t\t \n\t\t\t M Zaheer \n\t\t \n\t\t \n\t\t\t M Sanjabi \n\t\t \n\t\t \n\t\t\t A Talwalkar \n\t\t \n\t\t \n\t\t\t V Smith1 \n\t\t \n\t\t arXiv:1812.06127 \n\t\t \n\t\t\t 2019 \n\t\t \n\t \n\t Li T, Sahu AK, Zaheer M, Sanjabi M, Talwalkar A, Smith1 V (2019) Federated optimization for heterogeneous networks. arXiv:1812.06127"
+    },
+    {
+      "title": "Fair resource allocation in federated learning",
+      "authors": [
+        "T Li",
+        "M Sanjabi",
+        "V Smith"
+      ],
+      "year": 2019,
+      "raw": "Fair resource allocation in federated learning \n\t\t \n\t\t\t T Li \n\t\t \n\t\t \n\t\t\t M Sanjabi \n\t\t \n\t\t \n\t\t\t V Smith \n\t\t \n\t\t arXiv:1905.10497 \n\t\t \n\t\t\t 2019 \n\t\t \n\t \n\t Li T, Sanjabi M, Smith V (2019) Fair resource allocation in federated learning. arXiv:1905.10497"
+    },
+    {
+      "title": "Distributed learning from multiple ehr databases: Contextual embedding models for medical events",
+      "authors": [
+        "Z Li",
+        "K Roberts",
+        "X Jiang",
+        "Q Long"
+      ],
+      "year": 2019,
+      "journal": "J Biomed Inform",
+      "volume": "92",
+      "pages": "103138",
+      "raw": "Distributed learning from multiple ehr databases: Contextual embedding models for medical events \n\t\t \n\t\t\t Z Li \n\t\t \n\t\t \n\t\t\t K Roberts \n\t\t \n\t\t \n\t\t\t X Jiang \n\t\t \n\t\t \n\t\t\t Q Long \n\t\t \n\t \n\t \n\t\t J Biomed Inform \n\t\t \n\t\t\t 92 \n\t\t\t 103138 \n\t\t\t 2019 \n\t\t \n\t \n\t Li Z, Roberts K, Jiang X, Long Q (2019) Distributed learning from multiple ehr databases: Contextual embedding models for medical events. J Biomed Inform 92:103138"
+    },
+    {
+      "title": "Federated learning in mobile edge networks: a comprehensive survey",
+      "authors": [
+        "Wyb Lim",
+        "N Luong",
+        "D Hoang",
+        "Y Jiao",
+        "Y Liang",
+        "Q Yang",
+        "D Niyato",
+        "C Miao"
+      ],
+      "year": 2019,
+      "raw": "Federated learning in mobile edge networks: a comprehensive survey \n\t\t \n\t\t\t Wyb Lim \n\t\t \n\t\t \n\t\t\t N C Luong \n\t\t \n\t\t \n\t\t\t D T Hoang \n\t\t \n\t\t \n\t\t\t Y Jiao \n\t\t \n\t\t \n\t\t\t Y C Liang \n\t\t \n\t\t \n\t\t\t Q Yang \n\t\t \n\t\t \n\t\t\t D Niyato \n\t\t \n\t\t \n\t\t\t C Miao \n\t\t \n\t\t arXiv:1909.11875 \n\t\t \n\t\t\t 2019 \n\t\t \n\t \n\t Lim WYB, Luong NC, Hoang DT, Jiao Y, Liang YC, Yang Q, Niyato D, Miao C (2019) Federated learning in mobile edge networks: a comprehensive survey. arXiv:1909.11875"
+    },
+    {
+      "title": "Two-stage federated phenotyping and patient representation learning",
+      "authors": [
+        "D Liu",
+        "D Dligach",
+        "T Miller"
+      ],
+      "year": 2019,
+      "raw": "Two-stage federated phenotyping and patient representation learning \n\t\t \n\t\t\t D Liu \n\t\t \n\t\t \n\t\t\t D Dligach \n\t\t \n\t\t \n\t\t\t T Miller \n\t\t \n\t\t arXiv:1908.05596 \n\t\t \n\t\t\t 2019 \n\t\t \n\t \n\t Liu D, Dligach D, Miller T (2019) Two-stage federated phenotyping and patient representation learning. arXiv:1908.05596"
+    },
+    {
+      "title": "Threats to federated learning: a survey",
+      "authors": [
+        "L Lyu",
+        "H Yu",
+        "Q Yang"
+      ],
+      "year": 2020,
+      "raw": "Threats to federated learning: a survey \n\t\t \n\t\t\t L Lyu \n\t\t \n\t\t \n\t\t\t H Yu \n\t\t \n\t\t \n\t\t\t Q Yang \n\t\t \n\t\t arXiv:2003.02133 \n\t\t \n\t\t\t 2020 \n\t\t \n\t \n\t Lyu L, Yu H, Yang Q (2020) Threats to federated learning: a survey. arXiv:2003.02133"
+    },
+    {
+      "title": "Communication-efficient learning of deep networks from decentralized data",
+      "authors": [
+        "B Mcmahan",
+        "E Moore",
+        "D Ramage",
+        "S Hampson",
+        "B Arcas"
+      ],
+      "year": 2017,
+      "raw": "Communication-efficient learning of deep networks from decentralized data \n\t\t \n\t\t\t B Mcmahan \n\t\t \n\t\t \n\t\t\t E Moore \n\t\t \n\t\t \n\t\t\t D Ramage \n\t\t \n\t\t \n\t\t\t S Hampson \n\t\t \n\t\t \n\t\t\t B A Arcas \n\t\t \n\t \n\t \n\t\t Artificial intelligence and statistics \n\t\t \n\t\t\t 2017 \n\t\t\t \n\t\t \n\t \n\t McMahan B, Moore E, Ramage D, Hampson S, Arcas BA (2017) Communication-efficient learning of deep networks from decentralized data. In: Artificial intelligence and statistics, pp 1273-1282"
+    },
+    {
+      "title": "Learning differentially private recurrent language models",
+      "authors": [
+        "H Mcmahan",
+        "D Ramage",
+        "K Talwar",
+        "L Zhang"
+      ],
+      "year": 2017,
+      "raw": "Learning differentially private recurrent language models \n\t\t \n\t\t\t H B Mcmahan \n\t\t \n\t\t \n\t\t\t D Ramage \n\t\t \n\t\t \n\t\t\t K Talwar \n\t\t \n\t\t \n\t\t\t L Zhang \n\t\t \n\t\t arXiv:1710.06963 \n\t\t \n\t\t\t 2017 \n\t\t \n\t \n\t McMahan HB, Ramage D, Talwar K, Zhang L (2017) Learning differentially private recurrent language models. arXiv:1710.06963"
+    },
+    {
+      "title": "Predictive modeling of the hospital readmission risk from patients' claims data using machine learning: A case study on copd",
+      "authors": [
+        "X Min",
+        "B Yu",
+        "F Wang"
+      ],
+      "year": 2019,
+      "journal": "Sci Rep",
+      "volume": "9",
+      "issue": "1",
+      "pages": "2362",
+      "raw": "Predictive modeling of the hospital readmission risk from patients' claims data using machine learning: A case study on copd \n\t\t \n\t\t\t X Min \n\t\t \n\t\t \n\t\t\t B Yu \n\t\t \n\t\t \n\t\t\t F Wang \n\t\t \n\t \n\t \n\t\t Sci Rep \n\t\t \n\t\t\t 9 \n\t\t\t 1 \n\t\t\t 2362 \n\t\t\t 2019 \n\t\t \n\t \n\t Min X, Yu B, Wang F (2019) Predictive modeling of the hospital readmission risk from patients' claims data using machine learning: A case study on copd. Sci Rep 9(1):2362"
+    },
+    {
+      "title": "Deep learning for healthcare: review, opportunities and challenges",
+      "authors": [
+        "R Miotto",
+        "F Wang",
+        "S Wang",
+        "X Jiang",
+        "J Dudley"
+      ],
+      "year": 2018,
+      "journal": "Brief Bioinformatics",
+      "volume": "19",
+      "issue": "6",
+      "raw": "Deep learning for healthcare: review, opportunities and challenges \n\t\t \n\t\t\t R Miotto \n\t\t \n\t\t \n\t\t\t F Wang \n\t\t \n\t\t \n\t\t\t S Wang \n\t\t \n\t\t \n\t\t\t X Jiang \n\t\t \n\t\t \n\t\t\t J T Dudley \n\t\t \n\t \n\t \n\t\t Brief Bioinformatics \n\t\t \n\t\t\t 19 \n\t\t\t 6 \n\t\t\t \n\t\t\t 2018 \n\t\t \n\t \n\t Miotto R, Wang F, Wang S, Jiang X, Dudley JT (2018) Deep learning for healthcare: review, opportunities and challenges. Brief Bioinformatics 19(6):1236-1246"
+    },
+    {
+      "title": "Agnostic federated learning",
+      "authors": [
+        "M Mohri",
+        "G Sivek",
+        "A Suresh"
+      ],
+      "year": 2019,
+      "volume": "97",
+      "raw": "Agnostic federated learning \n\t\t \n\t\t\t M Mohri \n\t\t \n\t\t \n\t\t\t G Sivek \n\t\t \n\t\t \n\t\t\t A T Suresh \n\t\t \n\t \n\t \n\t\t Proceedings of the 36th International conference on machine learning, proceedings of machine learning research \n\t\t \n\t\t\t K Chaudhuri \n\t\t \n\t\t \n\t\t\t R Salakhutdinov \n\t\t \n\t\t the 36th International conference on machine learning, proceedings of machine learning research PMLR, Long Beach \n\t\t \n\t\t\t 2019 \n\t\t\t 97 \n\t\t\t \n\t\t \n\t \n\t Mohri M, Sivek G, Suresh AT (2019) Agnostic federated learning. In: Chaudhuri K, Salakhutdi- nov R (eds) Proceedings of the 36th International conference on machine learning, proceedings of machine learning research, vol 97. PMLR, Long Beach, pp 4615-4625"
+    },
+    {
+      "title": "System and method for dynamic context-sensitive federated search of multiple information repositories",
+      "authors": [
+        "R Mukherjee",
+        "H Jaffe"
+      ],
+      "year": 2005,
+      "journal": "US Patent App",
+      "volume": "10",
+      "issue": "743",
+      "pages": "196",
+      "raw": "System and method for dynamic context-sensitive federated search of multiple information repositories \n\t\t \n\t\t\t R Mukherjee \n\t\t \n\t\t \n\t\t\t H Jaffe \n\t\t \n\t \n\t \n\t\t US Patent App \n\t\t \n\t\t\t 10 \n\t\t\t 743 \n\t\t\t 196 \n\t\t\t 2005 \n\t\t \n\t \n\t Mukherjee R, Jaffe H (2005) System and method for dynamic context-sensitive federated search of multiple information repositories. US Patent App. 10/743,196"
+    },
+    {
+      "title": "Client selection for federated learning with heterogeneous resources in mobile edge",
+      "authors": [
+        "T Nishio",
+        "R Yonetani"
+      ],
+      "year": 2018,
+      "raw": "Client selection for federated learning with heterogeneous resources in mobile edge \n\t\t \n\t\t\t T Nishio \n\t\t \n\t\t \n\t\t\t R Yonetani \n\t\t \n\t\t arXiv:1804.08333 \n\t\t \n\t\t\t 2018 \n\t\t \n\t \n\t Nishio T, Yonetani R (2018) Client selection for federated learning with heterogeneous resources in mobile edge. arXiv:1804.08333"
+    },
+    {
+      "title": "Dissecting racial bias in an algorithm used to manage the health of populations",
+      "authors": [
+        "Z Obermeyer",
+        "B Powers",
+        "C Vogeli",
+        "S Mullainathan"
+      ],
+      "year": 2019,
+      "journal": "Science",
+      "volume": "366",
+      "issue": "6464",
+      "raw": "Dissecting racial bias in an algorithm used to manage the health of populations \n\t\t \n\t\t\t Z Obermeyer \n\t\t \n\t\t \n\t\t\t B Powers \n\t\t \n\t\t \n\t\t\t C Vogeli \n\t\t \n\t\t \n\t\t\t S Mullainathan \n\t\t \n\t \n\t \n\t\t Science \n\t\t \n\t\t\t 366 \n\t\t\t 6464 \n\t\t\t \n\t\t\t 2019 \n\t\t \n\t \n\t Obermeyer Z, Powers B, Vogeli C, Mullainathan S (2019) Dissecting racial bias in an algorithm used to manage the health of populations. Science 366(6464):447-453"
+    },
+    {
+      "title": "OpenMined: Pysyft-tensorflow",
+      "year": 2019,
+      "raw": "OpenMined: Pysyft-tensorflow \n\t\t \n\t\t\t 2019 \n\t\t \n\t \n\t OpenMined: Pysyft-tensorflow. https://github.com/OpenMined/PySyft-TensorFlow (2019)"
+    },
+    {
+      "title": "Multiparty differential privacy via aggregation of locally trained classifiers",
+      "authors": [
+        "M Pathak",
+        "S Rane",
+        "B Raj"
+      ],
+      "year": 2010,
+      "raw": "Multiparty differential privacy via aggregation of locally trained classifiers \n\t\t \n\t\t\t M Pathak \n\t\t \n\t\t \n\t\t\t S Rane \n\t\t \n\t\t \n\t\t\t B Raj \n\t\t \n\t \n\t \n\t\t Advances in neural information processing systems \n\t\t \n\t\t\t 2010 \n\t\t\t \n\t\t \n\t \n\t Pathak M, Rane S, Raj B (2010) Multiparty differential privacy via aggregation of locally trained classifiers. In: Advances in neural information processing systems, pp 1876-1884"
+    },
+    {
+      "title": "Large-scale assessment of a smartwatch to identify atrial fibrillation",
+      "authors": [
+        "M Perez",
+        "K Mahaffey",
+        "H Hedlin",
+        "J Rumsfeld",
+        "A Garcia",
+        "T Ferris",
+        "V Balasubramanian",
+        "A Russo",
+        "A Rajmane",
+        "L Cheung"
+      ],
+      "year": 2019,
+      "journal": "N Engl J Med",
+      "volume": "381",
+      "issue": "20",
+      "raw": "Large-scale assessment of a smartwatch to identify atrial fibrillation \n\t\t \n\t\t\t M V Perez \n\t\t \n\t\t \n\t\t\t K W Mahaffey \n\t\t \n\t\t \n\t\t\t H Hedlin \n\t\t \n\t\t \n\t\t\t J S Rumsfeld \n\t\t \n\t\t \n\t\t\t A Garcia \n\t\t \n\t\t \n\t\t\t T Ferris \n\t\t \n\t\t \n\t\t\t V Balasubramanian \n\t\t \n\t\t \n\t\t\t A M Russo \n\t\t \n\t\t \n\t\t\t A Rajmane \n\t\t \n\t\t \n\t\t\t L Cheung \n\t\t \n\t \n\t \n\t\t N Engl J Med \n\t\t \n\t\t\t 381 \n\t\t\t 20 \n\t\t\t \n\t\t\t 2019 \n\t\t \n\t \n\t Perez MV, Mahaffey KW, Hedlin H, Rumsfeld JS, Garcia A, Ferris T, Balasubramanian V, Russo AM, Rajmane A, Cheung L, et al. (2019) Large-scale assessment of a smartwatch to identify atrial fibrillation. N Engl J Med 381(20):1909-1917"
+    },
+    {
+      "title": "Federated and differentially private learning for electronic health records",
+      "authors": [
+        "S Pfohl",
+        "A Dai",
+        "K Heller"
+      ],
+      "year": 2019,
+      "raw": "Federated and differentially private learning for electronic health records \n\t\t \n\t\t\t S R Pfohl \n\t\t \n\t\t \n\t\t\t A M Dai \n\t\t \n\t\t \n\t\t\t K Heller \n\t\t \n\t\t arXiv:1911.05861 \n\t\t \n\t\t\t 2019 \n\t\t \n\t \n\t Pfohl SR, Dai AM, Heller K (2019) Federated and differentially private learning for electronic health records. arXiv:1911.05861"
+    },
+    {
+      "title": "The eicu collaborative research database, a freely available multi-center database for critical care research",
+      "authors": [
+        "T Pollard",
+        "A Johnson",
+        "J Raffa",
+        "L Celi",
+        "R Mark",
+        "O Badawi"
+      ],
+      "year": 2018,
+      "journal": "Sci Data",
+      "volume": "5",
+      "pages": "180178",
+      "raw": "The eicu collaborative research database, a freely available multi-center database for critical care research \n\t\t \n\t\t\t T J Pollard \n\t\t \n\t\t \n\t\t\t A E Johnson \n\t\t \n\t\t \n\t\t\t J D Raffa \n\t\t \n\t\t \n\t\t\t L A Celi \n\t\t \n\t\t \n\t\t\t R G Mark \n\t\t \n\t\t \n\t\t\t O Badawi \n\t\t \n\t \n\t \n\t\t Sci Data \n\t\t \n\t\t\t 5 \n\t\t\t 180178 \n\t\t\t 2018 \n\t\t \n\t \n\t Pollard TJ, Johnson AE, Raffa JD, Celi LA, Mark RG, Badawi O (2018) The eicu collabora- tive research database, a freely available multi-center database for critical care research. Sci Data 5:180178"
+    },
+    {
+      "title": "Modern framework for distributed healthcare data analytics based on hadoop",
+      "authors": [
+        "P Raja",
+        "E Sivasankar"
+      ],
+      "year": 2014,
+      "raw": "Modern framework for distributed healthcare data analytics based on hadoop \n\t\t \n\t\t\t P V Raja \n\t\t \n\t\t \n\t\t\t E Sivasankar \n\t\t \n\t \n\t \n\t\t Information and communication technology-EurAsia conference \n\t\t \n\t\t\t Springer \n\t\t\t 2014 \n\t\t\t \n\t\t \n\t \n\t Raja PV, Sivasankar E (2014) Modern framework for distributed healthcare data analytics based on hadoop. In: Information and communication technology-EurAsia conference. Springer, pp 348-355"
+    },
+    {
+      "title": "A model and infrastructure for federated learning content repositories",
+      "authors": [
+        "D Rehak",
+        "L Dodds"
+      ],
+      "year": 2005,
+      "volume": "143",
+      "raw": "A model and infrastructure for federated learning content repositories \n\t\t \n\t\t\t D Rehak \n\t\t \n\t\t \n\t\t\t L Dodds \n\t\t \n\t \n\t \n\t\t Interoperability of web-based educational systems workshop \n\t\t \n\t\t\t Citeseer \n\t\t\t 2005 \n\t\t\t 143 \n\t\t \n\t \n\t Rehak D, Dodds L (2005) A model and infrastructure for federated learning content repositories. In: Interoperability of web-based educational systems workshop, vol 143. Citeseer"
+    },
+    {
+      "title": "Accelerating dnn training in wireless federated edge learning system",
+      "authors": [
+        "J Ren",
+        "G Yu",
+        "G Ding"
+      ],
+      "year": 2019,
+      "raw": "Accelerating dnn training in wireless federated edge learning system \n\t\t \n\t\t\t J Ren \n\t\t \n\t\t \n\t\t\t G Yu \n\t\t \n\t\t \n\t\t\t G Ding \n\t\t \n\t\t arXiv:1905.09712 \n\t\t \n\t\t\t 2019 \n\t\t \n\t \n\t Ren J, Yu G, Ding G (2019) Accelerating dnn training in wireless federated edge learning system. arXiv:1905.09712"
+    },
+    {
+      "title": "Braintorrent: a peer-to-peer environment for decentralized federated learning",
+      "authors": [
+        "A Roy",
+        "S Siddiqui",
+        "S P\u00f6lsterl",
+        "N Navab",
+        "C Wachinger"
+      ],
+      "year": 2019,
+      "raw": "Braintorrent: a peer-to-peer environment for decentralized federated learning \n\t\t \n\t\t\t A G Roy \n\t\t \n\t\t \n\t\t\t S Siddiqui \n\t\t \n\t\t \n\t\t\t S P\u00f6lsterl \n\t\t \n\t\t \n\t\t\t N Navab \n\t\t \n\t\t \n\t\t\t C Wachinger \n\t\t \n\t\t arXiv:1905.06731 \n\t\t \n\t\t\t 2019 \n\t\t \n\t \n\t Roy AG, Siddiqui S, P\u00f6lsterl S, Navab N, Wachinger C (2019) Braintorrent: a peer-to-peer environment for decentralized federated learning. arXiv:1905.06731"
+    },
+    {
+      "title": "Learning in a large function space: privacypreserving mechanisms for svm learning",
+      "authors": [
+        "B Rubinstein",
+        "P Bartlett",
+        "L Huang",
+        "N Taft"
+      ],
+      "year": 2009,
+      "raw": "Learning in a large function space: privacypreserving mechanisms for svm learning \n\t\t \n\t\t\t B I Rubinstein \n\t\t \n\t\t \n\t\t\t P L Bartlett \n\t\t \n\t\t \n\t\t\t L Huang \n\t\t \n\t\t \n\t\t\t N Taft \n\t\t \n\t\t arXiv:0911.5708 \n\t\t \n\t\t\t 2009 \n\t\t \n\t \n\t Rubinstein BI, Bartlett PL, Huang L, Taft N (2009) Learning in a large function space: privacy- preserving mechanisms for svm learning. arXiv:0911.5708"
+    },
+    {
+      "title": "A generic framework for privacy preserving deep learning",
+      "authors": [
+        "T Ryffel",
+        "A Trask",
+        "M Dahl",
+        "B Wagner",
+        "J Mancuso",
+        "D Rueckert",
+        "J Passerat-Palmbach"
+      ],
+      "year": 2018,
+      "raw": "A generic framework for privacy preserving deep learning \n\t\t \n\t\t\t T Ryffel \n\t\t \n\t\t \n\t\t\t A Trask \n\t\t \n\t\t \n\t\t\t M Dahl \n\t\t \n\t\t \n\t\t\t B Wagner \n\t\t \n\t\t \n\t\t\t J Mancuso \n\t\t \n\t\t \n\t\t\t D Rueckert \n\t\t \n\t\t \n\t\t\t J Passerat-Palmbach \n\t\t \n\t\t arXiv:1811.04017 \n\t\t \n\t\t\t 2018 \n\t\t \n\t \n\t Ryffel T, Trask A, Dahl M, Wagner B, Mancuso J, Rueckert D, Passerat-Palmbach J (2018) A generic framework for privacy preserving deep learning. arXiv:1811.04017"
+    },
+    {
+      "title": "Federated learning for ultra-reliable lowlatency v2v communications",
+      "authors": [
+        "S Samarakoon",
+        "M Bennis",
+        "W Saad",
+        "M Debbah"
+      ],
+      "year": 2018,
+      "raw": "Federated learning for ultra-reliable lowlatency v2v communications \n\t\t \n\t\t\t S Samarakoon \n\t\t \n\t\t \n\t\t\t M Bennis \n\t\t \n\t\t \n\t\t\t W Saad \n\t\t \n\t\t \n\t\t\t M Debbah \n\t\t \n\t \n\t \n\t\t 2018 IEEE Global Communications Conference (GLOBECOM) \n\t\t \n\t\t\t IEEE \n\t\t\t 2018 \n\t\t\t \n\t\t \n\t \n\t Samarakoon S, Bennis M, Saad W, Debbah M (2018) Federated learning for ultra-reliable low- latency v2v communications. In: 2018 IEEE Global Communications Conference (GLOBECOM). IEEE, pp 1-7"
+    },
+    {
+      "title": "Robust and communication-efficient federated learning from non-iid data",
+      "authors": [
+        "F Sattler",
+        "S Wiedemann",
+        "K M\u00fcller",
+        "W Samek"
+      ],
+      "year": 2019,
+      "raw": "Robust and communication-efficient federated learning from non-iid data \n\t\t \n\t\t\t F Sattler \n\t\t \n\t\t \n\t\t\t S Wiedemann \n\t\t \n\t\t \n\t\t\t K R M\u00fcller \n\t\t \n\t\t \n\t\t\t W Samek \n\t\t \n\t\t arXiv:1903.02891 \n\t\t \n\t\t\t 2019 \n\t\t \n\t \n\t Sattler F, Wiedemann S, M\u00fcller K. R., Samek W (2019) Robust and communication-efficient federated learning from non-iid data. arXiv:1903.02891"
+    },
+    {
+      "title": "Preserving patient privacy while training a predictive model of in-hospital mortality",
+      "authors": [
+        "P Sharma",
+        "F Shamout"
+      ],
+      "year": 2019,
+      "raw": "P Sharma \n\t\t \n\t\t \n\t\t\t F E Shamout \n\t\t \n\t\t \n\t\t\t Clifton Da \n\t\t \n\t\t arXiv:1912.00354 \n\t\t Preserving patient privacy while training a predictive model of in-hospital mortality \n\t\t \n\t\t\t 2019 \n\t\t \n\t \n\t Sharma P, Shamout FE, Clifton DA (2019) Preserving patient privacy while training a predictive model of in-hospital mortality. arXiv:1912.00354"
+    },
+    {
+      "title": "Biscotti: a ledger for private and secure peer-topeer machine learning",
+      "authors": [
+        "M Shayan",
+        "C Fung",
+        "C Yoon",
+        "I Beschastnikh"
+      ],
+      "year": 2018,
+      "raw": "Biscotti: a ledger for private and secure peer-topeer machine learning \n\t\t \n\t\t\t M Shayan \n\t\t \n\t\t \n\t\t\t C Fung \n\t\t \n\t\t \n\t\t\t C J Yoon \n\t\t \n\t\t \n\t\t\t I Beschastnikh \n\t\t \n\t\t arXiv:1811.09904 \n\t\t \n\t\t\t 2018 \n\t\t \n\t \n\t Shayan M, Fung C, Yoon CJ, Beschastnikh I (2018) Biscotti: a ledger for private and secure peer-to- peer machine learning. arXiv:1811.09904"
+    },
+    {
+      "title": "Privacy-preserving deep learning",
+      "authors": [
+        "R Shokri",
+        "V Shmatikov"
+      ],
+      "year": 2015,
+      "raw": "Privacy-preserving deep learning \n\t\t \n\t\t\t R Shokri \n\t\t \n\t\t \n\t\t\t V Shmatikov \n\t\t \n\t \n\t \n\t\t Proceedings of the 22nd ACM SIGSAC conference on computer and communications security \n\t\t the 22nd ACM SIGSAC conference on computer and communications security \n\t\t \n\t\t\t ACM \n\t\t\t 2015 \n\t\t\t \n\t\t \n\t \n\t Shokri R, Shmatikov V (2015) Privacy-preserving deep learning. In: Proceedings of the 22nd ACM SIGSAC conference on computer and communications security. ACM, pp 1310-1321"
+    },
+    {
+      "title": "Federated learning in distributed medical databases: meta-analysis of large-scale subcortical brain data",
+      "authors": [
+        "S Silva",
+        "B Gutman",
+        "E Romero",
+        "P Thompson",
+        "A Altmann",
+        "M Lorenzi"
+      ],
+      "year": 2018,
+      "raw": "Federated learning in distributed medical databases: meta-analysis of large-scale subcortical brain data \n\t\t \n\t\t\t S Silva \n\t\t \n\t\t \n\t\t\t B Gutman \n\t\t \n\t\t \n\t\t\t E Romero \n\t\t \n\t\t \n\t\t\t P M Thompson \n\t\t \n\t\t \n\t\t\t A Altmann \n\t\t \n\t\t \n\t\t\t M Lorenzi \n\t\t \n\t\t arXiv:1810.08553 \n\t\t \n\t\t\t 2018 \n\t\t \n\t \n\t Silva S, Gutman B, Romero E, Thompson PM, Altmann A, Lorenzi M (2018) Federated learning in distributed medical databases: meta-analysis of large-scale subcortical brain data. arXiv:1810.08553"
+    },
+    {
+      "title": "An investigation into on-device personalization of end-to-end automatic speech recognition models",
+      "authors": [
+        "K Sim",
+        "P Zadrazil",
+        "F Beaufays"
+      ],
+      "year": 2019,
+      "raw": "An investigation into on-device personalization of end-to-end automatic speech recognition models \n\t\t \n\t\t\t K C Sim \n\t\t \n\t\t \n\t\t\t P Zadrazil \n\t\t \n\t\t \n\t\t\t F Beaufays \n\t\t \n\t\t arXiv:1909.06678 \n\t\t \n\t\t\t 2019 \n\t\t \n\t \n\t Sim KC, Zadrazil P, Beaufays F (2019) An investigation into on-device personalization of end-to-end automatic speech recognition models. arXiv:1909.06678"
+    },
+    {
+      "title": "Using the adap learning algorithm to forecast the onset of diabetes mellitus",
+      "authors": [
+        "J Smith",
+        "J Everhart",
+        "W Dickson",
+        "W Knowler",
+        "R Johannes"
+      ],
+      "year": 1988,
+      "pages": "261",
+      "raw": "Using the adap learning algorithm to forecast the onset of diabetes mellitus \n\t\t \n\t\t\t J W Smith \n\t\t \n\t\t \n\t\t\t J Everhart \n\t\t \n\t\t \n\t\t\t W Dickson \n\t\t \n\t\t \n\t\t\t W Knowler \n\t\t \n\t\t \n\t\t\t R Johannes \n\t\t \n\t \n\t \n\t\t Proceedings of the annual symposium on computer application in medical care \n\t\t the annual symposium on computer application in medical care \n\t\t \n\t\t\t American medical informatics association \n\t\t\t 1988 \n\t\t\t 261 \n\t\t \n\t \n\t Smith JW, Everhart J, Dickson W, Knowler W, Johannes R (1988) Using the adap learning algorithm to forecast the onset of diabetes mellitus. In: Proceedings of the annual symposium on computer application in medical care, p 261. American medical informatics association"
+    },
+    {
+      "title": "Federated multi-task learning",
+      "authors": [
+        "V Smith",
+        "C Chiang",
+        "M Sanjabi",
+        "A Talwalkar"
+      ],
+      "year": 2017,
+      "raw": "Federated multi-task learning \n\t\t \n\t\t\t V Smith \n\t\t \n\t\t \n\t\t\t C K Chiang \n\t\t \n\t\t \n\t\t\t M Sanjabi \n\t\t \n\t\t \n\t\t\t A S Talwalkar \n\t\t \n\t \n\t \n\t\t Advances in neural information processing systems \n\t\t \n\t\t\t 2017 \n\t\t\t \n\t\t \n\t \n\t Smith V, Chiang CK, Sanjabi M, Talwalkar AS (2017) Federated multi-task learning. In: Advances in neural information processing systems, pp 4424-4434"
+    },
+    {
+      "title": "Multiparty privacy in social media",
+      "authors": [
+        "J Such",
+        "N Criado"
+      ],
+      "year": 2018,
+      "doi": "10.1145/3208039",
+      "journal": "Commun ACM",
+      "volume": "61",
+      "issue": "8",
+      "raw": "Multiparty privacy in social media \n\t\t \n\t\t\t J M Such \n\t\t \n\t\t \n\t\t\t N Criado \n\t\t \n\t\t 10.1145/3208039 \n\t \n\t \n\t\t Commun ACM \n\t\t \n\t\t\t 61 \n\t\t\t 8 \n\t\t\t \n\t\t\t 2018 \n\t\t \n\t \n\t Such JM, Criado N (2018) Multiparty privacy in social media. Commun ACM 61(8):74-81"
+    },
+    {
+      "title": "unfriendly: multi-party privacy risks in social networks",
+      "authors": [
+        "K Thomas",
+        "C ; ) Grier",
+        "D Nicol"
+      ],
+      "year": 2010,
+      "raw": "unfriendly: multi-party privacy risks in social networks \n\t\t \n\t\t\t K Thomas \n\t\t \n\t\t \n\t\t\t C ; ) Grier \n\t\t \n\t\t \n\t\t\t D M Nicol \n\t\t \n\t \n\t \n\t\t International symposium on privacy enhancing technologies symposium \n\t\t \n\t\t\t Springer \n\t\t\t 2010 \n\t\t\t \n\t\t \n\t \n\t Thomas K, Grier C (2010) Nicol, D.M.: unfriendly: multi-party privacy risks in social networks. In: International symposium on privacy enhancing technologies symposium. Springer, pp 236-252"
+    },
+    {
+      "title": "Federated learning: rewards & challenges of distributed private ml",
+      "authors": [
+        "E Tramel"
+      ],
+      "year": 2019,
+      "journal": "Accessed",
+      "raw": "Federated learning: rewards & challenges of distributed private ml \n\t\t \n\t\t\t E Tramel \n\t\t \n\t \n\t \n\t\t Accessed \n\t\t \n\t\t\t 2019. May 28, 2019 100 \n\t\t \n\t \n\t Tramel E (2019) Federated learning: rewards & challenges of distributed private ml. Accessed May 28, 2019 100."
+    },
+    {
+      "title": "A hybrid approach to privacy-preserving federated learning",
+      "authors": [
+        "S Truex",
+        "N Baracaldo",
+        "A Anwar",
+        "T Steinke",
+        "H Ludwig",
+        "R Zhang"
+      ],
+      "year": 2018,
+      "raw": "A hybrid approach to privacy-preserving federated learning \n\t\t \n\t\t\t S Truex \n\t\t \n\t\t \n\t\t\t N Baracaldo \n\t\t \n\t\t \n\t\t\t A Anwar \n\t\t \n\t\t \n\t\t\t T Steinke \n\t\t \n\t\t \n\t\t\t H Ludwig \n\t\t \n\t\t \n\t\t\t R Zhang \n\t\t \n\t\t arXiv:1812.03224101 \n\t\t \n\t\t\t 2018 \n\t\t \n\t \n\t Truex S, Baracaldo N, Anwar A, Steinke T, Ludwig H, Zhang R (2018) A hybrid approach to privacy-preserving federated learning. arXiv:1812.03224 101."
+    },
+    {
+      "title": "Federated learning of electronic health records improves mortality prediction in patients hospitalized with covid-19 medRxiv 102",
+      "authors": [
+        "A Vaid",
+        "S Jaladanki",
+        "J Xu",
+        "S Teng",
+        "A Kumar",
+        "S Lee",
+        "S Somani",
+        "I Paranjpe",
+        "De Freitas",
+        "J Wanyan"
+      ],
+      "year": 2020,
+      "doi": "10.1101/2020.08.11.20172809",
+      "raw": "Federated learning of electronic health records improves mortality prediction in patients hospitalized with covid-19 medRxiv 102 \n\t\t \n\t\t\t A Vaid \n\t\t \n\t\t \n\t\t\t S K Jaladanki \n\t\t \n\t\t \n\t\t\t J Xu \n\t\t \n\t\t \n\t\t\t S Teng \n\t\t \n\t\t \n\t\t\t A Kumar \n\t\t \n\t\t \n\t\t\t S Lee \n\t\t \n\t\t \n\t\t\t S Somani \n\t\t \n\t\t \n\t\t\t I Paranjpe \n\t\t \n\t\t \n\t\t\t De Freitas \n\t\t \n\t\t \n\t\t\t J K Wanyan \n\t\t \n\t\t \n\t\t\t T \n\t\t \n\t\t 10.1101/2020.08.11.20172809 \n\t\t \n\t\t\t 2020 \n\t\t \n\t \n\t Vaid A, Jaladanki SK, Xu J, Teng S, Kumar A, Lee S, Somani S, Paranjpe I, De Freitas JK, Wanyan T, et al. (2020) Federated learning of electronic health records improves mortality prediction in patients hospitalized with covid-19 medRxiv 102."
+    },
+    {
+      "title": "Deep reinforcement learning with double q-learning",
+      "authors": [
+        "H Van Hasselt",
+        "A Guez",
+        "D Silver"
+      ],
+      "year": 2016,
+      "doi": "10.1609/aaai.v30i1.10295",
+      "raw": "Deep reinforcement learning with double q-learning \n\t\t \n\t\t\t H Van Hasselt \n\t\t \n\t\t \n\t\t\t A Guez \n\t\t \n\t\t \n\t\t\t D Silver \n\t\t \n\t\t 10.1609/aaai.v30i1.10295 \n\t \n\t \n\t\t Thirtieth AAAI conference on artificial intelligence 103 \n\t\t \n\t\t\t 2016 \n\t\t \n\t \n\t Van Hasselt H, Guez A, Silver D (2016) Deep reinforcement learning with double q-learning. In: Thirtieth AAAI conference on artificial intelligence 103."
+    },
+    {
+      "title": "Split learning for health: distributed deep learning without sharing raw patient data",
+      "authors": [
+        "P Vepakomma",
+        "O Gupta",
+        "T Swedish",
+        "R Raskar"
+      ],
+      "year": 2018,
+      "doi": "10.1007/978-3-030-96896-0_19",
+      "raw": "Split learning for health: distributed deep learning without sharing raw patient data \n\t\t \n\t\t\t P Vepakomma \n\t\t \n\t\t \n\t\t\t O Gupta \n\t\t \n\t\t \n\t\t\t T Swedish \n\t\t \n\t\t \n\t\t\t R Raskar \n\t\t \n\t\t 10.1007/978-3-030-96896-0_19 \n\t\t arXiv:1812.00564104 \n\t\t \n\t\t\t 2018 \n\t\t \n\t \n\t Vepakomma P, Gupta O, Swedish T, Raskar R (2018) Split learning for health: distributed deep learning without sharing raw patient data. arXiv:1812.00564 104."
+    },
+    {
+      "title": "The caltech-ucsd birds-200-2011 dataset",
+      "authors": [
+        "C Wah",
+        "S Branson",
+        "P Welinder",
+        "P Perona",
+        "S Belongie"
+      ],
+      "year": 2011,
+      "pages": "105",
+      "raw": "The caltech-ucsd birds-200-2011 dataset \n\t\t \n\t\t\t C Wah \n\t\t \n\t\t \n\t\t\t S Branson \n\t\t \n\t\t \n\t\t\t P Welinder \n\t\t \n\t\t \n\t\t\t P Perona \n\t\t \n\t\t \n\t\t\t S Belongie \n\t\t \n\t\t \n\t\t\t 2011 \n\t\t\t 105 \n\t\t \n\t \n\t Wah C, Branson S, Welinder P, Perona P, Belongie S (2011) The caltech-ucsd birds-200-2011 dataset 105."
+    },
+    {
+      "title": "Ai in health: state of the art, challenges, and future directions",
+      "authors": [
+        "F Wang",
+        "A Preininger"
+      ],
+      "year": 2019,
+      "doi": "10.1055/s-0039-1677908",
+      "journal": "Yearb Med Inform",
+      "volume": "28",
+      "issue": "01",
+      "raw": "Ai in health: state of the art, challenges, and future directions \n\t\t \n\t\t\t F Wang \n\t\t \n\t\t \n\t\t\t A Preininger \n\t\t \n\t\t 10.1055/s-0039-1677908 \n\t \n\t \n\t\t Yearb Med Inform \n\t\t \n\t\t\t 28 \n\t\t\t 01 \n\t\t\t \n\t\t\t 2019 \n\t\t \n\t \n\t Wang F, Preininger A (2019) Ai in health: state of the art, challenges, and future directions. Yearb Med Inform 28(01):016-026 106."
+    },
+    {
+      "title": "In-edge ai: Intelligentizing mobile edge computing, caching and communication by federated learning",
+      "authors": [
+        "X Wang",
+        "Y Han",
+        "C Wang",
+        "Q Zhao",
+        "X Chen",
+        "M Chen"
+      ],
+      "year": 2018,
+      "raw": "In-edge ai: Intelligentizing mobile edge computing, caching and communication by federated learning \n\t\t \n\t\t\t X Wang \n\t\t \n\t\t \n\t\t\t Y Han \n\t\t \n\t\t \n\t\t\t C Wang \n\t\t \n\t\t \n\t\t\t Q Zhao \n\t\t \n\t\t \n\t\t\t X Chen \n\t\t \n\t\t \n\t\t\t M Chen \n\t\t \n\t\t arXiv:1809.07857107 \n\t\t \n\t\t\t 2018 \n\t\t \n\t \n\t Wang X, Han Y, Wang C, Zhao Q, Chen X, Chen M (2018) In-edge ai: Intelligentizing mobile edge computing, caching and communication by federated learning. arXiv:1809.07857 107."
+    },
+    {
+      "title": "Federated learning for healthcare informatics",
+      "authors": [
+        "J Xu",
+        "F Wang"
+      ],
+      "year": 2019,
+      "raw": "Federated learning for healthcare informatics \n\t\t \n\t\t\t J Xu \n\t\t \n\t\t \n\t\t\t F Wang \n\t\t \n\t\t arXiv:1911.06270108 \n\t\t \n\t\t\t 2019 \n\t\t \n\t \n\t Xu J, Wang F (2019) Federated learning for healthcare informatics. arXiv:1911.06270 108."
+    },
+    {
+      "title": "Federated patient hashing",
+      "authors": [
+        "J Xu",
+        "Z Xu",
+        "P Walker",
+        "F Wang"
+      ],
+      "year": 2020,
+      "raw": "Federated patient hashing \n\t\t \n\t\t\t J Xu \n\t\t \n\t\t \n\t\t\t Z Xu \n\t\t \n\t\t \n\t\t\t P Walker \n\t\t \n\t\t \n\t\t\t F Wang \n\t\t \n\t \n\t \n\t\t AAAI \n\t\t \n\t\t\t 2020 \n\t\t\t \n\t\t \n\t \n\t Xu J, Xu Z, Walker P, Wang F (2020) Federated patient hashing. In: AAAI, pp 6486-6493 109."
+    },
+    {
+      "title": "Federated machine learning: concept and applications",
+      "authors": [
+        "Q Yang",
+        "Y Liu",
+        "T Chen",
+        "Y Tong"
+      ],
+      "year": 2019,
+      "doi": "10.1145/3298981",
+      "journal": "ACM Trans Intell Syst Technol",
+      "volume": "10",
+      "issue": "2",
+      "raw": "Federated machine learning: concept and applications \n\t\t \n\t\t\t Q Yang \n\t\t \n\t\t \n\t\t\t Y Liu \n\t\t \n\t\t \n\t\t\t T Chen \n\t\t \n\t\t \n\t\t\t Y Tong \n\t\t \n\t\t 10.1145/3298981 \n\t\t \n\t \n\t \n\t\t ACM Trans Intell Syst Technol \n\t\t \n\t\t\t 10 \n\t\t\t 2 \n\t\t\t \n\t\t\t 2019 \n\t\t \n\t \n\t Yang Q, Liu Y, Chen T, Tong Y (2019) Federated machine learning: concept and applications. ACM Trans Intell Syst Technol 10(2):12:1-12:19. https://doi.org/10.1145/3298981 110."
+    },
+    {
+      "title": "A federated learning framework for healthcare iot devices",
+      "authors": [
+        "B Yuan",
+        "S Ge",
+        "W Xing"
+      ],
+      "year": 2020,
+      "raw": "A federated learning framework for healthcare iot devices \n\t\t \n\t\t\t B Yuan \n\t\t \n\t\t \n\t\t\t S Ge \n\t\t \n\t\t \n\t\t\t W Xing \n\t\t \n\t\t arXiv:2005.05083111 \n\t\t \n\t\t\t 2020 \n\t\t \n\t \n\t Yuan B, Ge S, Xing W (2020) A federated learning framework for healthcare iot devices. arXiv:2005.05083 111."
+    },
+    {
+      "title": "Federated learning with non-iid data",
+      "authors": [
+        "Y Zhao",
+        "M Li",
+        "L Lai",
+        "N Suda",
+        "D Civin",
+        "V Chandra"
+      ],
+      "year": 2018,
+      "raw": "Federated learning with non-iid data \n\t\t \n\t\t\t Y Zhao \n\t\t \n\t\t \n\t\t\t M Li \n\t\t \n\t\t \n\t\t\t L Lai \n\t\t \n\t\t \n\t\t\t N Suda \n\t\t \n\t\t \n\t\t\t D Civin \n\t\t \n\t\t \n\t\t\t V Chandra \n\t\t \n\t\t arXiv:1806.00582112 \n\t\t \n\t\t\t 2018 \n\t\t \n\t \n\t Zhao Y, Li M, Lai L, Suda N, Civin D, Chandra V (2018) Federated learning with non-iid data. arXiv:1806.00582 112."
+    },
+    {
+      "title": "Mobile edge and reputationbased crowdsourcing iot federated learning: a secure, decentralized and privacy-preserving system",
+      "authors": [
+        "Y Zhao",
+        "J Zhao",
+        "L Jiang",
+        "R Tan",
+        "D Niyato"
+      ],
+      "year": 2019,
+      "raw": "Mobile edge and reputationbased crowdsourcing iot federated learning: a secure, decentralized and privacy-preserving system \n\t\t \n\t\t\t Y Zhao \n\t\t \n\t\t \n\t\t\t J Zhao \n\t\t \n\t\t \n\t\t\t L Jiang \n\t\t \n\t\t \n\t\t\t R Tan \n\t\t \n\t\t \n\t\t\t D Niyato \n\t\t \n\t\t arXiv:1906.10893113 \n\t\t \n\t\t\t 2019 \n\t\t \n\t \n\t Zhao Y, Zhao J, Jiang L, Tan R, Niyato D (2019) Mobile edge and reputation- based crowdsourcing iot federated learning: a secure, decentralized and privacy-preserving system. arXiv:1906.10893 113."
+    },
+    {
+      "title": "Multi-objective evolutionary federated learning",
+      "authors": [
+        "H Zhu"
+      ],
+      "year": 2019,
+      "journal": "IEEE transactions on neural networks and learning systems",
+      "volume": "114",
+      "raw": "Multi-objective evolutionary federated learning \n\t\t \n\t\t\t H Zhu \n\t\t \n\t\t \n\t\t\t Jin Y \n\t\t \n\t \n\t \n\t\t IEEE transactions on neural networks and learning systems \n\t\t \n\t\t\t 114 \n\t\t\t 2019 \n\t\t \n\t \n\t Zhu H, Jin Y (2019) Multi-objective evolutionary federated learning. IEEE transactions on neural networks and learning systems 114."
+    },
+    {
+      "title": "Federated reinforcement learning",
+      "authors": [
+        "H Zhuo",
+        "W Feng",
+        "Q Xu",
+        "Q Yang",
+        "Y Lin"
+      ],
+      "year": 2019,
+      "raw": "Federated reinforcement learning \n\t\t \n\t\t\t H H Zhuo \n\t\t \n\t\t \n\t\t\t W Feng \n\t\t \n\t\t \n\t\t\t Q Xu \n\t\t \n\t\t \n\t\t\t Q Yang \n\t\t \n\t\t \n\t\t\t Y Lin \n\t\t \n\t\t arXiv:1901.08277 \n\t\t \n\t\t\t 2019 \n\t\t \n\t \n\t Zhuo HH, Feng W, Xu Q, Yang Q, Lin Y (2019) Federated reinforcement learning. arXiv:1901.08277"
+    }
+  ],
+  "num_references": 114,
+  "figures": [
+    {
+      "caption": "Fig. 1",
+      "description": "Fig. 1 Schematic of the federated learning framework. The model is trained in a distributed manner: the institutions periodically communicate the local updates with a central server to learn a global model; the central server aggregates the updates and sends back the parameters of the updated global model"
+    },
+    {
+      "caption": "Fig. 2",
+      "description": "Fig. 2 Communication efficient federated learning methods. Existing research on improving communication efficiency can be categorized into a model compression, b client selection, c updates reducing, and d peer-to-peer learning"
+    },
+    {
+      "caption": "Fig. 3",
+      "description": "Fig. 3 Privacy-preserving schemes. a Secure multi-party computation. In security sharing, security values (blue and yellow pie) are split into any number of shares that are distributed among the computing nodes. During the computation, no computation node is able to recover the original value nor learn anything about the output (green pie). Any nodes can combine their shares to reconstruct the original value. b Differential privacy. It guarantees that anyone seeing the result of a differentially private analysis will make the same inference (answer 1 and answer 2 are nearly indistinguishable)"
+    },
+    {
+      "type": "table",
+      "caption": "Table 2",
+      "description": "Popular tools federated learning research"
+    }
+  ],
+  "num_figures": 4,
+  "tables": [
+    {
+      "content": "Project name Developer Description PySyft [87] OpenMined It decouples private data from model training using federated learning, DP, and MPC within PyTorch. TensorFlow bindings are also available [77]. TFF [31] Google With TFF, TensorFlow provides users with a flexible and open framework through which they can simulate dis- tributed computing locally. FATE [3] Webank FATE support the Federated AI ecosystem, where a secure computing protocol is implemented based on homomorphic encryption and MPC. Tensor/IO [24] Dow et al. Tensor/IO is a lightweight cross- platform library for on-device machine learning, bringing the power of TensorFlow and TensorFlow Lite to iOS, Android, and React native applications."
+    }
+  ],
+  "num_tables": 1,
+  "license": "\u00a9 Springer Nature Switzerland AG 2020",
+  "license_type": "unknown",
+  "formulas": [
+    {
+      "text": "min w\u2208R d F (w) := K k=1 n k n F k (w) where F k (w) := 1 n k x i \u2208D k f i (w), ( 1"
+    },
+    {
+      "text": ")"
+    },
+    {
+      "text": "f i (w) = 1 2 (x i w -y i ) 2 , y i \u2208 R; -logistic regression: f i (w) = -log(1 + exp(-y i x i w)), y i \u2208 {-1, 1}; -support vector machines: f i (w) = max{0, 1 -y i x i w}, y i \u2208 {-1, 1}."
+    },
+    {
+      "text": "E x i \u223cD k [f i (w; x i )] = E x i \u223cD k [f i (w; x i )]."
+    },
+    {
+      "text": "D = K k=1 n k n D k ,"
+    },
+    {
+      "text": "B up/down \u2208 O(U \u00d7 |w| \u00d7 (H ( w up/down ) + \u03b2) update size ) ( 2"
+    },
+    {
+      "text": ")"
+    }
+  ],
+  "num_formulas": 7,
+  "num_citations": 128,
+  "cited_references": [
+    "b72",
+    "b65",
+    "b13",
+    "b79",
+    "b41",
+    "b44",
+    "b14",
+    "b25",
+    "b1",
+    "b35",
+    "b92",
+    "b90",
+    "b71",
+    "b74",
+    "b51",
+    "b42",
+    "b96",
+    "b29",
+    "b28",
+    "b56",
+    "b4",
+    "b85",
+    "b62",
+    "b11",
+    "b34",
+    "b6",
+    "b58",
+    "b0",
+    "b73",
+    "b17",
+    "b77",
+    "b60",
+    "b43",
+    "b66",
+    "b68",
+    "b12",
+    "b78",
+    "b98",
+    "b52",
+    "b97",
+    "b75",
+    "b82",
+    "b84",
+    "b89",
+    "b81",
+    "b33",
+    "b8",
+    "b27",
+    "b57",
+    "b39",
+    "b36",
+    "b59",
+    "b21",
+    "b64",
+    "b40",
+    "b54",
+    "b91",
+    "b46",
+    "b10",
+    "b67",
+    "b55",
+    "b7",
+    "b87",
+    "b9",
+    "b69",
+    "b95",
+    "b47",
+    "b93",
+    "b31",
+    "b70",
+    "b61",
+    "b37",
+    "b5",
+    "b38",
+    "b88",
+    "b24",
+    "b48",
+    "b53",
+    "b63",
+    "b26"
+  ],
+  "notes": [
+    "[raw_affiliation] 1  Department of Population Health Sciences , Weill Cornell Medicine , New York , NY , USA",
+    "[raw_affiliation] 2  Institute for Digital Health , Icahn School of Medicine at Mount Sinai , New York , NY , USA",
+    "[raw_affiliation] 1  Department of Population Health Sciences , Weill Cornell Medicine , New York , NY , USA",
+    "[raw_affiliation] 3  U.S. Department of Defense Joint Artificial Intelligence Center , Washington , D.C. , USA",
+    "[raw_affiliation] 4  Department of Health Outcomes and Biomedical Informatics , College of Medicine , University of Florida , Gainesville , FL , USA",
+    "[raw_affiliation] 1  Department of Population Health Sciences , Weill Cornell Medicine , New York , NY , USA",
+    "[submission] Received: 19 August 2020 / Revised: 21 October 2020 / Accepted: 30 October 2020 /",
+    "http://news.moore.ren/industry/158978.htm",
+    "https://doc.ai/blog/do-you-know-how-valuable-your-medical-da/",
+    "[raw_reference] Abadi M, Chu A, Goodfellow I, McMahan HB, Mironov I, Talwar K, Zhang L (2016) Deep learning with differential privacy. In: Proceedings of the 2016 ACM SIGSAC conference on computer and communications security. ACM, pp 308-318",
+    "[raw_reference] Agarwal N, Suresh AT, Yu FXX, Kumar S, McMahan B (2018) cpsgd: communication-efficient and differentially-private distributed sgd. In: Advances in neural information processing systems, pp 7564-7575",
+    "[raw_reference] AI W (2019) Federated ai technology enabler. https://www.fedai.org/cn/",
+    "[raw_reference] Anguita D, Ghio A, Oneto L, Parra X, Reyes-Ortiz JL (2012) Human activity recognition on smart- phones using a multiclass hardware-friendly support vector machine. In: International workshop on ambient assisted living. Springer, pp 216-223",
+    "[raw_reference] Anh TT, Luong D, Kim DI, Wang LC (2019) Efficient training management for mobile crowd-machine learning: A deep reinforcement learning approach. IEEE Wireless Communications Letters 8(5):1345-1348",
+    "[raw_reference] Barcelos C, Gluz J, Vicari R (2011) An agent-based federated learning object search service. Interdisciplinary Journal of E-Learning and Learning Objects 7(1):37-54",
+    "[raw_reference] Bonawitz K, Eichner H, Grieskamp W, Huba D, Ingerman A, Ivanov V, Kiddon C, Konecny J, Mazzocchi S, McMahan HB, et al. (2019) Towards federated learning at scale: System design. arXiv:1902.01046",
+    "[raw_reference] Bonawitz K, Ivanov V, Kreuter B, Marcedone A, McMahan HB, Patel S, Ramage D, Segal A, Seth K (2017) Practical secure aggregation for privacy-preserving machine learning. In: Proceedings of the 2017 ACM SIGSAC conference on computer and communications security. ACM, pp 1175-1191",
+    "[raw_reference] Boughorbel S, Jarray F, Venugopal N, Moosa S, Elhadi H, Makhlouf M (2019) Federated uncertainty-aware learning for distributed hospital ehr data. arXiv:1910.12191",
+    "[raw_reference] Brisimi TS, Chen R, Mela T, Olshevsky A, Paschalidis IC, Shi W (2018) Federated learning of predictive models from federated electronic health records. Int J Med Inform 112:59-67",
+    "[raw_reference] Bui TD, Nguyen CV, Swaroop S, Turner RE (2018) Partitioned variational inference: a unified framework encompassing federated and continual learning. arXiv:1811.11206",
+    "[raw_reference] Caldas S, Kone\u010dny J, McMahan HB, Talwalkar A (2018) Expanding the reach of federated learning by reducing client resource requirements. arXiv:1812.07210",
+    "[raw_reference] Caldas S, Wu P, Li T, Kone\u010dn\u1ef3 J, McMahan HB, Smith V, Talwalkar A (2018) Leaf: a benchmark for federated settings. arXiv:1812.01097",
+    "[report_type] arXiv preprint",
+    "[raw_reference] Chai D, Wang L, Chen K, Yang Q (2020) Secure federated matrix factorization. arXiv preprint arXiv:1906.05108",
+    "[raw_reference] Chaudhuri K, Sarwate AD, Sinha K (2013) A near-optimal algorithm for differentially-private principal components. J Mach Learn Res 14(1):2905-2943",
+    "[raw_reference] Chen Y, Qin X, Wang J, Yu C, Gao W (2020) Fedhealth: a federated transfer learning framework for wearable healthcare. IEEE Intelligent Systems 17",
+    "[raw_reference] Chen Y, Sun X, Jin Y (2019) Communication-efficient federated deep learning with asynchronous model update and temporally weighted aggregation. arXiv:1903.07424",
+    "[raw_reference] Cheng K, Fan T, Jin Y, Liu Y, Chen T, Yang Q (2019) Secureboost: a lossless federated learning framework. arXiv:1901.08755",
+    "[raw_reference] Choudhury O, Gkoulalas-Divanis A, Salonidis T, Sylla I, Park Y, Hsu G, Das A (2019) Differential privacy-enabled federated learning for sensitive health data. arXiv:1910.02578",
+    "[raw_reference] Choudhury O, Park Y, Salonidis T, Gkoulalas-Divanis A, Sylla I, et al. (2019) Predicting adverse drug reactions on distributed health data using federated learning. In: AMIA Annual symposium proceedings, vol 2019, p 313. American Medical Informatics Association",
+    "[raw_reference] Clifford GD, Silva I, Moody B, Li Q, Kella D, Shahin A, Kooistra T, Perry D, Mark RG (2015) The physionet/computing in cardiology challenge 2015: reducing false arrhythmia alarms in the icu. In: 2015 Computing in Cardiology Conference (CinC). IEEE, pp 273-276",
+    "[raw_reference] Corinzia L, Buhmann JM (2019) Variational federated multi-task learning. arXiv:1906.06268",
+    "[raw_reference] Detrano R, Janosi A, Steinbrunn W, Pfisterer M, Schmid JJ, Sandhu S, Guppy KH, Lee S, Froelicher V (1989) International application of a new probability algorithm for the diagnosis of coronary artery disease. The American Journal of Cardiology 64(5):304-310 24",
+    "[raw_reference] 2019). doc.ai: declarative, on-device machine learning for ios, android, and react native. https:// github.com/doc-ai/tensorio",
+    "[raw_reference] Duan R, Boland MR, Liu Z, Liu Y, Chang HH, Xu H, Chu H, Schmid CH, Forrest CB, Holmes JH, et al. (2020) Learning from electronic health records across multiple sites: a communication-efficient and privacy-preserving distributed algorithm. J Am Med Inform Assoc 27(3):376-385",
+    "[raw_reference] Dwork C, Kenthapadi K, McSherry F, Mironov I, Naor M (2006) Our data, ourselves: Privacy via distributed noise generation. In: Annual international conference on the theory and applications of cryptographic techniques. Springer, pp 486-503",
+    "[raw_reference] Dwork C, Rothblum GN, Vadhan S (2010) Boosting and differential privacy. In: 2010 IEEE 51st Annual symposium on foundations of computer science. IEEE, pp 51-60",
+    "[raw_reference] Eichner H, Koren T, McMahan HB, Srebro N, Talwar K (2019) Semi-cyclic stochastic gradient descent. arXiv:1904.10120",
+    "[raw_reference] Fontaine C, Galand F (2007) A survey of homomorphic encryption for nonspecialists. EURASIP J Inf Secur 2007:15",
+    "[raw_reference] Johnson KW, Dudley JT (2018) The next generation of precision medicine: obser- vational studies, electronic health records, biobanks and continuous monitoring. Hum Mol Genet 27(R1):R56-R62 31",
+    "[raw_reference] 2019). Google: Tensorflow federated. https://www.tensorflow.org/federated",
+    "[raw_reference] Gostin LO (2001) National health information privacy: regulations under the health insurance portability and accountability act. JAMA 285(23):3015-3021",
+    "[raw_reference] Grama M, Musat M, Mu\u00f1oz-Gonz\u00e1lez L, Passerat-Palmbach J, Rueckert D, Alansary A (2020) Robust aggregation for adaptive privacy preserving federated learning in healthcare. arXiv:2009.08294",
+    "[raw_reference] Gruendner J, Schwachhofer T, Sippl P, Wolf N, Erpenbeck M, Gulden C, Kapsner LA, Zierk J, Mate S, St\u00fcrzl M, et al. (2019) KETOS: Clinical decision support and machine learning as a service-A training and deployment platform based on Docker, OMOP-CDM, and FHIR Web Services. PloS one 14(10):1-16",
+    "[raw_reference] Guha N, Talwalkar A, Smith V (2019) One-shot federated learning. arXiv:1902.11175",
+    "[raw_reference] Gupta O, Raskar R (2018) Distributed learning of deep neural network over multiple agents. J Netw Comput Appl 116:1-8",
+    "[raw_reference] Han S, Mao H, Dally WJ (2015) Deep compression: compressing deep neural networks with pruning, trained quantization and huffman coding. arXiv:1510.00149",
+    "[raw_reference] Han Y, Zhang X (2019) Robust federated training via collaborative machine teaching using trusted instances. arXiv:1905.02941",
+    "[raw_reference] Hard A, Rao K, Mathews R, Beaufays F, Augenstein S, Eichner H, Kiddon C, Ramage D (2018) Federated learning for mobile keyboard prediction. arXiv:1811.03604",
+    "[raw_reference] Hardy S, Henecka W, Ivey-Law H, Nock R, Patrini G, Smith G, Thorne B (2017) Private federated learning on vertically partitioned data via entity resolution and additively homomorphic encryption. arXiv:1711.10677",
+    "[raw_reference] He C, Tan C, Tang H, Qiu S, Liu J (2019) Central server free federated learning over single-sided trust social networks. arXiv:1910.04956",
+    "[raw_reference] Hill P (1985) The Rationale for Learning Communities and Learning Community Models. ERIC",
+    "[raw_reference] Hinton G, Vinyals O, Dean J (2015) Distilling the knowledge in a neural network. arXiv:1503.02531",
+    "[raw_reference] Hripcsak G, Duke JD, Shah NH, Reich CG, Huser V, Schuemie MJ, Suchard MA, Park RW, Wong ICK, Rijnbeek PR, et al. (2015) Observational health data sciences and informatics (ohdsi): opportunities for observational researchers. Stud Health Technol Inform 216:574",
+    "[raw_reference] Huang L, Liu D (2019) Patient clustering improves efficiency of federated machine learning to pre- dict mortality and hospital stay time using distributed electronic medical records. arXiv:1903.09296",
+    "[raw_reference] Ickin S, Vandikas K, Fiedler M (2019) Privacy preserving qoe modeling using collaborative learning. arXiv:1906.09248",
+    "[raw_reference] Jensen PB, Jensen LJ, Brunak S (2012) Mining electronic health records: towards better research applications and clinical care. Nat Rev Genet 13(6):395-405",
+    "[raw_reference] Jiang Y, Kone\u010dn\u1ef3 J, Rush K, Kannan S (2019) Improving federated learning personalization via model agnostic meta learning. arXiv:1909.12488v1",
+    "[raw_reference] Jin Y, Wei X, Liu Y, Yang Q (2020) A survey towards federated semi-supervised learning. arXiv:2002.11545",
+    "[raw_reference] Johnson AE, Pollard TJ, Shen L, Li-wei HL, Feng M, Ghassemi M, Moody B, Szolovits P, Celi LA, Mark RG (2016) Mimic-iii, a freely accessible critical care database. Sci Data 3:160035",
+    "[raw_reference] Kairouz P, McMahan HB, Avent B, Bellet A, Bennis M, Bhagoji AN, Bonawitz K, Charles Z, Cormode G, Cummings R, et al. (2019) Advances and open problems in federated learning. arXiv:1912.04977",
+    "[raw_reference] Kamp M, Adilova L, Sicking J, H\u00fcger F., Schlicht P, Wirtz T, Wrobel S (2018) Efficient decentral- ized deep learning by dynamic model averaging. In: Joint European conference on machine learning and knowledge discovery in databases. Springer, pp 393-409",
+    "[raw_reference] Kang J, Xiong Z, Niyato D, Yu H, Liang YC, Kim DI (2019) Incentive design for efficient federated learning in mobile networks: A contract theory approach. arXiv:1905.07479",
+    "[raw_reference] Kawa D, Punyani S, Nayak P, Karkera A, Jyotinagar V (2019) Credit risk assessment from com- bined bank records using federated learning. International Research Journal of Engineering and Technology (IRJET) 6(4):1355-1358",
+    "[raw_reference] Kim Y, Yu H, Jiang X (2017) Federated tensor factorization for computational phenotyping. In: Proceedings of the 23rd ACM SIGKDD International conference on knowledge discovery and data mining. ACM, pp 887-895",
+    "[raw_reference] Kone\u010dn\u1ef3 J, McMahan B, Ramage D (2015) Federated optimization: distributed optimization beyond the datacenter. arXiv:1511.03575",
+    "[raw_reference] Kone\u010dn\u1ef3 J, McMahan HB, Ramage D, Richt\u00e1rik P (2016) Federated optimization: distributed machine learning for on-device intelligence. arXiv:1610.02527",
+    "[raw_reference] Kone\u010dn\u1ef3 J, McMahan HB, Yu FX, Richt\u00e1rik P, Suresh AT, Bacon D (2016) Federated learning: strategies for improving communication efficiency. arXiv:1610.05492",
+    "[raw_reference] Kulkarni V, Kulkarni M, Pant A (2020) Survey of personalization techniques for federated learning. arXiv:2003.08673",
+    "[raw_reference] Lalitha A, Kilinc OC, Javidi T, Koushanfar F (2019) Peer-to-peer federated learning on graphs. arXiv:1901.11173",
+    "[raw_reference] LeCun Y, Bengio Y, Hinton G (2015) Deep learning. Nature 521(7553):436-444",
+    "[raw_reference] Lee J, Sun J, Wang F, Wang S, Jun CH, Jiang X (2018) Privacy-preserving patient similarity learning in a federated environment: development and analysis. JMIR Medical Informatics 6(2):e20",
+    "[raw_reference] Li T, Sahu AK, Zaheer M, Sanjabi M, Talwalkar A, Smith1 V (2019) Federated optimization for heterogeneous networks. arXiv:1812.06127",
+    "[raw_reference] Li T, Sanjabi M, Smith V (2019) Fair resource allocation in federated learning. arXiv:1905.10497",
+    "[raw_reference] Li Z, Roberts K, Jiang X, Long Q (2019) Distributed learning from multiple ehr databases: Contextual embedding models for medical events. J Biomed Inform 92:103138",
+    "[raw_reference] Lim WYB, Luong NC, Hoang DT, Jiao Y, Liang YC, Yang Q, Niyato D, Miao C (2019) Federated learning in mobile edge networks: a comprehensive survey. arXiv:1909.11875",
+    "[raw_reference] Liu D, Dligach D, Miller T (2019) Two-stage federated phenotyping and patient representation learning. arXiv:1908.05596",
+    "[raw_reference] Lyu L, Yu H, Yang Q (2020) Threats to federated learning: a survey. arXiv:2003.02133",
+    "[raw_reference] McMahan B, Moore E, Ramage D, Hampson S, Arcas BA (2017) Communication-efficient learning of deep networks from decentralized data. In: Artificial intelligence and statistics, pp 1273-1282",
+    "[raw_reference] McMahan HB, Ramage D, Talwar K, Zhang L (2017) Learning differentially private recurrent language models. arXiv:1710.06963",
+    "[raw_reference] Min X, Yu B, Wang F (2019) Predictive modeling of the hospital readmission risk from patients' claims data using machine learning: A case study on copd. Sci Rep 9(1):2362",
+    "[raw_reference] Miotto R, Wang F, Wang S, Jiang X, Dudley JT (2018) Deep learning for healthcare: review, opportunities and challenges. Brief Bioinformatics 19(6):1236-1246",
+    "[raw_reference] Mohri M, Sivek G, Suresh AT (2019) Agnostic federated learning. In: Chaudhuri K, Salakhutdi- nov R (eds) Proceedings of the 36th International conference on machine learning, proceedings of machine learning research, vol 97. PMLR, Long Beach, pp 4615-4625",
+    "[raw_reference] Mukherjee R, Jaffe H (2005) System and method for dynamic context-sensitive federated search of multiple information repositories. US Patent App. 10/743,196",
+    "[raw_reference] Nishio T, Yonetani R (2018) Client selection for federated learning with heterogeneous resources in mobile edge. arXiv:1804.08333",
+    "[raw_reference] Obermeyer Z, Powers B, Vogeli C, Mullainathan S (2019) Dissecting racial bias in an algorithm used to manage the health of populations. Science 366(6464):447-453",
+    "[raw_reference] OpenMined: Pysyft-tensorflow. https://github.com/OpenMined/PySyft-TensorFlow (2019)",
+    "[raw_reference] Pathak M, Rane S, Raj B (2010) Multiparty differential privacy via aggregation of locally trained classifiers. In: Advances in neural information processing systems, pp 1876-1884",
+    "[raw_reference] Perez MV, Mahaffey KW, Hedlin H, Rumsfeld JS, Garcia A, Ferris T, Balasubramanian V, Russo AM, Rajmane A, Cheung L, et al. (2019) Large-scale assessment of a smartwatch to identify atrial fibrillation. N Engl J Med 381(20):1909-1917",
+    "[raw_reference] Pfohl SR, Dai AM, Heller K (2019) Federated and differentially private learning for electronic health records. arXiv:1911.05861",
+    "[raw_reference] Pollard TJ, Johnson AE, Raffa JD, Celi LA, Mark RG, Badawi O (2018) The eicu collabora- tive research database, a freely available multi-center database for critical care research. Sci Data 5:180178",
+    "[raw_reference] Raja PV, Sivasankar E (2014) Modern framework for distributed healthcare data analytics based on hadoop. In: Information and communication technology-EurAsia conference. Springer, pp 348-355",
+    "[raw_reference] Rehak D, Dodds L (2005) A model and infrastructure for federated learning content repositories. In: Interoperability of web-based educational systems workshop, vol 143. Citeseer",
+    "[raw_reference] Ren J, Yu G, Ding G (2019) Accelerating dnn training in wireless federated edge learning system. arXiv:1905.09712",
+    "[raw_reference] Roy AG, Siddiqui S, P\u00f6lsterl S, Navab N, Wachinger C (2019) Braintorrent: a peer-to-peer environment for decentralized federated learning. arXiv:1905.06731",
+    "[raw_reference] Rubinstein BI, Bartlett PL, Huang L, Taft N (2009) Learning in a large function space: privacy- preserving mechanisms for svm learning. arXiv:0911.5708",
+    "[raw_reference] Ryffel T, Trask A, Dahl M, Wagner B, Mancuso J, Rueckert D, Passerat-Palmbach J (2018) A generic framework for privacy preserving deep learning. arXiv:1811.04017",
+    "[raw_reference] Samarakoon S, Bennis M, Saad W, Debbah M (2018) Federated learning for ultra-reliable low- latency v2v communications. In: 2018 IEEE Global Communications Conference (GLOBECOM). IEEE, pp 1-7",
+    "[raw_reference] Sattler F, Wiedemann S, M\u00fcller K. R., Samek W (2019) Robust and communication-efficient federated learning from non-iid data. arXiv:1903.02891",
+    "[raw_reference] Sharma P, Shamout FE, Clifton DA (2019) Preserving patient privacy while training a predictive model of in-hospital mortality. arXiv:1912.00354",
+    "[raw_reference] Shayan M, Fung C, Yoon CJ, Beschastnikh I (2018) Biscotti: a ledger for private and secure peer-to- peer machine learning. arXiv:1811.09904",
+    "[raw_reference] Shokri R, Shmatikov V (2015) Privacy-preserving deep learning. In: Proceedings of the 22nd ACM SIGSAC conference on computer and communications security. ACM, pp 1310-1321",
+    "[raw_reference] Silva S, Gutman B, Romero E, Thompson PM, Altmann A, Lorenzi M (2018) Federated learning in distributed medical databases: meta-analysis of large-scale subcortical brain data. arXiv:1810.08553",
+    "[raw_reference] Sim KC, Zadrazil P, Beaufays F (2019) An investigation into on-device personalization of end-to-end automatic speech recognition models. arXiv:1909.06678",
+    "[raw_reference] Smith JW, Everhart J, Dickson W, Knowler W, Johannes R (1988) Using the adap learning algorithm to forecast the onset of diabetes mellitus. In: Proceedings of the annual symposium on computer application in medical care, p 261. American medical informatics association",
+    "[raw_reference] Smith V, Chiang CK, Sanjabi M, Talwalkar AS (2017) Federated multi-task learning. In: Advances in neural information processing systems, pp 4424-4434",
+    "[raw_reference] Such JM, Criado N (2018) Multiparty privacy in social media. Commun ACM 61(8):74-81",
+    "[raw_reference] Thomas K, Grier C (2010) Nicol, D.M.: unfriendly: multi-party privacy risks in social networks. In: International symposium on privacy enhancing technologies symposium. Springer, pp 236-252",
+    "[raw_reference] Tramel E (2019) Federated learning: rewards & challenges of distributed private ml. Accessed May 28, 2019 100.",
+    "[raw_reference] Truex S, Baracaldo N, Anwar A, Steinke T, Ludwig H, Zhang R (2018) A hybrid approach to privacy-preserving federated learning. arXiv:1812.03224 101.",
+    "[raw_reference] Vaid A, Jaladanki SK, Xu J, Teng S, Kumar A, Lee S, Somani S, Paranjpe I, De Freitas JK, Wanyan T, et al. (2020) Federated learning of electronic health records improves mortality prediction in patients hospitalized with covid-19 medRxiv 102.",
+    "[raw_reference] Van Hasselt H, Guez A, Silver D (2016) Deep reinforcement learning with double q-learning. In: Thirtieth AAAI conference on artificial intelligence 103.",
+    "[raw_reference] Vepakomma P, Gupta O, Swedish T, Raskar R (2018) Split learning for health: distributed deep learning without sharing raw patient data. arXiv:1812.00564 104.",
+    "[raw_reference] Wah C, Branson S, Welinder P, Perona P, Belongie S (2011) The caltech-ucsd birds-200-2011 dataset 105.",
+    "[raw_reference] Wang F, Preininger A (2019) Ai in health: state of the art, challenges, and future directions. Yearb Med Inform 28(01):016-026 106.",
+    "[raw_reference] Wang X, Han Y, Wang C, Zhao Q, Chen X, Chen M (2018) In-edge ai: Intelligentizing mobile edge computing, caching and communication by federated learning. arXiv:1809.07857 107.",
+    "[raw_reference] Xu J, Wang F (2019) Federated learning for healthcare informatics. arXiv:1911.06270 108.",
+    "[raw_reference] Xu J, Xu Z, Walker P, Wang F (2020) Federated patient hashing. In: AAAI, pp 6486-6493 109.",
+    "[raw_reference] Yang Q, Liu Y, Chen T, Tong Y (2019) Federated machine learning: concept and applications. ACM Trans Intell Syst Technol 10(2):12:1-12:19. https://doi.org/10.1145/3298981 110.",
+    "[raw_reference] Yuan B, Ge S, Xing W (2020) A federated learning framework for healthcare iot devices. arXiv:2005.05083 111.",
+    "[raw_reference] Zhao Y, Li M, Lai L, Suda N, Civin D, Chandra V (2018) Federated learning with non-iid data. arXiv:1806.00582 112.",
+    "[raw_reference] Zhao Y, Zhao J, Jiang L, Tan R, Niyato D (2019) Mobile edge and reputation- based crowdsourcing iot federated learning: a secure, decentralized and privacy-preserving system. arXiv:1906.10893 113.",
+    "[raw_reference] Zhu H, Jin Y (2019) Multi-objective evolutionary federated learning. IEEE transactions on neural networks and learning systems 114.",
+    "[raw_reference] Zhuo HH, Feng W, Xu Q, Yang Q, Lin Y (2019) Federated reinforcement learning. arXiv:1901.08277"
+  ],
+  "editors": [
+    "K Chaudhuri",
+    "R Salakhutdinov"
+  ],
+  "processing_software": {
+    "GROBID": "0.8.2"
+  }
+}

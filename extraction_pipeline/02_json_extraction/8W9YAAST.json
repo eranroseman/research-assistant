@@ -1,0 +1,1321 @@
+{
+  "paper_id": "8W9YAAST",
+  "title": "A Primer on Reinforcement Learning in Medicine for Clinicians Check for updates",
+  "abstract": "Reinforcement Learning (RL) is a machine learning paradigm that enhances clinical decision-making for healthcare professionals by addressing uncertainties and optimizing sequential treatment strategies. RL leverages patient-data to create personalized treatment plans, improving outcomes and resource efficiency. This review introduces RL to a clinical audience, exploring core concepts, potential applications, and challenges in integrating RL into clinical practice, offering insights into efficient, personalized, and effective patient care. In healthcare, making the right decisions is crucial, as professionals face complex choices daily, from diagnosis to treatment planning and resource allocation. Patient care needs strategies that consider both immediate actions and long-term consequences. Reinforcement Learning (RL), a branch of machine learning, offers a way to enhance decision-making by learning optimal strategies through trial and error and addressing sequential decision-making challenges. RL can model uncertainties, personalize treatments based on patient data, and adapt interventions in real-time, leading to improved patient outcomes, optimized resource utilization, and more efficient healthcare delivery. RL is particularly well-suited for critical care due to availability of granular data allowing it to accurately model patient conditions, predict outcomes, and optimize treatment pathways using ICU data. However, RL can also be effectively applied in many other healthcare domains. RL's capacity to continuously learn from data can significantly improve clinical trial outcomes and healthcare practices. This review introduces RL to clinicians and explores its applications for personalized treatment decisions across a range of clinical domains. It also emphasizes the unique challenges associated with integrating RL into medical research and practice. By doing so, it equips clinicians to critically evaluate the clinical relevance of RL research and highlights its transformative potential in shaping the future of healthcare delivery. \n RLbasic concepts Reinforcement Learning (RL) is a machine learning approach which trains agents to learn decision-making strategies or functions ('policy') through continuous interaction with their environment. This interaction involves a process ('states') of trial ('action') and error 1 inspired by human learning, where the agent receives feedback-either in the form of rewards for successful actions or penalties for unsuccessful ones. Over time, this feedback allows the agent to improve its strategy and maximize expected cumulative rewards. An intuitive analogy is learning to ride a bicycle. Initially, the learner may face difficulties in balancing, receiving negative reinforcement (e.g., falling) when balance is lost. As balance is achieved, positive reinforcement (e.g., staying upright) encourages repeating those successful actions. Similarly, RL agents refine their actions based on the feedback they receive, gradually developing a policy that enhances their decision-making. Key components of RL include agent, environment, state, action reward and policy (Table  1 ). Mathematically, RL can be described using the framework of Markov Decision Processes 2,3 (MDPs). An MDP is represented as a tuple (S, A, P, R, \u03b3) where S is state, A is action, P is transition probability, R is reward and \u03b3 is discount factor (Table  2 ). MDPs offer a structured approach for modeling decision-making problems in which an agent interacts with an environment across discrete time steps. MDPs provide a flexible and widely applicable framework for modeling various decision-making problems, including robotics, game playing, finance, healthcare, and more. They serve as the foundation for many algorithms and techniques in reinforcement learning, allowing agents to learn effective decision-making strategies in complex and uncertain environments.",
+  "year": 2018,
+  "date": "2018",
+  "authors": [
+    {
+      "name": "Pushkala Jayaraman",
+      "orcid": "0000-0003-1159-8354"
+    },
+    {
+      "name": "Jacob Desman",
+      "orcid": "0000-0002-5411-6637"
+    },
+    {
+      "name": "Moein Sabounchi"
+    },
+    {
+      "name": "Girish Nadkarni",
+      "orcid": "0000-0001-6319-4314"
+    },
+    {
+      "name": "Ankit Sakhuja"
+    }
+  ],
+  "doi": "10.1038/s41746-024-01316-0",
+  "orcid": "0000-0001-6319-4314",
+  "md5": "CEDFD15E65E990FF915E429CD14F2696",
+  "publication": {
+    "journal": "Nat. Med",
+    "journal_inferred": true
+  },
+  "funding": [
+    "",
+    "",
+    "",
+    "Acknowledgements This work was supported by  NIH/NIDDK  grant  K08DK131286  (AS),  Clinical and Translational Science Awards (CTSA)  grant  UL1TR004419  from the  National Center for Advancing Translational Sciences (GNN)  and the computational resources and staff expertize provided by  Scientific Computing  at the  Icahn School of Medicine at Mount Sinai ."
+  ],
+  "sections": [
+    {
+      "title": "Delving deeper into RL concepts",
+      "text": "We have presented a detailed overview of RL concepts designed specifically for clinicians, equipping them with the tools to critically assess literature and understand how it can be integrated into clinical practice. For a deeper dive into the mathematical principles that underpin RL in clinical decisionmaking, the Supplementary Note 1 provides a more rigorous exploration (Supplementary Information). The main objective of RL is for an agent to learn a policy that maximizes cumulative rewards. This can be approached through either model-based or model-free RL methods, as illustrated in Fig.  1 ."
+    },
+    {
+      "title": "Model-based RL",
+      "text": "In model-based learning, the agent learns the model of the environment's dynamics, including transition probabilities and expected rewards  4  . This model allows the agent to simulate possible future states and outcomes, facilitating efficient planning and decision-making. By using the model to simulate trajectories, the agent can anticipate the consequences of its actions without directly interacting with the environment. Let's take an example a robot learning to navigate a maze. In model-based RL, the robot would construct a model of the maze's layout and dynamics. This model might include information about the maze's structure, such as walls and corridors, as well as the outcomes of actions taken by the robot (e.g., moving forward, turning left or right). By simulating possible trajectories using this model, the robot can then anticipate the consequences of its actions and plan its path through the maze accordingly. AlphaZero 5 by DeepMind is an example of model-based RL algorithm implemented using the Monte Carlo Tree Search paradigm."
+    },
+    {
+      "title": "Model-free RL",
+      "text": "Another way for the robot to navigate the maze would be to learn directly from experience, updating its policy based on observed rewards and transitions without explicitly modeling the environment. This would be an example of model-free  6  RL that focuses solely on learning the value of states or state-action pairs through trial and error. This can be achieved in three ways -value-based, policy-based or hybrid manner.\n\nValue-based RL. Value-based RL focuses on estimating the value of being in a particular state or taking a particular action, and then using these value estimates to make decisions that maximize cumulative rewards  7  . At the core of value-based RL is the concept of the value function, which is a measure of how \"good\" it is to be in a state i.e. it represents the expected cumulative reward achievable from a given state or state-action pair.\n\nThe agent can have two different learning strategies  8  in value-based RL: on-policy and off-policy; on-policy methods  9  update the agent's policy while it interacts with the environment. This means the data used for learning comes from the same policy being updated. In other words, the agent learns from its own experiences and updates its policy based on those experiences. For instance, think of a person learning to play a video game. They continuously adjust their strategy based on their current approach, refining their skills as they go.\n\nAn example of an on-policy method is SARSA 10 (State-Action-Reward-State-Action). In SARSA, the agent observes the current state, takes an action according to its current policy, receives a reward, observes the next state, updates the policy and then takes another action accordingly. The Q-values are updated based on these stateaction-reward-state-action sequences, ensuring that the learning and acting policies are consistent. Off-policy methods  11  , in contrast, separate the learning and behavior policies, allowing the agent to learn from experiences collected under a different policy than the one being improved. In other words, the agent learns from data generated by one policy while attempting to optimize a different policy. An analogy might be a chef learning to cook by studying recipes from various sources before developing their own unique style.\n\nA classic example of off-policy RL is Q-learning  12  . In Q-learning, the agent maintains a table of Q-values, where each entry represents the estimated expected cumulative reward for taking a specific action in a specific state. The off-policy nature of Q-learning arises from the fact that the agent learns the value of state-action pairs under one policy (often an exploratory behavior policy) while executing a different policy (the target policy) to gather data. This behavior policy is typically exploratory, employing strategies like \u03b5-greedy or Boltzmann exploration to balance exploration and exploitation. Importantly, the Q-values are updated independently of the behavior policy, enabling the agent to learn from experiences gathered under various policies. This decoupling of learning and behavior policies allows Q-learning to effectively explore the environment while learning optimal actionselection strategies."
+    },
+    {
+      "title": "Agent",
+      "text": "The entity learning to make decisions and take actions within an environment.\n\nThe person learning to ride is the agent."
+    },
+    {
+      "title": "Environment",
+      "text": "The external system with which the agent interacts. The physical world within which the agent rides the bike or a simulated environment in the context of machine learning."
+    },
+    {
+      "title": "State",
+      "text": "A representation of the current situation or condition of the environment.\n\nThe state could include factors such as the rider's speed, posture, and proximity to obstacles."
+    },
+    {
+      "title": "Action",
+      "text": "The decision or choice made by the agent that affects the state of the environment.\n\nActions could include pedaling, steering, or braking."
+    },
+    {
+      "title": "Reward",
+      "text": "Feedback from the environment that evaluates the goodness or badness of an action taken by the agent. Rewards serve as signals to reinforce or discourage certain behaviors.\n\nFalling off the bicycle could result in a negative reward, while successfully riding without falling could yield a positive reward"
+    },
+    {
+      "title": "Policy",
+      "text": "The strategy or rule that the agent follows to select sequence of actions based on its current state.\n\nLearning to ride the bike could be constituted as the \"learned policy\". A discount factor of 0 would mean that only immediate rewards will be considered, while a discount factor of 1 would mean that future rewards would be valued equally to immediate rewards.\n\nPolicy-based RL. Another approach is policy-based learning. Policybased RL directly learns a policy, which is a mapping from states to actions, without explicitly estimating the value of states or state-action pairs  13  . The policy specifies the probability distribution over actions given to states. The objective is to find the policy that maximizes the expected cumulative rewards. For instance, in the REINFORCE algorithm  14  , the policy parameters are updated based on the gradient of the expected return with respect to the policy parameters. Policy-based methods excel in handling stochastic policies and exploring the action space effectively. However, they may demand more data and computational resources to converge compared to value-based methods.\n\nHybrid RL. A third class of methods known as hybrid method incorporates both, value-based and policy-based approaches in the same framework. The Actor-Critic 15 class of methods are examples of this approach. Thus, RL offers a diverse range of strategies for agents to learn optimal policies in complex environments."
+    },
+    {
+      "title": "Applications of RL",
+      "text": "RL has achieved notable real-world applications. DeepMind's AlphaZero 5 was an early success in mastering Atari games  16  like Breakout and Ms. Pac-Man, and widely-known for surpassing human-level performance using Deep Q-Networks (DQN) algorithms. DeepRL has also revolutionized board games like chess  17  and plays a crucial role in autonomous driving  18  , where agents learn to navigate complex environments safely and efficiently. In robotics, RL has enabled robots to learn skills such as object grasping  19  , assembly, and navigation in unstructured environments. RL's applications extend to large language models, including ChatGPT  20  where RL helps improve conversational abilities by learning from user feedback to generate more contextually relevant and coherent text over time. Additionally, RL has also been used for generating personalized recommendations  21  for subscription-based viewers, content moderation on social media  22  platforms, and smart grid systems  23  . In each of these examples, the RL agent interacts with an environment, receiving feedback based on its actions and using this feedback to learn and improve its decision-making over time. Such interaction is characteristic of 'online RL', where the agent learns directly from its experiences, making decisions, observing outcomes, and receiving immediate feedback. This feedback loop allows the agent to adjust its behavior in real-time, optimizing its actions to maximize cumulative rewards. Online RL algorithms are transforming digital health clinical trials  24  by personalizing treatment interventions using real-time participant data. These algorithms dynamically adapt to individual characteristics and responses, facilitating real-time decision-making. Their capacity for handling user heterogeneity, distribution shifts, and non-stationarity allows them to modify treatments based on continuous data inputs, facilitating real-time decision-making. However, in cases where real-time interactions are not feasible or ethical, such as in clinical settings, offline RL offers a safer alternative."
+    },
+    {
+      "title": "Offline RL",
+      "text": "While the previously discussed algorithms illustrate a class of learning based on iteratively collecting data by interacting with an environment and using those interactions to improve decision-making, many scenarios preclude this online interaction. In online learning, any adjustments to the learned policy requires collecting new data following this new policy, which may need to be done millions of times  25  during training. Safety, resource availability, cost, time, and lack of a simulation environment 26 may require data collection only once. Moreover, the increasing quantity of large, retrospective datasets that already exist can be repurposed to optimize agents on vast and diverse behaviors that would otherwise be inaccessible to obtain from live experimentation. These constraints provide significant motivation to effectively convert traditional online RL as an \"offline\" problem  27  .\n\nOffline Reinforcement Learning (RL) is designed for scenarios where direct interaction with an environment is limited or infeasible. This limitation removes the agent's ability to explore new actions, making it crucial for the dataset to contain high-reward behavior for effective learning. Additionally, offline RL algorithms must contend with counterfactual ). This document is to confirm that Pushkala Jayaraman has been granted a license to use the BioRender content, including icons, templates and other original artwork, appearing in the attached completed graphic pursuant to BioRender's Academic License Terms. This license permits BioRender content to be sublicensed for use in journal publications. All rights and ownership of BioRender content are reserved by BioRender. All completed graphics must be accompanied by the following citation: \"Created with BioRender.com\". BioRender content included in the completed graphic is not licensed for any commercial uses beyond publication in a journal. For any commercial use of this figure, users may, if allowed, recreate it in BioRender under an Industry BioRender Plan. For any questions regarding this document, or other questions about publishing with BioRender refer to our BioRender Publication Guide or contact BioRender Support at support@biorender.com.\n\nreasoning, where the aim is not to simply imitate past behaviors but to improve upon them. If the policy deviates significantly from the behavior policy learned from the generated dataset, it can cause a distribution shift  28  , distribution shift, leading to discrepancies between expected and real-world outcomes. These challenges would necessitate careful algorithm design and benchmarking  29, 30  .\n\nOffline RL has evolved through various algorithmic advancements and is an active field of research. Early approaches, like Behavioral Cloning (BC), focused on mimicking expert demonstrations via supervised  31  learning but struggled in generalizing to new or unseen scenarios. More sophisticated methods, such as Batch Constrained Q-learning (BCQ) and Conservative Q-Learning (CQL)  32  , build on the Q-learning paradigm  33  while incorporating constraints to prevent the model from overestimating rewards for actions poorly represented in the dataset thereby allowing agents to cautiously propose new actions. Further innovations include Implicit Q-Learning  34  (IQL) which estimates optimal action-value functions indirectly to avoid challenges associated with explicit Q-value modeling. Additional models like Behavior Regularized Off-Policy Q-Learning  35  , Behavior Regularized Off-Policy Q-Learning  36  , Conservative Policy Iteration (CPI)  37  , Dueling Network Architecture  38  , Soft Behavior-regularized Actor Critic(SBAC)  39  , and Adversarially Trained Actor-Critic (ATAC)  40  address specific challenges associated with learning from fixed datasets of offline experiences. While they offer promising avenues for applying RL in scenarios with limited or no interaction with the environment, they also come with their own limitations and trade-offs (Table  3 ).\n\nAfter training a policy, assessing its performance (evaluation) without direct interaction in live environments or simulations poses challenges. However, Off-Policy Evaluation (OPE) methods such as Importance Sampling (IS) and Fitted-Q Evaluation  41  (FQE) offer a solution by predicting the trained policy's performance using historical data and probabilistically estimates a policy value. However, these methods are prone to bias or high variance, depending on the similarity between the evaluation policy and the behavior policy in the dataset. The Doubly Robust  42  (DR) method mitigates these issues by combining IS and model-based predictions, leveraging bias and variance mitigations of both methods. The newer DIstribution Correction Estimation (DICE)-based methods, such as DualDICE  43  and GenDICE  44  , address evaluation by minimizing a divergence measure to target a core issue of distributional shift in OPE and offline RL. As offline RL continues to advance, refining these methods remains a key area of research."
+    },
+    {
+      "title": "Applications of RL in medicine",
+      "text": "The inherent trial-and-error methodology of training RL agents endows it with considerable efficacy, albeit presenting formidable hurdles for its integration into healthcare settings. As a result, most RL applications in healthcare rely on simulated environments or offline learning approaches  45  . For example, RL has been applied in simulated environments to optimize the personalized dosing of propofol, a sedative commonly used in intensive care units to ensure appropriate sedation  46  . RL has also been applied to identify individualized chemotherapy regimens  [47] [48] [49]  such as dynamic treatment regimens (DTRs)  50  for cancer patients, optimizing chemotherapy dosing strategies. Additionally, RL has been shown to optimize insulin dosing for type 1 diabetics 51 using the FDA approved University of Virginia/ Padova type-1 diabetes simulator. RL has also shown potential in mitigating Parkinson's disease symptoms by optimizing combinations of medications  52  and in improving breast cancer screenings using envelope Q-learning  53  . Another prominent example includes applying Q-learning with expert-assisted rewards for diagnosing skin cancer  54  . These examples illustrate the use of RL's sequential decision-making capabilities across diverse medical conditions.\n\nThe expansion of RL applications in medicine has predominantly focused on offline RL, especially in the realm of critical care. With access to detailed and granular patient datasets  [55] [56] [57]  , datasets, researchers have been able to leverage offline RL to optimize treatment decisions. A pioneering example is the work by Nemati et al., who utilized de-identified patient data to develop a deep RL algorithm for optimizing  58  heparin dosing policies in critical care settings. By using activated partial thromboplastin time as a measure of anticoagulant effect, they were able to dynamically adjust dosing based on patient-specific data, accounting for temporal changes observed in electronic medical records. Further work by Lin et al. expanded on this by employing a deep deterministic policy gradient framework  59  with continuous state-action spaces where they demonstrated that significant deviations between RL-recommended dosing and clinician-prescribed doses correlated with increased complications in patients.\n\nThe focus of offline RL in critical care primarily targets two crucial aspects: managing sepsis through fluid and vasopressor optimization, and ventilator management for critically ill patients. Initial studies like those by Komorowski et al. applied the SARSA algorithm to sepsis treatment, setting a foundation that was expanded upon by Raghu et al. using Dueling Double Deep Q-Networks  60  to refine state-action modeling. Subsequently, a sepsis dosing sample-efficient DRL treatment model  61  with episodic control utilized the MIMIC III dataset to increase the longevity of sepsis patients. Komorowski et al. further built on these advancements leading to the development  62  of \"AI Clinician\" to predict treatment strategies that outperformed real-world clinician decisions. Further innovations include Wu et al.'s introduction of weighted dueling double deep Q-networks with embedded human expertize (WD3QNE)  63  to align closer with clinician strategies (choosing a clinician-based Q function), particularly for patients with specific needs indicated by SOFA scores.\n\nOffline RL has also been pivotal in developing weaning strategies for sedation in mechanically ventilated patients, improving safety and outcome metrics. Furthermore, efforts like Kondrup 64 et al.'s \"DeepVent\" -a Conservative Q-Learning (CQL) offline RL algorithm and Prasad et al.'s dueling network models integrate deep learning with traditional RL methods to wean sedation  65  for mechanically ventilated patients while ensuring hemodynamic stability and minimizing re-intubations. While Peine et al. focused on using Q learning to optimize mechanical ventilation settings 66 such as tidal volume, positive end expiratory pressure and FiO2 among critically ill patients, Kondrup et. al emphasized more conservative approaches to tackle the overestimation of Q values  67  and improving accuracy of clinical decisionmaking. Recently, Hengst et al. developed a guideline-informed RL framework for mechanical ventilation  68  that incorporated patient-specific masking actions and violation penalties, improving guideline adherence and outperformance in mortality prediction. However, challenges remain. Saghafian's work  69  highlights ambiguity in offline RL, presenting a model to manage \"New Onset Diabetes After Transplantation\" (NODAT) through augmented and safe V-learning, illustrating the need for more robust RL approaches when handling medical uncertainty.\n\nFurthermore, RL in DTRs has faced issues with evaluation metrics and standard baselines. Luo et al. addressed these challenges, proposing DTR-Bench 70 a benchmarking framework that standardizes evaluation in areas such as diabetes, cancer chemotherapy, and sepsis treatment  71  . Additionally, RL's role in robotic-assisted surgery (RAS)  72  (RAS) continues to evolve, with RL-based systems enhancing adaptability and efficiency through computer vision and RL algorithms, particularly in automating surgical tasks such as knot-tying to save time and improve precision."
+    },
+    {
+      "title": "Challenges of RL in medicine",
+      "text": "The versatility of suitable tasks highlights RL's potential and the transformative impact it could have across various facets of healthcare. Through ongoing research and developments, RL will be instrumental in redefining how healthcare professionals' approach daily complex decision-making challenges and assist the discovery of new state-of-the-art care practices. Despite the promise of RL in healthcare, there exist several ongoing challenges and areas of research (Fig.  2 ) -"
+    },
+    {
+      "title": "State space formulation challenges",
+      "text": "In offline RL, the state space is defined by the available data. Healthcare data, particularly electronic health records, can be high-dimensional presenting challenges in preprocessing and selecting relevant features. Data quality issues such as missing values, noise, and inconsistencies further complicate state space formulation. Healthcare data may also exhibit biases due to factors such as demographic disparities, clinical practice variations, and data collection methods  73  . These biases can lead to distribution shifts between the offline data and the target policy, affecting the generalizability and performance of learned policies. Finally, RL problems are formulated using MDPs which assume that the next state is only dependent on the current state and current action, which may not always be true in medicine."
+    },
+    {
+      "title": "Reward formulation challenges",
+      "text": "Designing reward functions in healthcare RL involves subjective judgments and complex trade-offs. Clinical outcomes, patient wellbeing, resource utilization, and adherence to medical guidelines are all factors that may need to be considered. Healthcare interventions often have long-term consequences, leading to sparse and delayed feedback on the efficacy of actions. Defining rewards that accurately capture the impact of actions over time while addressing the delay in feedback presents a significant challenge. This is seen in multiple studies that determine the dosing of vasopressors or management of mechanical ventilators based on all-cause in-hospital mortality  74  . Inverse reinforcement learning (IRL) offers a potential solution by deriving reward functions from observed behaviors or data, thus estimating rewards during the learning process  75  . However, IRL also necessitates extensive domain knowledge and often depends on heuristics, given the complexity of clinical data and uncertainties inherent in the decisionmaking process. Further research is necessary to fully realize the potential of this promising approach."
+    },
+    {
+      "title": "Action formulation challenges",
+      "text": "Healthcare interventions often span a spectrum from discrete choices (e.g., medication dosage, and treatment options) to continuous adjustments (e.g., Value-based off-policy method where the agent's goal is to find an optimal policy by maximizing the expected value of the total rewards through iterative interactions with the environment when the model is not known.\n\nQ-learning selects the action that yields the highest expected value which results in selected actions having consistently overestimated values.\n\nDeep Q-Network (DQN)  16  DQN uses deep neural networks to represent the Q-function rather than a simple table of values.\n\nDQN suffers from overestimation of action values and sensitivity to hyperparameters leading to computationally intensive training processes.\n\nDouble Deep Q-Network (DDQN)  85  The DDQN is an improvement over the DQN algorithm as it reduces the overestimation of action values by decoupling the selection and evaluation of actions, using two value function estimates by employing two separate neural networks.\n\nDDQN also suffers from potential overestimation bias due to shared target and online networks and increased computational complexity from maintaining two separate networks.\n\nBatch Constrained Q-Learning (BCQ)  33  It is as an off-policy algorithm that constrains exploration to improve policy learning and address overestimation bias in Q-learning.\n\nBCQ's learned policy is akin to robust imitation learning rather than true reinforcement learning when exploratory data is limited.\n\nConservative Q-Learning 32 CQL penalizes actions not well-supported by the dataset to mitigate overestimation bias, promoting safer policy learning in reinforcement learning scenarios.\n\nCQL suffers from potential underestimation of action values due to conservative updates, leading to suboptimal policies, and increased computational complexity from the additional penalty term, impacting training efficiency.\n\nImplicit Q-Learning (IQL)  34  IQL addresses the challenges of traditional Q-learning methods by leveraging implicit estimation techniques for improved policy optimization. It estimates the optimal action-value function indirectly, without explicitly modeling Q-values.\n\nIQL learned policy depends on the distributions of actions. The performance regresses when the data distribution is skewed toward sub-optimal actions in specific states.\n\nConservative Policy Iteration (CPI)  37  CPI balances exploration and exploitation by penalizing deviations from observed behavior, aiming to converge to a riskaverse policy with improved performance in uncertain environments.\n\nCPI suffers from conservative policies that may overly adhere to past behavior, potentially hindering exploration and innovation in dynamic environments. Additionally, CPI's computational complexity can escalate with larger datasets, impacting scalability in real-world applications.\n\nBehavior Regularized Off-Policy Q-Learning (BRAC)  35  BRAC introduces behavior regularization, which encourages the agent to prioritize actions that are consistent with the behavior observed in the dataset, leading to improved learning stability and performance.\n\nThe major limitations include difficulty in balancing exploration and exploitation, as well as challenges in effectively tuning the regularization parameter to achieve optimal performance across different environments and datasets.\n\nDueling Network Architecture (DNA)  38  The DNA architecture consists of two streams of fully connected layers that represent the value and advantage functions separately. It enables more efficient learning by allowing the agent to focus on valuable state information while independently estimating the advantage of different actions.\n\nDNA can suffer from increased complexity and increased computational requirements including a lack of interpretability and potential issues with generalizability.\n\nSoft Behavior-regularized Actor-Critic (SBAC)  39  SBAC incorporates behavior regularization by penalizing the policy for deviating from a behavior policy derived from past experience. This approach balances exploration and exploitation by leveraging previously collected data to improve learning efficiency.\n\nMajor limitations of SBAC include potential inefficiency in rapidly changing environments due to reliance on past behavior and the challenge of appropriately tuning the behavior regularization parameter, which can complicate the optimization process.\n\nAdversarially Trained Actor-Critic (ATAC)  40  In ATAC, 2 networks are trainedactor and critic. Actor, which is responsible for selecting actions, is trained against a worst-case behavior policy estimated by the critic network. This adversarial training enhances the actor's ability to perform well even under the most challenging conditions, promoting robustness and stability in learning.\n\nATAC suffers from need for increased computational complexity due to the adversarial training process, and potential challenges in effectively balancing the adversarial training objectives, which may affect convergence and performance stability.\n\nhttps://doi.org/10.1038/s41746-024-01316-0 infusion rates). Balancing the granularity of this high-dimensional action representation to capture the complexity of clinical decisions while allowing for optimization of learning algorithms is challenging. Healthcare actions are also subject to various constraints and safety considerations, such as drug interactions, physiological limits, and clinical guidelines. Ensuring that RL policies adhere to these constraints while still allowing for effective learning and adaptation presents another significant challenge."
+    },
+    {
+      "title": "Evaluation and implementation challenges",
+      "text": "Evaluation of RL algorithms remain a pivotal challenge in healthcare due to safety, ethics, and cost concerns. Applied RL practitioners often rely on simulated environments as testbenches before deployment. When simulators are unavailable, reliable Off-Policy Evaluation (OPE) methods become indispensable for selecting optimal policies across domains. Various innovative approaches, including fitted Q-estimation  41  (FQE) and importance sampling-based  42  methods, and marginalized sampling-based methods  43, 76  have emerged. Despite their complexity, studies have demonstrated the suitability of relatively simple methods like FQE for policy  77, 78  selection. However, challenges persist, and all methods can be affected by issues with state representations, deviations from observed behavior policies, and confounders. While OPE continues to evolve, real-world deployment is essential for comprehensive evaluation. Despite the abundance of literature applying RL to healthcare, there's a scarcity of clinical trials prospectively analyzing RL models. Notable examples include the REINFORCE trial of a RL-based text messaging program for type 2 diabetes treatment adherence  79  and a proof-of-concept trial of insulin control for type 2 diabetes  80  . However, conducting RL trials in high-risk domains remains challenging, as safety considerations take precedence."
+    },
+    {
+      "title": "Future directions",
+      "text": "The integration of large language models (LLMs)  81, 82  offers significant potential for incorporating reinforcement learning (RL) into automated clinical decision-support systems in healthcare. A review of PubMed publications (Fig.  3 ) underscores the growing interest in RL within medical research. Although RL-related studies in healthcare remain relatively few, the steady rise in publications indicates a burgeoning recognition of RL's capacity to revolutionize clinical practice. RL's ability to optimize treatment decisions, manage resources, and improve patient outcomes through dynamic learning from clinical data is still underutilized but highly promising. RL also enables continuous adaptation, facilitating progressively sophisticated applications that enhance care quality. Inverse Reinforcement Learning (IRL)  75  , when combined with Federated Learning (FL), can offer even greater advantages, particularly in maintaining patient privacy  83  while learning optimal action policies across hospitals. This approach is especially impactful in critical care settings like ICUs, where RL can optimize sedation and ventilation management while protecting data security. The goal of RL in healthcare extends to optimizing interventions during clinical trials to enhance treatment efficacy and support comprehensive post-trial analyzes, contributing valuable insights for future interventions and policies. However, applying RL in areas like robotic-assisted surgery presents challenges, including the need for large, diverse datasets for imitation learning and the ability to adapt to unforeseen surgical anomalies. Developing effective model functions that can accurately interpret sensory data  72  and guide surgical actions remains a complex task. Additionally, integrating advanced computer vision models to interpret and learn from the surgical environment, automating repetitive surgical tasks reliably, and achieving precise instrument localization with pixel-wise segmentation are all ongoing challenges that are potential opportunities in the advancement of RL in surgical robotics. Resource variability and the need for domain-specific expertize also impact RL performance in healthcare, requiring models to evolve with varying practice patterns, patient demographics, and clinical standards. While more and more RL models are developed using real-time clinical data  84  , iterative refinements are essential to capture additional complexities in RL models to improve treatment efficacy, yet balancing the simplicity of the model with comprehensive patient care remains a formidable challenge. Furthermore, the need for domain expertize to define reward functions and conduct clinical evaluations adds another layer of complexity, requiring specialized knowledge and considerable time investment. Additionally, enabling RL models to provide real-time decision support in critical care settings, while ensuring that decisions align with clinical best practices and meet patient-specific needs, continues to be a significant challenge  84  . Despite these challenges, RL continues to offer substantial opportunities, with future directions likely to include more personalized treatments, real-time adaptive interventions, and enhanced decisionmaking tools for clinicians, ultimately revolutionizing healthcare delivery."
+    },
+    {
+      "title": "Conclusion",
+      "text": "In conclusion, the integration of Reinforcement Learning (RL) into healthcare holds immense promise for transforming clinical decision-making and improving patient care through enhanced precision and personalization. Addressing the challenges in the development and deployment of RL algorithms is essential to fully realize its potential for more efficient and effective patient care. RL, with its sequential decision-making capabilities, is uniquely positioned to shift artificial intelligence in healthcare from predictive models to actionable, real-time tools, empowering clinicians to make data-driven, personalized decisions at the bedside. Open Access This article is licensed under a Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International License, which permits any non-commercial use, sharing, distribution and reproduction in any medium or format, as long as you give appropriate credit to the original author(s) and the source, provide a link to the Creative Commons licence, and indicate if you modified the licensed material. You do not have permission under this licence to share adapted material derived from this article or parts of it. The images or other third party material in this article are included in the article's Creative Commons licence, unless indicated otherwise in a credit line to the material. If material is not included in the article's Creative Commons licence and your intended use is not permitted by statutory regulation or exceeds the permitted use, you will need to obtain permission directly from the copyright holder. To view a copy of this licence, visit  http://creativecommons.org/licenses/by- nc-nd/4.0/ ."
+    },
+    {
+      "text": "Fig. 1 | Types of Reinforcement Learning. An overview of the sub-categories of reinforcement learning is presented in Fig. 1. Each major sub-category has an example of a published RL model. Source: Original. License: Created with BioRender.com. Agreement number: SF26VQJRKW for NPJDM (Issued on May 30th, 2024). This document is to confirm that Pushkala Jayaraman has been granted a license to use the BioRender content, including icons, templates and other original artwork, appearing in the attached completed graphic pursuant to BioRender's Academic License Terms. This license permits BioRender content to be sublicensed"
+    },
+    {
+      "text": "Fig.2| Challenges of reinforcement learning. A visual description of the ongoing challenges in RL is provided in Fig.2. These could be categorized as challenges in formulation of state-space, action-space and reward, challenges in evaluation and challenges with deployment into a production environment. Source: Original. License: Created with BioRender.com. Agreement number: SA26VQJVTH for NPJDM (Issued on May 30th, 2024). This document is to confirm that Pushkala Jayaraman has been granted a license to use the BioRender content, including icons, templates and other original artwork, appearing in the attached completed graphic pursuant to BioRender's Academic License Terms. This license permits BioRender content to be sublicensed for use in journal publications. All rights and ownership of BioRender content are reserved by BioRender. All completed graphics must be accompanied by the following citation: \"Created with BioRender.com\". BioRender content included in the completed graphic is not licensed for any commercial uses beyond publication in a journal. For any commercial use of this figure, users may, if allowed, recreate it in BioRender under an Industry BioRender Plan. For any questions regarding this document, or other questions about publishing with BioRender refer to our BioRender Publication Guide or contact BioRender Support at support@biorender.com."
+    },
+    {
+      "text": "Fig. 3 | Publication trends (PubMed) of ML, DL and RL in healthcare and clinical studies. A review of the growth of PubMed-indexed publications underscores the growing interest in RL within medical research. Although RL-related studies remain relatively few, the steady rise in publications indicates a burgeoning recognition of RL's capacity to revolutionize clinical practice. Source: Original. Created from PubMed statistics. License: Publication Trends (PubMed) of ML, DL and RL in Healthcare and Clinical Studies \u00a9 2024 by Pushkala Jayaraman & Jacob Desman is licensed under Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International. To view a copy of this license, visit https://creativecommons.org/ licenses/by-nc-nd/4.0/."
+    },
+    {
+      "text": "Key components of reinforcement learning"
+    },
+    {
+      "text": "Components of Markov Decision Processes"
+    },
+    {
+      "text": "Examples of Offline Reinforcement Learning Algorithms"
+    },
+    {
+      "title": "Acknowledgements",
+      "text": "This work was supported by  NIH/NIDDK  grant  K08DK131286  (AS),  Clinical and Translational Science Awards (CTSA)  grant  UL1TR004419  from the  National Center for Advancing Translational Sciences (GNN)  and the computational resources and staff expertize provided by  Scientific Computing  at the  Icahn School of Medicine at Mount Sinai ."
+    },
+    {
+      "title": "Author contributions",
+      "text": "Conceptualization: A.S, G.N.N, P.J. Methodology: P.J, J.D, M.S, A.S. Investigation: P.J, J.D, M.S, A.S. Visualization: P.J, J.D. Funding acquisition: A.S, G.N.N. Supervision: A.S, G.N.N. Writing: P.J, J.D, M.S, A.S. Revisions: P.J, J.D, M.S, A.S, G.N.N."
+    },
+    {
+      "title": "Competing interests",
+      "text": "GNN reports grants, personal fees, and non-financial support from Renalytix. GNN reports non-financial support from Pensieve Health, personal fees from AstraZeneca, personal fees from BioVie, personal fees from GLG Consulting, and personal fees from Siemens Healthineers from outside the submitted work. GNN is also serves as the Associate Editor for NPJDM. None of the other authors have any other competing interests to declare."
+    },
+    {
+      "title": "Additional information",
+      "text": "Supplementary information The online version contains supplementary material available at  https://doi.org/10.1038/s41746-024-01316-0 .\n\nCorrespondence and requests for materials should be addressed to Girish N. Nadkarni or Ankit Sakhuja.\n\nReprints and permissions information is available at  http://www.nature.com/reprints Publisher's note Springer Nature remains neutral with regard to jurisdictional claims in published maps and institutional affiliations."
+    }
+  ],
+  "references": [
+    {
+      "title": "Reinforcement learning: An introduction",
+      "authors": [
+        "R Sutton",
+        "A Barto"
+      ],
+      "year": 2018,
+      "raw": "Reinforcement learning: An introduction \n\t\t \n\t\t\t R S Sutton \n\t\t \n\t\t \n\t\t\t A G Barto \n\t\t \n\t\t \n\t\t\t 2018 \n\t\t\t The MIT Press \n\t\t\t Cambridge, MA, US \n\t\t \n\t \n\t 2nd ed \n\t Sutton, R. S. & Barto, A. G. Reinforcement learning: An introduction, 2nd ed, (The MIT Press, Cambridge, MA, US, 2018)."
+    },
+    {
+      "title": "A Markovian decision process",
+      "authors": [
+        "R Bellman"
+      ],
+      "year": 1957,
+      "journal": "J. Math. Mech",
+      "volume": "6",
+      "raw": "A Markovian decision process \n\t\t \n\t\t\t R Bellman \n\t\t \n\t \n\t \n\t\t J. Math. Mech \n\t\t \n\t\t\t 6 \n\t\t\t \n\t\t\t 1957 \n\t\t \n\t \n\t Bellman, R. A Markovian decision process. J. Math. Mech. 6, 679-684 (1957)."
+    },
+    {
+      "title": "Algorithms for Reinforcement Learning",
+      "authors": [
+        "C Szepesv\u00e1ri"
+      ],
+      "year": 2022,
+      "doi": "10.1007/978-3-642-29946-9_4",
+      "raw": "Algorithms for Reinforcement Learning \n\t\t \n\t\t\t C Szepesv\u00e1ri \n\t\t \n\t\t 10.1007/978-3-642-29946-9_4 \n\t\t \n\t\t\t 2022 \n\t\t\t Springer International Publishing \n\t\t \n\t \n\t Szepesv\u00e1ri, C. Algorithms for Reinforcement Learning, (Springer International Publishing, 2022)."
+    },
+    {
+      "title": "Model-based Reinforcement Learning: A Survey",
+      "authors": [
+        "M Thomas",
+        "B Joost",
+        "P Aske",
+        "M Catholijn"
+      ],
+      "year": 2023,
+      "raw": "Model-based Reinforcement Learning: A Survey \n\t\t \n\t\t\t M M Thomas \n\t\t \n\t\t \n\t\t\t B Joost \n\t\t \n\t\t \n\t\t\t P Aske \n\t\t \n\t\t \n\t\t\t M J Catholijn \n\t\t \n\t\t \n\t\t\t 2023 \n\t\t\t now \n\t\t \n\t \n\t Thomas, M. M., Joost, B., Aske, P. & Catholijn, M. J. Model-based Reinforcement Learning: A Survey, (now, 2023)."
+    },
+    {
+      "title": "A general reinforcement learning algorithm that masters chess, shogi, and Go through self-play",
+      "authors": [
+        "D Silver"
+      ],
+      "year": 2018,
+      "journal": "Science",
+      "volume": "362",
+      "raw": "A general reinforcement learning algorithm that masters chess, shogi, and Go through self-play \n\t\t \n\t\t\t D Silver \n\t\t \n\t \n\t \n\t\t Science \n\t\t \n\t\t\t 362 \n\t\t\t \n\t\t\t 2018 \n\t\t \n\t \n\t Silver, D. et al. A general reinforcement learning algorithm that masters chess, shogi, and Go through self-play. Science 362, 1140-1144 (2018)."
+    },
+    {
+      "title": "Model-Based or Model-Free, a Review of Approaches in Reinforcement Learning",
+      "authors": [
+        "Q Huang"
+      ],
+      "year": 2020,
+      "raw": "Model-Based or Model-Free, a Review of Approaches in Reinforcement Learning \n\t\t \n\t\t\t Q Huang \n\t\t \n\t \n\t \n\t\t 2020 International Conference on Computing and Data Science (CDS) \n\t\t \n\t\t\t 2020 \n\t\t\t \n\t\t \n\t \n\t Huang, Q. Model-Based or Model-Free, a Review of Approaches in Reinforcement Learning. In 2020 International Conference on Computing and Data Science (CDS) 219-221 (2020)."
+    },
+    {
+      "title": "Modern value based reinforcement learning: a chronological review",
+      "authors": [
+        "M Mckenzie",
+        "M Mcdonnell"
+      ],
+      "year": 2022,
+      "doi": "10.1109/access.2022.3228647",
+      "journal": "IEEE Access",
+      "volume": "10",
+      "raw": "Modern value based reinforcement learning: a chronological review \n\t\t \n\t\t\t M C Mckenzie \n\t\t \n\t\t \n\t\t\t M D Mcdonnell \n\t\t \n\t\t 10.1109/access.2022.3228647 \n\t \n\t \n\t\t IEEE Access \n\t\t \n\t\t\t 10 \n\t\t\t \n\t\t\t 2022 \n\t\t \n\t \n\t McKenzie, M. C. & McDonnell, M. D. Modern value based reinforcement learning: a chronological review. IEEE Access 10, 134704-134725 (2022)."
+    },
+    {
+      "title": "Artificial Intelligence: Foundations of Computational Agents",
+      "authors": [
+        "D Poole",
+        "A Mackworth"
+      ],
+      "year": 2017,
+      "raw": "D L Poole \n\t\t \n\t\t \n\t\t\t A K Mackworth \n\t\t \n\t\t Artificial Intelligence: Foundations of Computational Agents \n\t\t Cambridge \n\t\t \n\t\t\t Cambridge University Press \n\t\t\t 2017 \n\t\t \n\t \n\t Poole, D. L. & Mackworth, A. K. Artificial Intelligence: Foundations of Computational Agents, (Cambridge University Press, Cambridge, 2017)."
+    },
+    {
+      "title": "On-line Q-learning using connectionist systems",
+      "authors": [
+        "G Rummery",
+        "M Niranjan"
+      ],
+      "year": 1994,
+      "raw": "On-line Q-learning using connectionist systems \n\t\t \n\t\t\t G A Rummery \n\t\t \n\t\t \n\t\t\t M Niranjan \n\t\t \n\t\t \n\t\t\t 1994 \n\t\t \n\t \n\t Rummery, G. A. & Niranjan, M. On-line Q-learning using connectionist systems. (1994)."
+    },
+    {
+      "title": "Reinforcement learning with replacing eligibility traces",
+      "authors": [
+        "S Singh",
+        "R Sutton"
+      ],
+      "year": 1996,
+      "journal": "Mach. Learn",
+      "volume": "22",
+      "raw": "Reinforcement learning with replacing eligibility traces \n\t\t \n\t\t\t S P Singh \n\t\t \n\t\t \n\t\t\t R S Sutton \n\t\t \n\t \n\t \n\t\t Mach. Learn \n\t\t \n\t\t\t 22 \n\t\t\t \n\t\t\t 1996 \n\t\t \n\t \n\t Singh, S. P. & Sutton, R. S. Reinforcement learning with replacing eligibility traces. Mach. Learn. 22, 123-158 (1996)."
+    },
+    {
+      "title": "A Survey on Offline Reinforcement Learning: Taxonomy, Review, and Open Problems",
+      "authors": [
+        "R Prudencio",
+        "M Maximo",
+        "E Colombini"
+      ],
+      "year": 2023,
+      "journal": "IEEE Trans Neural Netw Learn Syst PP",
+      "raw": "A Survey on Offline Reinforcement Learning: Taxonomy, Review, and Open Problems \n\t\t \n\t\t\t R F Prudencio \n\t\t \n\t\t \n\t\t\t M Maximo \n\t\t \n\t\t \n\t\t\t E L Colombini \n\t\t \n\t \n\t \n\t\t IEEE Trans Neural Netw Learn Syst PP \n\t\t \n\t\t\t 2023 \n\t\t \n\t \n\t Prudencio, R. F., Maximo, M. & Colombini, E. L. A Survey on Offline Reinforcement Learning: Taxonomy, Review, and Open Problems. IEEE Trans Neural Netw Learn Syst PP(2023)."
+    },
+    {
+      "title": "Q-learning",
+      "authors": [
+        "C Watkins",
+        "P Dayan"
+      ],
+      "year": 1992,
+      "journal": "Mach. Learn",
+      "volume": "8",
+      "raw": "Q-learning \n\t\t \n\t\t\t C J C H Watkins \n\t\t \n\t\t \n\t\t\t P Dayan \n\t\t \n\t \n\t \n\t\t Mach. Learn \n\t\t \n\t\t\t 8 \n\t\t\t \n\t\t\t 1992 \n\t\t \n\t \n\t Watkins, C. J. C. H. & Dayan, P. Q-learning. Mach. Learn. 8, 279-292 (1992)."
+    },
+    {
+      "title": "A Review of Off-Policy Evaluation in Reinforcement Learning",
+      "authors": [
+        "M Uehara",
+        "C Shi",
+        "N Kallus"
+      ],
+      "year": 2022,
+      "raw": "A Review of Off-Policy Evaluation in Reinforcement Learning \n\t\t \n\t\t\t M Uehara \n\t\t \n\t\t \n\t\t\t C Shi \n\t\t \n\t\t \n\t\t\t N Kallus \n\t\t \n\t\t \n\t\t\t 2022 \n\t\t \n\t \n\t Uehara, M., Shi, C. & Kallus, N. A Review of Off-Policy Evaluation in Reinforcement Learning. (2022)."
+    },
+    {
+      "title": "Simple statistical gradient-following algorithms for connectionist reinforcement learning",
+      "authors": [
+        "R Williams"
+      ],
+      "year": 1992,
+      "doi": "10.1007/bf00992696",
+      "journal": "Mach. Learn",
+      "volume": "8",
+      "raw": "Simple statistical gradient-following algorithms for connectionist reinforcement learning \n\t\t \n\t\t\t R J Williams \n\t\t \n\t\t 10.1007/bf00992696 \n\t \n\t \n\t\t Mach. Learn \n\t\t \n\t\t\t 8 \n\t\t\t \n\t\t\t 1992 \n\t\t \n\t \n\t Williams, R. J. Simple statistical gradient-following algorithms for connectionist reinforcement learning. Mach. Learn. 8, 229-256 (1992)."
+    },
+    {
+      "title": "Actor-critic algorithms",
+      "authors": [
+        "V Konda",
+        "J Tsitsiklis"
+      ],
+      "year": 1999,
+      "journal": "Advances in neural information processing systems",
+      "volume": "12",
+      "raw": "Actor-critic algorithms \n\t\t \n\t\t\t V Konda \n\t\t \n\t\t \n\t\t\t J Tsitsiklis \n\t\t \n\t \n\t \n\t\t Advances in neural information processing systems \n\t\t \n\t\t\t 12 \n\t\t\t 1999 \n\t\t \n\t \n\t Konda, V. & Tsitsiklis, J. Actor-critic algorithms. Advances in neural information processing systems 12 (1999)."
+    },
+    {
+      "title": "Human-level control through deep reinforcement learning",
+      "authors": [
+        "V Mnih"
+      ],
+      "year": 2015,
+      "doi": "10.1038/nature14236",
+      "journal": "Nature",
+      "volume": "518",
+      "raw": "Human-level control through deep reinforcement learning \n\t\t \n\t\t\t V Mnih \n\t\t \n\t\t 10.1038/nature14236 \n\t \n\t \n\t\t Nature \n\t\t \n\t\t\t 518 \n\t\t\t \n\t\t\t 2015 \n\t\t \n\t \n\t Mnih, V. et al. Human-level control through deep reinforcement learning. Nature 518, 529-533 (2015)."
+    },
+    {
+      "title": "Giraffe: Using Deep Reinforcement Learning to Play Chess",
+      "authors": [
+        "M Lai"
+      ],
+      "year": 2015,
+      "raw": "Giraffe: Using Deep Reinforcement Learning to Play Chess \n\t\t \n\t\t\t M Lai \n\t\t \n\t\t \n\t\t\t 2015 \n\t\t \n\t \n\t Lai, M. Giraffe: Using Deep Reinforcement Learning to Play Chess. (2015)."
+    },
+    {
+      "title": "Deep reinforcement learning for autonomous driving: a survey",
+      "authors": [
+        "B Kiran"
+      ],
+      "year": 2022,
+      "journal": "IEEE Trans. Intell. Transportation Syst",
+      "volume": "23",
+      "raw": "Deep reinforcement learning for autonomous driving: a survey \n\t\t \n\t\t\t B R Kiran \n\t\t \n\t \n\t \n\t\t IEEE Trans. Intell. Transportation Syst \n\t\t \n\t\t\t 23 \n\t\t\t \n\t\t\t 2022 \n\t\t \n\t \n\t Kiran, B. R. et al. Deep reinforcement learning for autonomous driving: a survey. IEEE Trans. Intell. Transportation Syst. 23, 4909-4926 (2022)."
+    },
+    {
+      "title": "Reinforcement learning in robotics: a survey",
+      "authors": [
+        "J Kober",
+        "J Bagnell",
+        "J Peters"
+      ],
+      "year": 2013,
+      "journal": "Int. J. Robot. Res",
+      "volume": "32",
+      "raw": "Reinforcement learning in robotics: a survey \n\t\t \n\t\t\t J Kober \n\t\t \n\t\t \n\t\t\t J A Bagnell \n\t\t \n\t\t \n\t\t\t J Peters \n\t\t \n\t \n\t \n\t\t Int. J. Robot. Res \n\t\t \n\t\t\t 32 \n\t\t\t \n\t\t\t 2013 \n\t\t \n\t \n\t Kober, J., Bagnell, J. A. & Peters, J. Reinforcement learning in robotics: a survey. Int. J. Robot. Res. 32, 1238-1274 (2013)."
+    },
+    {
+      "title": "A brief overview of ChatGPT: The history, status quo and potential future development",
+      "authors": [
+        "T Wu"
+      ],
+      "year": 2023,
+      "doi": "10.1109/jas.2023.123618",
+      "journal": "IEEE/CAA J. Autom. Sin",
+      "volume": "10",
+      "raw": "A brief overview of ChatGPT: The history, status quo and potential future development \n\t\t \n\t\t\t T Wu \n\t\t \n\t\t 10.1109/jas.2023.123618 \n\t \n\t \n\t\t IEEE/CAA J. Autom. Sin \n\t\t \n\t\t\t 10 \n\t\t\t \n\t\t\t 2023 \n\t\t \n\t \n\t Wu, T. et al. A brief overview of ChatGPT: The history, status quo and potential future development. IEEE/CAA J. Autom. Sin. 10, 1122-1136 (2023)."
+    },
+    {
+      "title": "A contextual-bandit approach to personalized news article recommendation",
+      "authors": [
+        "L Li",
+        "W Chu",
+        "J Langford",
+        "R Schapire"
+      ],
+      "doi": "10.1145/1772690.1772758",
+      "raw": "A contextual-bandit approach to personalized news article recommendation \n\t\t \n\t\t\t L Li \n\t\t \n\t\t \n\t\t\t W Chu \n\t\t \n\t\t \n\t\t\t J Langford \n\t\t \n\t\t \n\t\t\t R E Schapire \n\t\t \n\t\t 10.1145/1772690.1772758 \n\t\t \n\t\t\t ACM \n\t\t \n\t \n\t Li, L., Chu, W., Langford, J. & Schapire, R. E. A contextual-bandit approach to personalized news article recommendation. (ACM)."
+    },
+    {
+      "title": "Horizon: Facebook's open source applied reinforcement learning platform",
+      "authors": [
+        "J Gauci"
+      ],
+      "year": 2019,
+      "raw": "Horizon: Facebook's open source applied reinforcement learning platform \n\t\t \n\t\t\t J Gauci \n\t\t \n\t\t \n\t\t \n\t\t\t 2019 \n\t\t \n\t \n\t Gauci, J. et al. Horizon: Facebook's open source applied reinforcement learning platform. https://openreview.net/forum?id= SylQKinLi4 (2019)."
+    },
+    {
+      "title": "Review on the research and practice of deep learning and reinforcement learning in smart grids",
+      "authors": [
+        "D Zhang",
+        "X Han",
+        "C Deng"
+      ],
+      "year": 2018,
+      "doi": "10.17775/cseejpes.2018.00520",
+      "journal": "CSEE J. Power Energy Syst",
+      "volume": "4",
+      "raw": "Review on the research and practice of deep learning and reinforcement learning in smart grids \n\t\t \n\t\t\t D Zhang \n\t\t \n\t\t \n\t\t\t X Han \n\t\t \n\t\t \n\t\t\t C Deng \n\t\t \n\t\t 10.17775/cseejpes.2018.00520 \n\t \n\t \n\t\t CSEE J. Power Energy Syst \n\t\t \n\t\t\t 4 \n\t\t\t \n\t\t\t 2018 \n\t\t \n\t \n\t Zhang, D., Han, X. & Deng, C. Review on the research and practice of deep learning and reinforcement learning in smart grids. CSEE J. Power Energy Syst. 4, 362-370 (2018)."
+    },
+    {
+      "title": "Monitoring Fidelity of Online Reinforcement Learning Algorithms in Clinical Trials",
+      "authors": [
+        "A Trella"
+      ],
+      "year": 2024,
+      "raw": "Monitoring Fidelity of Online Reinforcement Learning Algorithms in Clinical Trials \n\t\t \n\t\t\t A L Trella \n\t\t \n\t\t arXiv:2402.17003 \n\t\t \n\t\t\t 2024 \n\t\t \n\t \n\t arXiv preprint \n\t Trella, A. L., et al. Monitoring Fidelity of Online Reinforcement Learning Algorithms in Clinical Trials. arXiv preprint arXiv:2402.17003 (2024)."
+    },
+    {
+      "title": "A Survey on Offline Reinforcement Learning: Taxonomy, Review, and Open Problems",
+      "authors": [
+        "R Prudencio",
+        "M Maximo",
+        "E Colombini"
+      ],
+      "year": 2024,
+      "journal": "IEEE Transactions on Neural Networks and Learning Systems",
+      "raw": "A Survey on Offline Reinforcement Learning: Taxonomy, Review, and Open Problems \n\t\t \n\t\t\t R F Prudencio \n\t\t \n\t\t \n\t\t\t M R O A Maximo \n\t\t \n\t\t \n\t\t\t E L Colombini \n\t\t \n\t \n\t \n\t\t IEEE Transactions on Neural Networks and Learning Systems \n\t\t \n\t\t\t \n\t\t\t 2024 \n\t\t \n\t \n\t Prudencio, R. F., Maximo, M. R. O. A. & Colombini, E. L. A Survey on Offline Reinforcement Learning: Taxonomy, Review, and Open Problems. IEEE Transactions on Neural Networks and Learning Systems, 1-0 (2024)."
+    },
+    {
+      "title": "Noise and the reality gap: the use of simulation in evolutionary robotics",
+      "authors": [
+        "N Jakobi",
+        "P & Husbands",
+        "I Harvey"
+      ],
+      "year": 1995,
+      "doi": "10.1007/3-540-59496-5_337",
+      "raw": "Noise and the reality gap: the use of simulation in evolutionary robotics \n\t\t \n\t\t\t N Jakobi \n\t\t \n\t\t \n\t\t\t P & Husbands \n\t\t \n\t\t \n\t\t\t I Harvey \n\t\t \n\t\t 10.1007/3-540-59496-5_337 \n\t\t \n\t\t\t 1995 \n\t\t\t Springer \n\t\t\t \n\t\t\t Berlin \n\t\t \n\t \n\t Jakobi, N, Husbands, P & Harvey, I. Noise and the reality gap: the use of simulation in evolutionary robotics. Springer, Berlin, p 704-720 (1995)."
+    },
+    {
+      "title": "Offline reinforcement learning: Tutorial, review, and perspectives on open problems",
+      "authors": [
+        "S Levine",
+        "A Kumar",
+        "G Tucker",
+        "J Fu"
+      ],
+      "year": 2020,
+      "doi": "10.1007/s00129-005-1701-5",
+      "raw": "Offline reinforcement learning: Tutorial, review, and perspectives on open problems \n\t\t \n\t\t\t S Levine \n\t\t \n\t\t \n\t\t\t A Kumar \n\t\t \n\t\t \n\t\t\t G Tucker \n\t\t \n\t\t \n\t\t\t J Fu \n\t\t \n\t\t 10.1007/s00129-005-1701-5 \n\t\t . abs/ 2005.01643 \n\t\t \n\t\t \n\t\t\t 2020 \n\t\t \n\t \n\t Levine, S., Kumar, A., Tucker, G. & Fu, J. Offline reinforcement learning: Tutorial, review, and perspectives on open problems. abs/ 2005.01643. https://arxiv.org/abs/2005.01643 (2020)."
+    },
+    {
+      "title": "Wasserstein distributionally robust optimization: Theory and applications in machine learning",
+      "authors": [
+        "D Kuhn",
+        "P Esfahani",
+        "V Nguyen",
+        "S Shafieezadeh-Abadeh"
+      ],
+      "year": 2019,
+      "raw": "Wasserstein distributionally robust optimization: Theory and applications in machine learning \n\t\t \n\t\t\t D Kuhn \n\t\t \n\t\t \n\t\t\t P M Esfahani \n\t\t \n\t\t \n\t\t\t V A Nguyen \n\t\t \n\t\t \n\t\t\t S Shafieezadeh-Abadeh \n\t\t \n\t \n\t \n\t\t Operations research & management science in the age of analytics \n\t\t \n\t\t\t Informs \n\t\t\t 2019 \n\t\t\t \n\t\t \n\t \n\t Kuhn, D., Esfahani, P. M., Nguyen, V. A. & Shafieezadeh-Abadeh, S. Wasserstein distributionally robust optimization: Theory and applications in machine learning. In Operations research & management science in the age of analytics 130-166 (Informs, 2019)."
+    },
+    {
+      "title": "A Benchmark of in-the-Wild Distribution Shifts",
+      "authors": [
+        "P Koh"
+      ],
+      "pages": "139",
+      "raw": "A Benchmark of in-the-Wild Distribution Shifts \n\t\t \n\t\t\t P W Koh \n\t\t \n\t \n\t \n\t\t Proceedings of the 38th International Conference on Machine Learning \n\t\t the 38th International Conference on Machine Learning \n\t\t \n\t\t\t 139 \n\t\t \n\t \n\t Koh, P. W. et al. WILDS: A Benchmark of in-the-Wild Distribution Shifts. In Proceedings of the 38th International Conference on Machine Learning, 139 (eds."
+    },
+    {
+      "title": "PMLR, Proceedings of Machine Learning Research",
+      "authors": [
+        "M Marina",
+        "Z Tong"
+      ],
+      "year": 2021,
+      "raw": "M Marina \n\t\t \n\t\t \n\t\t\t Z Tong \n\t\t \n\t\t PMLR, Proceedings of Machine Learning Research \n\t\t \n\t\t\t 2021 \n\t\t\t \n\t\t \n\t \n\t Marina, M. & Tong, Z.) 5637-5664 (PMLR, Proceedings of Machine Learning Research, 2021)."
+    },
+    {
+      "title": "Datasets for deep data-driven reinforcement learning",
+      "authors": [
+        "J Fu",
+        "A Kumar",
+        "O Nachum",
+        "G Tucker",
+        "S Levine"
+      ],
+      "year": 2021,
+      "raw": "Datasets for deep data-driven reinforcement learning \n\t\t \n\t\t\t J Fu \n\t\t \n\t\t \n\t\t\t A Kumar \n\t\t \n\t\t \n\t\t\t O Nachum \n\t\t \n\t\t \n\t\t\t G Tucker \n\t\t \n\t\t \n\t\t\t S Levine \n\t\t \n\t\t \n\t\t \n\t\t\t 2021 \n\t\t \n\t \n\t Fu, J., Kumar, A., Nachum, O., Tucker, G. & Levine, S. Datasets for deep data-driven reinforcement learning. https://openreview.net/ forum?id=px0-N3_KjA (2021)."
+    },
+    {
+      "title": "A Framework for Behavioural Cloning",
+      "authors": [
+        "M Bain",
+        "C Sammut"
+      ],
+      "year": 1995,
+      "journal": "Machine Intelligence",
+      "volume": "15",
+      "raw": "A Framework for Behavioural Cloning \n\t\t \n\t\t\t M Bain \n\t\t \n\t\t \n\t\t\t C Sammut \n\t\t \n\t \n\t \n\t\t Machine Intelligence \n\t\t \n\t\t\t 15 \n\t\t\t 1995 \n\t\t \n\t \n\t Bain, M. & Sammut, C. A Framework for Behavioural Cloning. in Machine Intelligence 15 (1995)."
+    },
+    {
+      "title": "Conservative q-learning for offline reinforcement learning",
+      "authors": [
+        "A Kumar",
+        "A Zhou",
+        "G Tucker",
+        "S Levine"
+      ],
+      "year": 2020,
+      "journal": "Adv. Neural Inf. Process. Syst",
+      "volume": "33",
+      "raw": "Conservative q-learning for offline reinforcement learning \n\t\t \n\t\t\t A Kumar \n\t\t \n\t\t \n\t\t\t A Zhou \n\t\t \n\t\t \n\t\t\t G Tucker \n\t\t \n\t\t \n\t\t\t S Levine \n\t\t \n\t \n\t \n\t\t Adv. Neural Inf. Process. Syst \n\t\t \n\t\t\t 33 \n\t\t\t \n\t\t\t 2020 \n\t\t \n\t \n\t Kumar, A., Zhou, A., Tucker, G. & Levine, S. Conservative q-learning for offline reinforcement learning. Adv. Neural Inf. Process. Syst. 33, 1179-1191 (2020)."
+    },
+    {
+      "title": "Off-policy deep reinforcement learning without exploration",
+      "authors": [
+        "S Fujimoto",
+        "D Meger",
+        "D Precup"
+      ],
+      "year": 2019,
+      "raw": "Off-policy deep reinforcement learning without exploration \n\t\t \n\t\t\t S Fujimoto \n\t\t \n\t\t \n\t\t\t D Meger \n\t\t \n\t\t \n\t\t\t D Precup \n\t\t \n\t \n\t \n\t\t International conference on machine learning 2052-2062 \n\t\t \n\t\t\t PMLR \n\t\t\t 2019 \n\t\t \n\t \n\t Fujimoto, S., Meger, D. & Precup, D. Off-policy deep reinforcement learning without exploration. In International conference on machine learning 2052-2062 (PMLR, 2019)."
+    },
+    {
+      "title": "Offline reinforcement learning with implicit q-learning",
+      "authors": [
+        "I Kostrikov",
+        "A Nair",
+        "S Levine"
+      ],
+      "year": 2022,
+      "raw": "Offline reinforcement learning with implicit q-learning \n\t\t \n\t\t\t I Kostrikov \n\t\t \n\t\t \n\t\t\t A Nair \n\t\t \n\t\t \n\t\t\t S Levine \n\t\t \n\t\t \n\t \n\t \n\t\t International Conference on Learning Representations \n\t\t \n\t\t\t 2022 \n\t\t \n\t \n\t Kostrikov, I., Nair, A. & Levine, S. Offline reinforcement learning with implicit q-learning. In International Conference on Learning Representations. https://openreview.net/forum?id=68n2s9ZJWF8 (2022)."
+    },
+    {
+      "title": "Behavior regularized offline reinforcement learning",
+      "authors": [
+        "Y Wu",
+        "G Tucker",
+        "O Nachum"
+      ],
+      "year": 2020,
+      "raw": "Y Wu \n\t\t \n\t\t \n\t\t\t G Tucker \n\t\t \n\t\t \n\t\t\t O Nachum \n\t\t \n\t\t \n\t\t Behavior regularized offline reinforcement learning \n\t\t \n\t\t\t 2020 \n\t\t \n\t \n\t Wu, Y., Tucker, G. & Nachum, O. Behavior regularized offline reinforcement learning. https://openreview.net/forum?id= BJg9hTNKPH, https://openreview.net/forum?id=BJg9hTNKPH (2020)."
+    },
+    {
+      "title": "Stabilizing off-policy q-learning via bootstrapping error reduction",
+      "authors": [
+        "A Kumar",
+        "J Fu",
+        "M Soh",
+        "G Tucker",
+        "S Levine"
+      ],
+      "year": 2019,
+      "journal": "Advances in neural information processing systems",
+      "volume": "32",
+      "raw": "Stabilizing off-policy q-learning via bootstrapping error reduction \n\t\t \n\t\t\t A Kumar \n\t\t \n\t\t \n\t\t\t J Fu \n\t\t \n\t\t \n\t\t\t M Soh \n\t\t \n\t\t \n\t\t\t G Tucker \n\t\t \n\t\t \n\t\t\t S Levine \n\t\t \n\t \n\t \n\t\t Advances in neural information processing systems \n\t\t \n\t\t\t 32 \n\t\t\t 2019 \n\t\t \n\t \n\t Kumar, A., Fu, J., Soh, M., Tucker, G. & Levine, S. Stabilizing off-policy q-learning via bootstrapping error reduction. Advances in neural information processing systems 32 (2019)."
+    },
+    {
+      "title": "Deep conservative policy iteration",
+      "authors": [
+        "N Vieillard",
+        "O Pietquin",
+        "M Geist"
+      ],
+      "year": 2020,
+      "doi": "10.1609/aaai.v34i04.6070",
+      "volume": "34",
+      "raw": "Deep conservative policy iteration \n\t\t \n\t\t\t N Vieillard \n\t\t \n\t\t \n\t\t\t O Pietquin \n\t\t \n\t\t \n\t\t\t M Geist \n\t\t \n\t\t 10.1609/aaai.v34i04.6070 \n\t \n\t \n\t\t Proceedings of the AAAI Conference on Artificial Intelligence \n\t\t the AAAI Conference on Artificial Intelligence \n\t\t \n\t\t\t 2020 \n\t\t\t 34 \n\t\t\t \n\t\t \n\t \n\t Vieillard, N., Pietquin, O. & Geist, M. Deep conservative policy iteration. in Proceedings of the AAAI Conference on Artificial Intelligence, 34 6070-6077 (2020)."
+    },
+    {
+      "title": "Dueling network architectures for deep reinforcement learning",
+      "authors": [
+        "Z Wang"
+      ],
+      "year": 2016,
+      "raw": "Dueling network architectures for deep reinforcement learning \n\t\t \n\t\t\t Z Wang \n\t\t \n\t \n\t \n\t\t International conference on machine learning 1995-2003 \n\t\t \n\t\t\t PMLR \n\t\t\t 2016 \n\t\t \n\t \n\t Wang, Z., et al. Dueling network architectures for deep reinforcement learning. in International conference on machine learning 1995-2003 (PMLR, 2016)."
+    },
+    {
+      "title": "Offline reinforcement learning with soft behavior regularization",
+      "authors": [
+        "H Xu",
+        "X Zhan",
+        "J Li",
+        "H Yin"
+      ],
+      "year": 2021,
+      "raw": "Offline reinforcement learning with soft behavior regularization \n\t\t \n\t\t\t H Xu \n\t\t \n\t\t \n\t\t\t X Zhan \n\t\t \n\t\t \n\t\t\t J Li \n\t\t \n\t\t \n\t\t\t H Yin \n\t\t \n\t\t . abs/2110.07395 \n\t\t \n\t\t \n\t\t\t 2021 \n\t\t \n\t \n\t Xu, H., Zhan, X., Li, J. & Yin, H. Offline reinforcement learning with soft behavior regularization. abs/2110.07395. https://arxiv.org/abs/2110. 07395 (2021)."
+    },
+    {
+      "title": "Adversarially trained actor critic for offline reinforcement learning",
+      "authors": [
+        "C.-A Cheng",
+        "T Xie",
+        "N Jiang",
+        "A Agarwal"
+      ],
+      "year": 2022,
+      "doi": "10.2514/6.2022-2078.vid",
+      "raw": "Adversarially trained actor critic for offline reinforcement learning \n\t\t \n\t\t\t C.-A Cheng \n\t\t \n\t\t \n\t\t\t T Xie \n\t\t \n\t\t \n\t\t\t N Jiang \n\t\t \n\t\t \n\t\t\t A Agarwal \n\t\t \n\t\t 10.2514/6.2022-2078.vid \n\t \n\t \n\t\t International Conference on Machine Learning \n\t\t \n\t\t\t PMLR \n\t\t\t 2022 \n\t\t\t \n\t\t \n\t \n\t Cheng, C.-A., Xie, T., Jiang, N. & Agarwal, A. Adversarially trained actor critic for offline reinforcement learning. In International Conference on Machine Learning 3852-3878 (PMLR, 2022)."
+    },
+    {
+      "title": "Batch policy learning under constraints",
+      "authors": [
+        "H Le",
+        "C Voloshin",
+        "Y Yue"
+      ],
+      "year": 2019,
+      "raw": "Batch policy learning under constraints \n\t\t \n\t\t\t H Le \n\t\t \n\t\t \n\t\t\t C Voloshin \n\t\t \n\t\t \n\t\t\t Y Yue \n\t\t \n\t \n\t \n\t\t International Conference on Machine Learning \n\t\t \n\t\t\t PMLR \n\t\t\t 2019 \n\t\t\t \n\t\t \n\t \n\t Le, H., Voloshin, C. & Yue, Y. Batch policy learning under constraints. in International Conference on Machine Learning 3703-3712 (PMLR, 2019)."
+    },
+    {
+      "title": "Doubly robust off-policy value evaluation for reinforcement learning",
+      "authors": [
+        "N Jiang",
+        "L Li"
+      ],
+      "year": 2016,
+      "raw": "Doubly robust off-policy value evaluation for reinforcement learning \n\t\t \n\t\t\t N Jiang \n\t\t \n\t\t \n\t\t\t L Li \n\t\t \n\t \n\t \n\t\t International conference on machine learning \n\t\t \n\t\t\t PMLR \n\t\t\t 2016 \n\t\t\t \n\t\t \n\t \n\t Jiang, N. & Li, L. Doubly robust off-policy value evaluation for reinforcement learning. in International conference on machine learning 652-661 (PMLR, 2016)."
+    },
+    {
+      "title": "Behavior-agnostic estimation of discounted stationary distribution corrections",
+      "authors": [
+        "O Nachum",
+        "Y Chow",
+        "B Dai",
+        "L Li"
+      ],
+      "year": 2019,
+      "journal": "Advances in neural information processing systems",
+      "volume": "32",
+      "raw": "Behavior-agnostic estimation of discounted stationary distribution corrections \n\t\t \n\t\t\t O Nachum \n\t\t \n\t\t \n\t\t\t Y Chow \n\t\t \n\t\t \n\t\t\t B Dai \n\t\t \n\t\t \n\t\t\t L Li \n\t\t \n\t\t \n\t\t\t Dualdice \n\t\t \n\t \n\t \n\t\t Advances in neural information processing systems \n\t\t \n\t\t\t 32 \n\t\t\t 2019 \n\t\t \n\t \n\t Nachum, O., Chow, Y., Dai, B. & Li, L. Dualdice: Behavior-agnostic estimation of discounted stationary distribution corrections. Advances in neural information processing systems 32 (2019)."
+    },
+    {
+      "title": "Generalized offline estimation of stationary values",
+      "authors": [
+        "R Zhang",
+        "B Dai",
+        "L Li",
+        "D Schuurmans"
+      ],
+      "year": 2020,
+      "raw": "Generalized offline estimation of stationary values \n\t\t \n\t\t\t R Zhang \n\t\t \n\t\t \n\t\t\t B Dai \n\t\t \n\t\t \n\t\t\t L Li \n\t\t \n\t\t \n\t\t\t D Schuurmans \n\t\t \n\t\t \n\t\t\t Gendice \n\t\t \n\t\t \n\t \n\t \n\t\t international Conference on Learning Representations \n\t\t \n\t\t\t 2020 \n\t\t \n\t \n\t Zhang, R., Dai, B., Li, L. & Schuurmans, D. Gendice: Generalized offline estimation of stationary values. In international Conference on Learning Representations. https://openreview.net/forum?id= HkxlcnVFwB (2020)."
+    },
+    {
+      "title": "Reinforcement learning in healthcare: a survey",
+      "authors": [
+        "C Yu",
+        "J Liu",
+        "S Nemati",
+        "G Yin"
+      ],
+      "year": 2021,
+      "doi": "10.1145/3477600",
+      "journal": "ACM Comput. Surv. (CSUR)",
+      "volume": "55",
+      "raw": "Reinforcement learning in healthcare: a survey \n\t\t \n\t\t\t C Yu \n\t\t \n\t\t \n\t\t\t J Liu \n\t\t \n\t\t \n\t\t\t S Nemati \n\t\t \n\t\t \n\t\t\t G Yin \n\t\t \n\t\t 10.1145/3477600 \n\t \n\t \n\t\t ACM Comput. Surv. (CSUR) \n\t\t \n\t\t\t 55 \n\t\t\t \n\t\t\t 2021 \n\t\t \n\t \n\t Yu, C., Liu, J., Nemati, S. & Yin, G. Reinforcement learning in healthcare: a survey. ACM Comput. Surv. (CSUR) 55, 1-36 (2021)."
+    },
+    {
+      "title": "An Adaptive Neural Network Filter for Improved Patient State Estimation in Closed-Loop Anesthesia Control",
+      "authors": [
+        "E Borera",
+        "B Moore",
+        "A Doufas",
+        "L Pyeatt"
+      ],
+      "year": 2011,
+      "doi": "10.1109/ictai.2011.15",
+      "raw": "An Adaptive Neural Network Filter for Improved Patient State Estimation in Closed-Loop Anesthesia Control \n\t\t \n\t\t\t E C Borera \n\t\t \n\t\t \n\t\t\t B L Moore \n\t\t \n\t\t \n\t\t\t A G Doufas \n\t\t \n\t\t \n\t\t\t L D Pyeatt \n\t\t \n\t\t 10.1109/ictai.2011.15 \n\t \n\t \n\t\t IEEE 23rd International Conference on Tools with Artificial Intelligence \n\t\t \n\t\t\t 2011. 2011 \n\t\t\t \n\t\t \n\t \n\t Borera, E. C., Moore, B. L., Doufas, A. G. & Pyeatt, L. D. An Adaptive Neural Network Filter for Improved Patient State Estimation in Closed- Loop Anesthesia Control. in 2011 IEEE 23rd International Conference on Tools with Artificial Intelligence 41-46 (2011)."
+    },
+    {
+      "title": "Reinforcement learning design for cancer clinical trials",
+      "authors": [
+        "Y Zhao",
+        "M Kosorok",
+        "D Zeng"
+      ],
+      "year": 2009,
+      "journal": "Stat. Med",
+      "volume": "28",
+      "raw": "Reinforcement learning design for cancer clinical trials \n\t\t \n\t\t\t Y Zhao \n\t\t \n\t\t \n\t\t\t M R Kosorok \n\t\t \n\t\t \n\t\t\t D Zeng \n\t\t \n\t \n\t \n\t\t Stat. Med \n\t\t \n\t\t\t 28 \n\t\t\t \n\t\t\t 2009 \n\t\t \n\t \n\t Zhao, Y., Kosorok, M. R. & Zeng, D. Reinforcement learning design for cancer clinical trials. Stat. Med 28, 3294-3315 (2009)."
+    },
+    {
+      "title": "Drug scheduling of cancer chemotherapy based on natural actor-critic approach",
+      "authors": [
+        "I Ahn",
+        "J Park"
+      ],
+      "year": 2011,
+      "journal": "Biosystems",
+      "volume": "106",
+      "raw": "Drug scheduling of cancer chemotherapy based on natural actor-critic approach \n\t\t \n\t\t\t I Ahn \n\t\t \n\t\t \n\t\t\t J Park \n\t\t \n\t \n\t \n\t\t Biosystems \n\t\t \n\t\t\t 106 \n\t\t\t \n\t\t\t 2011 \n\t\t \n\t \n\t Ahn, I. & Park, J. Drug scheduling of cancer chemotherapy based on natural actor-critic approach. Biosystems 106, 121-129 (2011)."
+    },
+    {
+      "title": "Reinforcement learning for optimal scheduling of glioblastoma treatment with temozolomide",
+      "authors": [
+        "A Ebrahimi Zade",
+        "S Shahabi Haghighi",
+        "M Soltani"
+      ],
+      "year": 2020,
+      "journal": "Computer Methods Prog. Biomedicine",
+      "volume": "193",
+      "pages": "105443",
+      "raw": "Reinforcement learning for optimal scheduling of glioblastoma treatment with temozolomide \n\t\t \n\t\t\t A Ebrahimi Zade \n\t\t \n\t\t \n\t\t\t S Shahabi Haghighi \n\t\t \n\t\t \n\t\t\t M Soltani \n\t\t \n\t \n\t \n\t\t Computer Methods Prog. Biomedicine \n\t\t \n\t\t\t 193 \n\t\t\t 105443 \n\t\t\t 2020 \n\t\t \n\t \n\t Ebrahimi Zade, A., Shahabi Haghighi, S. & Soltani, M. Reinforcement learning for optimal scheduling of glioblastoma treatment with temozolomide. Computer Methods Prog. Biomedicine 193, 105443 (2020)."
+    },
+    {
+      "title": "Reinforcement learning strategies in cancer chemotherapy treatments: A review",
+      "authors": [
+        "C Yang",
+        "C Shiranthika",
+        "C Wang",
+        "K Chen",
+        "S Sumathipala"
+      ],
+      "year": 2023,
+      "doi": "10.1016/j.cmpb.2022.107280",
+      "journal": "Comput Methods Prog. Biomed",
+      "volume": "229",
+      "pages": "107280",
+      "raw": "Reinforcement learning strategies in cancer chemotherapy treatments: A review \n\t\t \n\t\t\t C Y Yang \n\t\t \n\t\t \n\t\t\t C Shiranthika \n\t\t \n\t\t \n\t\t\t C Y Wang \n\t\t \n\t\t \n\t\t\t K W Chen \n\t\t \n\t\t \n\t\t\t S Sumathipala \n\t\t \n\t\t 10.1016/j.cmpb.2022.107280 \n\t \n\t \n\t\t Comput Methods Prog. Biomed \n\t\t \n\t\t\t 229 \n\t\t\t 107280 \n\t\t\t 2023 \n\t\t \n\t \n\t Yang, C. Y., Shiranthika, C., Wang, C. Y., Chen, K. W. & Sumathipala, S. Reinforcement learning strategies in cancer chemotherapy treatments: A review. Comput Methods Prog. Biomed. 229, 107280 (2023)."
+    },
+    {
+      "title": "The university of Virginia/Padova type 1 diabetes simulator matches the glucose traces of a clinical trial",
+      "authors": [
+        "R Visentin",
+        "C Dalla Man",
+        "B Kovatchev",
+        "C Cobelli"
+      ],
+      "year": 2014,
+      "journal": "Diabetes Technol. Ther",
+      "volume": "16",
+      "raw": "The university of Virginia/Padova type 1 diabetes simulator matches the glucose traces of a clinical trial \n\t\t \n\t\t\t R Visentin \n\t\t \n\t\t \n\t\t\t C Dalla Man \n\t\t \n\t\t \n\t\t\t B Kovatchev \n\t\t \n\t\t \n\t\t\t C Cobelli \n\t\t \n\t \n\t \n\t\t Diabetes Technol. Ther \n\t\t \n\t\t\t 16 \n\t\t\t \n\t\t\t 2014 \n\t\t \n\t \n\t Visentin, R., Dalla Man, C., Kovatchev, B. & Cobelli, C. The university of Virginia/Padova type 1 diabetes simulator matches the glucose traces of a clinical trial. Diabetes Technol. Ther. 16, 428-434 (2014)."
+    },
+    {
+      "title": "Computational medication regimen for Parkinson's disease using reinforcement learning",
+      "authors": [
+        "Y Kim",
+        "J Suescun",
+        "M Schiess",
+        "X Jiang"
+      ],
+      "year": 2021,
+      "journal": "Sci. Rep",
+      "volume": "11",
+      "pages": "9313",
+      "raw": "Computational medication regimen for Parkinson's disease using reinforcement learning \n\t\t \n\t\t\t Y Kim \n\t\t \n\t\t \n\t\t\t J Suescun \n\t\t \n\t\t \n\t\t\t M C Schiess \n\t\t \n\t\t \n\t\t\t X Jiang \n\t\t \n\t \n\t \n\t\t Sci. Rep \n\t\t \n\t\t\t 11 \n\t\t\t 9313 \n\t\t\t 2021 \n\t\t \n\t \n\t Kim, Y., Suescun, J., Schiess, M. C. & Jiang, X. Computational medication regimen for Parkinson's disease using reinforcement learning. Sci. Rep. 11, 9313 (2021)."
+    },
+    {
+      "title": "Optimizing risk-based breast cancer screening policies with reinforcement learning",
+      "authors": [
+        "A Yala"
+      ],
+      "year": 2022,
+      "doi": "10.1038/s41746-024-01316-0",
+      "journal": "Nat. Med",
+      "volume": "28",
+      "raw": "Optimizing risk-based breast cancer screening policies with reinforcement learning \n\t\t \n\t\t\t A Yala \n\t\t \n\t\t 10.1038/s41746-024-01316-0 \n\t\t \n\t \n\t \n\t\t Nat. Med \n\t\t \n\t\t\t 28 \n\t\t\t \n\t\t\t 2022 \n\t\t \n\t \n\t Yala, A. et al. Optimizing risk-based breast cancer screening policies with reinforcement learning. Nat. Med. 28, 136-143 (2022). https://doi.org/10.1038/s41746-024-01316-0"
+    },
+    {
+      "title": "A reinforcement learning model for AI-based decision support in skin cancer",
+      "authors": [
+        "C Barata"
+      ],
+      "year": 2023,
+      "journal": "Nat. Med",
+      "volume": "29",
+      "raw": "A reinforcement learning model for AI-based decision support in skin cancer \n\t\t \n\t\t\t C Barata \n\t\t \n\t \n\t \n\t\t Nat. Med \n\t\t \n\t\t\t 29 \n\t\t\t \n\t\t\t 2023 \n\t\t \n\t \n\t Barata, C. et al. A reinforcement learning model for AI-based decision support in skin cancer. Nat. Med. 29, 1941-1946 (2023)."
+    },
+    {
+      "title": "MIMIC-III, a freely accessible critical care database",
+      "authors": [
+        "A Johnson"
+      ],
+      "year": 2016,
+      "journal": "Sci. Data",
+      "volume": "3",
+      "pages": "160035",
+      "raw": "MIMIC-III, a freely accessible critical care database \n\t\t \n\t\t\t A E Johnson \n\t\t \n\t \n\t \n\t\t Sci. Data \n\t\t \n\t\t\t 3 \n\t\t\t 160035 \n\t\t\t 2016 \n\t\t \n\t \n\t Johnson, A. E. et al. MIMIC-III, a freely accessible critical care database. Sci. Data 3, 160035 (2016)."
+    },
+    {
+      "title": "MIMIC-IV, a freely accessible electronic health record dataset",
+      "authors": [
+        "A Johnson"
+      ],
+      "year": 2023,
+      "journal": "Sci. Data",
+      "volume": "10",
+      "pages": "1",
+      "raw": "MIMIC-IV, a freely accessible electronic health record dataset \n\t\t \n\t\t\t A E W Johnson \n\t\t \n\t \n\t \n\t\t Sci. Data \n\t\t \n\t\t\t 10 \n\t\t\t 1 \n\t\t\t 2023 \n\t\t \n\t \n\t Johnson, A. E. W. et al. MIMIC-IV, a freely accessible electronic health record dataset. Sci. Data 10, 1 (2023)."
+    },
+    {
+      "title": "The eICU Collaborative Research Database, a freely available multi-center database for critical care research",
+      "authors": [
+        "T Pollard"
+      ],
+      "year": 2018,
+      "doi": "10.1038/sdata.2018.178",
+      "journal": "Sci. Data",
+      "volume": "5",
+      "pages": "180178",
+      "raw": "The eICU Collaborative Research Database, a freely available multi-center database for critical care research \n\t\t \n\t\t\t T J Pollard \n\t\t \n\t\t 10.1038/sdata.2018.178 \n\t \n\t \n\t\t Sci. Data \n\t\t \n\t\t\t 5 \n\t\t\t 180178 \n\t\t\t 2018 \n\t\t \n\t \n\t Pollard, T. J. et al. The eICU Collaborative Research Database, a freely available multi-center database for critical care research. Sci. Data 5, 180178 (2018)."
+    },
+    {
+      "title": "Optimal medication dosing from suboptimal clinical examples: a deep reinforcement learning approach",
+      "authors": [
+        "S Nemati",
+        "M Ghassemi",
+        "G Clifford"
+      ],
+      "year": 2016,
+      "doi": "10.1109/embc.2016.7591355",
+      "journal": "Annu Int Conf. IEEE Eng. Med Biol. Soc",
+      "volume": "2016",
+      "raw": "Optimal medication dosing from suboptimal clinical examples: a deep reinforcement learning approach \n\t\t \n\t\t\t S Nemati \n\t\t \n\t\t \n\t\t\t M M Ghassemi \n\t\t \n\t\t \n\t\t\t G D Clifford \n\t\t \n\t\t 10.1109/embc.2016.7591355 \n\t \n\t \n\t\t Annu Int Conf. IEEE Eng. Med Biol. Soc \n\t\t \n\t\t\t 2016 \n\t\t\t \n\t\t\t 2016 \n\t\t \n\t \n\t Nemati, S., Ghassemi, M. M. & Clifford, G. D. Optimal medication dosing from suboptimal clinical examples: a deep reinforcement learning approach. Annu Int Conf. IEEE Eng. Med Biol. Soc. 2016, 2978-2981 (2016)."
+    },
+    {
+      "title": "A deep deterministic policy gradient approach to medication dosing and surveillance in the ICU",
+      "authors": [
+        "R Lin",
+        "M Stanley",
+        "M Ghassemi",
+        "S Nemati"
+      ],
+      "year": 2018,
+      "journal": "Annu Int Conf. IEEE Eng. Med Biol. Soc",
+      "volume": "2018",
+      "raw": "A deep deterministic policy gradient approach to medication dosing and surveillance in the ICU \n\t\t \n\t\t\t R Lin \n\t\t \n\t\t \n\t\t\t M D Stanley \n\t\t \n\t\t \n\t\t\t M M Ghassemi \n\t\t \n\t\t \n\t\t\t S Nemati \n\t\t \n\t \n\t \n\t\t Annu Int Conf. IEEE Eng. Med Biol. Soc \n\t\t \n\t\t\t 2018 \n\t\t\t \n\t\t\t 2018 \n\t\t \n\t \n\t Lin, R., Stanley, M. D., Ghassemi, M. M. & Nemati, S. A deep deterministic policy gradient approach to medication dosing and surveillance in the ICU. Annu Int Conf. IEEE Eng. Med Biol. Soc. 2018, 4927-4931 (2018)."
+    },
+    {
+      "title": "Deep reinforcement learning for sepsis treatment",
+      "authors": [
+        "A Raghu"
+      ],
+      "year": 2017,
+      "doi": "10.1007/s00350-017-4558-4",
+      "raw": "Deep reinforcement learning for sepsis treatment \n\t\t \n\t\t\t A Raghu \n\t\t \n\t\t 10.1007/s00350-017-4558-4 \n\t\t . abs/ 1711.09602 \n\t\t \n\t\t \n\t\t\t 2017 \n\t\t \n\t \n\t Raghu, A. et al. Deep reinforcement learning for sepsis treatment. abs/ 1711.09602. http://arxiv.org/abs/1711.09602 (2017)."
+    },
+    {
+      "title": "The treatment of sepsis: an episodic memory-assisted deep reinforcement learning approach",
+      "authors": [
+        "D Liang",
+        "H Deng",
+        "Y Liu"
+      ],
+      "year": 2023,
+      "journal": "Appl. Intell",
+      "volume": "53",
+      "raw": "The treatment of sepsis: an episodic memory-assisted deep reinforcement learning approach \n\t\t \n\t\t\t D Liang \n\t\t \n\t\t \n\t\t\t H Deng \n\t\t \n\t\t \n\t\t\t Y Liu \n\t\t \n\t \n\t \n\t\t Appl. Intell \n\t\t \n\t\t\t 53 \n\t\t\t \n\t\t\t 2023 \n\t\t \n\t \n\t Liang, D., Deng, H. & Liu, Y. The treatment of sepsis: an episodic memory-assisted deep reinforcement learning approach. Appl. Intell. 53, 11034-11044 (2023)."
+    },
+    {
+      "title": "The artificial intelligence clinician learns optimal treatment strategies for sepsis in intensive care",
+      "authors": [
+        "M Komorowski",
+        "L Celi",
+        "O Badawi",
+        "A Gordon",
+        "A Faisal"
+      ],
+      "year": 2018,
+      "doi": "10.1038/s41591-018-0213-5",
+      "journal": "Nat. Med",
+      "volume": "24",
+      "raw": "The artificial intelligence clinician learns optimal treatment strategies for sepsis in intensive care \n\t\t \n\t\t\t M Komorowski \n\t\t \n\t\t \n\t\t\t L A Celi \n\t\t \n\t\t \n\t\t\t O Badawi \n\t\t \n\t\t \n\t\t\t A C Gordon \n\t\t \n\t\t \n\t\t\t A A Faisal \n\t\t \n\t\t 10.1038/s41591-018-0213-5 \n\t \n\t \n\t\t Nat. Med \n\t\t \n\t\t\t 24 \n\t\t\t \n\t\t\t 2018 \n\t\t \n\t \n\t Komorowski, M., Celi, L. A., Badawi, O., Gordon, A. C. & Faisal, A. A. The artificial intelligence clinician learns optimal treatment strategies for sepsis in intensive care. Nat. Med. 24, 1716-1720 (2018)."
+    },
+    {
+      "title": "A value-based deep reinforcement learning model with human expertise in optimal treatment of sepsis",
+      "authors": [
+        "X Wu",
+        "R Li",
+        "Z He",
+        "T Yu",
+        "C Cheng"
+      ],
+      "year": 2023,
+      "journal": "NPJ Digit Med",
+      "volume": "6",
+      "pages": "15",
+      "raw": "A value-based deep reinforcement learning model with human expertise in optimal treatment of sepsis \n\t\t \n\t\t\t X Wu \n\t\t \n\t\t \n\t\t\t R Li \n\t\t \n\t\t \n\t\t\t Z He \n\t\t \n\t\t \n\t\t\t T Yu \n\t\t \n\t\t \n\t\t\t C Cheng \n\t\t \n\t \n\t \n\t\t NPJ Digit Med \n\t\t \n\t\t\t 6 \n\t\t\t 15 \n\t\t\t 2023 \n\t\t \n\t \n\t Wu, X., Li, R., He, Z., Yu, T. & Cheng, C. A value-based deep reinforcement learning model with human expertise in optimal treatment of sepsis. NPJ Digit Med. 6, 15 (2023)."
+    },
+    {
+      "title": "Towards safe mechanical ventilation treatment using deep offline reinforcement learning",
+      "authors": [
+        "F Kondrup"
+      ],
+      "year": 2024,
+      "doi": "10.1609/aaai.v37i13.26862",
+      "volume": "37",
+      "raw": "Towards safe mechanical ventilation treatment using deep offline reinforcement learning \n\t\t \n\t\t\t F Kondrup \n\t\t \n\t\t 10.1609/aaai.v37i13.26862 \n\t \n\t \n\t\t Proc. AAAI Conf. Artif. Intell \n\t\t AAAI Conf. Artif. Intell \n\t\t \n\t\t\t 2024 \n\t\t\t 37 \n\t\t\t \n\t\t \n\t \n\t Kondrup, F. et al. Towards safe mechanical ventilation treatment using deep offline reinforcement learning. Proc. AAAI Conf. Artif. Intell. 37, 15696-15702 (2024)."
+    },
+    {
+      "title": "A reinforcement learning approach to weaning of mechanical ventilation in intensive care units",
+      "authors": [
+        "N Prasad",
+        "L Cheng",
+        "C Chivers",
+        "M Draugelis",
+        "B Engelhardt"
+      ],
+      "year": 2017,
+      "raw": "A reinforcement learning approach to weaning of mechanical ventilation in intensive care units \n\t\t \n\t\t\t N Prasad \n\t\t \n\t\t \n\t\t\t L F Cheng \n\t\t \n\t\t \n\t\t\t C Chivers \n\t\t \n\t\t \n\t\t\t M Draugelis \n\t\t \n\t\t \n\t\t\t B E Engelhardt \n\t\t \n\t\t . abs/1704.06300 \n\t\t \n\t\t \n\t\t\t 2017 \n\t\t \n\t \n\t Prasad, N., Cheng, L.F., Chivers, C., Draugelis, M. & Engelhardt, B. E. A reinforcement learning approach to weaning of mechanical ventilation in intensive care units. abs/1704.06300. http://arxiv.org/ abs/1704.06300 (2017)."
+    },
+    {
+      "title": "Development and validation of a reinforcement learning algorithm to dynamically optimize mechanical ventilation in critical care",
+      "authors": [
+        "A Peine"
+      ],
+      "year": 2021,
+      "doi": "10.1038/s41746-021-00388-6",
+      "journal": "NPJ Digit Med",
+      "volume": "4",
+      "pages": "32",
+      "raw": "Development and validation of a reinforcement learning algorithm to dynamically optimize mechanical ventilation in critical care \n\t\t \n\t\t\t A Peine \n\t\t \n\t\t 10.1038/s41746-021-00388-6 \n\t \n\t \n\t\t NPJ Digit Med \n\t\t \n\t\t\t 4 \n\t\t\t 32 \n\t\t\t 2021 \n\t\t \n\t \n\t Peine, A. et al. Development and validation of a reinforcement learning algorithm to dynamically optimize mechanical ventilation in critical care. NPJ Digit Med. 4, 32 (2021)."
+    },
+    {
+      "title": "Double Q-learning",
+      "authors": [
+        "H Hasselt"
+      ],
+      "year": 2010,
+      "journal": "Advances in neural information processing systems",
+      "volume": "23",
+      "raw": "Double Q-learning \n\t\t \n\t\t\t H Hasselt \n\t\t \n\t \n\t \n\t\t Advances in neural information processing systems \n\t\t \n\t\t\t 23 \n\t\t\t 2010 \n\t\t \n\t \n\t Hasselt, H. Double Q-learning. Advances in neural information processing systems 23 (2010)."
+    },
+    {
+      "title": "Guideline-informed reinforcement learning for mechanical ventilation in critical care",
+      "authors": [
+        "F Hengst"
+      ],
+      "year": 2024,
+      "journal": "Artif. Intell. Med",
+      "volume": "147",
+      "pages": "102742",
+      "raw": "Guideline-informed reinforcement learning for mechanical ventilation in critical care \n\t\t \n\t\t\t F Hengst \n\t\t \n\t \n\t \n\t\t Artif. Intell. Med \n\t\t \n\t\t\t 147 \n\t\t\t 102742 \n\t\t\t 2024 \n\t\t \n\t \n\t den Hengst, F. et al. Guideline-informed reinforcement learning for mechanical ventilation in critical care. Artif. Intell. Med. 147, 102742 (2024)."
+    },
+    {
+      "title": "Ambiguous Dynamic Treatment Regimes: A Reinforcement Learning Approach",
+      "authors": [
+        "S Saghafian"
+      ],
+      "year": 2023,
+      "journal": "Management Science",
+      "raw": "Ambiguous Dynamic Treatment Regimes: A Reinforcement Learning Approach \n\t\t \n\t\t\t S Saghafian \n\t\t \n\t \n\t \n\t\t Management Science \n\t\t \n\t\t\t 2023 \n\t\t \n\t \n\t Saghafian, S. Ambiguous Dynamic Treatment Regimes: A Reinforcement Learning Approach. Management Science (2023)."
+    },
+    {
+      "title": "Position: Reinforcement Learning in Dynamic Treatment Regimes Needs Critical Reexamination",
+      "authors": [
+        "Z Luo",
+        "Y Pan",
+        "P Watkinson",
+        "T Zhu"
+      ],
+      "year": 2024,
+      "raw": "Position: Reinforcement Learning in Dynamic Treatment Regimes Needs Critical Reexamination \n\t\t \n\t\t\t Z Luo \n\t\t \n\t\t \n\t\t\t Y Pan \n\t\t \n\t\t \n\t\t\t P Watkinson \n\t\t \n\t\t \n\t\t\t T Zhu \n\t\t \n\t\t \n\t \n\t \n\t\t Forty-first International Conference on Machine Learning \n\t\t \n\t\t\t 2024 \n\t\t \n\t \n\t Luo, Z., Pan, Y., Watkinson, P. & Zhu, T. Position: Reinforcement Learning in Dynamic Treatment Regimes Needs Critical Reexamination. In Forty-first International Conference on Machine Learning. https://openreview.net/forum?id=xtKWwB6lzT (2024)."
+    },
+    {
+      "title": "An in silico Environment and Benchmark Platform for Reinforcement Learning Based Dynamic Treatment Regime",
+      "authors": [
+        "Z Luo"
+      ],
+      "year": 2024,
+      "raw": "An in silico Environment and Benchmark Platform for Reinforcement Learning Based Dynamic Treatment Regime \n\t\t \n\t\t\t Z Luo \n\t\t \n\t\t arXiv:2405.18610 \n\t\t \n\t\t\t 2024 \n\t\t \n\t \n\t arXiv preprint \n\t Luo, Z. et al. DTR-Bench: An in silico Environment and Benchmark Platform for Reinforcement Learning Based Dynamic Treatment Regime. arXiv preprint arXiv:2405.18610 (2024)."
+    },
+    {
+      "title": "A guide to deep learning in healthcare",
+      "authors": [
+        "A Esteva"
+      ],
+      "year": 2019,
+      "journal": "Nat. Med",
+      "volume": "25",
+      "raw": "A guide to deep learning in healthcare \n\t\t \n\t\t\t A Esteva \n\t\t \n\t \n\t \n\t\t Nat. Med \n\t\t \n\t\t\t 25 \n\t\t\t \n\t\t\t 2019 \n\t\t \n\t \n\t Esteva, A. et al. A guide to deep learning in healthcare. Nat. Med 25, 24-29 (2019)."
+    },
+    {
+      "title": "Artificial intelligence, bias and clinical safety",
+      "authors": [
+        "R Challen"
+      ],
+      "year": 2019,
+      "journal": "BMJ Qual. Saf",
+      "volume": "28",
+      "raw": "Artificial intelligence, bias and clinical safety \n\t\t \n\t\t\t R Challen \n\t\t \n\t \n\t \n\t\t BMJ Qual. Saf \n\t\t \n\t\t\t 28 \n\t\t\t \n\t\t\t 2019 \n\t\t \n\t \n\t Challen, R. et al. Artificial intelligence, bias and clinical safety. BMJ Qual. Saf. 28, 231-237 (2019)."
+    },
+    {
+      "title": "Reinforcement learning for clinical decision support in critical care: comprehensive review",
+      "authors": [
+        "S Liu"
+      ],
+      "year": 2020,
+      "journal": "J. Med Internet Res",
+      "volume": "22",
+      "pages": "18477",
+      "raw": "Reinforcement learning for clinical decision support in critical care: comprehensive review \n\t\t \n\t\t\t S Liu \n\t\t \n\t \n\t \n\t\t J. Med Internet Res \n\t\t \n\t\t\t 22 \n\t\t\t 18477 \n\t\t\t 2020 \n\t\t \n\t \n\t Liu, S. et al. Reinforcement learning for clinical decision support in critical care: comprehensive review. J. Med Internet Res 22, e18477 (2020)."
+    },
+    {
+      "title": "Inverse reinforcement learning for intelligent mechanical ventilation and sedative dosing in intensive care units",
+      "authors": [
+        "C Yu",
+        "J Liu",
+        "H Zhao"
+      ],
+      "year": 2019,
+      "journal": "BMC Med Inf. Decis. Mak",
+      "volume": "19",
+      "pages": "57",
+      "raw": "Inverse reinforcement learning for intelligent mechanical ventilation and sedative dosing in intensive care units \n\t\t \n\t\t\t C Yu \n\t\t \n\t\t \n\t\t\t J Liu \n\t\t \n\t\t \n\t\t\t H Zhao \n\t\t \n\t \n\t \n\t\t BMC Med Inf. Decis. Mak \n\t\t \n\t\t\t 19 \n\t\t\t 57 \n\t\t\t 2019 \n\t\t \n\t \n\t Yu, C., Liu, J. & Zhao, H. Inverse reinforcement learning for intelligent mechanical ventilation and sedative dosing in intensive care units. BMC Med Inf. Decis. Mak. 19, 57 (2019)."
+    },
+    {
+      "title": "Algaedice: Policy gradient from arbitrary experience",
+      "authors": [
+        "O Nachum"
+      ],
+      "year": 2019,
+      "raw": "Algaedice: Policy gradient from arbitrary experience \n\t\t \n\t\t\t O Nachum \n\t\t \n\t\t . abs/1912.02074 \n\t\t \n\t\t \n\t\t\t 2019 \n\t\t \n\t \n\t Nachum, O. et al. Algaedice: Policy gradient from arbitrary experience. abs/1912.02074. http://arxiv.org/abs/1912.0207 (2019)."
+    },
+    {
+      "title": "Off-policy evaluation via the regularized lagrangian",
+      "authors": [
+        "M Yang",
+        "O Nachum",
+        "B Dai",
+        "L Li",
+        "D Schuurmans"
+      ],
+      "year": 2020,
+      "journal": "Adv. Neural Inf. Process. Syst",
+      "volume": "33",
+      "raw": "Off-policy evaluation via the regularized lagrangian \n\t\t \n\t\t\t M Yang \n\t\t \n\t\t \n\t\t\t O Nachum \n\t\t \n\t\t \n\t\t\t B Dai \n\t\t \n\t\t \n\t\t\t L Li \n\t\t \n\t\t \n\t\t\t D Schuurmans \n\t\t \n\t \n\t \n\t\t Adv. Neural Inf. Process. Syst \n\t\t \n\t\t\t 33 \n\t\t\t \n\t\t\t 2020 \n\t\t \n\t \n\t Yang, M., Nachum, O., Dai, B., Li, L. & Schuurmans, D. Off-policy evaluation via the regularized lagrangian. Adv. Neural Inf. Process. Syst. 33, 6551-6561 (2020)."
+    },
+    {
+      "title": "Empirical study of off-policy policy evaluation for reinforcement learning",
+      "authors": [
+        "C Voloshin",
+        "H Le",
+        "N Jiang",
+        "Y Yue"
+      ],
+      "year": 2019,
+      "raw": "Empirical study of off-policy policy evaluation for reinforcement learning \n\t\t \n\t\t\t C Voloshin \n\t\t \n\t\t \n\t\t\t H M Le \n\t\t \n\t\t \n\t\t\t N Jiang \n\t\t \n\t\t \n\t\t\t Y Yue \n\t\t \n\t\t . abs/1911.06854 \n\t\t \n\t\t \n\t\t\t 2019 \n\t\t \n\t \n\t Voloshin, C., Le, H. M., Jiang, N. & Yue, Y. Empirical study of off-policy policy evaluation for reinforcement learning. abs/1911.06854. http:// arxiv.org/abs/1911.06854 (2019)."
+    },
+    {
+      "title": "The impact of using reinforcement learning to personalize communication on medication adherence: findings from the REINFORCE trial",
+      "authors": [
+        "J Lauffenburger"
+      ],
+      "year": 2024,
+      "journal": "NPJ Digit Med",
+      "volume": "7",
+      "pages": "39",
+      "raw": "The impact of using reinforcement learning to personalize communication on medication adherence: findings from the REINFORCE trial \n\t\t \n\t\t\t J C Lauffenburger \n\t\t \n\t \n\t \n\t\t NPJ Digit Med \n\t\t \n\t\t\t 7 \n\t\t\t 39 \n\t\t\t 2024 \n\t\t \n\t \n\t Lauffenburger, J. C. et al. The impact of using reinforcement learning to personalize communication on medication adherence: findings from the REINFORCE trial. NPJ Digit Med. 7, 39 (2024)."
+    },
+    {
+      "title": "Optimized glycemic control of type 2 diabetes with reinforcement learning: a proof-of-concept trial",
+      "authors": [
+        "G Wang"
+      ],
+      "year": 2023,
+      "journal": "Nat. Med",
+      "volume": "29",
+      "raw": "Optimized glycemic control of type 2 diabetes with reinforcement learning: a proof-of-concept trial \n\t\t \n\t\t\t G Wang \n\t\t \n\t \n\t \n\t\t Nat. Med \n\t\t \n\t\t\t 29 \n\t\t\t \n\t\t\t 2023 \n\t\t \n\t \n\t Wang, G. et al. Optimized glycemic control of type 2 diabetes with reinforcement learning: a proof-of-concept trial. Nat. Med. 29, 2633-2642 (2023)."
+    },
+    {
+      "title": "Embracing large language models for medical applications: opportunities and challenges",
+      "authors": [
+        "M Karabacak",
+        "K Margetis"
+      ],
+      "year": 2023,
+      "journal": "Cureus",
+      "volume": "15",
+      "pages": "39305",
+      "raw": "Embracing large language models for medical applications: opportunities and challenges \n\t\t \n\t\t\t M Karabacak \n\t\t \n\t\t \n\t\t\t K Margetis \n\t\t \n\t \n\t \n\t\t Cureus \n\t\t \n\t\t\t 15 \n\t\t\t 39305 \n\t\t\t 2023 \n\t\t \n\t \n\t Karabacak, M. & Margetis, K. Embracing large language models for medical applications: opportunities and challenges. Cureus 15, e39305 (2023)."
+    },
+    {
+      "title": "The future landscape of large language models in medicine",
+      "authors": [
+        "J Clusmann"
+      ],
+      "year": 2023,
+      "journal": "Commun. Med (Lond.)",
+      "volume": "3",
+      "pages": "141",
+      "raw": "The future landscape of large language models in medicine \n\t\t \n\t\t\t J Clusmann \n\t\t \n\t \n\t \n\t\t Commun. Med (Lond.) \n\t\t \n\t\t\t 3 \n\t\t\t 141 \n\t\t\t 2023 \n\t\t \n\t \n\t Clusmann, J. et al. The future landscape of large language models in medicine. Commun. Med (Lond.) 3, 141 (2023)."
+    },
+    {
+      "title": "Federated inverse reinforcement learning for smart icus with differential privacy",
+      "authors": [
+        "W Gong"
+      ],
+      "year": 2023,
+      "journal": "IEEE Internet Things J",
+      "volume": "10",
+      "raw": "Federated inverse reinforcement learning for smart icus with differential privacy \n\t\t \n\t\t\t W Gong \n\t\t \n\t \n\t \n\t\t IEEE Internet Things J \n\t\t \n\t\t\t 10 \n\t\t\t \n\t\t\t 2023 \n\t\t \n\t \n\t Gong, W. et al. Federated inverse reinforcement learning for smart icus with differential privacy. IEEE Internet Things J. 10, 19117-19124 (2023)."
+    },
+    {
+      "title": "Reinforcement learning for intensive care medicine: actionable clinical insights from novel approaches to reward shaping and off-policy model evaluation",
+      "authors": [
+        "L Roggeveen"
+      ],
+      "year": 2024,
+      "journal": "Intensive Care Med Exp",
+      "volume": "12",
+      "pages": "32",
+      "raw": "Reinforcement learning for intensive care medicine: actionable clinical insights from novel approaches to reward shaping and off-policy model evaluation \n\t\t \n\t\t\t L F Roggeveen \n\t\t \n\t \n\t \n\t\t Intensive Care Med Exp \n\t\t \n\t\t\t 12 \n\t\t\t 32 \n\t\t\t 2024 \n\t\t \n\t \n\t Roggeveen, L. F. et al. Reinforcement learning for intensive care medicine: actionable clinical insights from novel approaches to reward shaping and off-policy model evaluation. Intensive Care Med Exp. 12, 32 (2024)."
+    },
+    {
+      "title": "Deep reinforcement learning with double q-learning",
+      "authors": [
+        "H Van Hasselt",
+        "A Guez",
+        "D Silver"
+      ],
+      "year": 2016,
+      "pages": "30",
+      "raw": "Deep reinforcement learning with double q-learning \n\t\t \n\t\t\t H Van Hasselt \n\t\t \n\t\t \n\t\t\t A Guez \n\t\t \n\t\t \n\t\t\t D Silver \n\t\t \n\t \n\t \n\t\t Proceedings of the AAAI conference on artificial intelligence \n\t\t the AAAI conference on artificial intelligence \n\t\t \n\t\t\t 2016 \n\t\t\t 30 \n\t\t \n\t \n\t Van Hasselt, H., Guez, A. & Silver, D. Deep reinforcement learning with double q-learning. In Proceedings of the AAAI conference on artificial intelligence, 30 (2016)."
+    }
+  ],
+  "num_references": 86,
+  "figures": [
+    {
+      "caption": "Fig. 1 |",
+      "description": "Fig. 1 | Types of Reinforcement Learning. An overview of the sub-categories of reinforcement learning is presented in Fig. 1. Each major sub-category has an example of a published RL model. Source: Original. License: Created with BioRender.com. Agreement number: SF26VQJRKW for NPJDM (Issued on May 30th, 2024). This document is to confirm that Pushkala Jayaraman has been granted a license to use the BioRender content, including icons, templates and other original artwork, appearing in the attached completed graphic pursuant to BioRender's Academic License Terms. This license permits BioRender content to be sublicensed"
+    },
+    {
+      "caption": "Fig. 2 |",
+      "description": "Fig.2| Challenges of reinforcement learning. A visual description of the ongoing challenges in RL is provided in Fig.2. These could be categorized as challenges in formulation of state-space, action-space and reward, challenges in evaluation and challenges with deployment into a production environment. Source: Original. License: Created with BioRender.com. Agreement number: SA26VQJVTH for NPJDM (Issued on May 30th, 2024). This document is to confirm that Pushkala Jayaraman has been granted a license to use the BioRender content, including icons, templates and other original artwork, appearing in the attached completed graphic pursuant to BioRender's Academic License Terms. This license permits BioRender content to be sublicensed for use in journal publications. All rights and ownership of BioRender content are reserved by BioRender. All completed graphics must be accompanied by the following citation: \"Created with BioRender.com\". BioRender content included in the completed graphic is not licensed for any commercial uses beyond publication in a journal. For any commercial use of this figure, users may, if allowed, recreate it in BioRender under an Industry BioRender Plan. For any questions regarding this document, or other questions about publishing with BioRender refer to our BioRender Publication Guide or contact BioRender Support at support@biorender.com."
+    },
+    {
+      "caption": "Fig. 3 |",
+      "description": "Fig. 3 | Publication trends (PubMed) of ML, DL and RL in healthcare and clinical studies. A review of the growth of PubMed-indexed publications underscores the growing interest in RL within medical research. Although RL-related studies remain relatively few, the steady rise in publications indicates a burgeoning recognition of RL's capacity to revolutionize clinical practice. Source: Original. Created from PubMed statistics. License: Publication Trends (PubMed) of ML, DL and RL in Healthcare and Clinical Studies \u00a9 2024 by Pushkala Jayaraman & Jacob Desman is licensed under Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International. To view a copy of this license, visit https://creativecommons.org/ licenses/by-nc-nd/4.0/."
+    },
+    {
+      "type": "table",
+      "caption": "Table 1 |",
+      "description": "Key components of reinforcement learning"
+    },
+    {
+      "type": "table",
+      "caption": "Table 2 |",
+      "description": "Components of Markov Decision Processes"
+    },
+    {
+      "type": "table",
+      "caption": "Table 3 |",
+      "description": "Examples of Offline Reinforcement Learning Algorithms"
+    }
+  ],
+  "num_figures": 6,
+  "tables": [
+    {
+      "content": "Terms Definitions Examples in the context of \"learning to ride a bike\""
+    },
+    {
+      "content": "Component name Description State (S) The set of States (s\u2208S) Action (A) The set of Actions (a\u2208A) Probability scores (P) Denotes transition probabilities, specifying the likelihood of moving from one state to another when the agent takes a particular action Rewards (R) Denotes the positive or negative rewards received upon transitioning from state s to s' (s, s'\u2208S) by taking an action a discount factor (\u03b3) Determines the importance of future rewards compared to immediate ones in the calculation of cumulative rewards."
+    },
+    {
+      "content": "Offline RL algorithm Conceptual framework Key limitations Behavioral Cloning (BC) 31 BC learns a policy by imitating expert behavior from a fixed dataset BC can suffer from compounding errors when the learned policy of expert demonstrations diverges from the expert behavior, leading to poor generalization and performance in new situations Q-Learning 12"
+    }
+  ],
+  "num_tables": 3,
+  "num_citations": 88,
+  "cited_references": [
+    "b73",
+    "b3",
+    "b57",
+    "b13",
+    "b39",
+    "b65",
+    "b41",
+    "b18",
+    "b44",
+    "b49",
+    "b72",
+    "b58",
+    "b79",
+    "b17",
+    "b36",
+    "b59",
+    "b77",
+    "b35",
+    "b20",
+    "b69",
+    "b71",
+    "b60",
+    "b43",
+    "b74",
+    "b21",
+    "b47",
+    "b40",
+    "b68",
+    "b12",
+    "b42",
+    "b30",
+    "b31",
+    "b78",
+    "b54",
+    "b61",
+    "b52",
+    "b16",
+    "b37",
+    "b46",
+    "b15",
+    "b32",
+    "b5",
+    "b19",
+    "b28",
+    "b75",
+    "b82",
+    "b45",
+    "b83",
+    "b10",
+    "b38",
+    "b27",
+    "b67",
+    "b24",
+    "b84",
+    "b56",
+    "b55",
+    "b81",
+    "b85",
+    "b50",
+    "b6",
+    "b33",
+    "b62",
+    "b7",
+    "b48",
+    "b11",
+    "b8",
+    "b53",
+    "b22",
+    "b63",
+    "b80",
+    "b34",
+    "b23",
+    "b76",
+    "b26"
+  ],
+  "notes": [
+    "[submission] Received: 8 June 2024; Accepted: 24 October 2024;",
+    "The Charles Bronfman Institute for Personalized Medicine (CBIPM), Icahn School of Medicine at Mount Sinai, New York, NY, USA.",
+    "Samuel Bronfman Department of Medicine Division of Data Driven and Digital Medicine (D3M), Icahn School of Medicine at Mount Sinai, New York, NY, USA.",
+    "Division of Nephrology, Department of Medicine, Icahn School of Medicine at Mount Sinai, New York, NY, USA.",
+    "Institute for Critical Care Medicine, Icahn School of Medicine at Mount Sinai, New York, NY, USA.",
+    "These authors jointly supervised this work: Girish N. Nadkarni, Ankit Sakhuja.e-mail: girish.nadkarni@mountsinai.org; ankit.sakhuja@mssm.edu",
+    "npj Digital Medicine | (2024) 7:337",
+    "\u00a9 The Author(s) 2024 https://doi.org/10.1038/s41746-024-01316-0",
+    "2nd ed",
+    "[raw_reference] Sutton, R. S. & Barto, A. G. Reinforcement learning: An introduction, 2nd ed, (The MIT Press, Cambridge, MA, US, 2018).",
+    "[raw_reference] Bellman, R. A Markovian decision process. J. Math. Mech. 6, 679-684 (1957).",
+    "[raw_reference] Szepesv\u00e1ri, C. Algorithms for Reinforcement Learning, (Springer International Publishing, 2022).",
+    "[raw_reference] Thomas, M. M., Joost, B., Aske, P. & Catholijn, M. J. Model-based Reinforcement Learning: A Survey, (now, 2023).",
+    "[raw_reference] Silver, D. et al. A general reinforcement learning algorithm that masters chess, shogi, and Go through self-play. Science 362, 1140-1144 (2018).",
+    "[raw_reference] Huang, Q. Model-Based or Model-Free, a Review of Approaches in Reinforcement Learning. In 2020 International Conference on Computing and Data Science (CDS) 219-221 (2020).",
+    "[raw_reference] McKenzie, M. C. & McDonnell, M. D. Modern value based reinforcement learning: a chronological review. IEEE Access 10, 134704-134725 (2022).",
+    "[raw_reference] Poole, D. L. & Mackworth, A. K. Artificial Intelligence: Foundations of Computational Agents, (Cambridge University Press, Cambridge, 2017).",
+    "[raw_reference] Rummery, G. A. & Niranjan, M. On-line Q-learning using connectionist systems. (1994).",
+    "[raw_reference] Singh, S. P. & Sutton, R. S. Reinforcement learning with replacing eligibility traces. Mach. Learn. 22, 123-158 (1996).",
+    "[raw_reference] Prudencio, R. F., Maximo, M. & Colombini, E. L. A Survey on Offline Reinforcement Learning: Taxonomy, Review, and Open Problems. IEEE Trans Neural Netw Learn Syst PP(2023).",
+    "[raw_reference] Watkins, C. J. C. H. & Dayan, P. Q-learning. Mach. Learn. 8, 279-292 (1992).",
+    "[raw_reference] Uehara, M., Shi, C. & Kallus, N. A Review of Off-Policy Evaluation in Reinforcement Learning. (2022).",
+    "[raw_reference] Williams, R. J. Simple statistical gradient-following algorithms for connectionist reinforcement learning. Mach. Learn. 8, 229-256 (1992).",
+    "[raw_reference] Konda, V. & Tsitsiklis, J. Actor-critic algorithms. Advances in neural information processing systems 12 (1999).",
+    "[raw_reference] Mnih, V. et al. Human-level control through deep reinforcement learning. Nature 518, 529-533 (2015).",
+    "[raw_reference] Lai, M. Giraffe: Using Deep Reinforcement Learning to Play Chess. (2015).",
+    "[raw_reference] Kiran, B. R. et al. Deep reinforcement learning for autonomous driving: a survey. IEEE Trans. Intell. Transportation Syst. 23, 4909-4926 (2022).",
+    "[raw_reference] Kober, J., Bagnell, J. A. & Peters, J. Reinforcement learning in robotics: a survey. Int. J. Robot. Res. 32, 1238-1274 (2013).",
+    "[raw_reference] Wu, T. et al. A brief overview of ChatGPT: The history, status quo and potential future development. IEEE/CAA J. Autom. Sin. 10, 1122-1136 (2023).",
+    "[raw_reference] Li, L., Chu, W., Langford, J. & Schapire, R. E. A contextual-bandit approach to personalized news article recommendation. (ACM).",
+    "[raw_reference] Gauci, J. et al. Horizon: Facebook's open source applied reinforcement learning platform. https://openreview.net/forum?id= SylQKinLi4 (2019).",
+    "[raw_reference] Zhang, D., Han, X. & Deng, C. Review on the research and practice of deep learning and reinforcement learning in smart grids. CSEE J. Power Energy Syst. 4, 362-370 (2018).",
+    "[report_type] arXiv preprint",
+    "[raw_reference] Trella, A. L., et al. Monitoring Fidelity of Online Reinforcement Learning Algorithms in Clinical Trials. arXiv preprint arXiv:2402.17003 (2024).",
+    "[raw_reference] Prudencio, R. F., Maximo, M. R. O. A. & Colombini, E. L. A Survey on Offline Reinforcement Learning: Taxonomy, Review, and Open Problems. IEEE Transactions on Neural Networks and Learning Systems, 1-0 (2024).",
+    "[raw_reference] Jakobi, N, Husbands, P & Harvey, I. Noise and the reality gap: the use of simulation in evolutionary robotics. Springer, Berlin, p 704-720 (1995).",
+    "[raw_reference] Levine, S., Kumar, A., Tucker, G. & Fu, J. Offline reinforcement learning: Tutorial, review, and perspectives on open problems. abs/ 2005.01643. https://arxiv.org/abs/2005.01643 (2020).",
+    "[raw_reference] Kuhn, D., Esfahani, P. M., Nguyen, V. A. & Shafieezadeh-Abadeh, S. Wasserstein distributionally robust optimization: Theory and applications in machine learning. In Operations research & management science in the age of analytics 130-166 (Informs, 2019).",
+    "[raw_reference] Koh, P. W. et al. WILDS: A Benchmark of in-the-Wild Distribution Shifts. In Proceedings of the 38th International Conference on Machine Learning, 139 (eds.",
+    "[raw_reference] Marina, M. & Tong, Z.) 5637-5664 (PMLR, Proceedings of Machine Learning Research, 2021).",
+    "[raw_reference] Fu, J., Kumar, A., Nachum, O., Tucker, G. & Levine, S. Datasets for deep data-driven reinforcement learning. https://openreview.net/ forum?id=px0-N3_KjA (2021).",
+    "[raw_reference] Bain, M. & Sammut, C. A Framework for Behavioural Cloning. in Machine Intelligence 15 (1995).",
+    "[raw_reference] Kumar, A., Zhou, A., Tucker, G. & Levine, S. Conservative q-learning for offline reinforcement learning. Adv. Neural Inf. Process. Syst. 33, 1179-1191 (2020).",
+    "[raw_reference] Fujimoto, S., Meger, D. & Precup, D. Off-policy deep reinforcement learning without exploration. In International conference on machine learning 2052-2062 (PMLR, 2019).",
+    "[raw_reference] Kostrikov, I., Nair, A. & Levine, S. Offline reinforcement learning with implicit q-learning. In International Conference on Learning Representations. https://openreview.net/forum?id=68n2s9ZJWF8 (2022).",
+    "[raw_reference] Wu, Y., Tucker, G. & Nachum, O. Behavior regularized offline reinforcement learning. https://openreview.net/forum?id= BJg9hTNKPH, https://openreview.net/forum?id=BJg9hTNKPH (2020).",
+    "[raw_reference] Kumar, A., Fu, J., Soh, M., Tucker, G. & Levine, S. Stabilizing off-policy q-learning via bootstrapping error reduction. Advances in neural information processing systems 32 (2019).",
+    "[raw_reference] Vieillard, N., Pietquin, O. & Geist, M. Deep conservative policy iteration. in Proceedings of the AAAI Conference on Artificial Intelligence, 34 6070-6077 (2020).",
+    "[raw_reference] Wang, Z., et al. Dueling network architectures for deep reinforcement learning. in International conference on machine learning 1995-2003 (PMLR, 2016).",
+    "[raw_reference] Xu, H., Zhan, X., Li, J. & Yin, H. Offline reinforcement learning with soft behavior regularization. abs/2110.07395. https://arxiv.org/abs/2110. 07395 (2021).",
+    "[raw_reference] Cheng, C.-A., Xie, T., Jiang, N. & Agarwal, A. Adversarially trained actor critic for offline reinforcement learning. In International Conference on Machine Learning 3852-3878 (PMLR, 2022).",
+    "[raw_reference] Le, H., Voloshin, C. & Yue, Y. Batch policy learning under constraints. in International Conference on Machine Learning 3703-3712 (PMLR, 2019).",
+    "[raw_reference] Jiang, N. & Li, L. Doubly robust off-policy value evaluation for reinforcement learning. in International conference on machine learning 652-661 (PMLR, 2016).",
+    "[raw_reference] Nachum, O., Chow, Y., Dai, B. & Li, L. Dualdice: Behavior-agnostic estimation of discounted stationary distribution corrections. Advances in neural information processing systems 32 (2019).",
+    "[raw_reference] Zhang, R., Dai, B., Li, L. & Schuurmans, D. Gendice: Generalized offline estimation of stationary values. In international Conference on Learning Representations. https://openreview.net/forum?id= HkxlcnVFwB (2020).",
+    "[raw_reference] Yu, C., Liu, J., Nemati, S. & Yin, G. Reinforcement learning in healthcare: a survey. ACM Comput. Surv. (CSUR) 55, 1-36 (2021).",
+    "[raw_reference] Borera, E. C., Moore, B. L., Doufas, A. G. & Pyeatt, L. D. An Adaptive Neural Network Filter for Improved Patient State Estimation in Closed- Loop Anesthesia Control. in 2011 IEEE 23rd International Conference on Tools with Artificial Intelligence 41-46 (2011).",
+    "[raw_reference] Zhao, Y., Kosorok, M. R. & Zeng, D. Reinforcement learning design for cancer clinical trials. Stat. Med 28, 3294-3315 (2009).",
+    "[raw_reference] Ahn, I. & Park, J. Drug scheduling of cancer chemotherapy based on natural actor-critic approach. Biosystems 106, 121-129 (2011).",
+    "[raw_reference] Ebrahimi Zade, A., Shahabi Haghighi, S. & Soltani, M. Reinforcement learning for optimal scheduling of glioblastoma treatment with temozolomide. Computer Methods Prog. Biomedicine 193, 105443 (2020).",
+    "[raw_reference] Yang, C. Y., Shiranthika, C., Wang, C. Y., Chen, K. W. & Sumathipala, S. Reinforcement learning strategies in cancer chemotherapy treatments: A review. Comput Methods Prog. Biomed. 229, 107280 (2023).",
+    "[raw_reference] Visentin, R., Dalla Man, C., Kovatchev, B. & Cobelli, C. The university of Virginia/Padova type 1 diabetes simulator matches the glucose traces of a clinical trial. Diabetes Technol. Ther. 16, 428-434 (2014).",
+    "[raw_reference] Kim, Y., Suescun, J., Schiess, M. C. & Jiang, X. Computational medication regimen for Parkinson's disease using reinforcement learning. Sci. Rep. 11, 9313 (2021).",
+    "[raw_reference] Yala, A. et al. Optimizing risk-based breast cancer screening policies with reinforcement learning. Nat. Med. 28, 136-143 (2022). https://doi.org/10.1038/s41746-024-01316-0",
+    "[raw_reference] Barata, C. et al. A reinforcement learning model for AI-based decision support in skin cancer. Nat. Med. 29, 1941-1946 (2023).",
+    "[raw_reference] Johnson, A. E. et al. MIMIC-III, a freely accessible critical care database. Sci. Data 3, 160035 (2016).",
+    "[raw_reference] Johnson, A. E. W. et al. MIMIC-IV, a freely accessible electronic health record dataset. Sci. Data 10, 1 (2023).",
+    "[raw_reference] Pollard, T. J. et al. The eICU Collaborative Research Database, a freely available multi-center database for critical care research. Sci. Data 5, 180178 (2018).",
+    "[raw_reference] Nemati, S., Ghassemi, M. M. & Clifford, G. D. Optimal medication dosing from suboptimal clinical examples: a deep reinforcement learning approach. Annu Int Conf. IEEE Eng. Med Biol. Soc. 2016, 2978-2981 (2016).",
+    "[raw_reference] Lin, R., Stanley, M. D., Ghassemi, M. M. & Nemati, S. A deep deterministic policy gradient approach to medication dosing and surveillance in the ICU. Annu Int Conf. IEEE Eng. Med Biol. Soc. 2018, 4927-4931 (2018).",
+    "[raw_reference] Raghu, A. et al. Deep reinforcement learning for sepsis treatment. abs/ 1711.09602. http://arxiv.org/abs/1711.09602 (2017).",
+    "[raw_reference] Liang, D., Deng, H. & Liu, Y. The treatment of sepsis: an episodic memory-assisted deep reinforcement learning approach. Appl. Intell. 53, 11034-11044 (2023).",
+    "[raw_reference] Komorowski, M., Celi, L. A., Badawi, O., Gordon, A. C. & Faisal, A. A. The artificial intelligence clinician learns optimal treatment strategies for sepsis in intensive care. Nat. Med. 24, 1716-1720 (2018).",
+    "[raw_reference] Wu, X., Li, R., He, Z., Yu, T. & Cheng, C. A value-based deep reinforcement learning model with human expertise in optimal treatment of sepsis. NPJ Digit Med. 6, 15 (2023).",
+    "[raw_reference] Kondrup, F. et al. Towards safe mechanical ventilation treatment using deep offline reinforcement learning. Proc. AAAI Conf. Artif. Intell. 37, 15696-15702 (2024).",
+    "[raw_reference] Prasad, N., Cheng, L.F., Chivers, C., Draugelis, M. & Engelhardt, B. E. A reinforcement learning approach to weaning of mechanical ventilation in intensive care units. abs/1704.06300. http://arxiv.org/ abs/1704.06300 (2017).",
+    "[raw_reference] Peine, A. et al. Development and validation of a reinforcement learning algorithm to dynamically optimize mechanical ventilation in critical care. NPJ Digit Med. 4, 32 (2021).",
+    "[raw_reference] Hasselt, H. Double Q-learning. Advances in neural information processing systems 23 (2010).",
+    "[raw_reference] den Hengst, F. et al. Guideline-informed reinforcement learning for mechanical ventilation in critical care. Artif. Intell. Med. 147, 102742 (2024).",
+    "[raw_reference] Saghafian, S. Ambiguous Dynamic Treatment Regimes: A Reinforcement Learning Approach. Management Science (2023).",
+    "[raw_reference] Luo, Z., Pan, Y., Watkinson, P. & Zhu, T. Position: Reinforcement Learning in Dynamic Treatment Regimes Needs Critical Reexamination. In Forty-first International Conference on Machine Learning. https://openreview.net/forum?id=xtKWwB6lzT (2024).",
+    "[report_type] arXiv preprint",
+    "[raw_reference] Luo, Z. et al. DTR-Bench: An in silico Environment and Benchmark Platform for Reinforcement Learning Based Dynamic Treatment Regime. arXiv preprint arXiv:2405.18610 (2024).",
+    "[raw_reference] Esteva, A. et al. A guide to deep learning in healthcare. Nat. Med 25, 24-29 (2019).",
+    "[raw_reference] Challen, R. et al. Artificial intelligence, bias and clinical safety. BMJ Qual. Saf. 28, 231-237 (2019).",
+    "[raw_reference] Liu, S. et al. Reinforcement learning for clinical decision support in critical care: comprehensive review. J. Med Internet Res 22, e18477 (2020).",
+    "[raw_reference] Yu, C., Liu, J. & Zhao, H. Inverse reinforcement learning for intelligent mechanical ventilation and sedative dosing in intensive care units. BMC Med Inf. Decis. Mak. 19, 57 (2019).",
+    "[raw_reference] Nachum, O. et al. Algaedice: Policy gradient from arbitrary experience. abs/1912.02074. http://arxiv.org/abs/1912.0207 (2019).",
+    "[raw_reference] Yang, M., Nachum, O., Dai, B., Li, L. & Schuurmans, D. Off-policy evaluation via the regularized lagrangian. Adv. Neural Inf. Process. Syst. 33, 6551-6561 (2020).",
+    "[raw_reference] Voloshin, C., Le, H. M., Jiang, N. & Yue, Y. Empirical study of off-policy policy evaluation for reinforcement learning. abs/1911.06854. http:// arxiv.org/abs/1911.06854 (2019).",
+    "[raw_reference] Lauffenburger, J. C. et al. The impact of using reinforcement learning to personalize communication on medication adherence: findings from the REINFORCE trial. NPJ Digit Med. 7, 39 (2024).",
+    "[raw_reference] Wang, G. et al. Optimized glycemic control of type 2 diabetes with reinforcement learning: a proof-of-concept trial. Nat. Med. 29, 2633-2642 (2023).",
+    "[raw_reference] Karabacak, M. & Margetis, K. Embracing large language models for medical applications: opportunities and challenges. Cureus 15, e39305 (2023).",
+    "[raw_reference] Clusmann, J. et al. The future landscape of large language models in medicine. Commun. Med (Lond.) 3, 141 (2023).",
+    "[raw_reference] Gong, W. et al. Federated inverse reinforcement learning for smart icus with differential privacy. IEEE Internet Things J. 10, 19117-19124 (2023).",
+    "[raw_reference] Roggeveen, L. F. et al. Reinforcement learning for intensive care medicine: actionable clinical insights from novel approaches to reward shaping and off-policy model evaluation. Intensive Care Med Exp. 12, 32 (2024).",
+    "[raw_reference] Van Hasselt, H., Guez, A. & Silver, D. Deep reinforcement learning with double q-learning. In Proceedings of the AAAI conference on artificial intelligence, 30 (2016)."
+  ],
+  "processing_software": {
+    "GROBID": "0.8.2"
+  }
+}

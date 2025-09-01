@@ -1,0 +1,723 @@
+{
+  "paper_id": "WKK4GKSE",
+  "title": "federated learning in medicine: facilitating multi-institutional collaborations without sharing patient data",
+  "abstract": "Several studies underscore the potential of deep learning in identifying complex patterns, leading to diagnostic and prognostic biomarkers. Identifying sufficiently large and diverse datasets, required for training, is a significant challenge in medicine and can rarely be found in individual institutions. Multi-institutional collaborations based on centrally-shared patient data face privacy and ownership challenges. federated learning is a novel paradigm for data-private multi-institutional collaborations, where model-learning leverages all available data without sharing data between institutions, by distributing the model-training to the data-owners and aggregating their results. We show that federated learning among 10 institutions results in models reaching 99% of the model quality achieved with centralized data, and evaluate generalizability on data from institutions outside the federation. We further investigate the effects of data distribution across collaborating institutions on model quality and learning patterns, indicating that increased access to data through data private multi-institutional collaborations can benefit model quality more than the errors introduced by the collaborative method. finally, we compare with other collaborative-learning approaches demonstrating the superiority of federated learning, and discuss practical implementation considerations. clinical adoption of federated learning is expected to lead to models trained on datasets of unprecedented size, hence have a catalytic impact towards precision/personalized medicine.",
+  "year": 2018,
+  "date": "2018",
+  "authors": [
+    {
+      "name": "Micah Sheller",
+      "affiliation": {
+        "organization": "Intel Corporation",
+        "institution": "Intel Corporation",
+        "address": "2200 Mission College Blvd., 95052, Santa Clara, CA, USA"
+      }
+    },
+    {
+      "name": "Brand Edwards",
+      "orcid": "0000-0002-0433-7159",
+      "affiliation": {
+        "organization": "Intel Corporation",
+        "institution": "Intel Corporation",
+        "address": "2200 Mission College Blvd., 95052, Santa Clara, CA, USA"
+      }
+    },
+    {
+      "name": "G Anthony",
+      "affiliation": {
+        "organization": "Intel Corporation",
+        "institution": "Intel Corporation",
+        "address": "2200 Mission College Blvd., 95052, Santa Clara, CA, USA"
+      }
+    },
+    {
+      "name": "Jason Martin",
+      "affiliation": {
+        "organization": "Intel Corporation",
+        "institution": "Intel Corporation",
+        "address": "2200 Mission College Blvd., 95052, Santa Clara, CA, USA"
+      }
+    },
+    {
+      "name": "Sarth Pati",
+      "orcid": "0000-0003-2243-8487",
+      "affiliation": {
+        "organization": "Center for Biomedical Image Computing and Analytics (CBICA)",
+        "department": "Center for Biomedical Image Computing and Analytics (CBICA)",
+        "institution": "University of Pennsylvania",
+        "address": "Floor 7 3700 Hamilton Walk, 19104, Philadelphia, PA, USA"
+      }
+    },
+    {
+      "name": "Aikaterini Kotrot",
+      "orcid": "0000-0002-0433-7159",
+      "affiliation": {
+        "organization": "Department of Diagnostic Radiology",
+        "department": "Department of Diagnostic Radiology",
+        "institution": "The University of Texas MD Anderson Cancer Center",
+        "address": "1400 Pressler St., 77030, Houston, TX, USA"
+      }
+    },
+    {
+      "name": "Mikhail Milchen",
+      "orcid": "0000-0001-8734-6482",
+      "affiliation": {
+        "organization": "Department of Radiology",
+        "department": "Department of Radiology",
+        "institution": "Washington University School of Medicine",
+        "address": "63110, St. Louis, MO, USA"
+      }
+    },
+    {
+      "name": "Weilin Xu",
+      "affiliation": {
+        "organization": "Intel Corporation",
+        "institution": "Intel Corporation",
+        "address": "2200 Mission College Blvd., 95052, Santa Clara, CA, USA"
+      }
+    },
+    {
+      "name": "Daniel Marcus",
+      "orcid": "0000-0001-9501-8104",
+      "affiliation": {
+        "organization": "Department of Radiology",
+        "department": "Department of Radiology",
+        "institution": "Washington University School of Medicine",
+        "address": "63110, St. Louis, MO, USA"
+      }
+    },
+    {
+      "name": "Rivka Colen",
+      "orcid": "0000-0002-0882-0607",
+      "affiliation": {
+        "organization": "Department of Diagnostic Radiology",
+        "department": "Department of Diagnostic Radiology",
+        "institution": "The University of Texas MD Anderson Cancer Center",
+        "address": "1400 Pressler St., 77030, Houston, TX, USA"
+      }
+    },
+    {
+      "name": "& Spyridon Bakas",
+      "orcid": "0000-0001-8734-6482",
+      "affiliation": {
+        "organization": "Center for Biomedical Image Computing and Analytics (CBICA)",
+        "department": "Center for Biomedical Image Computing and Analytics (CBICA)",
+        "institution": "University of Pennsylvania",
+        "address": "Floor 7 3700 Hamilton Walk, 19104, Philadelphia, PA, USA"
+      }
+    },
+    {
+      "affiliation": {
+        "organization": "Anderson Cancer Center",
+        "department": "Anderson Cancer Center",
+        "institution": "MDACC University of Texas",
+        "address": "St"
+      }
+    },
+    {
+      "affiliation": {
+        "organization": "Louis CNN",
+        "institution": "Louis CNN"
+      }
+    }
+  ],
+  "doi": "10.1038/s41598-020-69250-1",
+  "orcid": "0000-0001-8734-6482",
+  "md5": "FCC3C41D1D00B77AC8C4DAD36E593497",
+  "publication": {
+    "journal": "N. Engl. J. Med",
+    "journal_inferred": true
+  },
+  "funding": [
+    "",
+    "",
+    "",
+    "",
+    "Acknowledgements The authors would like to thank  Dr. Christos Davatzikos  for his insightful comments during writing of this manuscript. Research reported in this publication was partly supported by the  National Institutes of Health (NIH)  under Award Numbers  NCI : U01CA242871 ,  NINDS : R01NS042645 ,  NCI : U24CA189523 ,  NCI : U24CA204854 , and  UPMC   CCSG P30CA047904 . The content of this publication is solely the responsibility of the authors and does not necessarily represent the official views of the  NIH ."
+  ],
+  "sections": [
+    {
+      "text": "similarly reconstituted the real-world contributions to the BraTS dataset and compared FL model quality under various training conditions. The primary focus was on the performance impact of differentially private training techniques, which may reduce the risk of training data being reverse engineered from model parameters. Such reverse engineering is one of the many security and privacy concerns that remain for FL, discussed in \"Supplementary Information: Security and Privacy\".\n\nData private collaborative learning introduces additional restrictions to the training process over that of datasharing (e.g., not shuffling data across participants) as the computational process is not identical (see \"Discussion\" section). For any given potential collaboration, a crucial question then is whether the increased access to data from data private collaborative learning improves model accuracy more than these restrictions may hamper model accuracy. Here, we take brain cancer as an example, and perform a quantitative evaluation of data-private collaborative learning on the task of distinguishing healthy brain tissue from cancerous tissue, by virtue of their radiographic appearance on clinically-acquired magnetic resonance imaging (MRI). We reconstitute the original 10 institutional contributions to the data of the largest manually-annotated publicly-available medical imaging dataset (i.e., BraTS  [4] [5] [6] 21, 22  ), to form the Original Institution group for our study such that our dataset assignments match the real-world configuration, and further expand our quantitative evaluation to completely independent data from institutions that did not contribute to this dataset. We qu ntitatively compare models trained by (1)  single institutions, (2) using the data-private collaborative learning methods FL, CIIL, and IIL, and (3) using CDS, by evaluating their performance on both data from institutions within the Original Institution group, and data collected at institutions outside of that group. These evaluations reveal that the loss relative to CDS in final model quality for FL is considerably less than the benefits the group's data brings over single institution training. Though we provide a method for model validation during CIIL that makes it competitive with FL on this group of institutions, the Leave-One-(institution)-Out (LOO) testing on this group highlight the fact that CIIL model quality results are less stable than those of FL (Fig.  4 ). Our findings also indicate that IIL heavily biases the model toward the last model to train, as is discussed in \"Supplementary Information: Hyper-Parameter Selection for IIL and CIIL\". For completeness we discuss practical considerations to be made during implementation, including potential optimizations for training efficiency (see \"Supplementary Information: Hyper-Parameter Selection for FL\") and ongoing work on mitigations for remaining security and privacy issues (see \"Supplementary Information: Security and Privacy\"), and also explore more challenging learning environments-both of which further expose the superiority of FL over CIIL (see \"Supplementary Information: Further Challenging Model Quality Across Data-Private Collaborative Methods\"). In summary, this present study when compared to our preliminary results  15  (i.e., the first evaluation of FL, IIL, and CIIL in the medical domain), provides a far more extensive evaluation and highlights the need and ongoing considerations to address security and privacy issues. Specifically, the extensive evaluation is done through use of additional publicly available data from BraTS  [4] [5] [6] 21, 22  and additional private testing data from independent institutions (not included in the BraTS dataset). The additional experiments conducted here attempt to evaluate model generalization under various training schemes comprising (1) single institution training, (2) LOO validation, and importantly (3) exhaustively evaluating performance differences between FL, IIL, and CIIL, by exploring convergence, \"model selection\", and the effect of institutional order for IIL and CIIL."
+    },
+    {
+      "title": "Results",
+      "text": "Ample and diverse data are needed. In order to establish the need for more numerous and diverse data at the individual institutions of the Original Institution group, we trained single institution models for each institution in the group, and then evaluated each of these models against held-out validation sets from each of the institutions in the group defined prior to model training (Fig.  2 ).\n\nWe note that institutional models perform much lower against data from the other institutions of the group, showing that more ample and diverse data are indeed needed by each institution to train more generalizable models-a fact that is also supported by the results in our next finding. Note also that institution 1 has by far the best generalization performance. Institution 1 also holds the most data in the group (see \"Methods: Data\" section for more details). The poorest model generalization performances are shown on institutions 2, 3 and 6, which have the smallest data contributions of the group. collaborative learning is superior. We evaluate the benefits of collaborative learning with respect to improving both scores on an institution's own data, and the generalization performance to data from unseen institutions. In both evaluations, we compare models trained only on data from each single institution against models trained collaboratively using CDS and FL. To evaluate the first goal, we compare models over the single institutions' local held-out validation sets (For more details see \" Methods: Data\" section) to determine whether a given institution can improve performance on its own data by collaborating. To evaluate the second goal, we compare models over data from institutions that did not participate in the Original Institution group.\n\nFigure  3  shows the average (over experimental runs) of the model quality (Dice) results for single institution, CDS, and FL models, measured against the local (single institution) validation sets. Notably, averaging over institutions, the CDS model performance is 3.17% greater than the single institution models on their own validation data, and for FL the increase is 2.63% (percent improvements are shown in Table  S1 ).\n\nTable  1  includes the average mean and standard deviation of test Dice results of models trained using CDS, FL, and data of each single institution, as well as using a LOO schema, where each institution is held out in turn as the test set. Here, test performance exposes an even broader gap in model quality between the single institution and collaborative models (both CDS and FL).\n\nWe see the benefits of collaboration for the ten institutions in our study, both in terms of their own data and in terms of external test data, as rooted in the inherent diversity that can come from data collection across multiple   34  ) for the Original Institution group (y-axis) measured against all single institution held-out validation sets (x-axis) using multiple runs of five-fold collaborative cross validation. The Y axis represents models trained on a single institutional dataset, and the X axis represents the validation dataset of each independent institution (Local Validation Dataset). \"AVG\" indicates the average of each institution mean model performance over all institutions in the group other than itself, \"W-AVG\" denotes the same, but with a weighted average according to each institution's contribution to the validation set size. The diagonal entries indicate how well each institution's final models scored against their own validation set, and they are represented as the Single Institutional Model (SIM) results reported in Fig.  3 . institutions. Collaborative training across multiple institutions is a natural means by which to address the need that deep learning models have for ample and diverse data.\n\nfL performs comparably to data-sharing. Table  1  shows the mean model test Dice of models trained using FL on the Original Institution group. Specifically, for the LOO results, the collaborative method is carried out with one institution held-out from training, the held-out data to be used as the test set for the resulting models. The 'LOO Test' results reported in Table  1  are the weighted average over institutional LOO tests, weighted by the test institution contribution. These LOO results differentiate FL from IIL and CIIL, and do not include single institution models as these are not trained using data from multiple institutions. The per-institution LOO results  can be found in the Supplementary Information Section \"Extended Data\". Notably FL performs within 1% Dice of CDS on the three test sets, as well as for the LOO tests (on average). In order to compare the rates of model improvement, we plotted global validation Dice over epoch for all collaborative methods (Fig.  4 ) and show that FL training converges relatively quickly to the same performance as CDS training. A CDS epoch is defined to be a complete training pass over the shared data, whereas an FL epoch is defined as a parallel pass of all institutions over their own data. Averaging epochs from single institution training updates (i.e., FL) is not as efficient as CDS training, which shuffles the institutions' datasets together, but both approaches eventually converge to the same performance. Here we measure that FL final models took on average 2.26 \u00d7 as many epochs to train when compared to CDS final models (with a stopping criterion of 10 epochs with no improvement in the best validation DC observed). We also include learning curves for other data-private collaborative methods (Fig.  4 ).\n\nModel learning during fL is more stable than during incremental methods. To identify the superiority of a single data-private collaborative method, we compared the learning performance of FL with IIL and CIIL. FL achieves the best rate of model improvement over epoch of the data-private collaborative learning methods (Fig.  4 ). In addition, the more erratic nature of the IIL and CIIL curves (compared to both FL and CDS) expose an inefficiency in their training, a topic that we return to in the \"Discussion\" section. Note that an epoch for IIL and CIIL is defined as a pass of one institution over its training data.\n\nThe results in Table  1  also show that FL results in better models on average than every other data-private method on the Original Institution group. For CIIL, \"best local\" and \"random local\" are two methods we introduce for final model selection (see \"Methods: Final Model Selection\" section), as the only such methods considered by Chang et al.  14  , was that of keeping the model resulting from the last training cycle of a predetermined number of cycles (see \"Discussion\" section for more information regarding their final model selection). CIIL \"best local\" is the best competing data-private method, producing models of quality that is generally less than, but very close to FL (see \"Supplementary information: Hyper-Parameter Selection for IIL and CIIL\" for results regarding the choice of institutional order used in IIL and CIIL). The experiments on the LOO groups (Table  1 ) show, however, that CIIL \"best local\" can be less stable, as the standard deviation of model quality is twice or more that of both CDS and FL. See \"Supplementary Information: Further Challenging Model Quality Across Data-Private Collaborative Methods\", for experiments on a more challenging hypothetical group of institutions for which CIIL \"best local\" final model quality mean drops further below that of FL, with an even larger standard deviation relative to FL."
+    },
+    {
+      "title": "Discussion",
+      "text": "This study shows that data-private collaborative learning approaches, and particularly FL, can achieve the full learning capacity of the data while obviating the need to share patient data, and hence facilitate large-scale multiinstitutional collaborations, while overcoming technical and data ownership concerns and assisting towards meeting the requirements of data protection regulations (e.g., the European General Data Protection Regulation (GDPR)  24  , and the Health Insurance Portability and Accountability Act (HIPAA) of the United States)  25  . This finding can potentially pave the way towards shifting the paradigm of multi-institutional collaborations. Model training using FL across multiple authentic institutional datasets performs comparably to model training using CDS (Table  1 , Figs.  3 ,  4 ). The use of FL over CDS has the immediate advantage of raw data confidentiality, and current technologies can be incorporated into FL to aid in alleviating additional privacy concerns (discussed below). We expect for domains such as medicine, that the development of such solutions will allow for dataprivate collaborative training over data of unprecedented numbers and diversity. Such collaborations are likely to result in a significant jump in the state of the art performance for these models.\n\nPrevious work on CIIL (Chang, et al.  14  ) performs final model selection by keeping the last model trained after a predetermined number of cycles. Selecting final models from all locally trained models in this way, makes sense provided models can be consistently validated, and scores shown to be (more or less) non-decreasing. Chang et al.  14  , held out a global validation set for consistent validation, and their results indeed show a non-decreasing trend. We do not see a non-decreasing trend as something one can rely on in general. We think that Chang et al.  14  was an exceptional case driven by some intrinsic characteristic of their data (such as the IID nature of the data at their hypothetical institutions), and indeed our results confirm that on the contrary a quasi-periodic pattern can be observed. Moreover, CIIL in practice does not allow for anything but local validation. Though we use global validation results to assess the quality of CIIL models, no such set is available to a collaboration in practice without sharing data. Additionally for CIIL, only two of all collaborators ever see any one given model, preventing the aggregation of local validation on the same model that FL uses to obtain global validation results for its model selection process. As a result, we introduce the \"random local\" and \"best local\" model selection methods, and consider \"random local\" as the method closer to Chang et al.  14  as it requires less communication. We find that \"best local\" significantly outperforms \"random local\" in our setting.\n\nFollowing its performance evaluation, we favor FL over IIL and CIIL as a more principled way to perform multi-institutional data-private collaborative learning. The individual institutional training that occurs during all of FL, IIL, and CIIL is biased in as much as that institution's data patterns differ from that of the union of data used for CDS training. In the case of FL however, the results of institutional training are aggregated at the end of each round, mitigating this bias. In IIL, a type of aggregation exists as subsequent institutional training blends knowledge into the models it receives from the previous institution, however this aggregation favors institutions that train later in the cycle, and no mitigation exists for bias introduced by the last institution. See \"Supplementary Information: Hyper-Parameter Selection for IIL and CIIL\" for further evidence of this bias during IIL. CIIL further mitigates individual institutional bias, by limiting the number of epochs each institution trains before passing it forward, and by incorporating repeated cycling in an effort to enhance the type of aggregation that occurs during incremental training. The differences in the time-scale and quality of aggregation that occurs during FL versus IIL and CIIL, create qualitative differences in their training curves (Fig.  4 ). The short-term performance drops within the IIL training curve in Fig.  4  indicate that when an institution trains, it can significantly reduce previously established performance. Likewise, the CIIL curves clearly show a quasiperiodic pattern formed by re-visiting these performance drops while cycling over the institutions. We see this behavior as indicative of catastrophic forgetting  18  . The forgetting is not complete, as is evidenced by the fact that model improvement is still achievable for CIIL over cycles. However, these patterns do expose an inefficiency in the training processes of both IIL and CIIL.\n\nConsistent with the findings of Zech et al.  1  , the CDS models for the Original Institution group still appear to suffer from a lack of diverse data, scoring an average of 11% and 5% lower Dice on the data from institutions outside of the Original Institution group (Table  1 , Fig.  3 ). Though our institutional datasets are somewhat limited to be representative of a standard CDS contribution, we expect that data privacy and ownership concerns prevent near-term multi-institutional CDS collaborations large enough to overcome institutional biases and build models that widely generalize. We believe the data privacy that FL enables will be a catalyst for the formation of much larger collaborations, leveraging data throughout the world, since the data will be retained within their acquired institutions. Hence FL models will substantially benefit by continually learning on new data, compensating for the current relatively inferior performance compared to CDS models. Additionally, some settings may allow for this gap to be further closed, as we further describe in the Supplementary Section \"Hyper-Parameter Selection for FL\".\n\nAlthough the data are not centrally shared in FL, sources of variation across equipment configurations and acquisition protocols require careful consideration. For example, the highest throughput of medical images is produced during standard clinical practice, where the uncontrolled and varying acquisition protocols make such data of limited use and significance in large-scale analytical studies. In contrast, data from more controlled environments (such as clinical trials) are more suitable  26, 27  . To appropriately address this issue, common preprocessing routines should be considered and shared that account for harmonization of heterogeneous data (e.g., image resampling, orientation to a standardized atlas), allowing for integration and facilitating easier multi-institutional collaboration for large-scale analytics (see \"Methods: Data\" for details).\n\nThis study focused on the evaluation of data-private collaborative methods in radiographic imaging data. Specifically, following the performance evaluation presented here, the findings of this study support the superiority of FL when compared with IIL and CIIL, particularly on computational models for distinguishing healthy brain tissue from cancer, by virtue of their radiographic appearance. Technically, one can assume that similar results might be expected for other medical deep learning use cases, since generally FL should be able to approach CDS by increasing the rate of synchronization at the cost of network communication overhead. However, we acknowledge that the synchronization used in this study (1 epoch per synchronization, i.e., federated round) may be insufficient for data such as electronic health records  28, 29  and clinical notes, as well as genomics, where more variance might be present across international institutions. Notably, we did not perform hyper-parameter tuning specifically to FL. Further evaluation should be considered for the application and generalizability of data-private collaborative learning in other medical applications, beyond radiographic imaging, including exploration on variations in data sizes, institutional bias, as well as number and sequence of institutions.\n\nWhile data-private collaborative learning methods keep patient records confidential and allow multi-institutional training without sharing patient data, we caution that privacy risks still exist, since model parameters and the training execution are distributed among the collaborators. Studies have shown that training data may be approximated from the model weights  30, 31  . Model parameters necessarily encode information about their training data, which attackers may extract  30  . In FL, CIIL, and IIL the training algorithm is shared with multiple parties, each of which can tamper with some portion of the training. A malicious participant may tamper with training to cause the model to encode more information about others' training data than is necessary for the model task, improving the attacker's ability to approximate training data  32  . Thus, while data-private collaborations offer clear privacy advantages over CDS, collaborators must still conduct privacy analyses and consider possible mitigations such as tamper-resistant hardware and proper identity management. See \"Supplementary Information: Security and Privacy\" for a discussion on such threats and mitigations."
+    },
+    {
+      "title": "Methods",
+      "text": "Data. We use the task of distinguishing healthy brain tissue from tissue affected by cancer cells as the case study in evaluation of FL against CDS on a medical imaging task. We used the BraTS 2017 training dataset  [4] [5] [6] 21, 22  to form our institutional training and test datasets. We fu her formed two additional test sets by utilizing independent additional clinically-acquired brain tumor MRI scans from the University of Texas MD Anderson Cancer Center (MDACC) and Washington University School of Medicine in St. Louis (WashU). The complete BraTS 2017 high grade glioma data were collected from 13 different institutions, and consist of a training set of 210 patient scans, (collected from 10 different institutions), and additional validation and testing sets of 33 and 116 patients, respectively. The WashU and MDACC data consist of 18 and 29 patients, respectively. All these data reflect true clinical practice of radiographically scanning patients diagnosed with gliomas, and consist of multimodal magnetic resonance imaging (MRI) comprising pre-and post-contrast T1-weighted, T2-weighted, and T2-weighted Fluid Attenuated Inversion Recovery (T2-FLAIR) scans.\n\nThe radiographically abnormal regions of each image were annotated and approved by multiple clinical experts at each contributing institution following a pre-defined annotation protocol. The annotated regions included 3 distinct label masks indicating (1) peritumoral edematous/infiltrated tissue, (2) non-enhancing/ solid and necrotic/cystic tumor core, and (3) enhancing tumor regions. The raw brain scans were rigidly coregistered to a common anatomical atlas  33  , resampled to an isotropic resolution of 1 mm 3 to make the size of each scan consisting of 155 axial 2D slice images of 240 \u00d7 240 resolution, and skull-stripped. The data were further pre-processed to be made suitable for the specific task of our study, where the affected brain tissue is defined as the union of all three labels described above  [4] [5] [6] 21, 22  . Furth rmore, following the BraTS annotation protocol we eliminated all but the T2-FLAIR modality.\n\nFrom the BraTS 2017 training data, we sharded the data across 10 institutions, to match the real-world configuration of the 10 contributing institutions. We call this the Original Institution sharding. The resulting patient counts for each of the shards, which we will refer to as institutions 1-10 are given as 88, 22, 34, 12, 8, 4, 8, 14, 15, and 5 patients respectively. Additionally, we formed the Original Institution LOO groups from the Original Institution group, by variously holding out each one of the ten original institutions. The LOO groups represent additional examples of authentic institutional groups.\n\nFurthermore, for each institution of the collaborative group we hold out a validation set from their data, i.e., local validation set. We call the union of local validation sets the global validation set. These validation sets are used for final model selection as described below.\n\nIn order to reduce bias due to local validation set selection, we perform what we call \"collaborative cross validation\". In collaborative cross validation, each institution's dataset is partitioned into approximately 5 equal folds (indexed partitions), while ensuring that the 155 2D slices coming from a single patient scan end up in the same fold. Every experiment with a different model initialization is performed for five runs, each run using a different fold index to determine the validation fold at every institution. The other four fold indices correspond to the folds that form the training set for every institution during that run. Note that institution 6, holding only 4 patients, will have one empty fold. During CDS and FL, the run for which this fold number is selected is run as usual with no local validation step for institution 6, whereas during IIL, CIIL, and single institution 6 training this run is skipped. All experimental results in this work report average results over multiple instances of collaborative cross validation, with each instance using a different model initialization. Note that collaborative cross validation defines multiple iterations of coordinated local training and validation splits. As we specify for each experiment we perform, the validation scores reported may come from validating against the global validation set (union of all local validation sets), or from a local validation set belonging to a particular institution.\n\nThe BraTS 2017 validation data were combined with 22 cases from the BraTS 2017 test data (moved to the validation set for BraTS 2019) to form one test set for our study, which we call BTEST. (These images are now provided to BraTS 2019-2020 participants during the competition for method development and fine-tuning, and not for ranking purposes. Intel possessed the BraTS 2017-2018 training data having been participants in BraTS 2018 (as the training data were the same for 2017 and 2018). The binarized whole tumor (WT) labels for the BraTS 2017 validation data and the additional 22 BraTS 2017 test cases that were moved to BraTS 2019 validation set, were provided to the lead author Micah Sheller after the conclusion of the BraTS 2018 competition and under a signed Non-Disclosure Agreement. The data were held for calculation, avoiding exposure to a third party, and will be deleted upon publication of this manuscript.) Both WashU and MDACC did not contribute data to the BraTS 2017 training dataset or in the formulated BTEST data, and as such their data is used to test generalization to data from outside institutions. Models resulting from training on each of the Original Institution LOO groups are tested against the data owned by the institution held out to form the group. final model selection. Following standard practice, the final model for individual institutional training is taken as the one that achieves the best local validation score over the course of training. For CDS, final model selection can similarly be made using global validation scores. During FL, each institution locally validates any model it receives from the central aggregation server, i.e., at the start of each federated round. These local validation results are then sent to the aggregation server along with the model updates to be aggregated with the other institutional results. In such a way, global validation results can be naturally obtained during FL for final model selection.\n\nFinal model selection is harder for IIL and CIIL, than for FL and CDS, as generally no single model is seen by all institutions. Therefore, a complete set of local validation scores cannot be computed within these methods' natural framework. For CIIL, previous work  14, 15  did not provide any final model selection mechanism. Here, we introduce and explore two final model selection methods that keep close to the minimal communication costs of CIIL. For both these methods, each institution saves the best locally validated model. After the last training cycle, the final model is either randomly selected from one of the locally best models (which we call \"random local\") or all locally selected models and corresponding local validation results are passed around in order to select the best local model according to global validation (which we call \"best local\"). We stress that CIIL \"best local\" requires more communication between institutions than was originally designed for  14  ."
+    },
+    {
+      "title": "Model quality metric.",
+      "text": "To evaluate model quality on a particular test sample, we use a measure (Dice Similarity Coefficient  34  , also known as Dice) in the range [0,1] for the similarity between the model prediction on the test sample features, and the sample's ground truth mask label. If P and T are the prediction and ground truth masks respectively, Dice is defined as: where \u2022 is the Hadamard product (component-wise multiplication), and 1 is the L1-norm (sum on the absolute values of all components).\n\nFor the model training loss, we took the negative log of Dice, and explored multiple values for the Laplace smoothing [s terms in Eq. (  2 )]. After algebraically rearranging this loss function, we obtained:\n\nthe U-net model. For our analysis, we implemented a U-Net topology of a deep Convolutional Neural Network (CNN)  35  , in TensorFlow, and made the source code publicly available at:  https ://githu b.com/Intel AI/  unet/tree/maste r/2D  (commit: eaeac1fc68aa309feb00d419d1ea3b43b8725773). All experiments use a dropout parameter of 0.2, upsampling set to true, and args.featuremaps set to 32.   training hyper-parameters. See \"Supplementary Information\" for a table summarizing all the hyperparameters considered in this study. All institutional training in our experiments use mini-batch stochastic optimization and the Adam optimizer  36  , thus require batch size and Adam optimizer hyper-parameters  36  (adam learning rate, adam first moment decay parameter, and adam second moment decay parameter). Additionally, our training loss function requires the smoothing parameter (Laplace smoothing) the 's' of Eq. (  2 ) in \"Model Quality Metric\". These are the only hyper-parameters required for individual institutional training and CDS, and are shared by FL, IIL and CIIL.\n\nWhen using the Adam optimizer during FL, each institutional training session results in a distinct final state for Adam's first and second moments. A natural question arises as to whether it is best to aggregate these moments to be used by every institution in the next training session, or whether it is better to carry forward the optimizer states in some other way. We considered this choice to be an FL-specific hyper-parameter (optimizer state treatment). In addition, for FL training one needs to determine how many epochs of training to apply at each institution per round (epochs per round), which here we only consider as the same number for all institutions and rounds. One also needs to determine what percentage of institutions to randomly select for participation on each round (institutions per round).\n\nSimilar to FL, IIL and CIIL also have specific hyper-parameters. No hyper-parameters are associated with the Adam optimizer for institutional training, as for IIL and CIIL we pass the values of the Adam first and second moments along with the model for continued training. Specifically needed for IIL however, is the determination of the number of epochs with no validation improvement (over best so far) before passing the model to the next institution (patience), as well as how to order the institutions for the serial training process (institution order). For CIIL training one needs to determine how many epochs of training to apply at each institution (epochs per institution per cycle), as well as how to order the institutions for each training cycle (institution order). We consider only the same patience value for all institutions during IIL, the same institution order to made during every cycle of CIIL, and the same epochs per institution per cycle to be applied at every institution for every cycle of CIIL.\n\nFor all institutional training we chose a batch size of 64, and used the Adam optimizer with adam first moment decay parameter of 0.9 and adam second moment decay parameter of 0.999. In a preliminary experiment, we performed a grid search over the values of the Laplace smoothing, and learning rate used during CDS training, and found the best cross-validation values to be a Laplace smoothing value of 32, and a learning rate of 1 \u00d7 10 -4 . We subsequently used these institutional training hyper-parameter values for all experiments. See \"Supplementary Information: Hyper-Parameter Selection for Institutional Training\" for further details regarding institutional training hyper-parameter tuning.\n\nThe FL hyper-parameter epochs per round and institutions per round were set to 1 and 100% respectively in all experiments. Additionally, the FL hyper-parameter optimizer state treatment was set to that of aggregating the moments using a weighted average, exactly as the model weights are aggregated during FL. For a discussion of how other values of these hyper-parameters can affect FL training, see \"Supplementary Information: Hyper-Parameter Selection for FL\".\n\nAll IIL experiments used a patience value of 10. For epochs per institution per cycle during CIIL, we used 1, as this value produced the best results in previous work  14, 15  . For all IIL and CIIL experiments, institutional order was taken as increasing order by institution data size as preferable to decreasing order in initial exploration. See \"Supplementary Information: Hyper-Paramter Selection for IIL and CIIL\" for details of this exploration.\n\nexperiments. Every experiment in this work was repeated over multiple runs: using multiple random initializations of the U-Net model, with multiple choices for the local validation sets (as discussed in \"Data\" section).\n\nWe first trained models for each institution in the Original Institution group using its own training and validation data, training all models to 100 epochs, and evaluating the final model quality Dice against all single institution validation sets, the global validation set, as well as BTest, WashU and MDACC test data.\n\nNext, we measure final model quality Dice of FL, CIIL \"best local\", CIIL \"random local\", IIL, and CDS models trained on the Original Institution group against the global validation data as well as the BTest, WashU and MDACC test data. Here, all models were trained to 200 epochs.\n\nFinally, we train using CDS, FL, CIIL \"best local\", and CIIL \"random local\" on each of the LOO groups (described in \"Data\" section). Here all models are trained for a maximum of 200 epochs, stopping early if the best known model by validation did not change over 90 epochs. The quality of these final models was measured as its Dice value against the entire training/validation dataset belonging to the institution that was held out to form the group. (2) loss = log (\ufffdP\ufffd 1 + \ufffdT\ufffd 1 + s) -log (2\ufffdP \u2022 T\ufffd 1 + s)"
+    },
+    {
+      "text": "Figure 1. System architectures of collaborative learning approaches for multi-institutional collaborations. The current paradigm for multi-institutional collaborations, based on Centralized Data Sharing, is shown in (a), whereas in (b) we note the proposed paradigm, based on Federated Learning. Panels (c) and (d) offer schematics for alternative data-private collaborative learning approaches evaluated in this study, namely Institutional Incremental Learning, and Cyclic Institutional Incremental Learning, respectively."
+    },
+    {
+      "text": "Figure 2. Single Original Institution Validation Results. Single institution mean final model qualities (based on the Dice Similarity Coefficient 34 ) for the Original Institution group (y-axis) measured against all single institution held-out validation sets (x-axis) using multiple runs of five-fold collaborative cross validation. The Y axis represents models trained on a single institutional dataset, and the X axis represents the validation dataset of each independent institution (Local Validation Dataset). \"AVG\" indicates the average of each institution mean model performance over all institutions in the group other than itself, \"W-AVG\" denotes the same, but with a weighted average according to each institution's contribution to the validation set size. The diagonal entries indicate how well each institution's final models scored against their own validation set, and they are represented as the Single Institutional Model (SIM) results reported in Fig.3."
+    },
+    {
+      "text": "Figure 3. Model quality results from single institution training, CDS, FL, IIL, and CIIL. CDS, FL, CIIL mean model Dice against the Original Institution group single institution held-out validation data over multiple runs of collaborative cross validation, as well as the average of single institutional results under the same scheme (AVG SIM). The AVG 1-10 column provides the average performance of each collaboration method across single institution validation sets. For CIIL, 'best local' and 'random local' are two methods we introduce for final model selection during CIIL (More details are given in the \"Methods: Final Model Selection\" section ). Note that the color scale here differs from that used in Fig. 2."
+    },
+    {
+      "text": "Figure 4. Learning curves of collaborative learning methods on Original Institution data. Mean global validation Dice every epoch by collaborative learning method on the Original Institution group over multiple runs of collaborative cross validation. Confidence intervals are min, max. An epoch for DCS is defined as a single training pass over all of the centralized data. An epoch for FL is defined as a parallel training pass of every institutiuon over their training data, and an epoch during CIIL and IIL is defined as a single insitution training pass over its data."
+    },
+    {
+      "text": "March 2020; Accepted: 23 June 2020"
+    },
+    {
+      "text": "Model quality results from single institution training, CDS, and all data-private methods. Mean \u00b1 standard deviation of Dice for all collaboration methods on the Original Institution group under multiple runs of collaborative cross validation, as well as the mean of single institutional results under the same scheme. The LOO results are a weighted average over institutional LOO tests, weighted by test institution contribution. The '-' entries in the LOO column indicate single-institution tests, where the LOO method did not apply."
+    },
+    {
+      "title": "Acknowledgements",
+      "text": "The authors would like to thank  Dr. Christos Davatzikos  for his insightful comments during writing of this manuscript. Research reported in this publication was partly supported by the  National Institutes of Health (NIH)  under Award Numbers  NCI : U01CA242871 ,  NINDS : R01NS042645 ,  NCI : U24CA189523 ,  NCI : U24CA204854 , and  UPMC   CCSG P30CA047904 . The content of this publication is solely the responsibility of the authors and does not necessarily represent the official views of the  NIH ."
+    },
+    {
+      "title": "Author contributions",
+      "text": "M.J.S., B.E., and S.B. conceived and designed the complete study. A.K., M.M., D.M., R.R.C., and S.B. provided the data for the study. M.J.S. and B.E. did the data analysis. M.J.S., B.E., and S.B. interpreted the data and wrote the manuscript. G.A.R., J.M., S.P., A.K., M.M., W.X., D.M., and R.R.C. reviewed and edited the manuscript. M.J.S., B.E., G.A.R., S.P., and S.B. created new software used in the study. Each author has approved the submitted version, and has agreed both to be personally accountable for the author's own contributions and to ensure that questions related to the accuracy or integrity of any part of the work, even ones in which the author was not personally involved, are appropriately investigated, resolved, and the resolution documented in the literature."
+    },
+    {
+      "title": "competing interests",
+      "text": "The authors declare no competing interests."
+    }
+  ],
+  "references": [
+    {
+      "title": "Variable generalization performance of a deep learning model to detect pneumonia in chest radiographs: a crosssectional study",
+      "authors": [
+        "J Zech"
+      ],
+      "year": 2018,
+      "doi": "10.1371/journal.pmed.1002683",
+      "journal": "PLOS Med",
+      "volume": "15",
+      "pages": "1002683",
+      "raw": "Variable generalization performance of a deep learning model to detect pneumonia in chest radiographs: a crosssectional study \n\t\t \n\t\t\t J R Zech \n\t\t \n\t\t 10.1371/journal.pmed.1002683 \n\t\t \n\t \n\t \n\t\t PLOS Med \n\t\t \n\t\t\t 15 \n\t\t\t 1002683 \n\t\t\t 2018 \n\t\t \n\t \n\t Zech, J. R. et al. Variable generalization performance of a deep learning model to detect pneumonia in chest radiographs: a cross- sectional study. PLOS Med. 15, e1002683. https ://doi.org/10.1371/journ al.pmed.10026 83 (2018)."
+    },
+    {
+      "title": "The cancer imaging archive (TCIA): maintaining and operating a public information repository",
+      "authors": [
+        "K Clark"
+      ],
+      "year": 2013,
+      "doi": "10.1007/s10278-013-9622-7",
+      "journal": "J. Digit. Imaging",
+      "volume": "26",
+      "raw": "The cancer imaging archive (TCIA): maintaining and operating a public information repository \n\t\t \n\t\t\t K Clark \n\t\t \n\t\t 10.1007/s10278-013-9622-7 \n\t\t \n\t \n\t \n\t\t J. Digit. Imaging \n\t\t \n\t\t\t 26 \n\t\t\t \n\t\t\t 2013 \n\t\t \n\t \n\t Clark, K. et al. The cancer imaging archive (TCIA): maintaining and operating a public information repository. J. Digit. Imaging 26, 1045-1057. https ://doi.org/10.1007/s1027 8-013-9622-7 (2013)."
+    },
+    {
+      "title": "AI-based prognostic imaging biomarkers for precision neurooncology: the ReSPOND consortium",
+      "authors": [
+        "C Davatzikos"
+      ],
+      "year": 2020,
+      "doi": "10.1093/neuonc/noaa045",
+      "journal": "Neuro Oncol",
+      "raw": "AI-based prognostic imaging biomarkers for precision neurooncology: the ReSPOND consortium \n\t\t \n\t\t\t C Davatzikos \n\t\t \n\t\t 10.1093/neuonc/noaa045 \n\t\t \n\t \n\t \n\t\t Neuro Oncol \n\t\t \n\t\t\t 2020 \n\t\t \n\t \n\t Davatzikos, C. et al. AI-based prognostic imaging biomarkers for precision neurooncology: the ReSPOND consortium. Neuro Oncol. https ://doi.org/10.1093/neuon c/noaa0 45 (2020)."
+    },
+    {
+      "title": "The multimodal brain tumor image segmentation benchmark (BRATS)",
+      "authors": [
+        "B Menze"
+      ],
+      "year": 2015,
+      "doi": "10.1109/tmi.2014.2377694",
+      "journal": "IEEE Trans. Med. Imaging",
+      "volume": "34",
+      "raw": "The multimodal brain tumor image segmentation benchmark (BRATS) \n\t\t \n\t\t\t B H Menze \n\t\t \n\t\t 10.1109/tmi.2014.2377694 \n\t\t \n\t \n\t \n\t\t IEEE Trans. Med. Imaging \n\t\t \n\t\t\t 34 \n\t\t\t \n\t\t\t 2015 \n\t\t \n\t \n\t Menze, B. H. et al. The multimodal brain tumor image segmentation benchmark (BRATS). IEEE Trans. Med. Imaging 34, 1993- 2024. https ://doi.org/10.1109/TMI.2014.23776 94 (2015)."
+    },
+    {
+      "title": "Advancing the cancer genome atlas glioma MRI collections with expert segmentation labels and radiomic features",
+      "authors": [
+        "S Bakas"
+      ],
+      "year": 2017,
+      "doi": "10.1038/sdata.2017.117",
+      "journal": "Nat. Sci. Data",
+      "volume": "4",
+      "pages": "170117",
+      "raw": "Advancing the cancer genome atlas glioma MRI collections with expert segmentation labels and radiomic features \n\t\t \n\t\t\t S Bakas \n\t\t \n\t\t 10.1038/sdata.2017.117 \n\t\t \n\t \n\t \n\t\t Nat. Sci. Data \n\t\t \n\t\t\t 4 \n\t\t\t 170117 \n\t\t\t 2017 \n\t\t \n\t \n\t Bakas, S. et al. Advancing the cancer genome atlas glioma MRI collections with expert segmentation labels and radiomic features. Nat. Sci. Data 4, 170117. https ://doi.org/10.1038/sdata .2017.117 (2017)."
+    },
+    {
+      "title": "Identifying the best machine learning algorithms for brain tumor segmentation, progression assessment, and overall survival prediction in the BRATS challenge",
+      "authors": [
+        "S Bakas"
+      ],
+      "year": 2018,
+      "raw": "Identifying the best machine learning algorithms for brain tumor segmentation, progression assessment, and overall survival prediction in the BRATS challenge \n\t\t \n\t\t\t S Bakas \n\t\t \n\t\t arXiv:1811.02629 \n\t\t \n\t\t\t 2018 \n\t\t \n\t \n\t Bakas S. et al. Identifying the best machine learning algorithms for brain tumor segmentation, progression assessment, and overall survival prediction in the BRATS challenge. arXiv:1811.02629 (2018)."
+    },
+    {
+      "title": "The liver tumor segmentation benchmark (LiTS)",
+      "authors": [
+        "P Bilic"
+      ],
+      "year": 2019,
+      "doi": "10.1109/ichi61247.2024.00107",
+      "raw": "P Bilic \n\t\t \n\t\t 10.1109/ichi61247.2024.00107 \n\t\t arXiv:1901.04056 \n\t\t \n\t\t The liver tumor segmentation benchmark (LiTS) \n\t\t \n\t\t\t 2019 \n\t\t \n\t \n\t Bilic P. et al. The liver tumor segmentation benchmark (LiTS). arXiv:1901.04056. https ://ui.adsab s.harva rd.edu/abs/2019a rXiv1 90104 056B (2019)."
+    },
+    {
+      "title": "The challenge data: 300 kidney tumor cases with clinical context, CT semantic segmentations, and surgical outcomes",
+      "authors": [
+        "N Heller"
+      ],
+      "year": 2019,
+      "raw": "N Heller \n\t\t \n\t\t arXiv:1904.00445 \n\t\t \n\t\t The challenge data: 300 kidney tumor cases with clinical context, CT semantic segmentations, and surgical outcomes \n\t\t \n\t\t\t 2019 \n\t\t \n\t \n\t Heller N. et al. The challenge data: 300 kidney tumor cases with clinical context, CT semantic segmentations, and surgical outcomes. arXiv:1904.00445. https ://ui.adsab s.harva rd.edu/abs/2019a rXiv1 90400 445H (2019)."
+    },
+    {
+      "title": "A large annotated medical image dataset for the development and evaluation of segmentation algorithms",
+      "authors": [
+        "A Simpson"
+      ],
+      "year": 2019,
+      "doi": "10.7717/peerjcs.745/table-17",
+      "raw": "A large annotated medical image dataset for the development and evaluation of segmentation algorithms \n\t\t \n\t\t\t A L Simpson \n\t\t \n\t\t 10.7717/peerjcs.745/table-17 \n\t\t \n\t\t \n\t\t\t 2019 \n\t\t \n\t \n\t Simpson A. L. et al. A large annotated medical image dataset for the development and evaluation of segmentation algorithms. https ://ui.adsab s.harva rd.edu/abs/2019a rXiv1 90209 063S (2019)."
+    },
+    {
+      "title": "ANHIR: automatic non-rigid histological image registration challenge",
+      "authors": [
+        "J Borovec"
+      ],
+      "year": 2020,
+      "doi": "10.1109/tmi.2020.2986331",
+      "journal": "IEEE Trans. Med. Imaging",
+      "raw": "ANHIR: automatic non-rigid histological image registration challenge \n\t\t \n\t\t\t J Borovec \n\t\t \n\t\t 10.1109/tmi.2020.2986331 \n\t\t \n\t \n\t \n\t\t IEEE Trans. Med. Imaging \n\t\t \n\t\t\t 2020 \n\t\t \n\t \n\t Borovec, J. et al. ANHIR: automatic non-rigid histological image registration challenge. IEEE Trans. Med. Imaging https ://doi. org/10.1109/TMI.2020.29863 31 (2020)."
+    },
+    {
+      "title": "Glioma through the looking GLASS: molecular evolution of diffuse gliomas and the Glioma Longitudinal Analysis Consortium",
+      "authors": [
+        "T Consortium"
+      ],
+      "year": 2018,
+      "doi": "10.1093/neuonc/noy020",
+      "journal": "Neuro-Oncology",
+      "volume": "20",
+      "raw": "Glioma through the looking GLASS: molecular evolution of diffuse gliomas and the Glioma Longitudinal Analysis Consortium \n\t\t \n\t\t\t T G Consortium \n\t\t \n\t\t 10.1093/neuonc/noy020 \n\t\t \n\t \n\t \n\t\t Neuro-Oncology \n\t\t \n\t\t\t 20 \n\t\t\t \n\t\t\t 2018 \n\t\t \n\t \n\t Consortium, T. G. Glioma through the looking GLASS: molecular evolution of diffuse gliomas and the Glioma Longitudinal Analysis Consortium. Neuro-Oncology 20, 873-884. https ://doi.org/10.1093/neuon c/noy02 0 (2018)."
+    },
+    {
+      "title": "Going digital: a survey on digitalization and large-scale data analytics in healthcare",
+      "authors": [
+        "V Tresp"
+      ],
+      "year": 2016,
+      "doi": "10.1109/jproc.2016.2615052",
+      "volume": "104",
+      "raw": "Going digital: a survey on digitalization and large-scale data analytics in healthcare \n\t\t \n\t\t\t V Tresp \n\t\t \n\t\t 10.1109/jproc.2016.2615052 \n\t\t \n\t \n\t \n\t\t Proc. IEEE \n\t\t IEEE \n\t\t \n\t\t\t 2016 \n\t\t\t 104 \n\t\t\t \n\t\t \n\t \n\t Tresp, V. et al. Going digital: a survey on digitalization and large-scale data analytics in healthcare. Proc. IEEE 104, 2180-2206. https ://doi.org/10.1109/JPROC .2016.26150 52 (2016)."
+    },
+    {
+      "title": "Privacy protection and intrusion avoidance for cloudlet-based medical data sharing",
+      "authors": [
+        "M Chen"
+      ],
+      "year": 2016,
+      "doi": "10.1109/tcc.2016.2617382",
+      "journal": "IEEE Trans. Cloud Comput",
+      "raw": "Privacy protection and intrusion avoidance for cloudlet-based medical data sharing \n\t\t \n\t\t\t M Chen \n\t\t \n\t\t 10.1109/tcc.2016.2617382 \n\t\t \n\t \n\t \n\t\t IEEE Trans. Cloud Comput \n\t\t \n\t\t\t 2016 \n\t\t \n\t \n\t Chen, M. et al. Privacy protection and intrusion avoidance for cloudlet-based medical data sharing. IEEE Trans. Cloud Comput. https ://doi.org/10.1109/TCC.2016.26173 82 (2016)."
+    },
+    {
+      "title": "Distributed deep learning networks among institutions for medical imaging",
+      "authors": [
+        "K Chang"
+      ],
+      "year": 2018,
+      "doi": "10.1093/jamia/ocy017",
+      "journal": "J. Am. Med. Inform. Assoc",
+      "volume": "25",
+      "raw": "Distributed deep learning networks among institutions for medical imaging \n\t\t \n\t\t\t K Chang \n\t\t \n\t\t 10.1093/jamia/ocy017 \n\t\t \n\t \n\t \n\t\t J. Am. Med. Inform. Assoc \n\t\t \n\t\t\t 25 \n\t\t\t \n\t\t\t 2018 \n\t\t \n\t \n\t Chang, K. et al. Distributed deep learning networks among institutions for medical imaging. J. Am. Med. Inform. Assoc. 25, 945-954. https ://doi.org/10.1093/jamia /ocy01 7 (2018)."
+    },
+    {
+      "title": "Multi-institutional deep learning modeling without sharing patient data: A feasibility study on brain tumor segmentation",
+      "authors": [
+        "M Sheller",
+        "G Reina",
+        "B Edwards",
+        "J Martin",
+        "S Bakas"
+      ],
+      "year": 2018,
+      "doi": "10.1007/978-3-030-11723-8_9",
+      "volume": "11383",
+      "raw": "Multi-institutional deep learning modeling without sharing patient data: A feasibility study on brain tumor segmentation \n\t\t \n\t\t\t M J Sheller \n\t\t \n\t\t \n\t\t\t G A Reina \n\t\t \n\t\t \n\t\t\t B Edwards \n\t\t \n\t\t \n\t\t\t J Martin \n\t\t \n\t\t \n\t\t\t S Bakas \n\t\t \n\t\t 10.1007/978-3-030-11723-8_9 \n\t\t \n\t \n\t \n\t\t Brainles 2018 -Springer Lecture Notes in Computer Science \n\t\t \n\t\t\t 2018 \n\t\t\t 11383 \n\t\t\t \n\t\t \n\t \n\t Sheller, M. J., Reina, G. A., Edwards, B., Martin, J. & Bakas, S. Multi-institutional deep learning modeling without sharing patient data: A feasibility study on brain tumor segmentation. In Brainles 2018 -Springer Lecture Notes in Computer Science 11383, 92-104. https ://doi.org/10.1007/978-3-030-11723 -8_9 (2018)."
+    },
+    {
+      "title": "Communication-efficient learning of deep networks from decentralized data",
+      "authors": [
+        "B Mcmahan",
+        "E Moore",
+        "D Ramage",
+        "S Hampson",
+        "B Arcas"
+      ],
+      "year": 2017,
+      "journal": "Artificial Intelligence and Statistics",
+      "raw": "Communication-efficient learning of deep networks from decentralized data \n\t\t \n\t\t\t B Mcmahan \n\t\t \n\t\t \n\t\t\t E Moore \n\t\t \n\t\t \n\t\t\t D Ramage \n\t\t \n\t\t \n\t\t\t S Hampson \n\t\t \n\t\t \n\t\t\t B A Arcas \n\t\t \n\t \n\t \n\t\t Artificial Intelligence and Statistics \n\t\t \n\t\t\t \n\t\t\t 2017 \n\t\t \n\t \n\t McMahan, B., Moore, E., Ramage, D., Hampson, S. & y Arcas, B. A. Communication-efficient learning of deep networks from decentralized data, in Artificial Intelligence and Statistics. 1273-1282 (2017)."
+    },
+    {
+      "title": "Federated learning: collaborative machine learning without centralized training Data",
+      "authors": [
+        "B Mcmahan",
+        "D Ramage"
+      ],
+      "year": 2017,
+      "journal": "Google AI Blog",
+      "raw": "Federated learning: collaborative machine learning without centralized training Data \n\t\t \n\t\t\t B Mcmahan \n\t\t \n\t\t \n\t\t\t D Ramage \n\t\t \n\t \n\t \n\t\t Google AI Blog \n\t\t \n\t\t\t 2017 \n\t\t \n\t \n\t McMahan, B. & Ramage, D. Federated learning: collaborative machine learning without centralized training Data. Google AI Blog (2017)."
+    },
+    {
+      "title": "Catastrophic forgetting in connectionist networks",
+      "authors": [
+        "R French"
+      ],
+      "year": 1999,
+      "doi": "10.1016/s1364-6613(99)01294-2",
+      "journal": "Trends Cogn. Sci",
+      "volume": "3",
+      "raw": "Catastrophic forgetting in connectionist networks \n\t\t \n\t\t\t R M French \n\t\t \n\t\t 10.1016/s1364-6613(99)01294-2 \n\t\t \n\t \n\t \n\t\t Trends Cogn. Sci \n\t\t \n\t\t\t 3 \n\t\t\t \n\t\t\t 1999 \n\t\t \n\t \n\t French, R. M. Catastrophic forgetting in connectionist networks. Trends Cogn. Sci. 3, 128-135. https ://doi.org/10.1016/S1364 -6613(99)01294 -2 (1999)."
+    },
+    {
+      "title": "Federated learning with non-iid data",
+      "authors": [
+        "Y Zhao"
+      ],
+      "year": 2018,
+      "raw": "Y Zhao \n\t\t \n\t\t arXiv:1806.00582 \n\t\t Federated learning with non-iid data \n\t\t \n\t\t\t 2018 \n\t\t \n\t \n\t Zhao Y. et al. Federated learning with non-iid data. arXiv:1806.00582 (2018)."
+    },
+    {
+      "title": "Racial differences in quantitative measures of area and volumetric breast density",
+      "authors": [
+        "A Mccarthy"
+      ],
+      "year": 2016,
+      "doi": "10.1093/jnci/djw104",
+      "journal": "JNCI J. Natl. Cancer Inst",
+      "raw": "Racial differences in quantitative measures of area and volumetric breast density \n\t\t \n\t\t\t A M Mccarthy \n\t\t \n\t\t 10.1093/jnci/djw104 \n\t\t \n\t \n\t \n\t\t JNCI J. Natl. Cancer Inst \n\t\t \n\t\t\t 2016 \n\t\t \n\t \n\t McCarthy, A. M. et al. Racial differences in quantitative measures of area and volumetric breast density. JNCI J. Natl. Cancer Inst. https ://doi.org/10.1093/jnci/djw10 4 (2016)."
+    },
+    {
+      "title": "Segmentation labels and radiomic features for the pre-operative scans of the TCGA-GBM collection",
+      "authors": [
+        "S Bakas"
+      ],
+      "year": 2017,
+      "doi": "10.7937/K9/TCIA.2017.KLXWJJ1Q",
+      "journal": "The Cancer Imaging Archive",
+      "raw": "Segmentation labels and radiomic features for the pre-operative scans of the TCGA-GBM collection \n\t\t \n\t\t\t S Bakas \n\t\t \n\t\t 10.7937/K9/TCIA.2017.KLXWJJ1Q \n\t\t \n\t \n\t \n\t\t The Cancer Imaging Archive \n\t\t \n\t\t\t 2017 \n\t\t \n\t \n\t KLXWJ J \n\t Bakas, S. et al. Segmentation labels and radiomic features for the pre-operative scans of the TCGA-GBM collection. The Cancer Imaging Archive. https ://doi.org/10.7937/K9/TCIA.2017.KLXWJ J1Q (2017)."
+    },
+    {
+      "title": "Segmentation labels and radiomic features for the pre-operative scans of the TCGA-LGG collection",
+      "authors": [
+        "S Bakas"
+      ],
+      "year": 2017,
+      "doi": "10.7937/K9/TCIA.2017.GJQ7R0EF",
+      "journal": "The Cancer Imaging Archive",
+      "raw": "Segmentation labels and radiomic features for the pre-operative scans of the TCGA-LGG collection \n\t\t \n\t\t\t S Bakas \n\t\t \n\t\t 10.7937/K9/TCIA.2017.GJQ7R0EF \n\t\t \n\t \n\t \n\t\t The Cancer Imaging Archive \n\t\t \n\t\t\t 2017 \n\t\t \n\t \n\t Bakas, S. et al. Segmentation labels and radiomic features for the pre-operative scans of the TCGA-LGG collection. The Cancer Imaging Archive. https ://doi.org/10.7937/K9/TCIA.2017.GJQ7R 0EF (2017)."
+    },
+    {
+      "title": "Privacy-Preserving Federated Brain Tumour Segmentation",
+      "authors": [
+        "W Li"
+      ],
+      "year": 2019,
+      "doi": "10.1007/978-3-030-32692-0_16",
+      "volume": "11861",
+      "raw": "Privacy-Preserving Federated Brain Tumour Segmentation \n\t\t \n\t\t\t W Li \n\t\t \n\t\t 10.1007/978-3-030-32692-0_16 \n\t\t \n\t \n\t \n\t\t MLMI 2019 -Springer Lecture Notes in Computer Science \n\t\t \n\t\t\t 2019 \n\t\t\t 11861 \n\t\t\t \n\t\t \n\t \n\t Li, W. et al. Privacy-Preserving Federated Brain Tumour Segmentation, In MLMI 2019 -Springer Lecture Notes in Computer Science 11861, 133-141. https ://doi.org/10.1007/978-3-030-32692 -0_16 (2019)."
+    },
+    {
+      "title": "The eu general data protection regulation (gdpr)",
+      "authors": [
+        "P Voigt",
+        "A Von Dem Bussche"
+      ],
+      "year": 2017,
+      "doi": "10.1007/978-3-031-62328-8",
+      "raw": "The eu general data protection regulation (gdpr) \n\t\t \n\t\t\t P Voigt \n\t\t \n\t\t \n\t\t\t A Von Dem Bussche \n\t\t \n\t\t 10.1007/978-3-031-62328-8 \n\t \n\t \n\t\t A Practical Guide \n\t\t Cham \n\t\t \n\t\t\t Springer \n\t\t\t 2017 \n\t\t \n\t \n\t 1st edn \n\t Voigt, P. & Von dem Bussche, A. The eu general data protection regulation (gdpr). In A Practical Guide, 1st edn (Springer, Cham, 2017)."
+    },
+    {
+      "title": "HIPAA regulations-a new era of medical-record privacy?",
+      "authors": [
+        "G Annas"
+      ],
+      "year": 2003,
+      "doi": "10.1056/nejmlim035027",
+      "journal": "N. Engl. J. Med",
+      "volume": "348",
+      "raw": "HIPAA regulations-a new era of medical-record privacy? \n\t\t \n\t\t\t G J Annas \n\t\t \n\t\t 10.1056/nejmlim035027 \n\t \n\t \n\t\t N. Engl. J. Med \n\t\t \n\t\t\t 348 \n\t\t\t \n\t\t\t 2003 \n\t\t \n\t \n\t Annas, G. J. HIPAA regulations-a new era of medical-record privacy?. N. Engl. J. Med. 348, 1486-1490 (2003)."
+    },
+    {
+      "title": "Sharing clinical trial data-a proposal from the international committee of medical journal editors",
+      "authors": [
+        "D Taichman"
+      ],
+      "year": 2016,
+      "doi": "10.1056/nejme1515172",
+      "journal": "N. Engl. J. Med",
+      "volume": "374",
+      "raw": "Sharing clinical trial data-a proposal from the international committee of medical journal editors \n\t\t \n\t\t\t D B Taichman \n\t\t \n\t\t 10.1056/nejme1515172 \n\t\t \n\t \n\t \n\t\t N. Engl. J. Med \n\t\t \n\t\t\t 374 \n\t\t\t \n\t\t\t 2016 \n\t\t \n\t \n\t Taichman, D. B. et al. Sharing clinical trial data-a proposal from the international committee of medical journal editors. N. Engl. J. Med. 374, 384-386. https ://doi.org/10.1056/NEJMe 15151 72 (2016)."
+    },
+    {
+      "title": "Data sharing from clinical trials-a research funder's perspective",
+      "authors": [
+        "R Kiley",
+        "T Peatfield",
+        "J Hansen",
+        "F Reddington"
+      ],
+      "year": 2017,
+      "doi": "10.1056/nejmsb1708278",
+      "journal": "N. Engl. J. Med",
+      "volume": "377",
+      "raw": "Data sharing from clinical trials-a research funder's perspective \n\t\t \n\t\t\t R Kiley \n\t\t \n\t\t \n\t\t\t T Peatfield \n\t\t \n\t\t \n\t\t\t J Hansen \n\t\t \n\t\t \n\t\t\t F Reddington \n\t\t \n\t\t 10.1056/nejmsb1708278 \n\t\t \n\t \n\t \n\t\t N. Engl. J. Med \n\t\t \n\t\t\t 377 \n\t\t\t \n\t\t\t 2017 \n\t\t \n\t \n\t Kiley, R., Peatfield, T., Hansen, J. & Reddington, F. Data sharing from clinical trials-a research funder's perspective. N. Engl. J. Med. 377, 1990-1992. https ://doi.org/10.1056/NEJMs b1708 278 (2017)."
+    },
+    {
+      "title": "Distributed learning from multiple EHR databases: contextual embedding models for medical events",
+      "authors": [
+        "Z Li",
+        "K Roberts",
+        "X Jiang",
+        "Q Long"
+      ],
+      "year": 2019,
+      "doi": "10.1016/j.jbi.2019.103138",
+      "journal": "J. Biomed. Inform",
+      "volume": "92",
+      "pages": "103138",
+      "raw": "Distributed learning from multiple EHR databases: contextual embedding models for medical events \n\t\t \n\t\t\t Z Li \n\t\t \n\t\t \n\t\t\t K Roberts \n\t\t \n\t\t \n\t\t\t X Jiang \n\t\t \n\t\t \n\t\t\t Q Long \n\t\t \n\t\t 10.1016/j.jbi.2019.103138 \n\t \n\t \n\t\t J. Biomed. Inform \n\t\t \n\t\t\t 92 \n\t\t\t 103138 \n\t\t\t 2019 \n\t\t \n\t \n\t Li, Z., Roberts, K., Jiang, X. & Long, Q. Distributed learning from multiple EHR databases: contextual embedding models for medical events. J. Biomed. Inform. 92, 103138 (2019)."
+    },
+    {
+      "title": "Federated learning of predictive models from federated electronic health records",
+      "authors": [
+        "T Brisimi"
+      ],
+      "year": 2018,
+      "doi": "10.1016/j.ijmedinf.2018.01.007",
+      "journal": "Int. J. Med. Inform",
+      "volume": "112",
+      "raw": "Federated learning of predictive models from federated electronic health records \n\t\t \n\t\t\t T S Brisimi \n\t\t \n\t\t 10.1016/j.ijmedinf.2018.01.007 \n\t \n\t \n\t\t Int. J. Med. Inform \n\t\t \n\t\t\t 112 \n\t\t\t \n\t\t\t 2018 \n\t\t \n\t \n\t Brisimi, T. S. et al. Federated learning of predictive models from federated electronic health records. Int. J. Med. Inform. 112, 59-67 (2018)."
+    },
+    {
+      "title": "Proceedings of the 22nd ACM SIGSAC Conference on Computer and Communications Security 1322-1333",
+      "authors": [
+        "M Fredrikson",
+        "S Jha",
+        "T Ristenpart"
+      ],
+      "year": 2015,
+      "doi": "10.1145/2810103.2813677",
+      "raw": "M Fredrikson \n\t\t \n\t\t \n\t\t\t S Jha \n\t\t \n\t\t \n\t\t\t T Ristenpart \n\t\t \n\t\t 10.1145/2810103.2813677 \n\t\t Proceedings of the 22nd ACM SIGSAC Conference on Computer and Communications Security 1322-1333 \n\t\t the 22nd ACM SIGSAC Conference on Computer and Communications Security 1322-1333 Denver, Colorado, USA \n\t\t \n\t\t\t ACM \n\t\t\t 2015 \n\t\t \n\t \n\t Fredrikson, M., Jha, S. & Ristenpart, T. in Proceedings of the 22nd ACM SIGSAC Conference on Computer and Communications Security 1322-1333 (ACM, Denver, Colorado, USA, 2015)."
+    },
+    {
+      "title": "The secret sharer: measuring unintended neural network memorization and extracting secrets",
+      "authors": [
+        "N Carlini",
+        "C Liu",
+        "J Kos",
+        "\u00da Erlingsson",
+        "D Song"
+      ],
+      "year": 2018,
+      "doi": "10.1515/9781400863037.49",
+      "raw": "The secret sharer: measuring unintended neural network memorization and extracting secrets \n\t\t \n\t\t\t N Carlini \n\t\t \n\t\t \n\t\t\t C Liu \n\t\t \n\t\t \n\t\t\t J Kos \n\t\t \n\t\t \n\t\t\t \u00da Erlingsson \n\t\t \n\t\t \n\t\t\t D Song \n\t\t \n\t\t 10.1515/9781400863037.49 \n\t\t arXiv:1802.08232 \n\t\t \n\t\t\t 2018 \n\t\t \n\t \n\t Carlini, N., Liu, C., Kos, J., Erlingsson, \u00da. & Song, D. The secret sharer: measuring unintended neural network memorization and extracting secrets. arXiv:1802.08232 (2018)."
+    },
+    {
+      "title": "Proceedings of the 2017 ACM SIGSAC Conference on Computer and Communications Security",
+      "authors": [
+        "B Hitaj",
+        "G Ateniese",
+        "F Perez-Cruz"
+      ],
+      "year": 2017,
+      "doi": "10.1145/3133956.3134012",
+      "raw": "B Hitaj \n\t\t \n\t\t \n\t\t\t G Ateniese \n\t\t \n\t\t \n\t\t\t F Perez-Cruz \n\t\t \n\t\t 10.1145/3133956.3134012 \n\t\t Proceedings of the 2017 ACM SIGSAC Conference on Computer and Communications Security \n\t\t the 2017 ACM SIGSAC Conference on Computer and Communications Security Dallas, Texas, USA \n\t\t \n\t\t\t ACM \n\t\t\t 2017 \n\t\t\t \n\t\t \n\t \n\t Hitaj, B., Ateniese, G. & Perez-Cruz, F. in Proceedings of the 2017 ACM SIGSAC Conference on Computer and Communications Security 603-618 (ACM, Dallas, Texas, USA, 2017)."
+    },
+    {
+      "title": "The SRI24 multichannel atlas of normal adult human brain structure",
+      "authors": [
+        "T Rohlfing",
+        "N Zahr",
+        "E Sullivan",
+        "A Pfefferbaum"
+      ],
+      "year": 2010,
+      "doi": "10.1002/hbm.20906",
+      "journal": "Hum. Brain Mapp",
+      "volume": "31",
+      "raw": "The SRI24 multichannel atlas of normal adult human brain structure \n\t\t \n\t\t\t T Rohlfing \n\t\t \n\t\t \n\t\t\t N M Zahr \n\t\t \n\t\t \n\t\t\t E V Sullivan \n\t\t \n\t\t \n\t\t\t A Pfefferbaum \n\t\t \n\t\t 10.1002/hbm.20906 \n\t\t \n\t \n\t \n\t\t Hum. Brain Mapp \n\t\t \n\t\t\t 31 \n\t\t\t \n\t\t\t 2010 \n\t\t \n\t \n\t Rohlfing, T., Zahr, N. M., Sullivan, E. V. & Pfefferbaum, A. The SRI24 multichannel atlas of normal adult human brain structure. Hum. Brain Mapp. 31, 798-819. https ://doi.org/10.1002/hbm.20906 (2010)."
+    },
+    {
+      "title": "Measures of the amount of ecologic association between species",
+      "authors": [
+        "L Dice"
+      ],
+      "year": 1945,
+      "doi": "10.2307/1932409",
+      "journal": "Ecology",
+      "volume": "26",
+      "raw": "Measures of the amount of ecologic association between species \n\t\t \n\t\t\t L R Dice \n\t\t \n\t\t 10.2307/1932409 \n\t \n\t \n\t\t Ecology \n\t\t \n\t\t\t 26 \n\t\t\t \n\t\t\t 1945 \n\t\t \n\t \n\t Dice, L. R. Measures of the amount of ecologic association between species. Ecology 26, 297-302 (1945)."
+    },
+    {
+      "title": "International Conference on Medical Image Computing and Computer-Assisted Intervention",
+      "authors": [
+        "O Ronneberger",
+        "P Fischer",
+        "T Brox"
+      ],
+      "doi": "10.1007/978-3-319-24574-4_28",
+      "raw": "O Ronneberger \n\t\t \n\t\t \n\t\t\t P Fischer \n\t\t \n\t\t \n\t\t\t T Brox \n\t\t \n\t\t 10.1007/978-3-319-24574-4_28 \n\t\t International Conference on Medical Image Computing and Computer-Assisted Intervention \n\t\t \n\t\t\t Springer \n\t\t\t \n\t\t \n\t \n\t Ronneberger, O., Fischer, P. & Brox, T. in International Conference on Medical Image Computing and Computer-Assisted Interven- tion. 234-241 (Springer)."
+    },
+    {
+      "title": "a method for stochastic optimization",
+      "authors": [
+        "D Kingma",
+        "J Ba"
+      ],
+      "year": 2014,
+      "raw": "D P Kingma \n\t\t \n\t\t \n\t\t\t J Ba \n\t\t \n\t\t \n\t\t\t Adam \n\t\t \n\t\t arXiv:1412.6980 \n\t\t a method for stochastic optimization \n\t\t \n\t\t\t 2014 \n\t\t \n\t \n\t Kingma, D. P. & Ba, J. Adam: a method for stochastic optimization. arXiv:1412.6980 (2014)."
+    }
+  ],
+  "num_references": 36,
+  "figures": [
+    {
+      "caption": "Figure 1 .",
+      "description": "Figure 1. System architectures of collaborative learning approaches for multi-institutional collaborations. The current paradigm for multi-institutional collaborations, based on Centralized Data Sharing, is shown in (a), whereas in (b) we note the proposed paradigm, based on Federated Learning. Panels (c) and (d) offer schematics for alternative data-private collaborative learning approaches evaluated in this study, namely Institutional Incremental Learning, and Cyclic Institutional Incremental Learning, respectively."
+    },
+    {
+      "caption": "Figure 2 .",
+      "description": "Figure 2. Single Original Institution Validation Results. Single institution mean final model qualities (based on the Dice Similarity Coefficient 34 ) for the Original Institution group (y-axis) measured against all single institution held-out validation sets (x-axis) using multiple runs of five-fold collaborative cross validation. The Y axis represents models trained on a single institutional dataset, and the X axis represents the validation dataset of each independent institution (Local Validation Dataset). \"AVG\" indicates the average of each institution mean model performance over all institutions in the group other than itself, \"W-AVG\" denotes the same, but with a weighted average according to each institution's contribution to the validation set size. The diagonal entries indicate how well each institution's final models scored against their own validation set, and they are represented as the Single Institutional Model (SIM) results reported in Fig.3."
+    },
+    {
+      "caption": "Figure 3 .",
+      "description": "Figure 3. Model quality results from single institution training, CDS, FL, IIL, and CIIL. CDS, FL, CIIL mean model Dice against the Original Institution group single institution held-out validation data over multiple runs of collaborative cross validation, as well as the average of single institutional results under the same scheme (AVG SIM). The AVG 1-10 column provides the average performance of each collaboration method across single institution validation sets. For CIIL, 'best local' and 'random local' are two methods we introduce for final model selection during CIIL (More details are given in the \"Methods: Final Model Selection\" section ). Note that the color scale here differs from that used in Fig. 2."
+    },
+    {
+      "caption": "Figure 4 .",
+      "description": "Figure 4. Learning curves of collaborative learning methods on Original Institution data. Mean global validation Dice every epoch by collaborative learning method on the Original Institution group over multiple runs of collaborative cross validation. Confidence intervals are min, max. An epoch for DCS is defined as a single training pass over all of the centralized data. An epoch for FL is defined as a parallel training pass of every institutiuon over their training data, and an epoch during CIIL and IIL is defined as a single insitution training pass over its data."
+    },
+    {
+      "caption": "Received: 5",
+      "description": "March 2020; Accepted: 23 June 2020"
+    },
+    {
+      "type": "table",
+      "caption": "Table 1 .",
+      "description": "Model quality results from single institution training, CDS, and all data-private methods. Mean \u00b1 standard deviation of Dice for all collaboration methods on the Original Institution group under multiple runs of collaborative cross validation, as well as the mean of single institutional results under the same scheme. The LOO results are a weighted average over institutional LOO tests, weighted by test institution contribution. The '-' entries in the LOO column indicate single-institution tests, where the LOO method did not apply."
+    }
+  ],
+  "num_figures": 6,
+  "tables": [
+    {
+      "content": "Model BTest WashU MDACC Global val LOO Avg single inst 0.732 \u00b1 0.054 0.666 \u00b1 0.045 0.705 \u00b1 0.033 0.733 - CDS 0.863 \u00b1 0.008 0.782 \u00b1 0.009 0.828 \u00b1 0.007 0.862 \u00b1 0.007 0.84 \u00b1 0.006 FL 0.858 \u00b1 0.004 0.771 \u00b1 0.008 0.82 \u00b1 0.003 0.857 \u00b1 0.007 0.835 \u00b1 0.006 CIIL \"best local\" 0.855 \u00b1 0.007 0.775 \u00b1 0.013 0.82 \u00b1 0.009 0.853 \u00b1 0.006 0.831 \u00b1 0.012 CIIL \"rand. local\" 0.84 \u00b1 0.021 0.758 \u00b1 0.021 0.808 \u00b1 0.014 0.824 \u00b1 0.035 0.804 \u00b1 0.031 IIL \"smallest first\" 0.833 \u00b1 0.006 0.751 \u00b1 0.007 0.781 \u00b1 0.009 0.825 \u00b1 0.007 0.785 \u00b1 0.023 Institution 1 0.826 0.731 0.773 0.824 - Institution 2 0.614 0.572 0.651 0.628 - Institution 3 0.700 0.635 0.718 0.702 - Institution 4 0.751 0.680 0.701 0.747 - Institution 5 0.753 0.685 0.691 0.733 - Institution 6 0.708 0.621 0.668 0.709 - Institution 7 0.721 0.674 0.712 0.732 - Institution 8 0.755 0.687 0.720 0.755 - Institution 9 0.745 0.691 0.715 0.755 - Institution 10 0.751 0.687 0.700 0.745 -"
+    }
+  ],
+  "num_tables": 1,
+  "formulas": [
+    {
+      "text": "(1) Dice = 2\ufffdP \u2022 T\ufffd 1 + 1 \ufffdP\ufffd 1 + \ufffdT\ufffd 1 + 1"
+    }
+  ],
+  "num_formulas": 1,
+  "num_citations": 49,
+  "cited_references": [
+    "b32",
+    "b4",
+    "b14",
+    "b17",
+    "b20",
+    "b24",
+    "b26",
+    "b28",
+    "b13",
+    "b27",
+    "b33",
+    "b23",
+    "b29",
+    "b30",
+    "b35",
+    "b31",
+    "b3",
+    "b5",
+    "b34",
+    "b25",
+    "b0",
+    "b21"
+  ],
+  "notes": [
+    "[raw_affiliation] 1  Intel Corporation , 2200 Mission College Blvd. , Santa Clara , CA 95052 , USA.",
+    "[raw_affiliation] 1  Intel Corporation , 2200 Mission College Blvd. , Santa Clara , CA 95052 , USA.",
+    "[raw_affiliation] 1  Intel Corporation , 2200 Mission College Blvd. , Santa Clara , CA 95052 , USA.",
+    "[raw_affiliation] 1  Intel Corporation , 2200 Mission College Blvd. , Santa Clara , CA 95052 , USA.",
+    "[raw_affiliation] 2  Center for Biomedical Image Computing and Analytics (CBICA) , University of Pennsylvania , Richards Medical Research Laboratories , Floor 7 , 3700 Hamilton Walk , Philadelphia , PA 19104 , USA.",
+    "[raw_affiliation] 3  Department of Radiology , Perelman School of Medicine , University of Pennsylvania , Richards Medical Research Laboratories , Floor 7 , 3700 Hamilton Walk , Philadelphia , PA 19104 , USA.",
+    "[raw_affiliation] 4  Department of Diagnostic Radiology , The University of Texas MD Anderson Cancer Center , 1400 Pressler St. , Houston , TX 77030 , USA.",
+    "[raw_affiliation] 5  Department of Cancer Systems Imaging , The University of Texas MD Anderson Cancer Center , 1881 East Rd , 3SCRB4 , Houston , TX 77054 , USA.",
+    "[raw_affiliation] 6  Department of Radiology , Washington University School of Medicine , St. Louis , MO 63110 , USA.",
+    "[raw_affiliation] 1  Intel Corporation , 2200 Mission College Blvd. , Santa Clara , CA 95052 , USA.",
+    "[raw_affiliation] 6  Department of Radiology , Washington University School of Medicine , St. Louis , MO 63110 , USA.",
+    "[raw_affiliation] 4  Department of Diagnostic Radiology , The University of Texas MD Anderson Cancer Center , 1400 Pressler St. , Houston , TX 77030 , USA.",
+    "[raw_affiliation] 5  Department of Cancer Systems Imaging , The University of Texas MD Anderson Cancer Center , 1881 East Rd , 3SCRB4 , Houston , TX 77054 , USA.",
+    "[raw_affiliation] 7  Hillman Cancer Center , University of Pittsburgh Medical Center , Pittsburgh , PA 15232 , USA.",
+    "[raw_affiliation] 8  Department of Radiology , University of Pittsburgh , Pittsburgh , PA 15213 , USA.",
+    "[raw_affiliation] 2  Center for Biomedical Image Computing and Analytics (CBICA) , University of Pennsylvania , Richards Medical Research Laboratories , Floor 7 , 3700 Hamilton Walk , Philadelphia , PA 19104 , USA.",
+    "[raw_affiliation] 3  Department of Radiology , Perelman School of Medicine , University of Pennsylvania , Richards Medical Research Laboratories , Floor 7 , 3700 Hamilton Walk , Philadelphia , PA 19104 , USA.",
+    "[raw_affiliation] 9  Department of Pathology and Laboratory Medicine , Perelman School of Medicine , University of Pennsylvania , Richards Medical Research Laboratories , Floor 7 , 3700 Hamilton Walk , Philadelphia , PA 19104 , USA.",
+    "[raw_affiliation] MDACC University of Texas MD Anderson Cancer Center WashU Washington University School of Medicine in St",
+    "[raw_affiliation] . Louis CNN",
+    "Scientific RepoRtS | (2020) 10:12598 | https://doi.org/10.1038/s41598-020-69250-1",
+    "Vol:.(1234567890) Scientific RepoRtS | (2020) 10:12598 | https://doi.org/10.1038/s41598-020-69250-1",
+    "Vol.:(0123456789) Scientific RepoRtS | (2020) 10:12598 | https://doi.org/10.1038/s41598-020-69250-1",
+    "[raw_reference] Zech, J. R. et al. Variable generalization performance of a deep learning model to detect pneumonia in chest radiographs: a cross- sectional study. PLOS Med. 15, e1002683. https ://doi.org/10.1371/journ al.pmed.10026 83 (2018).",
+    "[raw_reference] Clark, K. et al. The cancer imaging archive (TCIA): maintaining and operating a public information repository. J. Digit. Imaging 26, 1045-1057. https ://doi.org/10.1007/s1027 8-013-9622-7 (2013).",
+    "[raw_reference] Davatzikos, C. et al. AI-based prognostic imaging biomarkers for precision neurooncology: the ReSPOND consortium. Neuro Oncol. https ://doi.org/10.1093/neuon c/noaa0 45 (2020).",
+    "[raw_reference] Menze, B. H. et al. The multimodal brain tumor image segmentation benchmark (BRATS). IEEE Trans. Med. Imaging 34, 1993- 2024. https ://doi.org/10.1109/TMI.2014.23776 94 (2015).",
+    "[raw_reference] Bakas, S. et al. Advancing the cancer genome atlas glioma MRI collections with expert segmentation labels and radiomic features. Nat. Sci. Data 4, 170117. https ://doi.org/10.1038/sdata .2017.117 (2017).",
+    "[raw_reference] Bakas S. et al. Identifying the best machine learning algorithms for brain tumor segmentation, progression assessment, and overall survival prediction in the BRATS challenge. arXiv:1811.02629 (2018).",
+    "[raw_reference] Bilic P. et al. The liver tumor segmentation benchmark (LiTS). arXiv:1901.04056. https ://ui.adsab s.harva rd.edu/abs/2019a rXiv1 90104 056B (2019).",
+    "[raw_reference] Heller N. et al. The challenge data: 300 kidney tumor cases with clinical context, CT semantic segmentations, and surgical outcomes. arXiv:1904.00445. https ://ui.adsab s.harva rd.edu/abs/2019a rXiv1 90400 445H (2019).",
+    "[raw_reference] Simpson A. L. et al. A large annotated medical image dataset for the development and evaluation of segmentation algorithms. https ://ui.adsab s.harva rd.edu/abs/2019a rXiv1 90209 063S (2019).",
+    "[raw_reference] Borovec, J. et al. ANHIR: automatic non-rigid histological image registration challenge. IEEE Trans. Med. Imaging https ://doi. org/10.1109/TMI.2020.29863 31 (2020).",
+    "[raw_reference] Consortium, T. G. Glioma through the looking GLASS: molecular evolution of diffuse gliomas and the Glioma Longitudinal Analysis Consortium. Neuro-Oncology 20, 873-884. https ://doi.org/10.1093/neuon c/noy02 0 (2018).",
+    "[raw_reference] Tresp, V. et al. Going digital: a survey on digitalization and large-scale data analytics in healthcare. Proc. IEEE 104, 2180-2206. https ://doi.org/10.1109/JPROC .2016.26150 52 (2016).",
+    "[raw_reference] Chen, M. et al. Privacy protection and intrusion avoidance for cloudlet-based medical data sharing. IEEE Trans. Cloud Comput. https ://doi.org/10.1109/TCC.2016.26173 82 (2016).",
+    "[raw_reference] Chang, K. et al. Distributed deep learning networks among institutions for medical imaging. J. Am. Med. Inform. Assoc. 25, 945-954. https ://doi.org/10.1093/jamia /ocy01 7 (2018).",
+    "[raw_reference] Sheller, M. J., Reina, G. A., Edwards, B., Martin, J. & Bakas, S. Multi-institutional deep learning modeling without sharing patient data: A feasibility study on brain tumor segmentation. In Brainles 2018 -Springer Lecture Notes in Computer Science 11383, 92-104. https ://doi.org/10.1007/978-3-030-11723 -8_9 (2018).",
+    "[raw_reference] McMahan, B., Moore, E., Ramage, D., Hampson, S. & y Arcas, B. A. Communication-efficient learning of deep networks from decentralized data, in Artificial Intelligence and Statistics. 1273-1282 (2017).",
+    "[raw_reference] McMahan, B. & Ramage, D. Federated learning: collaborative machine learning without centralized training Data. Google AI Blog (2017).",
+    "[raw_reference] French, R. M. Catastrophic forgetting in connectionist networks. Trends Cogn. Sci. 3, 128-135. https ://doi.org/10.1016/S1364 -6613(99)01294 -2 (1999).",
+    "[raw_reference] Zhao Y. et al. Federated learning with non-iid data. arXiv:1806.00582 (2018).",
+    "[raw_reference] McCarthy, A. M. et al. Racial differences in quantitative measures of area and volumetric breast density. JNCI J. Natl. Cancer Inst. https ://doi.org/10.1093/jnci/djw10 4 (2016).",
+    "KLXWJ J",
+    "[raw_reference] Bakas, S. et al. Segmentation labels and radiomic features for the pre-operative scans of the TCGA-GBM collection. The Cancer Imaging Archive. https ://doi.org/10.7937/K9/TCIA.2017.KLXWJ J1Q (2017).",
+    "[raw_reference] Bakas, S. et al. Segmentation labels and radiomic features for the pre-operative scans of the TCGA-LGG collection. The Cancer Imaging Archive. https ://doi.org/10.7937/K9/TCIA.2017.GJQ7R 0EF (2017).",
+    "[raw_reference] Li, W. et al. Privacy-Preserving Federated Brain Tumour Segmentation, In MLMI 2019 -Springer Lecture Notes in Computer Science 11861, 133-141. https ://doi.org/10.1007/978-3-030-32692 -0_16 (2019).",
+    "1st edn",
+    "[raw_reference] Voigt, P. & Von dem Bussche, A. The eu general data protection regulation (gdpr). In A Practical Guide, 1st edn (Springer, Cham, 2017).",
+    "[raw_reference] Annas, G. J. HIPAA regulations-a new era of medical-record privacy?. N. Engl. J. Med. 348, 1486-1490 (2003).",
+    "[raw_reference] Taichman, D. B. et al. Sharing clinical trial data-a proposal from the international committee of medical journal editors. N. Engl. J. Med. 374, 384-386. https ://doi.org/10.1056/NEJMe 15151 72 (2016).",
+    "[raw_reference] Kiley, R., Peatfield, T., Hansen, J. & Reddington, F. Data sharing from clinical trials-a research funder's perspective. N. Engl. J. Med. 377, 1990-1992. https ://doi.org/10.1056/NEJMs b1708 278 (2017).",
+    "[raw_reference] Li, Z., Roberts, K., Jiang, X. & Long, Q. Distributed learning from multiple EHR databases: contextual embedding models for medical events. J. Biomed. Inform. 92, 103138 (2019).",
+    "[raw_reference] Brisimi, T. S. et al. Federated learning of predictive models from federated electronic health records. Int. J. Med. Inform. 112, 59-67 (2018).",
+    "[raw_reference] Fredrikson, M., Jha, S. & Ristenpart, T. in Proceedings of the 22nd ACM SIGSAC Conference on Computer and Communications Security 1322-1333 (ACM, Denver, Colorado, USA, 2015).",
+    "[raw_reference] Carlini, N., Liu, C., Kos, J., Erlingsson, \u00da. & Song, D. The secret sharer: measuring unintended neural network memorization and extracting secrets. arXiv:1802.08232 (2018).",
+    "[raw_reference] Hitaj, B., Ateniese, G. & Perez-Cruz, F. in Proceedings of the 2017 ACM SIGSAC Conference on Computer and Communications Security 603-618 (ACM, Dallas, Texas, USA, 2017).",
+    "[raw_reference] Rohlfing, T., Zahr, N. M., Sullivan, E. V. & Pfefferbaum, A. The SRI24 multichannel atlas of normal adult human brain structure. Hum. Brain Mapp. 31, 798-819. https ://doi.org/10.1002/hbm.20906 (2010).",
+    "[raw_reference] Dice, L. R. Measures of the amount of ecologic association between species. Ecology 26, 297-302 (1945).",
+    "[raw_reference] Ronneberger, O., Fischer, P. & Brox, T. in International Conference on Medical Image Computing and Computer-Assisted Interven- tion. 234-241 (Springer).",
+    "[raw_reference] Kingma, D. P. & Ba, J. Adam: a method for stochastic optimization. arXiv:1412.6980 (2014)."
+  ],
+  "processing_software": {
+    "GROBID": "0.8.2"
+  },
+  "journal": "Scientific Reports",
+  "volume": "10",
+  "issue": "1",
+  "pages": "12598",
+  "zotero_recovery": {
+    "fields_recovered": [
+      "journal"
+    ],
+    "timestamp": "2025-09-01T11:08:19.507154",
+    "zotero_item_type": "journalArticle"
+  }
+}

@@ -1,0 +1,681 @@
+{
+  "paper_id": "VUVTK9RQ",
+  "title": "Predicting Dropouts From an Electronic Health Platform for Lifestyle Interventions: Analysis of Methods and Predictors",
+  "abstract": "Background: The increasing prevalence and economic impact of chronic diseases challenge health care systems globally. Digital solutions can potentially improve efficiency and quality of care, but these initiatives struggle with nonusage attrition. Machine learning methods have been proven to predict dropouts in other settings but lack implementation in health care. Objective: This study aimed to gain insight into the causes of attrition for patients in an electronic health (eHealth) intervention for chronic lifestyle diseases and evaluate if attrition can be predicted and consequently prevented. We aimed to build predictive models that can identify patients in a digital lifestyle intervention at high risk of dropout by analyzing several predictor variables applied in different models and to further assess the possibilities and impact of implementing such models into an eHealth platform. Methods: Data from 2684 patients using an eHealth platform were iteratively analyzed using logistic regression, decision trees, and random forest models. The dataset was split into a 79.99% (2147/2684) training and cross-validation set and a 20.0% (537/2684) holdout test set. Trends in activity patterns were analyzed to assess engagement over time. Development and implementation were performed iteratively with health coaches. Results: Patients in the test dataset were classified as dropouts with an 89% precision using a random forest model and 11 predictor variables. The most significant predictors were the provider of the intervention, 2 weeks inactivity, and the number of advices received from the health coach. Engagement in the platform dropped significantly leading up to the time of dropout. Conclusions: Dropouts from eHealth lifestyle interventions can be predicted using various data mining methods. This can support health coaches in preventing attrition by receiving proactive warnings. The best performing predictive model was found to be the random forest.",
+  "year": 2008,
+  "date": "2008",
+  "authors": [
+    {
+      "name": "Daniel Hansen Pedersen",
+      "affiliation": {
+        "organization": "Liva Healthcare A/S",
+        "institution": "Liva Healthcare A/S",
+        "address": "Copenhagen, Denmark"
+      }
+    },
+    {
+      "name": "Marjan Mansourvar",
+      "affiliation": {
+        "organization": "Centre of Health Informatics and Technology",
+        "department": "Centre of Health Informatics and Technology",
+        "institution": "The Maersk Mc-Kinney Moller Institute",
+        "address": "Odense, Denmark"
+      }
+    },
+    {
+      "name": "Camilla Sorts\u00f8",
+      "affiliation": {
+        "organization": "Liva Healthcare A/S",
+        "institution": "Liva Healthcare A/S",
+        "address": "Copenhagen, Denmark"
+      }
+    },
+    {
+      "name": "Thomas Schmidt",
+      "affiliation": {
+        "organization": "Centre of Health Informatics and Technology",
+        "department": "Centre of Health Informatics and Technology",
+        "institution": "The Maersk Mc-Kinney Moller Institute",
+        "address": "Odense, Denmark"
+      }
+    },
+    {
+      "name": "Msc Liva"
+    },
+    {
+      "affiliation": {
+        "organization": "Healthcare A/S Danneskiold-Sams\u00f8es",
+        "institution": "Healthcare A/S Danneskiold-Sams\u00f8es",
+        "address": "All\u00e9 41, 1434, Copenhagen, Denmark"
+      }
+    }
+  ],
+  "doi": "10.2196/13617",
+  "md5": "FDE53938C0E7277FB8C0ADBE8155AD24",
+  "pmid": "31486409",
+  "publication": {
+    "journal": "J Med Internet Res",
+    "journal_inferred": true
+  },
+  "keywords": [
+    "eHealth",
+    "patient dropouts",
+    "adherence",
+    "law of attrition",
+    "digital health",
+    "chronic disease",
+    "data mining",
+    "logistic regression",
+    "decision trees"
+  ],
+  "funding": [
+    "",
+    "Acknowledgments DHP analyzed the data, created and evaluated the models, and drafted the paper. MM, TS, and CS supervised the data analyses. MM, TS, and CS gave inputs on several drafts for the manuscript. All authors read, critically revised, and approved the final manuscript. Liva Healthcare  provided the data and allocated resources to conduct and assist in the research and creation of this paper. The publishing of this paper was funded by the  University of Southern Denmark, Health Informatics ."
+  ],
+  "sections": [
+    {
+      "title": "Introduction"
+    },
+    {
+      "title": "Background",
+      "text": "Chronic diseases such as diabetes, heart disease, chronic obstructive pulmonary disease, and cancer are collectively responsible for more than two-thirds of all deaths and 75% of the health care budget spending in Europe  [1] . The increasing prevalence and enormous economic impact of chronic diseases are a critical threat to health care systems. This necessitates new treatments that can effectively handle more people at a lower resource-to-outcome ratio. The application of mobile computing and communication technology in health care (denoted as electronic health  [eHealth] ) has introduced new possibilities in terms of improving efficiency and quality of care  [2] . Despite several studies showing promising results in terms of outcomes such as weight loss  [3]  and behavior change  [4] , the evidence for long-term effectiveness, and especially how to retain patients in digital interventions, remains limited  [5, 6, 7] .\n\nIn any eHealth program, adherence is a key challenge, as a substantial proportion of patients stop using the application and thus drop out of the intervention program before its completion, referred to as nonusage attrition, or simply a dropout  [8] . Recently, a dropout rate of 72% was reported in an eHealth intervention for adults with type 2 diabetes  [9] , and more generally, dropout rates up to as high as 83% are reported  [10, 11] . Studies have sought to identify predictors of dropout, but a consistent set of predictors has not yet been identified  [12] . Previous studies have found engagement and participation in an online forum  [13] , depressive mood  [14] , age, gender, vocational education and employment status  [15] , disease severity, treatment length, and chronicity  [11]  to be related to attrition. Prediction of dropouts has been evaluated in multiple studies, in which many often have been offset in an educational institution setting where high dropout rates are also a great concern. Survival analysis  [16] , logistic regression, random forest, and other machine learning algorithms  [17]  are commonly applied to address this problem, using demographics and other characteristics to predict dropout. The documented high attrition rates from eHealth interventions make it an attractive case to apply similar methods to predict patients at high risk of dropping out. Furthermore, the literature on data mining and predictive methods in relation to attrition in eHealth settings is very limited, suggesting a lack of implementation and integration of these methods in the eHealth domain."
+    },
+    {
+      "title": "Objectives",
+      "text": "The aim of our study was to assess the variables and methods for predicting dropouts of patients with chronic diseases in a digital lifestyle intervention and review their applicability for implementation in an eHealth platform. We utilized self-reported data including patient-reported outcome measures (PROMs) submitted by chronic lifestyle disease patients in an eHealth intervention provided by the Liva Healthcare (LIVA) platform (Textbox 1). To assess the research question of how self-reported data can be applied to address the challenge of attrition in an eHealth setting, we evaluated the factors associated with dropout and applied logistic regression, decision trees, and random forest. We proposed how these models can be implemented to visualize the results as predictive warnings to reduce dropouts. In this way, the data are used to improve the eHealth intervention by supporting health professionals and enabling them to re-engage patients at high risk of attrition. As defined previously, we applied a broad definition of eHealth given the scope of the intervention under study that is targeting a wide range of patients. However, the challenge of attrition is relevant for most eHealth interventions for lifestyle change. LIVA is a digital platform designed to facilitate lifestyle changes for patients with chronic diseases. The platform is used by Danish municipalities. Patients have an initial goal-setting meeting with their coach and are introduced to the LIVA app that allows setting and registering health goals (eg, steps, weight, exercise, or diet), monitoring progress, dialog with the health coach by receiving advice and sending messages, and participation in an online forum. Health coaches access the platform through an internet browser and are able to proactively advise patients on a weekly-to-monthly basis based on their patients' input in the platform. Personal data and health information are collected from the patients during the 3 to 12-month intervention program to provide the treatment service and for research purposes."
+    },
+    {
+      "title": "Methods"
+    },
+    {
+      "title": "Ethics and Approvals",
+      "text": "Only pseudonymized data for which patients had granted their consent to make them available for research purposes were used in this study. Consent was obtained explicitly in the sign-up flow before the patient's use of the service. Liva Healthcare processes the data as the data processor, using the means and purpose defined by the data controllers, that is, Danish municipalities."
+    },
+    {
+      "title": "Data Collection and Selection",
+      "text": "The study was retrospective, applying data collected by Liva Healthcare from June 7, 2016, to March 21, 2018. For active users, the anchor time point for features was the date of data collection and for dropouts, we went back 4 weeks before the date of dropout (see next section). Data were extracted from a Microsoft SQL database and further processed in Alteryx. The dataset contains several unvalidated PROMs and sociodemographic information entered by the health coaches. Consequently, values for weight loss and body mass index (BMI) were filtered to remove extreme outliers and unrealistic values (weight differences of >3.5 kg/week on average for weight registrations over 30 days or more and BMI >100 kg/m 2 ). The dataset was cleansed to only include patients who were referred to the platform by their doctor or municipality and showed commitment to the intervention by being properly set up in an advisory, received 3 or more advices from their coach, and had been active in the platform for at least 14 days (N=2684). A baseline of 14 days was selected as patients receive weekly advice in the beginning and should therefore receive their third advice on the fourteenth day of the program. Patients with less than 3 advices and 14 days of participation in the program were removed from the dataset as they had either not yet shown commitment to the intervention, signed up by a mistake, or merely signed up within the last 14 days of data collection. Thus, it is not known if these patients dropped out or never meant to use the service."
+    },
+    {
+      "title": "Definition of Dropout",
+      "text": "Generally, a large variation in the reporting and measurement of adherence is seen in previous literature  [18] . For the objective of this study, it was relevant to look at dropouts as patients who commit to the intervention and thenceforward discontinue using the platform, consequently dropping out. We proposed a definition of dropout that aligns with Eysenbach's characterization from 2005  [8]  and other operationalizations  [11] . Dropout is hence defined as 4 consecutive weeks of not performing any actions,for example,registrations or messages, in the platform. The threshold for a dropout after 4 weeks of inactivity was defined based on the insight that less than 5.0% (117/2684) of the patients become re-engaged in the program after 4 weeks of inactivity. For 79.2% (2126/2684) of the patients, 2 weeks of inactivity equals dropout, and 84.61% (2271/2684) of them drop out after 3 weeks of inactivity. Furthermore, dropouts are limited to the active coaching period, which is a maximum of 12 months. This might be lower for some providers, for example, 3 or 6 months. Patients who are still active after 12 months will move to a retention phase, and they will thus not be considered as dropouts if they discontinue the intervention."
+    },
+    {
+      "title": "Analysis of Dataset",
+      "text": "To gain insight into the population and understand the factors associated with nonusage attrition, we performed several analyses of the users' activity patterns by illustrating activity over time in the program for several subgroups of the population. We defined a formula for the current activity level in percentage based on these insights. Some descriptive user statistics of the population and analysis of predictors in t test and simple logistic regression models are provided to gain additional insights."
+    },
+    {
+      "title": "Data Mining and Model Evaluation",
+      "text": "The Cross-Industry Standard Process for Data Mining framework  [19]  was applied as an iterative data mining approach. This allowed for several iterations of the models to be developed as the knowledge of the population increased based on a better understanding for the dataset and end users (health coaches) who were able to provide feedback during each iteration.\n\nInspired by studies performed in an educational setting, logistic regression, decision trees, and random forest methods were applied to classify participants in the intervention into either dropouts or nondropouts based on specific characteristics.\n\nWe tested 11 variables that were well represented in the dataset as potential predictors of dropout: Gender, age group, provider of the intervention, period of intervention, BMI at the beginning of the intervention, weight loss, number of advices received, number of messages sent, total number of weeks with inactivity, and inactivity in the last 1 or 2 consecutive weeks. For weight loss, we required registrations over at least 30 days to be included. Less than 20% of the patients who registered had provided their educational status and zip code, because of the low quantity, these variables were not applied.\n\nThe variables in the final models for logistic regression were selected based on mixed backward and forward selection using the Akaike information criterion  [20] . For decision trees and random forest, variables were selected inherently by the hyperparameters. The minimum number of records allowed for a split and a terminal node was set to 50 and 25, respectively.\n\nThe maximum allowed depth in the final tree was set to 10 to avoid overfitting. The trees were pruned with a complexity parameter set to 0.01 to reduce the number of branches and the relative error.\n\nTo assess the quality of the 3 different models and to compare the predictive performance, the dataset was split into an 80% training and cross-validation set and a 20% test set. Owing to the relatively small size of the dataset, the training and cross-validation were performed using stratified 10-fold cross-validation. Stratification was applied on the target variable to ensure each fold was a good representative of the overall dataset distribution to reduce the bias and variance of the models. The best performing method was then applied to the 20% holdout test set that had never been seen by the model. The quality of the models was assessed based on the area under the curve (AUC) on the receiver operating characteristic (ROC) curve, the precision, and the accuracy. The goal was to have a high precision as the false negatives were the most critical to reduce in this scenario, that is, patients at high risk for dropout not identified as a potential dropout."
+    },
+    {
+      "title": "Adoption and Implementation",
+      "text": "The findings from this study have been diffused among the health coaches using the Liva Healthcare platform and prototype models have been implemented into the platform. Interviews were conducted with health coaches to adjust the models in terms of when and how warnings should be present. Feedback was continuously collected, and data were analyzed to assess dropout rate following implementation."
+    },
+    {
+      "title": "Results"
+    },
+    {
+      "title": "User Statistics",
+      "text": "The final dataset contained 2684 patients registered in the LIVA database. The population was characterized by a greater proportion of females (1943/2684, 72.39%) compared with males (741/2684, 27.6%). The majority of the population was in the age range of 40 to 59 years, and the average lifetime on the platform was 108 days. Overweight patients represent the largest treatment group, but patients might enter the program with one or more of 7 other diseases and possible comorbidities (other secondary disease). Additional characteristics of the population are provided in Table  1  (advice received and messages sent refer to the dialog between patient and health coach).\n\nThe intervention status for the patients was that 53.99% (1449/2684) had dropped out, 39.43% (1060/2684) were currently in active advisory, 3.7% (100/2684) had completed the intervention (finished intervention after >12 months), and 3% (75/2684) were in the retention phase (>12 months in program). More than 1 in 4 dropouts had occurred in the first month of the program (between day 14 and 31, n=388, 26.8% of dropouts; Table  2 )."
+    },
+    {
+      "title": "Preliminary Analysis of Predictors",
+      "text": "In total, a larger proportion of females (1069/1943, 55.02%) had dropped out compared with males (380/741, 51.3%), and for age groups, the highest dropout rate was found among the oldest (above 75 years; Table  3 ).\n\nCharacteristics for the patients in active advisory and the dropouts were assessed for the predictor variables of interest.\n\nGender was found to be significant in a Welch 2-sample t test (P=.01). Dropouts had a slightly lower starting BMI than the active patients (P=.01). No major differences were seen in average age among the 2 groups (P=.60) nor average weight loss (P=.88). Large variations in the risk for dropout were found among the different providers of the intervention, varying from 7.3% to 87.0% in a simple logistic regression model."
+    },
+    {
+      "title": "Activity Analysis",
+      "text": "The largest proportion of active patients was in months 2 to 4 in the program and the lowest proportion was found at the beginning of the program in month 1 (Figure  1 ). The odds for a patient dropping out in the first month of the intervention were 4.35 times higher than for dropping out past month 8.\n\nWe analyzed if trends in the patients' activity patterns could identify attrition by analyzing patient engagement in the platform over time. Evidently, patients who drop out have a very low level of activity (defined as a registration, forum posting, or messaging the coach) in the last weeks of their time on the platform. Overall, 71.77% (1040/1449) of the dropouts decreased their activity level by more than 50% in their last 2 weeks. However, there is also an expected decrease in activity that will occur over time, and individuals will have different trend lines for patterns in activity (Figure  2 ). The first week in the program (week 0) was found to have a significantly higher amount of registrations than the remaining weeks, on average 23.8 registrations, and was removed from the analysis to prevent skewing the linear regression line. A variable for the patient's current activity level defined in percentage of the baseline activity level was proposed (Equation  1 ). The variable accounts for (1) the patient's average activity in the last 2 weeks, (2) the patient's baseline activity (defined as the average activity in weeks 1-4 of the program), and (3) the regression line for the average activity levels over time (Figure  2 ). The average decrease in activities was found to be 0.094 per week. Patients with zero activity in the last 2 weeks will per default have a current activity level of 0%.\n\nCurrent activity level (%) = Average activity last two weeks / (Baseline activity -(0.094 \u00d7 weeks in program))  (1)  Fewer women tended to be active at the same number of inactive weeks compared with males, up to 40 weeks of inactivity, at which point of time, a very small percentage were still active in the program at the time of the data collection (Figure  3 ). For age groups, the oldest and the youngest age groups were the least active (Figure  4 ). The oldest group was also found to have the highest rate of dropouts (Table  3 ). Finally, introducing a variable that accounts for inactivity in the last 2 weeks of the program in any of the proposed models resulted in it becoming incomparably significant to any of the models' other variables, except for provider of intervention (partnerName; see Figure  5 ). Hence, inactivity in the platform should be a critical warning for the health coach. A significant decrease in activity that deviates from the overall pattern might also be a critical sign for attrition and consequently an attention mark for the health coach."
+    },
+    {
+      "title": "Model Selection for Dropout Prediction",
+      "text": "The random forest achieved an AUC of 0.92 on the ROC chart and a Gini score of 0.84 on the stratified cross-validated training data, making it the best-performing model (Figure  6 ) compared with decision trees and logistic regression (Table  4 ). When applied to the holdout test data, the AUC increases by 0.01, and the model is thus not suspect to overfitting.\n\nThe precision of the random forest model was 0.89, with an overall accuracy of 0.86. This means that 89% of all dropouts were classified correctly as dropouts and 11% were mistakenly classified as active patients. This corresponds with 88.7% (253/285) dropouts in the holdout test data being classified correctly as dropouts.\n\nThe outlined models for inactivity, activity level, and dropout risk have been implemented into the LIVA platform for the health coaches to be notified of attention markers related to patients that are at high risk of dropping out. The threshold values for activity levels have been set to highlight patients at medium (current activity level below 60% of expected) and high risk (below 40%), visualized with yellow and red warnings, respectively, for the health coach (Figure  7 ). The random forest model for dropout will show a yellow warning as the risk increases to above 60% and red if the risk is above 75%. The thresholds were selected based on an assessment of the patient distributions in collaboration with the health coaches. Table 4. Area under the curve (AUC) and Gini index for the receiver operating characteristic on the 3 applied best performing models. Gini AUC Model 0.68 0.84 Logistic regression 0.64 0.82 Decision trees"
+    },
+    {
+      "title": "Discussion"
+    },
+    {
+      "title": "Principal Findings",
+      "text": "This study applies real-world data from chronic lifestyle disease patients enrolled in an eHealth lifestyle intervention in municipal settings in Denmark. The findings show promising results in terms of applying data mining methods for the prediction of dropouts in eHealth interventions with high precision. To summarize, the following 4 key takeaway points were made clear in this study: 1. Patients are at the highest risk of dropout at the beginning of the intervention. Most dropouts occurred in the first part of the intervention, and evidence from other studies support the finding that when participants dropout, they do so early. For instance, 65% of dropouts from a diet and physical activity short message service text message program occurred within the first 2 weeks [21]. 2 . Attrition is not an abrupt process but something that happens over time. We found that patients reduce their activity in the platform significantly in the weeks leading up to their dropout. Therefore, being aware of abnormal decreases in activity should be a good indicator for health coaches to initiate re-engagement. 3 . Dropout is primarily related to the program provider, outline of the intervention, activity in the platform (engagement), and, to a lower degree, the demographic variables available in this study. Multiple other studies have found attrition to be related to demographic variables  [22, 15] , but these were not available in this dataset. 4 . Predicting activity level and risk of dropout can enable personalized advices and goal settings. Our findings strongly suggest that dropouts can be predicted, and personalized coaching can be supported by several parameters. However, there are some limitations to the study that will be discussed in the following section."
+    },
+    {
+      "title": "Limitations",
+      "text": "The definition of dropout was based on patients not using the platform for 4 consecutive weeks. However, this might also include patients who stop using the platform because of having achieved their desired goal or goals, for example, behavior change or weight loss, or because the advisor has terminated the patient for other reasons. Termination reasons have been implemented in the platform following this study. In addition, the length of the intervention program offered by the provider was varying and unknown. This influences the likelihood of patients being incorrectly labelled as dropouts and should therefore be taken into consideration for the definition of the matter.\n\nDropouts in the first 14 days were excluded from this study because of large uncertainties in the reason for dropout. As this group of patients was very diverse and the amount of data were primarily limited to their sign-up registration, it provided a restricted dataset for analysis. This suggests a possibility for a future study to look into these very early dropouts.\n\nThe reliability of the findings is limited by some of the applied data (weight loss and BMI) being PROMs and most of the variables being self-reported by the patients. The data are, to some degree, validated by the health coaches, and extreme outliers are automatically marked as unrealistic by the Liva Healthcare system, but it has not been clinically verified.\n\nThe activity analysis was based on a simple linear regression despite the pattern being shaped as a higher-order polynomial.\n\nA simple approach was sufficient for the focus of this study; however, further investigations into activity patterns showed large variations in individual patterns. For future studies, time series analysis on the activity patterns of a larger population could potentially be the basis for interesting risk models that could analyze activity levels for distinct patient types."
+    },
+    {
+      "title": "Adoption and Implementation",
+      "text": "The insights obtained from our work are not sufficient to maintain engaged patients on the platform. The knowledge must be put into action to have an effect on the attrition rates. The discoveries must be diffused among the health coaches using the eHealth platform but should also be integrated into the system to support them to the highest degree possible.\n\nThe finding that dropout is not an abrupt process but something that happens over time underlines the importance of the health coaches being warned of dropout risk to actively attempt a prevention of attrition. From a practical computational perspective, a random forest is a computational and expensive model, and depending on the nature of the intervention, the frequency of registrations by the patients, and the technical setup, it might not be applicable. Nevertheless, if the model is not expected to change frequently, then calculations can be performed, for example, every night, and can be used as the daily baseline for dropout risk in the advisors' overview. Otherwise, more simple models such as logistic regression might be preferred.\n\nPrevious studies have shown adherence to be closely related to the level of engagement in the platform, that is, by participating in an online forum  [13] . Socioeconomic status, occupation, and educational status have shown to be related to dropout  [15] , but this type of data have not been available in sufficient quantities for this research. Diagnosis and condition should also be included in future models. Utilizing these data types would provide important information for the models and likely increase the accuracy and possibly make distinct patient profiles clear. Thus, this added data could be used to further enhance and individualize the models.\n\nThe provider of the intervention was found to be the most significant predictor of dropout, together with inactivity on the platform. This indicates that efforts toward preventing attrition should be targeted at providers to the same degree as patients.\n\nProvider-specific attrition models may perform even better than the generic approach proposed in this work. Further insights into the providers and their strategies are required.\n\nFinally, to better validate the warnings that have been implemented into the platform, it requires a randomized setup or a less diverse population that is spread across multiple providers with varying programs. However, initial feedback from the health coaches is very positive, and the dropout rate for patients that have entered into the program after the date of data collection for this study is at only 19.3% (N=6402) compared with 54.0% for the population included in this study."
+    },
+    {
+      "title": "Perspectives",
+      "text": "This study contributes to the literature on adherence and nonusage attrition in eHealth by analyzing activity patterns, assessing various methods and predictor variables for predicting dropout in a chronic patient lifestyle intervention, and proposing some perspectives for implementation. We expect future research and development in eHealth to apply data mining methods in the process of tailoring information to patients in a higher degree to achieve personalized interventions as the field of digital health continues to evolve. Ongoing research is currently assessing how lifestyle interventions can be tailored to the individual patient  [23] , and as artificial intelligence is gaining ground within health care, we expect to see interventions, treatment, and guidance being selected based on the most suited for the specific individual patient profile in the future."
+    },
+    {
+      "title": "Conclusions",
+      "text": "It is possible to apply methods from data mining in the context of predicting dropouts in an eHealth setting. Stratified cross-validation shows that patients at high risk of dropout can be predicted with 89% precision using a random forest model. Computational simpler models, such as logistic regression, are applicable as well but might produce less precise predictions. The risk of dropout can be visualized as warnings for the health coaches, so they can attempt to re-engage the patient in their intervention before dropout. Initial assessment of the models implemented in an eHealth platform in use shows a decrease in dropout rate. Obtaining more rich data on educational status and socioeconomic factors in combination with a better delineation of dropouts would increase the quality of the models."
+    },
+    {
+      "text": "Short description of the LIVA platform and intervention."
+    },
+    {
+      "text": "Figure 1. Proportion of active patients over 4 segments of the intervention period."
+    },
+    {
+      "text": "Figure 2. Average number of activities in the platform per week in the program for patients who either completed the intervention or entered retention (n=175), excluding week 0 in the program."
+    },
+    {
+      "text": "Figure 3. Proportion of active patients over the total number of inactive weeks in the program defined by gender."
+    },
+    {
+      "text": "Figure 4. Proportion of active patients over the total number of inactive weeks in the program defined by age."
+    },
+    {
+      "text": "Figure 5. Variable importance plot for the 11 selected variables. Period of intervention is separated into 4 dummy variables."
+    },
+    {
+      "text": "Figure 6. Receiver operating characteristic curve with area under the curve for the random forest model on the holdout test data."
+    },
+    {
+      "text": "A summary of the population from the final dataset included in the models."
+    },
+    {
+      "text": "Number of dropouts over the period of intervention."
+    },
+    {
+      "text": "Percentage of dropouts distributed in age group and gender. The percentage indicates the proportion of dropouts for the patients in the specific age group and gender."
+    },
+    {
+      "title": "Acknowledgments",
+      "text": "DHP analyzed the data, created and evaluated the models, and drafted the paper. MM, TS, and CS supervised the data analyses. MM, TS, and CS gave inputs on several drafts for the manuscript. All authors read, critically revised, and approved the final manuscript. Liva Healthcare  provided the data and allocated resources to conduct and assist in the research and creation of this paper. The publishing of this paper was funded by the  University of Southern Denmark, Health Informatics ."
+    },
+    {
+      "title": "Conflicts of Interest",
+      "text": "DHP and CS are employed by Liva Healthcare A/S."
+    },
+    {
+      "title": "Abbreviations AUC: area under the curve"
+    }
+  ],
+  "references": [
+    {
+      "title": "Research Note: Chronic Disease Management in Europe URL",
+      "authors": [
+        "M Gemmill"
+      ],
+      "year": 2008,
+      "doi": "10.1097/nhh.0b013e3181f85e6e",
+      "raw": "M Gemmill \n\t\t \n\t\t \n\t\t\t Citeseerx \n\t\t \n\t\t 10.1097/nhh.0b013e3181f85e6e \n\t\t \n\t\t Research Note: Chronic Disease Management in Europe URL \n\t\t \n\t\t\t 2008 \n\t\t \n\t \n\t Gemmill M. CiteSeerX. 2008. Research Note: Chronic Disease Management in Europe URL: http://citeseerx.ist.psu.edu/ viewdoc/download?doi=10.1.1.619.4434&rep=rep1&type=pdf"
+    },
+    {
+      "title": "Mapping mhealth research: a decade of evolution",
+      "authors": [
+        "M Fiordelli",
+        "N Diviani",
+        "P Schulz"
+      ],
+      "year": 2013,
+      "doi": "10.2196/jmir.2430",
+      "journal": "J Med Internet Res",
+      "volume": "15",
+      "issue": "5",
+      "pages": "e95",
+      "raw": "Mapping mhealth research: a decade of evolution \n\t\t \n\t\t\t M Fiordelli \n\t\t \n\t\t \n\t\t\t N Diviani \n\t\t \n\t\t \n\t\t\t P J Schulz \n\t\t \n\t\t 10.2196/jmir.2430 \n\t\t Medline: 23697600 \n\t \n\t \n\t\t J Med Internet Res \n\t\t \n\t\t\t 15 \n\t\t\t 5 \n\t\t\t e95 \n\t\t\t 2013 May 21 \n\t\t \n\t \n\t Fiordelli M, Diviani N, Schulz PJ. Mapping mhealth research: a decade of evolution. J Med Internet Res 2013 May 21;15(5):e95. [doi: 10.2196/jmir.2430] [Medline: 23697600]"
+    },
+    {
+      "title": "Sustained weight loss during 20 months using a personalized interactive internet based dietician advice program in a general practice setting",
+      "authors": [
+        "V Brandt",
+        "C Brandt",
+        "D Glintborg",
+        "C Arendal",
+        "S Toubro",
+        "K Brandt"
+      ],
+      "year": 2011,
+      "doi": "10.1155/2014/245347",
+      "journal": "Int J Adv Life Sci",
+      "volume": "3",
+      "issue": "1-2",
+      "raw": "Sustained weight loss during 20 months using a personalized interactive internet based dietician advice program in a general practice setting \n\t\t \n\t\t\t V Brandt \n\t\t \n\t\t \n\t\t\t C J Brandt \n\t\t \n\t\t \n\t\t\t D Glintborg \n\t\t \n\t\t \n\t\t\t C Arendal \n\t\t \n\t\t \n\t\t\t S Toubro \n\t\t \n\t\t \n\t\t\t K Brandt \n\t\t \n\t\t 10.1155/2014/245347 \n\t \n\t \n\t\t Int J Adv Life Sci \n\t\t \n\t\t\t 3 \n\t\t\t 1-2 \n\t\t\t \n\t\t\t 2011 \n\t\t \n\t \n\t FREE Full text \n\t Brandt V, Brandt CJ, Glintborg D, Arendal C, Toubro S, Brandt K. Sustained weight loss during 20 months using a personalized interactive internet based dietician advice program in a general practice setting. Int J Adv Life Sci 2011;3(1-2):23-28 [FREE Full text]"
+    },
+    {
+      "title": "Information technology and lifestyle: a systematic evaluation of internet and mobile interventions for improving diet, physical activity, obesity, tobacco, and alcohol use",
+      "authors": [
+        "A Afshin",
+        "D Babalola",
+        "M Mclean",
+        "Z Yu",
+        "W Ma",
+        "C Chen"
+      ],
+      "year": 2016,
+      "doi": "10.1161/jaha.115.003058",
+      "journal": "J Am Heart Assoc",
+      "volume": "5",
+      "issue": "9",
+      "pages": "3058",
+      "raw": "Information technology and lifestyle: a systematic evaluation of internet and mobile interventions for improving diet, physical activity, obesity, tobacco, and alcohol use \n\t\t \n\t\t\t A Afshin \n\t\t \n\t\t \n\t\t\t D Babalola \n\t\t \n\t\t \n\t\t\t M Mclean \n\t\t \n\t\t \n\t\t\t Z Yu \n\t\t \n\t\t \n\t\t\t W Ma \n\t\t \n\t\t \n\t\t\t C Y Chen \n\t\t \n\t\t 10.1161/jaha.115.003058 \n\t\t Medline: 27581172 \n\t \n\t \n\t\t J Am Heart Assoc \n\t\t \n\t\t\t 5 \n\t\t\t 9 \n\t\t\t 3058 \n\t\t\t 2016 Aug 31 \n\t\t \n\t \n\t FREE Full text \n\t Afshin A, Babalola D, Mclean M, Yu Z, Ma W, Chen CY, et al. Information technology and lifestyle: a systematic evaluation of internet and mobile interventions for improving diet, physical activity, obesity, tobacco, and alcohol use. J Am Heart Assoc 2016 Aug 31;5(9):pii: e003058 [FREE Full text] [doi: 10.1161/JAHA.115.003058] [Medline: 27581172]"
+    },
+    {
+      "title": "Telehealth and mobile health",
+      "authors": [
+        "E Coiera"
+      ],
+      "year": 2015,
+      "doi": "10.1201/b13617-27",
+      "raw": "Telehealth and mobile health \n\t\t \n\t\t\t E Coiera \n\t\t \n\t\t 10.1201/b13617-27 \n\t \n\t \n\t\t Guide to Health Informatics \n\t\t Florida, United States \n\t\t \n\t\t\t CRC Press \n\t\t\t 2015 \n\t\t\t \n\t\t \n\t \n\t Third Edition \n\t Coiera E. Telehealth and mobile health. In: Guide to Health Informatics. Third Edition. Florida, United States: CRC Press; 2015:343-369."
+    },
+    {
+      "title": "Systematic review of studies of the cost-effectiveness of telemedicine and telecare. Changes in the economic evidence over twenty years",
+      "authors": [
+        "H Mistry"
+      ],
+      "year": 2012,
+      "doi": "10.1258/jtt.2011.110505",
+      "journal": "J Telemed Telecare",
+      "volume": "18",
+      "issue": "1",
+      "raw": "Systematic review of studies of the cost-effectiveness of telemedicine and telecare. Changes in the economic evidence over twenty years \n\t\t \n\t\t\t H Mistry \n\t\t \n\t\t 10.1258/jtt.2011.110505 \n\t\t Medline: 22101609 \n\t \n\t \n\t\t J Telemed Telecare \n\t\t \n\t\t\t 18 \n\t\t\t 1 \n\t\t\t \n\t\t\t 2012 Jan \n\t\t \n\t \n\t Mistry H. Systematic review of studies of the cost-effectiveness of telemedicine and telecare. Changes in the economic evidence over twenty years. J Telemed Telecare 2012 Jan;18(1):1-6. [doi: 10.1258/jtt.2011.110505] [Medline: 22101609]"
+    },
+    {
+      "title": "The effectiveness of mobile-health technologies to improve health care service delivery processes: a systematic review and meta-analysis",
+      "authors": [
+        "C Free",
+        "G Phillips",
+        "L Watson",
+        "L Galli",
+        "L Felix",
+        "P Edwards"
+      ],
+      "year": 2013,
+      "doi": "10.1371/journal.pmed.1001363",
+      "journal": "PLoS Med",
+      "volume": "10",
+      "issue": "1",
+      "pages": "1001363",
+      "raw": "The effectiveness of mobile-health technologies to improve health care service delivery processes: a systematic review and meta-analysis \n\t\t \n\t\t\t C Free \n\t\t \n\t\t \n\t\t\t G Phillips \n\t\t \n\t\t \n\t\t\t L Watson \n\t\t \n\t\t \n\t\t\t L Galli \n\t\t \n\t\t \n\t\t\t L Felix \n\t\t \n\t\t \n\t\t\t P Edwards \n\t\t \n\t\t 10.1371/journal.pmed.1001363 \n\t\t Medline: 23458994 \n\t \n\t \n\t\t PLoS Med \n\t\t \n\t\t\t 10 \n\t\t\t 1 \n\t\t\t 1001363 \n\t\t\t 2013 \n\t\t \n\t \n\t FREE Full text \n\t Free C, Phillips G, Watson L, Galli L, Felix L, Edwards P, et al. The effectiveness of mobile-health technologies to improve health care service delivery processes: a systematic review and meta-analysis. PLoS Med 2013;10(1):e1001363 [FREE Full text] [doi: 10.1371/journal.pmed.1001363] [Medline: 23458994]"
+    },
+    {
+      "title": "The law of attrition",
+      "authors": [
+        "G Eysenbach"
+      ],
+      "year": 2005,
+      "doi": "10.2196/jmir.7.1.e11",
+      "journal": "J Med Internet Res",
+      "volume": "7",
+      "issue": "1",
+      "raw": "The law of attrition \n\t\t \n\t\t\t G Eysenbach \n\t\t \n\t\t 10.2196/jmir.7.1.e11 \n\t\t Medline: 15829473 \n\t \n\t \n\t\t J Med Internet Res \n\t\t \n\t\t\t 7 \n\t\t\t 1 \n\t\t\t 2005 Mar 31 \n\t\t \n\t \n\t FREE Full text \n\t Eysenbach G. The law of attrition. J Med Internet Res 2005 Mar 31;7(1):e11 [FREE Full text] [doi: 10.2196/jmir.7.1.e11] [Medline: 15829473]"
+    },
+    {
+      "title": "Dropout from an ehealth intervention for adults with type 2 diabetes: a qualitative study",
+      "authors": [
+        "S Lie",
+        "B Karlsen",
+        "E Oord",
+        "M Graue",
+        "B Oftedal"
+      ],
+      "year": 2017,
+      "doi": "10.2196/jmir.7479",
+      "journal": "J Med Internet Res",
+      "volume": "19",
+      "issue": "5",
+      "pages": "187",
+      "raw": "Dropout from an ehealth intervention for adults with type 2 diabetes: a qualitative study \n\t\t \n\t\t\t S S Lie \n\t\t \n\t\t \n\t\t\t B Karlsen \n\t\t \n\t\t \n\t\t\t E R Oord \n\t\t \n\t\t \n\t\t\t M Graue \n\t\t \n\t\t \n\t\t\t B Oftedal \n\t\t \n\t\t 10.2196/jmir.7479 \n\t\t Medline: 28559223 \n\t \n\t \n\t\t J Med Internet Res \n\t\t \n\t\t\t 19 \n\t\t\t 5 \n\t\t\t 187 \n\t\t\t 2017 May 30 \n\t\t \n\t \n\t FREE Full text \n\t Lie SS, Karlsen B, Oord ER, Graue M, Oftedal B. Dropout from an ehealth intervention for adults with type 2 diabetes: a qualitative study. J Med Internet Res 2017 May 30;19(5):e187 [FREE Full text] [doi: 10.2196/jmir.7479] [Medline: 28559223]"
+    },
+    {
+      "title": "Dropout from internet-based treatment for psychological disorders",
+      "authors": [
+        "K Melville",
+        "L Casey",
+        "D Kavanagh"
+      ],
+      "year": 2010,
+      "doi": "10.1348/014466509x472138",
+      "journal": "Br J Clin Psychol",
+      "volume": "49",
+      "issue": "Pt 4",
+      "raw": "Dropout from internet-based treatment for psychological disorders \n\t\t \n\t\t\t K M Melville \n\t\t \n\t\t \n\t\t\t L M Casey \n\t\t \n\t\t \n\t\t\t D J Kavanagh \n\t\t \n\t\t 10.1348/014466509x472138 \n\t\t Medline: 19799804 \n\t \n\t \n\t\t Br J Clin Psychol \n\t\t \n\t\t\t 49 \n\t\t\t Pt 4 \n\t\t\t \n\t\t\t 2010 Nov \n\t\t \n\t \n\t Melville KM, Casey LM, Kavanagh DJ. Dropout from internet-based treatment for psychological disorders. Br J Clin Psychol 2010 Nov;49(Pt 4):455-471. [doi: 10.1348/014466509X472138] [Medline: 19799804]"
+    },
+    {
+      "title": "Adherence in internet interventions for anxiety and depression",
+      "authors": [
+        "H Christensen",
+        "K Griffiths",
+        "L Farrer"
+      ],
+      "year": 2009,
+      "doi": "10.2196/jmir.1194",
+      "journal": "J Med Internet Res",
+      "volume": "11",
+      "issue": "2",
+      "raw": "Adherence in internet interventions for anxiety and depression \n\t\t \n\t\t\t H Christensen \n\t\t \n\t\t \n\t\t\t K M Griffiths \n\t\t \n\t\t \n\t\t\t L Farrer \n\t\t \n\t\t 10.2196/jmir.1194 \n\t\t Medline: 19403466 \n\t \n\t \n\t\t J Med Internet Res \n\t\t \n\t\t\t 11 \n\t\t\t 2 \n\t\t\t 2009 Apr 24 \n\t\t \n\t \n\t FREE Full text \n\t Christensen H, Griffiths KM, Farrer L. Adherence in internet interventions for anxiety and depression. J Med Internet Res 2009 Apr 24;11(2):e13 [FREE Full text] [doi: 10.2196/jmir.1194] [Medline: 19403466]"
+    },
+    {
+      "title": "Predictors of dropout in weight loss interventions: a systematic review of the literature",
+      "authors": [
+        "I Moroshko",
+        "L Brennan",
+        "O' Brien"
+      ],
+      "year": 2011,
+      "doi": "10.1111/j.1467-789x.2011.00915.x",
+      "journal": "Obes Rev",
+      "volume": "12",
+      "issue": "11",
+      "raw": "Predictors of dropout in weight loss interventions: a systematic review of the literature \n\t\t \n\t\t\t I Moroshko \n\t\t \n\t\t \n\t\t\t L Brennan \n\t\t \n\t\t \n\t\t\t O' Brien \n\t\t \n\t\t \n\t\t\t P \n\t\t \n\t\t 10.1111/j.1467-789x.2011.00915.x \n\t\t Medline: 21815990 \n\t \n\t \n\t\t Obes Rev \n\t\t \n\t\t\t 12 \n\t\t\t 11 \n\t\t\t \n\t\t\t 2011 Nov \n\t\t \n\t \n\t Moroshko I, Brennan L, O'Brien P. Predictors of dropout in weight loss interventions: a systematic review of the literature. Obes Rev 2011 Nov;12(11):912-934. [doi: 10.1111/j.1467-789X.2011.00915.x] [Medline: 21815990]"
+    },
+    {
+      "title": "An online community improves adherence in an internet-mediated walking program. Part 1: results of a randomized controlled trial",
+      "authors": [
+        "C Richardson",
+        "L Buis",
+        "A Janney",
+        "D Goodrich",
+        "A Sen",
+        "M Hess"
+      ],
+      "year": 2010,
+      "doi": "10.2196/jmir.1338",
+      "journal": "J Med Internet Res",
+      "volume": "12",
+      "issue": "4",
+      "raw": "An online community improves adherence in an internet-mediated walking program. Part 1: results of a randomized controlled trial \n\t\t \n\t\t\t C R Richardson \n\t\t \n\t\t \n\t\t\t L R Buis \n\t\t \n\t\t \n\t\t\t A W Janney \n\t\t \n\t\t \n\t\t\t D E Goodrich \n\t\t \n\t\t \n\t\t\t A Sen \n\t\t \n\t\t \n\t\t\t M L Hess \n\t\t \n\t\t 10.2196/jmir.1338 \n\t\t Medline: 21169160 \n\t \n\t \n\t\t J Med Internet Res \n\t\t \n\t\t\t 12 \n\t\t\t 4 \n\t\t\t 2010 Dec 17 \n\t\t \n\t \n\t FREE Full text \n\t Richardson CR, Buis LR, Janney AW, Goodrich DE, Sen A, Hess ML, et al. An online community improves adherence in an internet-mediated walking program. Part 1: results of a randomized controlled trial. J Med Internet Res 2010 Dec 17;12(4):e71 [FREE Full text] [doi: 10.2196/jmir.1338] [Medline: 21169160]"
+    },
+    {
+      "title": "Internet-based motivation program for women with eating disorders: eating disorder pathology and depressive mood predict dropout",
+      "authors": [
+        "R Von Brachel",
+        "K H\u00f6tzel",
+        "G Hirschfeld",
+        "E Rieger",
+        "U Schmidt",
+        "J Kosfelder"
+      ],
+      "year": 2014,
+      "doi": "10.2196/jmir.3104",
+      "journal": "J Med Internet Res",
+      "volume": "16",
+      "issue": "3",
+      "raw": "Internet-based motivation program for women with eating disorders: eating disorder pathology and depressive mood predict dropout \n\t\t \n\t\t\t R Von Brachel \n\t\t \n\t\t \n\t\t\t K H\u00f6tzel \n\t\t \n\t\t \n\t\t\t G Hirschfeld \n\t\t \n\t\t \n\t\t\t E Rieger \n\t\t \n\t\t \n\t\t\t U Schmidt \n\t\t \n\t\t \n\t\t\t J Kosfelder \n\t\t \n\t\t 10.2196/jmir.3104 \n\t\t Medline: 24686856 \n\t \n\t \n\t\t J Med Internet Res \n\t\t \n\t\t\t 16 \n\t\t\t 3 \n\t\t\t 2014 Mar 31 \n\t\t \n\t \n\t FREE Full text \n\t von Brachel R, H\u00f6tzel K, Hirschfeld G, Rieger E, Schmidt U, Kosfelder J, et al. Internet-based motivation program for women with eating disorders: eating disorder pathology and depressive mood predict dropout. J Med Internet Res 2014 Mar 31;16(3):e92 [FREE Full text] [doi: 10.2196/jmir.3104] [Medline: 24686856]"
+    },
+    {
+      "title": "Factors associated with dropout during recruitment and follow-up periods of a mhealth-based randomized controlled trial for mobile.net to encourage treatment adherence for people with serious mental health problems",
+      "authors": [
+        "K Kannisto",
+        "J Korhonen",
+        "C Adams",
+        "M Koivunen",
+        "T Vahlberg",
+        "M V\u00e4lim\u00e4ki"
+      ],
+      "year": 2017,
+      "doi": "10.2196/jmir.6417",
+      "journal": "J Med Internet Res",
+      "volume": "19",
+      "issue": "2",
+      "raw": "Factors associated with dropout during recruitment and follow-up periods of a mhealth-based randomized controlled trial for mobile.net to encourage treatment adherence for people with serious mental health problems \n\t\t \n\t\t\t K A Kannisto \n\t\t \n\t\t \n\t\t\t J Korhonen \n\t\t \n\t\t \n\t\t\t C E Adams \n\t\t \n\t\t \n\t\t\t M H Koivunen \n\t\t \n\t\t \n\t\t\t T Vahlberg \n\t\t \n\t\t \n\t\t\t M A V\u00e4lim\u00e4ki \n\t\t \n\t\t 10.2196/jmir.6417 \n\t\t Medline: 28223262 \n\t \n\t \n\t\t J Med Internet Res \n\t\t \n\t\t\t 19 \n\t\t\t 2 \n\t\t\t 2017 Feb 21 \n\t\t \n\t \n\t FREE Full text \n\t Kannisto KA, Korhonen J, Adams CE, Koivunen MH, Vahlberg T, V\u00e4lim\u00e4ki MA. Factors associated with dropout during recruitment and follow-up periods of a mhealth-based randomized controlled trial for mobile.net to encourage treatment adherence for people with serious mental health problems. J Med Internet Res 2017 Feb 21;19(2):e46 [FREE Full text] [doi: 10.2196/jmir.6417] [Medline: 28223262]"
+    },
+    {
+      "title": "Survival Analysis Based Framework for Early Prediction of Student Dropouts",
+      "authors": [
+        "S Ameri",
+        "M Fard",
+        "R Chinnam",
+        "C Reddy"
+      ],
+      "year": 2016,
+      "doi": "10.1145/2983323.2983351",
+      "raw": "Survival Analysis Based Framework for Early Prediction of Student Dropouts \n\t\t \n\t\t\t S Ameri \n\t\t \n\t\t \n\t\t\t M J Fard \n\t\t \n\t\t \n\t\t\t R B Chinnam \n\t\t \n\t\t \n\t\t\t C K Reddy \n\t\t \n\t\t 10.1145/2983323.2983351 \n\t \n\t \n\t\t Proceedings of the 25th ACM International on Conference on Information and Knowledge Management \n\t\t the 25th ACM International on Conference on Information and Knowledge Management Indianapolis, Indiana, USA \n\t\t \n\t\t\t 2016. October 24-28, 2016 \n\t\t\t \n\t\t \n\t \n\t Presented at: CIKM'16 \n\t Ameri S, Fard MJ, Chinnam RB, Reddy CK. Survival Analysis Based Framework for Early Prediction of Student Dropouts. In: Proceedings of the 25th ACM International on Conference on Information and Knowledge Management. 2016 Presented at: CIKM'16; October 24-28, 2016; Indianapolis, Indiana, USA p. 903-912. [doi: 10.1145/2983323.2983351]"
+    },
+    {
+      "title": "Data-driven system to predict academic grades and dropout",
+      "authors": [
+        "S Rovira",
+        "E Puertas",
+        "L Igual"
+      ],
+      "year": 2017,
+      "doi": "10.1371/journal.pone.0171207",
+      "journal": "PLoS One",
+      "volume": "12",
+      "issue": "2",
+      "pages": "171207",
+      "raw": "Data-driven system to predict academic grades and dropout \n\t\t \n\t\t\t S Rovira \n\t\t \n\t\t \n\t\t\t E Puertas \n\t\t \n\t\t \n\t\t\t L Igual \n\t\t \n\t\t 10.1371/journal.pone.0171207 \n\t\t Medline: 28196078 \n\t \n\t \n\t\t PLoS One \n\t\t \n\t\t\t 12 \n\t\t\t 2 \n\t\t\t 171207 \n\t\t\t 2017 \n\t\t \n\t \n\t FREE Full text \n\t Rovira S, Puertas E, Igual L. Data-driven system to predict academic grades and dropout. PLoS One 2017;12(2):e0171207 [FREE Full text] [doi: 10.1371/journal.pone.0171207] [Medline: 28196078]"
+    },
+    {
+      "title": "A systematic review of the impact of adherence on the effectiveness of e-therapies",
+      "authors": [
+        "L Donkin",
+        "H Christensen",
+        "S Naismith",
+        "B Neal",
+        "I Hickie",
+        "N Glozier"
+      ],
+      "year": 2011,
+      "doi": "10.2196/jmir.1772",
+      "journal": "J Med Internet Res",
+      "volume": "13",
+      "issue": "3",
+      "raw": "A systematic review of the impact of adherence on the effectiveness of e-therapies \n\t\t \n\t\t\t L Donkin \n\t\t \n\t\t \n\t\t\t H Christensen \n\t\t \n\t\t \n\t\t\t S L Naismith \n\t\t \n\t\t \n\t\t\t B Neal \n\t\t \n\t\t \n\t\t\t I B Hickie \n\t\t \n\t\t \n\t\t\t N Glozier \n\t\t \n\t\t 10.2196/jmir.1772 \n\t\t Medline: 21821503 \n\t \n\t \n\t\t J Med Internet Res \n\t\t \n\t\t\t 13 \n\t\t\t 3 \n\t\t\t 2011 Aug 5 \n\t\t \n\t \n\t FREE Full text \n\t Donkin L, Christensen H, Naismith SL, Neal B, Hickie IB, Glozier N. A systematic review of the impact of adherence on the effectiveness of e-therapies. J Med Internet Res 2011 Aug 5;13(3):e52 [FREE Full text] [doi: 10.2196/jmir.1772] [Medline: 21821503]"
+    },
+    {
+      "title": "The CRISP-DM model: the new blueprint for data mining",
+      "authors": [
+        "C Shearer"
+      ],
+      "year": 2000,
+      "doi": "10.1201/b12040-8",
+      "journal": "J Data Warehous",
+      "volume": "5",
+      "issue": "4",
+      "raw": "The CRISP-DM model: the new blueprint for data mining \n\t\t \n\t\t\t C Shearer \n\t\t \n\t\t 10.1201/b12040-8 \n\t \n\t \n\t\t J Data Warehous \n\t\t \n\t\t\t 5 \n\t\t\t 4 \n\t\t\t \n\t\t\t 2000 \n\t\t \n\t \n\t FREE Full text \n\t Shearer C. The CRISP-DM model: the new blueprint for data mining. J Data Warehous 2000;5(4):13-22 [FREE Full text]"
+    },
+    {
+      "title": "A new look at the statistical model identification",
+      "authors": [
+        "H Akaike"
+      ],
+      "year": 1974,
+      "doi": "10.1109/tac.1974.1100705",
+      "journal": "IEEE T Automat Contr",
+      "volume": "19",
+      "issue": "6",
+      "raw": "A new look at the statistical model identification \n\t\t \n\t\t\t H Akaike \n\t\t \n\t\t 10.1109/tac.1974.1100705 \n\t \n\t \n\t\t IEEE T Automat Contr \n\t\t \n\t\t\t 19 \n\t\t\t 6 \n\t\t\t \n\t\t\t 1974 Dec \n\t\t \n\t \n\t Akaike H. A new look at the statistical model identification. IEEE T Automat Contr 1974 Dec;19(6):716-723. [doi: 10.1109/TAC.1974.1100705]"
+    },
+    {
+      "title": "Baseline motivation type as a predictor of dropout in a healthy eating text messaging program",
+      "authors": [
+        "K Coa",
+        "H Patrick"
+      ],
+      "year": 2016,
+      "doi": "10.2196/mhealth.5992",
+      "journal": "JMIR Mhealth Uhealth",
+      "volume": "4",
+      "issue": "3",
+      "pages": "e114",
+      "raw": "Baseline motivation type as a predictor of dropout in a healthy eating text messaging program \n\t\t \n\t\t\t K Coa \n\t\t \n\t\t \n\t\t\t H Patrick \n\t\t \n\t\t 10.2196/mhealth.5992 \n\t\t Medline: 27688034 \n\t \n\t \n\t\t JMIR Mhealth Uhealth \n\t\t \n\t\t\t 4 \n\t\t\t 3 \n\t\t\t e114 \n\t\t\t 2016 Sep 29 \n\t\t \n\t \n\t FREE Full text \n\t Coa K, Patrick H. Baseline motivation type as a predictor of dropout in a healthy eating text messaging program. JMIR Mhealth Uhealth 2016 Sep 29;4(3):e114 [FREE Full text] [doi: 10.2196/mhealth.5992] [Medline: 27688034]"
+    },
+    {
+      "title": "Predicting attrition in a text-based nutrition education program: survival analysis of Text2BHealthy",
+      "authors": [
+        "S Grutzmacher",
+        "A Munger",
+        "K Speirs",
+        "Y Vafai",
+        "E Hilberg",
+        "E Duru"
+      ],
+      "year": 2019,
+      "doi": "10.2196/mhealth.9967",
+      "journal": "JMIR Mhealth Uhealth",
+      "volume": "7",
+      "issue": "1",
+      "pages": "e9967",
+      "raw": "Predicting attrition in a text-based nutrition education program: survival analysis of Text2BHealthy \n\t\t \n\t\t\t S K Grutzmacher \n\t\t \n\t\t \n\t\t\t A L Munger \n\t\t \n\t\t \n\t\t\t K E Speirs \n\t\t \n\t\t \n\t\t\t Y Vafai \n\t\t \n\t\t \n\t\t\t E Hilberg \n\t\t \n\t\t \n\t\t\t E B Duru \n\t\t \n\t\t 10.2196/mhealth.9967 \n\t\t Medline: 30664489 \n\t \n\t \n\t\t JMIR Mhealth Uhealth \n\t\t \n\t\t\t 7 \n\t\t\t 1 \n\t\t\t e9967 \n\t\t\t 2019 Jan 21 \n\t\t \n\t \n\t FREE Full text \n\t Grutzmacher SK, Munger AL, Speirs KE, Vafai Y, Hilberg E, Duru EB, et al. Predicting attrition in a text-based nutrition education program: survival analysis of Text2BHealthy. JMIR Mhealth Uhealth 2019 Jan 21;7(1):e9967 [FREE Full text] [doi: 10.2196/mhealth.9967] [Medline: 30664489]"
+    },
+    {
+      "title": "Profiling patients' healthcare needs to support integrated, person-centered models for long-term disease management (profile): research design",
+      "authors": [
+        "A Elissen",
+        "F Hertroijs",
+        "C Schaper",
+        "J Vrijhoef",
+        "D Ruwaard"
+      ],
+      "year": 2016,
+      "doi": "10.5334/ijic.2208",
+      "journal": "Int J Integr Care",
+      "volume": "16",
+      "issue": "2",
+      "raw": "Profiling patients' healthcare needs to support integrated, person-centered models for long-term disease management (profile): research design \n\t\t \n\t\t\t A M Elissen \n\t\t \n\t\t \n\t\t\t F D Hertroijs \n\t\t \n\t\t \n\t\t\t C N Schaper \n\t\t \n\t\t \n\t\t\t J H Vrijhoef \n\t\t \n\t\t \n\t\t\t D Ruwaard \n\t\t \n\t\t 10.5334/ijic.2208 \n\t\t Medline: 27616957 \n\t \n\t \n\t\t Int J Integr Care \n\t\t \n\t\t\t 16 \n\t\t\t 2 \n\t\t\t 2016 Apr 29 \n\t\t \n\t \n\t FREE Full text \n\t Elissen AM, Hertroijs FD, Schaper CN, Vrijhoef JH, Ruwaard D. Profiling patients' healthcare needs to support integrated, person-centered models for long-term disease management (profile): research design. Int J Integr Care 2016 Apr 29;16(2):1 [FREE Full text] [doi: 10.5334/ijic.2208] [Medline: 27616957]"
+    }
+  ],
+  "num_references": 23,
+  "figures": [
+    {
+      "caption": "Textbox 1 .",
+      "description": "Short description of the LIVA platform and intervention."
+    },
+    {
+      "caption": "Figure 1 .",
+      "description": "Figure 1. Proportion of active patients over 4 segments of the intervention period."
+    },
+    {
+      "caption": "Figure 2 .",
+      "description": "Figure 2. Average number of activities in the platform per week in the program for patients who either completed the intervention or entered retention (n=175), excluding week 0 in the program."
+    },
+    {
+      "caption": "Figure 3 .",
+      "description": "Figure 3. Proportion of active patients over the total number of inactive weeks in the program defined by gender."
+    },
+    {
+      "caption": "Figure 4 .",
+      "description": "Figure 4. Proportion of active patients over the total number of inactive weeks in the program defined by age."
+    },
+    {
+      "caption": "Figure 5 .",
+      "description": "Figure 5. Variable importance plot for the 11 selected variables. Period of intervention is separated into 4 dummy variables."
+    },
+    {
+      "caption": "Figure 6 .Table 4 .Figure 7 .",
+      "description": "Figure 6. Receiver operating characteristic curve with area under the curve for the random forest model on the holdout test data."
+    },
+    {
+      "type": "table",
+      "caption": "Table 1 .",
+      "description": "A summary of the population from the final dataset included in the models."
+    },
+    {
+      "type": "table",
+      "caption": "Table 2 .",
+      "description": "Number of dropouts over the period of intervention."
+    },
+    {
+      "type": "table",
+      "caption": "Table 3 .",
+      "description": "Percentage of dropouts distributed in age group and gender. The percentage indicates the proportion of dropouts for the patients in the specific age group and gender."
+    }
+  ],
+  "num_figures": 10,
+  "tables": [
+    {
+      "content": "Parameter (statistic) Description Sample size (N) 2684 patients Number of providers (N) 18 different providers with between 13 and 581 patients ever in program Gender (percentage distribution) 72.4% females and 27.6% males Age (years), mean (SD) 48.6 (13.2) Treatment groups (percentage distribution) Overweight (85%), diabetes (17%), heart diseases (12%), chronic obstructive pulmonary disease (5%), stress (15%), cancer (1%), alcoholism (1%), smoking (6%), or another secondary disease (20%) Days on platform (minimum, median, maximum) 14, 82, 595 Start body mass index (kg/m 2 ), mean (SD) 33.6 (6.0) Advice received (minimum, median, maximum) 3, 7, 99 Messages sent (minimum, median, maximum) 0, 3, 156"
+    },
+    {
+      "content": "Number of dropouts"
+    },
+    {
+      "content": "Age group (years) Female, n (%) Male, n (%) Total, n (%) a 18-39 600 (53.72) 161 (51.60) 761 (53.18) 40-59 1040 (55.48) 395 (50.13) 1435 (54.01) 60-74 284 (52.11) 161 (50.31) 445 (51.39) >75 19 (63.33) 24 (54.55) 43 (58.11) Total 1943 (55.02) 741 (51.32) 2684 (53.99)"
+    }
+  ],
+  "num_tables": 3,
+  "num_citations": 30,
+  "cited_references": [
+    "b3",
+    "b13",
+    "b18",
+    "b2",
+    "b14",
+    "b17",
+    "b9",
+    "b1",
+    "b21",
+    "b12",
+    "b16",
+    "b15",
+    "b5",
+    "b19",
+    "b10",
+    "b4",
+    "b7",
+    "b11",
+    "b8",
+    "b22",
+    "b6",
+    "b0"
+  ],
+  "notes": [
+    "[raw_affiliation] 1  Liva Healthcare A/S , Copenhagen , Denmark",
+    "[raw_affiliation] 2  Centre of Health Informatics and Technology , The Maersk Mc-Kinney Moller Institute , University of Southern Denmark , Odense , Denmark",
+    "[raw_affiliation] 1  Liva Healthcare A/S , Copenhagen , Denmark",
+    "[raw_affiliation] 2  Centre of Health Informatics and Technology , The Maersk Mc-Kinney Moller Institute , University of Southern Denmark , Odense , Denmark",
+    "[raw_affiliation] Healthcare A/S Danneskiold-Sams\u00f8es All\u00e9 41 Copenhagen , 1434 Denmark",
+    "a Percentage of the total population of participants.",
+    "J Med Internet Res 2019 | vol. 21 | iss. 9 | e13617 | p. 2 https://www.jmir.org/2019/9/e13617/ (page number not for citation purposes)",
+    "J Med Internet Res 2019 | vol. 21 | iss. 9 | e13617 | p. 3 https://www.jmir.org/2019/9/e13617/ (page number not for citation purposes)",
+    "J Med Internet Res 2019 | vol. 21 | iss. 9 | e13617 | p. 4 https://www.jmir.org/2019/9/e13617/ (page number not for citation purposes)",
+    "J Med Internet Res 2019 | vol. 21 | iss. 9 | e13617 | p. 5 https://www.jmir.org/2019/9/e13617/ (page number not for citation purposes)",
+    "J Med Internet Res 2019 | vol. 21 | iss. 9 | e13617 | p. 6 https://www.jmir.org/2019/9/e13617/ (page number not for citation purposes)",
+    "J Med Internet Res 2019 | vol. 21 | iss. 9 | e13617 | p. 7 https://www.jmir.org/2019/9/e13617/ (page number not for citation purposes)",
+    "J Med Internet Res 2019 | vol. 21 | iss. 9 | e13617 | p. 8 https://www.jmir.org/2019/9/e13617/ (page number not for citation purposes)",
+    "J Med Internet Res 2019 | vol. 21 | iss. 9 | e13617 | p. 9 https://www.jmir.org/2019/9/e13617/ (page number not for citation purposes)",
+    "J Med Internet Res 2019 | vol. 21 | iss. 9 | e13617 | p. 10 https://www.jmir.org/2019/9/e13617/ (page number not for citation purposes)",
+    "J Med Internet Res 2019 | vol. 21 | iss. 9 | e13617 | p. 11 https://www.jmir.org/2019/9/e13617/ (page number not for citation purposes)",
+    "[raw_reference] Gemmill M. CiteSeerX. 2008. Research Note: Chronic Disease Management in Europe URL: http://citeseerx.ist.psu.edu/ viewdoc/download?doi=10.1.1.619.4434&rep=rep1&type=pdf",
+    "[raw_reference] Fiordelli M, Diviani N, Schulz PJ. Mapping mhealth research: a decade of evolution. J Med Internet Res 2013 May 21;15(5):e95. [doi: 10.2196/jmir.2430] [Medline: 23697600]",
+    "FREE Full text",
+    "[raw_reference] Brandt V, Brandt CJ, Glintborg D, Arendal C, Toubro S, Brandt K. Sustained weight loss during 20 months using a personalized interactive internet based dietician advice program in a general practice setting. Int J Adv Life Sci 2011;3(1-2):23-28 [FREE Full text]",
+    "FREE Full text",
+    "[raw_reference] Afshin A, Babalola D, Mclean M, Yu Z, Ma W, Chen CY, et al. Information technology and lifestyle: a systematic evaluation of internet and mobile interventions for improving diet, physical activity, obesity, tobacco, and alcohol use. J Am Heart Assoc 2016 Aug 31;5(9):pii: e003058 [FREE Full text] [doi: 10.1161/JAHA.115.003058] [Medline: 27581172]",
+    "Third Edition",
+    "[raw_reference] Coiera E. Telehealth and mobile health. In: Guide to Health Informatics. Third Edition. Florida, United States: CRC Press; 2015:343-369.",
+    "[raw_reference] Mistry H. Systematic review of studies of the cost-effectiveness of telemedicine and telecare. Changes in the economic evidence over twenty years. J Telemed Telecare 2012 Jan;18(1):1-6. [doi: 10.1258/jtt.2011.110505] [Medline: 22101609]",
+    "FREE Full text",
+    "[raw_reference] Free C, Phillips G, Watson L, Galli L, Felix L, Edwards P, et al. The effectiveness of mobile-health technologies to improve health care service delivery processes: a systematic review and meta-analysis. PLoS Med 2013;10(1):e1001363 [FREE Full text] [doi: 10.1371/journal.pmed.1001363] [Medline: 23458994]",
+    "FREE Full text",
+    "[raw_reference] Eysenbach G. The law of attrition. J Med Internet Res 2005 Mar 31;7(1):e11 [FREE Full text] [doi: 10.2196/jmir.7.1.e11] [Medline: 15829473]",
+    "FREE Full text",
+    "[raw_reference] Lie SS, Karlsen B, Oord ER, Graue M, Oftedal B. Dropout from an ehealth intervention for adults with type 2 diabetes: a qualitative study. J Med Internet Res 2017 May 30;19(5):e187 [FREE Full text] [doi: 10.2196/jmir.7479] [Medline: 28559223]",
+    "[raw_reference] Melville KM, Casey LM, Kavanagh DJ. Dropout from internet-based treatment for psychological disorders. Br J Clin Psychol 2010 Nov;49(Pt 4):455-471. [doi: 10.1348/014466509X472138] [Medline: 19799804]",
+    "FREE Full text",
+    "[raw_reference] Christensen H, Griffiths KM, Farrer L. Adherence in internet interventions for anxiety and depression. J Med Internet Res 2009 Apr 24;11(2):e13 [FREE Full text] [doi: 10.2196/jmir.1194] [Medline: 19403466]",
+    "[raw_reference] Moroshko I, Brennan L, O'Brien P. Predictors of dropout in weight loss interventions: a systematic review of the literature. Obes Rev 2011 Nov;12(11):912-934. [doi: 10.1111/j.1467-789X.2011.00915.x] [Medline: 21815990]",
+    "FREE Full text",
+    "[raw_reference] Richardson CR, Buis LR, Janney AW, Goodrich DE, Sen A, Hess ML, et al. An online community improves adherence in an internet-mediated walking program. Part 1: results of a randomized controlled trial. J Med Internet Res 2010 Dec 17;12(4):e71 [FREE Full text] [doi: 10.2196/jmir.1338] [Medline: 21169160]",
+    "FREE Full text",
+    "[raw_reference] von Brachel R, H\u00f6tzel K, Hirschfeld G, Rieger E, Schmidt U, Kosfelder J, et al. Internet-based motivation program for women with eating disorders: eating disorder pathology and depressive mood predict dropout. J Med Internet Res 2014 Mar 31;16(3):e92 [FREE Full text] [doi: 10.2196/jmir.3104] [Medline: 24686856]",
+    "FREE Full text",
+    "[raw_reference] Kannisto KA, Korhonen J, Adams CE, Koivunen MH, Vahlberg T, V\u00e4lim\u00e4ki MA. Factors associated with dropout during recruitment and follow-up periods of a mhealth-based randomized controlled trial for mobile.net to encourage treatment adherence for people with serious mental health problems. J Med Internet Res 2017 Feb 21;19(2):e46 [FREE Full text] [doi: 10.2196/jmir.6417] [Medline: 28223262]",
+    "Presented at: CIKM'16",
+    "[raw_reference] Ameri S, Fard MJ, Chinnam RB, Reddy CK. Survival Analysis Based Framework for Early Prediction of Student Dropouts. In: Proceedings of the 25th ACM International on Conference on Information and Knowledge Management. 2016 Presented at: CIKM'16; October 24-28, 2016; Indianapolis, Indiana, USA p. 903-912. [doi: 10.1145/2983323.2983351]",
+    "FREE Full text",
+    "[raw_reference] Rovira S, Puertas E, Igual L. Data-driven system to predict academic grades and dropout. PLoS One 2017;12(2):e0171207 [FREE Full text] [doi: 10.1371/journal.pone.0171207] [Medline: 28196078]",
+    "FREE Full text",
+    "[raw_reference] Donkin L, Christensen H, Naismith SL, Neal B, Hickie IB, Glozier N. A systematic review of the impact of adherence on the effectiveness of e-therapies. J Med Internet Res 2011 Aug 5;13(3):e52 [FREE Full text] [doi: 10.2196/jmir.1772] [Medline: 21821503]",
+    "FREE Full text",
+    "[raw_reference] Shearer C. The CRISP-DM model: the new blueprint for data mining. J Data Warehous 2000;5(4):13-22 [FREE Full text]",
+    "[raw_reference] Akaike H. A new look at the statistical model identification. IEEE T Automat Contr 1974 Dec;19(6):716-723. [doi: 10.1109/TAC.1974.1100705]",
+    "FREE Full text",
+    "[raw_reference] Coa K, Patrick H. Baseline motivation type as a predictor of dropout in a healthy eating text messaging program. JMIR Mhealth Uhealth 2016 Sep 29;4(3):e114 [FREE Full text] [doi: 10.2196/mhealth.5992] [Medline: 27688034]",
+    "FREE Full text",
+    "[raw_reference] Grutzmacher SK, Munger AL, Speirs KE, Vafai Y, Hilberg E, Duru EB, et al. Predicting attrition in a text-based nutrition education program: survival analysis of Text2BHealthy. JMIR Mhealth Uhealth 2019 Jan 21;7(1):e9967 [FREE Full text] [doi: 10.2196/mhealth.9967] [Medline: 30664489]",
+    "FREE Full text",
+    "[raw_reference] Elissen AM, Hertroijs FD, Schaper CN, Vrijhoef JH, Ruwaard D. Profiling patients' healthcare needs to support integrated, person-centered models for long-term disease management (profile): research design. Int J Integr Care 2016 Apr 29;16(2):1 [FREE Full text] [doi: 10.5334/ijic.2208] [Medline: 27616957]"
+  ],
+  "processing_software": {
+    "GROBID": "0.8.2"
+  }
+}

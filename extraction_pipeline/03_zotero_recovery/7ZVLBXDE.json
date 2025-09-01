@@ -1,0 +1,858 @@
+{
+  "paper_id": "7ZVLBXDE",
+  "title": "Assessing Time-Varying Causal Effect Moderation in Mobile Health",
+  "abstract": "In mobile health interventions aimed at behavior change and maintenance, treatments are provided in real time to manage current or impending high risk situations or promote healthy behaviors in near real time. Currently there is great scientific interest in developing data analysis approaches to guide the development of mobile interventions. In particular data from mobile health studies might be used to examine effect moderators-individual characteristics, time-varying context or past treatment response that moderate the effect of current treatment on a subsequent response. This paper introduces a formal definition for moderated effects in terms of potential outcomes, a definition that is particularly suited to mobile interventions, where treatment occasions are numerous, individuals are not always available for treatment, and potential moderators might be influenced by past treatment. Methods for estimating moderated effects are developed and compared. The proposed approach is illustrated using BASICS-Mobile, a smartphone-based intervention designed to curb heavy drinking and smoking among college students.",
+  "year": 2019,
+  "date": "2019-01-01",
+  "authors": [
+    {
+      "name": "Audrey Boruvka",
+      "affiliation": {
+        "organization": "Department of Statistics",
+        "department": "Department of Statistics",
+        "institution": "University of Michigan"
+      }
+    },
+    {
+      "name": "Daniel Almirall",
+      "affiliation": {
+        "organization": "Institute for Social Research",
+        "department": "Institute for Social Research",
+        "institution": "University of Michigan"
+      }
+    },
+    {
+      "name": "Katie Witkiewitz",
+      "affiliation": {
+        "organization": "Department of Psychology",
+        "department": "Department of Psychology",
+        "institution": "University of New Mexico"
+      }
+    },
+    {
+      "name": "Susan Murphy",
+      "affiliation": {
+        "organization": "Department of Statistics",
+        "department": "Department of Statistics",
+        "institution": "University of Michigan"
+      }
+    }
+  ],
+  "doi": "10.1080/01621459.2017.1305274",
+  "md5": "30093541E703CC580BD29BD212DAA8FB",
+  "publication": {
+    "journal": "Biometrics",
+    "journal_inferred": true
+  },
+  "keywords": [
+    "mHealth",
+    "structural nested mean model",
+    "effect modification"
+  ],
+  "funding": [
+    "",
+    "",
+    "",
+    "",
+    "Acknowledgments Funding was provided by the  National Institute on Drug Abuse  ( P50DA039838 ,  R01DA039901 ,  R01DA015697 ),  National Institute on Alcohol Abuse and Alcoholism  ( R01AA023187 ),  National Heart Lung and Blood Institute  ( R01HL125440 ), and  National Institute of Biomedical Imaging and Bioengineering  ( U54EB020404 )."
+  ],
+  "sections": [
+    {
+      "title": "1. Introduction",
+      "text": "Mobile health (mHealth) broadly refers to the practice of healthcare using mobile devices, such as smartphones and wearable sensors both to deliver treatment as well as to sense the current context of the individual. In mobile interventions for behavior maintenance or change, treatments are typically designed to help individuals manage high risk situations or promote healthy behaviors. Examples include medication reminders, motivational messages, physical activity suggestions, cognitive exercises to help manage stress or other risky situations, and prompts to facilitate activity in support networks.\n\nThere is intense interest in data analysis approaches to guide the development of mobile interventions  (Free et al. 2013; Muessig et al. 2013)  and to test the dynamic behavioral theories on which these interventions are based  (Spring et al. 2013; Mohr et al. 2014) . Micro-randomized trials (MRTs;  Klasnja et al. 2015; Liao et al. 2015; Dempsey et al. 2015)  provide data expressly for this purpose, with each participant in an MRT sequentially randomized to treatment numerous times, at possibly 100s to 1000s of occasions. In both MRTs and observational mHealth studies both treatment and measurement occur intensively over time. Measurements on individual characteristics, context and response to treatments are collected passively through sensors or actively by self-report.\n\nOne way in which these data may aid the design of a mobile intervention is through the examination of effect moderation; that is, inference about which factors strengthen or weaken the response to treatments. Consider, for example, an intervention for smoking cessation. Mindfulness-based treatments to help individuals manage their urge to smoke are presumably best delivered at times when there exists an inclination to smoke (e.g. Witkiewitz et al. 2014) . However other factors might influence the effect of these treatments on subsequent smoking rate. For example it may be that the mindfulness-based approach reduces smoking only when stress levels or self-regulatory demands are low, and has little to no effect otherwise. In general knowledge about moderators can be used to deliver treatments only in settings where they have proven most efficacious or to identify alternative treatment strategies when the treatment shows little to no benefit. Treatment effects might also evolve over the course of the intervention, so functions of time could also be examined as possible moderators.\n\nThis paper provides two main contributions in the assessment of treatment effects from longitudinal data in which treatment, response, and potential moderators are time-varying. The first is a definition for treatment effects that is particularly suited for mHealth, where treatment occasions are numerous and potential moderators might be influenced by past treatment. These effects are a marginal generalization of the treatment \"blips\" in the structural nested mean model (SNMM;  Robins 1989 Robins , 1994 Robins , 1997)) ; the effects are conditional on a few select variables representing potential moderators of interest as opposed to requiring that the effects be conditional on all past observed variables. The second contribution is a centered and weighted least squares method for estimating these treatment effects.\n\nThe most common estimation methods used in the analysis of mobile health data are generalized estimating equation (GEE) approaches or related approaches that employ random effects  (Schafer 2006; Schwartz and Stone 2007; Bolger and Laurenceau 2013) ; these methods are frequently used to better understand the time-varying relationship between two variables such as craving and stress. Unfortunately, when the mobile health data includes time-varying treatment, these methods are not guaranteed to consistently estimate causal treatment effects. In this paper, we provide a centered and weighted least squares estimation method that provides unbiased estimation.\n\nWe begin by defining treatment effects in our setting. The centered and weighted estimation method is derived and its properties are assessed numerically using a variety of simulation scenarios. As an illustration, we apply the proposed method to data from a study of BASICS-Mobile, a mobile intervention to curb heavy drinking and smoking among college students  (Witkiewitz et al. 2014) ."
+    },
+    {
+      "title": "2. Proximal and Other Lagged Treatment Effects"
+    },
+    {
+      "title": "2.1. Motivating Example",
+      "text": "Our motivating example is drawn from BASICS-Mobile, a smartphone-based intervention designed to reduce heavy drinking and smoking among college students. Users are prompted three times per day (morning, afternoon and evening) to complete a self-report assessing a variety of individual and contextual factors including episodes of drinking or smoking, social settings, affect, and need to self-regulate thoughts. The afternoon and evening selfreports are possibly followed by a treatment module of three to four screens of information and at least one question to confirm that the module was received. Some of the treatment modules address smoking and heavy drinking using mindfulness messages  (Bowen and Marlatt 2009) . Other modules provide general (primarily health-related) information  (Dimeff 1999) . In an analysis of data arising from the implementation of BASICS-Mobile, it is natural to estimate the effect of providing the mindfulness messages (versus providing general health information) on a proximal response, such as the smoking rate between the current and following self-report, and to assess whether or not these effects differ according to the individual's context."
+    },
+    {
+      "title": "2.2. Notation and Data",
+      "text": "For a given individual, let A t denote the treatment at the tth treatment occasion and Y t+1 be the subsequent proximal response (t = 1, \u2026, T). Throughout we limit attention to the case where each A t is binary and Y t+1 is continuous. Individual and contextual information at the tth treatment occasion is represented by X t , which may contain summaries of previous measurements of context, treatment or response. For example, prior to each treatment occasion the individual might report their current mood. The vector X t could then contain this measurement or, with previous measurements, variation or change in mood. Over the course of T treatment occasions, the resulting data from an individual ordered in time is (X 1 , A 1 , Y 2 , \u2026, X T , A T , Y T+1 ). The overbar is used to denote a sequence of random variables or realized values through a specific treatment occasion; for example \u0100 t = (A 1 , \u2026, A t ). Information accrued up to treatment occasion t is represented by the history H t = (X \u0304t, \u0232 t , \u0100 t-1 ). Throughout we represent random variables or vectors with uppercase letters; lowercase letters denote their realized values.\n\nIn BASICS-Mobile (Fig.  1 ), A t = 1 if a mindfulness message is provided at the tth treatment occasion and A t = 0 otherwise, Y t+1 is the smoking rate between the occasion t self-report prompt and the following self-report prompt, T = 28, and X t includes the time of day, number of reports recently completed, prior smoking rate, current need to self-regulate, and other summary variables formed from the reports up to and including the tth occasion. For example, from the self-reports at t -1 and t, we can examine the change in self-regulation needs and determine whether there was an increased need (incr t = 1) or not (incr t = 0).\n\nIn the following Section, we define the causal effects of interest in terms of the potential outcomes. Then we express the causal effects in terms of the observed data and provide causal assumptions sufficient for these expressions."
+    },
+    {
+      "title": "2.3. Moderated Treatment Effects",
+      "text": "To define treatment effects below, we adopt potential outcomes  (Rubin 1974; Neyman 1990; Robins 1989 ) notation. However we will deviate slightly from this framework because, as will be seen below in (2), our estimands may involve the treatment distribution in the data. In particular it will be useful to include in the set of potential outcomes, treatments expressed as potential outcomes of past treatment. That is, the potential outcomes are {Y 2 (a 1 ), X 2 (a 1 ), A 2 (a 1 )} a 1 \u2208{0,1} , \u2026, {Y T (\u0101 T-1 ), X T (\u0101 T -1 ), A T (\u0101 T-1 )} \u0101 T-1 \u2208{0,1} T-1, {Y T+1 (\u0101 T )} \u0101 T \u2208{0,1} T. In BASICS-Mobile, for example, the smoking rate measured following the second treatment occasion has four potential outcomes: Y 3 (0, 0), Y 3 (0, 1), Y 3 (1, 0), Y 3 (1, 1). Here Y 3 (0, 0) is the smoking rate that would arise for a given individual had that individual received no mindfulness treatments over the first two treatment occasions: a 1 = a 2 = 0. This idea can be similarly applied to the measurements X t , since they might also be influenced by past treatment; X t+1 (\u0101 t ) are the potential measurements had the sequence of treatments \u0101 t been allocated. For brevity, we denote A 2 (A 1 ) by A 2 and so on with A t (\u0100 t-1 ) denoted by A t . Then H t (\u0100 t-1 ) = (X 1 , A 1 , Y 2 (A 1 ), X 2 (A1), A 2 , Y 3 (\u0100 2 ), X 3 (\u0100 2 ), A 3 , \u2026, Y t (\u0100 t-1 ), X t (\u0100 t-1 )).\n\nMany treatments are designed to influence an individual in the short term or proximally in time  (Heron and Smyth 2010) . For example, instruction in the mindfulness intervention used in BASICS-Mobile, called urge surfing, aims to help the individual to \"ride out\" urges, by recognizing the urge as it arises and allowing the urge to pass on its own. Questions related to these effects concern the proximal effect of treatment on the response defined by\n\nwhere S 1t (\u0100 t-1 ) is a vector of summary variables chosen from H t (\u0100 t-1 ). The difference in (1) represents the effect of A t = 1 versus A t = 0 on the response at t + 1, given S 1t (\u0100 t-1 ). In conditioning only on S 1t (\u0100 t-1 ) as opposed to H t (\u0100 t-1 ), the effect (1) is marginalized over variables in H t (\u0100 t-1 ) that are not in S 1t (\u0100 t-1 ). Different choices of variables in S 1t address a variety of scientific questions, each of which is useful for understanding the effect of A t = 1 versus A t = 0 on the response Y t+1 . For example, a first analysis may focus on the proximal effect that is marginal over all variables in H t (\u0100 t-1 ) (i.e., S 1t = \u2205), whereas a second analysis may focus on assessing this effect conditional on particular variables from H t (\u0100 t-1 ).\n\nNote that, for any A u not contained in S 1t (\u0100 t-1 ), the expectation in (1) depends on distribution of A u . This is a departure from the causal inference literature, where estimands do not depend on the treatment distribution in the data at hand. Nonetheless, for all choices of variables in S 1t (\u0100 t-1 ), the proximal treatment effect is causal, since (1) is the conditional mean of the contrast between the potential proximal response had an individual received (a t = 1) versus not received (a t = 0) treatment at occasion t. Considering the dependence of the proximal effect on the distribution of the treatments, it is best to always present this distribution along with the estimated treatment effect. For further discussion concerning including the treatment distribution as part of the estimand, see Section 8.\n\nMany treatments may have delayed effects. For example, mindfulness messages have a delayed effect when individuals recall and employ mindfulness exercises provided prior to the most recent treatment occasion. In BASICS-Mobile, treatments suggesting alternative activities to smoking and drinking may achieve little to no immediate impact in the afternoon, but the individual might follow these suggestions later on in the evening. So in general both proximal and other lagged effects of treatments on the response variable may be of interest. To define these lagged effects, we denote A t+1 (\u0100 t-1 , a) by\n\nand so on, with\n\n. We define the lag k effect of treatment on the response k treatment occasions into the future Y t+k by\n\nwhere k ranges from 1 up to the number of lags of scientific interest. So the proximal effect corresponds to the lag k = 1 treatment effect. Note that both future actions, as well as Y t+k , depend on treatment at occasion t as emphasized by the superscripts a t = 1 or a t = 0. As with (1), S kt (\u0100 t-1 ) is a vector of variables from the history H t (\u0100 t-1 ). S kt is indexed by k to allow for the possibility that scientists may be interested in assessing effect moderation by different variables depending on the lag k. For example, current busyness might be expected to moderate the proximal (k = 1) effect of treatment, whereas expected busyness over the remaining day might be expected to moderate more delayed (k > 1) effects. The lagged effect is also similarly averaged over the conditional distribution of variables in the history H t (\u0100 t-1 ) not represented in S kt (\u0100 t-1 ), which might include past treatment or underlying moderators. In addition, (2) is averaged over the distribution of treatments after occasion t but before response Y t+k -namely\n\nfor either a = 1 or a = 0.\n\nThe causal effect in (  2 ) is a generalization of the treatment \"blip\" in the SNMM. In SNMMs, the tth treatment blip or intermediate effect on Y t+k is usually defined with S kt (\u0100 t-1 ) = H kt (\u0100 t-1 ) and with respect to a prespecified future (after time t) \"reference\" treatment regime that defines the distribution for A t+1 , \u2026, A t+k-1 . For example, if we were studying treatment discontinuation, we might have chosen the reference regime A u = 0 for u > t, with probability one (cf. Robins 1994, Section 3a ). In this case the lag k treatment effect (2) represents the impact of one last additional treatment on the proximal response k time units later. The reference treatment regime reflected in (2), however, assigns treatment with probabilities between zero and one and corresponds to the distribution of treatments in the data we have at hand. For further discussion of the connection between the causal effects defined here and the SNMM, see Supplement A.1.\n\nTo express the proximal and other lagged effects in terms of the observed data, we assume positivity, consistency and sequential ignorability  (Robins 1994 (Robins , 1997)) :\n\n) are equal to the potential outcomes as follows: Y 2 = Y 2 (A 1 ), X 2 = X 2 (A 1 ), A 2 = A 2 (A 1 ) and for each subsequent t \u2264 T, Y t = Y t (\u0100 t-1 ), X t = X t (\u0100 t-1 ), A t = A t (\u0100 t-1 ) and lastly Y T+1 = Y T +1 (\u0100 T )."
+    },
+    {
+      "title": "\u2022",
+      "text": "Positivity: If the joint density at {H t = h t , A t = a t } is greater than zero, then Pr(A t = a t |H t = h t ) > 0, almost everywhere."
+    },
+    {
+      "title": "\u2022",
+      "text": "Sequential ignorability: For each t \u2264 T, the potential outcomes {Y t+1 (\u0101 t ), X t+1 (\u0101 t ), A t+1 (\u0101 t ), \u2026, Y T+1 (\u0101 T )} are independent of A t conditional on H t .\n\nThe consistency assumption connects the potential outcomes with the data. When the treatment allocated to one individual may influence the response of others, the observed response Y t+1 is generally consistent not with the potential response Y t+1 (\u0100 t ) as above, but possibly with some other group-based conceptualization (e.g. Hong and Raudenbush 2006; Vanderweele et al. 2013) . In particular, for a mobile intervention with a social media component, it may be necessary to define the potential outcomes for a given individual as a function of the treatments that are provided to individuals in their social network.\n\nIn an MRT, treatment is sequentially randomized according to known treatment probabilities, say Pr(A t = 1|H t ) = p t (1|H t ), t = 1, \u2026, T, and thus sequential ignorability is ensured by design. In an observational study, where treatment status is observed rather than randomized, sequential ignorability is often assumed. Here the underlying treatment probabilities p t (1|H t ), t = 1, \u2026, T, are unknown.\n\nIn Supplement A.2 we show that, under these assumptions, the lag k treatment effect can be expressed in terms of the observed data as\n\nfor t = 1, \u2026, Tk + 1, respectively. Note that if S kt = H t , then the lag k effect simplifies to"
+    },
+    {
+      "title": "3. Estimation",
+      "text": "In the following we assume a linear model for the treatment effects. Fortunately, models for the proximal and other lagged treatment effects can in fact be specified separately, since for differing lags k do not constrain one another  (Robins 1994 (Robins , 1997;;  see Supplement B).\n\nSuppose that the following holds.\n\nA1 Each lag k treatment effect of interest takes the form\n\nwhere f kt (s) is a p-dimensional vector function of s and time t.\n\nNote that (5) does not imply that the lag-k effect is the same over time; indeed, the vector f kt (S kt ) may include a vector of basis functions in time, for example, for modeling timevarying effects. When S kt \u2260 H t , (  5 ) is a marginal model. For example, if S kt = \u2205, then (  5 ) is\n\nwhich is a model for the lag k treatment effects indexed by t but marginal over H t . The rest of this paper is devoted to inference on the unknown p-dimensional \u03b2 k . Through-out we denote the true value of \u03b2 k by \u03b2 k * , n represents the number of individuals in the data and\n\nfor some function h of the random vector Z. Assume the data comes from an MRT; in this case sequential ignorability is satisfied. In particular we assume:\n\nA2 Treatment is sequentially randomized with randomization probability Pr(A t = 1| H t ) = p t (1|H t ), for each t = 1, \u2026, T.\n\nInference concerning \u03b2 k using data from observational studies in which the treatment is not sequentially randomized can be handled-if the assumption of sequential ignorability holds-by estimating the treatment probability; see Supplement C.\n\nThe following, simple, estimation method includes centering of the treatment indicators and weighting of the estimating function. The weights allow us to estimate marginal treatment effects, e.g. conditional on S kt instead of H t . As discussed above this commonly occurs, for example, when interest lies in the treatment effect of A t for S kt = \u2205. The weights are ratios of probabilities, with the denominator weight equal to the randomization probability; the numerator probability is arbitrary as long as this probability depends on H t only via S kt (the variables in the treatment effect model, (  5 )). Denote the numerator probabilities by, pt(a|S kt ) for t = 1, \u2026, T. The weight at occasion is\n\nThe centering produces orthogonality between estimation of the \u03b2 k parameter in the treatment effect, f kt (S kt ) \u22a4 \u03b2 k and estimation of the parameters in a nuisance function. That is, the method below will provide a consistent estimator of the lag k effect even when the nuisance function E[W t Y t+k |H t ] is misspecified. This robustness property is desirable for two reasons. First, the history H t is usually high dimensional, making it very difficult to model these nuisance functions correctly. Second, even when H t is not very large, it can be difficult or impossible to specify models that can be correct for both the nuisance function as well as for the delayed treatment effects at lags j > k (see Supplement B for an example).\n\nBelow we provide results when the working model for E[W t Y t+k |H t ] is g kt (H t ) \u22a4 \u03b1 k where g kt (H t ) is a vector of features constructed from H t and the vector \u03b1 k is unknown.\n\nThe centered and weighted least squares estimating function is\n\nwhere as before,\n\n) . Let U \u0307W be the derivative of U W with respect to the row\n\nIn Supplement C we prove a more general version of the following result."
+    },
+    {
+      "title": "Proposition 3.1",
+      "text": "Assume A1 and A2, both defined above. Then, under invertibility and moment conditions, the solution to the estimating equation \u2119 n U W (\u03b1 k , \u03b2 k ) = 0 yields an estimator (\u03b1 \u0302k, \u03b2 \u0302k) for\n\nis asymptotically normal with mean zero and variance-covariance matrix consistently estimated by the lower block diagonal (p \u00d7 p) entry of the matrix (\u2119 n U \u0307W (\u03b1 \u0302k, \u03b2 \u0302k)) -1 \u2119 n U W (\u03b1 \u0302k, \u03b2 \u0302k) \u22972 (\u2119 n U \u0307W (\u03b1 \u0302k, \u03b2 \u0302k))\n\n-1 \u22a4 ."
+    },
+    {
+      "title": "Remarks-"
+    },
+    {
+      "title": "1.",
+      "text": "A first look at the estimating function, (  6 ), might lead one to think that the estimating function is unbiased\n\nhowever this is not the case. Indeed, the primary assumption A1 only concerns a marginal quantity derived from E[Y t+k | A t , H t ]. Furthermore, the working model g kt (H t ) \u22a4 \u03b1 k for E[W t Y t+k |H t ] need not be correct in order for \u03b2 \u0302k to be consistent and for the large sample results to hold (see the proof in Supplement C)."
+    },
+    {
+      "title": "2.",
+      "text": "As mentioned above the choice of the numerator of the weight, pt is arbitrary as long as pt depends at most on S kt . One approach to selecting pt is to recognize that pt determines the estimand when the model for the treatment effect in 5 is misspecified. See  (14, 15)  in Supplement C for the projection. In particular selecting pt to be constant in t and S kt results in the usual L 2 -projection of underlying treatment effect."
+    },
+    {
+      "title": "3.",
+      "text": "It is interesting to note that if the randomization probabilities are constant, \u03c1, then setting pt (1|S kt ) = \u03c1, simplifies (6) to an unweighted regression with recoded treatment indicators (A t \u2192 A t -\u03c1)."
+    },
+    {
+      "title": "4.",
+      "text": "The weight W t is reminiscent of inverse probability of treatment weighting in causal inference  (Robins 1998) . However, in addition to facilitating estimation of marginal treatment effects, here weighting (and centering) is simply used to make the weighted least squares estimator \u03b2 \u0302k robust against the case in which the working model g kt (H t ) \u22a4 \u03b1 k misspecifies E[W t Y t+k |H t ]. Further, this similarity might lead one to use the numerator of the weight to \"stabilize\" the weights (e.g. Section 6.1 of  Robins et al. 2000) ; that is, to select a pt to make W t as close to 1 as possible. There are two caveats to this. First, as mentioned in remark 2. above, the numerator probabilities determine the limit of \u03b2 \u0302k when the modeling assumption for the lag k treatment effect (  5 ) is false and thus might be selected with this alternative interpretation for the estimand in mind. Second, bias can result if the numerator of the weight depends on variables that are not in S kt ; see the second simulation in Section 6."
+    },
+    {
+      "title": "5.",
+      "text": "Centering has been previously employed by  Brumback et al. (2003)  and  Goetgeluk and Vansteelandt (2008)  for causal inference. For example  Goetgeluk and Vansteelandt (2008)  center exposure variables by their overall mean to protect against unmeasured baseline confounders. Brumback et al. (2003)  center time-varying exposures by their conditional mean given the history, as we do; they consider treatment effects under a treatment discontinuation reference regime and limit attention to overall effects without interaction terms. In contrast to these papers, our use of centering is similar to that of  Liao et al.'s (2015)  and is solely to provide robustness to the working model for E[W t Y t+k |H t ]; centering is not used to adjust for confounding. In  Liao et al. 2015  the treatment probabilities are non-stochastic."
+    },
+    {
+      "title": "6.",
+      "text": "The similarity of (6) to generalized estimating equations (GEEs, Liang and Zeger 1986) might motivate the inclusion of a non-independence working correlation matrices such as exchangeable or AR(1) in the estimating function so as to reduce variance of \u03b2 \u0302k (e.g. Mancl and Leroux 1996) . Similarly, an analyst might wish to use a non-independence working correlation matrix in our setting for the same reason, but this strategy will generally introduce bias. Such a result is unsurprising given the bias that arises when non-independence working matrices are used in inverse probability of treatment weighting literature  (Vansteelandt 2007; Tchetgen Tchetgen et al. 2012)  or in GEEs where a time-varying response is modeled by time-varying covariates  (Pepe and Anderson 1994) . The simulations in Table  3  in Section 6, and Table  7  in Supplement D illustrate such bias."
+    },
+    {
+      "title": "4. Availability",
+      "text": "Up to this point we have implicitly presumed that at every possible occasion t, the participant is available to engage with the mobile intervention. Consideration of availability is critical since it might be unreasonable, counter-productive or even unethical to always presume availability. By experimental design, treatment will not be delivered to unavailable individuals. For example in HeartSteps  (Klasnja et al. 2015) , smartphone notifications are used to deliver suggestions to disrupt sedentary behavior. Here, the participant is considered unavailable when driving a vehicle (because the notification may be distracting) or walking (as treatment at this time is scientifically inappropriate). Detection of availability can be carried out through sensors (as in the case of HeartSteps) or recent interaction with the mobile device. BASICS-Mobile took the latter approach by presuming that participants were available to receive a treatment only after they fully completed a self-report.\n\nAssume that the measurements X t just prior to the tth treatment occasion contain the participant's availability status, denoted by I t , where I t = 1 if the participant is available to engage with the treatment at occasion t and I t = 0 otherwise. To define the treatment effects under limited availability, we use potential outcome notation. The potential outcome notation allows us to not only make explicit the dependence of Y t+1 on treatment \u0101 t but also make explicit the dependence of I t on \u0101 t-1 . Furthermore, in contrast to Section 2.3, here the potential outcomes are indexed by decision rules because treatment can only be provided when a participant is available. The use of decision rules to index potential outcomes helps make explicit that, by experimental design, treatment A t is not delivered if the participant is unavailable at the t treatment occasion. In particular define d(a,i) for a \u2208 {0, 1}, i \u2208 {0, 1} by d(a, 0) = 0 and d(a, 1) = a (recall that here a = 0 means no treatment). Then for each a 1 \u2208 {0, 1}, define D 1 (a 1 ) = d(a 1 ,I 1 ). The potential proximal responses following treatment occasion 1 are {Y 2 (D 1 (1)), Y 2 (D 1 (0))}. Note that if I 1 = 0 then D 1 (1) = D 1 (0) = 0 and thus {Y 2 (D 1 (1)), Y 2 (D 1 (0))} = {Y 2 (0), Y 2 (0)}. That is, the experimental design excludes the possibility to observe Y 2 (1) if I 1 = 0. Similarly, there are potential outcomes for availability;\n\nthis emphasizes the fact that previous exposure to treatment can influence subsequent availability. In BASICS-Mobile, for example, repeated provision of treatment might lead to lower engagement with the intervention, and therefore lower availability for further delivery of the treatment. The potential availability indicators at t = 2 are {I 2 (D 1 (1)), I 2 (D 1 (0))}. As with the proximal response, if I 1 = 0 then D 1 (1) = D 1 (0) = 0 and thus {I 2 (D 1 (1)), I 2 (D 1 (0))} = {I 2 (0), I 2 (0)}.\n\nThe decision rules at t > 1 are defined iteratively, building on prior decision rules. For each \u0101 2 = (a 1 , a 2 ) with a 1 , a 2 \u2208 {0, 1}, define D 2 (\u0101 2 ) = d(a 2 , I 2 (D 1 (a 1 ))) and D 2 (a 2 ) = (D 1 (a 1 ), D 2 (a 2 )). A potential proximal response following occasion t = 2 and corresponding to \u0101 2 is Y 3 (D 2 (a 2 )) and a potential availability indicator at t = 3 is I 3 (D 2 (a 2 )).\n\nSimilarly, for each \u0101 t = (a 1 , \u2026, a t ) \u2208 {0, 1} t , define D t (a t ) = d(a t , I t (D t -1 (a t -1 ))) and D t (a t ) = (D 1 (a 1 ), \u2026, D t (a t )). For each \u0101 t = (a 1 , \u2026, a t ) \u2208 {0, 1} t , the potential proximal response is Y t + 1 (D t (a t )) and potential availability indicator is I t + 1 (D t (a t )) at occasion t + 1.\n\nWe now incorporate availability into the definition of the proximal treatment effect; first recall the notation from the end of Section 2.2; similarly denote A 2 (D 1 (A 1 )) by A 2 and so on with A t (D t -1 (A t -1 )) denoted by A t . The proximal treatment effect is\n\nUnlike (1), this effect is defined for only individuals available for treatment at time t, that is, I t D t -1 (A t -1 ) = 1. This subpopulation is not static; at a given treatment occasion t only certain types of individuals might tend to be available and availability for any given individual may change with t. Conditioning on availability is related to the concept of viable or feasible dynamic treatment regimes  (Wang et al. 2012; Robins 2004 ), in which one assesses only the causal effect of treatments that can actually be provided.\n\nTo incorporate availability into the definition of the lagged effects, we use the shorthand notation: denote\n\n, and so on, with\n\n. The lag k effect of treatment on the response k treatment occasions into the future Y t+k is defined by\n\n.\n\nAssuming consistency, positivity and sequential ignorability, the lag k treatment effect under limited availability can be expressed in terms of the data as\n\nwhere p t (1|H t ) is now Pr(A t = 1|I t = 1, H t ). Modeling and estimation proceeds following the same approach as with the always-available setting. In particular for the lag k treatment effect, we assume the linear model\n\nwhere, as before, f kt (S kt ) is a vector of features involving S kt and time t. To form the estimating function for \u03b2 k , we replace W t in (6) by the product I t W t . The working model and the treatment probability models are conditional on I t = 1. A more general version of the resulting estimating equation is provided in display (  12 ) of Supplement C. Proofs can be found in Supplement C."
+    },
+    {
+      "title": "5. Implementation",
+      "text": "The weighting and centering estimation method can be implemented using standard software for GEEs, provided that we: (i) incorporate I t W t as \"prior weights\" and (ii) employ a independence working correlation matrix. The standard errors provided in Proposition 3.1 directly correspond to the sandwich variance-covariance estimator provided by GEE software. From existing work on GEEs, it is well understood that the sandwich estimator is non-conservative in small samples. To address this, whenever n \u2264 50, we apply  Mancl and DeRouen's (2001)  small sample correction to the term \u2119 n U W (\u03b1 \u0302k, \u03b2 \u0302k) \u22972 in the estimator of the variance; in particular we premultiply the (T -k + 1) \u00d7 1 vector of each person's residuals in U W by the inverse of the identity matrix minus the leverage for this person. Also, as in  Liao et al. (2015) , we use critical values from a t distribution or a Hotelling's Tsquared distribution. In particular if we wish to test the null hypothesis for a linear combination of \u03b2 k -e.g., test c \u22a4 \u03b2 k = 0 for a known p-dimensional vector c-then we use the\n\n(1 -\u03b1 0 ) where, p is the dimension of \u03b2 k , q is the dimension of \u03b1 k and \u03b1 0 is the significance level. More generally, if we wish to conduct a p\u2032-dimensional multivariate test of \u03b2 k -e.g., test z \u22a4 \u03b2 k = 0 for a known p \u00d7 p\u2032 matrix z-then the critical\n\n.\n\nWhen either pt(1|S kt ) or p t (1|H t ) is estimated, the sandwich variance-covariance estimator must be adjusted to account for the additional sampling error (see Supplement C). See Supplement E to obtain code that calculates standard errors using R (R Core Team 2015)."
+    },
+    {
+      "title": "6. Simulation Study",
+      "text": "Here, we evaluate the proposed centering and weighting method via simulation experiments.\n\nThe following, simple, generative model will allow us to illustrate the proposed method and compare it with existing methods. Consider data arising from an MRT (so the randomization probability p t (1|H t ) is known). The generative model for the response, Y t+1 , is a linear model in (A t , S t , A t-1 , S t-1 , A t-2 , A t S t , A t-1 S t , A t-2 S t-1 ), for S t \u2208 {-1, 1}. For convenience in reading off the marginal effects, we write this model as\n\nHere the randomization probability is given by p t (1|H t ) = expit(\u03b7 1 A t-1 + \u03b7 2 S t ), Pr(S t = 1| A t-1 , H t-1 ) = expit(\u03beA t-1 ) (note A 0 = 0), and \u03b5 t ~ N(0, 1) with Corr(\u03b5 u , \u03b5 t ) = 0.5 |u-t|/2 . Throughout, for simplicity, each subject is available at every treatment occasion: I t = 1 (t = 1, \u2026, T). In the simulation scenarios below, we fix \u03b8 1 = 0.8 and \u03b2 10 * = -0.2 and we vary (\u03b8 2 , \u03b2 11 * , \u03b7 1 , \u03b7 2 , \u03be).\n\nThe marginal proximal (lag k = 1) effect is given by\n\n, by setting \u03be = 0), then the marginal proximal treatment effect is constant in time and is given by \u03b2 1 * = \u03b2 10 * = -0.2. Throughout, for simplicity, we consider scenarios with \u03b2 11 * = 0;\n\nhowever, as discussed in Section 3, the method does not require treatment effects that are constant in time.\n\nHere, we consider three simulation experiments. All three simulation experiments concern estimation of the marginal proximal treatment effect \u03b2 1 *\n\n. Thus in all cases when the weighted and centered method is used, f 1t (S 1t ) = (1) in the estimating function (6) (i.e., S 1t = \u2205). We report average \u03b2 \u03021 point estimates, standard deviation and root mean squared error of \u03b2 \u03021, and 95% confidence interval coverage probabilities for n = T = 30 across 1000 replicates.\n\nConfidence intervals are based on standard errors that are corrected for the estimation of weights and/or small samples (see Section 5). The tables below omit the average estimated standard errors; these are provided in Supplement D and closely correspond to the standard deviations of the point estimates. Supplement D also reports additional results for n = 30,60 with T = 30,50 (results were similar for different T values), and compares the proposed method versus centering but not weighting (W t = 1 for all t) in a fourth simulation experiment.\n\nThe first simulation experiment concerns the estimation of \u03b2 1 * when an important moderator exists. This experiment illustrates that, when primary interest is in the marginal proximal treatment effect, weighting and centering is preferable over GEE. In the data generative model, we set \u03b8 2 = 0, \u03b7 1 = -0.8, \u03b7 2 = 0.8 and \u03be = 0 (recall \u03be = 0 implies that the true marginal proximal treatment effect is \u03b2 1 * = -0.2). Different scenarios were devised by setting \u03b2 11 * to one of 0.2, 0.5, 0.8, giving respectively a small, medium, or large degree of moderation by S t . Since \u03b7 1 and \u03b7 2 are nonzero, the treatment A t is assigned with a probability depending on both S t and past treatment A t-1 , for each t.\n\nIn the weighted and centered analysis, we parameterize and estimate pt. In particular, pt(a; p) = p\u0302a(1 -p) 1-a where \u03c1 = \u2119 n \u2211 t = 1\n\nThe weights are set to W t = p\u0302A t (1 -p) 1-A t /p t (A t |H t ) and the working model for E[W t Y t+1 |H t ] is \u03b1 10 + \u03b1 11 S t (i.e., g 1t (H t ) = (1, S t ) \u22a4 ). Thus the estimating function in (6) is given by\n\nA common alternative would be a GEE analysis with an independence working correlation matrix. The GEE estimating function with an independence working correlation matrix (GEE-IND) is the above estimating function but with W t = 1 for all t and A t not centered. A more likely alternate that would be used in the mobile health literature is a GEE with an non-independence working correlation matrix  (Schafer 2006) ; the resulting conditional mean model is the same as when random effects are used  (Schwartz and Stone 2007; Bolger and Laurenceau 2013) . We also provide a comparison with this alternative, using an AR(1) correlation matrix (GEE-AR(1)). Note that, to guarantee consistency in a GEE analysis, one would assume that the analysis model is correct; since here the analysis model is Y t+1 ~ \u03b1 10 + \u03b1 11 S t + A t \u03b2 1 , the corresponding assumption would be that E[Y t+1 |S t , A t ] = \u03b1 10 + \u03b1 11 S t + A t \u03b2 1 for some (\u03b1 10 , \u03b1 11 , \u03b2 1 ). This assumption is false (no A t S t term). The weighting and centering method, on the other hand, does not require a model for the conditional mean. For consistency, the weighting and centering method only uses the assumption that\n\nSince the treatment effect term does not include S t , the GEE conditional mean models are misspecified. Furthermore since \u03b7 2 = 0.8, the randomization probability p t (1|H t ) depends on the underlying moderator S t . We therefore anticipate the \u03b2 \u03021 from the GEE methods to be a biased estimator of the marginal treatment effect of \u03b2 1 * = -0.2 and we expect this bias to increase proportional to \u03b2 11 * . On the other hand, all of the requirements needed to achieve consistency in the proposed method are satisfied; hence, the \u03b2 \u03021 from the weighted and\n\n] by a constant, here denoted by \u03b2 1 thus f 1t (S 1t ) = 1. We set pt(1) = 0.5 thus the weights are W t = 1 for all t = 1, \u2026, T = 30. We compare the use of (i) the estimating function in (6), which corresponds to an independent working correlation structure, versus (ii) using a working AR(1) correlation matrix assuming a correlation of 0.5 |u-t|/2 between times u and t. In the latter case, the estimating function is\n\nwhere \u03c5 tu is the (t, u) entry of V -1 , where the (t, u) entry in V is 0.5 |u-t|/2 . While AR(1) might better represent the true correlation matrix than an independence correlation matrix, we expect (ii) to induce bias as this marginal model includes time-varying covariates. Table  3  demonstrates this result, with (ii) exhibiting bias and achieving a coverage probability of 65%. Further results are provided in Table  7  in the Supplement."
+    },
+    {
+      "title": "7. Application",
+      "text": "BASICS-Mobile is a pilot study, with n = 28, T = 28. The response Y t+1 is the smoking rate from the tth occasion to the next self-report, and participants are presumed available only if they completed the preceding self-report. So the availability I t is the self-report completion status just prior to t and the treatment decision D t is 1 only if a mindfulness message is provided at t. Otherwise, D t = 0.\n\nBASICS-Mobile was neither a sequentially randomized trial nor an observational study. Treatment delivery at occasion t was based on a complex decision rule involving primarily a self-reported measure that the user had an urge or inclination to smoke at the preceding selfreport (urge t ), an indicator for the first three treatment occasions (1(t < 4)), and a combination of other variables. For illustrative purposes we provide an analysis acting as though the study was observational and assuming sequential ignorability; we estimate (with logistic regression) the treatment probabilities in the denominator of the weights, p t (1|H t ), based on (Y t , urge t ,1(t < 4)) using\n\np t (1 | H t ; \u03b7) = expit(0.69 + 0.02Y t + 0.17urge t -0.281(t < 4) + 0.070urge t 1(t < 4)) .\n\nWe examine proximal (k = 1) and lag-2 (k = 2) treatment effects. For the proximal effect analysis, we examine one candidate time-varying moderator S 1t = incr t , which indicates whether or not the user reported an increase in need to self-regulate thoughts over the two self-reports preceding t. Thus in the estimating function (  6 ) for the proximal effect analysis, we set f 1t (S 1t ) = (1, incr t ) \u22a4 . For the delayed effect analysis, we consider only the marginal lag-2 effect; thus, f 2t (S 2t ) = (1) in the estimating function (6). For both analyses, we centered and estimated the numerator of the weights based on pt(a; p) = p\u0302a(1 -p) 1-a where\n\nHence, for both analyses, the weights were set to W t = p\u0302A t (1 -p) 1-A t /p t (A t |H t ; \u03b7 \u0302). In the working model for both analyses, a variety of predictors are incorporated in g kt (H t ) (k = 1, 2), including an intercept term, incr t , current urge to smoke, Y t+1-k , time of day, the interaction between Y t+1-k and time of day, baseline smoking severity, baseline drinking level, age and gender.\n\nThe data analysis leads to several conclusions. First, the mindfulness message achieved a reduction in the average next-reported smoking rate, but only when the user was experiencing either a stable or decreased need to self-regulate (95% CI -5.45 to -0.15 cigarettes per day; see Table  4 ). Otherwise no proximal treatment effect is apparent. Second, there is no evidence to support the presence of an overall lag-2 effect, with a 95% CI of -1.74 to 0.76 cigarettes per day for the average reduction achieved by mindfulness treatment at the second-to-last treatment occasion. Estimated standard errors (SEs) take into account sampling error in estimated treatment probabilities (see (  13 ) for the formula), and are corrected for small n (see Section 5 for details on the correction)."
+    },
+    {
+      "title": "8. Discussion",
+      "text": "In this paper we define treatment effects suited for mobile interventions that enable frequent measurements and frequent delivery of treatments. As we discussed, the effect definition as provided in (  1 ) and (  2 ) is atypical in the field of causal inference in that the underlying mechanism for the assigned treatment is part of the definition of the causal effect. However, this definition of the causal effects is consistent with the effects defined via most models for intensively collected longitudinal data (see  Schafer 2006 , Schwartz and Stone 2007 and, more recently, Bolger and Laurenceau 2013) . Commonly the model for the conditional mean of a time-varying response given time-varying covariates is a linear model (possibly with the use of covariates defined by flexible basis functions). If treatment indicators as well as interactions between the treatment indicators and time varying covariates are included in the linear model then the meaning of coefficients of these covariates coincide with the moderated proximal effect defined here. However estimation of these casual coefficients using most common approaches  (Schafer 2006; Schwartz and Stone 2007; Bolger and Laurenceau 2013) , that is, either GEE approaches or approaches that employ random effects, can cause bias. Indeed the large sample and simulation results provided here show that straightforward use of GEEs (without weighting) is not guaranteed to consistently estimate\n\nSince the conditional mean functions for models with random intercepts or random coefficients (e.g. Goldstein 2011) are the same as those in GEEs, we expect that likelihood based methods which use the induced correlation structure in the estimation will generally be biased. This connection is important given the fact that, in the analysis of intensive longitudinal data, there is a preference for including random effects and, when GEE models are used, to use a non-independence working correlation structure (such as exchangeable, Corr(Y u , Y t ) = r (u \u2260 t), or AR(1), Corr(Y u , Y t ) = r |u-t| ) to improve precision  (Schafer 2006, p. 58) . Indeed the large sample and simulation results provided here show that GEEs based on a non-independence working covariance structure is not guaranteed to consistently estimate \u03b2 k * . Future work is needed on whether or how to incorporate random effects in the estimation of proximal and lagged treatment effects.\n\nThere are a number of other directions for future work. First, throughout we limited attention to a continuous response and binary treatment decisions. The extension to the multi-category treatment setting (e.g., A t \u2208 {1,2, \u2026, C}) is relatively straightforward involving, for example, the selection of a referent category (say, category C) and the use of C -1 centered terms of the form 1(A t = c) -pt(c|S kt ) where c \u2208 {1, 2, \u2026, C -1}. Note that here scientists might select different candidate moderators depending on the contrast. Second, an extension to the binary response setting is more difficult, potentially requiring an extension of the multiplicative or log-linear structural nested mean model  (Vansteelandt et al. 2014) . Such an extension will be non-trivial if one wants to preserve the ability to estimate treatment effects that are only conditional on S 1t as opposed to all of the past, H t .\n\nThird, lagged effects (k > 1) were defined similar to proximal effects (k = 1), but in future work one might rather be interested in a lagged effect that quantifies the accumulation of past treatment. Fourth, since small to moderate treatment effects may be difficult to detect, yet potential response predictors that can be used in the working models to reduce error variance are numerous, future work could consider penalized methods for the working model in order to accommodate and select from the large number of predictors. Fifth, although the primary motivation for this paper is to estimate proximal or lagged effects using data arising from micro-randomized trials  (Klasnja et al. 2015; Liao et al. 2015; Dempsey et al. 2015) , work on how to best generalize and combine the methods here with the current research in causal inference for observational studies is needed. Lastly, here we considered analyses that are similiar to longitudinal analyses; however, interesting alternative approaches might have more of a \"system dynamics\" flavor and employ time-series modeling or Markovian process modeling. A BASICS-Mobile participant's data for two treatment occasions leading up to Y t+1 , depicted in chronological order. Information is primarily collected via self-reports three times per day-morning, afternoon and evening. Treatment occasions take place after the afternoon and evening self-reports.\n\nTable 1\n\nComparison of three estimators of the marginal proximal treatment effect, \u03b2 \u03021, when an important moderator is omitted."
+    },
+    {
+      "text": "Figure 1."
+    },
+    {
+      "text": "or CP are significantly different, at the 5% level, from -0.2 or 0.95, respectively. GEE-IND is the same as the proposed method but with W t = 1 and no centering. In GEE-AR(1) includes an AR(1) working correlation matrix."
+    },
+    {
+      "title": "Acknowledgments",
+      "text": "Funding was provided by the  National Institute on Drug Abuse  ( P50DA039838 ,  R01DA039901 ,  R01DA015697 ),  National Institute on Alcohol Abuse and Alcoholism  ( R01AA023187 ),  National Heart Lung and Blood Institute  ( R01HL125440 ), and  National Institute of Biomedical Imaging and Bioengineering  ( U54EB020404 )."
+    },
+    {
+      "text": "centered method should be unbiased, regardless of the value for \u03b2 11 * . These conjectures concerning bias are supported by Table  1 . In addition, (i) for \u03b2 11 * = 0.5, 0.8 the RMSE for GEE is greater than or equal to the RMSE for the proposed method; and (ii) for all \u03b2 11 * the proposed method achieves nominal 95% coverage, whereas, the GEE methods generally do not (an exception was for \u03b2 11 * = 0.2 with GEE-IND). For further results see Table  5  in the Supplement.\n\nThe second and third simulation experiments focus on the proposed weighted and centered estimator. The second experiment illustrates that the ability to stabilize the weights is limited, since weighted least squares is prone to bias if the numerator of W t depends on variables that are not in S kt . In the data generative model, we set \u03b8 2 = -0.1, \u03b2 11 * = 0.5, \u03b7 1 = -0.8, \u03b7 2 = 0.8 and \u03be = 0. Thus as above, the randomization probability for A t depends on both S t and past treatment A t-1 (t = 1, \u2026, T = 100). Here, since \u03b2 11 * = 0.5, S t is a moderator of the proximal effect of treatment and since \u03b8 2 = \u03b2 1 * /2 = -0.1 there is a lag k = 2 treatment effect of A t-1 on Y t+1 .\n\nIn the data analysis using (6), the weighted and centered method, the working model for\n\nThe denominator of the weight W t is the known randomization probability, p t (A t |H t ). We consider two different choices for pt (hence, two different choices for centering A t and for the numerator of W t ): (i)\n\nA choice that is constant in t. Here, pt(a; p) = p\u0302a(1 -p) 1-a where \u03c1\n\nThe weights are W t (A t , H t ) = p\u0302A t (1 -p) 1-A t /p t (A t |H t ); (ii) A choice that depends on S t .\n\nHere, instead, pt(1|S t ; p) = expit(p\u03020 + p1S t ), where p\u0302 = (p\u03020, p1) is the solution to \u2119 n \u03a3 t exp(\u03c1 0 +\u03c1 1 S t ){expit(\u03c1 0 +\u03c1 1 S t )(1-expit(\u03c1 0 +\u03c1 1 S t ))} -1 (A t -expit(\u03c1 0 +\u03c1 1 S t ))(1, S t ) \u22a4 = 0. In (i) the probability in the numerator is constant for all W t (t = 1, \u2026, T = 30). In (ii) the probability in the numerator depends on S t yet interest is in a marginal proximal effect \u03b2 1 (S t is not a part of f 1t (S 1t )). Hence, we anticipate bias in \u03b2 \u03021 under (ii), but not (i). This is indeed reflected in Table  2 , with (ii) exhibiting bias and achieving a coverage probability of 89%.\n\nFor further results see Table  6  in Supplement D.\n\nThe third simulation experiment illustrates that employing a non-independence working correlation structure with the weighted and centered method can result in bias. In the data generative model, we set \u03b8 2 = -0.1, \u03b2 11 * = 0, \u03b7 1 = \u03b7 2 = 0 and \u03be = 0.1. There is no moderation of the proximal effect, since \u03b2 11 * = 0. Unlike the above scenarios, here the predictor S t is influenced by A t-1 (since \u03be = 0.1), and because \u03b8 2 = \u03b2 1 * /2 = -0.1, there is a lag k = 2 treatment effect of A t-1 on Y t+1 . Treatment is randomized with fixed probability p t (1|H t ) = 0.5 for each t = 1, \u2026, T = 30 since \u03b7 1 = \u03b7 2 = 0.\n\nIn the data analysis using (6), the weighted and centered method, the working model for E[W t Y t+1 |H t ] is again \u03b1 10 + \u03b1 11 S t ; thus, g 1t (H t ) = (1, S t ). In both data analyses, we correctly"
+    },
+    {
+      "title": "Supplementary Material",
+      "text": "Refer to Web version on PubMed Central for supplementary material."
+    },
+    {
+      "title": "Author Manuscript",
+      "text": "Boruvka et al."
+    },
+    {
+      "title": "Page 22",
+      "text": "Table  2  Weighted and centered estimator of the marginal proximal treatment effect, \u03b2 \u03021, using two choices for pt. Proximal and lag-2 treatment effects estimated from BASICS-Mobile data."
+    }
+  ],
+  "references": [
+    {
+      "title": "Intensive Longitudinal Methods: An Introduction to Diary and Experience",
+      "authors": [
+        "N Bolger",
+        "J-P Laurenceau"
+      ],
+      "year": 2013,
+      "raw": "N Bolger \n\t\t \n\t\t \n\t\t\t J-P Laurenceau \n\t\t \n\t\t Intensive Longitudinal Methods: An Introduction to Diary and Experience \n\t\t New York, NY \n\t\t \n\t\t\t The Guilford Press \n\t\t\t 2013 \n\t\t \n\t \n\t Bolger N, Laurenceau J-P. Intensive Longitudinal Methods: An Introduction to Diary and Experience. New York, NY: The Guilford Press; 2013."
+    },
+    {
+      "title": "Surfing the urge: Brief mindfulness-based intervention for college student smokers",
+      "authors": [
+        "S Bowen",
+        "A Marlatt"
+      ],
+      "year": 2009,
+      "doi": "10.1037/a0017127",
+      "journal": "Psychology of Addictive Behaviors",
+      "volume": "23",
+      "issue": "4",
+      "raw": "Surfing the urge: Brief mindfulness-based intervention for college student smokers \n\t\t \n\t\t\t S Bowen \n\t\t \n\t\t \n\t\t\t A Marlatt \n\t\t \n\t\t 10.1037/a0017127 \n\t\t 20025372 \n\t \n\t \n\t\t Psychology of Addictive Behaviors \n\t\t \n\t\t\t 23 \n\t\t\t 4 \n\t\t\t \n\t\t\t 2009 \n\t\t \n\t \n\t Bowen S, Marlatt A. Surfing the urge: Brief mindfulness-based intervention for college student smokers. Psychology of Addictive Behaviors. 2009; 23(4):666-671. [PubMed: 20025372]"
+    },
+    {
+      "title": "The intensity-score approach to adjusting for confounding",
+      "authors": [
+        "B Brumback",
+        "S Greenland",
+        "M Redman",
+        "N Kiviat",
+        "P Diehr"
+      ],
+      "year": 2003,
+      "doi": "10.1111/1541-0420.00034",
+      "journal": "Biometrics",
+      "volume": "59",
+      "issue": "2",
+      "raw": "The intensity-score approach to adjusting for confounding \n\t\t \n\t\t\t B Brumback \n\t\t \n\t\t \n\t\t\t S Greenland \n\t\t \n\t\t \n\t\t\t M Redman \n\t\t \n\t\t \n\t\t\t N Kiviat \n\t\t \n\t\t \n\t\t\t P Diehr \n\t\t \n\t\t 10.1111/1541-0420.00034 \n\t\t 12926712 \n\t \n\t \n\t\t Biometrics \n\t\t \n\t\t\t 59 \n\t\t\t 2 \n\t\t\t \n\t\t\t 2003 \n\t\t \n\t \n\t Brumback B, Greenland S, Redman M, Kiviat N, Diehr P. The intensity-score approach to adjusting for confounding. Biometrics. 2003; 59(2):274-285. [PubMed: 12926712]"
+    },
+    {
+      "title": "Randomized trials for the Fitbit generation",
+      "authors": [
+        "W Dempsey",
+        "P Liao",
+        "P Klasnja",
+        "Nahum Shani",
+        "I Murphy"
+      ],
+      "year": 2015,
+      "doi": "10.1111/j.1740-9713.2015.00863.x",
+      "journal": "Significance",
+      "volume": "12",
+      "issue": "6",
+      "raw": "Randomized trials for the Fitbit generation \n\t\t \n\t\t\t W Dempsey \n\t\t \n\t\t \n\t\t\t P Liao \n\t\t \n\t\t \n\t\t\t P Klasnja \n\t\t \n\t\t \n\t\t\t Nahum - Shani \n\t\t \n\t\t \n\t\t\t I Murphy \n\t\t \n\t\t \n\t\t\t S A \n\t\t \n\t\t 10.1111/j.1740-9713.2015.00863.x \n\t\t 26807137 \n\t \n\t \n\t\t Significance \n\t\t \n\t\t\t 12 \n\t\t\t 6 \n\t\t\t \n\t\t\t 2015 \n\t\t \n\t \n\t Dempsey W, Liao P, Klasnja P, Nahum-Shani I, Murphy SA. Randomized trials for the Fitbit generation. Significance. 2015; 12(6):20-23. [PubMed: 26807137]"
+    },
+    {
+      "title": "Brief Alcohol Screening and Intervention for College Students (BASICS): A Harm Reduction Approach",
+      "authors": [
+        "L Dimeff"
+      ],
+      "year": 1999,
+      "raw": "L A Dimeff \n\t\t \n\t\t Brief Alcohol Screening and Intervention for College Students (BASICS): A Harm Reduction Approach \n\t\t \n\t\t\t Guilford Press \n\t\t\t 1999 \n\t\t \n\t \n\t Dimeff LA. Brief Alcohol Screening and Intervention for College Students (BASICS): A Harm Reduction Approach. Guilford Press; 1999."
+    },
+    {
+      "title": "The effectiveness of mobile-health technology-based health behaviour change or disease management interventions for health care consumers: A systematic review",
+      "authors": [
+        "C Free",
+        "G Phillips",
+        "L Galli",
+        "L Watson",
+        "L Felix",
+        "P Edwards",
+        "V Patel",
+        "A Haines"
+      ],
+      "year": 2013,
+      "doi": "10.1371/journal.pmed.1001362",
+      "journal": "PLoS Medicine",
+      "volume": "10",
+      "issue": "1",
+      "pages": "1001362",
+      "raw": "The effectiveness of mobile-health technology-based health behaviour change or disease management interventions for health care consumers: A systematic review \n\t\t \n\t\t\t C Free \n\t\t \n\t\t \n\t\t\t G Phillips \n\t\t \n\t\t \n\t\t\t L Galli \n\t\t \n\t\t \n\t\t\t L Watson \n\t\t \n\t\t \n\t\t\t L Felix \n\t\t \n\t\t \n\t\t\t P Edwards \n\t\t \n\t\t \n\t\t\t V Patel \n\t\t \n\t\t \n\t\t\t A Haines \n\t\t \n\t\t 10.1371/journal.pmed.1001362 \n\t\t 23349621 \n\t \n\t \n\t\t PLoS Medicine \n\t\t \n\t\t\t 10 \n\t\t\t 1 \n\t\t\t 1001362 \n\t\t\t 2013 \n\t\t \n\t \n\t Free C, Phillips G, Galli L, Watson L, Felix L, Edwards P, Patel V, Haines A. The effectiveness of mobile-health technology-based health behaviour change or disease management interventions for health care consumers: A systematic review. PLoS Medicine. 2013; 10(1):e1001362. [PubMed: 23349621]"
+    },
+    {
+      "title": "Conditional generalized estimating equations for the analysis of clustered and longitudinal data",
+      "authors": [
+        "S Goetgeluk",
+        "S Vansteelandt"
+      ],
+      "year": 2008,
+      "doi": "10.1111/j.1541-0420.2007.00944.x",
+      "journal": "Biometrics",
+      "volume": "64",
+      "issue": "3",
+      "raw": "Conditional generalized estimating equations for the analysis of clustered and longitudinal data \n\t\t \n\t\t\t S Goetgeluk \n\t\t \n\t\t \n\t\t\t S Vansteelandt \n\t\t \n\t\t 10.1111/j.1541-0420.2007.00944.x \n\t\t 18047524 \n\t \n\t \n\t\t Biometrics \n\t\t \n\t\t\t 64 \n\t\t\t 3 \n\t\t\t \n\t\t\t 2008 \n\t\t \n\t \n\t Goetgeluk S, Vansteelandt S. Conditional generalized estimating equations for the analysis of clustered and longitudinal data. Biometrics. 2008; 64(3):772-780. [PubMed: 18047524]"
+    },
+    {
+      "title": "Multilevel Statistical Models",
+      "authors": [
+        "H Goldstein"
+      ],
+      "year": 2011,
+      "doi": "10.1002/9781119969488",
+      "raw": "Multilevel Statistical Models \n\t\t \n\t\t\t H Goldstein \n\t\t \n\t\t 10.1002/9781119969488 \n\t\t \n\t\t\t 2011 \n\t\t\t John Wiley & Sons, Ltd \n\t\t \n\t \n\t Goldstein H. Multilevel Statistical Models. John Wiley & Sons, Ltd.; 2011."
+    },
+    {
+      "title": "Ecological momentary interventions: Incorporating mobile technology into psychosocial and health behaviour treatments",
+      "authors": [
+        "K Heron",
+        "J Smyth"
+      ],
+      "year": 2010,
+      "doi": "10.1348/135910709x466063",
+      "journal": "British Journal of Health Psychology",
+      "volume": "15",
+      "issue": "1",
+      "raw": "Ecological momentary interventions: Incorporating mobile technology into psychosocial and health behaviour treatments \n\t\t \n\t\t\t K E Heron \n\t\t \n\t\t \n\t\t\t J M Smyth \n\t\t \n\t\t 10.1348/135910709x466063 \n\t\t 19646331 \n\t \n\t \n\t\t British Journal of Health Psychology \n\t\t \n\t\t\t 15 \n\t\t\t 1 \n\t\t\t \n\t\t\t 2010 \n\t\t \n\t \n\t Heron KE, Smyth JM. Ecological momentary interventions: Incorporating mobile technology into psychosocial and health behaviour treatments. British Journal of Health Psychology. 2010; 15(1):1- 39. [PubMed: 19646331]"
+    },
+    {
+      "title": "Evaluating kindergarten retention policy",
+      "authors": [
+        "G Hong",
+        "S Raudenbush"
+      ],
+      "year": 2006,
+      "doi": "10.1198/016214506000000447",
+      "journal": "Journal of the American Statistical Association",
+      "volume": "101",
+      "issue": "475",
+      "raw": "Evaluating kindergarten retention policy \n\t\t \n\t\t\t G Hong \n\t\t \n\t\t \n\t\t\t S W Raudenbush \n\t\t \n\t\t 10.1198/016214506000000447 \n\t \n\t \n\t\t Journal of the American Statistical Association \n\t\t \n\t\t\t 101 \n\t\t\t 475 \n\t\t\t \n\t\t\t 2006 \n\t\t \n\t \n\t Hong G, Raudenbush SW. Evaluating kindergarten retention policy. Journal of the American Statistical Association. 2006; 101(475):901-910."
+    },
+    {
+      "title": "Micro-randomized trials: An experimental design for developing just-in-time adaptive interventions",
+      "authors": [
+        "P Klasnja",
+        "E Hekler",
+        "S Shiffman",
+        "A Boruvka",
+        "D Almirall",
+        "A Tewari",
+        "S Murphy"
+      ],
+      "year": 2015,
+      "doi": "10.1037/hea0000305",
+      "journal": "Health Psychology",
+      "volume": "34",
+      "raw": "Micro-randomized trials: An experimental design for developing just-in-time adaptive interventions \n\t\t \n\t\t\t P Klasnja \n\t\t \n\t\t \n\t\t\t E Hekler \n\t\t \n\t\t \n\t\t\t S Shiffman \n\t\t \n\t\t \n\t\t\t A Boruvka \n\t\t \n\t\t \n\t\t\t D Almirall \n\t\t \n\t\t \n\t\t\t A Tewari \n\t\t \n\t\t \n\t\t\t S Murphy \n\t\t \n\t\t 10.1037/hea0000305 \n\t \n\t \n\t\t Health Psychology \n\t\t \n\t\t\t 34 \n\t\t\t \n\t\t\t 2015 \n\t\t \n\t \n\t Suppl \n\t Klasnja P, Hekler E, Shiffman S, Boruvka A, Almirall D, Tewari A, Murphy S. Micro-randomized trials: An experimental design for developing just-in-time adaptive interventions. Health Psychology. 2015; 34(Suppl):1220-1228."
+    },
+    {
+      "title": "Longitudinal data analysis using generalized linear models",
+      "authors": [
+        "K-Y Liang",
+        "S Zeger"
+      ],
+      "year": 1986,
+      "doi": "10.1093/biomet/73.1.13",
+      "journal": "Biometrika",
+      "volume": "73",
+      "issue": "1",
+      "raw": "Longitudinal data analysis using generalized linear models \n\t\t \n\t\t\t K-Y Liang \n\t\t \n\t\t \n\t\t\t S L Zeger \n\t\t \n\t\t 10.1093/biomet/73.1.13 \n\t \n\t \n\t\t Biometrika \n\t\t \n\t\t\t 73 \n\t\t\t 1 \n\t\t\t \n\t\t\t 1986 \n\t\t \n\t \n\t Liang K-Y, Zeger SL. Longitudinal data analysis using generalized linear models. Biometrika. 1986; 73(1):13-22."
+    },
+    {
+      "title": "Micro-randomized trials in mHealth",
+      "authors": [
+        "P Liao",
+        "P Klasnja",
+        "A Tewari",
+        "S Murphy"
+      ],
+      "year": 2015,
+      "journal": "Statistics in Medicine",
+      "raw": "Micro-randomized trials in mHealth \n\t\t \n\t\t\t P Liao \n\t\t \n\t\t \n\t\t\t P Klasnja \n\t\t \n\t\t \n\t\t\t A Tewari \n\t\t \n\t\t \n\t\t\t S A Murphy \n\t\t \n\t \n\t \n\t\t Statistics in Medicine \n\t\t \n\t\t\t 2015 \n\t\t \n\t \n\t in press \n\t Liao P, Klasnja P, Tewari A, Murphy SA. Micro-randomized trials in mHealth. Statistics in Medicine. 2015 in press."
+    },
+    {
+      "title": "A covariance estimator for GEE with improved small-sample properties",
+      "authors": [
+        "L Mancl",
+        "T Derouen"
+      ],
+      "year": 2001,
+      "doi": "10.1111/j.0006-341x.2001.00126.x",
+      "journal": "Biometrics",
+      "volume": "57",
+      "issue": "1",
+      "raw": "A covariance estimator for GEE with improved small-sample properties \n\t\t \n\t\t\t L A Mancl \n\t\t \n\t\t \n\t\t\t T A Derouen \n\t\t \n\t\t 10.1111/j.0006-341x.2001.00126.x \n\t\t 11252587 \n\t \n\t \n\t\t Biometrics \n\t\t \n\t\t\t 57 \n\t\t\t 1 \n\t\t\t \n\t\t\t 2001 \n\t\t \n\t \n\t Mancl LA, DeRouen TA. A covariance estimator for GEE with improved small-sample properties. Biometrics. 2001; 57(1):126-134. [PubMed: 11252587]"
+    },
+    {
+      "title": "Efficiency of regression estimates for clustered data",
+      "authors": [
+        "L Mancl",
+        "B Leroux"
+      ],
+      "year": 1996,
+      "doi": "10.2307/2532890",
+      "journal": "Biometrics",
+      "volume": "52",
+      "issue": "2",
+      "raw": "Efficiency of regression estimates for clustered data \n\t\t \n\t\t\t L A Mancl \n\t\t \n\t\t \n\t\t\t B G Leroux \n\t\t \n\t\t 10.2307/2532890 \n\t\t 10766502 \n\t \n\t \n\t\t Biometrics \n\t\t \n\t\t\t 52 \n\t\t\t 2 \n\t\t\t \n\t\t\t 1996 \n\t\t \n\t \n\t Mancl LA, Leroux BG. Efficiency of regression estimates for clustered data. Biometrics. 1996; 52(2): 500-511. [PubMed: 10766502]"
+    },
+    {
+      "title": "The behavioral intervention technology model: An integrated conceptual and technological framework for ehealth and mhealth interventions",
+      "authors": [
+        "D Mohr",
+        "S Schueller",
+        "E Montague",
+        "M Burns",
+        "P Rashidi"
+      ],
+      "year": 2014,
+      "doi": "10.2196/jmir.3077",
+      "journal": "Journal of Medical Internet Research",
+      "volume": "16",
+      "issue": "6",
+      "pages": "e146",
+      "raw": "The behavioral intervention technology model: An integrated conceptual and technological framework for ehealth and mhealth interventions \n\t\t \n\t\t\t D C Mohr \n\t\t \n\t\t \n\t\t\t S M Schueller \n\t\t \n\t\t \n\t\t\t E Montague \n\t\t \n\t\t \n\t\t\t M N Burns \n\t\t \n\t\t \n\t\t\t P Rashidi \n\t\t \n\t\t 10.2196/jmir.3077 \n\t\t 24905070 \n\t \n\t \n\t\t Journal of Medical Internet Research \n\t\t \n\t\t\t 16 \n\t\t\t 6 \n\t\t\t e146 \n\t\t\t 2014 \n\t\t \n\t \n\t Mohr DC, Schueller SM, Montague E, Burns MN, Rashidi P. The behavioral intervention technology model: An integrated conceptual and technological framework for ehealth and mhealth interventions. Journal of Medical Internet Research. 2014; 16(6):e146. [PubMed: 24905070]"
+    },
+    {
+      "title": "Mobile phone applications for the care and prevention of HIV and other sexually transmitted diseases: A review",
+      "authors": [
+        "K Muessig",
+        "E Pike",
+        "S Legrand",
+        "L Hightow-Weidman"
+      ],
+      "year": 2013,
+      "doi": "10.2196/jmir.2301",
+      "journal": "Journal of Medical Internet Research",
+      "volume": "15",
+      "issue": "1",
+      "raw": "Mobile phone applications for the care and prevention of HIV and other sexually transmitted diseases: A review \n\t\t \n\t\t\t K E Muessig \n\t\t \n\t\t \n\t\t\t E C Pike \n\t\t \n\t\t \n\t\t\t S Legrand \n\t\t \n\t\t \n\t\t\t L B Hightow-Weidman \n\t\t \n\t\t 10.2196/jmir.2301 \n\t\t 23291245 \n\t \n\t \n\t\t Journal of Medical Internet Research \n\t\t \n\t\t\t 15 \n\t\t\t 1 \n\t\t\t 2013 \n\t\t \n\t \n\t Muessig KE, Pike EC, Legrand S, Hightow-Weidman LB. Mobile phone applications for the care and prevention of HIV and other sexually transmitted diseases: A review. Journal of Medical Internet Research. 2013; 15(1):e1. [PubMed: 23291245]"
+    },
+    {
+      "title": "On the application of probability theory to agricultural experiments: Essay on principles",
+      "authors": [
+        "J Neyman"
+      ],
+      "year": 1990,
+      "journal": "Dabrowska DM, Speed TP, translatorsStatistical Science",
+      "volume": "5",
+      "raw": "On the application of probability theory to agricultural experiments: Essay on principles \n\t\t \n\t\t\t J Neyman \n\t\t \n\t \n\t \n\t\t Dabrowska DM, Speed TP, translatorsStatistical Science \n\t\t \n\t\t\t 5 \n\t\t\t \n\t\t\t 1990 \n\t\t \n\t \n\t Neyman J. On the application of probability theory to agricultural experiments: Essay on principles. In: Dabrowska DM, Speed TP, translatorsStatistical Science. Vol. 5. 1990. 465-472."
+    },
+    {
+      "title": "A cautionary note on inference for marginal regression models with longitudinal data and general correlated response data",
+      "authors": [
+        "M Pepe",
+        "G Anderson"
+      ],
+      "year": 1994,
+      "journal": "Communications in Statistics -Simulation and Computation",
+      "volume": "23",
+      "issue": "4",
+      "raw": "A cautionary note on inference for marginal regression models with longitudinal data and general correlated response data \n\t\t \n\t\t\t M S Pepe \n\t\t \n\t\t \n\t\t\t G L Anderson \n\t\t \n\t \n\t \n\t\t Communications in Statistics -Simulation and Computation \n\t\t \n\t\t\t 23 \n\t\t\t 4 \n\t\t\t \n\t\t\t 1994 \n\t\t \n\t \n\t Pepe MS, Anderson GL. A cautionary note on inference for marginal regression models with longitudinal data and general correlated response data. Communications in Statistics -Simulation and Computation. 1994; 23(4):939-951."
+    },
+    {
+      "title": "R: A Language and Environment for Statistical Computing",
+      "authors": [
+        "Team Core"
+      ],
+      "year": 2015,
+      "raw": "R: A Language and Environment for Statistical Computing \n\t\t \n\t\t\t Team Core \n\t\t \n\t\t \n\t\t\t 2015 \n\t\t\t R Foundation for Statistical Computing \n\t\t\t Vienna, Austria \n\t\t \n\t \n\t R Core Team. R: A Language and Environment for Statistical Computing. Vienna, Austria: R Foundation for Statistical Computing; 2015."
+    },
+    {
+      "title": "The analysis of randomized and non-randomized AIDS treatment trials using a new approach to causal inference in longitudinal studies",
+      "authors": [
+        "J Robins"
+      ],
+      "year": 1989,
+      "raw": "The analysis of randomized and non-randomized AIDS treatment trials using a new approach to causal inference in longitudinal studies \n\t\t \n\t\t\t J M Robins \n\t\t \n\t \n\t \n\t\t editorsHealth Services Research Methodology: A Focus on AIDS \n\t\t \n\t\t\t L Sechrest \n\t\t \n\t\t \n\t\t\t H Freeman \n\t\t \n\t\t \n\t\t\t A Mulley \n\t\t \n\t\t Rockville, MD \n\t\t \n\t\t\t National Center for Health Services Research and Health Care Technology Assessment, Public Health Service, U.S. Department of Health and Human Services \n\t\t\t 1989 \n\t\t\t \n\t\t \n\t\t \n\t\t\t National Center for Health Services Research and Health Care Technology Assessment \n\t\t \n\t \n\t Robins JM. The analysis of randomized and non-randomized AIDS treatment trials using a new approach to causal inference in longitudinal studies. In: Sechrest L, Freeman H, Mulley A. National Center for Health Services Research and Health Care Technology Assessment. , editorsHealth Services Research Methodology: A Focus on AIDS. Rockville, MD: National Center for Health Services Research and Health Care Technology Assessment, Public Health Service, U.S. Department of Health and Human Services; 1989. 113-159."
+    },
+    {
+      "title": "Correcting for non-compliance in randomized trials using structural nested mean models",
+      "authors": [
+        "J Robins"
+      ],
+      "year": 1994,
+      "journal": "Communications in Statistics -Theory and Methods",
+      "volume": "23",
+      "issue": "8",
+      "raw": "Correcting for non-compliance in randomized trials using structural nested mean models \n\t\t \n\t\t\t J M Robins \n\t\t \n\t \n\t \n\t\t Communications in Statistics -Theory and Methods \n\t\t \n\t\t\t 23 \n\t\t\t 8 \n\t\t\t \n\t\t\t 1994 \n\t\t \n\t \n\t Robins JM. Correcting for non-compliance in randomized trials using structural nested mean models. Communications in Statistics -Theory and Methods. 1994; 23(8):2379-2412."
+    },
+    {
+      "title": "Causal inference from complex longitudinal data",
+      "authors": [
+        "J Robins"
+      ],
+      "year": 1997,
+      "doi": "10.1007/978-1-4612-1842-5_4",
+      "volume": "120",
+      "raw": "Causal inference from complex longitudinal data \n\t\t \n\t\t\t J M Robins \n\t\t \n\t\t 10.1007/978-1-4612-1842-5_4 \n\t \n\t \n\t\t Berkane M, editorLatent Variable Modeling and Applications to Causality \n\t\t Lecture Notes in Statistics \n\t\t New York \n\t\t \n\t\t\t Springer \n\t\t\t 1997 \n\t\t\t 120 \n\t\t\t \n\t\t \n\t \n\t Robins JM. Causal inference from complex longitudinal data. In: Berkane M, editorLatent Variable Modeling and Applications to Causality, Volume 120 of Lecture Notes in Statistics. New York: Springer; 1997. 69-117."
+    },
+    {
+      "title": "Proceedings of the Section on Bayesian Statistical Science",
+      "authors": [
+        "J Robins"
+      ],
+      "year": 1997,
+      "raw": "J M Robins \n\t\t \n\t\t Proceedings of the Section on Bayesian Statistical Science \n\t\t the Section on Bayesian Statistical Science Alexandria, VA \n\t\t \n\t\t\t American Statistical Association \n\t\t\t 1997. 1998 \n\t\t\t \n\t\t \n\t \n\t Marginal structural models \n\t Robins JM. 1997 Proceedings of the Section on Bayesian Statistical Science. Alexandria, VA: American Statistical Association; 1998. Marginal structural models; 1-10."
+    },
+    {
+      "title": "Optimal structural nested models for optimal sequential decisions",
+      "authors": [
+        "J Robins"
+      ],
+      "year": 2004,
+      "doi": "10.1007/978-1-4419-9076-1_11",
+      "volume": "179",
+      "raw": "Optimal structural nested models for optimal sequential decisions \n\t\t \n\t\t\t J M Robins \n\t\t \n\t\t 10.1007/978-1-4419-9076-1_11 \n\t \n\t \n\t\t editorsProceedings of the Second Seattle Symposium in Biostatistics \n\t\t Lecture Notes in Statistics \n\t\t \n\t\t\t D Y Lin \n\t\t \n\t\t \n\t\t\t P J Heagerty \n\t\t \n\t\t New York \n\t\t \n\t\t\t Springer \n\t\t\t 2004 \n\t\t\t 179 \n\t\t\t \n\t\t \n\t \n\t Robins JM. Optimal structural nested models for optimal sequential decisions. In: Lin DY, Heagerty PJ, editorsProceedings of the Second Seattle Symposium in Biostatistics, Number 179 in Lecture Notes in Statistics. New York: Springer; 2004. 189-326."
+    },
+    {
+      "title": "Marginal structural models and causal inference in epidemiology",
+      "authors": [
+        "J Robins",
+        "M Hern\u00e1n",
+        "B Brumback"
+      ],
+      "year": 2000,
+      "doi": "10.1097/00001648-200009000-00011",
+      "journal": "Epidemiology",
+      "volume": "11",
+      "issue": "5",
+      "raw": "Marginal structural models and causal inference in epidemiology \n\t\t \n\t\t\t J M Robins \n\t\t \n\t\t \n\t\t\t M A Hern\u00e1n \n\t\t \n\t\t \n\t\t\t B Brumback \n\t\t \n\t\t 10.1097/00001648-200009000-00011 \n\t\t 10955408 \n\t \n\t \n\t\t Epidemiology \n\t\t \n\t\t\t 11 \n\t\t\t 5 \n\t\t\t \n\t\t\t 2000 \n\t\t \n\t \n\t Robins JM, Hern\u00e1n MA, Brumback B. Marginal structural models and causal inference in epidemiology. Epidemiology. 2000; 11(5):550-560. [PubMed: 10955408]"
+    },
+    {
+      "title": "Sensitivity analysis for selection bias and unmeasured confounding in missing data and causal inference models",
+      "authors": [
+        "J Robins",
+        "A Rotnitzky",
+        "D Scharfstein"
+      ],
+      "year": 2000,
+      "doi": "10.1007/978-1-4612-1284-3_1",
+      "raw": "Sensitivity analysis for selection bias and unmeasured confounding in missing data and causal inference models \n\t\t \n\t\t\t J M Robins \n\t\t \n\t\t \n\t\t\t A Rotnitzky \n\t\t \n\t\t \n\t\t\t D O Scharfstein \n\t\t \n\t\t 10.1007/978-1-4612-1284-3_1 \n\t \n\t \n\t\t editorsStatistical Models in Epidemiology, the Environment, and Clinical Trials \n\t\t \n\t\t\t M E Halloran \n\t\t \n\t\t \n\t\t\t D Berry \n\t\t \n\t\t \n\t\t\t Springer \n\t\t\t 2000 \n\t\t\t \n\t\t \n\t \n\t Robins JM, Rotnitzky A, Scharfstein DO. Sensitivity analysis for selection bias and unmeasured confounding in missing data and causal inference models. In: Halloran ME, Berry D, editorsStatistical Models in Epidemiology, the Environment, and Clinical Trials. Springer; 2000. 1-94."
+    },
+    {
+      "title": "Estimating causal effects of treatments in randomized and nonrandomized studies",
+      "authors": [
+        "D Rubin"
+      ],
+      "year": 1974,
+      "doi": "10.1037/h0037350",
+      "journal": "Journal of Educational Psychology",
+      "volume": "66",
+      "issue": "5",
+      "raw": "Estimating causal effects of treatments in randomized and nonrandomized studies \n\t\t \n\t\t\t D B Rubin \n\t\t \n\t\t 10.1037/h0037350 \n\t \n\t \n\t\t Journal of Educational Psychology \n\t\t \n\t\t\t 66 \n\t\t\t 5 \n\t\t\t \n\t\t\t 1974 \n\t\t \n\t \n\t Rubin DB. Estimating causal effects of treatments in randomized and nonrandomized studies. Journal of Educational Psychology. 1974; 66(5):688-701."
+    },
+    {
+      "title": "Marginal modeling of intensive longitudinal data by generalized estimating equations",
+      "authors": [
+        "J Schafer"
+      ],
+      "year": 2006,
+      "doi": "10.1093/acprof:oso/9780195173444.003.0002",
+      "raw": "Marginal modeling of intensive longitudinal data by generalized estimating equations \n\t\t \n\t\t\t J L Schafer \n\t\t \n\t\t 10.1093/acprof:oso/9780195173444.003.0002 \n\t \n\t \n\t\t editorsModels for Intensive Longitudinal Data \n\t\t \n\t\t\t T A Walls \n\t\t \n\t\t \n\t\t\t J L Schafer \n\t\t \n\t\t New York, NY \n\t\t \n\t\t\t Oxford University Press \n\t\t\t 2006 \n\t\t\t \n\t\t \n\t \n\t Schafer JL. Marginal modeling of intensive longitudinal data by generalized estimating equations. In: Walls TA, Schafer JL, editorsModels for Intensive Longitudinal Data. New York, NY: Oxford University Press; 2006. 38-62."
+    },
+    {
+      "title": "The analysis of real-time momentary data: A practical guide",
+      "authors": [
+        "J Schwartz",
+        "A Stone"
+      ],
+      "year": 2007,
+      "raw": "The analysis of real-time momentary data: A practical guide \n\t\t \n\t\t\t J E Schwartz \n\t\t \n\t\t \n\t\t\t A A Stone \n\t\t \n\t \n\t \n\t\t editorsThe Science of Real-Time Data Capture \n\t\t \n\t\t\t A A Stone \n\t\t \n\t\t \n\t\t\t S Shiffman \n\t\t \n\t\t \n\t\t\t A Aa \n\t\t \n\t\t \n\t\t\t L Nebeling \n\t\t \n\t\t New York, NY \n\t\t \n\t\t\t Oxford University Press \n\t\t\t 2007 \n\t\t\t \n\t\t \n\t \n\t Schwartz JE, Stone AA. The analysis of real-time momentary data: A practical guide. In: Stone AA, Shiffman S, A AA, Nebeling L, editorsThe Science of Real-Time Data Capture. New York, NY: Oxford University Press; 2007. 76-113."
+    },
+    {
+      "title": "Healthy apps: Mobile devices for continuous monitoring and intervention",
+      "authors": [
+        "B Spring",
+        "M Gotsis",
+        "A Paiva",
+        "D Spruijt-Metz"
+      ],
+      "year": 2013,
+      "doi": "10.1109/mpul.2013.2279620",
+      "journal": "IEEE Pulse",
+      "volume": "4",
+      "issue": "6",
+      "raw": "Healthy apps: Mobile devices for continuous monitoring and intervention \n\t\t \n\t\t\t B Spring \n\t\t \n\t\t \n\t\t\t M Gotsis \n\t\t \n\t\t \n\t\t\t A Paiva \n\t\t \n\t\t \n\t\t\t D Spruijt-Metz \n\t\t \n\t\t 10.1109/mpul.2013.2279620 \n\t\t 24233190 \n\t \n\t \n\t\t IEEE Pulse \n\t\t \n\t\t\t 4 \n\t\t\t 6 \n\t\t\t \n\t\t\t 2013 \n\t\t \n\t \n\t Spring B, Gotsis M, Paiva A, Spruijt-Metz D. Healthy apps: Mobile devices for continuous monitoring and intervention. IEEE Pulse. 2013; 4(6):34-40. [PubMed: 24233190]"
+    },
+    {
+      "title": "Specifying the correlation structure in inverse-probability-weighting estimation for repeated measures",
+      "authors": [
+        "Tchetgen Tchetgen",
+        "E Glymour",
+        "M Weuve",
+        "J Robins"
+      ],
+      "year": 2012,
+      "journal": "Epidemiology",
+      "volume": "23",
+      "issue": "4",
+      "raw": "Specifying the correlation structure in inverse-probability-weighting estimation for repeated measures \n\t\t \n\t\t\t Tchetgen Tchetgen \n\t\t \n\t\t \n\t\t\t E J Glymour \n\t\t \n\t\t \n\t\t\t M M Weuve \n\t\t \n\t\t \n\t\t\t J Robins \n\t\t \n\t\t \n\t\t\t J \n\t\t \n\t\t 22659551 \n\t \n\t \n\t\t Epidemiology \n\t\t \n\t\t\t 23 \n\t\t\t 4 \n\t\t\t \n\t\t\t 2012 \n\t\t \n\t \n\t Letter to the Editor \n\t Tchetgen Tchetgen EJ, Glymour MM, Weuve J, Robins J. Specifying the correlation structure in inverse-probability-weighting estimation for repeated measures. Epidemiology. 2012; 23(4):644- 646. Letter to the Editor. [PubMed: 22659551]"
+    },
+    {
+      "title": "Mediation and spillover effects in group-randomized trials: A case study of the 4rs educational intervention",
+      "authors": [
+        "T Vanderweele",
+        "G Hong",
+        "S Jones",
+        "J Brown"
+      ],
+      "year": 2013,
+      "journal": "Journal of the American Statistical Association",
+      "volume": "108",
+      "issue": "502",
+      "raw": "Mediation and spillover effects in group-randomized trials: A case study of the 4rs educational intervention \n\t\t \n\t\t\t T J Vanderweele \n\t\t \n\t\t \n\t\t\t G Hong \n\t\t \n\t\t \n\t\t\t S M Jones \n\t\t \n\t\t \n\t\t\t J L Brown \n\t\t \n\t\t 23997375 \n\t \n\t \n\t\t Journal of the American Statistical Association \n\t\t \n\t\t\t 108 \n\t\t\t 502 \n\t\t\t \n\t\t\t 2013 \n\t\t \n\t \n\t Vanderweele TJ, Hong G, Jones SM, Brown JL. Mediation and spillover effects in group-randomized trials: A case study of the 4rs educational intervention. Journal of the American Statistical Association. 2013; 108(502):469-482. [PubMed: 23997375]"
+    },
+    {
+      "title": "On confounding, prediction and efficiency in the analysis of longitudinal and crosssectional clustered data",
+      "authors": [
+        "S Vansteelandt"
+      ],
+      "year": 2007,
+      "doi": "10.1111/j.1467-9469.2006.00555.x",
+      "journal": "Scandinavian Journal of Statistics",
+      "volume": "34",
+      "issue": "3",
+      "raw": "On confounding, prediction and efficiency in the analysis of longitudinal and crosssectional clustered data \n\t\t \n\t\t\t S Vansteelandt \n\t\t \n\t\t 10.1111/j.1467-9469.2006.00555.x \n\t \n\t \n\t\t Scandinavian Journal of Statistics \n\t\t \n\t\t\t 34 \n\t\t\t 3 \n\t\t\t \n\t\t\t 2007 \n\t\t \n\t \n\t Vansteelandt S. On confounding, prediction and efficiency in the analysis of longitudinal and cross- sectional clustered data. Scandinavian Journal of Statistics. 2007; 34(3):478-498."
+    },
+    {
+      "title": "Structural nested models and g-estimation: The partially realized promise",
+      "authors": [
+        "S Vansteelandt",
+        "M Joffe"
+      ],
+      "year": 2014,
+      "journal": "Statistical Science",
+      "volume": "29",
+      "issue": "4",
+      "raw": "Structural nested models and g-estimation: The partially realized promise \n\t\t \n\t\t\t S Vansteelandt \n\t\t \n\t\t \n\t\t\t M Joffe \n\t\t \n\t \n\t \n\t\t Statistical Science \n\t\t \n\t\t\t 29 \n\t\t\t 4 \n\t\t\t \n\t\t\t 2014 \n\t\t \n\t \n\t Vansteelandt S, Joffe M, et al. Structural nested models and g-estimation: The partially realized promise. Statistical Science. 2014; 29(4):707-731."
+    },
+    {
+      "title": "Evaluation of viable dynamic treatment regimes in a sequentially randomized trial of advanced prostate cancer",
+      "authors": [
+        "L Wang",
+        "A Rotnitzky",
+        "X Lin",
+        "R Millikan",
+        "P Thall"
+      ],
+      "year": 2012,
+      "doi": "10.1080/01621459.2011.641416",
+      "journal": "Journal of the American Statistical Association",
+      "volume": "107",
+      "issue": "498",
+      "raw": "Evaluation of viable dynamic treatment regimes in a sequentially randomized trial of advanced prostate cancer \n\t\t \n\t\t\t L Wang \n\t\t \n\t\t \n\t\t\t A Rotnitzky \n\t\t \n\t\t \n\t\t\t X Lin \n\t\t \n\t\t \n\t\t\t R E Millikan \n\t\t \n\t\t \n\t\t\t P F Thall \n\t\t \n\t\t 10.1080/01621459.2011.641416 \n\t\t 22956855 \n\t \n\t \n\t\t Journal of the American Statistical Association \n\t\t \n\t\t\t 107 \n\t\t\t 498 \n\t\t\t \n\t\t\t 2012 \n\t\t \n\t \n\t Wang L, Rotnitzky A, Lin X, Millikan RE, Thall PF. Evaluation of viable dynamic treatment regimes in a sequentially randomized trial of advanced prostate cancer. Journal of the American Statistical Association. 2012; 107(498):493-508. [PubMed: 22956855]"
+    },
+    {
+      "title": "Development and evaluation of a mobile intervention for heavy drinking and smoking among college students",
+      "authors": [
+        "K Witkiewitz",
+        "S Desai",
+        "S Bowen",
+        "B Leigh",
+        "M Kirouac",
+        "M Larimer"
+      ],
+      "year": 2014,
+      "doi": "10.1037/a0034747",
+      "journal": "Psychology of Addictive Behaviors",
+      "volume": "28",
+      "issue": "3",
+      "raw": "Development and evaluation of a mobile intervention for heavy drinking and smoking among college students \n\t\t \n\t\t\t K Witkiewitz \n\t\t \n\t\t \n\t\t\t S A Desai \n\t\t \n\t\t \n\t\t\t S Bowen \n\t\t \n\t\t \n\t\t\t B C Leigh \n\t\t \n\t\t \n\t\t\t M Kirouac \n\t\t \n\t\t \n\t\t\t M E Larimer \n\t\t \n\t\t 10.1037/a0034747 \n\t\t 25000269 \n\t \n\t \n\t\t Psychology of Addictive Behaviors \n\t\t \n\t\t\t 28 \n\t\t\t 3 \n\t\t\t \n\t\t\t 2014 \n\t\t \n\t \n\t Witkiewitz K, Desai SA, Bowen S, Leigh BC, Kirouac M, Larimer ME. Development and evaluation of a mobile intervention for heavy drinking and smoking among college students. Psychology of Addictive Behaviors. 2014; 28(3):639-650. [PubMed: 25000269]"
+    }
+  ],
+  "num_references": 37,
+  "figures": [
+    {
+      "description": "Figure 1."
+    },
+    {
+      "description": "or CP are significantly different, at the 5% level, from -0.2 or 0.95, respectively. GEE-IND is the same as the proposed method but with W t = 1 and no centering. In GEE-AR(1) includes an AR(1) working correlation matrix."
+    }
+  ],
+  "num_figures": 2,
+  "formulas": [
+    {
+      "text": "E Y t + 1 (A t -1 , 1) -Y t + 1 (A t -1 , 0) | S 1t (A t -1 ) , (1)"
+    },
+    {
+      "text": "A t + 1 a t = a , A t + 2 (A t -1 , a, A t + 1 a t = a ) by A t + 2 a t = a"
+    },
+    {
+      "text": "A t + k -1 (A t -1 , a, A t + 1 a t , \u22ef, A t + k -2 a t = a ) by A t + k -1 a t = a"
+    },
+    {
+      "text": "E Y t + k (A t -1 , 1, A t + 1 a t = 1 , \u2026, A t + 1 -1 a t = 1 ) -Y t + k (A t -1 , 0, A t + 1 a t = 0 , \u2026, A t + k -1 a t = 0 ) S kt (A t -1 ) , (2)"
+    },
+    {
+      "text": "A t + 1 a t = a , \u2026, A t + k -1 a t = a"
+    },
+    {
+      "text": "\u2022 Consistency: The observed data (Y 2 , X 2 , A 2 , \u2026, Y T , X T , A T , Y T+1"
+    },
+    {
+      "text": "E[Y t + k (A t -1 , 1, A t + 1 a t = 1 , \u2026, A t + k -1 a t = 1 ) -Y t + k (A t -1 , 0, A t + 1 a t = 0 , \u2026, A t + k -1 a t = 0 ) | S kt (A t -1 )] = E[E[Y t + k | A t = 1, H t ] -E[Y t + k | A t = 0, H t ] | S kt ] = E 1(A t = 1)Y t + k p t (1 | H t ) - 1(A t = 0)Y t + k 1 -p t (1 | H t ) S kt , (3)"
+    },
+    {
+      "text": "E[Y t + k | A t = 1, H t ] -E[Y t + k | A t = 0, H t ] . (4)"
+    },
+    {
+      "text": "E[E[Y t + k | A t = 1, H t ] -E[Y t + k | A t = 0, H t ] | S kt ] = f kt (S kt ) \u22a4 \u03b2 k (5)"
+    },
+    {
+      "text": "E[E[Y t + k | A t = 1, H t ] -E[Y t + k | A t = 0, H t ]] = f kt \u22a4 \u03b2 k ,"
+    },
+    {
+      "text": "\u2119 n h(Z) = \u2211 i = 1 n h(Z i )/n"
+    },
+    {
+      "text": "W t = p \u223c (A t | S kt ) p t (A t | H t ) ."
+    },
+    {
+      "text": "U W (\u03b1 k , \u03b2 k ) = \u2211 t = 1 T -k + 1 (Y t + k -g kt (H t ) \u22a4 \u03b1 k -(A t -p \u223c t (1 | S kt )) f kt (S kt ) \u22a4 \u03b2 k ) W t g kt (H t ) (A t -p \u223c t (1 | S kt )) f kt (S kt ) , (6)"
+    },
+    {
+      "text": "W t = p \u223c (A t | S kt ) p t (A t | H t"
+    },
+    {
+      "text": "vector (\u03b1 k \u22a4 , \u03b2 k \u22a4 )."
+    },
+    {
+      "text": "which n(\u03b2 k -\u03b2 k * )"
+    },
+    {
+      "text": "only if E[Y t+k |A t , H t ] = g kt (H t ) \u22a4 \u03b1 k + (A t -pt(1| S kt )) f kt (S kt ) \u22a4 \u03b2 k for some (\u03b1 k , \u03b2 k );"
+    },
+    {
+      "text": "E[Y t + 1 D t (A t -1 , 1) -Y t + 1 D t (A t -1 , 0) | I t D t -1 (A t -1 ) = 1, S 1t D t -1 (A t -1 ) ."
+    },
+    {
+      "text": "A t + 1 (D t (A t -1 , a)) by A t + 1 a t = a , A t + 2 (D t + 1 (A t -1 , a), A t + 1 a t = a ) by A t + 2 a t = a"
+    },
+    {
+      "text": "A t + k -1 (D t + 1 (A t -1 , a), A t + 1 a t , \u22ef, A t + k -2 a t = a ) by A t + k -1 a t = a"
+    },
+    {
+      "text": "E Y t + k D t (A t -1 -, 1), A t + 1 a t = 1 , \u2026, A t + k -1 a t = 1 -Y t + k D t (A t -1 , 0), A t + 1 a t = 0 , \u2026, A t + k -1 a t = 0 | S kt D t -1 (A t -1 )"
+    },
+    {
+      "text": "E[E[Y t + k | A t = 1, I t = 1, H t ] -E[Y t + k | A t = 0, I t = 1, H t ] | I t = 1, S kt ] = E 1(A t = 1)Y t + 1 p t (1 | H t ) - 1(A t = 0)Y t + 1 1 -p t (1 | H t ) I t = 1, s kt ,"
+    },
+    {
+      "text": "E[E[Y t + k | A t = 1, I k = 1, H t ] -E[Y t + k | A k = 0, I t = 1, H t ] | I t = 1, S kt ] = f kt (S kt ) \u22a4 \u03b2 k , (7)"
+    },
+    {
+      "text": "critical value t n -p -q -1"
+    },
+    {
+      "text": "value is F p\u2032, n -q -p -1 (n -q -p\u2032)(1 -\u03b1 0 ) p\u2032(n -q -1)"
+    },
+    {
+      "text": "Y t + 1 = \u03b8 1 (S t -E[S t | A t -1 , H t -1 ]) + \u03b8 2 (A t -1 -p t -1 (1 | H t -1 )) + (A t -p t (1 | H t ))(\u03b2 10 * + \u03b2 11 * S t ) + \u03b5 t + 1 ."
+    },
+    {
+      "text": "E[E[Y t + 1 | A t = 1, H t ] -E[Y t + 1 | A t = 0, H t ]] = \u03b2 10 * + \u03b2 11 * E[S t ]. Note that if \u03b2 11 * = 0 or E[S t ] = 0 (i.e."
+    },
+    {
+      "text": "T A t /T."
+    },
+    {
+      "text": "\u2211 t = 1 T (Y t + 1 -(\u03b1 10 + \u03b1 11 S t ) -(A t -\u03c1)\u03b2 1 )W t (1, S t ) \u03a4 A t -\u03c1 ."
+    },
+    {
+      "text": "E[E[Y t+1 |S t , A t = 1] -E[Y t+1 |S t , A t = 0]] = \u03b2 1 for some \u03b2 1 ."
+    },
+    {
+      "text": "model E[E[Y t+1 |S t , A t = 1] -E[Y t+1 |S t , A t = 0]"
+    },
+    {
+      "text": "\u2211 t = 1 T (1, S t ) \u22a4 A t -0.5 \u2211 u = 1 T \u03c5 tu (Y u + 1 -(\u03b1 10 + \u03b1 11 S u ) -(A u -0.5)\u03b2 1 ),"
+    },
+    {
+      "text": "\u03c1 = \u2119 n \u2211 t = 1 T I t A t /\u2119 n \u2211 t = 1 T I t = 0.67."
+    },
+    {
+      "text": "\u03b2 k * ."
+    }
+  ],
+  "num_formulas": 34,
+  "num_citations": 62,
+  "cited_references": [
+    "b32",
+    "b4",
+    "b17",
+    "b14",
+    "b20",
+    "b24",
+    "b28",
+    "b13",
+    "b27",
+    "b33",
+    "b16",
+    "b23",
+    "b29",
+    "b6",
+    "b18",
+    "b30",
+    "b1",
+    "b35",
+    "b9",
+    "b31",
+    "b10",
+    "b3",
+    "b5",
+    "b34",
+    "b8",
+    "b12",
+    "b15",
+    "b36",
+    "b0",
+    "b21",
+    "b2"
+  ],
+  "notes": [
+    "[raw_affiliation] 1  Department of Statistics , University of Michigan",
+    "[raw_affiliation] 2  Institute for Social Research , University of Michigan",
+    "[raw_affiliation] 3  Department of Psychology , University of New Mexico",
+    "[raw_affiliation] 1  Department of Statistics , University of Michigan",
+    "[raw_affiliation] 2  Institute for Social Research , University of Michigan",
+    "J Am Stat Assoc. Author manuscript; available in PMC 2019 January 01.",
+    "[raw_reference] Bolger N, Laurenceau J-P. Intensive Longitudinal Methods: An Introduction to Diary and Experience. New York, NY: The Guilford Press; 2013.",
+    "[raw_reference] Bowen S, Marlatt A. Surfing the urge: Brief mindfulness-based intervention for college student smokers. Psychology of Addictive Behaviors. 2009; 23(4):666-671. [PubMed: 20025372]",
+    "[raw_reference] Brumback B, Greenland S, Redman M, Kiviat N, Diehr P. The intensity-score approach to adjusting for confounding. Biometrics. 2003; 59(2):274-285. [PubMed: 12926712]",
+    "[raw_reference] Dempsey W, Liao P, Klasnja P, Nahum-Shani I, Murphy SA. Randomized trials for the Fitbit generation. Significance. 2015; 12(6):20-23. [PubMed: 26807137]",
+    "[raw_reference] Dimeff LA. Brief Alcohol Screening and Intervention for College Students (BASICS): A Harm Reduction Approach. Guilford Press; 1999.",
+    "[raw_reference] Free C, Phillips G, Galli L, Watson L, Felix L, Edwards P, Patel V, Haines A. The effectiveness of mobile-health technology-based health behaviour change or disease management interventions for health care consumers: A systematic review. PLoS Medicine. 2013; 10(1):e1001362. [PubMed: 23349621]",
+    "[raw_reference] Goetgeluk S, Vansteelandt S. Conditional generalized estimating equations for the analysis of clustered and longitudinal data. Biometrics. 2008; 64(3):772-780. [PubMed: 18047524]",
+    "[raw_reference] Goldstein H. Multilevel Statistical Models. John Wiley & Sons, Ltd.; 2011.",
+    "[raw_reference] Heron KE, Smyth JM. Ecological momentary interventions: Incorporating mobile technology into psychosocial and health behaviour treatments. British Journal of Health Psychology. 2010; 15(1):1- 39. [PubMed: 19646331]",
+    "[raw_reference] Hong G, Raudenbush SW. Evaluating kindergarten retention policy. Journal of the American Statistical Association. 2006; 101(475):901-910.",
+    "Suppl",
+    "[raw_reference] Klasnja P, Hekler E, Shiffman S, Boruvka A, Almirall D, Tewari A, Murphy S. Micro-randomized trials: An experimental design for developing just-in-time adaptive interventions. Health Psychology. 2015; 34(Suppl):1220-1228.",
+    "[raw_reference] Liang K-Y, Zeger SL. Longitudinal data analysis using generalized linear models. Biometrika. 1986; 73(1):13-22.",
+    "in press",
+    "[raw_reference] Liao P, Klasnja P, Tewari A, Murphy SA. Micro-randomized trials in mHealth. Statistics in Medicine. 2015 in press.",
+    "[raw_reference] Mancl LA, DeRouen TA. A covariance estimator for GEE with improved small-sample properties. Biometrics. 2001; 57(1):126-134. [PubMed: 11252587]",
+    "[raw_reference] Mancl LA, Leroux BG. Efficiency of regression estimates for clustered data. Biometrics. 1996; 52(2): 500-511. [PubMed: 10766502]",
+    "[raw_reference] Mohr DC, Schueller SM, Montague E, Burns MN, Rashidi P. The behavioral intervention technology model: An integrated conceptual and technological framework for ehealth and mhealth interventions. Journal of Medical Internet Research. 2014; 16(6):e146. [PubMed: 24905070]",
+    "[raw_reference] Muessig KE, Pike EC, Legrand S, Hightow-Weidman LB. Mobile phone applications for the care and prevention of HIV and other sexually transmitted diseases: A review. Journal of Medical Internet Research. 2013; 15(1):e1. [PubMed: 23291245]",
+    "[raw_reference] Neyman J. On the application of probability theory to agricultural experiments: Essay on principles. In: Dabrowska DM, Speed TP, translatorsStatistical Science. Vol. 5. 1990. 465-472.",
+    "[raw_reference] Pepe MS, Anderson GL. A cautionary note on inference for marginal regression models with longitudinal data and general correlated response data. Communications in Statistics -Simulation and Computation. 1994; 23(4):939-951.",
+    "[raw_reference] R Core Team. R: A Language and Environment for Statistical Computing. Vienna, Austria: R Foundation for Statistical Computing; 2015.",
+    "[raw_reference] Robins JM. Correcting for non-compliance in randomized trials using structural nested mean models. Communications in Statistics -Theory and Methods. 1994; 23(8):2379-2412.",
+    "[raw_reference] Robins JM. Causal inference from complex longitudinal data. In: Berkane M, editorLatent Variable Modeling and Applications to Causality, Volume 120 of Lecture Notes in Statistics. New York: Springer; 1997. 69-117.",
+    "Marginal structural models",
+    "[raw_reference] Robins JM. 1997 Proceedings of the Section on Bayesian Statistical Science. Alexandria, VA: American Statistical Association; 1998. Marginal structural models; 1-10.",
+    "[raw_reference] Robins JM. Optimal structural nested models for optimal sequential decisions. In: Lin DY, Heagerty PJ, editorsProceedings of the Second Seattle Symposium in Biostatistics, Number 179 in Lecture Notes in Statistics. New York: Springer; 2004. 189-326.",
+    "[raw_reference] Robins JM, Hern\u00e1n MA, Brumback B. Marginal structural models and causal inference in epidemiology. Epidemiology. 2000; 11(5):550-560. [PubMed: 10955408]",
+    "[raw_reference] Robins JM, Rotnitzky A, Scharfstein DO. Sensitivity analysis for selection bias and unmeasured confounding in missing data and causal inference models. In: Halloran ME, Berry D, editorsStatistical Models in Epidemiology, the Environment, and Clinical Trials. Springer; 2000. 1-94.",
+    "[raw_reference] Rubin DB. Estimating causal effects of treatments in randomized and nonrandomized studies. Journal of Educational Psychology. 1974; 66(5):688-701.",
+    "[raw_reference] Schafer JL. Marginal modeling of intensive longitudinal data by generalized estimating equations. In: Walls TA, Schafer JL, editorsModels for Intensive Longitudinal Data. New York, NY: Oxford University Press; 2006. 38-62.",
+    "[raw_reference] Schwartz JE, Stone AA. The analysis of real-time momentary data: A practical guide. In: Stone AA, Shiffman S, A AA, Nebeling L, editorsThe Science of Real-Time Data Capture. New York, NY: Oxford University Press; 2007. 76-113.",
+    "[raw_reference] Spring B, Gotsis M, Paiva A, Spruijt-Metz D. Healthy apps: Mobile devices for continuous monitoring and intervention. IEEE Pulse. 2013; 4(6):34-40. [PubMed: 24233190]",
+    "Letter to the Editor",
+    "[raw_reference] Tchetgen Tchetgen EJ, Glymour MM, Weuve J, Robins J. Specifying the correlation structure in inverse-probability-weighting estimation for repeated measures. Epidemiology. 2012; 23(4):644- 646. Letter to the Editor. [PubMed: 22659551]",
+    "[raw_reference] Vanderweele TJ, Hong G, Jones SM, Brown JL. Mediation and spillover effects in group-randomized trials: A case study of the 4rs educational intervention. Journal of the American Statistical Association. 2013; 108(502):469-482. [PubMed: 23997375]",
+    "[raw_reference] Vansteelandt S. On confounding, prediction and efficiency in the analysis of longitudinal and cross- sectional clustered data. Scandinavian Journal of Statistics. 2007; 34(3):478-498.",
+    "[raw_reference] Vansteelandt S, Joffe M, et al. Structural nested models and g-estimation: The partially realized promise. Statistical Science. 2014; 29(4):707-731.",
+    "[raw_reference] Wang L, Rotnitzky A, Lin X, Millikan RE, Thall PF. Evaluation of viable dynamic treatment regimes in a sequentially randomized trial of advanced prostate cancer. Journal of the American Statistical Association. 2012; 107(498):493-508. [PubMed: 22956855]",
+    "[raw_reference] Witkiewitz K, Desai SA, Bowen S, Leigh BC, Kirouac M, Larimer ME. Development and evaluation of a mobile intervention for heavy drinking and smoking among college students. Psychology of Addictive Behaviors. 2014; 28(3):639-650. [PubMed: 25000269]"
+  ],
+  "editors": [
+    "L Sechrest",
+    "H Freeman",
+    "A Mulley",
+    "D Y Lin",
+    "P J Heagerty",
+    "M E Halloran",
+    "D Berry",
+    "T A Walls",
+    "J L Schafer",
+    "A A Stone",
+    "S Shiffman",
+    "A Aa",
+    "L Nebeling"
+  ],
+  "processing_software": {
+    "GROBID": "0.8.2"
+  },
+  "journal": "Journal of the American Statistical Association",
+  "volume": "113",
+  "issue": "523",
+  "pages": "1112-1121",
+  "zotero_recovery": {
+    "fields_recovered": [
+      "journal"
+    ],
+    "timestamp": "2025-09-01T11:08:21.477286",
+    "zotero_item_type": "journalArticle"
+  }
+}

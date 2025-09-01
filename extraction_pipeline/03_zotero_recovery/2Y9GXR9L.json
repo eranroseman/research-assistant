@@ -1,0 +1,988 @@
+{
+  "paper_id": "2Y9GXR9L",
+  "title": "Adaptive Multi-Agent Deep Reinforcement Learning for Timely Healthcare Interventions",
+  "abstract": "Effective patient monitoring is vital for timely interventions and improved healthcare outcomes. Traditional monitoring systems often struggle to handle complex, dynamic environments with fluctuating vital signs, leading to delays in identifying critical conditions. To address this challenge, we propose a novel AI-driven patient monitoring framework using multi-agent deep reinforcement learning (DRL). Our approach deploys multiple learning agents, each dedicated to monitoring a specific physiological feature, such as heart rate, respiration, and temperature. These agents interact with a generic healthcare monitoring environment, learn the patients' behavior patterns, and make informed decisions to alert the corresponding Medical Emergency Teams (METs) based on the level of emergency estimated. In this study, we evaluate the performance of the proposed multi-agent DRL framework using real-world physiological and motion data from two datasets: PPG-DaLiA and WESAD. We compare the results with several baseline models, including Q-Learning, PPO, Actor-Critic, Double DQN, and DDPG, as well as monitoring frameworks like WISEML and CA-MAQL. Our experiments demonstrate that the proposed DRL approach outperforms all other baseline models, achieving more accurate monitoring of patient's vital signs. Furthermore, we conduct hyperparameter optimization to fine-tune the learning process of each agent. By optimizing hyperparameters, we enhance the learning rate and discount factor, thereby improving the agents' overall performance in monitoring patient health status. Our AIdriven patient monitoring system offers several advantages over traditional methods, including the ability to handle complex and uncertain environments, adapt to varying patient conditions, and make real-time decisions without external supervision. However, we identify limitations related to data scale and prediction of future vital signs, paving the way for future research directions.",
+  "year": 2021,
+  "date": "2021",
+  "authors": [
+    {
+      "name": "Thanveer Shaik",
+      "email": "thanveer.shaik@unisq.edu.au"
+    },
+    {
+      "name": "Xiaohui Tao",
+      "email": "xiaohui.tao@unisq.edu.au"
+    },
+    {
+      "name": "Lin Li"
+    },
+    {
+      "name": "Haoran Xie",
+      "email": "hrxie@ln.edu.hk"
+    },
+    {
+      "name": "Hong-Ning Dai"
+    },
+    {
+      "name": "Feng Zhao",
+      "email": "zhaof@hust.edu.cn"
+    },
+    {
+      "name": "Jianming Yong",
+      "email": "jianming.yong@unisq.edu.au"
+    },
+    {
+      "affiliation": {
+        "organization": "School of Mathematics",
+        "department": "School of Mathematics",
+        "institution": "University of Southern Queensland",
+        "address": "Queensland, Australia"
+      }
+    },
+    {
+      "affiliation": {
+        "organization": "School of Computer and Artificial Intelligence",
+        "department": "School of Computer and Artificial Intelligence",
+        "institution": "Wuhan University of Technology",
+        "address": "China"
+      }
+    },
+    {
+      "affiliation": {
+        "organization": "Department of Computing and Decision Sciences",
+        "department": "Department of Computing and Decision Sciences",
+        "institution": "Lingnan University",
+        "address": "Tuen Mun, Hong Kong"
+      }
+    },
+    {
+      "affiliation": {
+        "organization": "Department of Computer Science",
+        "department": "Department of Computer Science",
+        "institution": "Hong Kong Baptist University",
+        "address": "Hong Kong"
+      }
+    },
+    {
+      "affiliation": {
+        "organization": "School of Business",
+        "department": "School of Business",
+        "institution": "Huazhong University of Science and Technology",
+        "address": "Wuhan, China"
+      }
+    },
+    {
+      "affiliation": {
+        "organization": "University of Southern Queensland",
+        "institution": "University of Southern Queensland"
+      }
+    }
+  ],
+  "doi": "10.3390/diagnostics11040607",
+  "md5": "16F0A9D4214A7E5AC3927C8FDEDC1D51",
+  "publication": {
+    "journal": "Diagnostics",
+    "journal_inferred": true
+  },
+  "keywords": [
+    "Behavior Patterns",
+    "Decision Making",
+    "Patient Monitoring",
+    "Reinforcement Learning",
+    "Vital Signs"
+  ],
+  "sections": [
+    {
+      "title": "I. INTRODUCTION",
+      "text": "In the dynamic domain of healthcare, the significance of informed decision-making cannot be overstated. With the advent of continuous patient monitoring systems, it has become possible to remotely track vital signs and physical movements, thereby enhancing the decision-making capabilities of clinicians  [1] ,  [2] . The application of machine learning models to analyze transmitted vital sign data has seen a significant uptick in various healthcare applications, ranging from pre-clinical data processing and diagnosis assistance to early warning detection of health deterioration, treatment decision-making, and drug prescription  [3] ,  [4] . In this context, the monitoring of human behavior patterns plays a crucial role, especially for remote patient monitoring in hospitals or through Internet of Things (IoT)-enabled home monitoring systems.\n\nTraditionally, methodologies in this field have predominantly relied on unsupervised and supervised learning techniques to identify patterns and classify patients' activities and vital signs  [5] ,  [6] . However, these techniques are limited in their capacity to only observe data and suggest potential decisions without the ability to act upon these observations. In contrast, Reinforcement Learning (RL) introduces a novel paradigm by deploying learning agents within complex and uncertain environments. These agents are empowered to explore and exploit the environment through actions, learning from the outcomes of their actions  [7] . A cornerstone of RL is its reward mechanism, which provides the agent with feedback in the form of rewards for its actions. These rewards serve as crucial signals that guide the learning process of the agent, encouraging actions that lead to favorable outcomes and discouraging detrimental ones. This reward system is instrumental in enabling the agent to iteratively refine its strategy based on the consequences of its actions, thereby enhancing its performance over time. The versatility of RL has been demonstrated in various dynamic domains, such as stock market trading  [8] , and is increasingly being adapted for healthcare applications, including diagnostic decisions and dynamic treatment regimes that arXiv:2309.10980v4 [cs.LG] 28 Oct 2024 require the consideration of delayed feedback  [9] . Specifically, RL-based patient monitoring applications have focused on optimizing the timing and dosage of medications to ensure their correct administration  [10] ,  [11] . The analogy of probabilistic machine learning models, such as RL, to an ICU clinician monitoring a patient's state and making subsequent decisions based on observed changes, underscores the potential of RL in healthcare  [12] .\n\nThis study addresses the challenge of monitoring multiple vital signs of the human body, tracking health status, and enabling timely interventions during emergencies by proposing an innovative approach that employs multiple deep learning agents within a healthcare monitoring environment. Each agent is responsible for monitoring specific vital signs, progressively learning threshold levels based on Modified Early Warning Scores (MEWS) and rewards accumulated from previous iterations. These well-trained deep reinforcement learning (DRL) agents are capable of monitoring parameters such as heart rate, respiration rate, and temperature, alerting clinical teams in case of deviations from predefined thresholds. While reinforcement learning (RL) has been applied in gaming environments like Deep Q-Networks (DQN) and sensor-based systems, this study offers novel contributions by integrating multi-agent reinforcement learning (MARL) within healthcare, creating a real-time, autonomous patient monitoring system. Unlike conventional RL models that focus on singular tasks, this approach uses multiple agents to monitor different physiological parameters simultaneously, enabling concurrent learning and more dynamic, comprehensive system responses. Additionally, the study introduces a novel reward mechanism that optimizes agent behavior based on MEWS, allowing agents to learn more efficiently and facilitate timely medical interventions, thus enhancing healthcare decision-making through a multiagent, clinically informed AI framework. This represents a significant advancement in AI-driven patient monitoring.\n\nThe primary aim of this study is to learn human behavior patterns in the context of clinical health by deploying a DRL agent for each physiological feature. These agents are designed to monitor, learn, and alert the respective clinical teams if any vital signs deviate from the norms established by MEWS. We introduce a novel approach for rewarding the actions of RL agents to facilitate the learning of behavior patterns. The generic monitoring environment developed in this study supports multi-agent functionality to monitor various vital signs of a patient, thereby introducing a new paradigm for remotely monitoring patients' health status using a multi-agent DRL environment as shown in Fig.  1 .\n\nThe contributions of this study are as follows:\n\n\u2022 Introduction of a novel approach for rewarding RL agents' actions to foster the learning of behavior patterns. \u2022 Development of a generic monitoring environment that accommodates multi-agents for monitoring various vital signs of a patient. \u2022 Establishment of a new paradigm for remotely monitoring patients' health status utilizing the multi-agent DRL environment. The paper is organized as follows: Section II presents related works in the RL community, specifically focusing on learning human behavior patterns and applications in the healthcare domain. The research problem formulation and the proposed multi-agent DRL methodology are detailed in Section III. Section IV evaluates the proposed methodology on 10 different subject vital signs, and baseline models are discussed. In Section V, the results of the proposed approach are compared with baseline models, and hyper-parameter optimization of the learning rate and discount factor is discussed. Based on the results, applications of the proposed framework are discussed in Section VI. Section VII concludes the paper, including limitations and future work."
+    },
+    {
+      "title": "II. RELATED WORKS A. Machine Learning in Healthcare",
+      "text": "Machine learning has transformed healthcare with its ability to predict, detect, and monitor, as noted in  [13] . Supervised learning algorithms can learn from labeled data and make predictions or classify based on the input features  [14] . For example, machine learning or deep learning techniques can predict human vital signs like heart rate or classify physical activities  [15] . In a study by Oyeleye et al.  [16] , machine learning and deep learning models were used to estimate heart rate using data from wearable devices. The authors tested different regression algorithms including linear regression, knearest neighbor, decision tree, random forest, autoregressive integrated moving average, support vector regressor, and long short-term memory recurrent neural networks. Similarly, Luo et al.  [17]  utilized the LSTM model to predict heart rate based on five factors: heart rate signal, gender, age, physical activities  [18] , and mental state. Unsupervised learning algorithms learn from unlabeled data and find patterns using association and clustering techniques  [19] ,  [20] . Sheng and Huber  [19]  developed an unsupervised method with an encoder and decoder network to identify similar physical activities using clustering, which achieved a clustering accuracy of 85% based on learning embeddings and behavior clusters. RL, on the other hand, does not require prior knowledge or information and works on an environment-driven approach  [21] . The agents learn through receiving rewards or penalties based on their actions which is called as experience. Unlike supervised learning, RL can learn a sequence of actions through exploration and exploitation and does not require extensive labeled data for data-driven models  [22] ."
+    },
+    {
+      "title": "B. Mimic Human Behavior Patterns",
+      "text": "Tirumala et al.  [23]  studied how to understand human behavior patterns and identify common movements and interactions in a set of related tasks and situations. They used probabilistic trajectory models to develop a framework for hierarchical reinforcement learning (HRL). Janssen et al.  [24]  suggested breaking down a complex task such as biological behavior into smaller parts, with HRL able to organize sequential actions into a temporary option. They compared biological behavior to options in HRL. Tsiakas et al.  [25]  proposed a human-centered cyber-physical systems framework for personalized human-robot collaboration and training, focusing on monitoring and evaluating human behavior. The authors aimed to effectively predict human attention with the minimum and least intrusive sensors. Kubota et al.  [26]  investigated how robots can adapt to the behavior of people with cognitive impairments for cognitive neuro-rehabilitation. They explored different types of robots for therapeutic, companion, and assistive applications. For health applications, robots must be able to perceive and understand human behavior, which includes high-level behaviors like cognitive abilities and engagement, as well as low-level behaviors like speech, gesture, and physiological signs  [27] ."
+    },
+    {
+      "title": "C. RL in Healthcare",
+      "text": "Lisowska et al.  [28]  developed a digital intervention for cancer patients to promote positive health habits and lifestyle changes. They used RL to determine the best time to send intervention prompts to the patients and employed three RL approaches (Deep Q-Learning, Advance Actor Critic, and proximal policy optimization) to create a virtual coach for sending prompts. Other studies have also shown that personalized messages can increase physical activity in type 2 diabetes patients  [29] . Li et al.  [30]  proposed a RL approach based on electronic health records for sequential decision-making tasks. They used a model-free Deep Q Networks (DQN) algorithm to make clinical decisions based on patient data and achieved better results with cooperative multi-agent RL. R decisionmaking can also be used for human activity recognition, as shown in a study that proposed a dynamic weight assignment network architecture and used a twin delayed deep deterministic algorithm inspired by various other RL algorithms  [31] ,  [32] .\n\nReinforcement learning (RL) has been extensively researched across various domains, including gaming, human behavior modeling, and socially assistive robotics. While these applications have demonstrated the effectiveness of RL in controlled environments, the deployment of physical robots in sensitive settings like hospitals, elderly care, and mental health facilities poses significant safety risks to patients and staff  [33] . Moreover, traditional supervised and unsupervised learning methods used in health monitoring systems often struggle to handle the uncertain and dynamic nature of hospital environments. In contrast, our study introduces a novel application of multi-agent reinforcement learning (MARL) for healthcare, where virtual agents, rather than physical robots, autonomously monitor and learn from patient vital signs in real-time. This approach goes beyond the typical uses of RL by integrating multi-agent systems in a healthcare setting, enabling concurrent learning across multiple physiological parameters. Each agent adapts its behavior based on changes in vital signs and takes actions to alert clinical teams during emergencies. Our framework not only addresses the challenges of safety and uncertainty in dynamic healthcare environments but also introduces a clinically-informed reward mechanism that enhances the agents' decision-making abilities, making this application of AI a novel contribution to healthcare monitoring."
+    },
+    {
+      "title": "III. DRL MONITORING FRAMEWORK",
+      "text": "In this section, the design of a human behavior monitoring system, DRL monitoring framework, that uses R is presented in detail. The aim of the system is to monitor vital signs to learn human behavior patterns and ensure clinical safety in an uncertain environment. The proposed framework involves a multi-agent system where each vital sign state is observed by an individual agent, as shown in Fig.  2 . A DRL algorithm, DQN, is used to learn effective strategies in the sequential decision-making process without prior knowledge through trial-and-error interactions with the environment  [34] ,  [35] ."
+    },
+    {
+      "title": "A. Technical Background",
+      "text": "The challenge addressed in this research is the development of a multi-agent framework for real-time health status monitoring by learning and interpreting patterns in vital signs through wearable sensors. The agents must detect deviations from normal vital sign patterns that exceed Modified Early Warning Scores (MEWS) thresholds and alert the emergency team accordingly.\n\nTo formulate this problem, we leverage the framework of Markov Decision Processes (MDP), expressed as a 5-tuple M = (S, A, P, R, \u03b3). Here, S represents the finite state space, where each state s t \u2208 S corresponds to a distinct combination of vital sign readings at time t. The action set A comprises potential alerts the agents can issue based on the observed vital signs. The transition function P (s, a, s \u2032 ) models the probability of moving from state s to state s \u2032 upon taking action a, reflecting the dynamic nature of human vital signs.\n\nCentral to our approach is the reward function R(s, a), which is defined to prioritize actions that lead to the early detection of potential health risks, thereby enabling timely intervention. This is mathematically represented as:\n\nwhere \u03b3 is the discount factor that balances the importance of immediate versus future rewards, ensuring the agents' actions are aligned with long-term health monitoring objectives.\n\nThe goal is to discover an optimal policy \u03c0(s t ) that maximizes the expected reward by selecting the most appropriate action a t in any given state s t . This optimization is achieved through the iterative update of the Q-function, as outlined in the Bellman equation:\n\nwhere \u03b1 represents the learning rate, influencing the integration of new information into the Q-function. Through this process, the agents continually refine their decision-making strategy, enhancing the system's capability to monitor and respond to emerging health risks effectively. TABLE I: Modified Early Warning Scores [36] MEWS 4/MET 3 2 1 0 1 2 3 4/MET Respiratory Rate \u22644 5-8 9-20 21-24 25-30 31-35 \u226536 Oxygen Saturation \u226484 85-89 90-92 93-94 \u226595 Temperature \u226434.0 34.1-35.0 35.1-36.0 36.1-37.9 38.0-38.5 \u226538.6 Heart Rate \u226439 40-49 50-99 100-109 110-129 130-139 \u2265140 Sedation Score Awake Mild Moderate Severe"
+    },
+    {
+      "title": "B. Monitoring Environment",
+      "text": "A custom RL monitoring system based on MDP has been created to have human vital signs data serve as the observation space S, action space A for learning agents to make decisions, and rewards R for the agents' actions as depicted in Fig.  2 . This study introduces a novel isolated multi-agent MDP framework that allows multi-agents to share the same environment and make decisions based on the health parameters they are monitoring, receiving rewards without being influenced by the decisions of other agents. The goal of all agents in this environment is to monitor the health of patients using the predefined MEWS, as shown in Tab. I. In healthcare, each vital sign plays a critical role in determining a person's clinical safety.\n\nIn the current framework, we have implemented three RL agents to monitor heart rate, respiration, and temperature. These agents operate primarily in cooperative mode, sharing information about the patient's health status and working together to ensure timely interventions. Cooperation allows the agents to pool rewards from collective actions, improving overall system learning. However, when multiple patients are being monitored or resource constraints arise (e.g., limited access to medical personnel), the agents may enter competitive mode. In this mode, agents prioritize the most critical health states and may compete for resources by adjusting the urgency of alerts based on the patient's condition.\n\nAs the number of agents increases, the framework is designed to scale effectively. Each additional agent monitors new physiological parameters or additional patients, with the system adjusting the reward mechanism and communication strategy to maintain efficient performance. The system remains modular, enabling easy expansion without significantly impacting computational load or decision-making speed. Importantly, the system's ability to operate in both cooperative and competitive modes ensures flexibility, allowing it to adapt to various healthcare scenarios, including large-scale monitoring in hospitals."
+    },
+    {
+      "title": "1) Observation Space:",
+      "text": "The environment in Fig.  2  has a state, represented by s i t \u03f5S, where i = 0, 1, 2, ...n, refers to observations at time t. The aim is to divide the state into observations and allocate them to multi-agents. Suppose S represents the state of the human body, and there are three observations, s 0 t , s 1 t , s 2 t \u03f5S, that represent different internal vital signs of the human body at time t. The human health status is controlled by multiple internal vital signs, each with a different threshold as shown in MEWS Tab.I. Using a single agent to monitor all the vital signs can result in a sparse rewards challenge  [37] , where the environment might produce few useful rewards and hinders the learning of an agent. Therefore, multi-agents need to be deployed for each human to monitor the critical vital signs. The expected return E \u03c0 of a policy \u03c0 in a state s can be defined by state-value Eq. 3 in the multiagent setting, where i = 0, 1, 2, 3, ...n is a finite number of observations n in the state.\n\n2) Action Space: The action space of the monitoring environment is defined based on the MEWS  [36]  as shown in Tab. I. The table presents early warning scores of adults' vital signs with the appropriate Medical Emergency Team (MET) to contact if any escalations in the health parameters. Based on the MEWS as threshold values, the action space has been segmented to have five discrete actions to communicate the vital signs to MET-0, MET-1, MET-2, MET-3, and MET-4. Each of these actions will be taken by agents based on the current state of the vital signs they are monitoring. The expected return E \u03c0 for taking an action a in a state s under a policy \u03c0 can be measured using the action-value function Q \u03c0 (s, a) defined in Eq. 4.\n\n3) Rewards: The goal of RL is to maximize cumulative rewards obtained through the actions of learning agents in an environment. In traditional RL, an agent is rewarded based on its action that leads to a transition from state s t to s t+1 . In this study, the objective of the learning agent is to learn patterns in human vital signs. This is achieved through the design of an effective reward policy. The reward policy, as defined in this study, is calculated using Eq. 5. The agents are positively rewarded if they monitor vital signs in a state and take the correct action from the action space to communicate with the correct MET as defined in MEWS Tab.I. On the other hand, if the agent takes the wrong action, it is negatively rewarded. The rewards are split into five categories for the five actions in the action space based on the MET from MEWS Tab.I. The full rewards for each action selected by the agents are presented in Tab.II. The reward policy utilizes the DRL agents' desire to maximize rewards in each learning iteration, making them learn the behavior patterns. Under each category, different levels of rewards were configured. For example, an observation s 1 t \u03f5S at the time t is related to heart rate falling under MET-4, the rewards are shown in Eq. 6."
+    },
+    {
+      "title": "C. Learning Agent",
+      "text": "In this study, a game learning agent DQN algorithm is employed. The DQN algorithm was first introduced by Deep-Mind, a subsidiary of Google, for playing Atari games. It allows the agent to play games by simply observing the screen, without any prior training or knowledge about the games. The DQN algorithm approximates the Q-Learning function using neural networks, and the learning agent is rewarded based on the neural network's prediction of the best action for the current state. For this research, the reward policy is described in more detail in Section III-B3.\n\n1) Function Approximation: The neural network used in this study to estimate the Q-values for each action has three layers: an input layer, a hidden layer, and an output layer. The input layer has a node for each vital sign in a state and the output layer has a node for each action in the action space. The model is configured with a relu activation function, mean square error as the loss function, and an Adam optimizer. The model is trained on the states and their corresponding rewards and, once trained, it can predict the accumulated reward.\n\nThe learning agent takes an action a t \u2208 A in a transition from state s t to s \u2032 t and receives a reward R. In this transition, the maximum Q-function value is calculated according to Eq. 4, and the calculated value is discounted by a discount factor \u03b3 to prioritize immediate rewards over future rewards. The discounted future reward is combined with the current reward to obtain the target value. The difference between the prediction from the neural network and the target value forms the loss function, which is a measure of the deviation of the predicted value from the target value and can be estimated using Eq. 7. The square of the loss function penalizes the agent for large loss values.\n\n2) Memorize and Replay: The basic neural network model has a limitation in its memory capacity and can forget previous observations as they are overwritten by new observations. To mitigate this issue, a memory array that stores the previous observations including the current state s t , action a t , reward R, and next state s \u2032 t is used. This memory array enables the neural network to be retrained using the replay method, where a random sample of previous observations from the memory is selected for training. In this study, the neural network model was retained by using a batch size of 32 previous observations.\n\n3) Exploration and Exploitation: The explorationexploitation trade-off in RL refers to the balancing act between trying out new actions to gather information and exploiting the actions that lead to the highest rewards. This balance can be modeled mathematically using the \u03f5-greedy algorithm, which defines a probability \u03f5 of choosing a random action and a probability 1 -\u03f5 of choosing the action believed to lead to the highest reward based on the current knowledge of the action-value function Q(s t , a). The equation to determine the action taken at time t is as follows:\n\nrandom(a t ) with probability \u03f5 greedy(a t ) with probability 1 -\u03f5\n\nwhere the greedy action is defined as:\n\nThe value of \u03f5 determines the level of exploration versus exploitation, with smaller values leading to more exploitation and larger values leading to more exploration. Over time, as the action-value function becomes more accurate, \u03f5 can be decreased to allow for more exploitation and convergence to the optimal policy.\n\nIn this study, we emphasize the importance of balancing exploration and exploitation for effective patient monitoring. Exploration allows agents to discover better monitoring strategies, while exploitation ensures timely alerts by acting on learned knowledge. Through empirical testing, we found that an exploration rate \u03f5 between 0.1 and 0.2 provided the optimal balance in our healthcare environment. This range ensured that agents could adapt to changing patient conditions while still providing timely and accurate interventions. In critical situations with frequent health deviations, a higher exploitation rate proved beneficial, whereas environments with fewer critical events required more exploration to discover new monitoring patterns.\n\n4) Hyper Parameters: Other than the parameters defined for the neural networks, a set of hyperparameters has to supply for the RL process. They are as follows:\n\n\u2022 episodes (M): This is a gaming term that means the number of times an agent has to execute the learning process.\n\n\u2022 learning rate(\u03b1): Learning rate is to determine much information neural networks learn in an iteration. \u2022 discount factor(\u03b3): Discount factor ranges from 0 to 1 to limit future rewards and focus on immediate rewards.\n\nAlgorithm 1 implements the proposed multi-agent human monitoring framework. It takes as input a set of subjects C = 1, 2, . . . , C and a set of vital signs V = 1, 2, . . . , V , along with the number of episodes M = 1, 2, . . . , M . The algorithm outputs the rewards achieved by agents in each episode. Lines 1-2 initializes all the parameters needed for monitoring the environment and learning agent. Lines 3-7 present the reward policy. Lines  8-14 present the function approximation using the neural networks model, memorize & replay, exploration & exploitation of the DRL agent. Lines 15-28 are nested for loops with conditional statements to check if the episode is completed or not. The outer loop is to iterate each episode while resetting the environment to initial values and score to Algorithm 1 multi-agents Monitoring Require: Input: a set of subjects C = {1, 2, . . . , C};a set of vital signs V = {1, 2, . . . , V }; Episodes M = {1, 2, . . . , M }; Ensure: Output: Rewards achieved by agentss in each episode. 1: Initialization : observation space = s i t \u03f5S, action space = at\u03f5A, reward R, \u03b3, \u03f5, \u03f5 decay , \u03f5min, memory = \u2205, batch size 2: Set monitor length = N 3: if action is appropriate then 4: R \u2190 +reward 5: else 6: R \u2190 -reward 7: end if 8: Define model \u2190 N euralN etworkM odel 9: memory \u2190 memory \u222a (st, at, R, st+1) 10: if np.random.rand < \u03f5 then \u25b7 Exploration 11: action value \u2190 random(at) 12: else \u25b7 Exploitation 13: action value \u2190 greedy(at) 14: end if 15: for episode m \u2208 M do 16: score = 0 17: for time in range(monitor length) do 18: at \u2190 action(st) 19: st+1, R, done \u2190 step(at) 20: memory \u2190 memory \u222a (st, at, R, st+1) 21: st \u2190 st+1 22: if done then 23: displaym, score 24: break 25: end if 26: end for 27:\n\nreplay \u2190 batch size 28: end for zero. The inner loop is to iterate timesteps which denote the time of the current state and calls the methods.\n\nThe patient monitoring system operates with multiple agents, each tasked with monitoring specific vital signs such as heart rate, respiration rate, and temperature. The agents are initialized with a basic action set, which includes triggering alerts, adjusting monitoring intervals, and taking no action based on the patient's condition. At each time step, agents receive vital sign data as input and evaluate the patient's state. Based on the current state and the agent's policy, an action is selected. The reward function provides feedback based on the timeliness and accuracy of the action: positive rewards are given for correct, timely interventions, while penalties are applied for false alarms or missed emergencies. Over time, the agents improve their performance through continuous learning and collaboration, ensuring that vital signs are monitored comprehensively and interventions are timely. IV. EXPERIMENT\n\nIn this study, the proposed multi-agent framework was evaluated by deploying an agent for each physiological feature of a different set of subjects. The aim of the learning agents was to monitor their respective vital signs, communicate with the corresponding MET based on the estimated level of emergency, and learn the subjects' behavior patterns. All the experiments were conducted using Python programming language version 3.7.6 and related libraries such as TensorFlow, Keras, Open Gym AI, and stable baselines3."
+    },
+    {
+      "title": "A. Dataset",
+      "text": "\u2022 PPG-DaLiA  [38] : The dataset contains physiological and motion data of 15 subjects, recorded from both a wrist-worn device and a chest-worn device while the subjects were performing a wide range of activities under conditions close to real life.\n\n\u2022 WESAD [39]: The WESAD (Wearable Stress and Affect Detection) dataset is a collection of physiological signals recorded from participants while they perform various activities. It includes multi-modal signals such as ECG, PPG, GSR, respiration, and body temperature. B. Baseline Models \u2022 WISEML [40]: Mallozzi et al. proposed an RL framework for runtime monitoring to prevent dangerous and safety-critical actions in safety-critical applications. In this framework, runtime monitoring is used to enforce properties to the agent and shape its reward during learning. \u2022 CA-MQL [41]: Chen et al. proposed constrained actionbased MQL (CA-MQL) for UAVs to autonomously make flight decisions that consider the uncertainty of the reference point location. \u2022 MADDPG [42]: Lowe et al. introduced a deep reinforcement learning framework for multi-agent environments. This framework uses an adaptation of actor-critic methods to coordinate agents in both cooperative and competitive settings by accounting for other agents' policies. It highlights the difficulty of traditional algorithms in multiagent scenarios and introduces policy ensembles for more robust learning. \u2022 QMIX [43]: Rashid et al. developed QMIX, a value-based multi-agent RL algorithm that factors joint action-values into per-agent values, allowing for decentralised policies while training in a centralised manner. QMIX demonstrated superior performance on challenging StarCraft II tasks by ensuring consistency between centralised and decentralised learning.\n\n\u2022 Existing RL baseline models by Li et al.  [30]  were deployed to optimize sequential treatment strategies based on Electronic Health Records (EHRs) for chronic diseases using DQN. The multi-agent framework results were compared with Q-Learning and Double DQN. \u2022 Similarly, RL was deployed to recognize human activity using a dynamic weight assignment network architecture with TD3 (a combination of Deep Deterministic Policy Gradient (DDPG), Actor-Critic, and DQN) by Guo et al. [31]. \u2022 Yom et al. [29] used Advantage Actor-Critic (A2C) and\n\nProximal Policy Optimization (PPO) algorithms to act as virtual coaches in decision-making and send personalized messages."
+    },
+    {
+      "title": "C. Performance Measures",
+      "text": "In the initial phase, Cumulative Rewards were selected as the primary performance metric because they offer a direct reflection of the RL agents' success in achieving healthcare objectives. These cumulative rewards quantify the agents' ability to make correct decisions based on real-time physiological data, which is essential for ensuring timely medical interventions. Given the critical nature of healthcare systems, focusing on cumulative rewards allowed for the evaluation of how well the agents were trained to detect early signs of health deterioration."
+    },
+    {
+      "title": "TABLE III: Comparison of DRL and MARL Frameworks on Cumulative Rewards",
+      "text": "To provide a more holistic evaluation, we introduced additional performance metrics:\n\n\u2022 Learning Rate: This metric evaluates how quickly the agents converge to an optimal policy, which is vital in healthcare applications where rapid adaptation to changing patient conditions is crucial. Faster learning ensures that the agents can respond to emergencies in real time, improving the effectiveness of the system. \u2022 Computational Complexity: This metric assesses the system's processing demands, particularly in terms of CPU/GPU time. Minimizing computational complexity is essential in healthcare settings with resource constraints, such as hospitals or wearable monitoring devices. Lower complexity ensures that the system can run efficiently without causing delays in decision-making. \u2022 Memory Usage: As the system scales to monitor multiple physiological parameters across various agents, memory usage becomes a key factor. Efficient memory utilization is critical for deploying the framework on resourceconstrained devices like wearables, ensuring scalability and adaptability without compromising performance. Incorporating these metrics provides a more comprehensive evaluation of the proposed framework, ensuring not only its effectiveness in terms of rewards but also its efficiency, scalability, and real-world deployment potential in healthcare environments."
+    },
+    {
+      "title": "V. EXPERIMENT RESULTS AND ANALYSIS",
+      "text": "The advantage of RL for monitoring systems is that it can learn to handle complex, dynamic environments. Many monitoring tasks involve making decisions based on incomplete, uncertain information, and the optimal decision may depend on the context of the situation  [44] . RL can learn to make decisions in these types of problems by considering the current state of the system and past experience. In this study, the aim is to leverage the RL capability to optimize the decision-making process in patient monitoring."
+    },
+    {
+      "title": "A. DRL Agents Performance",
+      "text": "The performance of the proposed DRL framework was evaluated using two datasets, with a focus on cumulative rewards, learning rate, computational complexity, and memory usage. Additionally, we expanded our comparison to include multi-agent RL frameworks, MADDPG and QMIX, to assess how well these frameworks handle the complexities of realtime health monitoring tasks.\n\nThe results are summarized in Tab. III, which includes the performance of single-agent RL methods (Q-Learning, PPO, A2C, and DDPG) and multi-agent RL models (MADDPG and QMIX). The proposed DRL framework consistently outperforms all other models in terms of cumulative rewards, with significant improvements over the baseline methods.\n\nAs shown in Tab. III, the proposed DRL framework surpasses both MADDPG and QMIX in cumulative rewards for both datasets, particularly excelling in agent 1's performance on the PPG-DaLia dataset. This indicates that our framework's design, which includes a tailored reward mechanism based on Modified Early Warning Scores (MEWS), enables more efficient learning in healthcare environments. Additionally, the exploration-exploitation trade-off in our system is better optimized for the variability of physiological data.\n\nBeyond cumulative rewards, we evaluated the proposed DRL framework against baseline models using additional performance metrics, including learning rate, computational complexity, and memory usage, as shown in Tab. IV. The proposed DRL framework showed superior performance across all these metrics, indicating its suitability for real-time applications in resource-constrained healthcare environments.\n\nIn terms of learning rate, the proposed DRL framework converged after 850 epochs, outperforming all baseline models, including Q-Learning (1200 epochs) and Double DQN (1100 epochs). This faster convergence demonstrates the DRL framework's enhanced efficiency in learning complex healthcare scenarios. Faster learning is especially critical in healthcare, where timely interventions directly impact patient outcomes. The use of multiple agents, each dedicated to a specific physiological metric, accelerates policy optimization and enhances responsiveness in dynamic, real-world environments.\n\nFor computational complexity, the proposed DRL framework exhibited a significantly lower iteration time of 0.70 seconds, outperforming more complex multi-agent models like CA-MQL (1.30 seconds) and PPO (1.10 seconds). This indicates that the framework is computationally efficient, making it ideal for real-time healthcare monitoring where decision delays could compromise patient safety. This improved efficiency is due to an optimized reward structure and action space, which reduces the time required for decision-making without compromising accuracy.\n\nIn terms of memory usage, the DRL framework consumed 110MB, which is lower than all other baseline models, such as DDPG (160MB) and CA-MQL (175MB). This low memory footprint is crucial for deploying the framework on resourceconstrained hardware like wearable devices or low-power hospital systems. The efficient memory usage ensures the system can scale with additional agents without overloading system resources, making the framework suitable for largescale healthcare applications.\n\nTABLE IV: Evaluation of DRL Framework and Baseline Models on Additional Metrics RL Method Learning Rate (Epochs to Converge) Computational Complexity (Time in Seconds) Memory Usage (MB) Q-Learning 1200 0.85s per iteration 120MB PPO [29] 900 1.10s per iteration 150MB A2C [29] 1000 1.05s per iteration 140MB Double DQN [30] 1100 0.95s per iteration 135MB DDPG [31] 950 1.20s per iteration 160MB WISEML [40] 900 1.15s per iteration 145MB CA-MQL [41] 1000 1.30s per iteration 175MB MADDPG [42] 950 1.25s per iteration 155MB QMIX [43] 1100 1.20s per iteration 165MB Proposed DRL 850 0.70s per iteration 110MB\n\nAll three learning agents were fed with physiological features such as heart rate, respiration, and temperature, respectively, from the PPG-DaLiA dataset. Based on the observation space, action space, and reward policy defined for a customized gym environment for human behavior monitoring, the learning agents were run for 10 episodes, as shown in Fig.  4 . In the results, agent 1 refers to the heart rate monitoring agent, which showed a constant increase in scores for each episode for most of the subjects except subjects 5 and 6. The intermittent low scores in agent 1 performance are due to the exploration rate in DQN learning, where the algorithm tries exploring all the actions randomly instead of relying on neural networks' predictions. Similarly, agent 2 and agent 3 monitor two other physiological features, respiration and temperature, respectively. agent 2 performed better than the other two agents and achieved consistent scores for all subjects. Out of all agents, agent 3, temperature monitoring performance, was poor. This issue was traced back to the data level, where the units of the temperature thresholds in the MEWS table and the input body temperature data from the dataset were different. Still, agent 3 achieved high scores in monitoring subjects 9, 8, 4, and 10.\n\nThe reward policy designed in the proposed multi-agent framework enables agents to learn the human physiological feature patterns. For example, if a subject's heart rate is 139 beats per minute, agent 1 takes Action 3 to communicate the message to MET-3. The agent will get rewarded with +10 points only if Action 3 is taken; otherwise, the agent gets negatively rewarded according to the reward policy (Table  II ). With this example, the results in Fig.  4  can be interpreted better. An increase in scores episode by episode, with the exception of the exploration rate, actually infers an increase in the learning curve of the agents in terms of human physiological patterns."
+    },
+    {
+      "title": "B. Hyper-Parameters Optimization",
+      "text": "The DRL agents were further evaluated by hyperparameters optimization. Out of all the hyperparameters discussed in this study, two hyperparameters, learning rate (\u03b1) and discount factor (\u03b3), were optimized for all three agents, and the results are shown in Figs.  5 and6 . The learning rate determines how much information neural networks learn in an iteration to predict action and approximate the rewards. The discount factor measures how much RL agents focus on future rewards relative to those in the immediate rewards. In Fig.  5 , Figs. 5a , 5b , and5c show the agents' performance while optimizing \u03b1 of neural networks. The x-axis of the plots represents scores (cumulative rewards) achieved by an agent in each episode shown on the y-axis. The bar plots show that the learning rate \u03b1 = 0.01 is a more optimized value in all the monitoring agents. Similarly, Figs. 6a , 6b , and 6c present the \u03b3 optimization of agent 1, agent 2, and agent 3, respectively. The discount factors \u03b3 = 0.9 and \u03b3 = 0.75 are the more optimized values for agents 2 and 3, respectively, after 10 episodes of training."
+    },
+    {
+      "title": "VI. DISCUSSION",
+      "text": "This study introduces an innovative approach to patient monitoring within the unpredictable environment of healthcare settings, employing adaptive multi-agent deep reinforcement learning (DRL) to ensure timely healthcare interventions. The fluctuating nature of vital signs, crucial indicators of patient health, necessitates a robust system capable of realtime analysis and decision-making. By leveraging the sequential decision-making prowess of RL algorithms, we have established a framework where each vital sign is monitored by a dedicated DRL agent. These agents operate within a cohesive monitoring environment, guided by meticulously defined reward policies to identify and respond to potential health emergencies based on MEWS and MET standards.\n\nA notable aspect of our research is the emphasis on the design of the observation space for each DRL agent. This design is pivotal in ensuring the accuracy and effectiveness of the learning process, as it directly impacts the agent's ability to interpret vital sign data and make informed decisions. The challenge encountered with DRL agent 3, responsible for monitoring body temperature, underscores the importance of data consistency and the need for a harmonized observation space. The discrepancy between the temperature units in the MEWS table and the dataset highlighted a critical area for improvement, emphasizing the need for standardized data inputs to enhance agent performance.\n\nThe autonomous decision-making capability inherent in RL represents a significant advancement in supporting clinicians. By providing real-time updates on patient health, the DRL framework facilitates a proactive approach to patient care, extending its applicability beyond hospital settings to include home and specialized care environments. This adaptability is further enhanced by the strategic optimization of hyperparameters, which fine-tunes the learning process of DRL agents to achieve optimal performance. Our investigation into hyperparameters such as the learning rate and discount rate reveals the critical balance between immediate and future rewards, a balance that is essential for the effective monitoring of patient health.\n\nComparatively, traditional supervised learning algorithms, while accurate in predicting vital signs, fall short in dynamic healthcare environments due to their reliance on extensive labeled datasets and external supervision. The DRL approach, free from the constraints of labeled data, offers a more flexible and efficient solution for patient monitoring. However, it is essential to acknowledge the considerable effort required in data preparation and model tuning within supervised learning frameworks, which, despite their limitations, contribute significantly to the development of informed clinical decisions.\n\nThe adaptive multi-agent DRL framework proposed in this study represents a paradigm shift in patient monitoring, offering a dynamic, efficient, and scalable solution for timely healthcare interventions  [45] , [?]. The challenges and insights gleaned from this research pave the way for future advancements in the field, promising to enhance the quality of patient care through innovative technological solutions."
+    },
+    {
+      "title": "VII. CONCLUSION",
+      "text": "This study has pioneered an adaptive framework for healthcare interventions using multi-agent DRL to dynamically monitor vital signs, establishing a novel approach in patient care. Through the development of a generic monitoring environment coupled with a strategic reward policy, the DRL agents were empowered to learn from and adapt to vital sign fluctuations, enabling timely interventions by healthcare professionals. Despite its innovative contributions, the research faced challenges, such as discrepancies in body temperature data scales and the absence of predictive capabilities for future vital sign trends, which limited the effectiveness of one DRL agent and the overall predictive potential of the system. Addressing these limitations, future research will focus on enhancing the framework with predictive analytics, allowing DRL agents to forecast vital sign trends and thus revolutionize patient monitoring. This advancement aims to facilitate proactive healthcare measures, significantly reducing the risk of critical health episodes and heralding a new era in adaptive patient monitoring and healthcare management. Having said that, the future direction of our research will be focused on extending the scope of the research to predict future vital signs using multi-agent DRL."
+    },
+    {
+      "text": "Fig. 1: Human monitoring framework to monitor vital signs of the client during regular activities and alert medical emergency teams accordingly."
+    },
+    {
+      "text": "Fig. 2: Multi-agent monitoring framework"
+    },
+    {
+      "text": "Fig. 3: Experiemental Design"
+    },
+    {
+      "text": "Fig. 4: DQN Agents Performance"
+    },
+    {
+      "text": "Fig. 5: Hyper Parameters -\u03b1 optimization"
+    },
+    {
+      "text": "Fig. 6: Hyper Parameters -\u03b3 optimization"
+    }
+  ],
+  "references": [
+    {
+      "title": "WESAD Dataset Method Agent 1 Agent 2 Agent 3 Agent 1 Agent 2 Agent 3 Q-Learning",
+      "journal": "PPG-DaLia Dataset",
+      "raw": "WESAD Dataset Method Agent 1 Agent 2 Agent 3 Agent 1 Agent 2 Agent 3 Q-Learning \n\t\t 42] 42500 29870 36015 41200 28560 35345 QMIX [43] 44800 30520 37600 43200 29230 36980 Proposed DRL 48354 30019 38651 47794 29056 37786 \n\t \n\t \n\t\t PPG-DaLia Dataset \n\t\t \n\t \n\t DDPG WISEML MADDPG \n\t PPG-DaLia Dataset WESAD Dataset Method Agent 1 Agent 2 Agent 3 Agent 1 Agent 2 Agent 3 Q-Learning 25878 17304 23688 25318 16341 22823 PPO [29] 23688 20367 17688 23128 19404 16823 A2C [29] 24717 13707 24369 24157 12744 23504 Double DQN [30] 25569 15360 20367 25009 14397 19502 DDPG [31] 26760 20754 23967 26200 19791 23102 WISEML [40] 28654 25789 33669 28094 24826 32804 CA-MQL [41] 32985 27856 34685 32425 26893 33820 MADDPG [42] 42500 29870 36015 41200 28560 35345 QMIX [43] 44800 30520 37600 43200 29230 36980 Proposed DRL 48354 30019 38651 47794 29056 37786 REFERENCES"
+    },
+    {
+      "title": "Mobile health in remote patient monitoring for chronic diseases: principles, trends, and challenges",
+      "authors": [
+        "N El-Rashidy",
+        "S El-Sappagh",
+        "S Islam",
+        "H El-Bakry",
+        "S Abdelrazek"
+      ],
+      "year": 2021,
+      "doi": "10.3390/diagnostics11040607",
+      "journal": "Diagnostics",
+      "volume": "11",
+      "issue": "4",
+      "pages": "607",
+      "raw": "Mobile health in remote patient monitoring for chronic diseases: principles, trends, and challenges \n\t\t \n\t\t\t N El-Rashidy \n\t\t \n\t\t \n\t\t\t S El-Sappagh \n\t\t \n\t\t \n\t\t\t S R Islam \n\t\t \n\t\t \n\t\t\t H M El-Bakry \n\t\t \n\t\t \n\t\t\t S Abdelrazek \n\t\t \n\t\t 10.3390/diagnostics11040607 \n\t \n\t \n\t\t Diagnostics \n\t\t \n\t\t\t 11 \n\t\t\t 4 \n\t\t\t 607 \n\t\t\t 2021 \n\t\t \n\t \n\t N. El-Rashidy, S. El-Sappagh, S. R. Islam, H. M. El-Bakry, and S. Abdelrazek, \"Mobile health in remote patient monitoring for chronic diseases: principles, trends, and challenges,\" Diagnostics, vol. 11, no. 4, p. 607, 2021."
+    },
+    {
+      "title": "Ai enabled rpm for mental health facility",
+      "authors": [
+        "T Shaik",
+        "X Tao",
+        "N Higgins",
+        "H Xie",
+        "R Gururajan",
+        "X Zhou"
+      ],
+      "year": 2022,
+      "raw": "Ai enabled rpm for mental health facility \n\t\t \n\t\t\t T Shaik \n\t\t \n\t\t \n\t\t\t X Tao \n\t\t \n\t\t \n\t\t\t N Higgins \n\t\t \n\t\t \n\t\t\t H Xie \n\t\t \n\t\t \n\t\t\t R Gururajan \n\t\t \n\t\t \n\t\t\t X Zhou \n\t\t \n\t \n\t \n\t\t Proceedings of the 1st ACM Workshop on Mobile and Wireless Sensing for Smart Healthcare \n\t\t the 1st ACM Workshop on Mobile and Wireless Sensing for Smart Healthcare \n\t\t \n\t\t\t 2022 \n\t\t\t \n\t\t \n\t \n\t T. Shaik, X. Tao, N. Higgins, H. Xie, R. Gururajan, and X. Zhou, \"Ai enabled rpm for mental health facility,\" in Proceedings of the 1st ACM Workshop on Mobile and Wireless Sensing for Smart Healthcare, 2022, pp. 26-32."
+    },
+    {
+      "title": "A computerized analysis with machine learning techniques for the diagnosis of parkinson's disease: Past studies and future perspectives",
+      "authors": [
+        "A Rana",
+        "A Dumka",
+        "R Singh",
+        "M Panda",
+        "N Priyadarshi"
+      ],
+      "year": 2022,
+      "journal": "Diagnostics",
+      "volume": "12",
+      "issue": "11",
+      "pages": "2708",
+      "raw": "A computerized analysis with machine learning techniques for the diagnosis of parkinson's disease: Past studies and future perspectives \n\t\t \n\t\t\t A Rana \n\t\t \n\t\t \n\t\t\t A Dumka \n\t\t \n\t\t \n\t\t\t R Singh \n\t\t \n\t\t \n\t\t\t M K Panda \n\t\t \n\t\t \n\t\t\t N Priyadarshi \n\t\t \n\t \n\t \n\t\t Diagnostics \n\t\t \n\t\t\t 12 \n\t\t\t 11 \n\t\t\t 2708 \n\t\t\t Nov. 2022 \n\t\t \n\t \n\t A. Rana, A. Dumka, R. Singh, M. K. Panda, and N. Priyadarshi, \"A computerized analysis with machine learning techniques for the diagnosis of parkinson's disease: Past studies and future perspectives,\" Diagnostics, vol. 12, no. 11, p. 2708, Nov. 2022."
+    },
+    {
+      "title": "The rise of artificial intelligence in healthcare applications",
+      "authors": [
+        "A Bohr",
+        "K Memarzadeh"
+      ],
+      "year": 2020,
+      "doi": "10.1016/b978-0-12-818438-7.00002-2",
+      "raw": "The rise of artificial intelligence in healthcare applications \n\t\t \n\t\t\t A Bohr \n\t\t \n\t\t \n\t\t\t K Memarzadeh \n\t\t \n\t\t 10.1016/b978-0-12-818438-7.00002-2 \n\t \n\t \n\t\t Artificial Intelligence in healthcare \n\t\t \n\t\t\t Elsevier \n\t\t\t 2020 \n\t\t\t \n\t\t \n\t \n\t A. Bohr and K. Memarzadeh, \"The rise of artificial intelligence in healthcare applications,\" in Artificial Intelligence in healthcare. El- sevier, 2020, pp. 25-60."
+    },
+    {
+      "title": "E-commerce application with analytics for pharmaceutical industry",
+      "authors": [
+        "R Pattanayak",
+        "V Kumar",
+        "K Raman",
+        "M Surya",
+        "M Pooja"
+      ],
+      "year": 2022,
+      "raw": "E-commerce application with analytics for pharmaceutical industry \n\t\t \n\t\t\t R K Pattanayak \n\t\t \n\t\t \n\t\t\t V S Kumar \n\t\t \n\t\t \n\t\t\t K Raman \n\t\t \n\t\t \n\t\t\t M M Surya \n\t\t \n\t\t \n\t\t\t M R Pooja \n\t\t \n\t \n\t \n\t\t Advances in Intelligent Systems and Computing \n\t\t Singapore \n\t\t \n\t\t\t Springer Nature \n\t\t\t Sep. 2022 \n\t\t\t \n\t\t \n\t \n\t R. K. Pattanayak, V. S. Kumar, K. Raman, M. M. Surya, and M. R. Pooja, \"E-commerce application with analytics for pharmaceutical in- dustry,\" in Advances in Intelligent Systems and Computing. Springer Nature Singapore, Sep. 2022, pp. 291-298."
+    },
+    {
+      "title": "Towards computational solutions for precision medicine based big data healthcare system using deep learning models: A review",
+      "authors": [
+        "R Thirunavukarasu",
+        "M Gopikrishnan",
+        "V Palanisamy"
+      ],
+      "year": 2022,
+      "journal": "Computers in Biology and Medicine",
+      "volume": "149",
+      "pages": "106020",
+      "raw": "Towards computational solutions for precision medicine based big data healthcare system using deep learning models: A review \n\t\t \n\t\t\t R Thirunavukarasu \n\t\t \n\t\t \n\t\t\t G P D \n\t\t \n\t\t \n\t\t\t G R \n\t\t \n\t\t \n\t\t\t M Gopikrishnan \n\t\t \n\t\t \n\t\t\t V Palanisamy \n\t\t \n\t \n\t \n\t\t Computers in Biology and Medicine \n\t\t \n\t\t\t 149 \n\t\t\t 106020 \n\t\t\t Oct. 2022 \n\t\t \n\t \n\t R. Thirunavukarasu, G. P. D. C, G. R, M. Gopikrishnan, and V. Palanisamy, \"Towards computational solutions for precision medicine based big data healthcare system using deep learning models: A review,\" Computers in Biology and Medicine, vol. 149, p. 106020, Oct. 2022."
+    },
+    {
+      "title": "Deep reinforcement learning for autonomous driving: A survey",
+      "authors": [
+        "B Kiran",
+        "I Sobh",
+        "V Talpaert",
+        "P Mannion",
+        "A Sallab",
+        "S Yogamani",
+        "P Perez"
+      ],
+      "year": 2022,
+      "journal": "IEEE Transactions on Intelligent Transportation Systems",
+      "volume": "23",
+      "issue": "6",
+      "raw": "Deep reinforcement learning for autonomous driving: A survey \n\t\t \n\t\t\t B R Kiran \n\t\t \n\t\t \n\t\t\t I Sobh \n\t\t \n\t\t \n\t\t\t V Talpaert \n\t\t \n\t\t \n\t\t\t P Mannion \n\t\t \n\t\t \n\t\t\t A A A Sallab \n\t\t \n\t\t \n\t\t\t S Yogamani \n\t\t \n\t\t \n\t\t\t P Perez \n\t\t \n\t \n\t \n\t\t IEEE Transactions on Intelligent Transportation Systems \n\t\t \n\t\t\t 23 \n\t\t\t 6 \n\t\t\t \n\t\t\t Jun. 2022 \n\t\t \n\t \n\t B. R. Kiran, I. Sobh, V. Talpaert, P. Mannion, A. A. A. Sallab, S. Yo- gamani, and P. Perez, \"Deep reinforcement learning for autonomous driving: A survey,\" IEEE Transactions on Intelligent Transportation Systems, vol. 23, no. 6, pp. 4909-4926, Jun. 2022."
+    },
+    {
+      "title": "Auto uning of price prediction models for high-frequency trading via reinforcement learning",
+      "authors": [
+        "W Zhang",
+        "N Zhang",
+        "J Yan",
+        "G Li",
+        "X Yang"
+      ],
+      "year": 2022,
+      "doi": "10.1016/j.patcog.2022.108543",
+      "journal": "Pattern Recognition",
+      "volume": "125",
+      "pages": "108543",
+      "raw": "Auto uning of price prediction models for high-frequency trading via reinforcement learning \n\t\t \n\t\t\t W Zhang \n\t\t \n\t\t \n\t\t\t N Zhang \n\t\t \n\t\t \n\t\t\t J Yan \n\t\t \n\t\t \n\t\t\t G Li \n\t\t \n\t\t \n\t\t\t X Yang \n\t\t \n\t\t 10.1016/j.patcog.2022.108543 \n\t \n\t \n\t\t Pattern Recognition \n\t\t \n\t\t\t 125 \n\t\t\t 108543 \n\t\t\t 2022 \n\t\t \n\t \n\t W. Zhang, N. Zhang, J. Yan, G. Li, and X. Yang, \"Auto uning of price prediction models for high-frequency trading via reinforcement learning,\" Pattern Recognition, vol. 125, p. 108543, 2022."
+    },
+    {
+      "title": "State of the art of machine learning-enabled clinical decision support in intensive care units: Literature review",
+      "authors": [
+        "N Hong",
+        "C Liu",
+        "J Gao",
+        "L Han",
+        "F Chang",
+        "M Gong",
+        "L Su"
+      ],
+      "year": 2022,
+      "doi": "10.2196/28781",
+      "journal": "JMIR Medical Informatics",
+      "volume": "10",
+      "issue": "3",
+      "pages": "28781",
+      "raw": "State of the art of machine learning-enabled clinical decision support in intensive care units: Literature review \n\t\t \n\t\t\t N Hong \n\t\t \n\t\t \n\t\t\t C Liu \n\t\t \n\t\t \n\t\t\t J Gao \n\t\t \n\t\t \n\t\t\t L Han \n\t\t \n\t\t \n\t\t\t F Chang \n\t\t \n\t\t \n\t\t\t M Gong \n\t\t \n\t\t \n\t\t\t L Su \n\t\t \n\t\t 10.2196/28781 \n\t \n\t \n\t\t JMIR Medical Informatics \n\t\t \n\t\t\t 10 \n\t\t\t 3 \n\t\t\t 28781 \n\t\t\t Mar. 2022 \n\t\t \n\t \n\t N. Hong, C. Liu, J. Gao, L. Han, F. Chang, M. Gong, and L. Su, \"State of the art of machine learning-enabled clinical decision support in intensive care units: Literature review,\" JMIR Medical Informatics, vol. 10, no. 3, p. e28781, Mar. 2022."
+    },
+    {
+      "title": "Optimizing individualized treatment planning for parkinson's disease using deep reinforcement learning",
+      "authors": [
+        "J Watts",
+        "A Khojandi",
+        "R Vasudevan",
+        "R Ramdhani"
+      ],
+      "year": 2020,
+      "raw": "Optimizing individualized treatment planning for parkinson's disease using deep reinforcement learning \n\t\t \n\t\t\t J Watts \n\t\t \n\t\t \n\t\t\t A Khojandi \n\t\t \n\t\t \n\t\t\t R Vasudevan \n\t\t \n\t\t \n\t\t\t R Ramdhani \n\t\t \n\t \n\t \n\t\t 2020 42nd Annual International Conference of the IEEE Engineering in Medicine & Biology Society (EMBC) \n\t\t \n\t\t\t IEEE \n\t\t\t Jul. 2020 \n\t\t \n\t \n\t J. Watts, A. Khojandi, R. Vasudevan, and R. Ramdhani, \"Optimizing individualized treatment planning for parkinson's disease using deep reinforcement learning,\" in 2020 42nd Annual International Conference of the IEEE Engineering in Medicine & Biology Society (EMBC). IEEE, Jul. 2020."
+    },
+    {
+      "title": "A reinforcement learning and deep learning based intelligent system for the support of impaired patients in home treatment",
+      "authors": [
+        "M Naeem",
+        "G Paragliola",
+        "A Coronato"
+      ],
+      "year": 2021,
+      "doi": "10.1016/j.eswa.2020.114285",
+      "journal": "Expert Systems with Applications",
+      "volume": "168",
+      "pages": "114285",
+      "raw": "A reinforcement learning and deep learning based intelligent system for the support of impaired patients in home treatment \n\t\t \n\t\t\t M Naeem \n\t\t \n\t\t \n\t\t\t G Paragliola \n\t\t \n\t\t \n\t\t\t A Coronato \n\t\t \n\t\t 10.1016/j.eswa.2020.114285 \n\t \n\t \n\t\t Expert Systems with Applications \n\t\t \n\t\t\t 168 \n\t\t\t 114285 \n\t\t\t Apr. 2021 \n\t\t \n\t \n\t M. Naeem, G. Paragliola, and A. Coronato, \"A reinforcement learning and deep learning based intelligent system for the support of impaired patients in home treatment,\" Expert Systems with Applications, vol. 168, p. 114285, Apr. 2021."
+    },
+    {
+      "title": "Probabilistic machine learning for healthcare",
+      "authors": [
+        "I Chen",
+        "S Joshi",
+        "M Ghassemi",
+        "R Ranganath"
+      ],
+      "year": 2021,
+      "doi": "10.1146/annurev-biodatasci-092820-033938",
+      "journal": "Annual Review of Biomedical Data Science",
+      "volume": "4",
+      "issue": "1",
+      "raw": "Probabilistic machine learning for healthcare \n\t\t \n\t\t\t I Y Chen \n\t\t \n\t\t \n\t\t\t S Joshi \n\t\t \n\t\t \n\t\t\t M Ghassemi \n\t\t \n\t\t \n\t\t\t R Ranganath \n\t\t \n\t\t 10.1146/annurev-biodatasci-092820-033938 \n\t \n\t \n\t\t Annual Review of Biomedical Data Science \n\t\t \n\t\t\t 4 \n\t\t\t 1 \n\t\t\t \n\t\t\t Jul. 2021 \n\t\t \n\t \n\t I. Y. Chen, S. Joshi, M. Ghassemi, and R. Ranganath, \"Probabilistic machine learning for healthcare,\" Annual Review of Biomedical Data Science, vol. 4, no. 1, pp. 393-415, Jul. 2021."
+    },
+    {
+      "title": "Role of machine learning in healthcare sector",
+      "authors": [
+        "M Rastogi",
+        "D Vijarania",
+        "D Goel"
+      ],
+      "year": 2022,
+      "doi": "10.2139/ssrn.4195384",
+      "journal": "SSRN Electronic Journal",
+      "raw": "Role of machine learning in healthcare sector \n\t\t \n\t\t\t M Rastogi \n\t\t \n\t\t \n\t\t\t D M Vijarania \n\t\t \n\t\t \n\t\t\t D N Goel \n\t\t \n\t\t 10.2139/ssrn.4195384 \n\t \n\t \n\t\t SSRN Electronic Journal \n\t\t \n\t\t\t 2022 \n\t\t \n\t \n\t M. Rastogi, D. M. Vijarania, and D. N. Goel, \"Role of machine learning in healthcare sector,\" SSRN Electronic Journal, 2022."
+    },
+    {
+      "title": "Machine learning algorithms-a review",
+      "authors": [
+        "B Mahesh"
+      ],
+      "year": 2020,
+      "journal": "International Journal of Science and Research (IJSR)",
+      "volume": "9",
+      "raw": "Machine learning algorithms-a review \n\t\t \n\t\t\t B Mahesh \n\t\t \n\t \n\t \n\t\t International Journal of Science and Research (IJSR) \n\t\t \n\t\t\t 9 \n\t\t\t \n\t\t\t 2020 \n\t\t \n\t \n\t Internet \n\t B. Mahesh, \"Machine learning algorithms-a review,\" International Jour- nal of Science and Research (IJSR).[Internet], vol. 9, pp. 381-386, 2020."
+    },
+    {
+      "title": "Physical activity monitoring and classification using machine learning techniques",
+      "authors": [
+        "S Alsareii",
+        "M Awais",
+        "A Alamri",
+        "M Alasmari",
+        "M Irfan",
+        "N Aslam",
+        "M Raza"
+      ],
+      "year": 2022,
+      "journal": "Life",
+      "volume": "12",
+      "issue": "8",
+      "pages": "1103",
+      "raw": "Physical activity monitoring and classification using machine learning techniques \n\t\t \n\t\t\t S A Alsareii \n\t\t \n\t\t \n\t\t\t M Awais \n\t\t \n\t\t \n\t\t\t A M Alamri \n\t\t \n\t\t \n\t\t\t M Y Alasmari \n\t\t \n\t\t \n\t\t\t M Irfan \n\t\t \n\t\t \n\t\t\t N Aslam \n\t\t \n\t\t \n\t\t\t M Raza \n\t\t \n\t \n\t \n\t\t Life \n\t\t \n\t\t\t 12 \n\t\t\t 8 \n\t\t\t 1103 \n\t\t\t 2022 \n\t\t \n\t \n\t S. A. Alsareii, M. Awais, A. M. Alamri, M. Y. AlAsmari, M. Irfan, N. Aslam, and M. Raza, \"Physical activity monitoring and classification using machine learning techniques,\" Life, vol. 12, no. 8, p. 1103, 2022."
+    },
+    {
+      "title": "A predictive analysis of heart rates using machine learning techniques",
+      "authors": [
+        "M Oyeleye",
+        "T Chen",
+        "S Titarenko",
+        "G Antoniou"
+      ],
+      "year": 2022,
+      "doi": "10.3390/ijerph19042417",
+      "journal": "International Journal of Environmental Research and Public Health",
+      "volume": "19",
+      "issue": "4",
+      "pages": "2417",
+      "raw": "A predictive analysis of heart rates using machine learning techniques \n\t\t \n\t\t\t M Oyeleye \n\t\t \n\t\t \n\t\t\t T Chen \n\t\t \n\t\t \n\t\t\t S Titarenko \n\t\t \n\t\t \n\t\t\t G Antoniou \n\t\t \n\t\t 10.3390/ijerph19042417 \n\t \n\t \n\t\t International Journal of Environmental Research and Public Health \n\t\t \n\t\t\t 19 \n\t\t\t 4 \n\t\t\t 2417 \n\t\t\t Feb. 2022 \n\t\t \n\t \n\t M. Oyeleye, T. Chen, S. Titarenko, and G. Antoniou, \"A predictive analysis of heart rates using machine learning techniques,\" International Journal of Environmental Research and Public Health, vol. 19, no. 4, p. 2417, Feb. 2022."
+    },
+    {
+      "title": "Heart rate prediction model based on neural network",
+      "authors": [
+        "M Luo",
+        "K Wu"
+      ],
+      "year": 2020,
+      "doi": "10.1088/1757-899x/715/1/012060",
+      "journal": "IOP Conference Series: Materials Science and Engineering",
+      "volume": "715",
+      "issue": "1",
+      "pages": "12060",
+      "raw": "Heart rate prediction model based on neural network \n\t\t \n\t\t\t M Luo \n\t\t \n\t\t \n\t\t\t K Wu \n\t\t \n\t\t 10.1088/1757-899x/715/1/012060 \n\t \n\t \n\t\t IOP Conference Series: Materials Science and Engineering \n\t\t \n\t\t\t 715 \n\t\t\t 1 \n\t\t\t 12060 \n\t\t\t Jan. 2020 \n\t\t \n\t \n\t M. Luo and K. Wu, \"Heart rate prediction model based on neural network,\" IOP Conference Series: Materials Science and Engineering, vol. 715, no. 1, p. 012060, Jan. 2020."
+    },
+    {
+      "title": "Sensor-based and vision-based human activity recognition: A comprehensive survey",
+      "authors": [
+        "L Dang",
+        "K Min",
+        "H Wang",
+        "M Piran",
+        "C Lee",
+        "H Moon"
+      ],
+      "year": 2020,
+      "journal": "Pattern Recognition",
+      "volume": "108",
+      "pages": "107561",
+      "raw": "Sensor-based and vision-based human activity recognition: A comprehensive survey \n\t\t \n\t\t\t L M Dang \n\t\t \n\t\t \n\t\t\t K Min \n\t\t \n\t\t \n\t\t\t H Wang \n\t\t \n\t\t \n\t\t\t M J Piran \n\t\t \n\t\t \n\t\t\t C H Lee \n\t\t \n\t\t \n\t\t\t H Moon \n\t\t \n\t \n\t \n\t\t Pattern Recognition \n\t\t \n\t\t\t 108 \n\t\t\t 107561 \n\t\t\t Dec. 2020 \n\t\t \n\t \n\t L. M. Dang, K. Min, H. Wang, M. J. Piran, C. H. Lee, and H. Moon, \"Sensor-based and vision-based human activity recognition: A compre- hensive survey,\" Pattern Recognition, vol. 108, p. 107561, Dec. 2020."
+    },
+    {
+      "title": "Unsupervised embedding learning for human activity recognition using wearable sensor data",
+      "authors": [
+        "T Sheng",
+        "M Huber"
+      ],
+      "year": 2020,
+      "raw": "Unsupervised embedding learning for human activity recognition using wearable sensor data \n\t\t \n\t\t\t T Sheng \n\t\t \n\t\t \n\t\t\t M Huber \n\t\t \n\t \n\t \n\t\t The Thirty-Third International Flairs Conference \n\t\t \n\t\t\t 2020 \n\t\t \n\t \n\t T. Sheng and M. Huber, \"Unsupervised embedding learning for human activity recognition using wearable sensor data,\" in The Thirty-Third International Flairs Conference, 2020."
+    },
+    {
+      "title": "Synthetic sensor data generation for health applications: A supervised deep learning approach",
+      "authors": [
+        "S Norgaard",
+        "R Saeedi",
+        "K Sasani",
+        "A Gebremedhin"
+      ],
+      "year": 2018,
+      "doi": "10.1109/embc.2018.8512470",
+      "raw": "Synthetic sensor data generation for health applications: A supervised deep learning approach \n\t\t \n\t\t\t S Norgaard \n\t\t \n\t\t \n\t\t\t R Saeedi \n\t\t \n\t\t \n\t\t\t K Sasani \n\t\t \n\t\t \n\t\t\t A H Gebremedhin \n\t\t \n\t\t 10.1109/embc.2018.8512470 \n\t \n\t \n\t\t 2018 40th Annual International Conference of the IEEE Engineering in Medicine and Biology Society (EMBC) \n\t\t \n\t\t\t IEEE \n\t\t\t 2018 \n\t\t\t \n\t\t \n\t \n\t S. Norgaard, R. Saeedi, K. Sasani, and A. H. Gebremedhin, \"Synthetic sensor data generation for health applications: A supervised deep learn- ing approach,\" in 2018 40th Annual International Conference of the IEEE Engineering in Medicine and Biology Society (EMBC). IEEE, 2018, pp. 1164-1167."
+    },
+    {
+      "title": "Machine learning: Algorithms, real-world applications and research directions",
+      "authors": [
+        "I Sarker"
+      ],
+      "year": 2021,
+      "journal": "SN computer science",
+      "volume": "2",
+      "issue": "3",
+      "pages": "160",
+      "raw": "Machine learning: Algorithms, real-world applications and research directions \n\t\t \n\t\t\t I H Sarker \n\t\t \n\t \n\t \n\t\t SN computer science \n\t\t \n\t\t\t 2 \n\t\t\t 3 \n\t\t\t 160 \n\t\t\t 2021 \n\t\t \n\t \n\t I. H. Sarker, \"Machine learning: Algorithms, real-world applications and research directions,\" SN computer science, vol. 2, no. 3, p. 160, 2021."
+    },
+    {
+      "title": "Application of machine learning in ocean data",
+      "authors": [
+        "R Lou",
+        "Z Lv",
+        "S Dang",
+        "T Su",
+        "X Li"
+      ],
+      "year": 2021,
+      "doi": "10.1007/s00530-020-00733-x",
+      "journal": "Multimedia Systems",
+      "raw": "Application of machine learning in ocean data \n\t\t \n\t\t\t R Lou \n\t\t \n\t\t \n\t\t\t Z Lv \n\t\t \n\t\t \n\t\t\t S Dang \n\t\t \n\t\t \n\t\t\t T Su \n\t\t \n\t\t \n\t\t\t X Li \n\t\t \n\t\t 10.1007/s00530-020-00733-x \n\t \n\t \n\t\t Multimedia Systems \n\t\t \n\t\t\t Feb. 2021 \n\t\t \n\t \n\t R. Lou, Z. Lv, S. Dang, T. Su, and X. Li, \"Application of machine learning in ocean data,\" Multimedia Systems, Feb. 2021."
+    },
+    {
+      "title": "Behavior priors for efficient reinforcement learning",
+      "authors": [
+        "D Tirumala",
+        "A Galashov",
+        "H Noh",
+        "L Hasenclever",
+        "R Pascanu",
+        "J Schwarz",
+        "G Desjardins",
+        "W Czarnecki",
+        "A Ahuja",
+        "Y Teh"
+      ],
+      "year": 2020,
+      "raw": "Behavior priors for efficient reinforcement learning \n\t\t \n\t\t\t D Tirumala \n\t\t \n\t\t \n\t\t\t A Galashov \n\t\t \n\t\t \n\t\t\t H Noh \n\t\t \n\t\t \n\t\t\t L Hasenclever \n\t\t \n\t\t \n\t\t\t R Pascanu \n\t\t \n\t\t \n\t\t\t J Schwarz \n\t\t \n\t\t \n\t\t\t G Desjardins \n\t\t \n\t\t \n\t\t\t W M Czarnecki \n\t\t \n\t\t \n\t\t\t A Ahuja \n\t\t \n\t\t \n\t\t\t Y W Teh \n\t\t \n\t\t \n\t\t\t 2020 \n\t\t \n\t \n\t D. Tirumala, A. Galashov, H. Noh, L. Hasenclever, R. Pascanu, J. Schwarz, G. Desjardins, W. M. Czarnecki, A. Ahuja, Y. W. Teh et al., \"Behavior priors for efficient reinforcement learning,\" 2020."
+    },
+    {
+      "title": "Hierarchical reinforcement learning, sequential behavior, and the dorsal frontostriatal system",
+      "authors": [
+        "M Janssen",
+        "C Lewarne",
+        "D Burk",
+        "B Averbeck"
+      ],
+      "year": 2022,
+      "doi": "10.1162/jocn_a_01869",
+      "journal": "Journal of Cognitive Neuroscience",
+      "volume": "34",
+      "issue": "8",
+      "raw": "Hierarchical reinforcement learning, sequential behavior, and the dorsal frontostriatal system \n\t\t \n\t\t\t M Janssen \n\t\t \n\t\t \n\t\t\t C Lewarne \n\t\t \n\t\t \n\t\t\t D Burk \n\t\t \n\t\t \n\t\t\t B B Averbeck \n\t\t \n\t\t 10.1162/jocn_a_01869 \n\t \n\t \n\t\t Journal of Cognitive Neuroscience \n\t\t \n\t\t\t 34 \n\t\t\t 8 \n\t\t\t \n\t\t\t 2022 \n\t\t \n\t \n\t M. Janssen, C. LeWarne, D. Burk, and B. B. Averbeck, \"Hierarchical reinforcement learning, sequential behavior, and the dorsal frontostriatal system,\" Journal of Cognitive Neuroscience, vol. 34, no. 8, pp. 1307- 1325, 2022."
+    },
+    {
+      "title": "An interactive multisensing framework for personalized human robot collaboration and assistive training using reinforcement learning",
+      "authors": [
+        "K Tsiakas",
+        "M Papakostas",
+        "M Theofanidis",
+        "M Bell",
+        "R Mihalcea",
+        "S Wang",
+        "M Burzo",
+        "F Makedon"
+      ],
+      "year": 2017,
+      "doi": "10.1145/3056540.3076191",
+      "raw": "An interactive multisensing framework for personalized human robot collaboration and assistive training using reinforcement learning \n\t\t \n\t\t\t K Tsiakas \n\t\t \n\t\t \n\t\t\t M Papakostas \n\t\t \n\t\t \n\t\t\t M Theofanidis \n\t\t \n\t\t \n\t\t\t M Bell \n\t\t \n\t\t \n\t\t\t R Mihalcea \n\t\t \n\t\t \n\t\t\t S Wang \n\t\t \n\t\t \n\t\t\t M Burzo \n\t\t \n\t\t \n\t\t\t F Makedon \n\t\t \n\t\t 10.1145/3056540.3076191 \n\t \n\t \n\t\t Proceedings of the 10th International Conference on PErvasive Technologies Related to Assistive Environments \n\t\t the 10th International Conference on PErvasive Technologies Related to Assistive Environments \n\t\t \n\t\t\t ACM \n\t\t\t Jun. 2017 \n\t\t \n\t \n\t K. Tsiakas, M. Papakostas, M. Theofanidis, M. Bell, R. Mihalcea, S. Wang, M. Burzo, and F. Makedon, \"An interactive multisensing framework for personalized human robot collaboration and assistive training using reinforcement learning,\" in Proceedings of the 10th International Conference on PErvasive Technologies Related to Assistive Environments. ACM, Jun. 2017."
+    },
+    {
+      "title": "Methods for robot behavior adaptation for cognitive neurorehabilitation",
+      "authors": [
+        "A Kubota",
+        "L Riek"
+      ],
+      "year": 2022,
+      "doi": "10.1146/annurev-control-042920-093225",
+      "journal": "Annual Review of Control, Robotics, and Autonomous Systems",
+      "volume": "5",
+      "issue": "1",
+      "raw": "Methods for robot behavior adaptation for cognitive neurorehabilitation \n\t\t \n\t\t\t A Kubota \n\t\t \n\t\t \n\t\t\t L D Riek \n\t\t \n\t\t 10.1146/annurev-control-042920-093225 \n\t \n\t \n\t\t Annual Review of Control, Robotics, and Autonomous Systems \n\t\t \n\t\t\t 5 \n\t\t\t 1 \n\t\t\t \n\t\t\t May 2022 \n\t\t \n\t \n\t A. Kubota and L. D. Riek, \"Methods for robot behavior adaptation for cognitive neurorehabilitation,\" Annual Review of Control, Robotics, and Autonomous Systems, vol. 5, no. 1, pp. 109-135, May 2022."
+    },
+    {
+      "title": "Intelligent health monitoring system modeling based on machine learning and agent technology",
+      "authors": [
+        "J Elouni",
+        "H Ellouzi",
+        "H Ltifi",
+        "M Ayed"
+      ],
+      "year": 2020,
+      "doi": "10.3233/mgs-200329",
+      "journal": "Multiagent and Grid Systems",
+      "volume": "16",
+      "issue": "2",
+      "raw": "Intelligent health monitoring system modeling based on machine learning and agent technology \n\t\t \n\t\t\t J Elouni \n\t\t \n\t\t \n\t\t\t H Ellouzi \n\t\t \n\t\t \n\t\t\t H Ltifi \n\t\t \n\t\t \n\t\t\t M B Ayed \n\t\t \n\t\t 10.3233/mgs-200329 \n\t \n\t \n\t\t Multiagent and Grid Systems \n\t\t \n\t\t\t 16 \n\t\t\t 2 \n\t\t\t \n\t\t\t 2020 \n\t\t \n\t \n\t J. Elouni, H. Ellouzi, H. Ltifi, and M. B. Ayed, \"Intelligent health monitoring system modeling based on machine learning and agent technology,\" Multiagent and Grid Systems, vol. 16, no. 2, pp. 207-226, 2020."
+    },
+    {
+      "title": "From personalized timely notification to healthy habit formation: a feasibility study of reinforcement learning approaches on synthetic data",
+      "authors": [
+        "A Lisowska",
+        "S Wilk",
+        "M Peleg"
+      ],
+      "year": 2021,
+      "doi": "10.1109/cbms52027.2021.00061",
+      "raw": "From personalized timely notification to healthy habit formation: a feasibility study of reinforcement learning approaches on synthetic data \n\t\t \n\t\t\t A Lisowska \n\t\t \n\t\t \n\t\t\t S Wilk \n\t\t \n\t\t \n\t\t\t M Peleg \n\t\t \n\t\t 10.1109/cbms52027.2021.00061 \n\t \n\t \n\t\t SMARTERCARE@ AI* IA \n\t\t \n\t\t\t 2021 \n\t\t\t \n\t\t \n\t \n\t A. Lisowska, S. Wilk, and M. Peleg, \"From personalized timely noti- fication to healthy habit formation: a feasibility study of reinforcement learning approaches on synthetic data.\" in SMARTERCARE@ AI* IA, 2021, pp. 7-18."
+    },
+    {
+      "title": "Encouraging physical activity in patients with diabetes: Intervention using a reinforcement learning system",
+      "authors": [
+        "E Yom-Tov",
+        "G Feraru",
+        "M Kozdoba",
+        "S Mannor",
+        "M Tennenholtz",
+        "I Hochberg"
+      ],
+      "year": 2017,
+      "journal": "Journal of Medical Internet Research",
+      "volume": "19",
+      "issue": "10",
+      "pages": "338",
+      "raw": "Encouraging physical activity in patients with diabetes: Intervention using a reinforcement learning system \n\t\t \n\t\t\t E Yom-Tov \n\t\t \n\t\t \n\t\t\t G Feraru \n\t\t \n\t\t \n\t\t\t M Kozdoba \n\t\t \n\t\t \n\t\t\t S Mannor \n\t\t \n\t\t \n\t\t\t M Tennenholtz \n\t\t \n\t\t \n\t\t\t I Hochberg \n\t\t \n\t \n\t \n\t\t Journal of Medical Internet Research \n\t\t \n\t\t\t 19 \n\t\t\t 10 \n\t\t\t 338 \n\t\t\t Oct. 2017 \n\t\t \n\t \n\t E. Yom-Tov, G. Feraru, M. Kozdoba, S. Mannor, M. Tennenholtz, and I. Hochberg, \"Encouraging physical activity in patients with diabetes: Intervention using a reinforcement learning system,\" Journal of Medical Internet Research, vol. 19, no. 10, p. e338, Oct. 2017."
+    },
+    {
+      "title": "Electronic health records based reinforcement learning for treatment optimizing",
+      "authors": [
+        "T Li",
+        "Z Wang",
+        "W Lu",
+        "Q Zhang",
+        "D Li"
+      ],
+      "year": 2022,
+      "journal": "Information Systems",
+      "volume": "104",
+      "pages": "101878",
+      "raw": "Electronic health records based reinforcement learning for treatment optimizing \n\t\t \n\t\t\t T Li \n\t\t \n\t\t \n\t\t\t Z Wang \n\t\t \n\t\t \n\t\t\t W Lu \n\t\t \n\t\t \n\t\t\t Q Zhang \n\t\t \n\t\t \n\t\t\t D Li \n\t\t \n\t \n\t \n\t\t Information Systems \n\t\t \n\t\t\t 104 \n\t\t\t 101878 \n\t\t\t Feb. 2022 \n\t\t \n\t \n\t T. Li, Z. Wang, W. Lu, Q. Zhang, and D. Li, \"Electronic health records based reinforcement learning for treatment optimizing,\" Information Systems, vol. 104, p. 101878, Feb. 2022."
+    },
+    {
+      "title": "A deep reinforcement learning method for multimodal data fusion in action recognition",
+      "authors": [
+        "J Guo",
+        "Q Liu",
+        "E Chen"
+      ],
+      "year": 2022,
+      "doi": "10.1109/lsp.2021.3128379",
+      "journal": "IEEE Signal Processing Letters",
+      "volume": "29",
+      "raw": "A deep reinforcement learning method for multimodal data fusion in action recognition \n\t\t \n\t\t\t J Guo \n\t\t \n\t\t \n\t\t\t Q Liu \n\t\t \n\t\t \n\t\t\t E Chen \n\t\t \n\t\t 10.1109/lsp.2021.3128379 \n\t \n\t \n\t\t IEEE Signal Processing Letters \n\t\t \n\t\t\t 29 \n\t\t\t \n\t\t\t 2022 \n\t\t \n\t \n\t J. Guo, Q. Liu, and E. Chen, \"A deep reinforcement learning method for multimodal data fusion in action recognition,\" IEEE Signal Processing Letters, vol. 29, pp. 120-124, 2022."
+    },
+    {
+      "title": "Framu: Attention-based machine unlearning using federated reinforcement learning",
+      "authors": [
+        "T Shaik",
+        "X Tao",
+        "L Li",
+        "H Xie",
+        "T Cai",
+        "X Zhu",
+        "Q Li"
+      ],
+      "year": 2024,
+      "journal": "IEEE Transactions on Knowledge and Data Engineering",
+      "raw": "Framu: Attention-based machine unlearning using federated reinforcement learning \n\t\t \n\t\t\t T Shaik \n\t\t \n\t\t \n\t\t\t X Tao \n\t\t \n\t\t \n\t\t\t L Li \n\t\t \n\t\t \n\t\t\t H Xie \n\t\t \n\t\t \n\t\t\t T Cai \n\t\t \n\t\t \n\t\t\t X Zhu \n\t\t \n\t\t \n\t\t\t Q Li \n\t\t \n\t \n\t \n\t\t IEEE Transactions on Knowledge and Data Engineering \n\t\t \n\t\t\t 2024 \n\t\t \n\t \n\t T. Shaik, X. Tao, L. Li, H. Xie, T. Cai, X. Zhu, and Q. Li, \"Framu: Attention-based machine unlearning using federated reinforce- ment learning,\" IEEE Transactions on Knowledge and Data Engineer- ing, 2024."
+    },
+    {
+      "title": "Lio-a personal robot assistant for human-robot interaction and care applications",
+      "authors": [
+        "J Mi\u0161eikis",
+        "P Caroni",
+        "P Duchamp",
+        "A Gasser",
+        "R Marko",
+        "N Mi\u0161eikien\u0117",
+        "F Zwilling",
+        "C De Castelbajac",
+        "L Eicher",
+        "M Fr\u00fch"
+      ],
+      "year": 2020,
+      "doi": "10.1109/lra.2020.3007462",
+      "journal": "IEEE Robotics and Automation Letters",
+      "volume": "5",
+      "issue": "4",
+      "raw": "Lio-a personal robot assistant for human-robot interaction and care applications \n\t\t \n\t\t\t J Mi\u0161eikis \n\t\t \n\t\t \n\t\t\t P Caroni \n\t\t \n\t\t \n\t\t\t P Duchamp \n\t\t \n\t\t \n\t\t\t A Gasser \n\t\t \n\t\t \n\t\t\t R Marko \n\t\t \n\t\t \n\t\t\t N Mi\u0161eikien\u0117 \n\t\t \n\t\t \n\t\t\t F Zwilling \n\t\t \n\t\t \n\t\t\t C De Castelbajac \n\t\t \n\t\t \n\t\t\t L Eicher \n\t\t \n\t\t \n\t\t\t M Fr\u00fch \n\t\t \n\t\t 10.1109/lra.2020.3007462 \n\t \n\t \n\t\t IEEE Robotics and Automation Letters \n\t\t \n\t\t\t 5 \n\t\t\t 4 \n\t\t\t \n\t\t\t 2020 \n\t\t \n\t \n\t J. Mi\u0161eikis, P. Caroni, P. Duchamp, A. Gasser, R. Marko, N. Mi\u0161eikien\u0117, F. Zwilling, C. De Castelbajac, L. Eicher, M. Fr\u00fch et al., \"Lio-a personal robot assistant for human-robot interaction and care applications,\" IEEE Robotics and Automation Letters, vol. 5, no. 4, pp. 5339-5346, 2020."
+    },
+    {
+      "title": "Reinforcement learning in healthcare: A survey",
+      "authors": [
+        "C Yu",
+        "J Liu",
+        "S Nemati",
+        "G Yin"
+      ],
+      "year": 2021,
+      "doi": "10.1145/3477600",
+      "journal": "ACM Comput. Surv",
+      "volume": "55",
+      "issue": "1",
+      "raw": "Reinforcement learning in healthcare: A survey \n\t\t \n\t\t\t C Yu \n\t\t \n\t\t \n\t\t\t J Liu \n\t\t \n\t\t \n\t\t\t S Nemati \n\t\t \n\t\t \n\t\t\t G Yin \n\t\t \n\t\t 10.1145/3477600 \n\t \n\t \n\t\t ACM Comput. Surv \n\t\t \n\t\t\t 55 \n\t\t\t 1 \n\t\t\t nov 2021 \n\t\t \n\t \n\t C. Yu, J. Liu, S. Nemati, and G. Yin, \"Reinforcement learning in healthcare: A survey,\" ACM Comput. Surv., vol. 55, no. 1, nov 2021."
+    },
+    {
+      "title": "Exploring the landscape of machine unlearning: A comprehensive survey and taxonomy",
+      "authors": [
+        "T Shaik",
+        "X Tao",
+        "H Xie",
+        "L Li",
+        "X Zhu",
+        "Q Li"
+      ],
+      "year": 2023,
+      "raw": "Exploring the landscape of machine unlearning: A comprehensive survey and taxonomy \n\t\t \n\t\t\t T Shaik \n\t\t \n\t\t \n\t\t\t X Tao \n\t\t \n\t\t \n\t\t\t H Xie \n\t\t \n\t\t \n\t\t\t L Li \n\t\t \n\t\t \n\t\t\t X Zhu \n\t\t \n\t\t \n\t\t\t Q Li \n\t\t \n\t\t arXiv:2305.06360 \n\t\t \n\t\t\t 2023 \n\t\t \n\t \n\t arXiv preprint \n\t T. Shaik, X. Tao, H. Xie, L. Li, X. Zhu, and Q. Li, \"Exploring the landscape of machine unlearning: A comprehensive survey and taxonomy,\" arXiv preprint arXiv:2305.06360, 2023."
+    },
+    {
+      "title": "Canberra hospital and health services clinical procedure",
+      "authors": [
+        "V Signs"
+      ],
+      "year": 2021,
+      "doi": "10.47363/jimrr/2023(2)124",
+      "raw": "Canberra hospital and health services clinical procedure \n\t\t \n\t\t\t V Signs \n\t\t \n\t\t 10.47363/jimrr/2023(2)124 \n\t\t \n\t\t\t 2021 \n\t\t \n\t \n\t V. Signs, \"Canberra hospital and health services clinical procedure,\" 2021."
+    },
+    {
+      "title": "Deep-reinforcementlearning-based autonomous uav navigation with sparse rewards",
+      "authors": [
+        "C Wang",
+        "J Wang",
+        "J Wang",
+        "X Zhang"
+      ],
+      "year": 2020,
+      "doi": "10.1109/jiot.2020.2973193",
+      "journal": "IEEE Internet of Things Journal",
+      "volume": "7",
+      "issue": "7",
+      "raw": "Deep-reinforcementlearning-based autonomous uav navigation with sparse rewards \n\t\t \n\t\t\t C Wang \n\t\t \n\t\t \n\t\t\t J Wang \n\t\t \n\t\t \n\t\t\t J Wang \n\t\t \n\t\t \n\t\t\t X Zhang \n\t\t \n\t\t 10.1109/jiot.2020.2973193 \n\t \n\t \n\t\t IEEE Internet of Things Journal \n\t\t \n\t\t\t 7 \n\t\t\t 7 \n\t\t\t \n\t\t\t 2020 \n\t\t \n\t \n\t C. Wang, J. Wang, J. Wang, and X. Zhang, \"Deep-reinforcement- learning-based autonomous uav navigation with sparse rewards,\" IEEE Internet of Things Journal, vol. 7, no. 7, pp. 6180-6190, 2020."
+    },
+    {
+      "title": "Deep PPG: Large-scale heart rate estimation with convolutional neural networks",
+      "authors": [
+        "A Reiss",
+        "I Indlekofer",
+        "P Schmidt",
+        "K Laerhoven"
+      ],
+      "year": 2019,
+      "journal": "Sensors",
+      "volume": "19",
+      "issue": "14",
+      "pages": "3079",
+      "raw": "Deep PPG: Large-scale heart rate estimation with convolutional neural networks \n\t\t \n\t\t\t A Reiss \n\t\t \n\t\t \n\t\t\t I Indlekofer \n\t\t \n\t\t \n\t\t\t P Schmidt \n\t\t \n\t\t \n\t\t\t K V Laerhoven \n\t\t \n\t \n\t \n\t\t Sensors \n\t\t \n\t\t\t 19 \n\t\t\t 14 \n\t\t\t 3079 \n\t\t\t Jul. 2019 \n\t\t \n\t \n\t A. Reiss, I. Indlekofer, P. Schmidt, and K. V. Laerhoven, \"Deep PPG: Large-scale heart rate estimation with convolutional neural networks,\" Sensors, vol. 19, no. 14, p. 3079, Jul. 2019."
+    },
+    {
+      "title": "Introducing wesad, a multimodal dataset for wearable stress and affect detection",
+      "authors": [
+        "P Schmidt",
+        "A Reiss",
+        "R Duerichen",
+        "C Marberger",
+        "K Van Laerhoven"
+      ],
+      "year": 2018,
+      "doi": "10.1145/3242969.3242985",
+      "raw": "Introducing wesad, a multimodal dataset for wearable stress and affect detection \n\t\t \n\t\t\t P Schmidt \n\t\t \n\t\t \n\t\t\t A Reiss \n\t\t \n\t\t \n\t\t\t R Duerichen \n\t\t \n\t\t \n\t\t\t C Marberger \n\t\t \n\t\t \n\t\t\t K Van Laerhoven \n\t\t \n\t\t 10.1145/3242969.3242985 \n\t \n\t \n\t\t Proceedings of the 20th ACM international conference on multimodal interaction \n\t\t the 20th ACM international conference on multimodal interaction \n\t\t \n\t\t\t 2018 \n\t\t\t \n\t\t \n\t \n\t P. Schmidt, A. Reiss, R. Duerichen, C. Marberger, and K. Van Laer- hoven, \"Introducing wesad, a multimodal dataset for wearable stress and affect detection,\" in Proceedings of the 20th ACM international conference on multimodal interaction, 2018, pp. 400-408."
+    },
+    {
+      "title": "A runtime monitoring framework to enforce invariants on reinforcement learning agents exploring complex environments",
+      "authors": [
+        "P Mallozzi",
+        "E Castellano",
+        "P Pelliccione",
+        "G Schneider",
+        "K Tei"
+      ],
+      "year": 2019,
+      "doi": "10.1109/rose.2019.00011",
+      "raw": "A runtime monitoring framework to enforce invariants on reinforcement learning agents exploring complex environments \n\t\t \n\t\t\t P Mallozzi \n\t\t \n\t\t \n\t\t\t E Castellano \n\t\t \n\t\t \n\t\t\t P Pelliccione \n\t\t \n\t\t \n\t\t\t G Schneider \n\t\t \n\t\t \n\t\t\t K Tei \n\t\t \n\t\t 10.1109/rose.2019.00011 \n\t \n\t \n\t\t IEEE/ACM 2nd International Workshop on Robotics Software Engineering (RoSE) \n\t\t \n\t\t\t IEEE \n\t\t\t 2019. May 2019 \n\t\t \n\t \n\t P. Mallozzi, E. Castellano, P. Pelliccione, G. Schneider, and K. Tei, \"A runtime monitoring framework to enforce invariants on reinforcement learning agents exploring complex environments,\" in 2019 IEEE/ACM 2nd International Workshop on Robotics Software Engineering (RoSE). IEEE, May 2019."
+    },
+    {
+      "title": "Autonomous tracking using a swarm of UAVs: A constrained multi-agent reinforcement learning approach",
+      "authors": [
+        "Y.-J Chen",
+        "D.-K Chang",
+        "C Zhang"
+      ],
+      "year": 2020,
+      "journal": "IEEE Transactions on Vehicular Technology",
+      "volume": "69",
+      "issue": "11",
+      "raw": "Autonomous tracking using a swarm of UAVs: A constrained multi-agent reinforcement learning approach \n\t\t \n\t\t\t Y.-J Chen \n\t\t \n\t\t \n\t\t\t D.-K Chang \n\t\t \n\t\t \n\t\t\t C Zhang \n\t\t \n\t \n\t \n\t\t IEEE Transactions on Vehicular Technology \n\t\t \n\t\t\t 69 \n\t\t\t 11 \n\t\t\t \n\t\t\t Nov. 2020 \n\t\t \n\t \n\t Y.-J. Chen, D.-K. Chang, and C. Zhang, \"Autonomous tracking using a swarm of UAVs: A constrained multi-agent reinforcement learning approach,\" IEEE Transactions on Vehicular Technology, vol. 69, no. 11, pp. 13 702-13 717, Nov. 2020."
+    },
+    {
+      "title": "Multi-agent actor-critic for mixed cooperative-competitive environments",
+      "authors": [
+        "R Lowe",
+        "Y Wu",
+        "A Tamar",
+        "J Harb",
+        "O Pieter",
+        "I Abbeel"
+      ],
+      "year": 2017,
+      "journal": "Advances in neural information processing systems",
+      "volume": "30",
+      "raw": "Multi-agent actor-critic for mixed cooperative-competitive environments \n\t\t \n\t\t\t R Lowe \n\t\t \n\t\t \n\t\t\t Y I Wu \n\t\t \n\t\t \n\t\t\t A Tamar \n\t\t \n\t\t \n\t\t\t J Harb \n\t\t \n\t\t \n\t\t\t O Pieter \n\t\t \n\t\t \n\t\t\t I Abbeel \n\t\t \n\t\t \n\t\t\t Mordatch \n\t\t \n\t \n\t \n\t\t Advances in neural information processing systems \n\t\t \n\t\t\t 30 \n\t\t\t 2017 \n\t\t \n\t \n\t R. Lowe, Y. I. Wu, A. Tamar, J. Harb, O. Pieter Abbeel, and I. Mordatch, \"Multi-agent actor-critic for mixed cooperative-competitive environ- ments,\" Advances in neural information processing systems, vol. 30, 2017."
+    },
+    {
+      "title": "Monotonic value function factorisation for deep multiagent reinforcement learning",
+      "authors": [
+        "T Rashid",
+        "M Samvelyan",
+        "C De Witt",
+        "G Farquhar",
+        "J Foerster",
+        "S Whiteson"
+      ],
+      "year": 2020,
+      "journal": "Journal of Machine Learning Research",
+      "volume": "21",
+      "issue": "178",
+      "raw": "Monotonic value function factorisation for deep multiagent reinforcement learning \n\t\t \n\t\t\t T Rashid \n\t\t \n\t\t \n\t\t\t M Samvelyan \n\t\t \n\t\t \n\t\t\t C S De Witt \n\t\t \n\t\t \n\t\t\t G Farquhar \n\t\t \n\t\t \n\t\t\t J Foerster \n\t\t \n\t\t \n\t\t\t S Whiteson \n\t\t \n\t \n\t \n\t\t Journal of Machine Learning Research \n\t\t \n\t\t\t 21 \n\t\t\t 178 \n\t\t\t \n\t\t\t 2020 \n\t\t \n\t \n\t T. Rashid, M. Samvelyan, C. S. De Witt, G. Farquhar, J. Foerster, and S. Whiteson, \"Monotonic value function factorisation for deep multi- agent reinforcement learning,\" Journal of Machine Learning Research, vol. 21, no. 178, pp. 1-51, 2020."
+    },
+    {
+      "title": "Optimizing decision-making processes in times of covid-19: using reflexivity to counteract informationprocessing failures",
+      "authors": [
+        "M Schippers",
+        "D Rus"
+      ],
+      "year": 2021,
+      "doi": "10.3389/fpsyg.2021.650525",
+      "journal": "Frontiers in psychology",
+      "volume": "12",
+      "pages": "650525",
+      "raw": "Optimizing decision-making processes in times of covid-19: using reflexivity to counteract informationprocessing failures \n\t\t \n\t\t\t M C Schippers \n\t\t \n\t\t \n\t\t\t D C Rus \n\t\t \n\t\t 10.3389/fpsyg.2021.650525 \n\t \n\t \n\t\t Frontiers in psychology \n\t\t \n\t\t\t 12 \n\t\t\t 650525 \n\t\t\t 2021 \n\t\t \n\t \n\t M. C. Schippers and D. C. Rus, \"Optimizing decision-making pro- cesses in times of covid-19: using reflexivity to counteract information- processing failures,\" Frontiers in psychology, vol. 12, p. 650525, 2021."
+    },
+    {
+      "title": "Graph-enabled reinforcement learning for time series forecasting with adaptive intelligence",
+      "authors": [
+        "T Shaik",
+        "X Tao",
+        "H Xie",
+        "L Li",
+        "J Yong",
+        "Y Li"
+      ],
+      "year": 2024,
+      "doi": "10.1109/tetci.2024.3398024",
+      "journal": "IEEE Transactions on Emerging Topics in Computational Intelligence",
+      "raw": "Graph-enabled reinforcement learning for time series forecasting with adaptive intelligence \n\t\t \n\t\t\t T Shaik \n\t\t \n\t\t \n\t\t\t X Tao \n\t\t \n\t\t \n\t\t\t H Xie \n\t\t \n\t\t \n\t\t\t L Li \n\t\t \n\t\t \n\t\t\t J Yong \n\t\t \n\t\t \n\t\t\t Y Li \n\t\t \n\t\t 10.1109/tetci.2024.3398024 \n\t \n\t \n\t\t IEEE Transactions on Emerging Topics in Computational Intelligence \n\t\t \n\t\t\t 2024 \n\t\t \n\t \n\t T. Shaik, X. Tao, H. Xie, L. Li, J. Yong, and Y. Li, \"Graph-enabled reinforcement learning for time series forecasting with adaptive in- telligence,\" IEEE Transactions on Emerging Topics in Computational Intelligence, 2024."
+    }
+  ],
+  "num_references": 46,
+  "figures": [
+    {
+      "caption": "Fig. 1 :",
+      "description": "Fig. 1: Human monitoring framework to monitor vital signs of the client during regular activities and alert medical emergency teams accordingly."
+    },
+    {
+      "caption": "Fig. 2 :",
+      "description": "Fig. 2: Multi-agent monitoring framework"
+    },
+    {
+      "caption": "3 Fig. 3 :",
+      "description": "Fig. 3: Experiemental Design"
+    },
+    {
+      "caption": "3 Fig. 4 :",
+      "description": "Fig. 4: DQN Agents Performance"
+    },
+    {
+      "caption": "3 Fig. 5 :",
+      "description": "Fig. 5: Hyper Parameters -\u03b1 optimization"
+    },
+    {
+      "caption": "3 Fig. 6 :",
+      "description": "Fig. 6: Hyper Parameters -\u03b3 optimization"
+    }
+  ],
+  "num_figures": 6,
+  "formulas": [
+    {
+      "text": "R(s t , a t ) = \u221e t=0 \u03b3 t r t , (1)"
+    },
+    {
+      "text": "Q new (s t , a t ) \u2190 (1-\u03b1)Q(s t , a t )+\u03b1 r t + \u03b3 max a Q(s t+1 , a) , (2)"
+    },
+    {
+      "text": "V \u03c0 (s i ) = E \u03c0 \u221e,n t=0,i=0 \u03b3 t R(s t , \u03c0(s t ))|s 0 0 = s (3)"
+    },
+    {
+      "text": "Q \u03c0 (s, a) = E \u03c0 \u221e t=0 \u03b3 t R(s t , a t , \u03c0(s t ))|s 0 = s, a 0 = a (4) TABLE II: Rewards Policy MEWS 4 3 2 1 0 Action 0 -4 -3 -2 -1 10"
+    },
+    {
+      "text": "Action 1 -4 -3 -2 10 -1 Action 2 -4 -3 10 -1 -2 Action 3 -4 10 -1 -2 -3 Action 4 10 -3 -2 -1 - 4"
+    },
+    {
+      "text": "R(s t , a t ) = +reward if action = M ET -reward if action \u0338 = M ET (5) R(s 1 t , a t ) = \uf8f1 \uf8f4 \uf8f4 \uf8f4 \uf8f4 \uf8f4 \uf8f4 \uf8f2 \uf8f4 \uf8f4 \uf8f4 \uf8f4 \uf8f4 \uf8f4 \uf8f3 10 if M ET = 4&action = 4 -1 if M ET = 4&action = 3 -2 if M ET = 4&action = 2 -3 if M ET = 4&action = 1 -4 if M ET = 4&action = 0 (6)"
+    },
+    {
+      "text": "loss = (R + \u03b3 \u2022 max(Q \u03c0 * (s, a)) target value -Q \u03c0 (s, a) predicted value ) 2 (7)"
+    },
+    {
+      "text": "a t ="
+    },
+    {
+      "text": "a t = arg max a Q(s t , a) (9)"
+    }
+  ],
+  "num_formulas": 9,
+  "num_citations": 43,
+  "cited_references": [
+    "b32",
+    "b38",
+    "b4",
+    "b14",
+    "b17",
+    "b20",
+    "b24",
+    "b26",
+    "b28",
+    "b13",
+    "b27",
+    "b33",
+    "b16",
+    "b7",
+    "b23",
+    "b29",
+    "b19",
+    "b6",
+    "b18",
+    "b30",
+    "b1",
+    "b35",
+    "b9",
+    "b31",
+    "b10",
+    "b3",
+    "b5",
+    "b34",
+    "b8",
+    "b12",
+    "b15",
+    "b45",
+    "b11",
+    "b37",
+    "b36",
+    "b25",
+    "b22",
+    "b21",
+    "b2",
+    "b44"
+  ],
+  "notes": [
+    "[raw_affiliation] the School of Mathematics, Physics & Computing , University of Southern Queensland , Queensland , Australia",
+    "[raw_affiliation] School of Computer and Artificial Intelligence , Wuhan University of Technology , China",
+    "[raw_affiliation] Department of Computing and Decision Sciences , Lingnan University , Tuen Mun , Hong Kong",
+    "[raw_affiliation] Department of Computer Science , Hong Kong Baptist University , Hong Kong",
+    "[raw_affiliation] Huazhong University of Science and Technology , Wuhan , China School of Business ,",
+    "[raw_affiliation] University of Southern Queensland ,",
+    "DDPG WISEML MADDPG",
+    "[raw_reference] N. El-Rashidy, S. El-Sappagh, S. R. Islam, H. M. El-Bakry, and S. Abdelrazek, \"Mobile health in remote patient monitoring for chronic diseases: principles, trends, and challenges,\" Diagnostics, vol. 11, no. 4, p. 607, 2021.",
+    "[raw_reference] T. Shaik, X. Tao, N. Higgins, H. Xie, R. Gururajan, and X. Zhou, \"Ai enabled rpm for mental health facility,\" in Proceedings of the 1st ACM Workshop on Mobile and Wireless Sensing for Smart Healthcare, 2022, pp. 26-32.",
+    "[raw_reference] A. Rana, A. Dumka, R. Singh, M. K. Panda, and N. Priyadarshi, \"A computerized analysis with machine learning techniques for the diagnosis of parkinson's disease: Past studies and future perspectives,\" Diagnostics, vol. 12, no. 11, p. 2708, Nov. 2022.",
+    "[raw_reference] A. Bohr and K. Memarzadeh, \"The rise of artificial intelligence in healthcare applications,\" in Artificial Intelligence in healthcare. El- sevier, 2020, pp. 25-60.",
+    "[raw_reference] R. K. Pattanayak, V. S. Kumar, K. Raman, M. M. Surya, and M. R. Pooja, \"E-commerce application with analytics for pharmaceutical in- dustry,\" in Advances in Intelligent Systems and Computing. Springer Nature Singapore, Sep. 2022, pp. 291-298.",
+    "[raw_reference] R. Thirunavukarasu, G. P. D. C, G. R, M. Gopikrishnan, and V. Palanisamy, \"Towards computational solutions for precision medicine based big data healthcare system using deep learning models: A review,\" Computers in Biology and Medicine, vol. 149, p. 106020, Oct. 2022.",
+    "[raw_reference] B. R. Kiran, I. Sobh, V. Talpaert, P. Mannion, A. A. A. Sallab, S. Yo- gamani, and P. Perez, \"Deep reinforcement learning for autonomous driving: A survey,\" IEEE Transactions on Intelligent Transportation Systems, vol. 23, no. 6, pp. 4909-4926, Jun. 2022.",
+    "[raw_reference] W. Zhang, N. Zhang, J. Yan, G. Li, and X. Yang, \"Auto uning of price prediction models for high-frequency trading via reinforcement learning,\" Pattern Recognition, vol. 125, p. 108543, 2022.",
+    "[raw_reference] N. Hong, C. Liu, J. Gao, L. Han, F. Chang, M. Gong, and L. Su, \"State of the art of machine learning-enabled clinical decision support in intensive care units: Literature review,\" JMIR Medical Informatics, vol. 10, no. 3, p. e28781, Mar. 2022.",
+    "[raw_reference] J. Watts, A. Khojandi, R. Vasudevan, and R. Ramdhani, \"Optimizing individualized treatment planning for parkinson's disease using deep reinforcement learning,\" in 2020 42nd Annual International Conference of the IEEE Engineering in Medicine & Biology Society (EMBC). IEEE, Jul. 2020.",
+    "[raw_reference] M. Naeem, G. Paragliola, and A. Coronato, \"A reinforcement learning and deep learning based intelligent system for the support of impaired patients in home treatment,\" Expert Systems with Applications, vol. 168, p. 114285, Apr. 2021.",
+    "[raw_reference] I. Y. Chen, S. Joshi, M. Ghassemi, and R. Ranganath, \"Probabilistic machine learning for healthcare,\" Annual Review of Biomedical Data Science, vol. 4, no. 1, pp. 393-415, Jul. 2021.",
+    "[raw_reference] M. Rastogi, D. M. Vijarania, and D. N. Goel, \"Role of machine learning in healthcare sector,\" SSRN Electronic Journal, 2022.",
+    "Internet",
+    "[raw_reference] B. Mahesh, \"Machine learning algorithms-a review,\" International Jour- nal of Science and Research (IJSR).[Internet], vol. 9, pp. 381-386, 2020.",
+    "[raw_reference] S. A. Alsareii, M. Awais, A. M. Alamri, M. Y. AlAsmari, M. Irfan, N. Aslam, and M. Raza, \"Physical activity monitoring and classification using machine learning techniques,\" Life, vol. 12, no. 8, p. 1103, 2022.",
+    "[raw_reference] M. Oyeleye, T. Chen, S. Titarenko, and G. Antoniou, \"A predictive analysis of heart rates using machine learning techniques,\" International Journal of Environmental Research and Public Health, vol. 19, no. 4, p. 2417, Feb. 2022.",
+    "[raw_reference] M. Luo and K. Wu, \"Heart rate prediction model based on neural network,\" IOP Conference Series: Materials Science and Engineering, vol. 715, no. 1, p. 012060, Jan. 2020.",
+    "[raw_reference] L. M. Dang, K. Min, H. Wang, M. J. Piran, C. H. Lee, and H. Moon, \"Sensor-based and vision-based human activity recognition: A compre- hensive survey,\" Pattern Recognition, vol. 108, p. 107561, Dec. 2020.",
+    "[raw_reference] T. Sheng and M. Huber, \"Unsupervised embedding learning for human activity recognition using wearable sensor data,\" in The Thirty-Third International Flairs Conference, 2020.",
+    "[raw_reference] S. Norgaard, R. Saeedi, K. Sasani, and A. H. Gebremedhin, \"Synthetic sensor data generation for health applications: A supervised deep learn- ing approach,\" in 2018 40th Annual International Conference of the IEEE Engineering in Medicine and Biology Society (EMBC). IEEE, 2018, pp. 1164-1167.",
+    "[raw_reference] I. H. Sarker, \"Machine learning: Algorithms, real-world applications and research directions,\" SN computer science, vol. 2, no. 3, p. 160, 2021.",
+    "[raw_reference] R. Lou, Z. Lv, S. Dang, T. Su, and X. Li, \"Application of machine learning in ocean data,\" Multimedia Systems, Feb. 2021.",
+    "[raw_reference] D. Tirumala, A. Galashov, H. Noh, L. Hasenclever, R. Pascanu, J. Schwarz, G. Desjardins, W. M. Czarnecki, A. Ahuja, Y. W. Teh et al., \"Behavior priors for efficient reinforcement learning,\" 2020.",
+    "[raw_reference] M. Janssen, C. LeWarne, D. Burk, and B. B. Averbeck, \"Hierarchical reinforcement learning, sequential behavior, and the dorsal frontostriatal system,\" Journal of Cognitive Neuroscience, vol. 34, no. 8, pp. 1307- 1325, 2022.",
+    "[raw_reference] K. Tsiakas, M. Papakostas, M. Theofanidis, M. Bell, R. Mihalcea, S. Wang, M. Burzo, and F. Makedon, \"An interactive multisensing framework for personalized human robot collaboration and assistive training using reinforcement learning,\" in Proceedings of the 10th International Conference on PErvasive Technologies Related to Assistive Environments. ACM, Jun. 2017.",
+    "[raw_reference] A. Kubota and L. D. Riek, \"Methods for robot behavior adaptation for cognitive neurorehabilitation,\" Annual Review of Control, Robotics, and Autonomous Systems, vol. 5, no. 1, pp. 109-135, May 2022.",
+    "[raw_reference] J. Elouni, H. Ellouzi, H. Ltifi, and M. B. Ayed, \"Intelligent health monitoring system modeling based on machine learning and agent technology,\" Multiagent and Grid Systems, vol. 16, no. 2, pp. 207-226, 2020.",
+    "[raw_reference] A. Lisowska, S. Wilk, and M. Peleg, \"From personalized timely noti- fication to healthy habit formation: a feasibility study of reinforcement learning approaches on synthetic data.\" in SMARTERCARE@ AI* IA, 2021, pp. 7-18.",
+    "[raw_reference] E. Yom-Tov, G. Feraru, M. Kozdoba, S. Mannor, M. Tennenholtz, and I. Hochberg, \"Encouraging physical activity in patients with diabetes: Intervention using a reinforcement learning system,\" Journal of Medical Internet Research, vol. 19, no. 10, p. e338, Oct. 2017.",
+    "[raw_reference] T. Li, Z. Wang, W. Lu, Q. Zhang, and D. Li, \"Electronic health records based reinforcement learning for treatment optimizing,\" Information Systems, vol. 104, p. 101878, Feb. 2022.",
+    "[raw_reference] J. Guo, Q. Liu, and E. Chen, \"A deep reinforcement learning method for multimodal data fusion in action recognition,\" IEEE Signal Processing Letters, vol. 29, pp. 120-124, 2022.",
+    "[raw_reference] T. Shaik, X. Tao, L. Li, H. Xie, T. Cai, X. Zhu, and Q. Li, \"Framu: Attention-based machine unlearning using federated reinforce- ment learning,\" IEEE Transactions on Knowledge and Data Engineer- ing, 2024.",
+    "[raw_reference] J. Mi\u0161eikis, P. Caroni, P. Duchamp, A. Gasser, R. Marko, N. Mi\u0161eikien\u0117, F. Zwilling, C. De Castelbajac, L. Eicher, M. Fr\u00fch et al., \"Lio-a personal robot assistant for human-robot interaction and care applications,\" IEEE Robotics and Automation Letters, vol. 5, no. 4, pp. 5339-5346, 2020.",
+    "[raw_reference] C. Yu, J. Liu, S. Nemati, and G. Yin, \"Reinforcement learning in healthcare: A survey,\" ACM Comput. Surv., vol. 55, no. 1, nov 2021.",
+    "[report_type] arXiv preprint",
+    "[raw_reference] T. Shaik, X. Tao, H. Xie, L. Li, X. Zhu, and Q. Li, \"Exploring the landscape of machine unlearning: A comprehensive survey and taxonomy,\" arXiv preprint arXiv:2305.06360, 2023.",
+    "[raw_reference] V. Signs, \"Canberra hospital and health services clinical procedure,\" 2021.",
+    "[raw_reference] C. Wang, J. Wang, J. Wang, and X. Zhang, \"Deep-reinforcement- learning-based autonomous uav navigation with sparse rewards,\" IEEE Internet of Things Journal, vol. 7, no. 7, pp. 6180-6190, 2020.",
+    "[raw_reference] A. Reiss, I. Indlekofer, P. Schmidt, and K. V. Laerhoven, \"Deep PPG: Large-scale heart rate estimation with convolutional neural networks,\" Sensors, vol. 19, no. 14, p. 3079, Jul. 2019.",
+    "[raw_reference] P. Schmidt, A. Reiss, R. Duerichen, C. Marberger, and K. Van Laer- hoven, \"Introducing wesad, a multimodal dataset for wearable stress and affect detection,\" in Proceedings of the 20th ACM international conference on multimodal interaction, 2018, pp. 400-408.",
+    "[raw_reference] P. Mallozzi, E. Castellano, P. Pelliccione, G. Schneider, and K. Tei, \"A runtime monitoring framework to enforce invariants on reinforcement learning agents exploring complex environments,\" in 2019 IEEE/ACM 2nd International Workshop on Robotics Software Engineering (RoSE). IEEE, May 2019.",
+    "[raw_reference] Y.-J. Chen, D.-K. Chang, and C. Zhang, \"Autonomous tracking using a swarm of UAVs: A constrained multi-agent reinforcement learning approach,\" IEEE Transactions on Vehicular Technology, vol. 69, no. 11, pp. 13 702-13 717, Nov. 2020.",
+    "[raw_reference] R. Lowe, Y. I. Wu, A. Tamar, J. Harb, O. Pieter Abbeel, and I. Mordatch, \"Multi-agent actor-critic for mixed cooperative-competitive environ- ments,\" Advances in neural information processing systems, vol. 30, 2017.",
+    "[raw_reference] T. Rashid, M. Samvelyan, C. S. De Witt, G. Farquhar, J. Foerster, and S. Whiteson, \"Monotonic value function factorisation for deep multi- agent reinforcement learning,\" Journal of Machine Learning Research, vol. 21, no. 178, pp. 1-51, 2020.",
+    "[raw_reference] M. C. Schippers and D. C. Rus, \"Optimizing decision-making pro- cesses in times of covid-19: using reflexivity to counteract information- processing failures,\" Frontiers in psychology, vol. 12, p. 650525, 2021.",
+    "[raw_reference] T. Shaik, X. Tao, H. Xie, L. Li, J. Yong, and Y. Li, \"Graph-enabled reinforcement learning for time series forecasting with adaptive in- telligence,\" IEEE Transactions on Emerging Topics in Computational Intelligence, 2024."
+  ],
+  "processing_software": {
+    "GROBID": "0.8.2"
+  }
+}

@@ -1,0 +1,1116 @@
+{
+  "paper_id": "4WXG8T2F",
+  "title": "Learning From Others Without Sacrificing Privacy: Simulation Comparing Centralized and Federated Machine Learning on Mobile Health Data",
+  "abstract": "Background: The use of wearables facilitates data collection at a previously unobtainable scale, enabling the construction of complex predictive models with the potential to improve health. However, the highly personal nature of these data requires strong privacy protection against data breaches and the use of data in a way that users do not intend. One method to protect user privacy while taking advantage of sharing data across users is federated learning, a technique that allows a machine learning model to be trained using data from all users while only storing a user's data on that user's device. By keeping data on users' devices, federated learning protects users' private data from data leaks and breaches on the researcher's central server and provides users with more control over how and when their data are used. However, there are few rigorous studies on the effectiveness of federated learning in the mobile health (mHealth) domain. Objective: We review federated learning and assess whether it can be useful in the mHealth field, especially for addressing common mHealth challenges such as privacy concerns and user heterogeneity. The aims of this study are to describe federated learning in an mHealth context, apply a simulation of federated learning to an mHealth data set, and compare the performance of federated learning with the performance of other predictive models. \n Methods: We applied a simulation of federated learning to predict the affective state of 15 subjects using physiological and motion data collected from a chest-worn device for approximately 36 minutes. We compared the results from this federated model with those from a centralized or server model and with the results from training individual models for each subject. Results: In a 3-class classification problem using physiological and motion data to predict whether the subject was undertaking a neutral, amusing, or stressful task, the federated model achieved 92.8% accuracy on average, the server model achieved 93.2% accuracy on average, and the individual model achieved 90.2% accuracy on average. \n Conclusions: Our findings support the potential for using federated learning in mHealth. The results showed that the federated model performed better than a model trained separately on each individual and nearly as well as the server model. As federated learning offers more privacy than a server model, it may be a valuable option for designing sensitive data collection methods.",
+  "year": 1998,
+  "date": "1998-08",
+  "authors": [
+    {
+      "name": "Jessica Liu",
+      "affiliation": {
+        "organization": "Department of Statistics",
+        "department": "Department of Statistics",
+        "institution": "University of Michigan",
+        "address": "Ann Arbor, MI, United States"
+      }
+    },
+    {
+      "name": "Jack Goetz",
+      "affiliation": {
+        "organization": "Department of Statistics",
+        "department": "Department of Statistics",
+        "institution": "University of Michigan",
+        "address": "Ann Arbor, MI, United States"
+      }
+    },
+    {
+      "name": "Srijan Sen",
+      "affiliation": {
+        "organization": "Molecular and Behavioral Neuroscience Institute",
+        "department": "Molecular and Behavioral Neuroscience Institute",
+        "institution": "University of Michigan",
+        "address": "Ann Arbor, MI, United States"
+      }
+    },
+    {
+      "name": "Ambuj Tewari",
+      "affiliation": {
+        "organization": "Department of Statistics",
+        "department": "Department of Statistics",
+        "institution": "University of Michigan",
+        "address": "Ann Arbor, MI, United States"
+      }
+    },
+    {
+      "affiliation": {
+        "organization": "Department of Statistics",
+        "department": "Department of Statistics",
+        "institution": "University of Michigan",
+        "address": "1085 South University Ave Ann Arbor, 48109, MI, United States"
+      }
+    }
+  ],
+  "doi": "10.2196/23728",
+  "md5": "9CBF5F61855A8BB3D7710BD834960DA2",
+  "publication": {
+    "journal": "JMIR Mhealth Uhealth",
+    "journal_inferred": true
+  },
+  "keywords": [
+    "privacy",
+    "data protection",
+    "machine learning",
+    "mobile health",
+    "wearable electronic devices"
+  ],
+  "funding": [
+    "",
+    "",
+    "",
+    "Acknowledgments SS was supported by the  National Institute of Mental Health  (grant number:  R01MH101459 ). AT was supported in part by the  National Science Foundation CAREER  (grant number:  IIS-1452099 ). JG was supported by the  National Science Foundation Research Training Groups in the Mathematical Sciences  (grant number:  DMS-1646108 ). JL and JG implemented federated learning and performed data analysis with guidance from AT. JL and JG wrote the Introduction and Methods sections, and JL wrote the Results and Discussion sections. SS provided subject matter expertise and guidance on the methods. All authors have reviewed and revised the manuscript and have read and approved the final version of the manuscript."
+  ],
+  "sections": [
+    {
+      "title": "Introduction"
+    },
+    {
+      "title": "Mobile Health Data",
+      "text": "The ubiquitous nature of wearables generates considerable potential for data collection and analysis but comes with the issue of protecting user privacy. Some important privacy considerations are protecting patient confidentiality  [1] , protecting against security breaches  [2] , and protecting against researchers using user data in a way that the user did not intend  [3, 4] . Individuals may be more willing to participate in studies and disclose information if these concerns are alleviated  [5, 6] . Privacy breaches can occur when data servers are compromised but can also occur when data are shared for legitimate purposes by well-intentioned members of the medical community  [7] . In this paper, we use privacy to denote the aspects related to protecting the identity, personal information, and use of the data of users.\n\nMobile health (mHealth) data are often related to the cognitive, behavioral, and affective states of users, making such data highly sensitive. Therefore, we want to ensure that individuals' confidential health information is not leaked to others. Wearables passively record a range of medically relevant data, such as temperature, heart rate, and electrodermal activity (EDA). As people may carry these items with them throughout the day, this allows for high-frequency collection of data from more people, who may have a greater variety of health conditions, than ever before. Such rich data collection opens up the possibility of using increasingly powerful but data hungry machine learning methods in the analysis of these data  [8] .\n\nIn this paper, we apply predictive machine learning models on the publicly available Wearable Stress and Affect Detection (WESAD) data set published by Schmidt et al  [9] . In particular, we focus on models that can be trained by fitting a function, potentially nonlinear, to the data using gradient descent and variants thereof. Many of these models make few assumptions about the structure of the underlying data-generating process. To improve privacy, we propose leaving each user's data on their personal device and training our models using federated learning. In federated learning, there is no single server that contains all users' information. Instead, model training occurs on each individual's device, and only model parameter updates leave the user's device. This allows for more user privacy by maintaining data only on individual user devices. In addition, as explained later, federated learning is still able to take advantage of some shared information across individuals. Thus, it can alleviate some of the concerns in analyzing mHealth data, such as user heterogeneity and privacy preservation."
+    },
+    {
+      "title": "Federated Learning",
+      "text": "Before further describing federated learning, we establish some common terminology. The goal is to produce a model, often a neural network, trained using data from many individuals. Each individual will have a mobile device, which we call a user device-in the networking literature, these are called clients-and we will not make a distinction between an individual and their user device. Each user device has its own private data, and the data will never leave the user device. Storing private data on each user device instead of uploading them centrally is the source of improved privacy provided by federated learning. We will also have a single device controlled by the researchers that can communicate with each user device, and we will call the former device the server. The server will coordinate the training procedure and store a copy of the model but will not have any private data uploaded onto it. The training process is iterative, as is common for many machine learning models. Each time the model parameters on the server change, we will call that one server training round (or server training iteration).\n\nIn Figure  1 , we compare how a model is trained on a central server (top) with how a model is trained using federated learning (bottom). In federated learning, one server training round comprises the following three distinct parts: 1. Broadcast: A small number of user devices will be selected at random, and the current server model will be transmitted to that cohort of user devices. 2 . Local update: Each of these user devices will perform a small amount of training of the model they received, using the data from the user device. 3 . Update aggregation: Each user device in this cohort will then transmit a copy of their (locally updated) model parameters to the server. The server then averages these parameters and replaces the server model parameters with these new averaged parameters.\n\nThe server then repeats this process by selecting a new cohort of user devices for each server training round. Thus, the data from every user device contribute to the training of the model. Algorithm 1 (Figure  2 ) presents the pseudocode, and a full algorithmic description is provided in Multimedia Appendix 1. The model trains using updates from the data on all user devices; however, individual, private, data remain only with each user device. This protects the privacy of users in several ways. Under federated learning, private data are significantly less vulnerable to the central server being compromised. The server never contains any raw private data and generally contains only the current model parameters. This protects users from being subject to adverse consequences of failings in the server's security.\n\nAnother benefit for users under federated learning is private data cannot be reused for other purposes at a later date. It cannot be shared or released either accidentally or in good faith but with inadequate anonymization measures. Finally, federated learning gives users the freedom to withdraw access to their data-both past and future-at any time without relying on guarantees from the researchers that any previously collected data will be deleted.\n\nFederated learning has been successfully applied in complex real-world applications, most notably in training the next-word prediction model for Google's Keyboard  [10] . We refer interested readers to excellent surveys of federated learning  [11] [12] [13]  and federated learning software and data sets  [13] ."
+    },
+    {
+      "title": "Previous Work",
+      "text": "There has been substantial research on privacy in mHealth and mood prediction using machine learning. Protecting the data of individual users stored in mHealth apps is important because the apps contain personal information about the user, information used to make treatment decisions, and information that could be misused for financial gain, among other concerns  [4] . Users' willingness to disclose personal information in mobile data varies according to their demographics and personal characteristics  [14] [15] [16] . Concerns about privacy vary among different age groups; for example, some older people are less willing to use mHealth services  [6, 14]  and are more likely to cite privacy concerns  [6] . As such, it is important to consider the target population when considering the amount of privacy guarantee needed. Increased privacy concerns about health information technologies reduce patients' willingness to share information and reduce their positive attitudes toward the technologies  [14, 17] . In the same vein, reducing privacy concerns makes patients more comfortable in sharing their health information  [5, 17] . Sometimes, individuals are willing to give up some privacy if they consider mHealth technology as beneficial; however, this depends on the sensitivity of the information they are providing  [18] . Due to these privacy concerns, there are many innovations for increasing patient trust and privacy protection  [19] .\n\nMany researchers have used machine learning methods, including neural networks, random forests, and support vector machines, to predict outcomes such as depression, mood, and stress using mobile data  [20] [21] [22] [23] [24] [25] [26] . Various physiological and behavioral features help predict these outcomes, such as skin temperature, EDA, 3-axis accelerometer data, mobility, sleep, and self-reported histories  [20] [21] [22] [23] 27, 28] . Detecting aberrations in some of these measures can help identify early signs of mental illness  [16] .\n\nPersonalization techniques in machine learning allow parts of a model to be specific to each user while other parts are shared between users, allowing both the sharing of data to estimate certain parameters and fitting to unmeasured covariates of each individual. To an extent, both unique traits among different individuals and commonalities across users are helpful in prediction. Some studies have taken advantage of this and grouped users based on common traits, finding that this improved mood prediction accuracy  [8, 24, 29] . In the same vein, accounting for individual user differences is valuable in prediction using machine learning  [8] . There is growing recognition within the mHealth literature  [30]  that there are trade-offs between individual and centrally trained models and that often there are reasons to make them work in tandem.\n\nIn the Methods section, we describe federated learning in the context of mHealth by addressing some of the issues raised in the mHealth literature. Specifically, we discuss the application of federated learning using neural networks to make predictions from mHealth data. We address practical considerations for researchers who consider using federated learning for their study. We then evaluate the performance of federated learning on an mHealth data set to predict subjects' affective states."
+    },
+    {
+      "title": "Methods"
+    },
+    {
+      "title": "Federated Learning in mHealth",
+      "text": "Federated learning is a nascent field within machine learning  [31] , which arose, at least partially, in response to the opportunities and difficulties presented by personal devices that can record information and perform computation  [11] . As such, many practical challenges in mHealth, such as privacy  [32, 33] , user heterogeneity  [34] , user hardware constraints  [35, 36] , and even incentivizing voluntary participation  [37] , are already being studied by the machine learning community. The medical science community has also proposed ways to share information while preserving privacy, such as developing models in a distributed manner  [38, 39] , using a federated patient hashing framework for similar patient matching  [40] , and using collaborative privacy-preserving training to detect protected health information in text  [41] . A recent paper describes how federated learning can be useful to various stakeholders in the mHealth field  [42] .\n\nFederated learning provides a middle ground between extremes in privacy and data utilization. One extreme is collecting data centrally on the server and performing all analyses and training there. The other extreme is individual training, in which each user device trains a completely separate model on its own data.\n\nIn centralized learning, we take all individual users' raw data and store them in one location. This unlimited access gives researchers the most flexibility when analyzing the data-clearly any analysis that can be performed with limited data access can be performed with unlimited data access-and the best chance of extracting useful insights from the data. However, it is likely that some individuals are reluctant to have all of their raw data stored in a central location, as the central location could be hacked or because individuals feel that their data are too sensitive to be released. A model trained using federated learning is useful because it is trained without putting all individuals' raw data together in one place. Not only does this help alleviate concerns about data privacy, but it can also help potential subjects be more willing to engage in studies, as their raw data will not be sent to a foreign central location. As we show in our case study, a model trained in a federated way performs almost as well as a centrally trained model. We refer to the former as the federated model and the latter as the server model.\n\nIn individual training, each user device trains a separate model using only their own data; therefore, no information, besides potentially their final model, leaves the user device. We refer to this as the individual model. This provides a very high level of privacy. However, it prevents information sharing across users during model training. Federated learning takes advantage of the information shared across users, which can be especially useful when analyzing health care data. Each person's characteristics and health care need personalization; however, there is also a lot of useful information that can be shared across people, as every person's distribution is not entirely different.\n\nIn training, the algorithm can learn from similar users and apply this knowledge when predicting another user's outcome. It is significantly easier to use a federated model to make predictions for a new patient because there is a single model that is trained using data from many people, and we do not need previous data from the new patient. In this way, the federated model can do better than the individual model. Thus, federated learning can help improve the prediction accuracy while preserving privacy."
+    },
+    {
+      "title": "Practical Considerations for Using Federated Learning",
+      "text": "The decision to use federated learning must be made when designing the study so that one leaves the data on the user devices and trains the model using federated learning. If data have already been collected from each user device and stored together on a server, privacy has been violated, and we cannot use federated learning to retroactively make the experiment privacy preserving. A small burden might need to be placed on user devices to use federated learning. To minimize disruptive usage of user device bandwidth and compute resources, the local update on the user device should take place while the user device is connected to a nonmetered internet such as Wi-Fi, and the device should be idle and plugged into a charger. To avoid inducing bias in the training process by the overuse or underuse of certain user devices because of their passive adherence to these restrictions, we may need to request that user devices be available for local training during certain times of the day. The structuring of these times should be considered during the experimental design phase. In addition, the server should follow certain protocols to minimize the privacy loss. The model updates may contain some information about the data on the user device; however, the privacy loss from these updates can be mitigated by not storing or viewing any locally updated parameters during each server training round. Similarly, information about when each user device participated in the training should also not be stored.\n\nAlthough concerns about user privacy deter users from sharing health information, the perceived effectiveness of information security reduces these concerns  [5, 17] . However, federated learning is not the only tool for privacy, and it does not alone provide perfect privacy. Depending on the privacy requirements of the study, federated learning may or may not be the best method to use. We provide a few examples to illustrate cases where federated learning may not be the correct method.\n\n\u2022 Low privacy: If a doctor is collecting data from his or her patients and the patients completely trust their doctor and the security of their server, then there is no need to collect data using federated learning-the doctor can simply take all of his or her patients' raw data. However, the more assured patients are about their information security, the more willing they are to disclose information and the higher their perceived quality of care  [17] .\n\n\u2022 Verifiable privacy: If patients completely distrust the researcher, they may insist on formal guarantees of privacy. This could manifest itself as requiring privacy protection from an honest-but-curious server, wherein the server will attempt to learn anything it can from the information it receives. Under such a requirement, we cannot simply transmit model parameters back to the server, as an individual's model parameters may reveal information about the user. It requires significant technical expertise and engineering effort to implement federated learning under such a strong privacy requirement  [43] , which may be beyond the resources available in a clinical trial.\n\n\u2022 Privacy under model access: Even if no user device data are transmitted to the server, it may be possible to infer information about the data used to train the model, given sufficient access to the model itself, including the reconstruction of specific data points used to train the model  [44] . Protection against such attacks is particularly important if the model will be made available to those beyond trusted researchers; in the most extreme cases, researchers themselves may not be trusted. Federated learning provides no guarantees of protection against such attacks; complementary forms of privacy protection, such as differential privacy  [45] , may be required.\n\nFederated learning is not a silver bullet against privacy loss, and it is not a black-box tool that can be simply tacked onto an existing study. However, when properly integrated into the study design, federated learning can significantly reduce the loss in users' privacy while incurring only a small reduction in model accuracy."
+    },
+    {
+      "title": "Evaluation of Federated Learning on mHealth Data",
+      "text": "To assess the practicality of using federated learning on mHealth data, we compared its predictive performance with that of other predictive machine learning models. We used the WESAD data set for this purpose  [9] . We had a 3-class classification problem using physiological and motion data to predict whether each subject was, at the time, performing a task designed to elicit a neutral, stressed, or amused affective state.\n\nWe used the WESAD data set because it is publicly available and thus easily accessible by other interested researchers, and it is in the University of California, Irvine, Machine Learning Repository as a data set that measures stress in users using wearables. The data were collected from 15 subjects and contained physiological and motion data measured simultaneously by a wrist device and a chest device during specific tasks designed to capture 3 different affective states: neutral, stress, and amusement. There was approximately 36 minutes of data for each subject. Using 30-second windows for all 15 subjects, 1087 windows were generated in total. Of these windows, 53.45% (581/1087) were collected during the baseline task, 29.99% (326/1087) during the task designed to elicit stress, and 16.56% (180/1087) during the task designed to elicit amusement.\n\nThe authors of the data set found that using physiological and motion data from the chest-worn device was more informative than using physiological and motion data from the wrist-worn device in the 3-class classification problem  [9] . The chest-worn and wrist-worn devices differed slightly in the modalities they measured. Thus, we restricted our analysis to the data collected using the chest-worn device. These include electrocardiogram, EDA, electromyogram, respiration, body temperature, and 3-axis acceleration (x-axis, y-axis, and z-axis) measurements collected at 700 Hz. For additional information, we refer interested readers to the original WESAD paper  [9] .\n\nThe authors of the WESAD paper used feature extraction to identify useful features for their predictive models, which often included the mean, SD, minimum, and maximum of measurements. For simplicity, we used these four summary statistics, calculated over 30-second windows, of each of the 8 measurements for each subject as the features in our models.\n\nThe code to extract our features was derived from Matthew Johnson's GitHub repository  [46] . The limitations of our analysis include whether the subject was in the intended affective state and the set of features used.\n\nAs we had access to each subject's data, we were able to use a server model. However, in many situations, researchers may not want to access each subject's raw data for privacy reasons.\n\nAs true federated learning would not store raw data on a central server, we could not use a true federated model and instead use simulated federated learning. Nonetheless, we saw this as a feature and not a limitation. As we had the server data, we could compare the accuracy between our simulated federated model and the truth in the centralized data. If we had implemented true federated learning, we would not be able to compare performance with the centralized, or server, model, or compare performance with the individual model. Much of published federated learning research uses federated learning simulations for experimental results  [31, 32, 34, 36] ."
+    },
+    {
+      "title": "Data Preprocessing",
+      "text": "Of the 15 participants, 12 were male and the remaining 3 were female. Table  1  shows the demographics of the subjects in the WESAD study. Table  2  shows the summary statistics of some of the features used. The full table of summary statistics for the features used is provided in Multimedia Appendix 1."
+    },
+    {
+      "title": "XSL \u2022 FO"
+    },
+    {
+      "title": "RenderX"
+    },
+    {
+      "title": "Neural Network Architecture",
+      "text": "We tuned the hyperparameters for the individual, federated, and server models separately. We used 3-fold cross-validation to jointly tune the number of epochs and learning rate for the individual and server models. For the federated model, because it involves more hyperparameters, we jointly tuned the number of epochs, learning rate, number of clients sampled per round, number of local updates per round, and step size. The training set consisted of the first two-thirds of the data from each task for each user. The test set consisted of the remaining third of the data from each task for each user. Within each training set, one-third of the training data were used for validation, that is, to tune the hyperparameters.\n\nOur neural networks had 1 dense input layer with 12 hidden units, followed by a dense layer with 10 hidden units, and then followed by a dense layer with 8 hidden units. These layers used the leaky rectified linear unit (leaky ReLU) activation function with a slope of 0.01 where the x-axis is negative. The output layer was a dense layer with 3 hidden nodes and used a softmax activation with categorical cross-entropy loss. We used Adam as the optimizer. We standardized our training data and applied that same standardization to our test set. By privately calculating the mean and SD, standardization can preserve privacy  [47] . Our code, which uses Python TensorFlow, and the best hyperparameters chosen by our cross-validation process are available on the authors' GitHub repository  [48] . The transformed data are available on GitHub and in Multimedia Appendix 2  [9] . We tested augmentations in the architecture to allow for model personalization. The simplest example of adding personalization to a model is a fixed effects model for linear regression, where each user is given a user-specific intercept, and the other parameters are estimated jointly. This is mathematically equivalent to augmenting each data point by adding a single covariate, where the covariate's value is the same for all data points from the user, and the value is learned by the model-fitting process. We add personalization to our neural network in a similar way, in which we augment each data point by adding a user embedding, with u extra covariates that are the same for all data from that user and learned by the model-fitting process (Figure  3 ). Note that if we solely use user embeddings, then each prediction for the same user would be exactly the same, and the best possible prediction would be the user mean for all data points. This is a very simple example of collaborative personalization  [49, 50] ; in the same way fixed effects models can be extended, there are many extensions of collaborative personalization. However, this simple method is sufficient for our study. User embeddings often encode unmeasured user-specific covariates, meaning that access to user embeddings from a trained model has the potential to expose information about that user. However, a small change in the federated learning protocol can prevent such privacy loss. As user embeddings are user-specific and only updated by training with the user's data, there is no need to transmit gradients for updating any user embeddings to the server. Thus, each person's user embedding may be kept only on that user's device, preventing the server from using that embedding to learn private information about that user.\n\nTo choose the dimension of the user embedding for the personalized federated and personalized server models, we used 3-fold cross-validation, as described earlier, with 1D, 2D, and 3D user embeddings. We used the same number of dimensions for both personalized models each time. Using a 2D user embedding achieved the highest accuracy on the validation set for the personalized server model. As such, we used 2D user embeddings in our final personalized federated and personalized server models."
+    },
+    {
+      "title": "XSL \u2022 FO"
+    },
+    {
+      "title": "RenderX"
+    },
+    {
+      "title": "Results",
+      "text": "In this section, we present the results for evaluating federated learning on the WESAD data set and compare them with the performance of a server model and an individual model. We include results of personalized federated and server models as well as nonpersonalized federated and server models.\n\nThere is inherent variation each time we run a neural network because the initial weights are randomized, and there is randomness in stochastic gradient descent as the neural network tries to find the local minimum. Further, there is variation each time we run a federated model because federated learning takes a random sample of user devices per round of training. As such, we ran each of our models 15 times, using different seed settings each time. We report the median and mean accuracy over 15 tests in Table  3 . The distribution of the results over 15 tests and graphs of the average prediction accuracy after each epoch of training of the neural network are presented in Multimedia Appendix 1. The personalized server model achieved the highest accuracy. The personalized federated model came in second, performing nearly as well as the personalized server model. Thus, the personalized server model and the personalized federated model beat their nonpersonalized counterparts.\n\nThe individual model outperformed both the nonpersonalized server and nonpersonalized federated models. The individual model is trained separately on each user, whereas the server model takes the data of all individuals at once and cannot adjust for each user. For comparison, a model that always predicts the majority class would attain 53% accuracy on the data set.\n\nThese results provide evidence that using personalization, which takes into account individual differences, helped improve the prediction accuracy of the models. This is reasonable for the WESAD data set, considering that each person has varying baseline physiological measurements."
+    },
+    {
+      "title": "Discussion"
+    },
+    {
+      "title": "Principal Findings",
+      "text": "This paper discusses the advantages and challenges of using federated learning as a predictive model in mHealth data collection and demonstrates an empirical example in which federated learning could have been effective. Furthermore, it shows empirical evidence that a federated model can make accurate predictions, is compatible with personalization, and has the added privacy advantage of not storing raw data from individual users. The personalized server model performed the best on the chosen data set, followed closely by the personalized federated model. As a federated model offers more privacy for users than a server model, there is evidence to suggest that federated learning may be a valuable option for collecting and analyzing sensitive mHealth data."
+    },
+    {
+      "title": "Limitations",
+      "text": "The decision of whether to use federated learning is based on a combination of factors, including how much privacy is required, how much data are available, and what resources are available to implement the federated model. Each of the models we tested has advantages and disadvantages. The server model uses all raw data stored in one place for easy access and future use. However, this poses the risk of breaching user privacy if the server is compromised and the risk of the data being accessed and used in a way that the users did not intend. An individual model can maintain user privacy by keeping the data on the user's device and requires less engineering to implement than a federated model. However, the individual model did not perform as well as the personalized server model and personalized federated model in our tests. Nonetheless, if a researcher has a lot of data from each user, using an individual model can be useful for prediction, and a federated model may be unnecessary. The federated model provides more privacy than a server model, as well as reasonably accurate predictions, but it requires some design work before collecting data and software engineering to implement. Moreover, although federated learning provides an added degree of privacy, it does not guarantee privacy, as explained in the Methods section. To achieve stronger privacy guarantees in federated learning, a substantial amount of software engineering is needed. Federated learning is used for predictive modeling; therefore, implementing it limits the research questions that can be answered from the data. Researchers may often wish to pursue research questions aside from prediction; in the future, it would be interesting to extend federated learning to estimate treatment effects. Other future work includes developing ways to handle missing data for time series in the context of federated learning. In addition, Python TensorFlow has recently released capabilities to apply federated learning in their TensorFlow Federated package, and it would be interesting to compare it with our implementation."
+    },
+    {
+      "title": "Comparison With Previous Work",
+      "text": "Previous research in the mHealth field has explored privacy-preserving methods. Some of these studies do not involve neural networks and federated learning  [38] [39] [40] . One study applied a methodology similar to federated learning  [41] , although it selectively updated parameters from individual users, whereas we used multiple local updates between transmission rounds. As federated learning started in the machine learning community, there have been papers in the computer science and engineering fields regarding collaborative privacy-preserving learning tested on mHealth data  [33, 51] . Our work bridges the mHealth and machine learning communities by discussing practical considerations for mHealth researchers who want to consider implementing federated learning. Furthermore, we evaluate the effectiveness of federated learning on a publicly available mHealth data set. Our code is available on GitHub to encourage reproducibility of our results.\n\nAs mentioned earlier, many mHealth researchers have applied machine learning methods to predict mood and stress  [20] [21] [22] [23] 25, 26] . Research has shown that accounting for both unique traits among different individuals and commonalities across users is valuable in prediction  [8, 24, 29] . We demonstrate the use of federated learning as a privacy-preserving method that also has these advantages."
+    },
+    {
+      "title": "Conclusions",
+      "text": "This paper discusses federated learning and its importance in the field of mHealth. For example, federated learning provides added protection to preserve patient confidentiality and inhibits the use of data in a way that the participants in a study did not intend. As federated learning does not store raw data from individual users on a central server, there is no possibility of a central server being hacked and raw data leaked. This provides more privacy to users when recording sensitive data.\n\nProtecting user privacy is critical in mHealth. Having more privacy protection measures in place may encourage people to participate in a study and to be more willing to disclose information that is useful for treatment and research. Federated learning offers additional data privacy and can overcome some common challenges in mHealth data by addressing user heterogeneity and taking advantage of commonalities across users. As such, federated learning has considerable potential to help advance mHealth research."
+    },
+    {
+      "text": "Figure 1. Diagram comparing central and federated learning workflows. Color abstractly represents the private information content at different locations, with red, blue, and green colors representing private information for different user devices. When training on a central server, user data are uploaded onto the server once. In federated learning, model parameters are updated on the user device, producing updates that contain less private information than the data themselves. The updates from many users are then aggregated, further mixing the contribution from each individual user."
+    },
+    {
+      "text": "Figure 2. Pseudocode for federated learning algorithm 1."
+    },
+    {
+      "text": "c EMG: electromyogram. d ACC_X: 3-axis acceleration (x-axis)."
+    },
+    {
+      "text": "e ACC_Y: 3-axis acceleration (y-axis)."
+    },
+    {
+      "text": "axis acceleration (z-axis)."
+    },
+    {
+      "text": "Figure 3. Comparison between the architecture of nonpersonalized and personalized versions of our models. The green blocks represent trained model parameters, and the blue blocks represent the input covariates. Note the user ID is removed from the covariates once it is used to attach the correct parameters, which represent that user's embedding."
+    },
+    {
+      "text": "Demographic characteristics of the participants in the study (N=15)."
+    },
+    {
+      "text": "Summary statistics of a subset of features."
+    },
+    {
+      "text": "Median and mean accuracy of each model over 15 tests."
+    },
+    {
+      "title": "Acknowledgments",
+      "text": "SS was supported by the  National Institute of Mental Health  (grant number:  R01MH101459 ). AT was supported in part by the  National Science Foundation CAREER  (grant number:  IIS-1452099 ). JG was supported by the  National Science Foundation Research Training Groups in the Mathematical Sciences  (grant number:  DMS-1646108 ). JL and JG implemented federated learning and performed data analysis with guidance from AT. JL and JG wrote the Introduction and Methods sections, and JL wrote the Results and Discussion sections. SS provided subject matter expertise and guidance on the methods. All authors have reviewed and revised the manuscript and have read and approved the final version of the manuscript."
+    },
+    {
+      "title": "Conflicts of Interest",
+      "text": "None declared."
+    },
+    {
+      "title": "Multimedia Appendix 1",
+      "text": "Federated learning algorithm, summary statistics, and additional figures.\n\n[PDF File (Adobe PDF File), 576 KB-Multimedia Appendix 1] \u00a9Jessica Chia Liu, Jack Goetz, Srijan Sen, Ambuj Tewari. Originally published in JMIR mHealth and uHealth ( http://mhealth.jmir.org ), 30.03.2021. This is an open-access article distributed under the terms of the Creative Commons Attribution License ( https://creativecommons.org/licenses/by/4.0/ ), which permits unrestricted use, distribution, and reproduction in any medium, provided the original work, first published in JMIR mHealth and uHealth, is properly cited. The complete bibliographic information, a link to the original publication on  http://mhealth.jmir.org/ , as well as this copyright and license information must be included."
+    },
+    {
+      "title": "Multimedia Appendix 2"
+    }
+  ],
+  "references": [
+    {
+      "title": "The functions and limitations of trust in the provision of medical care",
+      "authors": [
+        "D Mechanic"
+      ],
+      "year": 1998,
+      "doi": "10.1215/03616878-23-4-661",
+      "journal": "J Health Polit Policy Law",
+      "volume": "23",
+      "issue": "4",
+      "raw": "The functions and limitations of trust in the provision of medical care \n\t\t \n\t\t\t D Mechanic \n\t\t \n\t\t 10.1215/03616878-23-4-661 \n\t\t Medline: 9718518 \n\t \n\t \n\t\t J Health Polit Policy Law \n\t\t \n\t\t\t 23 \n\t\t\t 4 \n\t\t\t \n\t\t\t Aug 1998 \n\t\t \n\t \n\t Mechanic D. The functions and limitations of trust in the provision of medical care. J Health Polit Policy Law. Aug 1998;23(4):661-686. [doi: 10.1215/03616878-23-4-661] [Medline: 9718518]"
+    },
+    {
+      "title": "Client-Focused Security Assessment of mHealth Apps and Recommended Practices to Prevent or Mitigate Transport Security Issues",
+      "authors": [
+        "J M\u00fcthing",
+        "T J\u00e4schke",
+        "C Friedrich"
+      ],
+      "year": 2017,
+      "doi": "10.2196/mhealth.7791",
+      "journal": "JMIR Mhealth Uhealth",
+      "volume": "5",
+      "issue": "10",
+      "pages": "e147",
+      "raw": "Client-Focused Security Assessment of mHealth Apps and Recommended Practices to Prevent or Mitigate Transport Security Issues \n\t\t \n\t\t\t J M\u00fcthing \n\t\t \n\t\t \n\t\t\t T J\u00e4schke \n\t\t \n\t\t \n\t\t\t C M Friedrich \n\t\t \n\t\t 10.2196/mhealth.7791 \n\t\t Medline: 29046271 \n\t \n\t \n\t\t JMIR Mhealth Uhealth \n\t\t \n\t\t\t 5 \n\t\t\t 10 \n\t\t\t e147 \n\t\t\t Oct 18, 2017 \n\t\t \n\t \n\t FREE Full text \n\t M\u00fcthing J, J\u00e4schke T, Friedrich CM. Client-Focused Security Assessment of mHealth Apps and Recommended Practices to Prevent or Mitigate Transport Security Issues. JMIR Mhealth Uhealth. Oct 18, 2017;5(10):e147. [FREE Full text] [doi: 10.2196/mhealth.7791] [Medline: 29046271]"
+    },
+    {
+      "title": "Server-Focused Security Assessment of Mobile Health Apps for Popular Mobile Platforms",
+      "authors": [
+        "J M\u00fcthing",
+        "R Br\u00fcngel",
+        "C Friedrich"
+      ],
+      "year": 2019,
+      "doi": "10.2196/jmir.9818",
+      "journal": "J Med Internet Res",
+      "volume": "21",
+      "issue": "1",
+      "pages": "e9818",
+      "raw": "Server-Focused Security Assessment of Mobile Health Apps for Popular Mobile Platforms \n\t\t \n\t\t\t J M\u00fcthing \n\t\t \n\t\t \n\t\t\t R Br\u00fcngel \n\t\t \n\t\t \n\t\t\t C M Friedrich \n\t\t \n\t\t 10.2196/jmir.9818 \n\t\t Medline: 30672738 \n\t \n\t \n\t\t J Med Internet Res \n\t\t \n\t\t\t 21 \n\t\t\t 1 \n\t\t\t e9818 \n\t\t\t Jan 23. 2019 \n\t\t \n\t \n\t FREE Full text \n\t M\u00fcthing J, Br\u00fcngel R, Friedrich CM. Server-Focused Security Assessment of Mobile Health Apps for Popular Mobile Platforms. J Med Internet Res. Jan 23, 2019;21(1):e9818. [FREE Full text] [doi: 10.2196/jmir.9818] [Medline: 30672738]"
+    },
+    {
+      "title": "Exploring the Far Side of Mobile Health: Information Security and Privacy of Mobile Health Apps on iOS and Android",
+      "authors": [
+        "T Dehling",
+        "F Gao",
+        "S Schneider",
+        "A Sunyaev"
+      ],
+      "year": 2015,
+      "doi": "10.2196/mhealth.3672",
+      "journal": "JMIR Mhealth Uhealth",
+      "volume": "3",
+      "issue": "1",
+      "raw": "Exploring the Far Side of Mobile Health: Information Security and Privacy of Mobile Health Apps on iOS and Android \n\t\t \n\t\t\t T Dehling \n\t\t \n\t\t \n\t\t\t F Gao \n\t\t \n\t\t \n\t\t\t S Schneider \n\t\t \n\t\t \n\t\t\t A Sunyaev \n\t\t \n\t\t 10.2196/mhealth.3672 \n\t\t Medline: 25599627 \n\t \n\t \n\t\t JMIR Mhealth Uhealth \n\t\t \n\t\t\t 3 \n\t\t\t 1 \n\t\t\t 2015 \n\t\t \n\t \n\t FREE Full text \n\t Dehling T, Gao F, Schneider S, Sunyaev A. Exploring the Far Side of Mobile Health: Information Security and Privacy of Mobile Health Apps on iOS and Android. JMIR Mhealth Uhealth. 2015;3(1):e8. [FREE Full text] [doi: 10.2196/mhealth.3672] [Medline: 25599627]"
+    },
+    {
+      "title": "Patients, privacy and trust: patients' willingness to allow researchers to access their medical records",
+      "authors": [
+        "L Damschroder",
+        "J Pritts",
+        "M Neblo",
+        "R Kalarickal",
+        "J Creswell",
+        "R Hayward"
+      ],
+      "year": 2007,
+      "doi": "10.1016/j.socscimed.2006.08.045",
+      "journal": "Soc Sci Med",
+      "volume": "64",
+      "issue": "1",
+      "raw": "Patients, privacy and trust: patients' willingness to allow researchers to access their medical records \n\t\t \n\t\t\t L J Damschroder \n\t\t \n\t\t \n\t\t\t J L Pritts \n\t\t \n\t\t \n\t\t\t M A Neblo \n\t\t \n\t\t \n\t\t\t R J Kalarickal \n\t\t \n\t\t \n\t\t\t J W Creswell \n\t\t \n\t\t \n\t\t\t R A Hayward \n\t\t \n\t\t 10.1016/j.socscimed.2006.08.045 \n\t\t Medline: 17045717 \n\t \n\t \n\t\t Soc Sci Med \n\t\t \n\t\t\t 64 \n\t\t\t 1 \n\t\t\t \n\t\t\t Jan 2007 \n\t\t \n\t \n\t FREE Full text \n\t Damschroder LJ, Pritts JL, Neblo MA, Kalarickal RJ, Creswell JW, Hayward RA. Patients, privacy and trust: patients' willingness to allow researchers to access their medical records. Soc Sci Med. Jan 2007;64(1):223-235. [FREE Full text] [doi: 10.1016/j.socscimed.2006.08.045] [Medline: 17045717]"
+    },
+    {
+      "title": "Willingness of African American Women to Participate in e-Health/m-Health Research",
+      "authors": [
+        "D James",
+        "C2 Harville",
+        "N Whitehead",
+        "M Stellefson",
+        "S Dodani",
+        "C Sears"
+      ],
+      "year": 2016,
+      "doi": "10.1089/tmj.2015.0071",
+      "journal": "Telemed J E Health",
+      "volume": "22",
+      "issue": "3",
+      "raw": "Willingness of African American Women to Participate in e-Health/m-Health Research \n\t\t \n\t\t\t D C James \n\t\t \n\t\t \n\t\t\t C2 Harville \n\t\t \n\t\t \n\t\t\t N Whitehead \n\t\t \n\t\t \n\t\t\t M Stellefson \n\t\t \n\t\t \n\t\t\t S Dodani \n\t\t \n\t\t \n\t\t\t C Sears \n\t\t \n\t\t 10.1089/tmj.2015.0071 \n\t\t Medline: 26313323 \n\t \n\t \n\t\t Telemed J E Health \n\t\t \n\t\t\t 22 \n\t\t\t 3 \n\t\t\t \n\t\t\t Mar 2016 \n\t\t \n\t \n\t James DC, Harville C2, Whitehead N, Stellefson M, Dodani S, Sears C. Willingness of African American Women to Participate in e-Health/m-Health Research. Telemed J E Health. Mar 2016;22(3):191-197. [doi: 10.1089/tmj.2015.0071] [Medline: 26313323]"
+    },
+    {
+      "title": "Broken promises of privacy: Responding to the surprising failure of anonymization",
+      "authors": [
+        "P Ohm"
+      ],
+      "year": 2010,
+      "doi": "10.1515/9781400829781.28",
+      "journal": "UCLA Law Review",
+      "volume": "57",
+      "issue": "6",
+      "raw": "Broken promises of privacy: Responding to the surprising failure of anonymization \n\t\t \n\t\t\t P Ohm \n\t\t \n\t\t 10.1515/9781400829781.28 \n\t \n\t \n\t\t UCLA Law Review \n\t\t \n\t\t\t 57 \n\t\t\t 6 \n\t\t\t \n\t\t\t 2010 \n\t\t \n\t \n\t Ohm P. Broken promises of privacy: Responding to the surprising failure of anonymization. UCLA Law Review. 2010;57(6):1701-1778."
+    },
+    {
+      "title": "Personalized Multitask Learning for Predicting Tomorrow's Mood, Stress, and Health",
+      "authors": [
+        "S Taylor",
+        "N Jaques",
+        "E Nosakhare",
+        "A Sano",
+        "R Picard"
+      ],
+      "year": 2020,
+      "doi": "10.1109/taffc.2017.2784832",
+      "journal": "IEEE Transactions on Affective Computing",
+      "volume": "11",
+      "issue": "2",
+      "raw": "Personalized Multitask Learning for Predicting Tomorrow's Mood, Stress, and Health \n\t\t \n\t\t\t S A Taylor \n\t\t \n\t\t \n\t\t\t N Jaques \n\t\t \n\t\t \n\t\t\t E Nosakhare \n\t\t \n\t\t \n\t\t\t A Sano \n\t\t \n\t\t \n\t\t\t R Picard \n\t\t \n\t\t 10.1109/taffc.2017.2784832 \n\t \n\t \n\t\t IEEE Transactions on Affective Computing \n\t\t \n\t\t\t 11 \n\t\t\t 2 \n\t\t\t \n\t\t\t 2020 \n\t\t \n\t \n\t Taylor SA, Jaques N, Nosakhare E, Sano A, Picard R. Personalized Multitask Learning for Predicting Tomorrow's Mood, Stress, and Health. IEEE Transactions on Affective Computing. 2020;11(2):200-213. [doi: 10.1109/TAFFC.2017.2784832]"
+    },
+    {
+      "title": "Introducing WESAD, a Multimodal Dataset for Wearable Stress and Affect Detection",
+      "authors": [
+        "P Schmidt",
+        "A Reiss",
+        "R Duerichen",
+        "C Marberger",
+        "K Van Laerhoven"
+      ],
+      "year": 2018,
+      "doi": "10.1145/3242969.3242985",
+      "raw": "Introducing WESAD, a Multimodal Dataset for Wearable Stress and Affect Detection \n\t\t \n\t\t\t P Schmidt \n\t\t \n\t\t \n\t\t\t A Reiss \n\t\t \n\t\t \n\t\t\t R Duerichen \n\t\t \n\t\t \n\t\t\t C Marberger \n\t\t \n\t\t \n\t\t\t K Van Laerhoven \n\t\t \n\t\t 10.1145/3242969.3242985 \n\t \n\t \n\t\t ACM International Conference on Multimodal Interaction \n\t\t New York \n\t\t \n\t\t\t Association for Computing Machinery \n\t\t\t 2018. October 16-20, 2018 \n\t\t\t \n\t\t \n\t \n\t Presented at: 20th \n\t Schmidt P, Reiss A, Duerichen R, Marberger C, Van Laerhoven K. Introducing WESAD, a Multimodal Dataset for Wearable Stress and Affect Detection. New York. Association for Computing Machinery; 2018. Presented at: 20th ACM International Conference on Multimodal Interaction; October 16-20, 2018:400-408;"
+    },
+    {
+      "doi": "10.1145/3242969.3242985",
+      "raw": "10.1145/3242969.3242985 \n\t\t \n\t\t \n\t\t\t Boulder, CO, USA \n\t\t \n\t \n\t Boulder, CO, USA. URL: https://archive.ics.uci.edu/ ml/datasets/WESAD+%28Wearable+Stress+and+Affect+Detection%29 [doi: 10.1145/3242969.3242985]"
+    },
+    {
+      "title": "Federated Learning for Mobile Keyboard Prediction",
+      "authors": [
+        "A Hard",
+        "K Rao",
+        "R Mathews",
+        "S Ramaswamy",
+        "F Beaufays",
+        "S Augenstein"
+      ],
+      "year": 2018,
+      "raw": "Federated Learning for Mobile Keyboard Prediction \n\t\t \n\t\t\t A Hard \n\t\t \n\t\t \n\t\t\t K Rao \n\t\t \n\t\t \n\t\t\t R Mathews \n\t\t \n\t\t \n\t\t\t S Ramaswamy \n\t\t \n\t\t \n\t\t\t F Beaufays \n\t\t \n\t\t \n\t\t\t S Augenstein \n\t\t \n\t\t \n\t\t \n\t\t\t 2018. 2021-03-11 \n\t\t \n\t \n\t Hard A, Rao K, Mathews R, Ramaswamy S, Beaufays F, Augenstein S, et al. Federated Learning for Mobile Keyboard Prediction. 2018. URL: https://arxiv.org/abs/1811.03604 [accessed 2021-03-11]"
+    },
+    {
+      "title": "Federated Learning: Challenges, Methods, and Future Directions",
+      "authors": [
+        "T Li",
+        "A Sahu",
+        "A Talwalkar",
+        "V Smith"
+      ],
+      "year": 2020,
+      "doi": "10.1109/msp.2020.2975749",
+      "journal": "IEEE Signal Processing Magazine",
+      "volume": "37",
+      "issue": "3",
+      "raw": "Federated Learning: Challenges, Methods, and Future Directions \n\t\t \n\t\t\t T Li \n\t\t \n\t\t \n\t\t\t A K Sahu \n\t\t \n\t\t \n\t\t\t A Talwalkar \n\t\t \n\t\t \n\t\t\t V Smith \n\t\t \n\t\t 10.1109/msp.2020.2975749 \n\t \n\t \n\t\t IEEE Signal Processing Magazine \n\t\t \n\t\t\t 37 \n\t\t\t 3 \n\t\t\t \n\t\t\t May 2020 \n\t\t \n\t \n\t Li T, Sahu AK, Talwalkar A, Smith V. Federated Learning: Challenges, Methods, and Future Directions. IEEE Signal Processing Magazine. May 2020;37(3):50-60. [doi: 10.1109/msp.2020.2975749]"
+    },
+    {
+      "title": "Federated Machine Learning: Concept and Applications",
+      "authors": [
+        "Q Yang",
+        "Y Liu",
+        "T Chen",
+        "Y Tong"
+      ],
+      "year": 2019,
+      "doi": "10.1145/3298981",
+      "journal": "ACM Trans. Intell. Syst. Technol",
+      "volume": "10",
+      "issue": "2",
+      "raw": "Federated Machine Learning: Concept and Applications \n\t\t \n\t\t\t Q Yang \n\t\t \n\t\t \n\t\t\t Y Liu \n\t\t \n\t\t \n\t\t\t T Chen \n\t\t \n\t\t \n\t\t\t Y Tong \n\t\t \n\t\t 10.1145/3298981 \n\t \n\t \n\t\t ACM Trans. Intell. Syst. Technol \n\t\t \n\t\t\t 10 \n\t\t\t 2 \n\t\t\t Feb 2019 \n\t\t \n\t \n\t Yang Q, Liu Y, Chen T, Tong Y. Federated Machine Learning: Concept and Applications. ACM Trans. Intell. Syst. Technol. Feb 2019;10(2). [doi: 10.1145/3298981]"
+    },
+    {
+      "title": "Advances and Open Problems in Federated Learning",
+      "authors": [
+        "P Kairouz",
+        "H Mcmahan"
+      ],
+      "year": 2021,
+      "doi": "10.1561/2200000083",
+      "journal": "FNT in Machine Learning",
+      "volume": "14",
+      "issue": "1",
+      "raw": "Advances and Open Problems in Federated Learning \n\t\t \n\t\t\t P Kairouz \n\t\t \n\t\t \n\t\t\t H B Mcmahan \n\t\t \n\t\t 10.1561/2200000083 \n\t \n\t \n\t\t FNT in Machine Learning \n\t\t \n\t\t\t 14 \n\t\t\t 1 \n\t\t\t 2021 \n\t\t \n\t \n\t Kairouz P, McMahan HB. Advances and Open Problems in Federated Learning. FNT in Machine Learning. 2021;14(1). [doi: 10.1561/2200000083]"
+    },
+    {
+      "title": "The privacy-personalization paradox in mHealth services acceptance of different age groups",
+      "authors": [
+        "X Guo",
+        "X Zhang",
+        "Y Sun"
+      ],
+      "year": 2016,
+      "doi": "10.1016/j.elerap.2015.11.001",
+      "journal": "Electronic Commerce Research and Applications",
+      "volume": "16",
+      "raw": "The privacy-personalization paradox in mHealth services acceptance of different age groups \n\t\t \n\t\t\t X Guo \n\t\t \n\t\t \n\t\t\t X Zhang \n\t\t \n\t\t \n\t\t\t Y Sun \n\t\t \n\t\t 10.1016/j.elerap.2015.11.001 \n\t \n\t \n\t\t Electronic Commerce Research and Applications \n\t\t \n\t\t\t 16 \n\t\t\t \n\t\t\t 2016 \n\t\t \n\t \n\t Guo X, Zhang X, Sun Y. The privacy-personalization paradox in mHealth services acceptance of different age groups. Electronic Commerce Research and Applications. 2016;16:55-65. [doi: 10.1016/j.elerap.2015.11.001]"
+    },
+    {
+      "title": "Anonymous or Not? Understanding the Factors Affecting Personal Mobile Data Disclosure",
+      "authors": [
+        "C Perentis",
+        "M Vescovi",
+        "C Leonardi",
+        "C Moiso",
+        "M Musolesi",
+        "F Pianesi"
+      ],
+      "year": 2017,
+      "doi": "10.1145/3017431",
+      "journal": "ACM Trans. Internet Technol",
+      "volume": "17",
+      "issue": "2",
+      "raw": "Anonymous or Not? Understanding the Factors Affecting Personal Mobile Data Disclosure \n\t\t \n\t\t\t C Perentis \n\t\t \n\t\t \n\t\t\t M Vescovi \n\t\t \n\t\t \n\t\t\t C Leonardi \n\t\t \n\t\t \n\t\t\t C Moiso \n\t\t \n\t\t \n\t\t\t M Musolesi \n\t\t \n\t\t \n\t\t\t F Pianesi \n\t\t \n\t\t 10.1145/3017431 \n\t \n\t \n\t\t ACM Trans. Internet Technol \n\t\t \n\t\t\t 17 \n\t\t\t 2 \n\t\t\t May 2017 \n\t\t \n\t \n\t Perentis C, Vescovi M, Leonardi C, Moiso C, Musolesi M, Pianesi F, et al. Anonymous or Not? Understanding the Factors Affecting Personal Mobile Data Disclosure. ACM Trans. Internet Technol. May 2017;17(2). [doi: 10.1145/3017431]"
+    },
+    {
+      "title": "Digital phenotyping: a global tool for psychiatry",
+      "authors": [
+        "T Insel"
+      ],
+      "year": 2018,
+      "doi": "10.1002/wps.20550",
+      "journal": "World Psychiatry",
+      "volume": "17",
+      "issue": "3",
+      "raw": "Digital phenotyping: a global tool for psychiatry \n\t\t \n\t\t\t T R Insel \n\t\t \n\t\t 10.1002/wps.20550 \n\t\t Medline: 30192103 \n\t \n\t \n\t\t World Psychiatry \n\t\t \n\t\t\t 17 \n\t\t\t 3 \n\t\t\t \n\t\t\t Oct 2018 \n\t\t \n\t \n\t FREE Full text \n\t Insel TR. Digital phenotyping: a global tool for psychiatry. World Psychiatry. Oct 2018;17(3):276-277. [FREE Full text] [doi: 10.1002/wps.20550] [Medline: 30192103]"
+    },
+    {
+      "title": "The Effectiveness of Health Care Information Technologies: Evaluation of Trust, Security Beliefs, and Privacy as Determinants of Health Care Outcomes",
+      "authors": [
+        "V Kisekka",
+        "J Giboney"
+      ],
+      "year": 2018,
+      "doi": "10.2196/jmir.9014",
+      "journal": "J Med Internet Res",
+      "volume": "20",
+      "issue": "4",
+      "pages": "e107",
+      "raw": "The Effectiveness of Health Care Information Technologies: Evaluation of Trust, Security Beliefs, and Privacy as Determinants of Health Care Outcomes \n\t\t \n\t\t\t V Kisekka \n\t\t \n\t\t \n\t\t\t J S Giboney \n\t\t \n\t\t 10.2196/jmir.9014 \n\t\t Medline: 29643052 \n\t \n\t \n\t\t J Med Internet Res \n\t\t \n\t\t\t 20 \n\t\t\t 4 \n\t\t\t e107 \n\t\t\t Apr 11, 2018 \n\t\t \n\t \n\t FREE Full text \n\t Kisekka V, Giboney JS. The Effectiveness of Health Care Information Technologies: Evaluation of Trust, Security Beliefs, and Privacy as Determinants of Health Care Outcomes. J Med Internet Res. Apr 11, 2018;20(4):e107. [FREE Full text] [doi: 10.2196/jmir.9014] [Medline: 29643052]"
+    },
+    {
+      "title": "Consumer Attitudes and Perceptions on mHealth Privacy and Security: Findings From a Mixed-Methods Study",
+      "authors": [
+        "A Atienza",
+        "C Zarcadoolas",
+        "W Vaughon",
+        "P Hughes",
+        "V Patel",
+        "W Chou"
+      ],
+      "year": 2015,
+      "doi": "10.1080/10810730.2015.1018560",
+      "journal": "J Health Commun",
+      "volume": "20",
+      "issue": "6",
+      "raw": "Consumer Attitudes and Perceptions on mHealth Privacy and Security: Findings From a Mixed-Methods Study \n\t\t \n\t\t\t A A Atienza \n\t\t \n\t\t \n\t\t\t C Zarcadoolas \n\t\t \n\t\t \n\t\t\t W Vaughon \n\t\t \n\t\t \n\t\t\t P Hughes \n\t\t \n\t\t \n\t\t\t V Patel \n\t\t \n\t\t \n\t\t\t W Y Chou \n\t\t \n\t\t 10.1080/10810730.2015.1018560 \n\t\t Medline: 25868685 \n\t \n\t \n\t\t J Health Commun \n\t\t \n\t\t\t 20 \n\t\t\t 6 \n\t\t\t \n\t\t\t 2015 \n\t\t \n\t \n\t Atienza AA, Zarcadoolas C, Vaughon W, Hughes P, Patel V, Chou WY, et al. Consumer Attitudes and Perceptions on mHealth Privacy and Security: Findings From a Mixed-Methods Study. J Health Commun. 2015;20(6):673-679. [doi: 10.1080/10810730.2015.1018560] [Medline: 25868685]"
+    },
+    {
+      "title": "An 'Honest Broker' mechanism to maintain privacy for patient care and academic medical research",
+      "authors": [
+        "A Boyd",
+        "C Hosner",
+        "D Hunscher",
+        "B Athey",
+        "D Clauw",
+        "L Green"
+      ],
+      "year": 2007,
+      "doi": "10.1016/j.ijmedinf.2006.09.004",
+      "journal": "Int J Med Inform",
+      "volume": "76",
+      "issue": "5-6",
+      "raw": "An 'Honest Broker' mechanism to maintain privacy for patient care and academic medical research \n\t\t \n\t\t\t A D Boyd \n\t\t \n\t\t \n\t\t\t C Hosner \n\t\t \n\t\t \n\t\t\t D A Hunscher \n\t\t \n\t\t \n\t\t\t B D Athey \n\t\t \n\t\t \n\t\t\t D J Clauw \n\t\t \n\t\t \n\t\t\t L A Green \n\t\t \n\t\t 10.1016/j.ijmedinf.2006.09.004 \n\t\t Medline: 17081800 \n\t \n\t \n\t\t Int J Med Inform \n\t\t \n\t\t\t 76 \n\t\t\t 5-6 \n\t\t\t \n\t\t\t 2007 \n\t\t \n\t \n\t FREE Full text \n\t Boyd AD, Hosner C, Hunscher DA, Athey BD, Clauw DJ, Green LA. An 'Honest Broker' mechanism to maintain privacy for patient care and academic medical research. Int J Med Inform. 2007;76(5-6):407-411. [FREE Full text] [doi: 10.1016/j.ijmedinf.2006.09.004] [Medline: 17081800]"
+    },
+    {
+      "title": "Improving Students' Daily Life Stress Forecasting using LSTM Neural Networks",
+      "authors": [
+        "T Umematsu",
+        "A Sano",
+        "S Taylor",
+        "R Picard"
+      ],
+      "year": 2019,
+      "doi": "10.1109/bhi.2019.8834624",
+      "journal": "IEEE EMBS International Conference on Biomedical & Health Informatics (BHI)",
+      "raw": "Improving Students' Daily Life Stress Forecasting using LSTM Neural Networks \n\t\t \n\t\t\t T Umematsu \n\t\t \n\t\t \n\t\t\t A Sano \n\t\t \n\t\t \n\t\t\t S Taylor \n\t\t \n\t\t \n\t\t\t R Picard \n\t\t \n\t\t 10.1109/bhi.2019.8834624 \n\t \n\t \n\t\t IEEE EMBS International Conference on Biomedical & Health Informatics (BHI) \n\t\t \n\t\t\t \n\t\t\t 2019. May 19-22, 2019 \n\t\t\t Chicago, IL, USA \n\t\t \n\t \n\t Umematsu T, Sano A, Taylor S, Picard R. Improving Students' Daily Life Stress Forecasting using LSTM Neural Networks. 2019. Presented at: IEEE EMBS International Conference on Biomedical & Health Informatics (BHI); May 19-22, 2019:1-4; Chicago, IL, USA. [doi: 10.1109/bhi.2019.8834624]"
+    },
+    {
+      "title": "The accuracy of passive phone sensors in predicting daily mood",
+      "authors": [
+        "A Pratap",
+        "D Atkins",
+        "B Renn",
+        "M Tanana",
+        "S Mooney",
+        "J Anguera"
+      ],
+      "year": 2019,
+      "doi": "10.1002/da.22822",
+      "journal": "Depress Anxiety",
+      "volume": "36",
+      "issue": "1",
+      "raw": "The accuracy of passive phone sensors in predicting daily mood \n\t\t \n\t\t\t A Pratap \n\t\t \n\t\t \n\t\t\t D C Atkins \n\t\t \n\t\t \n\t\t\t B N Renn \n\t\t \n\t\t \n\t\t\t M J Tanana \n\t\t \n\t\t \n\t\t\t S D Mooney \n\t\t \n\t\t \n\t\t\t J A Anguera \n\t\t \n\t\t 10.1002/da.22822 \n\t\t Medline: 30129691 \n\t \n\t \n\t\t Depress Anxiety \n\t\t \n\t\t\t 36 \n\t\t\t 1 \n\t\t\t \n\t\t\t Jan 2019 \n\t\t \n\t \n\t FREE Full text \n\t Pratap A, Atkins DC, Renn BN, Tanana MJ, Mooney SD, Anguera JA, et al. The accuracy of passive phone sensors in predicting daily mood. Depress Anxiety. Jan 2019;36(1):72-81. [FREE Full text] [doi: 10.1002/da.22822] [Medline: 30129691]"
+    },
+    {
+      "title": "DeepMood: Forecasting Depressed Mood Based on Self-Reported Histories via Recurrent Neural Networks",
+      "authors": [
+        "Y Suhara",
+        "Y Xu",
+        "A Pentland"
+      ],
+      "year": 2017,
+      "doi": "10.1145/3038912.3052676",
+      "raw": "DeepMood: Forecasting Depressed Mood Based on Self-Reported Histories via Recurrent Neural Networks \n\t\t \n\t\t\t Y Suhara \n\t\t \n\t\t \n\t\t\t Y Xu \n\t\t \n\t\t \n\t\t\t A Pentland \n\t\t \n\t\t 10.1145/3038912.3052676 \n\t \n\t \n\t\t Presented at: 26th International Conference on World Wide Web \n\t\t Perth, Australia \n\t\t \n\t\t\t 2017. April 2017 \n\t\t\t \n\t\t \n\t \n\t Suhara Y, Xu Y, Pentland A. DeepMood: Forecasting Depressed Mood Based on Self-Reported Histories via Recurrent Neural Networks. 2017. Presented at: 26th International Conference on World Wide Web; April 2017:715-724; Perth, Australia. [doi: 10.1145/3038912.3052676]"
+    },
+    {
+      "title": "Passive mobile sensing and psychological traits for large scale mood prediction",
+      "authors": [
+        "D Spathis",
+        "S Servia-Rodriguez",
+        "K Farrahi",
+        "C Mascolo",
+        "J Rentfrow"
+      ],
+      "year": 2019,
+      "doi": "10.1145/3329189.3329213",
+      "raw": "Passive mobile sensing and psychological traits for large scale mood prediction \n\t\t \n\t\t\t D Spathis \n\t\t \n\t\t \n\t\t\t S Servia-Rodriguez \n\t\t \n\t\t \n\t\t\t K Farrahi \n\t\t \n\t\t \n\t\t\t C Mascolo \n\t\t \n\t\t \n\t\t\t J Rentfrow \n\t\t \n\t\t 10.1145/3329189.3329213 \n\t \n\t \n\t\t 13th EAI International Conference on Pervasive Computing Technologies for Healthcare \n\t\t Trento, Italy \n\t\t \n\t\t\t 2019. May 2019 \n\t\t\t \n\t\t \n\t \n\t Spathis D, Servia-Rodriguez S, Farrahi K, Mascolo C, Rentfrow J. Passive mobile sensing and psychological traits for large scale mood prediction. 2019. Presented at: 13th EAI International Conference on Pervasive Computing Technologies for Healthcare; May 2019:272-281; Trento, Italy. [doi: 10.1145/3329189.3329213]"
+    },
+    {
+      "title": "Predicting short term mood developments among depressed patients using adherence and ecological momentary assessment data",
+      "authors": [
+        "A Mikus",
+        "M Hoogendoorn",
+        "A Rocha",
+        "J Gama",
+        "J Ruwaard",
+        "H Riper"
+      ],
+      "year": 2017,
+      "doi": "10.1016/j.invent.2017.10.001",
+      "journal": "Internet Interv",
+      "volume": "12",
+      "raw": "Predicting short term mood developments among depressed patients using adherence and ecological momentary assessment data \n\t\t \n\t\t\t A Mikus \n\t\t \n\t\t \n\t\t\t M Hoogendoorn \n\t\t \n\t\t \n\t\t\t A Rocha \n\t\t \n\t\t \n\t\t\t J Gama \n\t\t \n\t\t \n\t\t\t J Ruwaard \n\t\t \n\t\t \n\t\t\t H Riper \n\t\t \n\t\t 10.1016/j.invent.2017.10.001 \n\t\t Medline: 30135774 \n\t \n\t \n\t\t Internet Interv \n\t\t \n\t\t\t 12 \n\t\t\t \n\t\t\t Oct 07, 2017 \n\t\t \n\t \n\t FREE Full text \n\t Mikus A, Hoogendoorn M, Rocha A, Gama J, Ruwaard J, Riper H. Predicting short term mood developments among depressed patients using adherence and ecological momentary assessment data. Internet Interv. Oct 07, 2017;12:105-110. [FREE Full text] [doi: 10.1016/j.invent.2017.10.001] [Medline: 30135774]"
+    },
+    {
+      "title": "Prediction of stress levels with LSTM and passive mobile sensors",
+      "authors": [
+        "Y Acikmese",
+        "S Alptekin"
+      ],
+      "year": 2019,
+      "doi": "10.1016/j.procs.2019.09.221",
+      "journal": "Procedia Computer Science",
+      "volume": "159",
+      "raw": "Prediction of stress levels with LSTM and passive mobile sensors \n\t\t \n\t\t\t Y Acikmese \n\t\t \n\t\t \n\t\t\t S E Alptekin \n\t\t \n\t\t 10.1016/j.procs.2019.09.221 \n\t \n\t \n\t\t Procedia Computer Science \n\t\t \n\t\t\t 159 \n\t\t\t \n\t\t\t 2019 \n\t\t \n\t \n\t Acikmese Y, Alptekin SE. Prediction of stress levels with LSTM and passive mobile sensors. Procedia Computer Science. 2019;159:658-667. [doi: 10.1016/j.procs.2019.09.221]"
+    },
+    {
+      "title": "Detecting Recovery Problems Just in Time: Application of Automated Linguistic Analysis and Supervised Machine Learning to an Online Substance Abuse Forum",
+      "authors": [
+        "R Kornfield",
+        "P Sarma",
+        "D Shah",
+        "F Mctavish",
+        "G Landucci",
+        "K Pe-Romashko"
+      ],
+      "year": 2018,
+      "doi": "10.2196/10136",
+      "journal": "J Med Internet Res",
+      "volume": "20",
+      "issue": "6",
+      "pages": "e10136",
+      "raw": "Detecting Recovery Problems Just in Time: Application of Automated Linguistic Analysis and Supervised Machine Learning to an Online Substance Abuse Forum \n\t\t \n\t\t\t R Kornfield \n\t\t \n\t\t \n\t\t\t P K Sarma \n\t\t \n\t\t \n\t\t\t D V Shah \n\t\t \n\t\t \n\t\t\t F Mctavish \n\t\t \n\t\t \n\t\t\t G Landucci \n\t\t \n\t\t \n\t\t\t K Pe-Romashko \n\t\t \n\t\t 10.2196/10136 \n\t\t Medline: 29895517 \n\t \n\t \n\t\t J Med Internet Res \n\t\t \n\t\t\t 20 \n\t\t\t 6 \n\t\t\t e10136 \n\t\t\t Jun 12. 2018 \n\t\t \n\t \n\t FREE Full text \n\t Kornfield R, Sarma PK, Shah DV, McTavish F, Landucci G, Pe-Romashko K, et al. Detecting Recovery Problems Just in Time: Application of Automated Linguistic Analysis and Supervised Machine Learning to an Online Substance Abuse Forum. J Med Internet Res. Jun 12, 2018;20(6):e10136. [FREE Full text] [doi: 10.2196/10136] [Medline: 29895517]"
+    },
+    {
+      "title": "Well-Being Tracking via Smartphone-Measured Activity and Sleep: Cohort Study",
+      "authors": [
+        "O Demasi",
+        "S Feygin",
+        "A Dembo",
+        "A Aguilera",
+        "B Recht"
+      ],
+      "year": 2017,
+      "doi": "10.2196/mhealth.7820",
+      "journal": "JMIR Mhealth Uhealth",
+      "volume": "5",
+      "issue": "10",
+      "pages": "e137",
+      "raw": "Well-Being Tracking via Smartphone-Measured Activity and Sleep: Cohort Study \n\t\t \n\t\t\t O Demasi \n\t\t \n\t\t \n\t\t\t S Feygin \n\t\t \n\t\t \n\t\t\t A Dembo \n\t\t \n\t\t \n\t\t\t A Aguilera \n\t\t \n\t\t \n\t\t\t B Recht \n\t\t \n\t\t 10.2196/mhealth.7820 \n\t\t Medline: 28982643 \n\t \n\t \n\t\t JMIR Mhealth Uhealth \n\t\t \n\t\t\t 5 \n\t\t\t 10 \n\t\t\t e137 \n\t\t\t Oct 05, 2017 \n\t\t \n\t \n\t FREE Full text \n\t DeMasi O, Feygin S, Dembo A, Aguilera A, Recht B. Well-Being Tracking via Smartphone-Measured Activity and Sleep: Cohort Study. JMIR Mhealth Uhealth. Oct 05, 2017;5(10):e137. [FREE Full text] [doi: 10.2196/mhealth.7820] [Medline: 28982643]"
+    },
+    {
+      "title": "Assessing Real-Time Moderation for Developing Adaptive Mobile Health Interventions for Medical Interns: Micro-Randomized Trial",
+      "authors": [
+        "T Necamp",
+        "S Sen",
+        "E Frank",
+        "M Walton",
+        "E Ionides",
+        "Y Fang"
+      ],
+      "year": 2020,
+      "doi": "10.2196/15033",
+      "journal": "J Med Internet Res. Mar",
+      "volume": "31",
+      "issue": "3",
+      "pages": "e15033",
+      "raw": "Assessing Real-Time Moderation for Developing Adaptive Mobile Health Interventions for Medical Interns: Micro-Randomized Trial \n\t\t \n\t\t\t T Necamp \n\t\t \n\t\t \n\t\t\t S Sen \n\t\t \n\t\t \n\t\t\t E Frank \n\t\t \n\t\t \n\t\t\t M A Walton \n\t\t \n\t\t \n\t\t\t E L Ionides \n\t\t \n\t\t \n\t\t\t Y Fang \n\t\t \n\t\t 10.2196/15033 \n\t\t Medline: 32229469 \n\t \n\t \n\t\t J Med Internet Res. Mar \n\t\t \n\t\t\t 31 \n\t\t\t 3 \n\t\t\t e15033 \n\t\t\t 2020 \n\t\t \n\t \n\t FREE Full text \n\t NeCamp T, Sen S, Frank E, Walton MA, Ionides EL, Fang Y, et al. Assessing Real-Time Moderation for Developing Adaptive Mobile Health Interventions for Medical Interns: Micro-Randomized Trial. J Med Internet Res. Mar 31, 2020;22(3):e15033. [FREE Full text] [doi: 10.2196/15033] [Medline: 32229469]"
+    },
+    {
+      "title": "Personalized Wellbeing Prediction using Behavioral, Physiological and Weather Data",
+      "authors": [
+        "H Yu",
+        "E Klerman",
+        "R Picard",
+        "A Sano"
+      ],
+      "year": 2019,
+      "doi": "10.1109/bhi.2019.8834456",
+      "journal": "IEEE EMBS International Conference on Biomedical & Health Informatics (BHI)",
+      "raw": "Personalized Wellbeing Prediction using Behavioral, Physiological and Weather Data \n\t\t \n\t\t\t H Yu \n\t\t \n\t\t \n\t\t\t E B Klerman \n\t\t \n\t\t \n\t\t\t R W Picard \n\t\t \n\t\t \n\t\t\t A Sano \n\t\t \n\t\t 10.1109/bhi.2019.8834456 \n\t \n\t \n\t\t IEEE EMBS International Conference on Biomedical & Health Informatics (BHI) \n\t\t \n\t\t\t \n\t\t\t 2019. 2019 \n\t\t\t Chicago, IL, USA \n\t\t \n\t \n\t Yu H, Klerman EB, Picard RW, Sano A. Personalized Wellbeing Prediction using Behavioral, Physiological and Weather Data. 2019. Presented at: IEEE EMBS International Conference on Biomedical & Health Informatics (BHI); 2019:1-4; Chicago, IL, USA. [doi: 10.1109/bhi.2019.8834456]"
+    },
+    {
+      "title": "Ecological momentary interventions for depression and anxiety",
+      "authors": [
+        "S Schueller",
+        "A Aguilera",
+        "D Mohr"
+      ],
+      "year": 2017,
+      "doi": "10.1002/da.22649",
+      "journal": "Depress Anxiety",
+      "volume": "34",
+      "issue": "6",
+      "raw": "Ecological momentary interventions for depression and anxiety \n\t\t \n\t\t\t S M Schueller \n\t\t \n\t\t \n\t\t\t A Aguilera \n\t\t \n\t\t \n\t\t\t D C Mohr \n\t\t \n\t\t 10.1002/da.22649 \n\t\t Medline: 28494123 \n\t \n\t \n\t\t Depress Anxiety \n\t\t \n\t\t\t 34 \n\t\t\t 6 \n\t\t\t \n\t\t\t Jun 2017 \n\t\t \n\t \n\t Schueller SM, Aguilera A, Mohr DC. Ecological momentary interventions for depression and anxiety. Depress Anxiety. Jun 2017;34(6):540-545. [doi: 10.1002/da.22649] [Medline: 28494123]"
+    },
+    {
+      "title": "Communication-Efficient Learning of Deep Networks from Decentralized Data",
+      "authors": [
+        "B Mcmahan",
+        "E Moore",
+        "D Ramage",
+        "S Hampson",
+        "B Ag\u00fcera Y Arcas"
+      ],
+      "year": 2017,
+      "raw": "Communication-Efficient Learning of Deep Networks from Decentralized Data \n\t\t \n\t\t\t B Mcmahan \n\t\t \n\t\t \n\t\t\t E Moore \n\t\t \n\t\t \n\t\t\t D Ramage \n\t\t \n\t\t \n\t\t\t S Hampson \n\t\t \n\t\t \n\t\t\t B Ag\u00fcera Y Arcas \n\t\t \n\t \n\t \n\t\t International Conference on Artificial Intelligence and Statistics (AISTATS) \n\t\t \n\t\t\t 2017. Apr 20-22, 2017 \n\t\t\t \n\t\t \n\t \n\t Presented at: 20th Proceedings of Machine Learning Research \n\t McMahan B, Moore E, Ramage D, Hampson S, Ag\u00fcera y Arcas B. Communication-Efficient Learning of Deep Networks from Decentralized Data. In: Proceedings of Machine Learning Research. 2017. Presented at: 20th International Conference on Artificial Intelligence and Statistics (AISTATS); Apr 20-22, 2017:1273-1282;"
+    },
+    {
+      "title": "Protection Against Reconstruction and Its Applications in Private Federated Learning",
+      "authors": [
+        "A Bhowmick",
+        "J Duchi",
+        "J Freudiger",
+        "G Kapoor",
+        "R Rogers"
+      ],
+      "year": 2019,
+      "raw": "Protection Against Reconstruction and Its Applications in Private Federated Learning \n\t\t \n\t\t\t A Bhowmick \n\t\t \n\t\t \n\t\t\t J Duchi \n\t\t \n\t\t \n\t\t\t J Freudiger \n\t\t \n\t\t \n\t\t\t G Kapoor \n\t\t \n\t\t \n\t\t\t R Rogers \n\t\t \n\t\t \n\t\t \n\t\t\t 2019. 2021-03-11 \n\t\t \n\t \n\t Bhowmick A, Duchi J, Freudiger J, Kapoor G, Rogers R. Protection Against Reconstruction and Its Applications in Private Federated Learning. 2019. URL: https://arxiv.org/abs/1812.00984 [accessed 2021-03-11]"
+    },
+    {
+      "title": "A Collaborative Privacy-Preserving Deep Learning System in Distributed Mobile Environment",
+      "authors": [
+        "M Liu",
+        "H Jiang",
+        "J Chen",
+        "A Badokhon",
+        "X Wei",
+        "M Huang"
+      ],
+      "year": 2016,
+      "doi": "10.1109/csci.2016.0043",
+      "raw": "A Collaborative Privacy-Preserving Deep Learning System in Distributed Mobile Environment \n\t\t \n\t\t\t M Liu \n\t\t \n\t\t \n\t\t\t H Jiang \n\t\t \n\t\t \n\t\t\t J Chen \n\t\t \n\t\t \n\t\t\t A Badokhon \n\t\t \n\t\t \n\t\t\t X Wei \n\t\t \n\t\t \n\t\t\t M Huang \n\t\t \n\t\t 10.1109/csci.2016.0043 \n\t \n\t \n\t\t Presented at: International Conference on Computational Science and Computational Intelligence (CSCI) \n\t\t Las Vegas, NV, USA \n\t\t \n\t\t\t 2016. 2016 \n\t\t\t \n\t\t \n\t \n\t Liu M, Jiang H, Chen J, Badokhon A, Wei X, Huang M. A Collaborative Privacy-Preserving Deep Learning System in Distributed Mobile Environment. 2016. Presented at: International Conference on Computational Science and Computational Intelligence (CSCI); 2016:192-197; Las Vegas, NV, USA. [doi: 10.1109/csci.2016.0043]"
+    },
+    {
+      "title": "Federated Learning with Non-IID Data",
+      "authors": [
+        "Y Zhao",
+        "M Li",
+        "L Lai",
+        "N Suda",
+        "D Civin",
+        "V Chandra"
+      ],
+      "year": 2018,
+      "raw": "Federated Learning with Non-IID Data \n\t\t \n\t\t\t Y Zhao \n\t\t \n\t\t \n\t\t\t M Li \n\t\t \n\t\t \n\t\t\t L Lai \n\t\t \n\t\t \n\t\t\t N Suda \n\t\t \n\t\t \n\t\t\t D Civin \n\t\t \n\t\t \n\t\t\t V Chandra \n\t\t \n\t\t \n\t\t \n\t\t\t 2018. 2021-03-11 \n\t\t \n\t \n\t Zhao Y, Li M, Lai L, Suda N, Civin D, Chandra V. Federated Learning with Non-IID Data. 2018. URL: https://arxiv.org/ abs/1806.00582 [accessed 2021-03-11]"
+    },
+    {
+      "title": "Adaptive Federated Learning in Resource Constrained Edge Computing Systems",
+      "authors": [
+        "S Wang",
+        "T Tuor",
+        "T Salonidis",
+        "K Leung",
+        "C Makaya",
+        "T He"
+      ],
+      "year": 2019,
+      "doi": "10.1109/jsac.2019.2904348",
+      "journal": "IEEE J. Select. Areas Commun",
+      "volume": "37",
+      "issue": "6",
+      "raw": "Adaptive Federated Learning in Resource Constrained Edge Computing Systems \n\t\t \n\t\t\t S Wang \n\t\t \n\t\t \n\t\t\t T Tuor \n\t\t \n\t\t \n\t\t\t T Salonidis \n\t\t \n\t\t \n\t\t\t K K Leung \n\t\t \n\t\t \n\t\t\t C Makaya \n\t\t \n\t\t \n\t\t\t T He \n\t\t \n\t\t 10.1109/jsac.2019.2904348 \n\t \n\t \n\t\t IEEE J. Select. Areas Commun \n\t\t \n\t\t\t 37 \n\t\t\t 6 \n\t\t\t \n\t\t\t Jun 2019 \n\t\t \n\t \n\t Wang S, Tuor T, Salonidis T, Leung KK, Makaya C, He T, et al. Adaptive Federated Learning in Resource Constrained Edge Computing Systems. IEEE J. Select. Areas Commun. Jun 2019;37(6):1205-1221. [doi: 10.1109/jsac.2019.2904348]"
+    },
+    {
+      "title": "Client Selection for Federated Learning with Heterogeneous Resources in Mobile Edge",
+      "authors": [
+        "T Nishio",
+        "R Yonetani"
+      ],
+      "year": 2019,
+      "doi": "10.1109/icc.2019.8761315",
+      "raw": "Client Selection for Federated Learning with Heterogeneous Resources in Mobile Edge \n\t\t \n\t\t\t T Nishio \n\t\t \n\t\t \n\t\t\t R Yonetani \n\t\t \n\t\t 10.1109/icc.2019.8761315 \n\t \n\t \n\t\t IEEE International Conference on Communications (ICC) \n\t\t Shanghai, China \n\t\t \n\t\t\t 2019. 2019 \n\t\t\t \n\t\t \n\t \n\t Nishio T, Yonetani R. Client Selection for Federated Learning with Heterogeneous Resources in Mobile Edge. 2019. Presented at: IEEE International Conference on Communications (ICC); 2019:1-7; Shanghai, China. [doi: 10.1109/icc.2019.8761315]"
+    },
+    {
+      "title": "Incentive Design for Efficient Federated Learning in Mobile Networks: A Contract Theory Approach",
+      "authors": [
+        "J Kang",
+        "Z Xiong",
+        "D Niyato",
+        "H Yu",
+        "Y Liang",
+        "D Kim"
+      ],
+      "year": 2019,
+      "doi": "10.1109/vts-apwcs.2019.8851649",
+      "raw": "Incentive Design for Efficient Federated Learning in Mobile Networks: A Contract Theory Approach \n\t\t \n\t\t\t J Kang \n\t\t \n\t\t \n\t\t\t Z Xiong \n\t\t \n\t\t \n\t\t\t D Niyato \n\t\t \n\t\t \n\t\t\t H Yu \n\t\t \n\t\t \n\t\t\t Y Liang \n\t\t \n\t\t \n\t\t\t D I Kim \n\t\t \n\t\t 10.1109/vts-apwcs.2019.8851649 \n\t \n\t \n\t\t IEEE VTS Asia Pacific Wireless Communications Symposium (APWCS) \n\t\t Singapore \n\t\t \n\t\t\t 2019. 2019 \n\t\t\t \n\t\t \n\t \n\t Kang J, Xiong Z, Niyato D, Yu H, Liang Y, Kim DI. Incentive Design for Efficient Federated Learning in Mobile Networks: A Contract Theory Approach. 2019. Presented at: IEEE VTS Asia Pacific Wireless Communications Symposium (APWCS); 2019:1-5; Singapore. [doi: 10.1109/vts-apwcs.2019.8851649]"
+    },
+    {
+      "title": "Grid Binary LOgistic REgression (GLORE): building shared models without sharing data",
+      "authors": [
+        "Y Wu",
+        "X Jiang",
+        "J Kim",
+        "L Ohno-Machado"
+      ],
+      "year": 2012,
+      "doi": "10.1136/amiajnl-2012-000862",
+      "journal": "J Am Med Inform Assoc",
+      "volume": "19",
+      "issue": "5",
+      "raw": "Grid Binary LOgistic REgression (GLORE): building shared models without sharing data \n\t\t \n\t\t\t Y Wu \n\t\t \n\t\t \n\t\t\t X Jiang \n\t\t \n\t\t \n\t\t\t J Kim \n\t\t \n\t\t \n\t\t\t L Ohno-Machado \n\t\t \n\t\t 10.1136/amiajnl-2012-000862 \n\t\t Medline: 22511014 \n\t \n\t \n\t\t J Am Med Inform Assoc \n\t\t \n\t\t\t 19 \n\t\t\t 5 \n\t\t\t \n\t\t\t 2012 \n\t\t \n\t \n\t FREE Full text \n\t Wu Y, Jiang X, Kim J, Ohno-Machado L. Grid Binary LOgistic REgression (GLORE): building shared models without sharing data. J Am Med Inform Assoc. 2012;19(5):758-764. [FREE Full text] [doi: 10.1136/amiajnl-2012-000862] [Medline: 22511014]"
+    },
+    {
+      "title": "WebDISCO: a web service for distributed cox model learning without patient-level data sharing",
+      "authors": [
+        "C Lu",
+        "S Wang",
+        "Z Ji",
+        "Y Wu",
+        "L Xiong",
+        "X Jiang"
+      ],
+      "year": 2015,
+      "doi": "10.1093/jamia/ocv083",
+      "journal": "J Am Med Inform Assoc",
+      "volume": "22",
+      "issue": "6",
+      "raw": "WebDISCO: a web service for distributed cox model learning without patient-level data sharing \n\t\t \n\t\t\t C L Lu \n\t\t \n\t\t \n\t\t\t S Wang \n\t\t \n\t\t \n\t\t\t Z Ji \n\t\t \n\t\t \n\t\t\t Y Wu \n\t\t \n\t\t \n\t\t\t L Xiong \n\t\t \n\t\t \n\t\t\t X Jiang \n\t\t \n\t\t 10.1093/jamia/ocv083 \n\t\t Medline: 26159465 \n\t \n\t \n\t\t J Am Med Inform Assoc \n\t\t \n\t\t\t 22 \n\t\t\t 6 \n\t\t\t \n\t\t\t Nov 2015 \n\t\t \n\t \n\t FREE Full text \n\t Lu CL, Wang S, Ji Z, Wu Y, Xiong L, Jiang X, et al. WebDISCO: a web service for distributed cox model learning without patient-level data sharing. J Am Med Inform Assoc. Nov 2015;22(6):1212-1219. [FREE Full text] [doi: 10.1093/jamia/ocv083] [Medline: 26159465]"
+    },
+    {
+      "title": "Privacy-Preserving Patient Similarity Learning in a Federated Environment: Development and Analysis",
+      "authors": [
+        "J Lee",
+        "J Sun",
+        "F Wang",
+        "S Wang",
+        "C Jun",
+        "X Jiang"
+      ],
+      "year": 2018,
+      "doi": "10.2196/medinform.7744",
+      "journal": "JMIR Med Inform",
+      "volume": "6",
+      "issue": "2",
+      "pages": "e20",
+      "raw": "Privacy-Preserving Patient Similarity Learning in a Federated Environment: Development and Analysis \n\t\t \n\t\t\t J Lee \n\t\t \n\t\t \n\t\t\t J Sun \n\t\t \n\t\t \n\t\t\t F Wang \n\t\t \n\t\t \n\t\t\t S Wang \n\t\t \n\t\t \n\t\t\t C H Jun \n\t\t \n\t\t \n\t\t\t X Jiang \n\t\t \n\t\t 10.2196/medinform.7744 \n\t\t Medline: 29653917 \n\t \n\t \n\t\t JMIR Med Inform \n\t\t \n\t\t\t 6 \n\t\t\t 2 \n\t\t\t e20 \n\t\t\t Apr 13, 2018 \n\t\t \n\t \n\t FREE Full text \n\t Lee J, Sun J, Wang F, Wang S, Jun CH, Jiang X. Privacy-Preserving Patient Similarity Learning in a Federated Environment: Development and Analysis. JMIR Med Inform. Apr 13, 2018;6(2):e20. [FREE Full text] [doi: 10.2196/medinform.7744] [Medline: 29653917]"
+    },
+    {
+      "title": "Privacy-Preserving Deep Learning for the Detection of Protected Health Information in Real-World Data: Comparative Evaluation",
+      "authors": [
+        "S Festag",
+        "C Spreckelsen"
+      ],
+      "year": 2020,
+      "doi": "10.2196/14064",
+      "journal": "JMIR Form Res",
+      "volume": "4",
+      "issue": "5",
+      "pages": "e14064",
+      "raw": "Privacy-Preserving Deep Learning for the Detection of Protected Health Information in Real-World Data: Comparative Evaluation \n\t\t \n\t\t\t S Festag \n\t\t \n\t\t \n\t\t\t C Spreckelsen \n\t\t \n\t\t 10.2196/14064 \n\t\t Medline: 32369025 \n\t \n\t \n\t\t JMIR Form Res \n\t\t \n\t\t\t 4 \n\t\t\t 5 \n\t\t\t e14064 \n\t\t\t May 05, 2020 \n\t\t \n\t \n\t FREE Full text \n\t Festag S, Spreckelsen C. Privacy-Preserving Deep Learning for the Detection of Protected Health Information in Real-World Data: Comparative Evaluation. JMIR Form Res. May 05, 2020;4(5):e14064. [FREE Full text] [doi: 10.2196/14064] [Medline: 32369025]"
+    },
+    {
+      "title": "The future of digital health with federated learning",
+      "authors": [
+        "N Rieke",
+        "J Hancox",
+        "W Li",
+        "F Milletar\u00ec",
+        "H Roth",
+        "S Albarqouni"
+      ],
+      "year": 2020,
+      "doi": "10.1038/s41746-020-00323-1",
+      "journal": "NPJ Digit Med. Sep",
+      "volume": "14",
+      "pages": "119",
+      "raw": "The future of digital health with federated learning \n\t\t \n\t\t\t N Rieke \n\t\t \n\t\t \n\t\t\t J Hancox \n\t\t \n\t\t \n\t\t\t W Li \n\t\t \n\t\t \n\t\t\t F Milletar\u00ec \n\t\t \n\t\t \n\t\t\t H R Roth \n\t\t \n\t\t \n\t\t\t S Albarqouni \n\t\t \n\t\t 10.1038/s41746-020-00323-1 \n\t\t Medline: 33015372 \n\t \n\t \n\t\t NPJ Digit Med. Sep \n\t\t \n\t\t\t 14 \n\t\t\t 119 \n\t\t\t 2020 \n\t\t \n\t \n\t FREE Full text \n\t Rieke N, Hancox J, Li W, Milletar\u00ec F, Roth HR, Albarqouni S, et al. The future of digital health with federated learning. NPJ Digit Med. Sep 14, 2020;3:119. [FREE Full text] [doi: 10.1038/s41746-020-00323-1] [Medline: 33015372]"
+    },
+    {
+      "title": "Practical Secure Aggregation for Privacy-Preserving Machine Learning",
+      "authors": [
+        "K Bonawitz",
+        "V Ivanov",
+        "B Kreuter",
+        "A Marcedone",
+        "H Mcmahan",
+        "S Patel"
+      ],
+      "year": 2017,
+      "doi": "10.1145/3133956.3133982",
+      "raw": "Practical Secure Aggregation for Privacy-Preserving Machine Learning \n\t\t \n\t\t\t K Bonawitz \n\t\t \n\t\t \n\t\t\t V Ivanov \n\t\t \n\t\t \n\t\t\t B Kreuter \n\t\t \n\t\t \n\t\t\t A Marcedone \n\t\t \n\t\t \n\t\t\t H B Mcmahan \n\t\t \n\t\t \n\t\t\t S Patel \n\t\t \n\t\t 10.1145/3133956.3133982 \n\t\t \n\t\t\t 2017. October 2017 \n\t\t\t Association for Computing Machinery \n\t\t\t \n\t\t\t New York; Dallas, TX, USA \n\t\t \n\t \n\t Bonawitz K, Ivanov V, Kreuter B, Marcedone A, McMahan HB, Patel S, et al. Practical Secure Aggregation for Privacy-Preserving Machine Learning. New York. Association for Computing Machinery; 2017. Presented at: ACM SIGSAC Conference on Computer and Communications Security; October 2017:1175-1191; Dallas, TX, USA. [doi: 10.1145/3133956.3133982]"
+    },
+    {
+      "title": "Neural Network Inversion in Adversarial Setting via Background Knowledge Alignment",
+      "authors": [
+        "Z Yang",
+        "J Zhang",
+        "E Chang",
+        "Z Liang"
+      ],
+      "year": 2019,
+      "doi": "10.1145/3319535.3354261",
+      "raw": "Neural Network Inversion in Adversarial Setting via Background Knowledge Alignment \n\t\t \n\t\t\t Z Yang \n\t\t \n\t\t \n\t\t\t J Zhang \n\t\t \n\t\t \n\t\t\t E C Chang \n\t\t \n\t\t \n\t\t\t Z Liang \n\t\t \n\t\t 10.1145/3319535.3354261 \n\t \n\t \n\t\t ACM SIGSAC Conference on Computer and Communications Security \n\t\t New York; London, United Kingdom \n\t\t \n\t\t\t Association for Computing Machinery \n\t\t\t 2019. November 2019 \n\t\t\t \n\t\t \n\t \n\t Yang Z, Zhang J, Chang EC, Liang Z. Neural Network Inversion in Adversarial Setting via Background Knowledge Alignment. New York. Association for Computing Machinery; 2019. Presented at: ACM SIGSAC Conference on Computer and Communications Security; November 2019:225-240; London, United Kingdom. [doi: 10.1145/3319535.3354261]"
+    },
+    {
+      "title": "The Algorithmic Foundations of Differential Privacy",
+      "authors": [
+        "C Dwork",
+        "A Roth"
+      ],
+      "year": 2014,
+      "doi": "10.1561/0400000042",
+      "journal": "FNT in Theoretical Computer Science",
+      "volume": "9",
+      "issue": "3-4",
+      "raw": "The Algorithmic Foundations of Differential Privacy \n\t\t \n\t\t\t C Dwork \n\t\t \n\t\t \n\t\t\t A Roth \n\t\t \n\t\t 10.1561/0400000042 \n\t \n\t \n\t\t FNT in Theoretical Computer Science \n\t\t \n\t\t\t 9 \n\t\t\t 3-4 \n\t\t\t \n\t\t\t 2014 \n\t\t \n\t \n\t Dwork C, Roth A. The Algorithmic Foundations of Differential Privacy. FNT in Theoretical Computer Science. 2014;9(3-4):211-407. [doi: 10.1561/0400000042]"
+    },
+    {
+      "title": "GitHub",
+      "authors": [
+        "Johnson Wesad"
+      ],
+      "year": 2019,
+      "raw": "GitHub \n\t\t \n\t\t\t Johnson M Wesad \n\t\t \n\t\t \n\t\t \n\t\t\t 2019. 2021-03-11 \n\t\t \n\t \n\t Johnson M. WESAD. GitHub. 2019. URL: https://github.com/WJMatthew/WESAD [accessed 2021-03-11]"
+    },
+    {
+      "title": "Private Mean Estimation of Heavy-Tailed Distributions",
+      "authors": [
+        "G Kamath",
+        "V Singhal",
+        "J Ullman"
+      ],
+      "year": 2020,
+      "doi": "10.1007/springerreference_205369",
+      "raw": "Private Mean Estimation of Heavy-Tailed Distributions \n\t\t \n\t\t\t G Kamath \n\t\t \n\t\t \n\t\t\t V Singhal \n\t\t \n\t\t \n\t\t\t J Ullman \n\t\t \n\t\t 10.1007/springerreference_205369 \n\t \n\t \n\t\t Proceedings of Machine Learning Research \n\t\t Machine Learning Research Graz, Austria \n\t\t \n\t\t\t 2020. July 9-12, 2020:2204-2235 \n\t\t \n\t \n\t Presented at: 33rd Conference on Learning Theory \n\t Kamath G, Singhal V, Ullman J. Private Mean Estimation of Heavy-Tailed Distributions. In: Proceedings of Machine Learning Research. 2020. Presented at: 33rd Conference on Learning Theory; July 9-12, 2020:2204-2235; Graz, Austria. [doi: 10.1007/springerreference_205369]"
+    },
+    {
+      "title": "Federated Learning on Mobile Health Data",
+      "authors": [
+        "J Liu",
+        "J Goetz"
+      ],
+      "year": 2020,
+      "doi": "10.2196/preprints.23728",
+      "raw": "Federated Learning on Mobile Health Data \n\t\t \n\t\t\t J Liu \n\t\t \n\t\t \n\t\t\t J Goetz \n\t\t \n\t\t 10.2196/preprints.23728 \n\t\t \n\t\t \n\t\t\t 2020. 2021-03-11 \n\t\t\t GitHub \n\t\t \n\t \n\t Liu J, Goetz J. Federated Learning on Mobile Health Data. GitHub. 2020. URL: https://github.com/liujessica503/ federatedLearning [accessed 2021-03-11]"
+    },
+    {
+      "title": "Perceive Your Users in Depth: Learning Universal User Representations from Multiple E-commerce Tasks",
+      "authors": [
+        "Y Ni",
+        "D Ou",
+        "S Liu",
+        "X Li",
+        "W Ou",
+        "A Zeng"
+      ],
+      "year": 2018,
+      "doi": "10.1145/3219819.3219828",
+      "raw": "Perceive Your Users in Depth: Learning Universal User Representations from Multiple E-commerce Tasks \n\t\t \n\t\t\t Y Ni \n\t\t \n\t\t \n\t\t\t D Ou \n\t\t \n\t\t \n\t\t\t S Liu \n\t\t \n\t\t \n\t\t\t X Li \n\t\t \n\t\t \n\t\t\t W Ou \n\t\t \n\t\t \n\t\t\t A Zeng \n\t\t \n\t\t 10.1145/3219819.3219828 \n\t \n\t \n\t\t ACM SIGKDD International Conference on Knowledge Discovery and Data Mining \n\t\t New York; London, United Kingdom \n\t\t \n\t\t\t Association for Computing Machinery \n\t\t\t 2018. August 2018 \n\t\t\t \n\t\t \n\t \n\t Presented at: 24th \n\t Ni Y, Ou D, Liu S, Li X, Ou W, Zeng A, et al. Perceive Your Users in Depth: Learning Universal User Representations from Multiple E-commerce Tasks. New York. Association for Computing Machinery; 2018. Presented at: 24th ACM SIGKDD International Conference on Knowledge Discovery and Data Mining; August 2018:596-605; London, United Kingdom. [doi: 10.1145/3219819.3219828]"
+    },
+    {
+      "title": "Real-time Personalization using Embeddings for Search Ranking at Airbnb",
+      "authors": [
+        "M Grbovic",
+        "H Cheng"
+      ],
+      "year": 2018,
+      "doi": "10.1145/3219819.3219885",
+      "raw": "Real-time Personalization using Embeddings for Search Ranking at Airbnb \n\t\t \n\t\t\t M Grbovic \n\t\t \n\t\t \n\t\t\t H Cheng \n\t\t \n\t\t 10.1145/3219819.3219885 \n\t \n\t \n\t\t ACM SIGKDD International Conference on Knowledge Discovery & Data Mining \n\t\t New York; London, United Kingdom \n\t\t \n\t\t\t Association for Computing Machinery \n\t\t\t 2018. August 2018 \n\t\t\t \n\t\t \n\t \n\t Presented at: 24th \n\t Grbovic M, Cheng H. Real-time Personalization using Embeddings for Search Ranking at Airbnb. New York. Association for Computing Machinery; 2018. Presented at: 24th ACM SIGKDD International Conference on Knowledge Discovery & Data Mining; August 2018:311-320; London, United Kingdom. [doi: 10.1145/3219819.3219885]"
+    },
+    {
+      "title": "FedHealth: A Federated Transfer Learning Framework for Wearable Healthcare",
+      "authors": [
+        "Y Chen",
+        "X Qin",
+        "J Wang",
+        "C Yu",
+        "W Gao"
+      ],
+      "year": 2020,
+      "doi": "10.1109/mis.2020.2988604",
+      "journal": "IEEE Intell. Syst",
+      "volume": "35",
+      "issue": "4",
+      "raw": "FedHealth: A Federated Transfer Learning Framework for Wearable Healthcare \n\t\t \n\t\t\t Y Chen \n\t\t \n\t\t \n\t\t\t X Qin \n\t\t \n\t\t \n\t\t\t J Wang \n\t\t \n\t\t \n\t\t\t C Yu \n\t\t \n\t\t \n\t\t\t W Gao \n\t\t \n\t\t 10.1109/mis.2020.2988604 \n\t \n\t \n\t\t IEEE Intell. Syst \n\t\t \n\t\t\t 35 \n\t\t\t 4 \n\t\t\t \n\t\t\t 2020 \n\t\t \n\t \n\t Chen Y, Qin X, Wang J, Yu C, Gao W. FedHealth: A Federated Transfer Learning Framework for Wearable Healthcare. IEEE Intell. Syst. 2020;35(4):83-93. [doi: 10.1109/mis.2020.2988604]"
+    }
+  ],
+  "num_references": 52,
+  "figures": [
+    {
+      "caption": "Figure 1 .",
+      "description": "Figure 1. Diagram comparing central and federated learning workflows. Color abstractly represents the private information content at different locations, with red, blue, and green colors representing private information for different user devices. When training on a central server, user data are uploaded onto the server once. In federated learning, model parameters are updated on the user device, producing updates that contain less private information than the data themselves. The updates from many users are then aggregated, further mixing the contribution from each individual user."
+    },
+    {
+      "caption": "Figure 2 .",
+      "description": "Figure 2. Pseudocode for federated learning algorithm 1."
+    },
+    {
+      "description": "c EMG: electromyogram. d ACC_X: 3-axis acceleration (x-axis)."
+    },
+    {
+      "description": "e ACC_Y: 3-axis acceleration (y-axis)."
+    },
+    {
+      "caption": "fACC_Z: 3 -",
+      "description": "axis acceleration (z-axis)."
+    },
+    {
+      "caption": "Figure 3 .",
+      "description": "Figure 3. Comparison between the architecture of nonpersonalized and personalized versions of our models. The green blocks represent trained model parameters, and the blue blocks represent the input covariates. Note the user ID is removed from the covariates once it is used to attach the correct parameters, which represent that user's embedding."
+    },
+    {
+      "type": "table",
+      "caption": "Table 1 .",
+      "description": "Demographic characteristics of the participants in the study (N=15)."
+    },
+    {
+      "type": "table",
+      "caption": "Table 2 .",
+      "description": "Summary statistics of a subset of features."
+    },
+    {
+      "type": "table",
+      "caption": "Table 3 .",
+      "description": "Median and mean accuracy of each model over 15 tests."
+    }
+  ],
+  "num_figures": 9,
+  "tables": [
+    {
+      "content": "Value, mean (SD)"
+    },
+    {
+      "content": "Feature Participants, first quartile Participants, median Participants, mean (SD) Participants, third quartile Mean EDA a 2.0 3.7 4.6 (3.4) 6.3 Mean ECG b 7.2E-04 1.1E-03 1.1E-03 (7.8E-04) 1.5E-03 Mean EMG c -3.5E-03 -3.0E-03 -3.0E-03 (9.2E-04) -2.5E-03 Mean respiration -0.02 0.05 5.4E-02 (2.0E-01) 0.13 Mean temperature 34 34 34 (1.3) 35 Mean ACC_X d 0.73 0.86 8.0E-01 (1.3E-01) 0.90 Mean ACC_Y e -0.06 -0.02 -3.1E-02 (1.0E-01) 0.02 Mean ACC_Z f -0.54 -0.31 -3.5E-01 (2.6E-01) -0.17 a EDA: electrodermal activity."
+    },
+    {
+      "content": "Model Accuracy, median Accuracy, mean (SD) Personalized server 0.929 0.932 (0.019) Server 0.897 0.888 (0.028) Personalized federated 0.929 0.928 (0.018) Federated 0.853 0.859 (0.021) Individual 0.899 0.902 (0.021)"
+    }
+  ],
+  "num_tables": 3,
+  "num_citations": 93,
+  "cited_references": [
+    "b3",
+    "b13",
+    "b39",
+    "b41",
+    "b18",
+    "b44",
+    "b49",
+    "b2",
+    "b14",
+    "b17",
+    "b36",
+    "b25",
+    "b1",
+    "b35",
+    "b20",
+    "b43",
+    "b21",
+    "b51",
+    "b47",
+    "b40",
+    "b12",
+    "b42",
+    "b30",
+    "b31",
+    "b29",
+    "b16",
+    "b37",
+    "b46",
+    "b15",
+    "b23",
+    "b32",
+    "b5",
+    "b19",
+    "b28",
+    "b45",
+    "b10",
+    "b38",
+    "b27",
+    "b24",
+    "b4",
+    "b50",
+    "b33",
+    "b7",
+    "b48",
+    "b11",
+    "b8",
+    "b22",
+    "b34",
+    "b6",
+    "b0",
+    "b26"
+  ],
+  "notes": [
+    "[raw_affiliation] 1  Department of Statistics , University of Michigan , Ann Arbor , MI , United States",
+    "[raw_affiliation] 1  Department of Statistics , University of Michigan , Ann Arbor , MI , United States",
+    "[raw_affiliation] 2  Molecular and Behavioral Neuroscience Institute , University of Michigan , Ann Arbor , MI , United States",
+    "[raw_affiliation] 3  Department of Psychiatry , University of Michigan , Ann Arbor , MI , United States",
+    "[raw_affiliation] 1  Department of Statistics , University of Michigan , Ann Arbor , MI , United States",
+    "[raw_affiliation] Department of Statistics University of Michigan 1085 South University Ave Ann Arbor , MI , 48109 United States",
+    "b ECG: electrocardiogram.",
+    "JMIR Mhealth Uhealth 2021 | vol. 9 | iss. 3 | e23728 | p. 3 https://mhealth.jmir.org/2021/3/e23728 (page number not for citation purposes)",
+    "JMIR Mhealth Uhealth 2021 | vol. 9 | iss. 3 | e23728 | p. 4 https://mhealth.jmir.org/2021/3/e23728 (page number not for citation purposes)",
+    "(page number not for citation purposes)",
+    "JMIR Mhealth Uhealth 2021 | vol. 9 | iss. 3 | e23728 | p. 6 https://mhealth.jmir.org/2021/3/e23728 (page number not for citation purposes)",
+    "JMIR Mhealth Uhealth 2021 | vol. 9 | iss. 3 | e23728 | p. 7 https://mhealth.jmir.org/2021/3/e23728 (page number not for citation purposes)",
+    "JMIR Mhealth Uhealth 2021 | vol. 9 | iss. 3 | e23728 | p. 8 https://mhealth.jmir.org/2021/3/e23728 (page number not for citation purposes)",
+    "JMIR Mhealth Uhealth 2021 | vol. 9 | iss. 3 | e23728 | p. 12 https://mhealth.jmir.org/2021/3/e23728 (page number not for citation purposes)",
+    "[raw_reference] Mechanic D. The functions and limitations of trust in the provision of medical care. J Health Polit Policy Law. Aug 1998;23(4):661-686. [doi: 10.1215/03616878-23-4-661] [Medline: 9718518]",
+    "FREE Full text",
+    "[raw_reference] M\u00fcthing J, J\u00e4schke T, Friedrich CM. Client-Focused Security Assessment of mHealth Apps and Recommended Practices to Prevent or Mitigate Transport Security Issues. JMIR Mhealth Uhealth. Oct 18, 2017;5(10):e147. [FREE Full text] [doi: 10.2196/mhealth.7791] [Medline: 29046271]",
+    "FREE Full text",
+    "[raw_reference] M\u00fcthing J, Br\u00fcngel R, Friedrich CM. Server-Focused Security Assessment of Mobile Health Apps for Popular Mobile Platforms. J Med Internet Res. Jan 23, 2019;21(1):e9818. [FREE Full text] [doi: 10.2196/jmir.9818] [Medline: 30672738]",
+    "FREE Full text",
+    "[raw_reference] Dehling T, Gao F, Schneider S, Sunyaev A. Exploring the Far Side of Mobile Health: Information Security and Privacy of Mobile Health Apps on iOS and Android. JMIR Mhealth Uhealth. 2015;3(1):e8. [FREE Full text] [doi: 10.2196/mhealth.3672] [Medline: 25599627]",
+    "FREE Full text",
+    "[raw_reference] Damschroder LJ, Pritts JL, Neblo MA, Kalarickal RJ, Creswell JW, Hayward RA. Patients, privacy and trust: patients' willingness to allow researchers to access their medical records. Soc Sci Med. Jan 2007;64(1):223-235. [FREE Full text] [doi: 10.1016/j.socscimed.2006.08.045] [Medline: 17045717]",
+    "[raw_reference] James DC, Harville C2, Whitehead N, Stellefson M, Dodani S, Sears C. Willingness of African American Women to Participate in e-Health/m-Health Research. Telemed J E Health. Mar 2016;22(3):191-197. [doi: 10.1089/tmj.2015.0071] [Medline: 26313323]",
+    "[raw_reference] Ohm P. Broken promises of privacy: Responding to the surprising failure of anonymization. UCLA Law Review. 2010;57(6):1701-1778.",
+    "[raw_reference] Taylor SA, Jaques N, Nosakhare E, Sano A, Picard R. Personalized Multitask Learning for Predicting Tomorrow's Mood, Stress, and Health. IEEE Transactions on Affective Computing. 2020;11(2):200-213. [doi: 10.1109/TAFFC.2017.2784832]",
+    "Presented at: 20th",
+    "[raw_reference] Schmidt P, Reiss A, Duerichen R, Marberger C, Van Laerhoven K. Introducing WESAD, a Multimodal Dataset for Wearable Stress and Affect Detection. New York. Association for Computing Machinery; 2018. Presented at: 20th ACM International Conference on Multimodal Interaction; October 16-20, 2018:400-408;",
+    "[raw_reference] Boulder, CO, USA. URL: https://archive.ics.uci.edu/ ml/datasets/WESAD+%28Wearable+Stress+and+Affect+Detection%29 [doi: 10.1145/3242969.3242985]",
+    "[raw_reference] Hard A, Rao K, Mathews R, Ramaswamy S, Beaufays F, Augenstein S, et al. Federated Learning for Mobile Keyboard Prediction. 2018. URL: https://arxiv.org/abs/1811.03604 [accessed 2021-03-11]",
+    "[raw_reference] Li T, Sahu AK, Talwalkar A, Smith V. Federated Learning: Challenges, Methods, and Future Directions. IEEE Signal Processing Magazine. May 2020;37(3):50-60. [doi: 10.1109/msp.2020.2975749]",
+    "[raw_reference] Yang Q, Liu Y, Chen T, Tong Y. Federated Machine Learning: Concept and Applications. ACM Trans. Intell. Syst. Technol. Feb 2019;10(2). [doi: 10.1145/3298981]",
+    "[raw_reference] Kairouz P, McMahan HB. Advances and Open Problems in Federated Learning. FNT in Machine Learning. 2021;14(1). [doi: 10.1561/2200000083]",
+    "[raw_reference] Guo X, Zhang X, Sun Y. The privacy-personalization paradox in mHealth services acceptance of different age groups. Electronic Commerce Research and Applications. 2016;16:55-65. [doi: 10.1016/j.elerap.2015.11.001]",
+    "[raw_reference] Perentis C, Vescovi M, Leonardi C, Moiso C, Musolesi M, Pianesi F, et al. Anonymous or Not? Understanding the Factors Affecting Personal Mobile Data Disclosure. ACM Trans. Internet Technol. May 2017;17(2). [doi: 10.1145/3017431]",
+    "FREE Full text",
+    "[raw_reference] Insel TR. Digital phenotyping: a global tool for psychiatry. World Psychiatry. Oct 2018;17(3):276-277. [FREE Full text] [doi: 10.1002/wps.20550] [Medline: 30192103]",
+    "FREE Full text",
+    "[raw_reference] Kisekka V, Giboney JS. The Effectiveness of Health Care Information Technologies: Evaluation of Trust, Security Beliefs, and Privacy as Determinants of Health Care Outcomes. J Med Internet Res. Apr 11, 2018;20(4):e107. [FREE Full text] [doi: 10.2196/jmir.9014] [Medline: 29643052]",
+    "[raw_reference] Atienza AA, Zarcadoolas C, Vaughon W, Hughes P, Patel V, Chou WY, et al. Consumer Attitudes and Perceptions on mHealth Privacy and Security: Findings From a Mixed-Methods Study. J Health Commun. 2015;20(6):673-679. [doi: 10.1080/10810730.2015.1018560] [Medline: 25868685]",
+    "FREE Full text",
+    "[raw_reference] Boyd AD, Hosner C, Hunscher DA, Athey BD, Clauw DJ, Green LA. An 'Honest Broker' mechanism to maintain privacy for patient care and academic medical research. Int J Med Inform. 2007;76(5-6):407-411. [FREE Full text] [doi: 10.1016/j.ijmedinf.2006.09.004] [Medline: 17081800]",
+    "[raw_reference] Umematsu T, Sano A, Taylor S, Picard R. Improving Students' Daily Life Stress Forecasting using LSTM Neural Networks. 2019. Presented at: IEEE EMBS International Conference on Biomedical & Health Informatics (BHI); May 19-22, 2019:1-4; Chicago, IL, USA. [doi: 10.1109/bhi.2019.8834624]",
+    "FREE Full text",
+    "[raw_reference] Pratap A, Atkins DC, Renn BN, Tanana MJ, Mooney SD, Anguera JA, et al. The accuracy of passive phone sensors in predicting daily mood. Depress Anxiety. Jan 2019;36(1):72-81. [FREE Full text] [doi: 10.1002/da.22822] [Medline: 30129691]",
+    "[raw_reference] Suhara Y, Xu Y, Pentland A. DeepMood: Forecasting Depressed Mood Based on Self-Reported Histories via Recurrent Neural Networks. 2017. Presented at: 26th International Conference on World Wide Web; April 2017:715-724; Perth, Australia. [doi: 10.1145/3038912.3052676]",
+    "[raw_reference] Spathis D, Servia-Rodriguez S, Farrahi K, Mascolo C, Rentfrow J. Passive mobile sensing and psychological traits for large scale mood prediction. 2019. Presented at: 13th EAI International Conference on Pervasive Computing Technologies for Healthcare; May 2019:272-281; Trento, Italy. [doi: 10.1145/3329189.3329213]",
+    "FREE Full text",
+    "[raw_reference] Mikus A, Hoogendoorn M, Rocha A, Gama J, Ruwaard J, Riper H. Predicting short term mood developments among depressed patients using adherence and ecological momentary assessment data. Internet Interv. Oct 07, 2017;12:105-110. [FREE Full text] [doi: 10.1016/j.invent.2017.10.001] [Medline: 30135774]",
+    "[raw_reference] Acikmese Y, Alptekin SE. Prediction of stress levels with LSTM and passive mobile sensors. Procedia Computer Science. 2019;159:658-667. [doi: 10.1016/j.procs.2019.09.221]",
+    "FREE Full text",
+    "[raw_reference] Kornfield R, Sarma PK, Shah DV, McTavish F, Landucci G, Pe-Romashko K, et al. Detecting Recovery Problems Just in Time: Application of Automated Linguistic Analysis and Supervised Machine Learning to an Online Substance Abuse Forum. J Med Internet Res. Jun 12, 2018;20(6):e10136. [FREE Full text] [doi: 10.2196/10136] [Medline: 29895517]",
+    "FREE Full text",
+    "[raw_reference] DeMasi O, Feygin S, Dembo A, Aguilera A, Recht B. Well-Being Tracking via Smartphone-Measured Activity and Sleep: Cohort Study. JMIR Mhealth Uhealth. Oct 05, 2017;5(10):e137. [FREE Full text] [doi: 10.2196/mhealth.7820] [Medline: 28982643]",
+    "FREE Full text",
+    "[raw_reference] NeCamp T, Sen S, Frank E, Walton MA, Ionides EL, Fang Y, et al. Assessing Real-Time Moderation for Developing Adaptive Mobile Health Interventions for Medical Interns: Micro-Randomized Trial. J Med Internet Res. Mar 31, 2020;22(3):e15033. [FREE Full text] [doi: 10.2196/15033] [Medline: 32229469]",
+    "[raw_reference] Yu H, Klerman EB, Picard RW, Sano A. Personalized Wellbeing Prediction using Behavioral, Physiological and Weather Data. 2019. Presented at: IEEE EMBS International Conference on Biomedical & Health Informatics (BHI); 2019:1-4; Chicago, IL, USA. [doi: 10.1109/bhi.2019.8834456]",
+    "[raw_reference] Schueller SM, Aguilera A, Mohr DC. Ecological momentary interventions for depression and anxiety. Depress Anxiety. Jun 2017;34(6):540-545. [doi: 10.1002/da.22649] [Medline: 28494123]",
+    "Presented at: 20th Proceedings of Machine Learning Research",
+    "[raw_reference] McMahan B, Moore E, Ramage D, Hampson S, Ag\u00fcera y Arcas B. Communication-Efficient Learning of Deep Networks from Decentralized Data. In: Proceedings of Machine Learning Research. 2017. Presented at: 20th International Conference on Artificial Intelligence and Statistics (AISTATS); Apr 20-22, 2017:1273-1282;",
+    "[raw_reference] Bhowmick A, Duchi J, Freudiger J, Kapoor G, Rogers R. Protection Against Reconstruction and Its Applications in Private Federated Learning. 2019. URL: https://arxiv.org/abs/1812.00984 [accessed 2021-03-11]",
+    "[raw_reference] Liu M, Jiang H, Chen J, Badokhon A, Wei X, Huang M. A Collaborative Privacy-Preserving Deep Learning System in Distributed Mobile Environment. 2016. Presented at: International Conference on Computational Science and Computational Intelligence (CSCI); 2016:192-197; Las Vegas, NV, USA. [doi: 10.1109/csci.2016.0043]",
+    "[raw_reference] Zhao Y, Li M, Lai L, Suda N, Civin D, Chandra V. Federated Learning with Non-IID Data. 2018. URL: https://arxiv.org/ abs/1806.00582 [accessed 2021-03-11]",
+    "[raw_reference] Wang S, Tuor T, Salonidis T, Leung KK, Makaya C, He T, et al. Adaptive Federated Learning in Resource Constrained Edge Computing Systems. IEEE J. Select. Areas Commun. Jun 2019;37(6):1205-1221. [doi: 10.1109/jsac.2019.2904348]",
+    "[raw_reference] Nishio T, Yonetani R. Client Selection for Federated Learning with Heterogeneous Resources in Mobile Edge. 2019. Presented at: IEEE International Conference on Communications (ICC); 2019:1-7; Shanghai, China. [doi: 10.1109/icc.2019.8761315]",
+    "[raw_reference] Kang J, Xiong Z, Niyato D, Yu H, Liang Y, Kim DI. Incentive Design for Efficient Federated Learning in Mobile Networks: A Contract Theory Approach. 2019. Presented at: IEEE VTS Asia Pacific Wireless Communications Symposium (APWCS); 2019:1-5; Singapore. [doi: 10.1109/vts-apwcs.2019.8851649]",
+    "FREE Full text",
+    "[raw_reference] Wu Y, Jiang X, Kim J, Ohno-Machado L. Grid Binary LOgistic REgression (GLORE): building shared models without sharing data. J Am Med Inform Assoc. 2012;19(5):758-764. [FREE Full text] [doi: 10.1136/amiajnl-2012-000862] [Medline: 22511014]",
+    "FREE Full text",
+    "[raw_reference] Lu CL, Wang S, Ji Z, Wu Y, Xiong L, Jiang X, et al. WebDISCO: a web service for distributed cox model learning without patient-level data sharing. J Am Med Inform Assoc. Nov 2015;22(6):1212-1219. [FREE Full text] [doi: 10.1093/jamia/ocv083] [Medline: 26159465]",
+    "FREE Full text",
+    "[raw_reference] Lee J, Sun J, Wang F, Wang S, Jun CH, Jiang X. Privacy-Preserving Patient Similarity Learning in a Federated Environment: Development and Analysis. JMIR Med Inform. Apr 13, 2018;6(2):e20. [FREE Full text] [doi: 10.2196/medinform.7744] [Medline: 29653917]",
+    "FREE Full text",
+    "[raw_reference] Festag S, Spreckelsen C. Privacy-Preserving Deep Learning for the Detection of Protected Health Information in Real-World Data: Comparative Evaluation. JMIR Form Res. May 05, 2020;4(5):e14064. [FREE Full text] [doi: 10.2196/14064] [Medline: 32369025]",
+    "FREE Full text",
+    "[raw_reference] Rieke N, Hancox J, Li W, Milletar\u00ec F, Roth HR, Albarqouni S, et al. The future of digital health with federated learning. NPJ Digit Med. Sep 14, 2020;3:119. [FREE Full text] [doi: 10.1038/s41746-020-00323-1] [Medline: 33015372]",
+    "[raw_reference] Bonawitz K, Ivanov V, Kreuter B, Marcedone A, McMahan HB, Patel S, et al. Practical Secure Aggregation for Privacy-Preserving Machine Learning. New York. Association for Computing Machinery; 2017. Presented at: ACM SIGSAC Conference on Computer and Communications Security; October 2017:1175-1191; Dallas, TX, USA. [doi: 10.1145/3133956.3133982]",
+    "[raw_reference] Yang Z, Zhang J, Chang EC, Liang Z. Neural Network Inversion in Adversarial Setting via Background Knowledge Alignment. New York. Association for Computing Machinery; 2019. Presented at: ACM SIGSAC Conference on Computer and Communications Security; November 2019:225-240; London, United Kingdom. [doi: 10.1145/3319535.3354261]",
+    "[raw_reference] Dwork C, Roth A. The Algorithmic Foundations of Differential Privacy. FNT in Theoretical Computer Science. 2014;9(3-4):211-407. [doi: 10.1561/0400000042]",
+    "[raw_reference] Johnson M. WESAD. GitHub. 2019. URL: https://github.com/WJMatthew/WESAD [accessed 2021-03-11]",
+    "Presented at: 33rd Conference on Learning Theory",
+    "[raw_reference] Kamath G, Singhal V, Ullman J. Private Mean Estimation of Heavy-Tailed Distributions. In: Proceedings of Machine Learning Research. 2020. Presented at: 33rd Conference on Learning Theory; July 9-12, 2020:2204-2235; Graz, Austria. [doi: 10.1007/springerreference_205369]",
+    "[raw_reference] Liu J, Goetz J. Federated Learning on Mobile Health Data. GitHub. 2020. URL: https://github.com/liujessica503/ federatedLearning [accessed 2021-03-11]",
+    "Presented at: 24th",
+    "[raw_reference] Ni Y, Ou D, Liu S, Li X, Ou W, Zeng A, et al. Perceive Your Users in Depth: Learning Universal User Representations from Multiple E-commerce Tasks. New York. Association for Computing Machinery; 2018. Presented at: 24th ACM SIGKDD International Conference on Knowledge Discovery and Data Mining; August 2018:596-605; London, United Kingdom. [doi: 10.1145/3219819.3219828]",
+    "Presented at: 24th",
+    "[raw_reference] Grbovic M, Cheng H. Real-time Personalization using Embeddings for Search Ranking at Airbnb. New York. Association for Computing Machinery; 2018. Presented at: 24th ACM SIGKDD International Conference on Knowledge Discovery & Data Mining; August 2018:311-320; London, United Kingdom. [doi: 10.1145/3219819.3219885]",
+    "[raw_reference] Chen Y, Qin X, Wang J, Yu C, Gao W. FedHealth: A Federated Transfer Learning Framework for Wearable Healthcare. IEEE Intell. Syst. 2020;35(4):83-93. [doi: 10.1109/mis.2020.2988604]"
+  ],
+  "processing_software": {
+    "GROBID": "0.8.2"
+  }
+}

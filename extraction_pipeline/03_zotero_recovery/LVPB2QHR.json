@@ -1,0 +1,1192 @@
+{
+  "paper_id": "LVPB2QHR",
+  "title": "Dynamic Bayesian network modeling for longitudinal data on child undernutrition in Ethiopia (2002-2016)",
+  "abstract": "Introduction: Dynamic Bayesian networks improve the modeling of complex systems by incorporating continuous probabilistic relationships between covariates that change over time. This study aimed to analyze the complex causal links contributing to child undernutrition using dynamic Bayesian network modeling, examining both the best-and worst-case scenarios. The Young Cohort of the Ethiopian Young Lives dataset from 2002-2016 was used to analyze the complex relationships among various covariates influencing child undernutrition. We used a built-in Bayes server tool to identify potential features, followed by building the structure of the directed acyclic graph using a structural learning algorithm. The maximum posterior is determined using the relevance tree algorithm. The node with the highest values of mutual information and target entropy reduction, along with the lowest value of target entropy, was considered to have the strongest predictive power in the dataset. Results: This study revealed that long-term participation in programs increased the likelihood of children being in a normal nutritional state. Key factors influencing the nutritional status of children under two years of age include the mother's education level, her subjective well-being, and the household's wealth quintile. Children with educated parents were more likely to have a healthy nutritional status. Additionally, the causal pathway of intervention programs \u2192 wealth quintile \u2192 child nutritional status consistently exceeded 90% in Waves 3, 4, and 5, indicating a strong relationship. Similarly, the relationship between intervention programs \u2192 food security \u2192 child nutritional status was nearly perfect at 99.99% in Waves 4 and 5, indicating a strong association. Finally, the study revealed that household participation in intervention programs significantly reduces undernutrition in best-case scenarios, while the absence of support poses a higher risk in worst-case conditions. \n Conclusion: The comprehensive intervention program strongly improved household wealth, food security, and maternal well-being, which in turn affected children's nutritional status.",
+  "year": 2024,
+  "date": "2024-12-12",
+  "authors": [
+    {
+      "name": "Getnet Begashaw",
+      "affiliation": {
+        "organization": "Department of Statistics",
+        "department": "Department of Statistics",
+        "institution": "Bahir Dar University",
+        "address": "Bahir Dar, Ethiopia"
+      }
+    },
+    {
+      "name": "Temesgen Zewotir",
+      "affiliation": {
+        "organization": "School of Mathematics",
+        "department": "School of Mathematics",
+        "institution": "University of KwaZulu-Natal",
+        "address": "Durban, South Africa"
+      }
+    },
+    {
+      "name": "Haile Fenta",
+      "affiliation": {
+        "organization": "Department of Statistics",
+        "department": "Department of Statistics",
+        "institution": "Bahir Dar University",
+        "address": "Bahir Dar, Ethiopia"
+      }
+    },
+    {
+      "name": "Francois-Pierre Martin"
+    },
+    {
+      "name": "Carlos Maciel"
+    },
+    {
+      "name": "Andrei Rodin"
+    },
+    {
+      "name": "Acyclic Graph"
+    },
+    {
+      "name": "; Psnp"
+    },
+    {
+      "affiliation": {
+        "organization": "City of Hope National Medical Center",
+        "department": "City of Hope National Medical Center",
+        "institution": "University of S\u00e3o Paulo",
+        "address": "Brazil United States"
+      }
+    },
+    {
+      "affiliation": {
+        "organization": "Productive Safety Net Program; SNNP",
+        "department": "Productive Safety Net Program; SNNP",
+        "institution": "Southern Nations",
+        "address": "and Peoples', UK United Kingdom"
+      }
+    }
+  ],
+  "doi": "10.3389/fpubh.2024.1399094",
+  "md5": "59E33E173EBD9621A6496684C2AB23F8",
+  "publication": {
+    "journal": "Lancet",
+    "journal_inferred": true
+  },
+  "keywords": [
+    "Bayes server, counterfactual prediction, conditional probability, maximum posterior, young Lives data AI, Artificial Intelligence",
+    "BMI, Body Mass Index",
+    "DAG, Directed Acyclic Graph",
+    "DBN, Dynamic Bayesian Network",
+    "DiD, Difference in Differences"
+  ],
+  "funding": [
+    "Acknowledgments The authors express their sincere gratitude to the reviewers for their insightful comments and suggestions, which greatly improved this manuscript. We also thank the  Young Lives Study  teams and the  UK Data Service  for providing access to the data files used in this research."
+  ],
+  "sections": [
+    {
+      "title": "Introduction",
+      "text": "Child undernutrition is a pressing health concern that affects children, necessitating thorough examination and effective interventions  (1, 2) . In Ethiopia, child undernutrition is one of the countries where it poses a health challenge  (3) . In addition to Ethiopia, India, Nigeria, Pakistan, Bangladesh, Indonesia and the Democratic Republic of the Congo are among the seven nations with the highest prevalence of child undernutrition  (2, 4, 5) . These countries face challenges in undernutrition, including access to nourished food and inadequate healthcare services.\n\nMultivariate logistic regression models are commonly used in studies on child undernutrition outcomes and risk factors  (6, 7) . However, these models have limitations owing to their static nature and inability to capture temporal relationships  (8, 9) . The studies conducted by Egata et al.  (10)  and Bahru et al.  (11)  utilized a longitudinal model because it is preferable to address this gap by considering within-subject correlations and temporal changes  (12, 13) . Although longitudinal analysis may not explicitly model transitions between states, it can still provide valuable insights into how variables evolve over time and how they are related to each other. Likewise, Jeyaseelan et al.  (14) , Owoeye et al.  (15)  and Begashaw et al.  (57)  used Markov chain models to address this limitation by incorporating state transitions. However, these models also have limitations because of their assumption of memorylessness, which means that the future state depends only on the current state and not on previous states. Moreover, the research conducted by Hoddinott et al.  (16)  and P\u00e9rez Albertos  (17)  using the difference-in-differences (DiD) model does not consider the long-term impact of the Productive Safety Net Program (PSNP). On the other hand, Bahru's et al.  (18)  marginal structural model has limitations, such as unmeasured time-varying confounding variables and model specification sensitivity.\n\nTo address these methodological gaps, this study employs a dynamic Bayesian network (DBN) model that allows for the consideration of uncertainties in the relationships between interventions, covariates, time slices, and nutritional status. Unlike traditional statistical methodologies, which often assume linear relationships or require strong parametric assumptions, DBNs can capture the nonlinear and dynamic relationships among variables. This makes DBNs well suited for analyzing the complex interactions of covariates influencing child undernutrition in a complex socioeconomic context such as Ethiopia  (19, 20) .\n\nA DBN is a probabilistic reasoning graphical model that represents temporal dependencies between variables in a system  (21, 22) . It extends traditional Bayesian networks to capture evolving dynamics and is an integral part of artificial intelligence (AI), with applications in finance, healthcare, and other domains that require modeling and predicting complex systems  (23, 24) . This study provides valuable insights for policymakers and stakeholders by identifying potential interactions between variables to address the challenges related to system dynamics and decision-making. Additionally, DBNs allow the integration of prior knowledge and expert opinions, thereby enhancing the robustness of the modeling process  (25) .\n\nCurrently, DBNs are the most effective models for encoding causal relationships and reasoning uncertain knowledge  (26, 27) . However, despite Ethiopia having one of the highest rates of undernourished children, DBN use in this context remains relatively underexplored. Our study aimed to fill this gap by applying DBNs to analyze the factors contributing to undernutrition among children in Ethiopia.\n\nIdentifying key causal pathways and assessing their interactions to improve targeted interventions and policy responses. We also examined which program combinations yielded the most effective improvements and how these changes aligned with the nutritional status of children within participating households.\n\nMany studies on child undernutrition have used composite indices or classified children into categories, such as normal, underweight, stunted, and wasted, or by severity (mild, moderate, and severe). However, these studies often fail to account for concurrent nutritional outcomes, as children may experience multiple forms of undernutrition simultaneously. To address this limitation, we employed a DBN that captures the probability of children being in multiple states of undernutrition over time. This method allows us to analyze the complex interrelationships among various nutritional outcomes and identify the dynamic factors influencing child nutrition. By doing so, we gained deeper insights into how different risk factors and intervention programs interact, ultimately informing more effective strategies to combat undernutrition.\n\nTo the best of our knowledge, there is limited evidence regarding the use of the DBN approach to assess the concurrent nutritional status in Ethiopia. Consequently, this proof-of-concept study seeks to explore the potential of DBNs in predicting causal relationships among various parental, household, and child-level nodes/covariates among Ethiopian children under 15 years of age. Additionally, this study aims to identify the strength of key causal relationships contributing to low levels of undernutrition in the best-case conditions, as well as those leading to high levels of undernutrition in the worst-case conditions, counterfactual scenarios in Ethiopia."
+    },
+    {
+      "title": "Methods"
+    },
+    {
+      "title": "Data source and survey design",
+      "text": "This study utilized longitudinal data from Ethiopia's Young Lives of Young cohort (YLCS), an international initiative aimed at addressing childhood poverty and health. The cohort includes approximately 1999 children aged 1-15  (28, 29) . The country is highly heterogeneous, with large socioeconomic differences across regional states and between urban and rural areas  (30) . The surveys were conducted in 20 sentinels across five Ethiopian regions: Amhara, Oromia, Southern Nations, Nationalities, and Peoples (SNNP), Tigray, and Addis Ababa City Administration (CA) from 2002 to 2016 with five waves. Notably, the Productive Safety Net Program (PSNP) operates in 14 sentinels in four regions (excluding Addis Ababa CA), targeting the pro-poor population  (31) , while the Emergency Aid Programme (EAP) and Health Extension Programme (HEP) operate in all five regions, targeting disadvantaged socioeconomic groups and offering antenatal care, childhood disease management, and micronutrient supplement coverage  (32) . The study conducted interviews with randomly selected households to determine whether they had participated in the PSNP, EAP, and/or HEP programs within the past 12 months, facilitating the identification of beneficiaries. In the PSNP and EAP, households were categorized as beneficiaries or non-beneficiaries beginning in 2009 (third wave), with the HEP categorization starting in 2013 (fourth wave). These intervention programs were consolidated into a single package using the \"program participation status\" variable with eight categories (C, P, E, H, PE, PH, EH, and PEH), as detailed in Supplementary Table  S1 . Similarly, as outlined in Supplementary Table  S2 , children's anthropometric conditions encompassed eight distinct states: N, U, S, W, US, UW, SW, and USW  (57) .\n\nThis study did not require ethics approval, as it involved a secondary analysis of publicly available anonymized data. There was no direct interaction with human participants; therefore, informed consent and institutional review board (IRB) approval were not required."
+    },
+    {
+      "title": "Data preprocessing pipeline: techniques for anomalies, missing values, and quantization",
+      "text": "This study utilizes Bayes Server software, which offers built-in tools for handling missing values, anomaly detection, and feature relevance assessments. It estimates missing values using observed data and probabilistic relationships in the network, without imputing them with static values. Bayes Server employs inference algorithms for temporal models, considering data from past and future time slices. It also uses a probabilistic anomaly detection algorithm to identify outliers or unusual data points, ensuring the quality and reliability of the dataset.\n\nQuantization is essential for preparing continuous variables for analysis in DBNs, as it simplifies modeling and improves interpretability. A balance is needed between using a few categories to prevent overfitting and enough detail to capture variability. Furthermore, the study uses a uniform time interval approach, with data collected every 3.5 years  (2002, 2006, 2009, 2013 , and 2016)  (29, 33) . A Lag-1 time window assesses past conditions' impact on current outcomes, while a Lag-2 window captures longer-term dependencies, enhancing model accuracy and providing deeper insights. As illustrated in Figure  1 , our DBN model follows a step-by-step workflow for analyzing children's nutritional status using YLCS data (see Supplementary material for details)."
+    },
+    {
+      "title": "Nodes selection in the child nutritional status network",
+      "text": "Feature selection is a crucial step in the construction of a DBN. Including all variables in a temporal node can increase the complexity of the network, resulting in higher computational costs and potential convergence issues. Therefore, dedicating extra effort to feature selection is considered to be the best practice. The Bayes Server also offers a built-in feature selection tool that can automatically determine relevant features through the \"Add nodes from the data\" functionality. Additionally, it uses mutual information and target entropy reduction to assess the conditional dependencies between the features and target variable. The features with the highest mutual information values and target entropy reduction were the most important factors for the predictive performance of the model. As a result, out of the 39 covariates considered, 13 variables were selected as important, reducing model complexity and improving computational efficiency without compromising predictive accuracy (see Supplementary Table  S3 ). The final 13 covariates were treated as nodes in the DBN analysis, allowing for the modeling of temporal dependencies and causal relationships among influential variables (Table  1 )."
+    },
+    {
+      "title": "Structure learning",
+      "text": "This study created a directed acyclic graph (DAG) structure to analyze child undernutrition data. The process involved consulting experts, reviewing the literature, and identifying key nodes. An initial DAG structure was constructed, defining nodes representing factors related to child undernutrition and hypothesizing directional relationships. The DAG structure was then refined using\n\nTechnical workflow of DBN in application with children nutritional status in YLCS data.\n\nBegashaw et al. 10.3389/fpubh.2024.1399094 Frontiers in Public Health 04 frontiersin.org structure-learning algorithms in Bayes Server Desktop version 10.9. However, several erroneous links were produced, requiring validation and correction, with certain causal relationships, such as those from DA \u2192 HHS, MSW and ME \u2192 CS, CS \u2192 WQ, and CA \u2192 MA, identified as implausible. These causal links are static and cannot be influenced by other variables, and were confirmed during the structural learning process.\n\nThe final DAG structure was validated and refined to ensure consistency with the domain knowledge and plausibility of the generated links, accurately representing child undernutrition dynamics while considering system complexity (Figure  2 ). In the DAG, the child's sex is the only node that does not have a curved arrow pointing back. This means that all other nodes, excluding the child's sex, have a temporal dependency on their responses (Supplementary Table  S5 ). In addition, all temporal nodes except the PS and FS nodes had five time slices. The PS and FS nodes had only three time slices, with zero placeholder values used for the first and second visits to account for the missing data (Supplementary Table  S4 ). The fundamental concepts of temporal relationships and causal dependencies in DBNs are briefly discussed in the Supplementary material."
+    },
+    {
+      "title": "Statistical analysis",
+      "text": "DBNs have expanded the scope of traditional BNs to include temporal features such as changes in child undernutrition data over discrete time intervals (t = 1, 2, 3, \u2026, T). The set of variables in a DBN is represented by\n\n, with conditional dependencies represented by directed edges. The transition model in a DBN is defined by the joint probability distribution over time  (34, 35) .\n\nwhere, ( )\n\nis the joint probability distribution of the state variables at time t given the past observations, t X represents the state of variables at time t, and the conditional dependencies capture how the state at the current time depends on the previous states, , t i X is the state of node i at time t, and ( ) , Pa t i X represents the parents of node i at time t in the graph (Figure  2 ).\n\nThe model incorporates the transition probabilities between time steps 1 tand t . For example, the probability of transitioning from state ( )\n\ncan be represented as:\n\nThe model parameters were calibrated against available data using maximum likelihood estimation (MLE). The log-likelihood function for the entire dataset D can be defined as:\n\n; log Pa ;\n\nwhere \u0398 represents the parameters of the DBN and D is the observed data.\n\nThe structure of the DBN was learned from data using the Peter and Clark (PC) algorithm. Let D be the dataset; the objective is to find the optimal structure G that maximizes the likelihood of the data:\n\n( )\n\nThe PC algorithm efficiently explores possible network structures by systematically identifying conditional independence relationships among data variables, which helps to determine the structure of the DBN. The PC algorithm constructs a DAG starting from an empty graph by adding edges based on a statistical test of conditional independence  (36, 37) . It constructs a partially directed acyclic graph (PDAG) and applies rules such as the \"V-structure\" and \"immorality\" rules to obtain a full DAG.\n\nThe DBN parameters (\u00e8), including conditional probability tables, were estimated from the data D using the following mathematical formula:\n\n( )\n\nThis step involves estimating the parameters that maximize the likelihood of the data, given the chosen DBN structure. Maximum a posteriori (MAP) queries, also known as the most likely explanation (MPE), aim to determine the most likely state of the target variables based on the evidence observed in the data. MAP estimation in DBNs involves finding the sequence of hidden states that maximizes the posterior probability, given the observed evidence. This can be formulated using Bayes' theorem as follows:\n\nt x t t x t P E X P X argmax P X E argmax P E = where: t X : represents the hidden state at time t; 1:t E denotes the evidence observed up to time t; ( ) 1: | t t P X E is the posterior probability of the hidden state given the evidence; ( ) 1: | t t P E X is the likelihood of observing evidence given the hidden state; ( ) t P X is the prior probability of the hidden state; and ( ) 1:t P E is the marginal likelihood of the evidence.\n\nThe relevance tree algorithm was utilized to compute the MAP estimate, which efficiently found the most likely sequence of hidden states based on model parameters and observed data. This algorithm is particularly useful for computing probabilities in DBNs with large state spaces and complex variables because it constructs a tree structure.\n\nIn causal inference, we model counterfactual outcomes to estimate the probability of an event under hypothetical conditions. Let Y represent the outcome of interest, such as child nutritional status, and let\n\n, , , n X X X X = \u2026 be a set of covariates, including factors like household, caregiver, and parental information. To formalize counterfactual reasoning, we typically use a causal graph or a Bayesian network, where directed edges represent the causal dependencies between variables.\n\nIn this framework, the counterfactual probability can be expressed as:\n\nY refers to the counterfactual outcome of Y , representing the value that would have been observed if the hypothetical conditions cf X x = were true. In contrast, Y is the observed outcome under normal conditions. Similarly, cf X x = refers to a set of counterfactual conditions, which represent a hypothetical intervention or modification of the covariates. The operator, ( ) cf do X x = denotes an intervention where we actively set cf X x = , effectively modifying the system. Therefore, the expression ( ) ( )\n\ngives the counterfactual probability of Y y = if the intervention cf X x = had been applied. For instance, if we consider X to represent maternal education level and Y as child nutritional status, the counterfactual probability ( ) ( )\n\nquantifies the likelihood of different nutritional outcomes had the maternal education level been fixed at x, regardless of other influencing factors. Table S5 because the number of causal pathways across time points is extensive and difficult to display in a single DAG structure. 10.3389/fpubh.2024.1399094 Frontiers in Public Health 06 frontiersin.org"
+    },
+    {
+      "title": "Model performance metrics",
+      "text": "Model performance was assessed using three key metrics: log-likelihood and Value of Information (VOI). The log-likelihood metric assesses how well the model fits the observed data and provides an indication of its accuracy. Finally, VOI measures the potential value of acquiring additional information to improve the model's predictions."
+    },
+    {
+      "title": "Computational environment",
+      "text": "The study evaluated various software options, including GeNIe and SMILE  (38) , Hugin Expert  (39) , Netica  (40) , R (bnlearn and gRain packages)  (41) (42) (43) , and BayesiaLab  (44) . Bayes Server Desktop version 10.9 was found to be most effective for managing the complexities of a DBN model with numerous variables. It enabled precise inference, updated beliefs, and assessed uncertainty in child nutrition decisions. The intuitive graphical interface and efficient analysis were achieved on a system with an Intel i7-9300H, NVIDIA GTX 1650 GPU, and 32 GB of RAM."
+    },
+    {
+      "title": "Results"
+    },
+    {
+      "title": "Conditional probabilities of child nutritional status and household characteristics over time",
+      "text": "In 2016, 41% of the children from households without any program enrollment had a normal nutritional status. In contrast, those enrolled in the PEH in 2013 had a 49% chance of having a normal nutritional status and a 15% chance of being underweight and wasting concurrently (UW). Between 2009 and 2013, in 2016, 58% of the households participating in the PEH and PEH programs were normal children, 16% were underweight, and 16% were wasting children (Figure  3 ).\n\nFigure  4  shows the conditional probabilities of children's undernutrition status based on the parents' education levels over time. In 2016, children with illiterate parents had a greater risk of developing underweight and stunted conditions concurrently than those with literate parents. The risk was 30% greater for children with illiterate fathers and 26% greater for children with literate mothers.\n\nThe study showed that in 2016, mothers in households without prior intervention had a 57% chance of improved well-being. For those who joined after 2013, the likelihood increased to 75%. However, the number of households that joined in 2009 but discontinued after 2013 decreased to 69%. Among those engaged since 2009, 79% had significantly increased well-being, indicating that sustained program participation positively impacts mothers' well-being. In 2016, households that were not in the intervention program had a 60% probability of securing food access. Those participating in 2009 or 2013 had a 72% probability, whereas those participating in both years had a 95% probability. Finally, in 2016, households not previously enrolled in the programme had a 24% probability of being wealthy. For those who received support from 2013 onward, the probability increased to 68%. For households supported beginning in 2009, but discontinued after 2013, the probability was 64%. Households that have been continuously supported since 2009 have an 84% probability of earning wealth (Figure  5 ). Moreover, since 2009, the likelihood of a child being classified as having normal nutritional status in 2013 was 47% when she was a family with access to food security. This probability increased to 54% in 2016 for children from households that had gained access to food security in 2013. In contrast, the likelihood of a child experiencing concurrent underweight, stunting, and wasting (USW) in 2013 was 11% among families with continuous access to secure food since 2009. This probability has decreased slightly to 11% in 2016 for a child in a household with sustained food security since 2013 (Figure  6 )."
+    },
+    {
+      "title": "Key household and parental factors influencing food security, well-being, wealth, and child nutrition outcomes",
+      "text": "In 2009, households with more than six members in the poor wealth quintile and those participating in PSNP programs were most likely to experience food insecurity. By 2013, households with fewer than six members in the poor wealth quintile and enrolled in both PSNP and EAP programs were most likely to have secure food access. By 2016, households with fewer than six members in the economically wealthy quintile and participating in all three programs (PSNP, EAP, and HEP) were most likely to maintain food security (Table  2 ).\n\nIn 2002, 2006, and 2009, mothers not enrolled in the intervention program were most likely to have low subjective well-being regardless of their age. However, in 2013 and 2016, mothers under the age of 30 but enrolled in EH and PEH, respectively, were most likely to have high subjective well-being (Table  3 ).\n\nIn 2002 and 2006, households were most likely to be poor if the mother was illiterate, both parents were aged 18-30, or the household head was male, regardless of the father's education level and household head's age. However, in 2009, 2013, and 2016, households headed by males aged 30-50 years and fathers of the same age range were more likely to achieve wealth when enrolled in PE, PEH, or PE programs, respectively (Table  4 ).\n\nIn 2002, households with illiterate fathers and literate mothers were most likely to have undernourished (US) female infants. By 2006, households with illiterate mothers, literate fathers, and wealthier status were the most likely to have stunted male children. Conversely, in 2009, households with literate mothers and illiterate fathers in poor conditions had a greater chance of being undernourished (SW) preadolescent males. In 2013, households with both literate parents and wealthier status were most likely to have preadolescent females with normal nutritional status. Finally, in 2016, households with literate mothers, illiterate fathers, and wealthier status were most likely to have wasted adolescent females (Table  5 )."
+    },
+    {
+      "title": "Causal pathway strength over time: evidence from posterior probabilities in the DAG model",
+      "text": "Due to the extensive number of causal pathways across time points, displaying them all in a single DAG structure has been challenging. The DAG structure presents detailed causal pathways across time points based on hard evidence, with parent and child nodes and their causal edges indicated by right arrows (Supplementary Table  S5 ). These arrows show the temporal direction of the causal connection, specifying which parent node is connected to a child node at which time slice. Additionally, temporal dependency edges are included, indicating where a node has a connection to itself across time slices. The probabilities indicate edge strength, with higher probabilities indicating stronger relationships or causation.\n\nIn this study, we found varying edge probabilities in the relationship from PS \u2192 MSW in the posterior DAG across different waves, ranging from 74 to 93%, indicating a consistent strengthening of this connection over time. Mothers in households involved in EH and PEH intervention programs exhibited higher levels of subjective well-being. The edge probabilities for PS \u2192 FS and PS \u2192 WQ were 100% during waves 2, 3, and 4 as well as during waves 3 and 4. This perfect certainty in the posterior DAG suggests a robust link between household food security and wealth quintiles within combined initiative programs. Specifically, households with fewer than six members who received assistance from both the PSNP and EAP in 2013 were more likely to have secure access to food (Supplementary Table  S5 ).\n\nThe study revealed a strong relationship between the wealth quintile and food security, with a near-certain relationship in Waves 2 and 4 (99.99%) and a slightly weaker but still significant relationship in Wave 3 (95%). This finding underscores the substantial impact of wealth quintiles on food security, indicating that individuals in higherwealth quintiles are more likely to experience better food security than those in lower-wealth quintiles. The relationship between food security and undernutrition was 48% in Wave 2, rising to 100% in both Wave 3 and Wave 4. This finding indicates a strong and enduring link between food security and children's nutritional status over time."
+    },
+    {
+      "title": "Examining child nutrition outcomes in Ethiopia: best-and worst-case situation",
+      "text": "The study aimed to find a condition that reduce child undernutrition (best-case situation) in Ethiopia by setting the \"Normal\" category to 100% and adjusting counterfactual values. The original values for underweight (U), stunted (S), and wasting (W) were 3.8, 7.8, and 5.3%, respectively. For combined undernutrition conditions, the initial values were underweight and wasting (US) at 14.1%, underweight and stunting (UW) at 11.1%, stunting and 10.3389/fpubh.2024.1399094 Frontiers in Public Health 08 frontiersin.org\n\nwasting (SW) at 0.1%, and a combination of all three conditions (USW) at 8.1%. This idealized scenario represents a condition in which no child suffers from undernutrition.\n\nThe corresponding counterfactual results under the header \"Predicted\" are listed in Supplementary Table  S6 . The up and down arrows next to the predicted value indicate an increase and decrease, respectively, compared with the original value. The results of the bestcase counterfactual situations can be interpreted as follows. The results of the best-case counterfactual scenarios reveal that by the time children reach eight years old (time slice 2), households with fewer than six members experience increased counterfactual probabilities of 31.7, 26.2, and 21.2% for time slices 2, 3, and 4, respectively, compared to the original values. This trend suggests that smaller household sizes during early childhood may reduce the likelihood of undernutrition. As household size increases, food insecurity also tends to increase, which in turn increases the likelihood of children experiencing undernutrition. Likewise, counterfactual probabilities for poor maternal subjective well-being decreased as children aged 8 to 15-28.3, 21.4, and 14.3% for time slices 2, 3, and 4, respectivelycompared to the original probabilities. Simultaneously, the probabilities for better subjective well-being increased (31.4, 19.7, and 23.1%), highlighting the importance of improving maternal wellbeing as an effective strategy for reducing child undernutrition. Similarly, the decreased counterfactual probabilities for poor maternal well-being-28.3, 21.4, and 14.3% for time slices 0, 1, and 2, respectively-indicate an improvement as children age to 8 years.\n\nTo emphasize the worst-case situation, the probability of a child being categorized as 'Undernourished' is set to 100%, which represents a scenario where every child is experiencing some form of undernutrition. Conversely, the probability of children being classified as 'Normal' (i.e., not undernourished) is set to 0%. The model shows that a low subjective wellbeing of mothers significantly impacts child undernutrition, with the probability of children being undernourished increasing as the mother's wellbeing declines. This is particularly evident in the later time slices, where the probability reaches 3.1% for those in high wellbeing and 40.2% for those in low wellbeing. Smaller households (<=6 members) initially have a higher probability of undernutrition (38.2% in Time slice 0), but this decreases over time. Larger households (>6 members) initially experience a smaller proportion of undernutrition, but this increases in later time slices (Supplementary Table  S7 ). Similarly, poor households and those experiencing food insecurity show much higher probabilities of undernutrition across all time slices. In contrast, wealthier households and those with food security experience fluctuations, but they generally see a higher probability of 'Normal' status compared to their poorer counterparts. Similarly, illiterate fathers and mothers contribute to a higher likelihood of child undernutrition. However, the scenario shows a complex pattern with some improvements in later time slices, possibly due to interventions or other factors impacting education."
+    },
+    {
+      "title": "Impact of intervention programs on combating child undernutrition",
+      "text": "As shown in Figure  7 , the predicted counterfactual probability of household program participation combinations across each time slice is visualized for both the best-and worst-case scenarios. In the most favorable scenario, the probability of program participation (except EH) is highest at time slice 2, followed by time slice 3, and decreases further at time slice 4. In contrast, in the least favorable scenario, the probability shows a decline from time slice 2 to time slice 3, and again from time slice 3 to time slice 4. This suggests that early household participation in the program provides the most effective scenario for improving children's nutritional status, whereas decreased participation over time correlates with higher likelihoods of child undernutrition.\n\nFor non-beneficiary households under the best-case scenario, the predicted probability is lowest at time slice 2 and increases in time slices 3 and 4. Conversely, under the worst-case scenario, this probability is highest at time slice 2 and decreases in subsequent time slices, indicating a greater risk of undernutrition for non-participating households. Begashaw et al. 10.3389/fpubh.2024.1399094 Frontiers in Public Health 09 frontiersin.org"
+    },
+    {
+      "title": "Performance metrics of DBN model",
+      "text": "Table  6  shows that variables such as MSW, DE, PS, HS, and MA had higher mutual information values, indicating stronger relationships with child undernutrition within the network. Additionally, variables such as PS, DE, HS, CA, and FS exhibit high target entropy reduction, suggesting their importance in reducing uncertainty within the network. Conversely, covariates such as DE, PS, HS, MA, and MSW exhibited lower target entropy values, implying lower uncertainty and greater predictability of the target variable compared to other covariates in the network (Table  6 )."
+    },
+    {
+      "title": "Discussion",
+      "text": "Child malnutrition is a complex health problem affected by various factors, such as food security, socioeconomic status, parental education, mother well-being, and access to healthcare services, as indicated in previous research studies  (45, 46) .\n\nIn our study, we found that children with educated parents were more likely to have a normal nutritional status. A recent study by Zhu et al.  (47)  revealed that socioeconomic factors impact the body mass index (BMI) of both primary and secondary caregivers, which in turn affects the BMI of their children through a causal relationship. Research has demonstrated that the educational level of parents and  Trends in the conditional probability of child undernutrition in food-secured households.\n\nBegashaw et al. 10.3389/fpubh.2024.1399094 Frontiers in Public Health 10 frontiersin.org\n\nprimary caregivers significantly impacts the nutritional status of children, with improvements in nutritional status observed as education levels increase  (48, 49) . Access to nutritious food and essential services such as clean water, electricity, healthcare, and proper sanitation facilities tends to increase as household wealth increases. This improvement in access leads to better nutritional status for children. In this regard, the intervention program showed a significant association with wealth quantiles (PS \u2192 WQ), particularly in the 4th and 5th waves, suggesting a positive impact on household wealth improvement. Research indicates that children from economically disadvantaged and displaced families are particularly vulnerable and may require assistance in accessing food and healthcare services  (50) (51) (52) .\n\nThe study highlights the substantial impact of mother well-being on child nutrition, attributed to improved mental health, emotional availability, and caregiving practices. Mothers with enrolled households in the program were most likely to report high subjective well-being (PS \u2192 MSW). Health workers, through regular nutritional counseling, significantly improve child-feeding practices, reducing undernutrition risk in children. Sunguya et al.  (53)  showed that health workers' nutritional training enhances feeding frequency, energy intake, and dietary diversity in children aged six months to two years. Furthermore, this study is supported by a study by  Miller et al. (54) , which highlighted the effective management of children by health extension workers.\n\nThe study showed that the improvement in a household's food security status is conditional on the combination of the intervention program (PS \u2192 WQ), indicating that the intervention program positively impacts household food security. A study by Tadesse and Gebremedhin (55) using propensity score matching found that PSNP significantly enhances the income and food security of households in chronically food-insecure areas by increasing consumption expenditure and daily caloric intake. This finding is further supported by a study conducted by Bahru et al.  (18) , which also confirmed the positive impact of PSNP on household food security and child meal frequency. Furthermore, a study conducted by Gilligan and Hoddinott (56) using a difference-in-differences matching estimator revealed that households in rural areas affected by drought experienced improvements in food security when they received support from emergency food aid programs.\n\nThe DBN model predicts that household participation like in PSNP, EAP, and PE programs can significantly reduce undernutrition in the best-case conditions. However, counterfactual probabilities for non-beneficiary households are higher. These results highlight the impact of program interventions on reducing undernutrition over time, emphasizing the higher risk of undernutrition without support. Early and sustained program engagement is crucial for improving children's nutritional outcomes. The best-case conditions for reducing childhood undernutrition in households are based on earlier participation in the program (except EH program combination), with the higher predicted probabilities for participation in the intervention program and clearly visualized in Figure  7 .\n\nStrong temporal causation is shown in the Supplementary Table  S5  for variables such as CNS, PS, FS, and WQ, all of which have a significant effect on child undernutrition in Ethiopia. From time 0 to time 1, the CNS is extremely dependent, however PS shows long-lasting benefits from time 2 to 4. In order to reduce undernutrition, FS is essential for mitigating undernutrition, and WQ highlights the significance of household economic position. Weaker temporal dependencies like household head age and child age indicate that the influence of variables diminishes with time."
+    },
+    {
+      "title": "Strengths, limitations, and future work",
+      "text": "A significant methodological contribution of this study is the application of DBNs to analyze child undernutrition, a relatively novel approach in public health research. This study demonstrates how DBNs can provide temporal dependencies, capturing how risk factors and nutritional states change and influence each other over different time periods. To maintain a manageable publication length, we opted not to include the predicted counterfactual probabilities for all seven undernutrition states, as presenting each state individually would be overly bulky. Instead, these states were consolidated into a single \"Undernourished\" category, for modeling worst-case situation of child undernutrition. Additionally, query outputs for all variables and time steps were excluded, as they were primarily used internally for structure learning, assessing causal pathway, and edge strengths within the DBN. A system with 13 nodes has an order of 2 78 possible graph structures, as calculated using the formula ( )\n\n. Due to this immense complexity, attempting to visualize all potential graph structures for a system with 16 nodes and 5 time points becomes practically impossible.\n\nFor future researchers working with DBNs, access to highperformance computing systems is essential to handle larger models efficiently. Future research could explore hybrid models that integrate additional machine learning techniques and causal artificial intelligence (AI), which are supported in Bayes Server through its API, to capture more complex relationships and enhance causal insights. Most-and least favorable situation of child undernutrition in Ethiopia based on household participation in intervention programs."
+    },
+    {
+      "title": "Conclusion",
+      "text": "Overall, our DBN model offers a novel approach for understanding child undernutrition in Ethiopia by capturing temporal relationships and identifying critical risk factors. This study demonstrates how DBNs can enhance public health research, providing policymakers and practitioners with a predictive tool for targeted interventions. The combined intervention program showed a strong causal relationship with enhancing the food security, wealth, and subjective well-being of mothers. Wealth quantiles provide better access to nutritious food, healthcare services, and education, which are vital for ensuring optimal growth and development in children. Food security ensures that adequate, safe, and nutritious food for healthy growth is essential for promoting healthy growth in children. Mothers' subjective well-being, including mental health, stress levels, and overall satisfaction, also influences children's nutritional status.\n\nThe study provides valuable insights for policymakers and health practitioners to simulate \"what-if \" scenarios to optimize nutritional outcomes and forecast at-risk situations leading to child undernutrition. It highlights high-risk factors like food insecurity, low maternal education, and household economic challenges, highlighting areas for targeted interventions. The DBN model suggests addressing these risk factors early in a child's life to prevent undernutrition onset or worsening, advocating for policies focused on maternal and child health during critical developmental periods. This tool aids in informed decision-making and improving child health and nutrition in Ethiopia."
+    },
+    {
+      "text": "FIGURE 2Temporal causal pathways in DAGs for child undernutrition. NB: The detailed DAG causal pathways are listed in Supplementary TableS5because the number of causal pathways across time points is extensive and difficult to display in a single DAG structure."
+    },
+    {
+      "text": "FIGURE 3Conditional probability of child nutritional status by household program participation status over time."
+    },
+    {
+      "text": "FIGURE 4Conditional probability of child nutritional status based on parental education history."
+    },
+    {
+      "text": "FIGURE 5Conditional probabilities of household characteristics over time by programme participation status."
+    },
+    {
+      "text": "FIGURE 6"
+    },
+    {
+      "text": "FIGURE 7"
+    },
+    {
+      "text": "Description and abbreviations of nodes in the child nutritional status network."
+    },
+    {
+      "text": "Maximum posterior effect of household characteristics and program enrollment on wealth status over time."
+    },
+    {
+      "text": "Maximum posterior effect of household characteristics on food security."
+    },
+    {
+      "text": "Maximum posterior effect of parental education and household wealth on child nutritional status over time."
+    },
+    {
+      "text": "Predictive performance of nodes in the DBN."
+    },
+    {
+      "title": "Acknowledgments",
+      "text": "The authors express their sincere gratitude to the reviewers for their insightful comments and suggestions, which greatly improved this manuscript. We also thank the  Young Lives Study  teams and the  UK Data Service  for providing access to the data files used in this research."
+    },
+    {
+      "title": "Funding",
+      "text": "The author(s) declare that no financial support was received for the research, authorship, and/or publication of this article."
+    },
+    {
+      "title": "Data availability statement",
+      "text": "The original contributions presented in the study are included in the article/Supplementary material, further inquiries can be directed to the corresponding author."
+    },
+    {
+      "title": "Ethics statement",
+      "text": "Ethical approval was not required for the study involving humans in accordance with the local legislation and institutional requirements. Written informed consent to participate in this study was not required from the participants or the participants' legal guardians/next of kin in accordance with the national legislation and the institutional requirements."
+    },
+    {
+      "title": "Author contributions"
+    },
+    {
+      "title": "Conflict of interest",
+      "text": "The authors declare that the research was conducted in the absence of any commercial or financial relationships that could be construed as a potential conflict of interest."
+    },
+    {
+      "title": "Publisher's note",
+      "text": "All claims expressed in this article are solely those of the authors and do not necessarily represent those of their affiliated organizations, or those of the publisher, the editors and the reviewers. Any product that may be evaluated in this article, or claim that may be made by its manufacturer, is not guaranteed or endorsed by the publisher."
+    },
+    {
+      "title": "Supplementary material",
+      "text": "The Supplementary material for this article can be found online at:  https://www.frontiersin.org/articles/10.3389/fpubh.2024.1399094/  full#supplementary-material"
+    }
+  ],
+  "references": [
+    {
+      "title": "Maternal and child undernutrition: effective action at national level",
+      "authors": [
+        "J Bryce",
+        "D Coitinho",
+        "I Darnton-Hill",
+        "D Pelletier",
+        "P Pinstrup-Andersen"
+      ],
+      "year": 2008,
+      "doi": "10.1016/s0140-6736(07)61694-8",
+      "journal": "Lancet",
+      "volume": "371",
+      "raw": "Maternal and child undernutrition: effective action at national level \n\t\t \n\t\t\t J Bryce \n\t\t \n\t\t \n\t\t\t D Coitinho \n\t\t \n\t\t \n\t\t\t I Darnton-Hill \n\t\t \n\t\t \n\t\t\t D Pelletier \n\t\t \n\t\t \n\t\t\t P Pinstrup-Andersen \n\t\t \n\t\t 10.1016/s0140-6736(07)61694-8 \n\t \n\t \n\t\t Lancet \n\t\t \n\t\t\t 371 \n\t\t\t \n\t\t\t 2008 \n\t\t \n\t \n\t Bryce J, Coitinho D, Darnton-Hill I, Pelletier D, Pinstrup-Andersen P. Maternal and child undernutrition: effective action at national level. Lancet. (2008) 371:510-26. doi: 10.1016/S0140-6736(07)61694-8"
+    },
+    {
+      "title": "Undernutrition, poor feeding practices, and low coverage of key nutrition interventions",
+      "authors": [
+        "C Lutter",
+        "B Daelmans",
+        "M De Onis",
+        "M Kothari",
+        "M Ruel",
+        "M Arimond"
+      ],
+      "year": 2011,
+      "doi": "10.1542/peds.2011-1392",
+      "journal": "Pediatrics",
+      "volume": "128",
+      "raw": "Undernutrition, poor feeding practices, and low coverage of key nutrition interventions \n\t\t \n\t\t\t C K Lutter \n\t\t \n\t\t \n\t\t\t B M Daelmans \n\t\t \n\t\t \n\t\t\t M De Onis \n\t\t \n\t\t \n\t\t\t M T Kothari \n\t\t \n\t\t \n\t\t\t M T Ruel \n\t\t \n\t\t \n\t\t\t M Arimond \n\t\t \n\t\t 10.1542/peds.2011-1392 \n\t \n\t \n\t\t Pediatrics \n\t\t \n\t\t\t 128 \n\t\t\t \n\t\t\t 2011 \n\t\t \n\t \n\t Lutter CK, Daelmans BM, de Onis M, Kothari MT, Ruel MT, Arimond M, et al. Undernutrition, poor feeding practices, and low coverage of key nutrition interventions. Pediatrics. (2011) 128:e1418-27. doi: 10.1542/peds.2011-1392"
+    },
+    {
+      "title": "Undernutrition and associated risk factors among school age children in Addis Ababa, Ethiopia",
+      "authors": [
+        "D Degarege",
+        "A Degarege",
+        "A Animut"
+      ],
+      "year": 2015,
+      "doi": "10.1186/s12889-015-1714-5",
+      "journal": "BMC Public Health",
+      "volume": "15",
+      "raw": "Undernutrition and associated risk factors among school age children in Addis Ababa, Ethiopia \n\t\t \n\t\t\t D Degarege \n\t\t \n\t\t \n\t\t\t A Degarege \n\t\t \n\t\t \n\t\t\t A Animut \n\t\t \n\t\t 10.1186/s12889-015-1714-5 \n\t \n\t \n\t\t BMC Public Health \n\t\t \n\t\t\t 15 \n\t\t\t \n\t\t\t 2015 \n\t\t \n\t \n\t Degarege D, Degarege A, Animut A. Undernutrition and associated risk factors among school age children in Addis Ababa, Ethiopia. BMC Public Health. (2015) 15:1-9. doi: 10.1186/s12889-015-1714-5"
+    },
+    {
+      "title": "Trend and future of infant mortality in Pakistan",
+      "authors": [
+        "Z Shabbir",
+        "A Riaz",
+        "F Ahmad"
+      ],
+      "year": 2022,
+      "doi": "10.37723/jumdc.v13i3.649",
+      "journal": "J Univ Med Dent College",
+      "volume": "13",
+      "raw": "Trend and future of infant mortality in Pakistan \n\t\t \n\t\t\t Z Shabbir \n\t\t \n\t\t \n\t\t\t A Riaz \n\t\t \n\t\t \n\t\t\t F Ahmad \n\t\t \n\t\t 10.37723/jumdc.v13i3.649 \n\t \n\t \n\t\t J Univ Med Dent College \n\t\t \n\t\t\t 13 \n\t\t\t \n\t\t\t 2022 \n\t\t \n\t \n\t Shabbir Z, Riaz A, Ahmad F. Trend and future of infant mortality in Pakistan. J Univ Med Dent College. (2022) 13:518-23. doi: 10.37723/jumdc.v13i3.649"
+    },
+    {
+      "title": "Evidence-based interventions to reduce maternal malnutrition in low and middle-income countries: a systematic review",
+      "authors": [
+        "S Shenoy",
+        "P Sharma",
+        "A Rao",
+        "N Aparna",
+        "D Adenikinju",
+        "C Iloegbu"
+      ],
+      "year": 2023,
+      "doi": "10.3389/frhs.2023.1155928",
+      "journal": "Frontiers in Health Services",
+      "volume": "3",
+      "pages": "3",
+      "raw": "Evidence-based interventions to reduce maternal malnutrition in low and middle-income countries: a systematic review \n\t\t \n\t\t\t S Shenoy \n\t\t \n\t\t \n\t\t\t P Sharma \n\t\t \n\t\t \n\t\t\t A Rao \n\t\t \n\t\t \n\t\t\t N Aparna \n\t\t \n\t\t \n\t\t\t D Adenikinju \n\t\t \n\t\t \n\t\t\t C Iloegbu \n\t\t \n\t\t 10.3389/frhs.2023.1155928 \n\t \n\t \n\t\t Frontiers in Health Services \n\t\t \n\t\t\t 3 \n\t\t\t 3 \n\t\t\t 2023 \n\t\t \n\t \n\t Shenoy S, Sharma P, Rao A, Aparna N, Adenikinju D, Iloegbu C, et al. Evidence-based interventions to reduce maternal malnutrition in low and middle-income countries: a systematic review. Frontiers in Health Services. (2023) 3:3. doi: 10.3389/frhs.2023.1155928"
+    },
+    {
+      "title": "Application of ordinal logistic regression analysis in determining risk factors of child malnutrition in Bangladesh",
+      "authors": [
+        "S Das",
+        "R Rahman"
+      ],
+      "year": 2011,
+      "doi": "10.1186/1475-2891-10-124",
+      "journal": "Nutr J",
+      "volume": "10",
+      "raw": "Application of ordinal logistic regression analysis in determining risk factors of child malnutrition in Bangladesh \n\t\t \n\t\t\t S Das \n\t\t \n\t\t \n\t\t\t R M Rahman \n\t\t \n\t\t 10.1186/1475-2891-10-124 \n\t \n\t \n\t\t Nutr J \n\t\t \n\t\t\t 10 \n\t\t\t \n\t\t\t 2011 \n\t\t \n\t \n\t Das S, Rahman RM. Application of ordinal logistic regression analysis in determining risk factors of child malnutrition in Bangladesh. Nutr J. (2011) 10:1-11. doi: 10.1186/1475-2891-10-124"
+    },
+    {
+      "title": "Multivariate logistic regression analysis on the association between anthropometric indicators of under-five children in Nigeria: NDHS 2018",
+      "authors": [
+        "L Tesfaw",
+        "H Fenta"
+      ],
+      "year": 2021,
+      "doi": "10.1186/s12887-021-02657-5",
+      "journal": "BMC Pediatr",
+      "volume": "21",
+      "raw": "Multivariate logistic regression analysis on the association between anthropometric indicators of under-five children in Nigeria: NDHS 2018 \n\t\t \n\t\t\t L M Tesfaw \n\t\t \n\t\t \n\t\t\t H M Fenta \n\t\t \n\t\t 10.1186/s12887-021-02657-5 \n\t \n\t \n\t\t BMC Pediatr \n\t\t \n\t\t\t 21 \n\t\t\t \n\t\t\t 2021 \n\t\t \n\t \n\t Tesfaw LM, Fenta HM. Multivariate logistic regression analysis on the association between anthropometric indicators of under-five children in Nigeria: NDHS 2018. BMC Pediatr. (2021) 21:1-13. doi: 10.1186/s12887-021-02657-5"
+    },
+    {
+      "title": "An appraisal of multivariable logistic models in the pulmonary and critical care literature",
+      "authors": [
+        "M Moss",
+        "D Wellman",
+        "G Cotsonis"
+      ],
+      "year": 2003,
+      "doi": "10.3389/fpubh.2024.1399094",
+      "volume": "123",
+      "raw": "An appraisal of multivariable logistic models in the pulmonary and critical care literature \n\t\t \n\t\t\t M Moss \n\t\t \n\t\t \n\t\t\t D A Wellman \n\t\t \n\t\t \n\t\t\t G A Cotsonis \n\t\t \n\t\t 10.3389/fpubh.2024.1399094 \n\t\t \n\t \n\t \n\t\t Frontiers in Public Health 13 frontiersin \n\t\t \n\t\t\t 2003 \n\t\t\t 123 \n\t\t\t \n\t\t \n\t \n\t Moss M, Wellman DA, Cotsonis GA. An appraisal of multivariable logistic models in the pulmonary and critical care literature. Chest. (2003) 123:923-8. doi: 10.1378/chest.123.3.923 Begashaw et al. 10.3389/fpubh.2024.1399094 Frontiers in Public Health 13 frontiersin.org"
+    },
+    {
+      "title": "A review of two journals found that articles using multivariable logistic regression frequently did not report commonly recommended assumptions",
+      "authors": [
+        "K Ottenbacher",
+        "H Ottenbacher",
+        "L Tooth",
+        "G Ostir"
+      ],
+      "year": 2004,
+      "doi": "10.1016/j.jclinepi.2003.05.003",
+      "journal": "J Clin Epidemiol",
+      "volume": "57",
+      "raw": "A review of two journals found that articles using multivariable logistic regression frequently did not report commonly recommended assumptions \n\t\t \n\t\t\t K J Ottenbacher \n\t\t \n\t\t \n\t\t\t H R Ottenbacher \n\t\t \n\t\t \n\t\t\t L Tooth \n\t\t \n\t\t \n\t\t\t G V Ostir \n\t\t \n\t\t 10.1016/j.jclinepi.2003.05.003 \n\t \n\t \n\t\t J Clin Epidemiol \n\t\t \n\t\t\t 57 \n\t\t\t \n\t\t\t 2004 \n\t\t \n\t \n\t Ottenbacher KJ, Ottenbacher HR, Tooth L, Ostir GV. A review of two journals found that articles using multivariable logistic regression frequently did not report commonly recommended assumptions. J Clin Epidemiol. (2004) 57:1147-52. doi: 10.1016/j.jclinepi.2003.05.003"
+    },
+    {
+      "title": "Seasonal variation in the prevalence of acute undernutrition among children under five years of age in east rural Ethiopia: a longitudinal study",
+      "authors": [
+        "G Egata",
+        "Y Berhane",
+        "A Worku"
+      ],
+      "year": 2013,
+      "doi": "10.1186/1471-2458-13-864",
+      "journal": "BMC Public Health",
+      "volume": "13",
+      "raw": "Seasonal variation in the prevalence of acute undernutrition among children under five years of age in east rural Ethiopia: a longitudinal study \n\t\t \n\t\t\t G Egata \n\t\t \n\t\t \n\t\t\t Y Berhane \n\t\t \n\t\t \n\t\t\t A Worku \n\t\t \n\t\t 10.1186/1471-2458-13-864 \n\t \n\t \n\t\t BMC Public Health \n\t\t \n\t\t\t 13 \n\t\t\t \n\t\t\t 2013 \n\t\t \n\t \n\t Egata G, Berhane Y, Worku A. Seasonal variation in the prevalence of acute undernutrition among children under five years of age in east rural Ethiopia: a longitudinal study. BMC Public Health. (2013) 13:1-8. doi: 10.1186/1471-2458-13-864"
+    },
+    {
+      "title": "Drought and child undernutrition in Ethiopia: a longitudinal path analysis",
+      "authors": [
+        "B Bahru",
+        "C Bosch",
+        "R Birner",
+        "M Zeller"
+      ],
+      "year": 2019,
+      "doi": "10.1371/journal.pone.0217821",
+      "journal": "PLoS One",
+      "volume": "14",
+      "pages": "217821",
+      "raw": "Drought and child undernutrition in Ethiopia: a longitudinal path analysis \n\t\t \n\t\t\t B A Bahru \n\t\t \n\t\t \n\t\t\t C Bosch \n\t\t \n\t\t \n\t\t\t R Birner \n\t\t \n\t\t \n\t\t\t M Zeller \n\t\t \n\t\t 10.1371/journal.pone.0217821 \n\t \n\t \n\t\t PLoS One \n\t\t \n\t\t\t 14 \n\t\t\t 217821 \n\t\t\t 2019 \n\t\t \n\t \n\t Bahru BA, Bosch C, Birner R, Zeller M. Drought and child undernutrition in Ethiopia: a longitudinal path analysis. PLoS One. (2019) 14:e0217821. doi: 10.1371/ journal.pone.0217821"
+    },
+    {
+      "title": "Repeated measures and longitudinal data analysis",
+      "authors": [
+        "E Vittinghoff",
+        "D Glidden",
+        "S Shiboski",
+        "C Mcculloch",
+        "E Vittinghoff",
+        "D Glidden"
+      ],
+      "year": 2012,
+      "doi": "10.1007/978-1-4614-1353-0_7",
+      "journal": "Regress Methods Biostat",
+      "raw": "Repeated measures and longitudinal data analysis \n\t\t \n\t\t\t E Vittinghoff \n\t\t \n\t\t \n\t\t\t D V Glidden \n\t\t \n\t\t \n\t\t\t S C Shiboski \n\t\t \n\t\t \n\t\t\t C E Mcculloch \n\t\t \n\t\t \n\t\t\t E Vittinghoff \n\t\t \n\t\t \n\t\t\t D V Glidden \n\t\t \n\t\t 10.1007/978-1-4614-1353-0_7 \n\t \n\t \n\t\t Regress Methods Biostat \n\t\t \n\t\t\t \n\t\t\t 2012 \n\t\t \n\t \n\t Vittinghoff E, Glidden DV, Shiboski SC, McCulloch CE, Vittinghoff E, Glidden DV, et al. Repeated measures and longitudinal data analysis. Regress Methods Biostat. (2012):261-308. doi: 10.1007/978-1-4614-1353-0_7"
+    },
+    {
+      "title": "Methods and applications of longitudinal data analysis",
+      "authors": [
+        "X Liu"
+      ],
+      "year": 2015,
+      "raw": "Methods and applications of longitudinal data analysis \n\t\t \n\t\t\t X Liu \n\t\t \n\t\t \n\t\t\t 2015 \n\t\t\t Elsevier \n\t\t\t Amsterdam, Netherlands \n\t\t \n\t \n\t Liu X. Methods and applications of longitudinal data analysis. Amsterdam, Netherlands: Elsevier (2015)."
+    },
+    {
+      "title": "Longitudinal data analysis of mean passage time among malnutrition states: an application of Markov chains",
+      "authors": [
+        "V Jeyaseelan",
+        "T Sebastian",
+        "J Lakshmanan",
+        "S Bangdiwala"
+      ],
+      "year": 2016,
+      "doi": "10.1080/02664763.2016.1143454",
+      "journal": "J Appl Stat",
+      "volume": "43",
+      "raw": "Longitudinal data analysis of mean passage time among malnutrition states: an application of Markov chains \n\t\t \n\t\t\t V Jeyaseelan \n\t\t \n\t\t \n\t\t\t T Sebastian \n\t\t \n\t\t \n\t\t\t J Lakshmanan \n\t\t \n\t\t \n\t\t\t S I Bangdiwala \n\t\t \n\t\t 10.1080/02664763.2016.1143454 \n\t \n\t \n\t\t J Appl Stat \n\t\t \n\t\t\t 43 \n\t\t\t \n\t\t\t 2016 \n\t\t \n\t \n\t Jeyaseelan V, Sebastian T, Lakshmanan J, Bangdiwala SI. Longitudinal data analysis of mean passage time among malnutrition states: an application of Markov chains. J Appl Stat. (2016) 43:2729-39. doi: 10.1080/02664763.2016.1143454"
+    },
+    {
+      "title": "Estimating lifetime malnourished period and its statistics based on the concept of Markov chain with reward",
+      "authors": [
+        "S Owoeye",
+        "B Oseni",
+        "E Gayawan"
+      ],
+      "year": 2020,
+      "doi": "10.1016/j.heliyon.2020.e04073",
+      "journal": "Heliyon",
+      "volume": "6",
+      "pages": "4073",
+      "raw": "Estimating lifetime malnourished period and its statistics based on the concept of Markov chain with reward \n\t\t \n\t\t\t S M Owoeye \n\t\t \n\t\t \n\t\t\t B M Oseni \n\t\t \n\t\t \n\t\t\t E Gayawan \n\t\t \n\t\t 10.1016/j.heliyon.2020.e04073 \n\t \n\t \n\t\t Heliyon \n\t\t \n\t\t\t 6 \n\t\t\t 4073 \n\t\t\t 2020 \n\t\t \n\t \n\t Owoeye SM, Oseni BM, Gayawan E. Estimating lifetime malnourished period and its statistics based on the concept of Markov chain with reward. Heliyon. (2020) 6:e04073. doi: 10.1016/j.heliyon.2020.e04073"
+    },
+    {
+      "title": "Social protection, household size, and its determinants: evidence from Ethiopia",
+      "authors": [
+        "J Hoddinott",
+        "T Mekasha"
+      ],
+      "year": 2020,
+      "doi": "10.1080/00220388.2020.1736283",
+      "journal": "J Dev Stud",
+      "volume": "56",
+      "raw": "Social protection, household size, and its determinants: evidence from Ethiopia \n\t\t \n\t\t\t J Hoddinott \n\t\t \n\t\t \n\t\t\t T J Mekasha \n\t\t \n\t\t 10.1080/00220388.2020.1736283 \n\t \n\t \n\t\t J Dev Stud \n\t\t \n\t\t\t 56 \n\t\t\t \n\t\t\t 2020 \n\t\t \n\t \n\t Hoddinott J, Mekasha TJ. Social protection, household size, and its determinants: evidence from Ethiopia. J Dev Stud. (2020) 56:1818-37. doi: 10.1080/00220388.2020.1736283"
+    },
+    {
+      "title": "Evaluating public works programs' impact on children's outcomes: further evidence from the PSNP in Ethiopia",
+      "authors": [
+        "P\u00e9rez Albertos"
+      ],
+      "year": 2018,
+      "doi": "10.24241/rcai.2023.133.1.113",
+      "raw": "P\u00e9rez Albertos \n\t\t \n\t\t \n\t\t\t \u00c1 \n\t\t \n\t\t 10.24241/rcai.2023.133.1.113 \n\t\t Evaluating public works programs' impact on children's outcomes: further evidence from the PSNP in Ethiopia \n\t\t \n\t\t\t Universidad Pontificia Comillas, Facultad de Ciencias Humanas y Sociales \n\t\t\t 2018 \n\t\t \n\t \n\t P\u00e9rez Albertos \u00c1. Evaluating public works programs' impact on children's outcomes: further evidence from the PSNP in Ethiopia. Universidad Pontificia Comillas, Facultad de Ciencias Humanas y Sociales. (2018)."
+    },
+    {
+      "title": "Impact of Ethiopia's productive safety net program on household food security and child nutrition: a marginal structural modeling approach",
+      "authors": [
+        "B Bahru",
+        "M Jebena",
+        "R Birner",
+        "M Zeller"
+      ],
+      "year": 2020,
+      "doi": "10.1016/j.ssmph.2020.100660",
+      "journal": "SSM Popul Health",
+      "volume": "12",
+      "pages": "100660",
+      "raw": "Impact of Ethiopia's productive safety net program on household food security and child nutrition: a marginal structural modeling approach \n\t\t \n\t\t\t B A Bahru \n\t\t \n\t\t \n\t\t\t M G Jebena \n\t\t \n\t\t \n\t\t\t R Birner \n\t\t \n\t\t \n\t\t\t M Zeller \n\t\t \n\t\t 10.1016/j.ssmph.2020.100660 \n\t \n\t \n\t\t SSM Popul Health \n\t\t \n\t\t\t 12 \n\t\t\t 100660 \n\t\t\t 2020 \n\t\t \n\t \n\t Bahru BA, Jebena MG, Birner R, Zeller M. Impact of Ethiopia's productive safety net program on household food security and child nutrition: a marginal structural modeling approach. SSM Popul Health. (2020) 12:100660. doi: 10.1016/j.ssmph.2020.100660"
+    },
+    {
+      "title": "Dynamic bayesian networks: Representation, inference and learning",
+      "year": 2002,
+      "raw": "Dynamic bayesian networks: Representation, inference and learning \n\t\t \n\t\t\t Kevin P \n\t\t \n\t\t \n\t\t\t 2002 \n\t\t\t Berkeley, California, USA \n\t\t \n\t\t \n\t\t\t University of California \n\t\t \n\t \n\t PhD thesis \n\t Kevin P. Dynamic bayesian networks: Representation, inference and learning. PhD thesis, Berkeley, California, USA: University of California (2002)."
+    },
+    {
+      "title": "Causality: Models, reasoning, and inference",
+      "authors": [
+        "J Pearl"
+      ],
+      "year": 2000,
+      "raw": "Causality: Models, reasoning, and inference \n\t\t \n\t\t\t J Pearl \n\t\t \n\t\t \n\t\t\t 2000. 2003 \n\t\t\t Cambridge University Pres \n\t\t\t Cambridge, England, UK \n\t\t \n\t \n\t Pearl J. Causality: Models, reasoning, and inference. Cambridge, England, UK: Cambridge University Pres; 2000 (2003)."
+    },
+    {
+      "title": "DBN-extended: a dynamic Bayesian network model extended with temporal abstractions for coronary heart disease prognosis",
+      "authors": [
+        "K Orphanou",
+        "A Stassopoulou",
+        "E Keravnou"
+      ],
+      "year": 2015,
+      "doi": "10.1109/jbhi.2015.2420534",
+      "journal": "IEEE J Biomed Health Inform",
+      "volume": "20",
+      "raw": "DBN-extended: a dynamic Bayesian network model extended with temporal abstractions for coronary heart disease prognosis \n\t\t \n\t\t\t K Orphanou \n\t\t \n\t\t \n\t\t\t A Stassopoulou \n\t\t \n\t\t \n\t\t\t E Keravnou \n\t\t \n\t\t 10.1109/jbhi.2015.2420534 \n\t \n\t \n\t\t IEEE J Biomed Health Inform \n\t\t \n\t\t\t 20 \n\t\t\t \n\t\t\t 2015 \n\t\t \n\t \n\t Orphanou K, Stassopoulou A, Keravnou E. DBN-extended: a dynamic Bayesian network model extended with temporal abstractions for coronary heart disease prognosis. IEEE J Biomed Health Inform. (2015) 20:944-52. doi: 10.1109/ JBHI.2015.2420534"
+    },
+    {
+      "title": "Characterization of dynamic Bayesian network-the dynamic Bayesian network as temporal network",
+      "authors": [
+        "N Ghanmi",
+        "M Mahjoub",
+        "Amara Neb"
+      ],
+      "year": 2011,
+      "doi": "10.14569/IJACSA.2011.020708",
+      "journal": "Int J Adv Comput Sci Appl",
+      "volume": "2",
+      "raw": "Characterization of dynamic Bayesian network-the dynamic Bayesian network as temporal network \n\t\t \n\t\t\t N Ghanmi \n\t\t \n\t\t \n\t\t\t M A Mahjoub \n\t\t \n\t\t \n\t\t\t Amara Neb \n\t\t \n\t\t 10.14569/IJACSA.2011.020708 \n\t \n\t \n\t\t Int J Adv Comput Sci Appl \n\t\t \n\t\t\t 2 \n\t\t\t \n\t\t\t 2011 \n\t\t \n\t \n\t Ghanmi N, Mahjoub MA, Amara NEB. Characterization of dynamic Bayesian network-the dynamic Bayesian network as temporal network. Int J Adv Comput Sci Appl. (2011) 2: 66-73. doi: 10.14569/IJACSA.2011.020708"
+    },
+    {
+      "title": "An extension of the differential approach for Bayesian network inference to dynamic Bayesian networks",
+      "authors": [
+        "B Brandherm"
+      ],
+      "year": 2004,
+      "doi": "10.1002/int.20022",
+      "journal": "Int J Intell Syst",
+      "volume": "19",
+      "raw": "An extension of the differential approach for Bayesian network inference to dynamic Bayesian networks \n\t\t \n\t\t\t B Brandherm \n\t\t \n\t\t \n\t\t\t Jameson A \n\t\t \n\t\t 10.1002/int.20022 \n\t \n\t \n\t\t Int J Intell Syst \n\t\t \n\t\t\t 19 \n\t\t\t \n\t\t\t 2004 \n\t\t \n\t \n\t Brandherm B, Jameson A. An extension of the differential approach for Bayesian network inference to dynamic Bayesian networks. Int J Intell Syst. (2004) 19:727-48. doi: 10.1002/int.20022"
+    },
+    {
+      "title": "Artificial intelligence-enabled predictive insights for ameliorating global malnutrition: a human-centric ai-thinking approach",
+      "authors": [
+        "M-L How",
+        "Y Chan"
+      ],
+      "year": 2020,
+      "doi": "10.3390/ai1010004",
+      "journal": "AI",
+      "volume": "1",
+      "pages": "4",
+      "raw": "Artificial intelligence-enabled predictive insights for ameliorating global malnutrition: a human-centric ai-thinking approach \n\t\t \n\t\t\t M-L How \n\t\t \n\t\t \n\t\t\t Y J Chan \n\t\t \n\t\t 10.3390/ai1010004 \n\t \n\t \n\t\t AI \n\t\t \n\t\t\t 1 \n\t\t\t 4 \n\t\t\t 2020 \n\t\t \n\t \n\t How M-L, Chan YJ. Artificial intelligence-enabled predictive insights for ameliorating global malnutrition: a human-centric ai-thinking approach. AI. (2020) 1:4. doi: 10.3390/ai1010004"
+    },
+    {
+      "title": "Probabilistic graphical models: principles and techniques",
+      "authors": [
+        "D Koller",
+        "N Friedman"
+      ],
+      "year": 2009,
+      "raw": "Probabilistic graphical models: principles and techniques \n\t\t \n\t\t\t D Koller \n\t\t \n\t\t \n\t\t\t N Friedman \n\t\t \n\t\t \n\t\t\t 2009 \n\t\t\t MIT press \n\t\t\t Cambridge, Massachusetts, USA \n\t\t \n\t \n\t Koller D, Friedman N. Probabilistic graphical models: principles and techniques. Cambridge, Massachusetts, USA: MIT press (2009)."
+    },
+    {
+      "title": "Risk assessment and decision analysis with Bayesian networks",
+      "authors": [
+        "N Fenton",
+        "M Neil"
+      ],
+      "year": 2018,
+      "raw": "Risk assessment and decision analysis with Bayesian networks \n\t\t \n\t\t\t N Fenton \n\t\t \n\t\t \n\t\t\t M Neil \n\t\t \n\t\t \n\t\t\t 2018 \n\t\t\t Crc Press \n\t\t\t Boca Raton, Florida, USA \n\t\t \n\t \n\t Fenton N, Neil M. Risk assessment and decision analysis with Bayesian networks. Boca Raton, Florida, USA: Crc Press (2018)."
+    },
+    {
+      "title": "Dynamic Bayesian network modeling, learning, and inference: a survey",
+      "authors": [
+        "P Shiguihara",
+        "Ada Lopes"
+      ],
+      "year": 2021,
+      "doi": "10.1109/access.2021.3105520",
+      "journal": "IEEE Access",
+      "volume": "9",
+      "raw": "Dynamic Bayesian network modeling, learning, and inference: a survey \n\t\t \n\t\t\t P Shiguihara \n\t\t \n\t\t \n\t\t\t Ada Lopes \n\t\t \n\t\t \n\t\t\t Mauricio D \n\t\t \n\t\t 10.1109/access.2021.3105520 \n\t \n\t \n\t\t IEEE Access \n\t\t \n\t\t\t 9 \n\t\t\t \n\t\t\t 2021 \n\t\t \n\t \n\t Shiguihara P, Lopes ADA, Mauricio D. Dynamic Bayesian network modeling, learning, and inference: a survey. IEEE Access. (2021) 9:117639-48. doi: 10.1109/ ACCESS.2021.3105520"
+    },
+    {
+      "title": "Young lives: an international study of childhood poverty: round 2 2006",
+      "authors": [
+        "J Boyden"
+      ],
+      "year": 2012,
+      "raw": "Young lives: an international study of childhood poverty: round 2 2006 \n\t\t \n\t\t\t J Boyden \n\t\t \n\t \n\t \n\t\t (study# SN 6852); round 3 2009 \n\t\t \n\t\t\t 2012 \n\t\t \n\t\t \n\t\t\t University of Oxford, Department of International Development \n\t\t \n\t \n\t study# SN 6853 \n\t Boyden J. Young lives: an international study of childhood poverty: round 2 2006 (study# SN 6852); round 3 2009 (study# SN 6853). University of Oxford, Department of International Development. (2012)."
+    },
+    {
+      "title": "Equating cognitive scores across rounds and cohorts for young Lives in Ethiopia, India, Peru and Vietnam",
+      "authors": [
+        "Y Lives"
+      ],
+      "year": 2020,
+      "doi": "10.56687/9781447348368-013",
+      "raw": "Y Lives \n\t\t \n\t\t 10.56687/9781447348368-013 \n\t\t Equating cognitive scores across rounds and cohorts for young Lives in Ethiopia, India, Peru and Vietnam \n\t\t \n\t\t\t 2020 \n\t\t \n\t\t \n\t\t\t University of Oxford, Department of International Development \n\t\t \n\t \n\t Lives Y. Equating cognitive scores across rounds and cohorts for young Lives in Ethiopia, India, Peru and Vietnam. University of Oxford, Department of International Development. (2020)."
+    },
+    {
+      "title": "Regional inequality of economic outcomes and opportunities in Ethiopia: a tale of two periods",
+      "authors": [
+        "B Argaw"
+      ],
+      "year": 2017,
+      "raw": "Regional inequality of economic outcomes and opportunities in Ethiopia: a tale of two periods \n\t\t \n\t\t\t B A Argaw \n\t\t \n\t\t No.: 9292563424 \n\t\t \n\t\t\t 2017 \n\t\t \n\t \n\t Report \n\t Argaw BA. Regional inequality of economic outcomes and opportunities in Ethiopia: a tale of two periods. WIDER Working Paper; (2017). Report No.: 9292563424."
+    },
+    {
+      "title": "Smarter through social protection? Evaluating the impact of Ethiopia's safety-net on child cognitive abilities",
+      "authors": [
+        "C Porter",
+        "M Favara",
+        "T Woldehanna"
+      ],
+      "year": 2017,
+      "raw": "Smarter through social protection? Evaluating the impact of Ethiopia's safety-net on child cognitive abilities \n\t\t \n\t\t\t C Porter \n\t\t \n\t\t \n\t\t\t M Favara \n\t\t \n\t\t \n\t\t\t T Woldehanna \n\t\t \n\t\t \n\t\t\t 2017 \n\t\t \n\t\t \n\t\t\t Institute of Labor Economics \n\t\t \n\t \n\t Porter C, Favara M, Woldehanna T. Smarter through social protection? Evaluating the impact of Ethiopia's safety-net on child cognitive abilities. Institute of Labor Economics. (2017)."
+    },
+    {
+      "title": "Ethiopia health extension program: An institutionalized community approach for universal health coverage",
+      "authors": [
+        "H Wang",
+        "R Tesfaye",
+        "G Ramana",
+        "C Chekagn"
+      ],
+      "raw": "Ethiopia health extension program: An institutionalized community approach for universal health coverage \n\t\t \n\t\t\t H Wang \n\t\t \n\t\t \n\t\t\t R Tesfaye \n\t\t \n\t\t \n\t\t\t G N Ramana \n\t\t \n\t\t \n\t\t\t C T Chekagn \n\t\t \n\t\t \n\t \n\t Wang H, Tesfaye R, Ramana GN, Chekagn CT. Ethiopia health extension program: An institutionalized community approach for universal health coverage."
+    },
+    {
+      "authors": [
+        "D Washington"
+      ],
+      "year": 2016,
+      "raw": "D C Washington \n\t\t \n\t\t \n\t\t\t 2016 \n\t\t\t World Bank Publications \n\t\t\t USA \n\t\t \n\t \n\t Washington, D.C., USA: World Bank Publications (2016)."
+    },
+    {
+      "title": "Young Lives Ethiopia school survey 2012-13: Data overview report: Young Lives",
+      "authors": [
+        "E Aurino",
+        "Z James",
+        "C Rolleston"
+      ],
+      "year": 2014,
+      "raw": "E Aurino \n\t\t \n\t\t \n\t\t\t Z James \n\t\t \n\t\t \n\t\t\t C Rolleston \n\t\t \n\t\t Young Lives Ethiopia school survey 2012-13: Data overview report: Young Lives \n\t\t \n\t\t\t 2014 \n\t\t \n\t\t \n\t\t\t University of Oxford, Department of International Development \n\t\t \n\t \n\t Aurino E, James Z, Rolleston C. Young Lives Ethiopia school survey 2012-13: Data overview report: Young Lives. University of Oxford, Department of International Development. (2014)."
+    },
+    {
+      "title": "Health monitoring system for autonomous vehicles using dynamic Bayesian networks for diagnosis and prognosis",
+      "authors": [
+        "I Gomes",
+        "D Wolf"
+      ],
+      "year": 2021,
+      "doi": "10.1007/s10846-020-01293-y",
+      "journal": "J Intell Robot Syst",
+      "volume": "101",
+      "raw": "Health monitoring system for autonomous vehicles using dynamic Bayesian networks for diagnosis and prognosis \n\t\t \n\t\t\t I P Gomes \n\t\t \n\t\t \n\t\t\t D F Wolf \n\t\t \n\t\t 10.1007/s10846-020-01293-y \n\t \n\t \n\t\t J Intell Robot Syst \n\t\t \n\t\t\t 101 \n\t\t\t \n\t\t\t 2021 \n\t\t \n\t \n\t Gomes IP, Wolf DF. Health monitoring system for autonomous vehicles using dynamic Bayesian networks for diagnosis and prognosis. J Intell Robot Syst. (2021) 101:1-21. doi: 10.1007/s10846-020-01293-y"
+    },
+    {
+      "title": "Dynamic Bayesian networks for prediction of health status and treatment effect in patients with chronic lymphocytic leukemia",
+      "authors": [
+        "P Ladyzynski",
+        "M Molik",
+        "P Foltynski"
+      ],
+      "year": 2022,
+      "doi": "10.1038/s41598-022-05813-8",
+      "journal": "Sci Rep",
+      "volume": "12",
+      "pages": "1811",
+      "raw": "Dynamic Bayesian networks for prediction of health status and treatment effect in patients with chronic lymphocytic leukemia \n\t\t \n\t\t\t P Ladyzynski \n\t\t \n\t\t \n\t\t\t M Molik \n\t\t \n\t\t \n\t\t\t P Foltynski \n\t\t \n\t\t 10.1038/s41598-022-05813-8 \n\t \n\t \n\t\t Sci Rep \n\t\t \n\t\t\t 12 \n\t\t\t 1811 \n\t\t\t 2022 \n\t\t \n\t \n\t Ladyzynski P, Molik M, Foltynski P. Dynamic Bayesian networks for prediction of health status and treatment effect in patients with chronic lymphocytic leukemia. Sci Rep. (2022) 12:1811. doi: 10.1038/s41598-022-05813-8"
+    },
+    {
+      "title": "A causal brain network estimation method leveraging Bayesian analysis and the PC algorithm",
+      "authors": [
+        "G Zhang",
+        "A Zhang",
+        "V Calhoun",
+        "Y-P Wang"
+      ],
+      "year": 2020,
+      "doi": "10.1117/12.2549295",
+      "raw": "A causal brain network estimation method leveraging Bayesian analysis and the PC algorithm \n\t\t \n\t\t\t G Zhang \n\t\t \n\t\t \n\t\t\t A Zhang \n\t\t \n\t\t \n\t\t\t V D Calhoun \n\t\t \n\t\t \n\t\t\t Y-P Wang \n\t\t \n\t\t 10.1117/12.2549295 \n\t \n\t \n\t\t Biomedical applications in molecular, structural, and functional imaging \n\t\t Bellingham, Washington, USA \n\t\t \n\t\t\t SPIE \n\t\t\t 2020. 2020 \n\t\t \n\t \n\t Zhang G, Zhang A, Calhoun VD, Wang Y-P. A causal brain network estimation method leveraging Bayesian analysis and the PC algorithm. Medical imaging 2020: Biomedical applications in molecular, structural, and functional imaging. Bellingham, Washington, USA: SPIE (2020)."
+    },
+    {
+      "title": "Effectiveness of monetary policy: application of modified Peter and Clark (PC) algorithms under graph-theoretic approach",
+      "authors": [
+        "R Fazal",
+        "M Alam",
+        "U Hayat",
+        "N Alam"
+      ],
+      "year": 2021,
+      "doi": "10.47743/saeb-2021-0019",
+      "journal": "Sci Ann Econ Business",
+      "volume": "68",
+      "raw": "Effectiveness of monetary policy: application of modified Peter and Clark (PC) algorithms under graph-theoretic approach \n\t\t \n\t\t\t R Fazal \n\t\t \n\t\t \n\t\t\t M S Alam \n\t\t \n\t\t \n\t\t\t U Hayat \n\t\t \n\t\t \n\t\t\t N Alam \n\t\t \n\t\t 10.47743/saeb-2021-0019 \n\t \n\t \n\t\t Sci Ann Econ Business \n\t\t \n\t\t\t 68 \n\t\t\t \n\t\t\t 2021 \n\t\t \n\t \n\t Fazal R, Alam MS, Hayat U, Alam N. Effectiveness of monetary policy: application of modified Peter and Clark (PC) algorithms under graph-theoretic approach. Sci Ann Econ Business. (2021) 68:333-44. doi: 10.47743/saeb-2021-0019"
+    },
+    {
+      "title": "Dynamic data feed to bayesian network model and SMILE web application",
+      "authors": [
+        "N Jongsawat",
+        "P Poompuang",
+        "W Premchaiswadi"
+      ],
+      "year": 2008,
+      "doi": "10.1109/snpd.2008.67",
+      "raw": "Dynamic data feed to bayesian network model and SMILE web application \n\t\t \n\t\t\t N Jongsawat \n\t\t \n\t\t \n\t\t\t P Poompuang \n\t\t \n\t\t \n\t\t\t W Premchaiswadi \n\t\t \n\t\t 10.1109/snpd.2008.67 \n\t \n\t \n\t\t ninth ACIS international conference on software engineering, artificial intelligence, networking \n\t\t \n\t\t\t IEEE \n\t\t\t 2008. 2008 \n\t\t \n\t \n\t and parallel/ distributed computing \n\t Jongsawat N, Poompuang P, Premchaiswadi W, editors. Dynamic data feed to bayesian network model and SMILE web application. 2008 ninth ACIS international conference on software engineering, artificial intelligence, networking, and parallel/ distributed computing; (2008): IEEE."
+    },
+    {
+      "title": "HUGIN-A Shell for building Bayesian belief universes for expert systems",
+      "authors": [
+        "S Andersen",
+        "K Olesen",
+        "F Jensen",
+        "F Jensen"
+      ],
+      "year": 1989,
+      "raw": "HUGIN-A Shell for building Bayesian belief universes for expert systems \n\t\t \n\t\t\t S K Andersen \n\t\t \n\t\t \n\t\t\t K G Olesen \n\t\t \n\t\t \n\t\t\t F V Jensen \n\t\t \n\t\t \n\t\t\t F Jensen \n\t\t \n\t\t \n\t\t\t 1989 \n\t\t\t IJCAI \n\t\t\t Menlo Park, California, USA \n\t\t \n\t \n\t Andersen SK, Olesen KG, Jensen FV, Jensen F. HUGIN-A Shell for building Bayesian belief universes for expert systems. Menlo Park, California, USA: IJCAI (1989)."
+    },
+    {
+      "title": "A bayesian network approach to causation analysis of road accidents using netica",
+      "authors": [
+        "X Zou",
+        "W Yue"
+      ],
+      "year": 2017,
+      "doi": "10.1155/2017/2525481",
+      "journal": "J Adv Transp",
+      "volume": "2017",
+      "raw": "A bayesian network approach to causation analysis of road accidents using netica \n\t\t \n\t\t\t X Zou \n\t\t \n\t\t \n\t\t\t W L Yue \n\t\t \n\t\t 10.1155/2017/2525481 \n\t \n\t \n\t\t J Adv Transp \n\t\t \n\t\t\t 2017 \n\t\t\t \n\t\t\t 2017 \n\t\t \n\t \n\t Zou X, Yue WL. A bayesian network approach to causation analysis of road accidents using netica. J Adv Transp. (2017) 2017:1-18. doi: 10.1155/2017/2525481"
+    },
+    {
+      "title": "Bayesian network constraint-based structure learning algorithms: parallel and optimised implementations in the bnlearn R package",
+      "authors": [
+        "M Scutari"
+      ],
+      "year": 2014,
+      "doi": "10.48550/arXiv.1406.7648",
+      "raw": "Bayesian network constraint-based structure learning algorithms: parallel and optimised implementations in the bnlearn R package \n\t\t \n\t\t\t M Scutari \n\t\t \n\t\t 10.48550/arXiv.1406.7648 \n\t\t \n\t\t\t 2014 \n\t\t\t \n\t\t \n\t \n\t Scutari M. Bayesian network constraint-based structure learning algorithms: parallel and optimised implementations in the bnlearn R package. arXiv. (2014). VV: 4-7. doi: 10.48550/arXiv.1406.7648"
+    },
+    {
+      "title": "Bayesian network structure learning, parameter learning and inference, R package version",
+      "authors": [
+        "M Scutari"
+      ],
+      "year": 2019,
+      "doi": "10.32614/cran.package.bnlearn",
+      "journal": "The R Foundation for Statistical Computing",
+      "pages": "4",
+      "raw": "Bayesian network structure learning, parameter learning and inference, R package version \n\t\t \n\t\t\t M Scutari \n\t\t \n\t\t 10.32614/cran.package.bnlearn \n\t \n\t \n\t\t The R Foundation for Statistical Computing \n\t\t \n\t\t\t 4 \n\t\t\t 2019 \n\t\t \n\t \n\t Package 'bnlearn \n\t Scutari M. Package 'bnlearn' . Bayesian network structure learning, parameter learning and inference, R package version. The R Foundation for Statistical Computing. (2019);4."
+    },
+    {
+      "title": "Bayesian networks in R with the gRain package",
+      "authors": [
+        "S H\u00f8jsgaard"
+      ],
+      "year": 2012,
+      "doi": "10.32614/cran.package.grain",
+      "journal": "J Stat Softw",
+      "volume": "46",
+      "raw": "Bayesian networks in R with the gRain package \n\t\t \n\t\t\t S H\u00f8jsgaard \n\t\t \n\t\t 10.32614/cran.package.grain \n\t \n\t \n\t\t J Stat Softw \n\t\t \n\t\t\t 46 \n\t\t\t \n\t\t\t 2012 \n\t\t \n\t \n\t H\u00f8jsgaard S. Bayesian networks in R with the gRain package. J Stat Softw. (2012) 46:1-26."
+    },
+    {
+      "title": "Introduction to bayesian networks & bayesialab",
+      "authors": [
+        "S Conrady",
+        "L Jouffe"
+      ],
+      "year": 2013,
+      "doi": "10.1201/b14499-2",
+      "raw": "S Conrady \n\t\t \n\t\t \n\t\t\t L Jouffe \n\t\t \n\t\t 10.1201/b14499-2 \n\t\t Introduction to bayesian networks & bayesialab \n\t\t Laval, France \n\t\t \n\t\t\t Bayesia SAS \n\t\t\t 2013 \n\t\t \n\t \n\t Conrady S, Jouffe L. Introduction to bayesian networks & bayesialab.Laval, France: Bayesia SAS (2013)."
+    },
+    {
+      "title": "The state of food security and nutrition in the world Food and Agriculture Organization of the United Nations (FAO), International Fund for Agricultural Development (IFAD)",
+      "year": 2019,
+      "doi": "10.54394/whtv8767",
+      "pages": "2019",
+      "raw": "10.54394/whtv8767 \n\t\t The state of food security and nutrition in the world Food and Agriculture Organization of the United Nations (FAO), International Fund for Agricultural Development (IFAD) \n\t\t \n\t\t\t UNICEF, World Food Programme (WFP), and World Health Organization (WHO) \n\t\t\t 2019 \n\t\t\t 2019 \n\t\t \n\t \n\t UNICEF. The state of food security and nutrition in the world Food and Agriculture Organization of the United Nations (FAO), International Fund for Agricultural Development (IFAD), UNICEF, World Food Programme (WFP), and World Health Organization (WHO). (2019). 2019 p."
+    },
+    {
+      "title": "Parental incarceration and kinship care: caregiver experiences, child well-being, and permanency intentions",
+      "authors": [
+        "R Denby"
+      ],
+      "year": 2012,
+      "doi": "10.1080/19371918.2012.639639",
+      "journal": "Soc Work Public Health",
+      "volume": "27",
+      "raw": "Parental incarceration and kinship care: caregiver experiences, child well-being, and permanency intentions \n\t\t \n\t\t\t R W Denby \n\t\t \n\t\t 10.1080/19371918.2012.639639 \n\t \n\t \n\t\t Soc Work Public Health \n\t\t \n\t\t\t 27 \n\t\t\t \n\t\t\t 2012 \n\t\t \n\t \n\t Denby RW. Parental incarceration and kinship care: caregiver experiences, child well-being, and permanency intentions. Soc Work Public Health. (2012) 27:104-28. doi: 10.1080/19371918.2012.639639"
+    },
+    {
+      "title": "Bayesian network modelling to identify on-ramps to childhood obesity",
+      "authors": [
+        "W Zhu",
+        "R Marchant",
+        "R Morris",
+        "L Baur",
+        "S Simpson",
+        "S Cripps"
+      ],
+      "year": 2023,
+      "doi": "10.1186/s12916-023-02789-8",
+      "journal": "BMC Med",
+      "volume": "21",
+      "pages": "105",
+      "raw": "Bayesian network modelling to identify on-ramps to childhood obesity \n\t\t \n\t\t\t W Zhu \n\t\t \n\t\t \n\t\t\t R Marchant \n\t\t \n\t\t \n\t\t\t R W Morris \n\t\t \n\t\t \n\t\t\t L A Baur \n\t\t \n\t\t \n\t\t\t S J Simpson \n\t\t \n\t\t \n\t\t\t S Cripps \n\t\t \n\t\t 10.1186/s12916-023-02789-8 \n\t \n\t \n\t\t BMC Med \n\t\t \n\t\t\t 21 \n\t\t\t 105 \n\t\t\t 2023 \n\t\t \n\t \n\t Zhu W, Marchant R, Morris RW, Baur LA, Simpson SJ, Cripps S. Bayesian network modelling to identify on-ramps to childhood obesity. BMC Med. (2023) 21:105. doi: 10.1186/s12916-023-02789-8"
+    },
+    {
+      "title": "The association of parental education with childhood undernutrition in low-and middle-income countries: comparing the role of paternal and maternal education",
+      "authors": [
+        "S Vollmer",
+        "C Bommer",
+        "Krishna Harttgen",
+        "K Subramanian"
+      ],
+      "year": 2017,
+      "doi": "10.1093/ije/dyw133",
+      "journal": "Int J Epidemiol",
+      "volume": "46",
+      "raw": "The association of parental education with childhood undernutrition in low-and middle-income countries: comparing the role of paternal and maternal education \n\t\t \n\t\t\t S Vollmer \n\t\t \n\t\t \n\t\t\t C Bommer \n\t\t \n\t\t \n\t\t\t Krishna A Harttgen \n\t\t \n\t\t \n\t\t\t K Subramanian \n\t\t \n\t\t \n\t\t\t S \n\t\t \n\t\t 10.1093/ije/dyw133 \n\t \n\t \n\t\t Int J Epidemiol \n\t\t \n\t\t\t 46 \n\t\t\t \n\t\t\t 2017 \n\t\t \n\t \n\t Vollmer S, Bommer C, Krishna A, Harttgen K, Subramanian S. The association of parental education with childhood undernutrition in low-and middle-income countries: comparing the role of paternal and maternal education. Int J Epidemiol. (2017) 46:312-23. doi: 10.1093/ije/dyw133"
+    },
+    {
+      "title": "Association between parental education and simultaneous malnutrition among parents and children in 45 low-and middle-income countries",
+      "authors": [
+        "S Chen",
+        "S Richardson",
+        "Y Kong",
+        "N Ma",
+        "A Zhao",
+        "Y Song"
+      ],
+      "year": 2023,
+      "doi": "10.1001/jamanetworkopen.2022.51727",
+      "journal": "JAMA Netw Open",
+      "volume": "6",
+      "pages": "51727",
+      "raw": "Association between parental education and simultaneous malnutrition among parents and children in 45 low-and middle-income countries \n\t\t \n\t\t\t S Chen \n\t\t \n\t\t \n\t\t\t S Richardson \n\t\t \n\t\t \n\t\t\t Y Kong \n\t\t \n\t\t \n\t\t\t N Ma \n\t\t \n\t\t \n\t\t\t A Zhao \n\t\t \n\t\t \n\t\t\t Y Song \n\t\t \n\t\t 10.1001/jamanetworkopen.2022.51727 \n\t \n\t \n\t\t JAMA Netw Open \n\t\t \n\t\t\t 6 \n\t\t\t 51727 \n\t\t\t 2023 \n\t\t \n\t \n\t Chen S, Richardson S, Kong Y, Ma N, Zhao A, Song Y, et al. Association between parental education and simultaneous malnutrition among parents and children in 45 low-and middle-income countries. JAMA Netw Open. (2023) 6:51727. doi: 10.1001/ jamanetworkopen.2022.51727"
+    },
+    {
+      "title": "Nutrition-sensitive interventions and programmes: how can they help to accelerate progress in improving maternal and child nutrition?",
+      "authors": [
+        "M Ruel",
+        "H Alderman"
+      ],
+      "year": 2013,
+      "doi": "10.1016/s0140-6736(13)60843-0",
+      "journal": "Lancet",
+      "volume": "382",
+      "raw": "Nutrition-sensitive interventions and programmes: how can they help to accelerate progress in improving maternal and child nutrition? \n\t\t \n\t\t\t M T Ruel \n\t\t \n\t\t \n\t\t\t H Alderman \n\t\t \n\t\t 10.1016/s0140-6736(13)60843-0 \n\t \n\t \n\t\t Lancet \n\t\t \n\t\t\t 382 \n\t\t\t \n\t\t\t 2013 \n\t\t \n\t \n\t Ruel MT, Alderman H. Nutrition-sensitive interventions and programmes: how can they help to accelerate progress in improving maternal and child nutrition? Lancet. (2013) 382:536-51. doi: 10.1016/S0140-6736(13)60843-0"
+    },
+    {
+      "title": "Evidence-based interventions for improvement of maternal and child nutrition: what can be done and at what cost?",
+      "authors": [
+        "Z Bhutta",
+        "J Das",
+        "A Rizvi",
+        "M Gaffey",
+        "N Walker",
+        "S Horton"
+      ],
+      "year": 2013,
+      "doi": "10.1016/s0140-6736(13)60996-4",
+      "journal": "Lancet",
+      "volume": "382",
+      "raw": "Evidence-based interventions for improvement of maternal and child nutrition: what can be done and at what cost? \n\t\t \n\t\t\t Z A Bhutta \n\t\t \n\t\t \n\t\t\t J K Das \n\t\t \n\t\t \n\t\t\t A Rizvi \n\t\t \n\t\t \n\t\t\t M F Gaffey \n\t\t \n\t\t \n\t\t\t N Walker \n\t\t \n\t\t \n\t\t\t S Horton \n\t\t \n\t\t 10.1016/s0140-6736(13)60996-4 \n\t \n\t \n\t\t Lancet \n\t\t \n\t\t\t 382 \n\t\t\t \n\t\t\t 2013 \n\t\t \n\t \n\t Bhutta ZA, Das JK, Rizvi A, Gaffey MF, Walker N, Horton S, et al. Evidence-based interventions for improvement of maternal and child nutrition: what can be done and at what cost? Lancet. (2013) 382:452-77. doi: 10.1016/S0140-6736(13)60996-4"
+    },
+    {
+      "title": "The impact of conditional cash transfers on child health in low-and middle-income countries: a systematic review",
+      "authors": [
+        "E Owusu-Addo",
+        "R Cross"
+      ],
+      "year": 2014,
+      "doi": "10.1007/s00038-014-0570-x",
+      "journal": "Int J Public Health",
+      "volume": "59",
+      "raw": "The impact of conditional cash transfers on child health in low-and middle-income countries: a systematic review \n\t\t \n\t\t\t E Owusu-Addo \n\t\t \n\t\t \n\t\t\t R Cross \n\t\t \n\t\t 10.1007/s00038-014-0570-x \n\t \n\t \n\t\t Int J Public Health \n\t\t \n\t\t\t 59 \n\t\t\t \n\t\t\t 2014 \n\t\t \n\t \n\t Owusu-Addo E, Cross R. The impact of conditional cash transfers on child health in low-and middle-income countries: a systematic review. Int J Public Health. (2014) 59:609-18. doi: 10.1007/s00038-014-0570-x"
+    },
+    {
+      "title": "Effectiveness of nutrition training of health workers toward improving caregivers' feeding practices for children aged six months to two years: a systematic review",
+      "authors": [
+        "B Sunguya",
+        "K Poudel",
+        "L Mlunde",
+        "P Shakya",
+        "D Urassa",
+        "M Jimba"
+      ],
+      "year": 2013,
+      "doi": "10.1186/1475-2891-12-66",
+      "journal": "Nutr J",
+      "volume": "12",
+      "raw": "Effectiveness of nutrition training of health workers toward improving caregivers' feeding practices for children aged six months to two years: a systematic review \n\t\t \n\t\t\t B F Sunguya \n\t\t \n\t\t \n\t\t\t K C Poudel \n\t\t \n\t\t \n\t\t\t L B Mlunde \n\t\t \n\t\t \n\t\t\t P Shakya \n\t\t \n\t\t \n\t\t\t D P Urassa \n\t\t \n\t\t \n\t\t\t M Jimba \n\t\t \n\t\t 10.1186/1475-2891-12-66 \n\t \n\t \n\t\t Nutr J \n\t\t \n\t\t\t 12 \n\t\t\t \n\t\t\t 2013 \n\t\t \n\t \n\t Sunguya BF, Poudel KC, Mlunde LB, Shakya P, Urassa DP, Jimba M, et al. Effectiveness of nutrition training of health workers toward improving caregivers' feeding practices for children aged six months to two years: a systematic review. Nutr J. (2013) 12:1-14. doi: 10.1186/1475-2891-12-66"
+    },
+    {
+      "title": "Assessment of the impact of quality improvement interventions on the quality of sick child care provided by health extension Workers in Ethiopia",
+      "authors": [
+        "N Miller",
+        "A Amouzou",
+        "E Hazel",
+        "H Legesse",
+        "T Degefie",
+        "M Tafesse"
+      ],
+      "year": 2016,
+      "doi": "10.7189/jogh.06.020404",
+      "journal": "J Glob Health",
+      "volume": "6",
+      "pages": "404",
+      "raw": "Assessment of the impact of quality improvement interventions on the quality of sick child care provided by health extension Workers in Ethiopia \n\t\t \n\t\t\t N P Miller \n\t\t \n\t\t \n\t\t\t A Amouzou \n\t\t \n\t\t \n\t\t\t E Hazel \n\t\t \n\t\t \n\t\t\t H Legesse \n\t\t \n\t\t \n\t\t\t T Degefie \n\t\t \n\t\t \n\t\t\t M Tafesse \n\t\t \n\t\t 10.7189/jogh.06.020404 \n\t \n\t \n\t\t J Glob Health \n\t\t \n\t\t\t 6 \n\t\t\t 404 \n\t\t\t 2016 \n\t\t \n\t \n\t Miller NP, Amouzou A, Hazel E, Legesse H, Degefie T, Tafesse M, et al. Assessment of the impact of quality improvement interventions on the quality of sick child care provided by health extension Workers in Ethiopia. J Glob Health. (2016) 6:404. doi: 10.7189/jogh.06.020404"
+    },
+    {
+      "title": "The impact of the productive safety net program (PSNP) on food security and asset accumulation of rural households': evidence from Gedeo zone, southern Ethiopia",
+      "authors": [
+        "T Tadesse",
+        "Z Gebremedhin"
+      ],
+      "year": 2022,
+      "doi": "10.1080/23322039.2022.2087285",
+      "journal": "Cogent Econ Finance",
+      "volume": "10",
+      "pages": "2087285",
+      "raw": "The impact of the productive safety net program (PSNP) on food security and asset accumulation of rural households': evidence from Gedeo zone, southern Ethiopia \n\t\t \n\t\t\t T Tadesse \n\t\t \n\t\t \n\t\t\t Z T Gebremedhin \n\t\t \n\t\t 10.1080/23322039.2022.2087285 \n\t \n\t \n\t\t Cogent Econ Finance \n\t\t \n\t\t\t 10 \n\t\t\t 2087285 \n\t\t\t 2022 \n\t\t \n\t \n\t Tadesse T, Gebremedhin ZT. The impact of the productive safety net program (PSNP) on food security and asset accumulation of rural households': evidence from Gedeo zone, southern Ethiopia. Cogent Econ Finance. (2022) 10:2087285. doi: 10.1080/23322039.2022.2087285"
+    },
+    {
+      "title": "Is there persistence in the impact of emergency food aid? Evidence on consumption, food security, and assets in rural Ethiopia",
+      "authors": [
+        "D Gilligan",
+        "J Hoddinott"
+      ],
+      "year": 2007,
+      "doi": "10.1111/j.1467-8276.2007.00992.x",
+      "journal": "Am J Agric Econ",
+      "volume": "89",
+      "raw": "Is there persistence in the impact of emergency food aid? Evidence on consumption, food security, and assets in rural Ethiopia \n\t\t \n\t\t\t D O Gilligan \n\t\t \n\t\t \n\t\t\t J Hoddinott \n\t\t \n\t\t 10.1111/j.1467-8276.2007.00992.x \n\t \n\t \n\t\t Am J Agric Econ \n\t\t \n\t\t\t 89 \n\t\t\t \n\t\t\t 2007 \n\t\t \n\t \n\t Gilligan DO, Hoddinott J. Is there persistence in the impact of emergency food aid? Evidence on consumption, food security, and assets in rural Ethiopia. Am J Agric Econ. (2007) 89:225-42. doi: 10.1111/j.1467-8276.2007.00992.x"
+    },
+    {
+      "title": "Multistate Markov chain modeling for child undernutrition transitions in Ethiopia: a longitudinal data analysis, 2002-2016",
+      "authors": [
+        "G Begashaw",
+        "T Zewotir",
+        "H Fenta"
+      ],
+      "year": 2024,
+      "journal": "BMC Medical Research Methodology",
+      "volume": "24",
+      "pages": "283",
+      "raw": "Multistate Markov chain modeling for child undernutrition transitions in Ethiopia: a longitudinal data analysis, 2002-2016 \n\t\t \n\t\t\t G B Begashaw \n\t\t \n\t\t \n\t\t\t T Zewotir \n\t\t \n\t\t \n\t\t\t H M Fenta \n\t\t \n\t \n\t \n\t\t BMC Medical Research Methodology \n\t\t \n\t\t\t 24 \n\t\t\t 283 \n\t\t\t 2024 \n\t\t \n\t \n\t Begashaw G. B., Zewotir T, Fenta H. M. Multistate Markov chain modeling for child undernutrition transitions in Ethiopia: a longitudinal data analysis, 2002-2016. BMC Medical Research Methodology. (2024) 24:283."
+    }
+  ],
+  "num_references": 58,
+  "figures": [
+    {
+      "caption": "FIGURE 2",
+      "description": "FIGURE 2Temporal causal pathways in DAGs for child undernutrition. NB: The detailed DAG causal pathways are listed in Supplementary TableS5because the number of causal pathways across time points is extensive and difficult to display in a single DAG structure."
+    },
+    {
+      "caption": "FIGURE 3",
+      "description": "FIGURE 3Conditional probability of child nutritional status by household program participation status over time."
+    },
+    {
+      "caption": "FIGURE 4",
+      "description": "FIGURE 4Conditional probability of child nutritional status based on parental education history."
+    },
+    {
+      "caption": "FIGURE 5",
+      "description": "FIGURE 5Conditional probabilities of household characteristics over time by programme participation status."
+    },
+    {
+      "caption": "FIGURE 6",
+      "description": "FIGURE 6"
+    },
+    {
+      "caption": "FIGURE 7",
+      "description": "FIGURE 7"
+    },
+    {
+      "type": "table",
+      "caption": "TABLE 1",
+      "description": "Description and abbreviations of nodes in the child nutritional status network."
+    },
+    {
+      "type": "table",
+      "caption": "TABLE 4",
+      "description": "Maximum posterior effect of household characteristics and program enrollment on wealth status over time."
+    },
+    {
+      "type": "table",
+      "caption": "TABLE 2",
+      "description": "Maximum posterior effect of household characteristics on food security."
+    },
+    {
+      "type": "table",
+      "caption": "TABLE 5",
+      "description": "Maximum posterior effect of parental education and household wealth on child nutritional status over time."
+    },
+    {
+      "type": "table",
+      "caption": "TABLE 6",
+      "description": "Predictive performance of nodes in the DBN."
+    }
+  ],
+  "num_figures": 11,
+  "tables": [
+    {
+      "content": "Node Abbreviation Node name Time- category dependent Time step t Round of Survey - ( 0 t = to 4 t = ) Target state CNS Child nutritional Yes status Child level CA Children age Yes nodes CS Children sex No Parents's MSW Mother's subjective Yes level nodes wellbeing DA Father's education Yes level DE Father's age Yes MA Mother's age Yes ME Mother' education Yes level Household HS Household size Yes level nodes WQ Wealth quintile Yes FS Food Security Yes HHA Household head age Yes HHS Household head sex Yes Intervention PS Program Participation Yes node Status t (recommended approach in Bayes server as shorthand for time) represents time, where 4 t = indicates time step 4. All time steps are zero-based, meaning 0 t = is the initial time step."
+    },
+    {
+      "content": "t DE ME DA MA HHA HHS PS WQ 2002 Illiterate Illiterate 18-30 18-30 18-30 Male - Poor 2006 Literate Illiterate 18-30 18-30 30-50 Male - Poor 2009 Literate Illiterate 30-50 Under 30 30-50 Male PE Wealthy 2013 Illiterate Literate 30-50 30-50 30-50 Male PEH Wealthy 2016 Literate Literate 30-50 30-50 30-50 Male PE Wealthy"
+    },
+    {
+      "content": "t HS WQ PS FS 2009 >6 Poor P Insecure 2013 <6 Poor PE Secure 2016 <6 Poor PEH Secure TABLE 3 Maximum posterior effect of maternal characteristics and program enrollment on subjective well-being. t MA PS MSW 2002 Under 30 - Low 2006 30-50 - Low 2009 Under 30 C Low 2013 Under 30 EH High 2016 Under 30 PEH High Dash (-) indicates that the program was not available in that specific time slice."
+    },
+    {
+      "content": "t ME DE WQ MSW FS CA CS CNS 2002 Literate Illiterate Poor Low - Infants (0-2 years) Female US 2006 Illiterate Literate Wealthy Low - Early childhood (2-6 years) Male S 2009 Literate Illiterate Poor Low Insecure Preadolescence (6-12 years) Male SW 2013 Literate Literate Wealthy High Secure Preadolescence (6-12 years) Female N 2016 Literate Illiterate Wealthy High Secure Adolescents (12-18 years) Female W"
+    },
+    {
+      "content": "Variables Mutual Target Target information entropy entropy reduction MSW 0.97 0.44 0.03 DE 0.96 0.52 0.03 PS 0.94 0.68 0.02 HS 0.92 0.51 0.04 MA 0.91 0.45 0.05 ME 0.89 0.48 0.04 WQ 0.88 0.54 0.05 HHA 0.82 0.39 0.04 HHS 0.79 0.42 0.06 CA 0.78 0.52 0.07 DA 0.75 0.37 0.05 FS 0.73 0.57 0.05 CS 0.62 0.54 0.06"
+    }
+  ],
+  "num_tables": 5,
+  "license": "COPYRIGHT \u00a9 2024 Begashaw, Zewotir and Fenta. This is an open-access article distributed under the terms of the Creative Commons Attribution License (CC BY). The use, distribution or reproduction in other forums is permitted, provided the original author(s) and the copyright owner(s) are credited and that the original publication in this journal is cited, in accordance with accepted academic practice. No use, distribution or reproduction is permitted which does not comply with these terms.",
+  "license_type": "unknown",
+  "formulas": [
+    {
+      "text": "{ } 1 2 , , , N X X X X = \u2026"
+    },
+    {
+      "text": "( ) ( ) ( ) 1 , , 1 , , Pa N t t t T t i t i i P X X X P X X - - = \u2026 = \u220f | |"
+    },
+    {
+      "text": "1 , , t t t T P X X X - - \u2026 |"
+    },
+    {
+      "text": ", 1, to t i t i X X"
+    },
+    {
+      "text": "( ) ( ) ( ) , 1, t i t i P X X - |"
+    },
+    {
+      "text": "( ) ( ) ( ) 5 , , 1 1"
+    },
+    {
+      "text": "n t i t i t i D P X X = = \u0398 = \u0398 \u2211\u2211 \uf04c |"
+    },
+    {
+      "text": "optimal argmax G G P D G = |"
+    },
+    {
+      "text": "optimal optimal argmax , P D G \u03b8 \u03b8 \u03b8 = |"
+    },
+    {
+      "text": "( ) ( ) ( ) ( ) 1: 1: 1: | | t t"
+    },
+    {
+      "text": "{ } 1 2"
+    },
+    {
+      "text": "( ) ( ) cf cf P Y y do X x = = | Here, cf"
+    },
+    {
+      "text": "cf cf P Y y do X x = = |"
+    },
+    {
+      "text": "cf cf P Y y do X x = = |"
+    },
+    {
+      "text": "1 2 2 n n- \uf8eb \uf8f6 \uf8ec \uf8f7 \uf8ec \uf8f7 \uf8ec \uf8f7 \uf8ed \uf8f8"
+    }
+  ],
+  "num_formulas": 15,
+  "num_citations": 63,
+  "cited_references": [
+    "b43",
+    "b39",
+    "b38",
+    "b4",
+    "b14",
+    "b17",
+    "b48",
+    "b20",
+    "b53",
+    "b24",
+    "b40",
+    "b41",
+    "b26",
+    "b28",
+    "b51",
+    "b13",
+    "b27",
+    "b33",
+    "b49",
+    "b16",
+    "b7",
+    "b23",
+    "b46",
+    "b29",
+    "b52",
+    "b19",
+    "b6",
+    "b57",
+    "b42",
+    "b18",
+    "b30",
+    "b1",
+    "b35",
+    "b9",
+    "b31",
+    "b10",
+    "b3",
+    "b5",
+    "b34",
+    "b47",
+    "b8",
+    "b12",
+    "b15",
+    "b45",
+    "b11",
+    "b36",
+    "b37",
+    "b25",
+    "b22",
+    "b0",
+    "b21",
+    "b2",
+    "b44",
+    "b50"
+  ],
+  "notes": [
+    "[raw_affiliation] 1  Department of Statistics , College of Science , Bahir Dar University , Bahir Dar , Ethiopia ,",
+    "[raw_affiliation] 2  Department of Data Science , College of Natural and Computational Science , Debre Berhan University , Debre Berhan , Ethiopia ,",
+    "[raw_affiliation] 3  School of Mathematics , Statistics and Computer Science , College of Agriculture, Engineering and Science , University of KwaZulu-Natal , Durban , South Africa ,",
+    "[raw_affiliation] 1  Department of Statistics , College of Science , Bahir Dar University , Bahir Dar , Ethiopia ,",
+    "[raw_affiliation] 4  Center for Environmental and Respiratory Health Research (CERH) , Research Unit of Population Health , University of Oulu , Oulu , Finland ,",
+    "[raw_affiliation] 5  Biocenter Oulu , University of Oulu , Oulu , Finland H&H Group , Switzerland",
+    "[raw_affiliation] University of S\u00e3o Paulo , Brazil City of Hope National Medical Center , United States",
+    "[raw_affiliation] Productive Safety Net Program; SNNP , Southern Nations , Nationalities , and Peoples' ; UK , United Kingdom.",
+    "[submission] RECEIVED 11 March 2024 ACCEPTED 27 November 2024",
+    "[other] FIGURE 1",
+    "Dash (-) indicates that the program was not available in that specific time slice.",
+    "Dash (-) indicates that the program was not available in that specific time slice.",
+    "Frontiers in Public Health 07 frontiersin.org",
+    "[raw_reference] Bryce J, Coitinho D, Darnton-Hill I, Pelletier D, Pinstrup-Andersen P. Maternal and child undernutrition: effective action at national level. Lancet. (2008) 371:510-26. doi: 10.1016/S0140-6736(07)61694-8",
+    "[raw_reference] Lutter CK, Daelmans BM, de Onis M, Kothari MT, Ruel MT, Arimond M, et al. Undernutrition, poor feeding practices, and low coverage of key nutrition interventions. Pediatrics. (2011) 128:e1418-27. doi: 10.1542/peds.2011-1392",
+    "[raw_reference] Degarege D, Degarege A, Animut A. Undernutrition and associated risk factors among school age children in Addis Ababa, Ethiopia. BMC Public Health. (2015) 15:1-9. doi: 10.1186/s12889-015-1714-5",
+    "[raw_reference] Shabbir Z, Riaz A, Ahmad F. Trend and future of infant mortality in Pakistan. J Univ Med Dent College. (2022) 13:518-23. doi: 10.37723/jumdc.v13i3.649",
+    "[raw_reference] Shenoy S, Sharma P, Rao A, Aparna N, Adenikinju D, Iloegbu C, et al. Evidence-based interventions to reduce maternal malnutrition in low and middle-income countries: a systematic review. Frontiers in Health Services. (2023) 3:3. doi: 10.3389/frhs.2023.1155928",
+    "[raw_reference] Das S, Rahman RM. Application of ordinal logistic regression analysis in determining risk factors of child malnutrition in Bangladesh. Nutr J. (2011) 10:1-11. doi: 10.1186/1475-2891-10-124",
+    "[raw_reference] Tesfaw LM, Fenta HM. Multivariate logistic regression analysis on the association between anthropometric indicators of under-five children in Nigeria: NDHS 2018. BMC Pediatr. (2021) 21:1-13. doi: 10.1186/s12887-021-02657-5",
+    "[raw_reference] Moss M, Wellman DA, Cotsonis GA. An appraisal of multivariable logistic models in the pulmonary and critical care literature. Chest. (2003) 123:923-8. doi: 10.1378/chest.123.3.923 Begashaw et al. 10.3389/fpubh.2024.1399094 Frontiers in Public Health 13 frontiersin.org",
+    "[raw_reference] Ottenbacher KJ, Ottenbacher HR, Tooth L, Ostir GV. A review of two journals found that articles using multivariable logistic regression frequently did not report commonly recommended assumptions. J Clin Epidemiol. (2004) 57:1147-52. doi: 10.1016/j.jclinepi.2003.05.003",
+    "[raw_reference] Egata G, Berhane Y, Worku A. Seasonal variation in the prevalence of acute undernutrition among children under five years of age in east rural Ethiopia: a longitudinal study. BMC Public Health. (2013) 13:1-8. doi: 10.1186/1471-2458-13-864",
+    "[raw_reference] Bahru BA, Bosch C, Birner R, Zeller M. Drought and child undernutrition in Ethiopia: a longitudinal path analysis. PLoS One. (2019) 14:e0217821. doi: 10.1371/ journal.pone.0217821",
+    "[raw_reference] Vittinghoff E, Glidden DV, Shiboski SC, McCulloch CE, Vittinghoff E, Glidden DV, et al. Repeated measures and longitudinal data analysis. Regress Methods Biostat. (2012):261-308. doi: 10.1007/978-1-4614-1353-0_7",
+    "[raw_reference] Liu X. Methods and applications of longitudinal data analysis. Amsterdam, Netherlands: Elsevier (2015).",
+    "[raw_reference] Jeyaseelan V, Sebastian T, Lakshmanan J, Bangdiwala SI. Longitudinal data analysis of mean passage time among malnutrition states: an application of Markov chains. J Appl Stat. (2016) 43:2729-39. doi: 10.1080/02664763.2016.1143454",
+    "[raw_reference] Owoeye SM, Oseni BM, Gayawan E. Estimating lifetime malnourished period and its statistics based on the concept of Markov chain with reward. Heliyon. (2020) 6:e04073. doi: 10.1016/j.heliyon.2020.e04073",
+    "[raw_reference] Hoddinott J, Mekasha TJ. Social protection, household size, and its determinants: evidence from Ethiopia. J Dev Stud. (2020) 56:1818-37. doi: 10.1080/00220388.2020.1736283",
+    "[raw_reference] P\u00e9rez Albertos \u00c1. Evaluating public works programs' impact on children's outcomes: further evidence from the PSNP in Ethiopia. Universidad Pontificia Comillas, Facultad de Ciencias Humanas y Sociales. (2018).",
+    "[raw_reference] Bahru BA, Jebena MG, Birner R, Zeller M. Impact of Ethiopia's productive safety net program on household food security and child nutrition: a marginal structural modeling approach. SSM Popul Health. (2020) 12:100660. doi: 10.1016/j.ssmph.2020.100660",
+    "[report_type] PhD thesis",
+    "[raw_reference] Kevin P. Dynamic bayesian networks: Representation, inference and learning. PhD thesis, Berkeley, California, USA: University of California (2002).",
+    "[raw_reference] Pearl J. Causality: Models, reasoning, and inference. Cambridge, England, UK: Cambridge University Pres; 2000 (2003).",
+    "[raw_reference] Orphanou K, Stassopoulou A, Keravnou E. DBN-extended: a dynamic Bayesian network model extended with temporal abstractions for coronary heart disease prognosis. IEEE J Biomed Health Inform. (2015) 20:944-52. doi: 10.1109/ JBHI.2015.2420534",
+    "[raw_reference] Ghanmi N, Mahjoub MA, Amara NEB. Characterization of dynamic Bayesian network-the dynamic Bayesian network as temporal network. Int J Adv Comput Sci Appl. (2011) 2: 66-73. doi: 10.14569/IJACSA.2011.020708",
+    "[raw_reference] Brandherm B, Jameson A. An extension of the differential approach for Bayesian network inference to dynamic Bayesian networks. Int J Intell Syst. (2004) 19:727-48. doi: 10.1002/int.20022",
+    "[raw_reference] How M-L, Chan YJ. Artificial intelligence-enabled predictive insights for ameliorating global malnutrition: a human-centric ai-thinking approach. AI. (2020) 1:4. doi: 10.3390/ai1010004",
+    "[raw_reference] Koller D, Friedman N. Probabilistic graphical models: principles and techniques. Cambridge, Massachusetts, USA: MIT press (2009).",
+    "[raw_reference] Fenton N, Neil M. Risk assessment and decision analysis with Bayesian networks. Boca Raton, Florida, USA: Crc Press (2018).",
+    "[raw_reference] Shiguihara P, Lopes ADA, Mauricio D. Dynamic Bayesian network modeling, learning, and inference: a survey. IEEE Access. (2021) 9:117639-48. doi: 10.1109/ ACCESS.2021.3105520",
+    "study# SN 6853",
+    "[raw_reference] Boyden J. Young lives: an international study of childhood poverty: round 2 2006 (study# SN 6852); round 3 2009 (study# SN 6853). University of Oxford, Department of International Development. (2012).",
+    "[raw_reference] Lives Y. Equating cognitive scores across rounds and cohorts for young Lives in Ethiopia, India, Peru and Vietnam. University of Oxford, Department of International Development. (2020).",
+    "[report_type] Report",
+    "[raw_reference] Argaw BA. Regional inequality of economic outcomes and opportunities in Ethiopia: a tale of two periods. WIDER Working Paper; (2017). Report No.: 9292563424.",
+    "[raw_reference] Porter C, Favara M, Woldehanna T. Smarter through social protection? Evaluating the impact of Ethiopia's safety-net on child cognitive abilities. Institute of Labor Economics. (2017).",
+    "[raw_reference] Wang H, Tesfaye R, Ramana GN, Chekagn CT. Ethiopia health extension program: An institutionalized community approach for universal health coverage.",
+    "[raw_reference] Washington, D.C., USA: World Bank Publications (2016).",
+    "[raw_reference] Aurino E, James Z, Rolleston C. Young Lives Ethiopia school survey 2012-13: Data overview report: Young Lives. University of Oxford, Department of International Development. (2014).",
+    "[raw_reference] Gomes IP, Wolf DF. Health monitoring system for autonomous vehicles using dynamic Bayesian networks for diagnosis and prognosis. J Intell Robot Syst. (2021) 101:1-21. doi: 10.1007/s10846-020-01293-y",
+    "[raw_reference] Ladyzynski P, Molik M, Foltynski P. Dynamic Bayesian networks for prediction of health status and treatment effect in patients with chronic lymphocytic leukemia. Sci Rep. (2022) 12:1811. doi: 10.1038/s41598-022-05813-8",
+    "[raw_reference] Zhang G, Zhang A, Calhoun VD, Wang Y-P. A causal brain network estimation method leveraging Bayesian analysis and the PC algorithm. Medical imaging 2020: Biomedical applications in molecular, structural, and functional imaging. Bellingham, Washington, USA: SPIE (2020).",
+    "[raw_reference] Fazal R, Alam MS, Hayat U, Alam N. Effectiveness of monetary policy: application of modified Peter and Clark (PC) algorithms under graph-theoretic approach. Sci Ann Econ Business. (2021) 68:333-44. doi: 10.47743/saeb-2021-0019",
+    "and parallel/ distributed computing",
+    "[raw_reference] Jongsawat N, Poompuang P, Premchaiswadi W, editors. Dynamic data feed to bayesian network model and SMILE web application. 2008 ninth ACIS international conference on software engineering, artificial intelligence, networking, and parallel/ distributed computing; (2008): IEEE.",
+    "[raw_reference] Andersen SK, Olesen KG, Jensen FV, Jensen F. HUGIN-A Shell for building Bayesian belief universes for expert systems. Menlo Park, California, USA: IJCAI (1989).",
+    "[raw_reference] Zou X, Yue WL. A bayesian network approach to causation analysis of road accidents using netica. J Adv Transp. (2017) 2017:1-18. doi: 10.1155/2017/2525481",
+    "[raw_reference] Scutari M. Bayesian network constraint-based structure learning algorithms: parallel and optimised implementations in the bnlearn R package. arXiv. (2014). VV: 4-7. doi: 10.48550/arXiv.1406.7648",
+    "Package 'bnlearn",
+    "[raw_reference] Scutari M. Package 'bnlearn' . Bayesian network structure learning, parameter learning and inference, R package version. The R Foundation for Statistical Computing. (2019);4.",
+    "[raw_reference] H\u00f8jsgaard S. Bayesian networks in R with the gRain package. J Stat Softw. (2012) 46:1-26.",
+    "[raw_reference] Conrady S, Jouffe L. Introduction to bayesian networks & bayesialab.Laval, France: Bayesia SAS (2013).",
+    "[raw_reference] UNICEF. The state of food security and nutrition in the world Food and Agriculture Organization of the United Nations (FAO), International Fund for Agricultural Development (IFAD), UNICEF, World Food Programme (WFP), and World Health Organization (WHO). (2019). 2019 p.",
+    "[raw_reference] Denby RW. Parental incarceration and kinship care: caregiver experiences, child well-being, and permanency intentions. Soc Work Public Health. (2012) 27:104-28. doi: 10.1080/19371918.2012.639639",
+    "[raw_reference] Zhu W, Marchant R, Morris RW, Baur LA, Simpson SJ, Cripps S. Bayesian network modelling to identify on-ramps to childhood obesity. BMC Med. (2023) 21:105. doi: 10.1186/s12916-023-02789-8",
+    "[raw_reference] Vollmer S, Bommer C, Krishna A, Harttgen K, Subramanian S. The association of parental education with childhood undernutrition in low-and middle-income countries: comparing the role of paternal and maternal education. Int J Epidemiol. (2017) 46:312-23. doi: 10.1093/ije/dyw133",
+    "[raw_reference] Chen S, Richardson S, Kong Y, Ma N, Zhao A, Song Y, et al. Association between parental education and simultaneous malnutrition among parents and children in 45 low-and middle-income countries. JAMA Netw Open. (2023) 6:51727. doi: 10.1001/ jamanetworkopen.2022.51727",
+    "[raw_reference] Ruel MT, Alderman H. Nutrition-sensitive interventions and programmes: how can they help to accelerate progress in improving maternal and child nutrition? Lancet. (2013) 382:536-51. doi: 10.1016/S0140-6736(13)60843-0",
+    "[raw_reference] Bhutta ZA, Das JK, Rizvi A, Gaffey MF, Walker N, Horton S, et al. Evidence-based interventions for improvement of maternal and child nutrition: what can be done and at what cost? Lancet. (2013) 382:452-77. doi: 10.1016/S0140-6736(13)60996-4",
+    "[raw_reference] Owusu-Addo E, Cross R. The impact of conditional cash transfers on child health in low-and middle-income countries: a systematic review. Int J Public Health. (2014) 59:609-18. doi: 10.1007/s00038-014-0570-x",
+    "[raw_reference] Sunguya BF, Poudel KC, Mlunde LB, Shakya P, Urassa DP, Jimba M, et al. Effectiveness of nutrition training of health workers toward improving caregivers' feeding practices for children aged six months to two years: a systematic review. Nutr J. (2013) 12:1-14. doi: 10.1186/1475-2891-12-66",
+    "[raw_reference] Miller NP, Amouzou A, Hazel E, Legesse H, Degefie T, Tafesse M, et al. Assessment of the impact of quality improvement interventions on the quality of sick child care provided by health extension Workers in Ethiopia. J Glob Health. (2016) 6:404. doi: 10.7189/jogh.06.020404",
+    "[raw_reference] Tadesse T, Gebremedhin ZT. The impact of the productive safety net program (PSNP) on food security and asset accumulation of rural households': evidence from Gedeo zone, southern Ethiopia. Cogent Econ Finance. (2022) 10:2087285. doi: 10.1080/23322039.2022.2087285",
+    "[raw_reference] Gilligan DO, Hoddinott J. Is there persistence in the impact of emergency food aid? Evidence on consumption, food security, and assets in rural Ethiopia. Am J Agric Econ. (2007) 89:225-42. doi: 10.1111/j.1467-8276.2007.00992.x",
+    "[raw_reference] Begashaw G. B., Zewotir T, Fenta H. M. Multistate Markov chain modeling for child undernutrition transitions in Ethiopia: a longitudinal data analysis, 2002-2016. BMC Medical Research Methodology. (2024) 24:283."
+  ],
+  "processing_software": {
+    "GROBID": "0.8.2"
+  },
+  "journal": "Frontiers in Public Health",
+  "volume": "12",
+  "pages": "1399094",
+  "zotero_recovery": {
+    "fields_recovered": [
+      "journal"
+    ],
+    "timestamp": "2025-09-01T11:08:22.672541",
+    "zotero_item_type": "journalArticle"
+  }
+}

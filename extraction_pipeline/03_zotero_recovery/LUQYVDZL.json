@@ -1,0 +1,1566 @@
+{
+  "paper_id": "LUQYVDZL",
+  "title": "Reinforcement Learning for Clinical Decision Support in Critical Care: Comprehensive Review",
+  "abstract": "Background: Decision support systems based on reinforcement learning (RL) have been implemented to facilitate the delivery of personalized care. This paper aimed to provide a comprehensive review of RL applications in the critical care setting. Objective: This review aimed to survey the literature on RL applications for clinical decision support in critical care and to provide insight into the challenges of applying various RL models. Methods: We performed an extensive search of the following databases: PubMed, Google Scholar, Institute of Electrical and Electronics Engineers (IEEE), ScienceDirect, Web of Science, Medical Literature Analysis and Retrieval System Online (MEDLINE), and Excerpta Medica Database (EMBASE). Studies published over the past 10 years (2010-2019) that have applied RL for critical care were included. \n Results: We included 21 papers and found that RL has been used to optimize the choice of medications, drug dosing, and timing of interventions and to target personalized laboratory values. We further compared and contrasted the design of the RL models and the evaluation metrics for each application. Conclusions: RL has great potential for enhancing decision making in critical care. Challenges regarding RL system design, evaluation metrics, and model choice exist. More importantly, further work is required to validate RL in authentic clinical environments.",
+  "year": 2012,
+  "date": "2012-07-30",
+  "authors": [
+    {
+      "name": "Siqi Liu",
+      "affiliation": {
+        "organization": "NUS Graduate School for Integrative Science and Engineering",
+        "department": "NUS Graduate School for Integrative Science and Engineering",
+        "institution": "National University of Singapore",
+        "address": "Singapore, Singapore"
+      }
+    },
+    {
+      "name": "Kay Choong See",
+      "affiliation": {
+        "organization": "Division of Respiratory & Critical Care Medicine",
+        "department": "Division of Respiratory & Critical Care Medicine",
+        "institution": "National University Hospital",
+        "address": "Singapore, Singapore"
+      }
+    },
+    {
+      "name": "; Kee"
+    },
+    {
+      "name": "Yuan Ngiam",
+      "affiliation": {
+        "organization": "Group Chief Technology Office",
+        "department": "Group Chief Technology Office",
+        "institution": "National University Health System",
+        "address": "Singapore, Singapore"
+      }
+    },
+    {
+      "name": "Frcs Leo"
+    },
+    {
+      "name": "Anthony Celi",
+      "affiliation": {
+        "organization": "Institute for Medical Engineering and Science",
+        "department": "Institute for Medical Engineering and Science",
+        "institution": "Massachusetts Institute of Technology",
+        "address": "Cambridge, MA, United States"
+      }
+    },
+    {
+      "name": "Xingzhi Sun",
+      "affiliation": {
+        "organization": "School of Public Health",
+        "department": "School of Public Health",
+        "institution": "Ping An Health Technology",
+        "address": "Beijing, China"
+      }
+    },
+    {
+      "name": "Mengling Feng",
+      "affiliation": {
+        "organization": "Saw Swee Hock School of Public Health",
+        "department": "Saw Swee Hock School of Public Health",
+        "institution": "National University of Singapore",
+        "address": "Singapore, Singapore"
+      }
+    },
+    {
+      "name": "Saw Hock"
+    },
+    {
+      "affiliation": {
+        "organization": "National University of Singapore",
+        "institution": "National University of Singapore",
+        "address": "12 Science Drive 2 #10, -01 117549, Singapore, Singapore"
+      }
+    }
+  ],
+  "doi": "10.2196/18477",
+  "md5": "F2D7539640781E414FBDA9BE6BBBE9E9",
+  "publication": {
+    "journal": "Crit Care Med",
+    "journal_inferred": true
+  },
+  "keywords": [
+    "artificial intelligence",
+    "reinforcement learning",
+    "critical care",
+    "decision support systems, clinical",
+    "intensive care unit",
+    "machine learning"
+  ],
+  "funding": [
+    "",
+    "",
+    "",
+    "",
+    "Acknowledgments SL was funded by the  National University of Singapore Graduate School for Integrative Sciences and Engineering Scholarship . This research was supported by the  National Research Foundation Singapore  under its  AI Singapore Programme  (award no. AISG-GC-2019-002 ), the  National University Health System joint  grant ( WBS R-608-000-199-733 ), and the  National Medical Research Council health  service research grant ( HSRG-OC17nov004 )."
+  ],
+  "sections": [
+    {
+      "title": "Introduction"
+    },
+    {
+      "title": "Background",
+      "text": "In the health care domain, clinical processes are dynamic because of the high prevalence of complex diseases and dynamic changes in the clinical conditions of patients. Existing treatment recommendation systems are mainly implemented using rule-based protocols defined by physicians based on evidence-based clinical guidelines or best practices  [1] [2] [3] . In addition, these protocols and guidelines may not consider multiple comorbid conditions  [4] . In an intensive care unit (ICU), critically ill patients may benefit from deviation from established treatment protocols and from personalizing patient care using means not based on rules  [5, 6] .\n\nWhen physicians need to adapt treatment for individual patients, they may take reference from randomized controlled trials (RCTs), systemic reviews, and meta-analyses. However, RCTs may not be available or definitive for many ICU conditions. Many patients admitted to ICUs might also be too ill for inclusion in clinical trials  [6] . Furthermore, only 9% of treatment recommendations in the ICU are based on RCTs  [7] , and the vast majority of RCTs in critical care have negative findings  [8] . To aid clinical decisions in ICUs, we need other methods, including the use of large observational data sets. ICU data can be useful for learning about patients as they were collected in a data-rich environment. A large amount of data can then be fed into artificial intelligence (AI) systems (using computers to mimic human cognitive functions) and machine learning methods (using computer algorithms to perform clinical tasks without the need for explicit instructions). AI and machine learning can then help with diagnosis  [9, 10] , treatment  [11, 12] , and resource management  [13, 14]  in the ICU. Given the dynamic nature of critically ill patients, one machine learning method called reinforcement learning (RL) is particularly suitable for ICU settings."
+    },
+    {
+      "title": "Fundamentals of Reinforcement Learning",
+      "text": "RL is a goal-oriented learning tool where a computer agent, acting as a decision maker, analyzes available data within its defined environment  [15] , derives a rule for taking actions, and optimizes long-term rewards. The agent is the RL model that we wish to develop. In general, an RL agent receives evaluative feedback about the performance of its action in each time step, allowing it to improve the performance of subsequent actions by trial and error  [16] . Mathematically, this sequential decision-making process is called the Markov decision process (MDP)  [17] . An MDP is defined by 4 major components: (1) a state that represents the environment at each time;  (2)  an action the agent takes at each time that influences the next state; (3) a transition probability that provides an estimate for reaching different subsequent states, which reflects the environment for an agent to interact with; (4) a reward function is the observed feedback given a state-action pair. The solution of the MDP is an optimized set of rules and is termed the policy. RL has already emerged as an effective tool to solve complicated control problems with large-scale, high-dimensional data in some application domains, including video games, board games, and autonomous control  [18] [19] [20] . In these domains, RL has been proven to achieve human-level capacity for learning complex sequential decisions. For instance, Alpha Go is an RL agent for playing the strategy board game Go. On the basis of Alpha Go's learned policy, and given the current position of the Go stones, it is possible to decide where the next white/black stone should be placed on the board to maximize its chance of winning."
+    },
+    {
+      "title": "Analogies to Critical Care",
+      "text": "For critical care, given the large amount and granular nature of recorded data, RL is well suited for providing sequential treatment suggestions, optimizing treatments, and improving outcomes for new ICU patients. RL also has the potential to expand our understanding of existing clinical protocols by automatically exploring various treatment options. The RL agent analyzes the patient trajectories, and through trial and error, derives a policy, a personalized treatment protocol that optimizes the probability of favorable clinical outcomes (eg, survival). As this computerized process is an attempt to mimic the human clinician's thought process, RL has also been called the AI clinician  [21] .\n\nWe can consider the state as the well-being/condition of a patient. The state of the patients could depend on static traits (eg, patient demographics including age, gender, ethnicity, pre-existing comorbidity) and longitudinal measurements (eg, vital signs, laboratory test results). An action is a treatment or an intervention that physicians do for patients (eg, prescription of medications and ordering of laboratory tests). The transition probability is the likelihood of state transitions, and it is viewed as a prognosis. If the well-being in the new state is improved, we assign a reward to the RL agent, but we penalize the agent if the patient's condition worsens or stays stagnant after the intervention.\n\nAs illustrated in Figure  1 , if we take a snapshot of the current well-being of a patient as his/her state, the physician would provide a treatment or an intervention (an action) to the patient. This action would lead the patient to the next state depending on his/her current state and the action performed on him/her. While knowing the next state of the patient, the physician would need to take another action according to the new state. These state-action pairs would continue to rollout over time, and the resultant trajectory of state-action pairs could represent the changes in the patients' conditions and the sequential treatment decisions that were performed by the physicians. We can define the length of the trajectory for each patient as fixed (eg, during the first 24 hours of the ICUs stay) or as dynamic (eg, different patients could be discharged from the ICUs at different times). The main objective of the RL algorithm is to train an agent that can maximize the cumulative future reward from the state-action pairs given the patients' state-action trajectories. When a new state is observed, the agent is able to perform an action, which could choose the action for the greatest long-term outcome (eg, survival). When the RL agent is well-trained, it is possible to pick the best action given the state of a patient, and we describe this process as acting according to an optimal policy.\n\nA policy is analogous to a clinical protocol. Nonetheless, a policy has advantages over a clinical protocol because it is capable of capturing more personalized details of individual patients. A policy can be represented by a table where it maps all possible states with actions. Alternatively, a policy could also be represented by a deep neural network (DNN) where given the input of a patient's state, the DNN model outputs the highest probability of an action. An optimal policy can be trained using various RL algorithms. Some widely applied RL algorithms include the fitted-Q-iteration (FQI)  [22] , deep Q network (DQN)  [23] , actor-critic network  [24] , and model-based RL  [25] . More technical details about various RL models have been explained  [26, 27] .\n\nAs RL in critical care is a relatively nascent field, we therefore aimed to review all the existing clinical applications that applied RL in the ICU setting for decision support over the past 10 years (2010-2019). Specifically, we aimed to categorize RL applications and summarize and compare different RL designs. We hope that our overview of RL applications in critical care can help reveal both the advances and gaps for future clinical development of RL. A detailed explanation of the concept of RL and its algorithms is available in Multimedia Appendix 1  [28] ."
+    },
+    {
+      "title": "Methods"
+    },
+    {
+      "title": "Search Strategy",
+      "text": "A review of the literature was conducted using the following 7 databases: PubMed, Institute of Electrical and Electronics Engineers (IEEE), Google Scholar, Medical Literature Analysis and Retrieval System Online (MEDLINE), Excerpta Medica Database (EMBASE), ScienceDirect, and Web of Science. The search terms reinforcement learning, critical care, intensive care, intensive care units, and ICUs were combined. The search phrases listed in Textbox 1 were used to identify articles in each database.\n\nTextbox 1. Queries used to retrieve records. EMBASE (Excerpta Medica Database) \u2022 #1 'reinforcement learning' \u2022 #2 'intensive care unit' OR 'critical care' OR 'ICU' \u2022 #1 AND #2 Google Scholar \u2022 (conference OR journal) AND (\"intensive care unit\" OR \"critical care\" OR ICU) AND \"reinforcement learning\" -survey -reviews -reviewed -news IEEE (Institute of Electrical and Electronics Engineers) \u2022 ((\"Full Text Only\": \"reinforcement learning\") AND \"Full Text Only\": \"intensive care units\") OR ((\"Full Text Only\": \"reinforcement learning\") AND \"Full Text Only\": \"critical care\") MEDLINE (Medical Literature Analysis and Retrieval System Online) \u2022 multifield search=reinforcement learning, critical care, intensive care PubMed \u2022 (\"reinforcement learning\") AND ((\"ICU\") OR (\"critical care\") OR (\"intensive care unit\") OR (\"intensive care\")) ScienceDirect \u2022 \"reinforcement learning\" AND (\"critical care\" OR \"intensive care\" OR \"ICU\") Web of Science \u2022 ALL=(intensive care unit OR \"critical care\" OR \"ICU\") AND ((ALL=(\"reinforcement learning\")) AND LANGUAGE: (English))"
+    },
+    {
+      "title": "Inclusion Criteria",
+      "text": "To be eligible for inclusion in this review, the primary requirement was that the article needed to focus on the implementation, evaluation, or use of an RL algorithm to process or analyze patient information (including simulated data) in an ICU setting. Papers published from January 1, 2010, to October 19, 2019 were selected. General review articles and articles not published in English were excluded. Only papers that discussed sufficient details on the data, method, and results were included in this review."
+    },
+    {
+      "title": "Data Synthesis",
+      "text": "Data were manually extracted from the articles included in the review. A formal quality assessment was not conducted, as relevant reporting standards have not been established for articles on RL. Instead, we extracted the following characteristics from each study: the purpose of the study, data source, number of patients included, main method, evaluation metrics, and related outcomes. The final collection of articles was divided into categories to assist reading according to their application type in the ICUs."
+    },
+    {
+      "title": "Results"
+    },
+    {
+      "title": "Selection Process and Results Overview",
+      "text": "The selection process of this review was demonstrated using the Preferred Reporting Items for Systematic Reviews and Meta-Analyses flow diagram (Figure  2 ). From the full text of 269 distinct articles, an independent assessment for eligibility was performed by 2 authors (SL and MF). Disagreements were discussed to reach consensus. During the full-text review, 249 articles were excluded, and 21 articles were eventually included.\n\nThe reasons for exclusion during the review process are outlined in Table  1 . The papers discussed issues in the critical care setting, but not using RL as an approach Not using RL a as the approach in critical care 6 1\n\nThe methods and results were not clearly described and thus not qualified for this review No clear description of the method and result 7 a RL: reinforcement learning.\n\nIn this section, we organized the reviewed articles into 4 categories, which reflect clinically relevant domains: (1) optimal individualized target laboratory value; (2) optimal choice of medication; (3) optimal timing of an intervention; and (4) optimal dosing of medication.\n\nWe plotted the number of articles reviewed by their category and year of publication in Figure  3 . We found that the majority of the papers were published in the past 3 years (n=17), indicating an increasing trend of applying RL-based approaches to assist physicians in decision making in critical care. In each of the 4 categories, we further organized the articles into subgroups based on their clinical questions (Figure  3 ). The figure shows that most of the applications used RL to find optimal drug dosing (n=16)  [6, 21, [29] [30] [31] [32] [33] [34] [35] [36] [37] [38] [39] [40] [41] [42] , followed by the timing of an intervention (n=3)  [43] [44] [45] . Only a few applications were looking at the individualized laboratory value (n=1)  [46]  and the optimal choice of medication (n=1)  [47] . Next, we discuss the details for each category with the methods and outcomes for each application. In particular, we further grouped the studies based on specific medication or treatment type in categories 3 and 4 to assist readers. A summary of all study details is found in Multimedia Appendix 2."
+    },
+    {
+      "title": "Optimal Individualized Target Laboratory Value",
+      "text": "Even after decades of routine use of laboratory value ranges, reference standards may need to be reconsidered, especially for individual patients  [48] . Personalized targets for laboratory values in ICU patients could account for disease severity, comorbidities, and other patient-specific differences. Weng et al  [46]  tried to identify individualized targeted blood glucose levels as a reference for physicians. They applied an RL-based approach, policy iteration, to learn the target glycemic range at an hourly interval for severely ill patients with sepsis using real ICU data. Their approach was tested using the Medical Information Mart for Intensive Care III (MIMIC III), a large, publicly available ICU database  [49] . MIMIC III contains information for hospital admissions of 43,000 patients in critical care units during 2001 and 2012, from which the authors extracted hourly data for 5565 patients with sepsis.\n\nWeng et al  [46]  constructed their RL model as follows: First, they represented the patients' states from 128 variables. These variables included patient demographics, comorbid conditions, vital sign changes, and laboratory value changes. They used a spare autoencoder  [50]  to reduce the high dimensionality of the raw features (128 dimensions) to only 32 dimensions so that the RL model could be trained more efficiently with limited observational data. Second, they chose to act upon 1 of 11 discrete ranges of serum glucose at each time step. Third, they designed the reward function so that the RL agent could recommend an hourly target glucose level to optimize long-term survival. A positive 100 was assigned to the end state if patients survived 90 days after admission, and a negative 100 was assigned if the patients died. For each state-action pair, the value of the pair was iteratively estimated using the reward from the training data.\n\nTo understand how the reward value was related to mortality, the authors assigned values to discrete buckets using separate test data. In each value bucket, if the state-action pair is part of a trajectory where a patient died, a label of 1 was assigned to that bucket; otherwise, a label of 0 was assigned. After assigning all the state-action pairs from the test data with the labels in the corresponding value bucket, the mortality rate could be estimated for each value bucket. The authors plotted the estimated mortality rate with respect to the value-buckets and found an inverse relationship between them, where the highest value was associated with the lowest mortality. This result suggested that the learnt value represented the relationship between the state-action pair and mortality and that the learnt value of the state-action pairs from training data was validated on the test data.\n\nTo validate the RL policy, the author calculated the frequency of state transitions from the training data and generated new trajectories. Starting from the observed state in the test data, the RL policy would recommend an action with the highest value, and the subsequent state was estimated with the transition probability. By averaging the value for all state-action pairs in the simulated trajectory, the mortality for simulated trajectories could be estimated by mapping this value in the mortality-value plot. Compared with the actual mortality rate in the test data, the author claimed that if physicians could control patients' hourly blood glucose levels within the range recommended by the RL model, the estimated 90-day mortality would be lowered by 6.3% (from 31% to 24.7%)."
+    },
+    {
+      "title": "Optimal Timing of Intervention"
+    },
+    {
+      "title": "Weaning of Mechanical Ventilation",
+      "text": "Mechanical ventilation (MV) is a life-saving treatment applied in approximately a third of all critically ill patients  [53] .\n\nPrematurely discontinuing MV (premature weaning) and excessively prolonged MV (late weaning) are both associated with higher mortality  [54] . The best time to wean may be uncertain  [55] .\n\nTo optimize the timing of ventilation discontinuation, Prasad et al  [43]  applied the RL-based FQI (the details of the FQI algorithm are explained in Multimedia Appendix 1  [28] ) on the MIMIC III database for all patients who were kept under ventilator support for more than 24 hours and extracted their records every 10 min from ICU admission to discharge. Patient states included a number of factors that could affect extubation, such as demographics, pre-existing conditions, comorbidities, and time-varying vital signs. The action for the ventilation setting was binary, that is, for each 10-min time step, the RL agent needed to decide whether the ventilation should be set on (continued MV) or off (weaned from MV). For reward design, Prasad et al  [43]  followed an existing weaning protocol from the Hospital of University of Pennsylvania. They assigned reward values to the RL agent at each time step according to 3 major considerations: (1) the RL agent should penalize each additional hour spent on the ventilator, (2) the RL agent should be assigned a positive reward value to a weaning action if the patient's vital signs and laboratory results were steady and within normal ranges after extubation, and (3) there was no reward value for failed spontaneous breathing trial or for reintubation after the first extubation. For RL policy evaluation, the authors calculated the proportion of weaning actions from the RL policy, referencing the total number of weaning actions from the clinician's policy at each time step, and calculated the overall consistency of weaning transitions. The recommend actions from the RL agent could match 85% of those from clinicians. The authors categorized the degree of consistency into 5 bins, and plotted the distribution of the number of reintubations with respect to the discrete consistency levels. Their results showed that when the consistency was high, vital sign fluctuations were fewer, laboratory results were more in-range, and reintubations were minimized.\n\nYu et al  [45]  studied the same clinical issue as Prasad et al  [43]  and used the same data set, but designed a different reward function using inverse RL. The inverse RL model directly learnt reward mapping from data for each state-action pair and inferred what clinicians would wish to achieve as a reward. Similar to Prasad et al  [43] , the RL recommendations by Yu et al  [45]  were associated with shorter weaning times and fewer reintubations compared with clinician decision making."
+    },
+    {
+      "title": "Timing to Order Laboratory Tests",
+      "text": "The timing of ordering a laboratory test can be challenging. Delayed testing would lead to continued uncertainty over the patient's condition and possible late treatment  [56] . However, excessively early ordering of laboratory tests can cause unnecessary discomfort to the patient, increase the risk of anemia, and increase health care cost.\n\nCheng et al  [44]  applied the FQI method to find the optimal timing for ordering laboratory tests among patients with sepsis in the MIMIC III data set. They examined the timing of 4 types of laboratory tests: white blood cell count (WBC), creatinine, blood urea nitrogen (BUN), and lactate. They sampled the patients' data at hourly intervals and constructed the state of a patient by considering the predictive variables of severe sepsis or acute kidney failure, including respiratory rate, heart rate, mean blood pressure, temperature, creatinine, BUN, WBC, and lactate. The missing values were predicted by a multioutput Gaussian process  [57, 58] . In their RL model, they chose to design the reward function with the combination of 4 factors:\n\n(1) a positive reward should be given only if the ordering of test was necessary, while penalizing over or under ordering;  (2)  the RL agent should be encouraged to order laboratory tests when there was a sudden change in laboratory results or vital signs; (3) negative reward should be given if the laboratory results were similar to the last measurements (no information gain); (4) a penalty would be added to a reward whenever a test was ordered, to reflect the testing cost. Their RL agent, compared with clinicians, was able to reduce the number of laboratory tests by 27% for lactate and 44% for WBC, while maintaining high information gain."
+    },
+    {
+      "title": "Optimal Dosing of a Drug",
+      "text": "Recommendations for dosing regimens in ICU patients are often extrapolated from clinical trials in healthy volunteers or noncritically ill patients. This extrapolation assumes similar drug behavior (pharmacokinetics and pharmacodynamics) in the ICU and other patients or healthy volunteers. However, it is well known that many drugs used in critically ill patients may have alterations in pharmacokinetic and pharmacodynamic properties because of pathophysiological changes or drug interactions  [59] . Therefore, critically ill patients bring unique challenges in drug dosing."
+    },
+    {
+      "title": "Dosing of Propofol",
+      "text": "Critically ill patients in ICUs often require sedation to facilitate various clinical procedures and to comfort patients during treatment. Propofol is a widely used sedative medication  [60] , but titration of propofol is challenging, and both over sedation and under sedation can have adverse effects  [32] . Of the studies reviewed, 6 studies have focused on applying RL to determine the optimal dosage for propofol while maintaining the physiological stability of the patient. The bispectral index (BIS) was used to monitor sedation level and to determine the effect of propofol.\n\nBorera et al  [29]  was the first to apply RL to a pharmacokinetic model  [61]  to describe the time-dependent distribution of propofol in human surgical patients. The RL agent was a neural network aimed at optimizing the propofol dose to achieve the target BIS value. The patient's state and state transition were modeled using a mathematical pharmacokinetic model with predefined parameters such as the concentration at half maximal effect of BIS, degree of nonlinearity of BIS, and time-lag coefficient to estimate the BIS value for simulated patients. The action was a discrete range of propofol infusion rate. The reward function was the error rate between the target BIS value and the current simulated BIS value, where a larger negative reward was given when the current simulated BIS value was further away from the predefined target value. They measured the performance of the RL agent by looking at the time to reach the target BIS value (steady time). The evaluation was conducted on 1000 simulated patients. On average, the steady time was 3.25 min for the BIS value to reach target.\n\nTo ensure patient safety, propofol dosing should consider the concurrent stability of vital parameters. For instance, Padmanabhan et al  [30]  chose mean arterial pressure (MAP) as the secondary control variable. The authors combined the error rates for both BIS and MAP when designing the reward. The target for the RL agent was to infuse propofol so that the target BIS would be reached in a short time, whereas MAP was kept within a desired range. In subsequent studies, Padmanabhan et al  [31, 32]  modified their methods with different RL training algorithms (Q-learning and policy iteration). In all their studies, the RL agent was able to suggest accurate propofol doses and achieve target BIS values within a few minutes.\n\nIn contrast to fixed pharmacokinetic models in the RL model environment, Yu et al  [45]  applied FQI and Bayesian inverse RL on the MIMIC III database. They considered patients' demographic characteristics, pre-existing conditions, comorbidities, and time-varying vital signs to construct the state of the patient. Their inverse RL model interpreted clinician preference as a reward for different patient states. The learned reward function from the inverse RL model suggested that clinicians may pay more attention to patients' cardiorespiratory stability rather than oxygenation when making decisions about propofol dosage."
+    },
+    {
+      "title": "Dosing of Intravenous Heparin",
+      "text": "Anticoagulant agents are often used to prevent and treat a wide range of cardiovascular diseases. Heparin is commonly used in critical care  [62] , yet its precise dosing is complicated by a narrow therapeutic window. Overdosing of heparin results in bleeding whereas under dosing risks clotting. To guide heparin dosing, activated partial thromboplastin time (aPTT) is often used as a measure of the anticoagulant effect of heparin.\n\nNemati et al  [6]  applied FQI with a neural network to optimize and individualize heparin dosing. Their study was conducted on the MIMIC II database, with the reward function based on aPTT levels following heparin dosing  [63] . The reward to the RL agent will be high if the aPTT value is between 60 and 100 seconds. After training, they plot the state-action value with respect to the level of consistency between the RL policy and clinician practice. Their results showed that, on average, following the recommendations of the RL agent resulted in higher state-action values.\n\nGhassemi et al  [33]  and Lin et al  [34]  focused on a personalized optimal heparin dosing using different RL algorithms. In addition to the MIMIC III data set, Lin et al  [34]  applied an actor-critic network on the Emory Healthcare data set from Emory University. For RL policy evaluation, Lin et al  [34]  regressed the discordance between RL policy and physician practice over the number of clotting and bleeding complications, adjusting for covariates such as history of clot or bleed, weight, age, and sequential organ failure assessment score. The regression coefficient suggested that following the RL agent's recommendations would have likely resulted in improved clinical outcomes with a reduced number of clotting and bleeding complications."
+    },
+    {
+      "title": "Intravenous Fluids, Vasopressors, and Cytokine Therapy for Treating Sepsis",
+      "text": "Sepsis is the third leading cause of death and is expensive to treat  [64] . Besides antibiotics and source control, challenges remain with the use of intravenous (IV) fluids to correct hypovolemia and administration of vasopressors to counteract sepsis-induced vasodilation. Raghu et al  [36]  suggested a data-driven RL approach to recommend personalized optimal dosage for IV fluids and vasopressors to improve hospital mortality. Their RL model was double DQN with dueling, which can minimize the overestimation problem of previous Q-learning models. The details of the Q-learning and double DQN algorithms are explained in Multimedia Appendix 1  [28] . The authors considered patients' demographics, laboratory values, vital signs, and intake/output events as state features in the RL model. Action was designed as a combination of 5 discrete bins for IV fluid dosing and 5 bins for vasopressor dosing to treat patients with sepsis. The reward was issued at the terminal time step of the patient's trajectory, with a positive reward if the patient survived. Data were extracted from the MIMIC III database for all patients who fulfilled sepsis-3 criteria  [65] . For policy evaluation, Raghu et al  [36]  plotted the estimated hospital mortality with respect to the difference between dosages recommended by the RL agent and by clinicians. The plot showed that the mortality was lowest when there was no discrepancy between RL policy and physician decision making. Six other groups of researchers also focused on the same research question and applied various RL algorithms with slightly different designs of the state space, reward function, and evaluation metrics  [21, 35, [37] [38] [39] [40] . The findings from these studies all suggest that the RL agent would be able to learn from the data and if physicians followed the RL policy, the estimated hospital mortality could be improved.\n\nAmong the aforementioned studies, Komorowski et al  [21]  were the pioneers of applying RL in the ICU, using data from patients with sepsis in the MIMIC III database. They inferred a patient's health status using an array of inputs, which included demographics, vital signs, laboratory tests, illness severity scores, medications, procedures, fluid intake and output, physician notes, and diagnostic coding. Patient data were aggregated and averaged every 4 hours to represent patient states. Using a k-means algorithm, these patient states were then simplified into 750 discrete mutually exclusive clusters. A sequence of these clustered states would describe a particular patient's trajectory. The authors estimated the state transition probability by counting how many times each transition was observed and converted the counts to a stochastic matrix. This transition matrix contained the probability for each patient going to a new state, given a previous action taken in the current state. The entire trajectory of a patient's state can be estimated using the transition matrix. The authors applied a policy iteration RL algorithm that learnt the optimal dosing policy for IV fluids and vasopressors to maximize the probability of 90-day survival.\n\nNevertheless, the study by Komorowski et al  [21] . had several limitations. First, their study only considered fluid and vasopressor management, ignoring other important treatments such as source control, correction of hypovolemia, and management of secondary organ failures  [21] . Second, 90-day mortality is affected by factors outside of the ICU, which the study did not take into account. Third, clinical decision making considers both short-term outcomes (eg, physiological stability) and long-term outcomes (eg, kidney failure or mortality), but the study only considered mortality as the single goal for training the RL algorithm  [66] . Fourth, discretizing patient health status into discrete clusters loses data granularity and may limit the ability to detect changes in patient status. These limitations also occur in other studies, which we will elaborate in the Discussion section.\n\nOther than using IV fluids and vasopressors for treating sepsis. Petersen et al  [42]  investigated cytokine therapy using the deep deterministic policy gradient  [67]  method. The details of the policy gradient RL algorithm are explained in Multimedia Appendix 1  [28] . They evaluated the RL model by using an agent-based model, the innate immune response agent-based model  [68] , that simulated the immune response to infection. The RL policy was able to achieve a very low mortality rate of 0.8% over 500 simulated patients, and suggested that personalized multicytokine treatment could be promising for patients with sepsis."
+    },
+    {
+      "title": "Dosing of Morphine",
+      "text": "Critically ill patients may experience pain as a result of disease or certain invasive interventions. Morphine is one of the most commonly used opioids for analgesia  [69] . Similar to sedation, the dosing of analgesia is subject to uncertainty. Lopez-Martinez et al  [41]  collected data for patients who had at least one pain intensity score and at least one dose of IV morphine in the MIMIC III database. They applied double DQN with dueling as their RL model and constructed the state space to be continuous with features including the patient's self-reported pain intensity and their measured physiological status. The action was a choice of 14 discrete dosing ranges of IV morphine. The reward was determined by considering both the patients' cardiorespiratory stability and their pain intensity. The highest reward was given when pain was absent and both heart rate and respiration rate were within the acceptable range. By comparing the RL policy with physicians' choices, Lopez-Martinez et al  [41]  found that RL policy tended to prescribe higher doses of morphine. This result was consistent with previous studies: continuous dosing provided similar or even better pain relief with no increase in acute adverse effects  [70, 71] ."
+    },
+    {
+      "title": "Discussion"
+    },
+    {
+      "title": "Principal Findings",
+      "text": "Our comprehensive review of the literature demonstrates that RL has the potential to be a clinical decision support tool in the ICU. As the RL algorithm is well aligned with sequential decision making in ICUs, RL consistently outperformed physicians in simulated studies. Nonetheless, challenges regarding RL system design, evaluation metrics, and model choice exist. In addition, all current applications have focused on using retrospective data sets to derive treatment algorithms and require prospective validation in authentic clinical settings."
+    },
+    {
+      "title": "RL System Design",
+      "text": "The majority of applications were similar in their formulation of the RL system design. The state space is usually constructed by features including patient demographics, laboratory test values, and vital signs, whereas some studies applied encoding methods to represent the state of the patients instead of using raw features. The action space was very specific to each application. For instance, in terms of the dosing category, the action space would be discretized ranges of medication dosage. For other categories, such as timing of an intervention, the action space would be the binary indicator of an intervention for each time step. The number of action levels differed among the studies. For some studies, the action levels could be as many as a dozen or a hundred (eg, optimal medication combination), whereas for other studies, the action levels were limited to only 2 (eg, on/off MV). The design of the reward function is central to successful RL learning. Most of the reward functions were designed a priori with guidance from clinical practice and protocols, but 2 studies  [40, 45]  managed to directly learn the reward function from the data using inverse RL."
+    },
+    {
+      "title": "Evaluation Metrics",
+      "text": "The only metric that matters is if the adoption of an RL algorithm leads to improvement in some clinical outcomes. Most studies calculated the estimated mortality as the long-term outcome and drew plots to show the relationship between the estimated mortality versus the learnt value of patients' state-action trajectories, where the higher value function was associated with lower mortality. The RL agent would provide treatment suggestions for those actions with higher values, thus leading to a lower estimated mortality. Estimated mortality is a popular metric for RL policy evaluation. However, the problem with the estimated mortality is that it is calculated from simulated trajectories with observational data, and may not be the actual mortality.\n\nMortality is not always the most relevant and appropriate outcome measure. For instance, in the study by Weng et al  [46] , they tried to identify individualized targeted blood glucose levels as a reference for physicians. In their study, 90-day mortality was used to evaluate the RL policy. However, a more relevant measure could be considered, such as short-term changes in the blood glucose level, physiological stability, and development of complications.\n\nSeveral studies that focused on propofol titration have considered BIS as the evaluation metric to monitor the sedation level and hence to determine the effect of propofol. Although BIS monitoring is fairly objective, assessing sedation is usually performed by health care providers with clinically validated behavioral assessment scales such as the Richmond Agitation-Sedation Scale score  [72] . In addition, EEG-based technologies, such as BIS and M-entropy, have been validated more in the operating room than in the ICU  [73] . Furthermore, BIS cannot be used as the sole monitoring parameter for sedation, as it is affected by several other factors, including the anesthetic drugs used, muscle movement, or artifacts from surgical equipments  [74] .\n\nTo date, there has been no prospective evaluation of an RL algorithm. Moreover, the observational data itself may not truly reflect the underlying condition of patients. This is known as the partially observable MDP  [75]  problem, where we are only able to represent a patient's state by the observed physiological features, which are solved by mathematical approximation."
+    },
+    {
+      "title": "Model Choice",
+      "text": "FQI and DQN seem to be the top RL approaches among the reviewed studies. FQI is not a deep learning-based RL model, which guarantees convergence for many commonly used regressors, including kernel-based methods and decision trees. On the other hand, DQN leverages the representational power of DNNs to learn optimal treatment recommendations, mapping the patient state-action pair to the value function. Neural networks hold an advantage over tree-based methods in iterative settings in that it is possible to simply update the network weights at each iteration, rather than rebuilding the trees entirely.\n\nBoth FQI and DQN are off-policy RL models. Off-policy refers to learning about one way of behaving from the data generated by another way of selecting actions  [76] . For instance, an off-policy RL model tries to train a policy X to select actions in each step, but it estimates the Q-values from state-action pairs where the action was chosen by following another policy Y. In contrast to off-policy learning, on-policy learning uses the same policy X to choose actions and to evaluate the returns in each step during training. Most of the included studies adopted off-policy RL models because the RL models aim to learn policy X from the data, which was generated by following real actions of physicians (policy Y). The data generated by policy Y is the actual physicians' policy, where the RL models try to learn and improve from. This is the fundamental idea of applying off-policy RL models.\n\nIn addition, both FQI and DQN are value-based RL models that aim to learn the value functions. In value-based RL, a policy can be derived by following the action with the highest value at each time step. Another type of RL is called policy-based RL, which aims to learn the policy directly without worrying about the value function. Policy-based methods are more useful in continuous space. When the data volume is insufficient to train a DQN model, the DQN is not guaranteed to achieve a stable RL policy. As there is an infinite number of actions or states to estimate the values for, value-based RL models are too computationally expensive in the continuous space. However, policy-based RL models demand more data samples for training. Otherwise, the learned policy is not guaranteed to converge to an optimal one. Both value-based and policy-based RL models can be grouped in a more general way as model-free RL. Here the word model-free means the environment is unknown to an agent. The RL agent makes use of the trajectories generated from the environment, rather than explicitly knowing the rule or the transition probability. In contrast to model-free RL, model-based RL requires the agent to know the transition probability for all the state-action combinations explicitly and hence impractical as the state space and action space grow. In the critical care context, patients' conditions and prognosis are very complex to apply model-based RL because we are not exactly sure about the probability of all state transitions. In addition, most studies in critical care could only use limited retrospective data to train the model offline. Therefore, we found that most of the studies have applied a value-based RL model to utilize the available observational data."
+    },
+    {
+      "title": "Common Data Sets",
+      "text": "We found that 71% (15/21) of applications utilized the MIMIC II or MIMIC III database to conduct their experiments. We conjecture that such popularity might be due to public availability and high quality of MIMIC data. However, data collected from a single source may introduce potential bias to the research findings. There are inherent biases in the medical data sets obtained at various institutions due to multiple factors, including operation strategy, hospital protocol, instrument difference, and patient preference. Therefore, the RL models trained on a single data set, regardless of the data volume, cannot be confidently applied to another data set. The findings from the reviewed articles may not be generalizable to other institutions and populations. In addition to the MIMIC database, one of the studies also utilized the eICU Research Institute (eRI) database to test their RL model  [77] . The eRI database has a larger volume of data compared with the MIMIC database, and it is also publicly available. We suggest that future applications could cross-validate their models on both the MIMIC and eRI databases. In addition, all current applications have focused on using retrospective data sets to derive treatment algorithms and require prospective validation in authentic clinical settings."
+    },
+    {
+      "title": "Strengths and Limitations of This Study",
+      "text": "The strengths of this paper include the comprehensive and extensive search for all available publications that applied RL as an approach in the critical care context. Nonetheless, we acknowledge the limitations. We included papers (eg, those on arXiv) that have not been peer-reviewed before publication but these papers have undergone a postpublication peer review. According to the search phrases applied in this review, we may miss out certain papers that applied RL in critical care, but did not specify the phrase intensive care nor ICU in their full text papers."
+    },
+    {
+      "title": "Challenges and Future Directions",
+      "text": "A number of challenges must be overcome before RL can be implemented in a clinical setting. First, it is important to have a meaningful reward design. The RL agent would be vulnerable in case of reward misspecification, and might not be able to produce any meaningful treatment suggestion. Inverse RL can be an alternative to a priori-specified reward functions. However, inverse RL assumes that the given data represent the experts' demonstrations and the recommendations from the data were already optimal; these may not be true.\n\nSecond, medical domains present special challenges with respect to data acquisition, analysis, interpretation, and presentation of these data in a clinically relevant and usable format. Addressing the question of censoring in suboptimal historical data and explicitly correcting for the bias that arises from the timing of interventions or dosing of medication is crucial to fair evaluation of learnt policies. Third, another challenge for applying the RL model in the clinical setting is exploration. Unlike other domains such as game playing, where one can repeat the experiments as many times, in the clinical setting, the RL agent has to learn from a limited set of data and intervention variations that were collected offline. Using trial and error to explore all possible scenarios may conflict with medical ethics, thereby limiting the ability of the RL agent to attempt new behaviors to discover ones with higher rewards and better long-term outcomes.\n\nIn comparison with other machine learning approaches, there is an absence of acceptable performance standards in RL. This problem is not unique to RL but seems harder to address in RL compared with other machine learning approaches, such as prediction and classification algorithms, where accuracy and precision recall are more straightforward to implement. However, it is worth noting that RL has a distinct advantage over other machine learning approaches, that one can choose which outcome to optimize by specifying the reward function. This provides an opportunity to involve patient preferences and shared decision making. This becomes more relevant when learned policies change depending on the reward function. For example, an RL algorithm that optimizes survival may recommend a different set of treatments versus an RL algorithm that optimizes neurologic outcome. In such situations, patient preference is elicited to guide the choice of the RL algorithm.\n\nRL has the potential to offer considerable advantages in supporting the decision making of physicians. However, certain key issues need to be addressed, such as clinical implementation, ethics, and medico-legal limitations in health care delivery  [78] . In fact, any machine learning model would need to address these limitations carefully to serve as truly effective tools. In clinical practice, the RL models need to be refined iteratively throughout the time to include newly generated data from electronic health systems in hospitals, and the model must produce robust results for physicians to interpret and understand. Besides, patients' understanding and willingness to use the RL model as a supporting tool in their care would be another important consideration. Another important ethical consideration would be the liability in case of medical error when the RL model recommendation differs from the physician. It has an impact on the autonomy of both the physician and patient. The problem of medical error works in both ways when there is a poor outcome: (1) if the physician follows the RL model recommendation, can the clinician then blame the model and the personnel who maintain the model; (2) if the clinician does not follow the RL model recommendation, can the clinician then be said to have made the wrong decision and be penalized.\n\nPossible directions for future work include (1) modeling the RL environment as a partially observable MDP, in which observations from the data are mapped to some state space that truly represents patients' underlying well-being; (2) extending the action space to be continuous, suggesting more precise and practical treatment recommendations to physicians; and (3) improving the interpretability of the RL models so that physicians can have more confidence in accepting the model results. With further efforts to tackle these challenges, RL methods could play a crucial role in helping to inform patient-specific decisions in critical care."
+    },
+    {
+      "text": "Figure 1. Illustration of reinforcement learning in critical care."
+    },
+    {
+      "text": "Figure 2. Preferred Reporting Items for Systematic Reviews and Meta-Analyses flow diagram of the search strategy."
+    },
+    {
+      "text": "Figure 3. Mapping of reinforcement learning studies in critical care by application type."
+    },
+    {
+      "text": "Exclusion criteria used to exclude papers."
+    },
+    {
+      "title": "Acknowledgments",
+      "text": "SL was funded by the  National University of Singapore Graduate School for Integrative Sciences and Engineering Scholarship . This research was supported by the  National Research Foundation Singapore  under its  AI Singapore Programme  (award no. AISG-GC-2019-002 ), the  National University Health System joint  grant ( WBS R-608-000-199-733 ), and the  National Medical Research Council health  service research grant ( HSRG-OC17nov004 )."
+    },
+    {
+      "title": "Optimal Choice of Medications",
+      "text": "Apart from some clinical decision support systems, commonly used systems such as computerized prescriber order entry and bar-coded medication administration lack personalized recommendations to optimize medication effectiveness and minimize side effects  [51] . Wang et al  [47]  applied a deep learning network based on RL to exploit medication recommendations with a data-driven strategy. Their approach accounted for individual patient demographics, laboratory values, vital signs, and diagnoses from the MIMIC III database. They selected the top 1000 out of 4127 medications and the top 2000 out of 6695 diseases (represented by the International Classification of Diseases, Ninth Revision codes), which covered 85.4% of all medication records and 95.3% of all diagnosis records, respectively. To reduce the problem complexity, the authors further categorized the 1000 medications into 180 drug categories using anatomical therapeutic chemical codes and aggregated patients' drug prescriptions into 24-hour windows.\n\nThe authors defined RL action as the medication combinations from the 180 drug categories. They adopted an actor-critic RL agent that suggested a daily medication prescription set, and aimed to improve patients' hospital survival. The details of the actor-critic RL algorithm are explained in Multimedia Appendix 1  [28] . For each patient's ICU day, the actor network would recommend one medication combination by considering state variables such as demographics, laboratory results, and vital signs. A reward value of positive 15 would be given to the end state if a patient survived until hospital discharge and negative 15 if the patient died. The reward was designated as 0 for all other time steps. To counterbalance the actor network, the critic network was applied to evaluate the consistency of actual physician prescriptions and the RL agent's recommendations. The net effect of the actor-critic RL agent was to optimize the long-term outcomes of patients (hospital mortality) while minimizing deviations of RL-recommended actions from actual prescription patterns. In addition to the actor-critic network, the authors also applied long short-term memory  [52]  to represent a patient's current state by incorporating the long sequence of all historical states. Wang et al  [47]  suggested that hospital mortality would be reduced by 4.4% if clinicians adhered to the RL agent's recommendations."
+    },
+    {
+      "title": "Conflicts of Interest",
+      "text": "None declared."
+    },
+    {
+      "title": "Multimedia Appendix 1"
+    }
+  ],
+  "references": [
+    {
+      "title": "Designing a pilot sequential multiple assignment randomized trial for developing an adaptive treatment strategy",
+      "authors": [
+        "D Almirall",
+        "S Compton",
+        "M Gunlicks-Stoessel",
+        "N Duan",
+        "S Murphy"
+      ],
+      "year": 2012,
+      "doi": "10.1002/sim.4512",
+      "journal": "Stat Med",
+      "volume": "31",
+      "issue": "17",
+      "raw": "Designing a pilot sequential multiple assignment randomized trial for developing an adaptive treatment strategy \n\t\t \n\t\t\t D Almirall \n\t\t \n\t\t \n\t\t\t S N Compton \n\t\t \n\t\t \n\t\t\t M Gunlicks-Stoessel \n\t\t \n\t\t \n\t\t\t N Duan \n\t\t \n\t\t \n\t\t\t S A Murphy \n\t\t \n\t\t 10.1002/sim.4512 \n\t\t Medline: 22438190 \n\t \n\t \n\t\t Stat Med \n\t\t \n\t\t\t 31 \n\t\t\t 17 \n\t\t\t \n\t\t\t 2012 Jul 30 \n\t\t \n\t \n\t FREE Full text \n\t Almirall D, Compton SN, Gunlicks-Stoessel M, Duan N, Murphy SA. Designing a pilot sequential multiple assignment randomized trial for developing an adaptive treatment strategy. Stat Med 2012 Jul 30;31(17):1887-1902 [FREE Full text] [doi: 10.1002/sim.4512] [Medline: 22438190]"
+    },
+    {
+      "title": "A physician advisory system for chronic heart failure management based on knowledge patterns",
+      "authors": [
+        "Z Chen",
+        "K Marple",
+        "E Salazar",
+        "G Gupta",
+        "L Tamil"
+      ],
+      "year": 2016,
+      "doi": "10.1017/s1471068416000429",
+      "journal": "Theor Pract Log Prog",
+      "volume": "16",
+      "issue": "5-6",
+      "raw": "A physician advisory system for chronic heart failure management based on knowledge patterns \n\t\t \n\t\t\t Z Chen \n\t\t \n\t\t \n\t\t\t K Marple \n\t\t \n\t\t \n\t\t\t E Salazar \n\t\t \n\t\t \n\t\t\t G Gupta \n\t\t \n\t\t \n\t\t\t L Tamil \n\t\t \n\t\t 10.1017/s1471068416000429 \n\t \n\t \n\t\t Theor Pract Log Prog \n\t\t \n\t\t\t 16 \n\t\t\t 5-6 \n\t\t\t \n\t\t\t 2016 Oct 14 \n\t\t \n\t \n\t Chen Z, Marple K, Salazar E, Gupta G, Tamil L. A physician advisory system for chronic heart failure management based on knowledge patterns. Theor Pract Log Prog 2016 Oct 14;16(5-6):604-618. [doi: 10.1017/S1471068416000429]"
+    },
+    {
+      "title": "Implementing evidence-based medicine in general practice: a focus group based study",
+      "authors": [
+        "K Hannes",
+        "M Leys",
+        "E Vermeire",
+        "B Aertgeerts",
+        "F Buntinx",
+        "A Depoorter"
+      ],
+      "year": 2005,
+      "doi": "10.1186/1471-2296-6-37",
+      "journal": "BMC Fam Pract",
+      "volume": "6",
+      "pages": "37",
+      "raw": "Implementing evidence-based medicine in general practice: a focus group based study \n\t\t \n\t\t\t K Hannes \n\t\t \n\t\t \n\t\t\t M Leys \n\t\t \n\t\t \n\t\t\t E Vermeire \n\t\t \n\t\t \n\t\t\t B Aertgeerts \n\t\t \n\t\t \n\t\t\t F Buntinx \n\t\t \n\t\t \n\t\t\t A Depoorter \n\t\t \n\t\t 10.1186/1471-2296-6-37 \n\t\t Medline: 16153300 \n\t \n\t \n\t\t BMC Fam Pract \n\t\t \n\t\t\t 6 \n\t\t\t 37 \n\t\t\t 2005 Sep 9 \n\t\t \n\t \n\t FREE Full text \n\t Hannes K, Leys M, Vermeire E, Aertgeerts B, Buntinx F, Depoorter A. Implementing evidence-based medicine in general practice: a focus group based study. BMC Fam Pract 2005 Sep 9;6:37 [FREE Full text] [doi: 10.1186/1471-2296-6-37] [Medline: 16153300]"
+    },
+    {
+      "title": "Making use of guidelines in clinical practice",
+      "authors": [
+        "A Hutchinson",
+        "R Baker"
+      ],
+      "year": 1999,
+      "doi": "10.1136/bmj.319.7216.1078",
+      "journal": "Br Med J",
+      "volume": "319",
+      "issue": "7216",
+      "pages": "1078",
+      "raw": "Making use of guidelines in clinical practice \n\t\t \n\t\t\t A Hutchinson \n\t\t \n\t\t \n\t\t\t R Baker \n\t\t \n\t\t 10.1136/bmj.319.7216.1078 \n\t\t Medline: 10521225 \n\t \n\t \n\t\t Br Med J \n\t\t \n\t\t\t 319 \n\t\t\t 7216 \n\t\t\t 1078 \n\t\t\t 1999 Oct 16 \n\t\t \n\t \n\t FREE Full text \n\t Hutchinson A, Baker R. Making use of guidelines in clinical practice. Br Med J 1999 Oct 16;319(7216):1078 [FREE Full text] [doi: 10.1136/bmj.319.7216.1078] [Medline: 10521225]"
+    },
+    {
+      "title": "A new, evidence-based estimate of patient harms associated with hospital care",
+      "authors": [
+        "J James"
+      ],
+      "year": 2013,
+      "doi": "10.1097/pts.0b013e3182948a69",
+      "journal": "J Patient Saf",
+      "volume": "9",
+      "issue": "3",
+      "raw": "A new, evidence-based estimate of patient harms associated with hospital care \n\t\t \n\t\t\t J T James \n\t\t \n\t\t 10.1097/pts.0b013e3182948a69 \n\t\t Medline: 23860193 \n\t \n\t \n\t\t J Patient Saf \n\t\t \n\t\t\t 9 \n\t\t\t 3 \n\t\t\t \n\t\t\t 2013 Sep \n\t\t \n\t \n\t James JT. A new, evidence-based estimate of patient harms associated with hospital care. J Patient Saf 2013 Sep;9(3):122-128. [doi: 10.1097/PTS.0b013e3182948a69] [Medline: 23860193]"
+    },
+    {
+      "title": "Optimal medication dosing from suboptimal clinical examples: a deep reinforcement learning approach",
+      "authors": [
+        "S Nemati",
+        "M Ghassemi",
+        "G Clifford"
+      ],
+      "year": 2016,
+      "doi": "10.1109/embc.2016.7591355",
+      "journal": "Conf Proc IEEE Eng Med Biol Soc",
+      "volume": "2016",
+      "raw": "Optimal medication dosing from suboptimal clinical examples: a deep reinforcement learning approach \n\t\t \n\t\t\t S Nemati \n\t\t \n\t\t \n\t\t\t M M Ghassemi \n\t\t \n\t\t \n\t\t\t G D Clifford \n\t\t \n\t\t 10.1109/embc.2016.7591355 \n\t\t Medline: 28268938 \n\t \n\t \n\t\t Conf Proc IEEE Eng Med Biol Soc \n\t\t \n\t\t\t 2016 \n\t\t\t \n\t\t\t 2016 Aug \n\t\t \n\t \n\t Nemati S, Ghassemi MM, Clifford GD. Optimal medication dosing from suboptimal clinical examples: a deep reinforcement learning approach. Conf Proc IEEE Eng Med Biol Soc 2016 Aug;2016:2978-2981. [doi: 10.1109/EMBC.2016.7591355] [Medline: 28268938]"
+    },
+    {
+      "title": "Scientific evidence underlying the recommendations of critical care clinical practice guidelines: a lack of high level evidence",
+      "authors": [
+        "Z Zhang",
+        "Y Hong",
+        "N Liu"
+      ],
+      "year": 2018,
+      "doi": "10.1007/s00134-018-5142-8",
+      "journal": "Intensive Care Med",
+      "volume": "44",
+      "issue": "7",
+      "raw": "Scientific evidence underlying the recommendations of critical care clinical practice guidelines: a lack of high level evidence \n\t\t \n\t\t\t Z Zhang \n\t\t \n\t\t \n\t\t\t Y Hong \n\t\t \n\t\t \n\t\t\t N Liu \n\t\t \n\t\t 10.1007/s00134-018-5142-8 \n\t\t Medline: 29564478 \n\t \n\t \n\t\t Intensive Care Med \n\t\t \n\t\t\t 44 \n\t\t\t 7 \n\t\t\t \n\t\t\t 2018 Jul \n\t\t \n\t \n\t Zhang Z, Hong Y, Liu N. Scientific evidence underlying the recommendations of critical care clinical practice guidelines: a lack of high level evidence. Intensive Care Med 2018 Jul;44(7):1189-1191. [doi: 10.1007/s00134-018-5142-8] [Medline: 29564478]"
+    },
+    {
+      "title": "Negative trials in critical care: why most research is probably wrong",
+      "authors": [
+        "J Laffey",
+        "B Kavanagh"
+      ],
+      "year": 2018,
+      "doi": "10.1016/s2213-2600(18)30279-0",
+      "journal": "Lancet Respir Med",
+      "volume": "6",
+      "issue": "9",
+      "raw": "Negative trials in critical care: why most research is probably wrong \n\t\t \n\t\t\t J G Laffey \n\t\t \n\t\t \n\t\t\t B P Kavanagh \n\t\t \n\t\t 10.1016/s2213-2600(18)30279-0 \n\t\t Medline: 30061048 \n\t \n\t \n\t\t Lancet Respir Med \n\t\t \n\t\t\t 6 \n\t\t\t 9 \n\t\t\t \n\t\t\t 2018 Sep \n\t\t \n\t \n\t Laffey JG, Kavanagh BP. Negative trials in critical care: why most research is probably wrong. Lancet Respir Med 2018 Sep;6(9):659-660. [doi: 10.1016/S2213-2600(18)30279-0] [Medline: 30061048]"
+    },
+    {
+      "title": "Feasibility and acceptability of home use of a smartphone-based urine testing application among women in prenatal care",
+      "authors": [
+        "A Burke",
+        "K Thaler",
+        "M Geva",
+        "Y Adiri"
+      ],
+      "year": 2019,
+      "doi": "10.1016/j.ajog.2019.06.015",
+      "journal": "Am J Obstet Gynecol",
+      "volume": "221",
+      "issue": "5",
+      "raw": "Feasibility and acceptability of home use of a smartphone-based urine testing application among women in prenatal care \n\t\t \n\t\t\t A E Burke \n\t\t \n\t\t \n\t\t\t K M Thaler \n\t\t \n\t\t \n\t\t\t M Geva \n\t\t \n\t\t \n\t\t\t Y Adiri \n\t\t \n\t\t 10.1016/j.ajog.2019.06.015 \n\t\t Medline: 31300161 \n\t \n\t \n\t\t Am J Obstet Gynecol \n\t\t \n\t\t\t 221 \n\t\t\t 5 \n\t\t\t \n\t\t\t 2019 Nov \n\t\t \n\t \n\t Burke AE, Thaler KM, Geva M, Adiri Y. Feasibility and acceptability of home use of a smartphone-based urine testing application among women in prenatal care. Am J Obstet Gynecol 2019 Nov;221(5):527-528. [doi: 10.1016/j.ajog.2019.06.015] [Medline: 31300161]"
+    },
+    {
+      "title": "TextRay: Mining Clinical Reports to Gain a Broad Understanding of Chest X-Rays",
+      "authors": [
+        "J Laserson",
+        "C Lantsman",
+        "M Cohen-Sfady",
+        "I Tamir",
+        "E Goz",
+        "C Brestel"
+      ],
+      "year": 2018,
+      "doi": "10.1007/978-3-030-00934-2_62",
+      "raw": "TextRay: Mining Clinical Reports to Gain a Broad Understanding of Chest X-Rays \n\t\t \n\t\t\t J Laserson \n\t\t \n\t\t \n\t\t\t C D Lantsman \n\t\t \n\t\t \n\t\t\t M Cohen-Sfady \n\t\t \n\t\t \n\t\t\t I Tamir \n\t\t \n\t\t \n\t\t\t E Goz \n\t\t \n\t\t \n\t\t\t C Brestel \n\t\t \n\t\t 10.1007/978-3-030-00934-2_62 \n\t \n\t \n\t\t International Conference on Medical Image Computing and Computer-Assisted Intervention \n\t\t Granada, Spain \n\t\t \n\t\t\t 2018. September 16-20, 2018 \n\t\t \n\t \n\t MICCAI'18 \n\t Laserson J, Lantsman CD, Cohen-Sfady M, Tamir I, Goz E, Brestel C, et al. TextRay: Mining Clinical Reports to Gain a Broad Understanding of Chest X-Rays. In: International Conference on Medical Image Computing and Computer-Assisted Intervention. 2018 Presented at: MICCAI'18; September 16-20, 2018; Granada, Spain. [doi: 10.1007/978-3-030-00934-2_62]"
+    },
+    {
+      "title": "Doctor AI: predicting clinical events via recurrent neural networks",
+      "authors": [
+        "E Choi",
+        "M Bahadori",
+        "A Schuetz",
+        "W Stewart",
+        "J Sun"
+      ],
+      "year": 2016,
+      "doi": "10.1093/jamia/ocw112",
+      "journal": "JMLR Workshop Conf Proc",
+      "volume": "56",
+      "raw": "Doctor AI: predicting clinical events via recurrent neural networks \n\t\t \n\t\t\t E Choi \n\t\t \n\t\t \n\t\t\t M T Bahadori \n\t\t \n\t\t \n\t\t\t A Schuetz \n\t\t \n\t\t \n\t\t\t W F Stewart \n\t\t \n\t\t \n\t\t\t J Sun \n\t\t \n\t\t 10.1093/jamia/ocw112 \n\t\t Medline: 28286600 \n\t \n\t \n\t\t JMLR Workshop Conf Proc \n\t\t \n\t\t\t 56 \n\t\t\t \n\t\t\t 2016 Aug \n\t\t \n\t \n\t FREE Full text \n\t Choi E, Bahadori MT, Schuetz A, Stewart WF, Sun J. Doctor AI: predicting clinical events via recurrent neural networks. JMLR Workshop Conf Proc 2016 Aug;56:301-318 [FREE Full text] [Medline: 28286600]"
+    },
+    {
+      "title": "Automatic treatment planning based on three-dimensional dose distribution predicted from deep learning technique",
+      "authors": [
+        "J Fan",
+        "J Wang",
+        "Z Chen",
+        "C Hu",
+        "Z Zhang",
+        "W Hu"
+      ],
+      "year": 2019,
+      "doi": "10.1002/mp.13271",
+      "journal": "Med Phys",
+      "volume": "46",
+      "issue": "1",
+      "raw": "Automatic treatment planning based on three-dimensional dose distribution predicted from deep learning technique \n\t\t \n\t\t\t J Fan \n\t\t \n\t\t \n\t\t\t J Wang \n\t\t \n\t\t \n\t\t\t Z Chen \n\t\t \n\t\t \n\t\t\t C Hu \n\t\t \n\t\t \n\t\t\t Z Zhang \n\t\t \n\t\t \n\t\t\t W Hu \n\t\t \n\t\t 10.1002/mp.13271 \n\t\t Medline: 30383300 \n\t \n\t \n\t\t Med Phys \n\t\t \n\t\t\t 46 \n\t\t\t 1 \n\t\t\t \n\t\t\t 2019 Jan \n\t\t \n\t \n\t Fan J, Wang J, Chen Z, Hu C, Zhang Z, Hu W. Automatic treatment planning based on three-dimensional dose distribution predicted from deep learning technique. Med Phys 2019 Jan;46(1):370-381. [doi: 10.1002/mp.13271] [Medline: 30383300]"
+    },
+    {
+      "title": "Automated opportunistic osteoporotic fracture risk assessment using computed tomography scans to aid in FRAX underutilization",
+      "authors": [
+        "N Dagan",
+        "E Elnekave",
+        "N Barda",
+        "O Bregman-Amitai",
+        "A Bar",
+        "M Orlovsky"
+      ],
+      "year": 2020,
+      "doi": "10.1038/s41591-019-0720-z",
+      "journal": "Nat Med",
+      "volume": "26",
+      "issue": "1",
+      "raw": "Automated opportunistic osteoporotic fracture risk assessment using computed tomography scans to aid in FRAX underutilization \n\t\t \n\t\t\t N Dagan \n\t\t \n\t\t \n\t\t\t E Elnekave \n\t\t \n\t\t \n\t\t\t N Barda \n\t\t \n\t\t \n\t\t\t O Bregman-Amitai \n\t\t \n\t\t \n\t\t\t A Bar \n\t\t \n\t\t \n\t\t\t M Orlovsky \n\t\t \n\t\t 10.1038/s41591-019-0720-z \n\t\t Medline: 31932801 \n\t \n\t \n\t\t Nat Med \n\t\t \n\t\t\t 26 \n\t\t\t 1 \n\t\t\t \n\t\t\t 2020 Jan \n\t\t \n\t \n\t Dagan N, Elnekave E, Barda N, Bregman-Amitai O, Bar A, Orlovsky M, et al. Automated opportunistic osteoporotic fracture risk assessment using computed tomography scans to aid in FRAX underutilization. Nat Med 2020 Jan;26(1):77-82. [doi: 10.1038/s41591-019-0720-z] [Medline: 31932801]"
+    },
+    {
+      "title": "Improved cancer detection using artificial intelligence: a retrospective evaluation of missed cancers on mammography",
+      "authors": [
+        "A Watanabe",
+        "V Lim",
+        "H Vu",
+        "R Chim",
+        "E Weise",
+        "J Liu"
+      ],
+      "year": 2019,
+      "doi": "10.1007/s10278-019-00192-5",
+      "journal": "J Digit Imaging",
+      "volume": "32",
+      "issue": "4",
+      "raw": "Improved cancer detection using artificial intelligence: a retrospective evaluation of missed cancers on mammography \n\t\t \n\t\t\t A T Watanabe \n\t\t \n\t\t \n\t\t\t V Lim \n\t\t \n\t\t \n\t\t\t H X Vu \n\t\t \n\t\t \n\t\t\t R Chim \n\t\t \n\t\t \n\t\t\t E Weise \n\t\t \n\t\t \n\t\t\t J Liu \n\t\t \n\t\t 10.1007/s10278-019-00192-5 \n\t\t Medline: 31011956 \n\t \n\t \n\t\t J Digit Imaging \n\t\t \n\t\t\t 32 \n\t\t\t 4 \n\t\t\t \n\t\t\t 2019 Aug \n\t\t \n\t \n\t FREE Full text \n\t Watanabe AT, Lim V, Vu HX, Chim R, Weise E, Liu J, et al. Improved cancer detection using artificial intelligence: a retrospective evaluation of missed cancers on mammography. J Digit Imaging 2019 Aug;32(4):625-637 [FREE Full text] [doi: 10.1007/s10278-019-00192-5] [Medline: 31011956]"
+    },
+    {
+      "title": "Reinforcement learning: an introduction",
+      "authors": [
+        "P Montague",
+        "A Barto"
+      ],
+      "year": 1999,
+      "doi": "10.1016/s1364-6613(99)01331-5",
+      "journal": "Trends Cogn Sci",
+      "volume": "3",
+      "issue": "9",
+      "pages": "360",
+      "raw": "Reinforcement learning: an introduction \n\t\t \n\t\t\t P R Montague \n\t\t \n\t\t \n\t\t\t Sutton \n\t\t \n\t\t \n\t\t\t A G Barto \n\t\t \n\t\t 10.1016/s1364-6613(99)01331-5 \n\t \n\t \n\t\t Trends Cogn Sci \n\t\t \n\t\t\t 3 \n\t\t\t 9 \n\t\t\t 360 \n\t\t\t 1999 Sep \n\t\t \n\t \n\t Montague PR. Reinforcement learning: an introduction, by Sutton, RS and Barto, AG. Trends Cogn Sci 1999 Sep;3(9):360. [doi: 10.1016/S1364-6613(99)01331-5]"
+    },
+    {
+      "title": "Optimal and autonomous control using reinforcement learning: a survey",
+      "authors": [
+        "B Kiumarsi",
+        "K Vamvoudakis",
+        "H Modares",
+        "F Lewis"
+      ],
+      "year": 2018,
+      "doi": "10.1109/tnnls.2017.2773458",
+      "journal": "IEEE Trans Neural Netw Learn Syst",
+      "volume": "29",
+      "issue": "6",
+      "raw": "Optimal and autonomous control using reinforcement learning: a survey \n\t\t \n\t\t\t B Kiumarsi \n\t\t \n\t\t \n\t\t\t K G Vamvoudakis \n\t\t \n\t\t \n\t\t\t H Modares \n\t\t \n\t\t \n\t\t\t F L Lewis \n\t\t \n\t\t 10.1109/tnnls.2017.2773458 \n\t\t Medline: 29771662 \n\t \n\t \n\t\t IEEE Trans Neural Netw Learn Syst \n\t\t \n\t\t\t 29 \n\t\t\t 6 \n\t\t\t \n\t\t\t 2018 Jun \n\t\t \n\t \n\t Kiumarsi B, Vamvoudakis KG, Modares H, Lewis FL. Optimal and autonomous control using reinforcement learning: a survey. IEEE Trans Neural Netw Learn Syst 2018 Jun;29(6):2042-2062. [doi: 10.1109/TNNLS.2017.2773458] [Medline: 29771662]"
+    },
+    {
+      "title": "Dynamic Programming and Markov Process",
+      "authors": [
+        "R Howard"
+      ],
+      "year": 1960,
+      "raw": "Dynamic Programming and Markov Process \n\t\t \n\t\t\t R A Howard \n\t\t \n\t\t \n\t\t\t 1960 \n\t\t\t MIT Press and Wiley \n\t\t\t New York, USA \n\t\t \n\t \n\t Howard RA. Dynamic Programming and Markov Process. New York, USA: MIT Press and Wiley; 1960."
+    },
+    {
+      "title": "Playing atari with deep reinforcement learning",
+      "authors": [
+        "V Mnih",
+        "K Kavukcuoglu",
+        "D Silver",
+        "A Graves",
+        "I Antonoglou",
+        "D Wierstra"
+      ],
+      "raw": "Playing atari with deep reinforcement learning \n\t\t \n\t\t\t V Mnih \n\t\t \n\t\t \n\t\t\t K Kavukcuoglu \n\t\t \n\t\t \n\t\t\t D Silver \n\t\t \n\t\t \n\t\t\t A Graves \n\t\t \n\t\t \n\t\t\t I Antonoglou \n\t\t \n\t\t \n\t\t\t D Wierstra \n\t\t \n\t\t arXiv preprint 2013:-epub ahead of print(1312.5602 \n\t\t \n\t \n\t FREE Full text \n\t Mnih V, Kavukcuoglu K, Silver D, Graves A, Antonoglou I, Wierstra D, et al. Playing atari with deep reinforcement learning. arXiv preprint 2013:-epub ahead of print(1312.5602) [FREE Full text]"
+    },
+    {
+      "title": "Mastering the game of Go with deep neural networks and tree search",
+      "authors": [
+        "D Silver",
+        "A Huang",
+        "C Maddison",
+        "A Guez",
+        "L Sifre",
+        "G Van Den Driessche"
+      ],
+      "year": 2016,
+      "doi": "10.1038/nature16961",
+      "journal": "Nature",
+      "volume": "529",
+      "issue": "7587",
+      "raw": "Mastering the game of Go with deep neural networks and tree search \n\t\t \n\t\t\t D Silver \n\t\t \n\t\t \n\t\t\t A Huang \n\t\t \n\t\t \n\t\t\t C J Maddison \n\t\t \n\t\t \n\t\t\t A Guez \n\t\t \n\t\t \n\t\t\t L Sifre \n\t\t \n\t\t \n\t\t\t G Van Den Driessche \n\t\t \n\t\t 10.1038/nature16961 \n\t\t Medline: 26819042 \n\t \n\t \n\t\t Nature \n\t\t \n\t\t\t 529 \n\t\t\t 7587 \n\t\t\t \n\t\t\t 2016 Jan 28 \n\t\t \n\t \n\t Silver D, Huang A, Maddison CJ, Guez A, Sifre L, van den Driessche G, et al. Mastering the game of Go with deep neural networks and tree search. Nature 2016 Jan 28;529(7587):484-489. [doi: 10.1038/nature16961] [Medline: 26819042]"
+    },
+    {
+      "title": "Autonomous inverted autonomous helicopter flight via reinforcement learning",
+      "authors": [
+        "A Ng",
+        "A Coates",
+        "M Diel",
+        "V Ganapathi",
+        "J Schulte",
+        "B Tse"
+      ],
+      "year": 2006,
+      "raw": "Autonomous inverted autonomous helicopter flight via reinforcement learning \n\t\t \n\t\t\t A Ng \n\t\t \n\t\t \n\t\t\t A Coates \n\t\t \n\t\t \n\t\t\t M Diel \n\t\t \n\t\t \n\t\t\t V Ganapathi \n\t\t \n\t\t \n\t\t\t J Schulte \n\t\t \n\t\t \n\t\t\t B Tse \n\t\t \n\t \n\t \n\t\t Experimental Robotics IX \n\t\t New York, USA \n\t\t \n\t\t\t Springer \n\t\t\t 2006 \n\t\t\t \n\t\t \n\t \n\t Ng A, Coates A, Diel M, Ganapathi V, Schulte J, Tse B, et al. Autonomous inverted autonomous helicopter flight via reinforcement learning. In: Experimental Robotics IX. New York, USA: Springer; 2006:363-372."
+    },
+    {
+      "title": "The artificial intelligence clinician learns optimal treatment strategies for sepsis in intensive care",
+      "authors": [
+        "M Komorowski",
+        "L Celi",
+        "O Badawi",
+        "A Gordon",
+        "A Faisal"
+      ],
+      "year": 2018,
+      "doi": "10.1038/s41591-018-0213-5",
+      "journal": "Nat Med",
+      "volume": "24",
+      "issue": "11",
+      "raw": "The artificial intelligence clinician learns optimal treatment strategies for sepsis in intensive care \n\t\t \n\t\t\t M Komorowski \n\t\t \n\t\t \n\t\t\t L A Celi \n\t\t \n\t\t \n\t\t\t O Badawi \n\t\t \n\t\t \n\t\t\t A C Gordon \n\t\t \n\t\t \n\t\t\t A A Faisal \n\t\t \n\t\t 10.1038/s41591-018-0213-5 \n\t\t Medline: 30349085 \n\t \n\t \n\t\t Nat Med \n\t\t \n\t\t\t 24 \n\t\t\t 11 \n\t\t\t \n\t\t\t 2018 Nov \n\t\t \n\t \n\t Komorowski M, Celi LA, Badawi O, Gordon AC, Faisal AA. The artificial intelligence clinician learns optimal treatment strategies for sepsis in intensive care. Nat Med 2018 Nov;24(11):1716-1720. [doi: 10.1038/s41591-018-0213-5] [Medline: 30349085]"
+    },
+    {
+      "title": "Neural Fitted Q Iteration -First Experiences with a Data Efficient Neural Reinforcement Learning Method",
+      "authors": [
+        "M Riedmiller"
+      ],
+      "year": 2005,
+      "doi": "10.1007/11564096_32",
+      "raw": "Neural Fitted Q Iteration -First Experiences with a Data Efficient Neural Reinforcement Learning Method \n\t\t \n\t\t\t M Riedmiller \n\t\t \n\t\t 10.1007/11564096_32 \n\t\t \n\t \n\t \n\t\t Proceedings of the European Conference on Machine Learning \n\t\t the European Conference on Machine Learning Porto, Portugal \n\t\t \n\t\t\t 2005. October 3-7, 2005 \n\t\t \n\t \n\t ECML'05 \n\t Riedmiller M. Neural Fitted Q Iteration -First Experiences with a Data Efficient Neural Reinforcement Learning Method. In: Proceedings of the European Conference on Machine Learning. 2005 Presented at: ECML'05; October 3-7, 2005; Porto, Portugal URL: https://doi.org/10.1007/11564096_32 [doi: 10.1007/11564096_32]"
+    },
+    {
+      "title": "Deep Reinforcement Learning With Double Q-learning",
+      "authors": [
+        "H Van Hasselt",
+        "A Guez",
+        "D Silver"
+      ],
+      "year": 2016,
+      "doi": "10.5555/3016100.3016191",
+      "raw": "Deep Reinforcement Learning With Double Q-learning \n\t\t \n\t\t\t H Van Hasselt \n\t\t \n\t\t \n\t\t\t A Guez \n\t\t \n\t\t \n\t\t\t D Silver \n\t\t \n\t\t 10.5555/3016100.3016191 \n\t \n\t \n\t\t Proceedings of the Thirtieth AAAI Conference on Artificial Intelligence \n\t\t the Thirtieth AAAI Conference on Artificial Intelligence Phoenix, Arizona, USA \n\t\t \n\t\t\t 2016. February 12-17, 2016 \n\t\t \n\t \n\t Presented at: AAAI'16 \n\t van Hasselt H, Guez A, Silver D. Deep Reinforcement Learning With Double Q-learning. In: Proceedings of the Thirtieth AAAI Conference on Artificial Intelligence. 2016 Presented at: AAAI'16; February 12-17, 2016; Phoenix, Arizona, USA. [doi: 10.5555/3016100.3016191]"
+    },
+    {
+      "title": "Asynchronous methods for deep reinforcement learning",
+      "authors": [
+        "V Mnih",
+        "A Puigdomenech",
+        "M Mirza",
+        "A Graves",
+        "T Lillicrap",
+        "T Harley"
+      ],
+      "raw": "Asynchronous methods for deep reinforcement learning \n\t\t \n\t\t\t V Mnih \n\t\t \n\t\t \n\t\t\t A Puigdomenech \n\t\t \n\t\t \n\t\t\t M Mirza \n\t\t \n\t\t \n\t\t\t A Graves \n\t\t \n\t\t \n\t\t\t T Lillicrap \n\t\t \n\t\t \n\t\t\t T Harley \n\t\t \n\t\t Arxiv 2016:-epub ahead of print(1602.01783 \n\t\t \n\t \n\t FREE Full text \n\t Mnih V, Puigdomenech A, Mirza M, Graves A, Lillicrap T, Harley T, et al. Asynchronous methods for deep reinforcement learning. Arxiv 2016:-epub ahead of print(1602.01783) [FREE Full text]"
+    },
+    {
+      "title": "Multiple model-based reinforcement learning",
+      "authors": [
+        "K Doya",
+        "K Samejima",
+        "K Katagiri",
+        "M Kawato"
+      ],
+      "year": 2002,
+      "doi": "10.1162/089976602753712972",
+      "journal": "Neural Comput",
+      "volume": "14",
+      "issue": "6",
+      "raw": "Multiple model-based reinforcement learning \n\t\t \n\t\t\t K Doya \n\t\t \n\t\t \n\t\t\t K Samejima \n\t\t \n\t\t \n\t\t\t K Katagiri \n\t\t \n\t\t \n\t\t\t M Kawato \n\t\t \n\t\t 10.1162/089976602753712972 \n\t\t Medline: 12020450 \n\t \n\t \n\t\t Neural Comput \n\t\t \n\t\t\t 14 \n\t\t\t 6 \n\t\t\t \n\t\t\t 2002 Jun \n\t\t \n\t \n\t Doya K, Samejima K, Katagiri K, Kawato M. Multiple model-based reinforcement learning. Neural Comput 2002 Jun;14(6):1347-1369. [doi: 10.1162/089976602753712972] [Medline: 12020450]"
+    },
+    {
+      "title": "Deep reinforcement learning: a brief survey",
+      "authors": [
+        "K Arulkumaran",
+        "M Deisenroth",
+        "M Brundage",
+        "A Bharath"
+      ],
+      "year": 2017,
+      "doi": "10.1109/MSP.2017.2743240",
+      "journal": "IEEE Signal Process Mag",
+      "volume": "34",
+      "issue": "6",
+      "raw": "Deep reinforcement learning: a brief survey \n\t\t \n\t\t\t K Arulkumaran \n\t\t \n\t\t \n\t\t\t M P Deisenroth \n\t\t \n\t\t \n\t\t\t M Brundage \n\t\t \n\t\t \n\t\t\t A A Bharath \n\t\t \n\t\t 10.1109/MSP.2017.2743240 \n\t \n\t \n\t\t IEEE Signal Process Mag \n\t\t \n\t\t\t 34 \n\t\t\t 6 \n\t\t\t \n\t\t\t 2017 Nov \n\t\t \n\t \n\t Arulkumaran K, Deisenroth MP, Brundage M, Bharath AA. Deep reinforcement learning: a brief survey. IEEE Signal Process Mag 2017 Nov;34(6):26-38. [doi: 10.1109/MSP.2017.2743240]"
+    },
+    {
+      "title": "Reinforcement Learning: State-of-the-Art",
+      "authors": [
+        "M Wiering",
+        "M Van Otterlo"
+      ],
+      "year": 2012,
+      "doi": "10.1007/978-3-642-27645-3",
+      "raw": "M Wiering \n\t\t \n\t\t \n\t\t\t M Van Otterlo \n\t\t \n\t\t 10.1007/978-3-642-27645-3 \n\t\t Reinforcement Learning: State-of-the-Art \n\t\t Berlin, Heidelberg \n\t\t \n\t\t\t Springer-Verlag \n\t\t\t 2012 \n\t\t \n\t \n\t Wiering M, van Otterlo M, editors. Reinforcement Learning: State-of-the-Art. Berlin, Heidelberg: Springer-Verlag; 2012."
+    },
+    {
+      "title": "Reinforcement-Learning",
+      "authors": [
+        "L Siqi"
+      ],
+      "year": 2020,
+      "raw": "Reinforcement-Learning \n\t\t \n\t\t\t L Siqi \n\t\t \n\t\t \n\t\t \n\t\t\t 2020-01-01 \n\t\t \n\t \n\t GitHub \n\t Siqi L. Reinforcement-Learning. GitHub. URL: https://github.com/nus-mornin-lab/Reinforcement-Learning [accessed 2020-01-01]"
+    },
+    {
+      "title": "An Adaptive Neural Network Filter for Improved Patient State Estimation in Closed-Loop Anesthesia Control",
+      "authors": [
+        "E Borera",
+        "B Moore",
+        "A Doufas",
+        "L Pyeatt"
+      ],
+      "year": 2011,
+      "doi": "10.1109/ictai.2011.15",
+      "raw": "An Adaptive Neural Network Filter for Improved Patient State Estimation in Closed-Loop Anesthesia Control \n\t\t \n\t\t\t E C Borera \n\t\t \n\t\t \n\t\t\t B L Moore \n\t\t \n\t\t \n\t\t\t A G Doufas \n\t\t \n\t\t \n\t\t\t L D Pyeatt \n\t\t \n\t\t 10.1109/ictai.2011.15 \n\t \n\t \n\t\t 23rd International Conference on Tools with Artificial Intelligence \n\t\t Boca Raton, FL, USA \n\t\t \n\t\t\t 2011. November 7-9, 2011 \n\t\t \n\t \n\t ICTAI'11 \n\t Borera EC, Moore BL, Doufas AG, Pyeatt LD. An Adaptive Neural Network Filter for Improved Patient State Estimation in Closed-Loop Anesthesia Control. In: 23rd International Conference on Tools with Artificial Intelligence. 2011 Presented at: ICTAI'11; November 7-9, 2011; Boca Raton, FL, USA. [doi: 10.1109/ictai.2011.15]"
+    },
+    {
+      "title": "Closed-loop Control of Anesthesia and Mean Arterial Pressure Using Reinforcement Learning",
+      "authors": [
+        "R Padmanabhan",
+        "N Meskin",
+        "W Haddad"
+      ],
+      "year": 2014,
+      "doi": "10.1109/adprl.2014.7010644",
+      "raw": "Closed-loop Control of Anesthesia and Mean Arterial Pressure Using Reinforcement Learning \n\t\t \n\t\t\t R Padmanabhan \n\t\t \n\t\t \n\t\t\t N Meskin \n\t\t \n\t\t \n\t\t\t W M Haddad \n\t\t \n\t\t 10.1109/adprl.2014.7010644 \n\t \n\t \n\t\t Symposium on Adaptive Dynamic Programming and Reinforcement Learning \n\t\t Orlando, FL, USA \n\t\t \n\t\t\t 2014. December 9-12, 2014 \n\t\t \n\t \n\t ADPRL'14 \n\t Padmanabhan R, Meskin N, Haddad WM. Closed-loop Control of Anesthesia and Mean Arterial Pressure Using Reinforcement Learning. In: Symposium on Adaptive Dynamic Programming and Reinforcement Learning. 2014 Presented at: ADPRL'14; December 9-12, 2014; Orlando, FL, USA. [doi: 10.1109/ADPRL.2014.7010644]"
+    },
+    {
+      "title": "Reinforcement Learning-Based Control for Combined Infusion of Sedatives and Analgesics",
+      "authors": [
+        "R Padmanabhan",
+        "N Meskin",
+        "W Haddad"
+      ],
+      "year": 2017,
+      "doi": "10.1109/codit.2017.8102643",
+      "raw": "Reinforcement Learning-Based Control for Combined Infusion of Sedatives and Analgesics \n\t\t \n\t\t\t R Padmanabhan \n\t\t \n\t\t \n\t\t\t N Meskin \n\t\t \n\t\t \n\t\t\t W M Haddad \n\t\t \n\t\t 10.1109/codit.2017.8102643 \n\t \n\t \n\t\t 4th International Conference on Control, Decision and Information Technologies \n\t\t Barcelona, Spain \n\t\t \n\t\t\t 2017. April 5-7, 2017 \n\t\t \n\t \n\t Presented at: CoDIT'17 \n\t Padmanabhan R, Meskin N, Haddad WM. Reinforcement Learning-Based Control for Combined Infusion of Sedatives and Analgesics. In: 4th International Conference on Control, Decision and Information Technologies. 2017 Presented at: CoDIT'17; April 5-7, 2017; Barcelona, Spain. [doi: 10.1109/codit.2017.8102643]"
+    },
+    {
+      "title": "Optimal adaptive control of drug dosing using integral reinforcement learning",
+      "authors": [
+        "R Padmanabhan",
+        "N Meskin",
+        "W Haddad"
+      ],
+      "year": 2019,
+      "doi": "10.1016/j.mbs.2019.01.012",
+      "journal": "Math Biosci",
+      "volume": "309",
+      "raw": "Optimal adaptive control of drug dosing using integral reinforcement learning \n\t\t \n\t\t\t R Padmanabhan \n\t\t \n\t\t \n\t\t\t N Meskin \n\t\t \n\t\t \n\t\t\t W M Haddad \n\t\t \n\t\t 10.1016/j.mbs.2019.01.012 \n\t\t Medline: 30735696 \n\t \n\t \n\t\t Math Biosci \n\t\t \n\t\t\t 309 \n\t\t\t \n\t\t\t 2019 Mar \n\t\t \n\t \n\t Padmanabhan R, Meskin N, Haddad WM. Optimal adaptive control of drug dosing using integral reinforcement learning. Math Biosci 2019 Mar;309:131-142. [doi: 10.1016/j.mbs.2019.01.012] [Medline: 30735696]"
+    },
+    {
+      "title": "Personalized Medication Dosing Using Volatile Data Streams",
+      "authors": [
+        "M Ghassemi",
+        "T Alhanai",
+        "M Westover",
+        "T Mark",
+        "S Nemati"
+      ],
+      "year": 2018,
+      "raw": "Personalized Medication Dosing Using Volatile Data Streams \n\t\t \n\t\t\t M M Ghassemi \n\t\t \n\t\t \n\t\t\t T Alhanai \n\t\t \n\t\t \n\t\t\t M B Westover \n\t\t \n\t\t \n\t\t\t T G Mark \n\t\t \n\t\t \n\t\t\t S Nemati \n\t\t \n\t\t \n\t \n\t \n\t\t Proceedings of the Thirty-Second AAAI Conference on Artificial Intelligence \n\t\t the Thirty-Second AAAI Conference on Artificial Intelligence New Orleans, Louisiana, USA \n\t\t \n\t\t\t 2018. February 2-7, 2018 \n\t\t \n\t \n\t Presented at: AAAI'18 \n\t Ghassemi MM, Alhanai T, Westover MB, Mark TG, Nemati S. Personalized Medication Dosing Using Volatile Data Streams. In: Proceedings of the Thirty-Second AAAI Conference on Artificial Intelligence. 2018 Presented at: AAAI'18; February 2-7, 2018; New Orleans, Louisiana, USA URL: https://aaai.org/ocs/index.php/WS/AAAIW18/paper/view/17234"
+    },
+    {
+      "title": "A deep deterministic policy gradient approach to medication dosing and surveillance in the ICU",
+      "authors": [
+        "R Lin",
+        "M Stanley",
+        "M Ghassemi",
+        "S Nemati"
+      ],
+      "year": 2018,
+      "doi": "10.1109/embc.2018.8513203",
+      "journal": "Conf Proc IEEE Eng Med Biol Soc",
+      "volume": "2018",
+      "raw": "A deep deterministic policy gradient approach to medication dosing and surveillance in the ICU \n\t\t \n\t\t\t R Lin \n\t\t \n\t\t \n\t\t\t M D Stanley \n\t\t \n\t\t \n\t\t\t M M Ghassemi \n\t\t \n\t\t \n\t\t\t S Nemati \n\t\t \n\t\t 10.1109/embc.2018.8513203 \n\t\t Medline: 30441448 \n\t \n\t \n\t\t Conf Proc IEEE Eng Med Biol Soc \n\t\t \n\t\t\t 2018 \n\t\t\t \n\t\t\t 2018 Jul \n\t\t \n\t \n\t FREE Full text \n\t Lin R, Stanley MD, Ghassemi MM, Nemati S. A deep deterministic policy gradient approach to medication dosing and surveillance in the ICU. Conf Proc IEEE Eng Med Biol Soc 2018 Jul;2018:4927-4931 [FREE Full text] [doi: 10.1109/EMBC.2018.8513203] [Medline: 30441448]"
+    },
+    {
+      "title": "Deep reinforcement learning for sepsis treatment",
+      "authors": [
+        "A Raghu",
+        "M Komorowski",
+        "I Ahmed",
+        "L Celi",
+        "P Szolovits",
+        "M Ghassemi"
+      ],
+      "doi": "10.5173/ceju.2017.1595",
+      "raw": "Deep reinforcement learning for sepsis treatment \n\t\t \n\t\t\t A Raghu \n\t\t \n\t\t \n\t\t\t M Komorowski \n\t\t \n\t\t \n\t\t\t I Ahmed \n\t\t \n\t\t \n\t\t\t L Celi \n\t\t \n\t\t \n\t\t\t P Szolovits \n\t\t \n\t\t \n\t\t\t M Ghassemi \n\t\t \n\t\t 10.5173/ceju.2017.1595 \n\t\t arXiv 2017:-epub ahead of print(1711.09602 \n\t\t \n\t \n\t FREE Full text \n\t Raghu A, Komorowski M, Ahmed I, Celi L, Szolovits P, Ghassemi M. Deep reinforcement learning for sepsis treatment. arXiv 2017:-epub ahead of print(1711.09602) [FREE Full text]"
+    },
+    {
+      "title": "Continuous state-space models for optimal sepsis treatment-a deep reinforcement learning approach",
+      "authors": [
+        "A Raghu",
+        "M Komorowski",
+        "L Celi",
+        "P Szolovits",
+        "M Ghassemi"
+      ],
+      "doi": "10.2514/6.2020-2909.vid",
+      "raw": "Continuous state-space models for optimal sepsis treatment-a deep reinforcement learning approach \n\t\t \n\t\t\t A Raghu \n\t\t \n\t\t \n\t\t\t M Komorowski \n\t\t \n\t\t \n\t\t\t L Celi \n\t\t \n\t\t \n\t\t\t P Szolovits \n\t\t \n\t\t \n\t\t\t M Ghassemi \n\t\t \n\t\t 10.2514/6.2020-2909.vid \n\t\t arXiv 2017:-epub ahead of print(1705.08422 \n\t\t \n\t \n\t FREE Full text \n\t Raghu A, Komorowski M, Celi L, Szolovits P, Ghassemi M. Continuous state-space models for optimal sepsis treatment-a deep reinforcement learning approach. arXiv 2017:-epub ahead of print(1705.08422) [FREE Full text]"
+    },
+    {
+      "title": "Model-based reinforcement learning for sepsis treatment",
+      "authors": [
+        "A Raghu",
+        "M Komorowski",
+        "S Singh"
+      ],
+      "raw": "Model-based reinforcement learning for sepsis treatment \n\t\t \n\t\t\t A Raghu \n\t\t \n\t\t \n\t\t\t M Komorowski \n\t\t \n\t\t \n\t\t\t S Singh \n\t\t \n\t\t arXiv 2018:-epub ahead of print-1811.09602 \n\t\t \n\t \n\t FREE Full text \n\t Raghu A, Komorowski M, Singh S. Model-based reinforcement learning for sepsis treatment. arXiv 2018:-epub ahead of print-1811.09602 [FREE Full text]"
+    },
+    {
+      "title": "Learning to Treat Sepsis with Multi-Output Gaussian Process Deep Recurrent Q-Networks",
+      "authors": [
+        "J Futoma",
+        "A Lin",
+        "M Sendak",
+        "A Bedoya",
+        "M Clement",
+        "O' Brien"
+      ],
+      "year": 2018,
+      "raw": "Learning to Treat Sepsis with Multi-Output Gaussian Process Deep Recurrent Q-Networks \n\t\t \n\t\t\t J Futoma \n\t\t \n\t\t \n\t\t\t A Lin \n\t\t \n\t\t \n\t\t\t M Sendak \n\t\t \n\t\t \n\t\t\t A Bedoya \n\t\t \n\t\t \n\t\t\t M Clement \n\t\t \n\t\t \n\t\t\t O' Brien \n\t\t \n\t\t \n\t\t\t C \n\t\t \n\t\t \n\t\t \n\t\t\t 2018. 2020-06-10 \n\t\t\t OpenReview \n\t\t \n\t \n\t Futoma J, Lin A, Sendak M, Bedoya A, Clement M, O'Brien C, et al. Learning to Treat Sepsis with Multi-Output Gaussian Process Deep Recurrent Q-Networks. OpenReview. 2018. URL: https://openreview.net/forum?id=SyxCqGbRZ [accessed 2020-06-10]"
+    },
+    {
+      "title": "Improving sepsis treatment strategies by combining deep and kernel-based reinforcement learning",
+      "authors": [
+        "X Peng",
+        "Y Ding",
+        "D Wihl",
+        "O Gottesman",
+        "M Komorowski",
+        "L Lehman"
+      ],
+      "year": 2018,
+      "journal": "AMIA Annu Symp Proc",
+      "volume": "2018",
+      "raw": "Improving sepsis treatment strategies by combining deep and kernel-based reinforcement learning \n\t\t \n\t\t\t X Peng \n\t\t \n\t\t \n\t\t\t Y Ding \n\t\t \n\t\t \n\t\t\t D Wihl \n\t\t \n\t\t \n\t\t\t O Gottesman \n\t\t \n\t\t \n\t\t\t M Komorowski \n\t\t \n\t\t \n\t\t\t L H Lehman \n\t\t \n\t\t Medline: 30815131 \n\t \n\t \n\t\t AMIA Annu Symp Proc \n\t\t \n\t\t\t 2018 \n\t\t\t \n\t\t\t 2018 \n\t\t \n\t \n\t FREE Full text \n\t Peng X, Ding Y, Wihl D, Gottesman O, Komorowski M, Lehman LH, et al. Improving sepsis treatment strategies by combining deep and kernel-based reinforcement learning. AMIA Annu Symp Proc 2018;2018:887-896 [FREE Full text] [Medline: 30815131]"
+    },
+    {
+      "title": "Truly Batch Apprenticeship Learning with Deep Successor Features",
+      "authors": [
+        "D Lee",
+        "S Srinivasan",
+        "F Doshi-Velez"
+      ],
+      "year": 2019,
+      "doi": "10.24963/ijcai.2019/819",
+      "raw": "Truly Batch Apprenticeship Learning with Deep Successor Features \n\t\t \n\t\t\t D Lee \n\t\t \n\t\t \n\t\t\t S Srinivasan \n\t\t \n\t\t \n\t\t\t F Doshi-Velez \n\t\t \n\t\t 10.24963/ijcai.2019/819 \n\t \n\t \n\t\t International Joint Conferences on Artificial Intelligence Organization \n\t\t Macao, China \n\t\t \n\t\t\t 2019. August 10-16, 2019 \n\t\t \n\t \n\t Lee D, Srinivasan S, Doshi-Velez F. Truly Batch Apprenticeship Learning with Deep Successor Features. 2019 Presented at: International Joint Conferences on Artificial Intelligence Organization; August 10-16, 2019; Macao, China. [doi: 10.24963/ijcai.2019/819]"
+    },
+    {
+      "title": "Deep reinforcement learning for optimal critical care pain management with morphine using dueling double-deep Q networks",
+      "authors": [
+        "D Lopez-Martinez",
+        "P Eschenfeldt",
+        "S Ostvar",
+        "M Ingram",
+        "C Hur",
+        "R Picard"
+      ],
+      "year": 2019,
+      "doi": "10.1109/EMBC.2019.8857295",
+      "journal": "Conf Proc IEEE Eng Med Biol Soc",
+      "volume": "2019",
+      "raw": "Deep reinforcement learning for optimal critical care pain management with morphine using dueling double-deep Q networks \n\t\t \n\t\t\t D Lopez-Martinez \n\t\t \n\t\t \n\t\t\t P Eschenfeldt \n\t\t \n\t\t \n\t\t\t S Ostvar \n\t\t \n\t\t \n\t\t\t M Ingram \n\t\t \n\t\t \n\t\t\t C Hur \n\t\t \n\t\t \n\t\t\t R Picard \n\t\t \n\t\t 10.1109/EMBC.2019.8857295 \n\t\t Medline: 31946739 \n\t \n\t \n\t\t Conf Proc IEEE Eng Med Biol Soc \n\t\t \n\t\t\t 2019 \n\t\t\t \n\t\t\t 2019 Jul \n\t\t \n\t \n\t Lopez-Martinez D, Eschenfeldt P, Ostvar S, Ingram M, Hur C, Picard R. Deep reinforcement learning for optimal critical care pain management with morphine using dueling double-deep Q networks. Conf Proc IEEE Eng Med Biol Soc 2019 Jul;2019:3960-3963. [doi: 10.1109/EMBC.2019.8857295] [Medline: 31946739]"
+    },
+    {
+      "title": "Precision medicine as a control problem: Using simulation and deep reinforcement learning to discover adaptive, personalized multi-cytokine therapy for sepsis",
+      "authors": [
+        "B Petersen",
+        "J Yang",
+        "W Grathwohl",
+        "C Cockrell",
+        "C Santiago",
+        "G An"
+      ],
+      "doi": "10.1089/cmb.2018.0168",
+      "raw": "Precision medicine as a control problem: Using simulation and deep reinforcement learning to discover adaptive, personalized multi-cytokine therapy for sepsis \n\t\t \n\t\t\t B Petersen \n\t\t \n\t\t \n\t\t\t J Yang \n\t\t \n\t\t \n\t\t\t W S Grathwohl \n\t\t \n\t\t \n\t\t\t C Cockrell \n\t\t \n\t\t \n\t\t\t C Santiago \n\t\t \n\t\t \n\t\t\t G An \n\t\t \n\t\t 10.1089/cmb.2018.0168 \n\t\t arXiv:1802.104402018 \n\t\t \n\t \n\t arXiv preprint \n\t FREE Full text \n\t Petersen B, Yang J, Grathwohl WS, Cockrell C, Santiago C, An G, et al. Precision medicine as a control problem: Using simulation and deep reinforcement learning to discover adaptive, personalized multi-cytokine therapy for sepsis. arXiv preprint. arXiv:1802.10440 2018 [FREE Full text]"
+    },
+    {
+      "title": "A reinforcement learning approach to weaning of mechanical ventilation in intensive care units",
+      "authors": [
+        "N Prasad",
+        "L Cheng",
+        "C Chivers",
+        "M Draugelis",
+        "B Engelhardt"
+      ],
+      "doi": "10.3390/jpm12050661",
+      "raw": "A reinforcement learning approach to weaning of mechanical ventilation in intensive care units \n\t\t \n\t\t\t N Prasad \n\t\t \n\t\t \n\t\t\t L F Cheng \n\t\t \n\t\t \n\t\t\t C Chivers \n\t\t \n\t\t \n\t\t\t M Draugelis \n\t\t \n\t\t \n\t\t\t B Engelhardt \n\t\t \n\t\t 10.3390/jpm12050661 \n\t\t Arxiv 2017:-epub ahead of print(1704.06300 \n\t\t \n\t \n\t FREE Full text \n\t Prasad N, Cheng LF, Chivers C, Draugelis M, Engelhardt B. A reinforcement learning approach to weaning of mechanical ventilation in intensive care units. Arxiv 2017:-epub ahead of print(1704.06300) [FREE Full text]"
+    },
+    {
+      "title": "An optimal policy for patient laboratory tests in intensive care units",
+      "authors": [
+        "L Cheng",
+        "N Prasad",
+        "B Engelhardt"
+      ],
+      "year": 2019,
+      "journal": "Pac Symp Biocomput",
+      "volume": "24",
+      "raw": "An optimal policy for patient laboratory tests in intensive care units \n\t\t \n\t\t\t L Cheng \n\t\t \n\t\t \n\t\t\t N Prasad \n\t\t \n\t\t \n\t\t\t B E Engelhardt \n\t\t \n\t\t Medline: 30864333 \n\t \n\t \n\t\t Pac Symp Biocomput \n\t\t \n\t\t\t 24 \n\t\t\t \n\t\t\t 2019 \n\t\t \n\t \n\t FREE Full text \n\t Cheng L, Prasad N, Engelhardt BE. An optimal policy for patient laboratory tests in intensive care units. Pac Symp Biocomput 2019;24:320-331 [FREE Full text] [Medline: 30864333]"
+    },
+    {
+      "title": "Inverse reinforcement learning for intelligent mechanical ventilation and sedative dosing in intensive care units",
+      "authors": [
+        "C Yu",
+        "J Liu",
+        "H Zhao"
+      ],
+      "year": 2019,
+      "doi": "10.1186/s12911-019-0763-6",
+      "journal": "BMC Med Inform Decis Mak",
+      "volume": "19",
+      "issue": "Suppl 2",
+      "pages": "57",
+      "raw": "Inverse reinforcement learning for intelligent mechanical ventilation and sedative dosing in intensive care units \n\t\t \n\t\t\t C Yu \n\t\t \n\t\t \n\t\t\t J Liu \n\t\t \n\t\t \n\t\t\t H Zhao \n\t\t \n\t\t 10.1186/s12911-019-0763-6 \n\t\t Medline: 30961594 \n\t \n\t \n\t\t BMC Med Inform Decis Mak \n\t\t \n\t\t\t 19 \n\t\t\t Suppl 2 \n\t\t\t 57 \n\t\t\t 2019 Apr 9 \n\t\t \n\t \n\t FREE Full text \n\t Yu C, Liu J, Zhao H. Inverse reinforcement learning for intelligent mechanical ventilation and sedative dosing in intensive care units. BMC Med Inform Decis Mak 2019 Apr 9;19(Suppl 2):57 [FREE Full text] [doi: 10.1186/s12911-019-0763-6] [Medline: 30961594]"
+    },
+    {
+      "title": "Representation and reinforcement learning for personalized glycemic control in septic patients",
+      "authors": [
+        "W Weng",
+        "M Gao",
+        "Z He",
+        "S Yan",
+        "P Szolovits"
+      ],
+      "raw": "Representation and reinforcement learning for personalized glycemic control in septic patients \n\t\t \n\t\t\t W Weng \n\t\t \n\t\t \n\t\t\t M Gao \n\t\t \n\t\t \n\t\t\t Z He \n\t\t \n\t\t \n\t\t\t S Yan \n\t\t \n\t\t \n\t\t\t P Szolovits \n\t\t \n\t\t arXiv 2017:-epub ahead of print(1712.00654 \n\t\t \n\t \n\t FREE Full text \n\t Weng W, Gao M, He Z, Yan S, Szolovits P. Representation and reinforcement learning for personalized glycemic control in septic patients. arXiv 2017:-epub ahead of print(1712.00654) [FREE Full text]"
+    },
+    {
+      "title": "Supervised Reinforcement Learning with Recurrent Neural Network for Dynamic Treatment Recommendation",
+      "authors": [
+        "L Wang",
+        "W Zhang",
+        "X He",
+        "H Zha"
+      ],
+      "year": 2018,
+      "doi": "10.1145/3219819.3219961",
+      "raw": "Supervised Reinforcement Learning with Recurrent Neural Network for Dynamic Treatment Recommendation \n\t\t \n\t\t\t L Wang \n\t\t \n\t\t \n\t\t\t W Zhang \n\t\t \n\t\t \n\t\t\t X He \n\t\t \n\t\t \n\t\t\t H Zha \n\t\t \n\t\t 10.1145/3219819.3219961 \n\t \n\t \n\t\t Proceedings of the 24th ACM SIGKDD International Conference on Knowledge Discovery & Data Mining \n\t\t the 24th ACM SIGKDD International Conference on Knowledge Discovery & Data Mining London, UK \n\t\t \n\t\t\t 2018. August 19-23, 2018 \n\t\t \n\t \n\t KDD'18 \n\t Wang L, Zhang W, He X, Zha H. Supervised Reinforcement Learning with Recurrent Neural Network for Dynamic Treatment Recommendation. In: Proceedings of the 24th ACM SIGKDD International Conference on Knowledge Discovery & Data Mining. 2018 Presented at: KDD'18; August 19-23, 2018; London, UK. [doi: 10.1145/3219819.3219961]"
+    },
+    {
+      "title": "In the era of precision medicine and big data, who is normal?",
+      "authors": [
+        "A Manrai",
+        "C Patel",
+        "J Ioannidis"
+      ],
+      "year": 2018,
+      "doi": "10.1001/jama.2018.2009",
+      "journal": "J Am Med Assoc",
+      "volume": "319",
+      "issue": "19",
+      "raw": "In the era of precision medicine and big data, who is normal? \n\t\t \n\t\t\t A K Manrai \n\t\t \n\t\t \n\t\t\t C J Patel \n\t\t \n\t\t \n\t\t\t J P Ioannidis \n\t\t \n\t\t 10.1001/jama.2018.2009 \n\t\t Medline: 29710130 \n\t \n\t \n\t\t J Am Med Assoc \n\t\t \n\t\t\t 319 \n\t\t\t 19 \n\t\t\t \n\t\t\t 2018 May 15 \n\t\t \n\t \n\t Manrai AK, Patel CJ, Ioannidis JP. In the era of precision medicine and big data, who is normal? J Am Med Assoc 2018 May 15;319(19):1981-1982. [doi: 10.1001/jama.2018.2009] [Medline: 29710130]"
+    },
+    {
+      "title": "MIMIC-III, a freely accessible critical care database",
+      "authors": [
+        "A Johnson",
+        "T Pollard",
+        "L Shen",
+        "L Lehman",
+        "M Feng",
+        "M Ghassemi"
+      ],
+      "year": 2016,
+      "doi": "10.1038/sdata.2016.35",
+      "journal": "Sci Data",
+      "volume": "3",
+      "pages": "160035",
+      "raw": "MIMIC-III, a freely accessible critical care database \n\t\t \n\t\t\t A E Johnson \n\t\t \n\t\t \n\t\t\t T J Pollard \n\t\t \n\t\t \n\t\t\t L Shen \n\t\t \n\t\t \n\t\t\t L H Lehman \n\t\t \n\t\t \n\t\t\t M Feng \n\t\t \n\t\t \n\t\t\t M Ghassemi \n\t\t \n\t\t 10.1038/sdata.2016.35 \n\t\t Medline: 27219127 \n\t \n\t \n\t\t Sci Data \n\t\t \n\t\t\t 3 \n\t\t\t 160035 \n\t\t\t 2016 May 24 \n\t\t \n\t \n\t FREE Full text \n\t Johnson AE, Pollard TJ, Shen L, Lehman LH, Feng M, Ghassemi M, et al. MIMIC-III, a freely accessible critical care database. Sci Data 2016 May 24;3:160035 [FREE Full text] [doi: 10.1038/sdata.2016.35] [Medline: 27219127]"
+    },
+    {
+      "title": "A Lecture Notes: Sparse Autoencoder",
+      "authors": [
+        "A Ng"
+      ],
+      "year": 2011,
+      "raw": "A Ng \n\t\t \n\t\t \n\t\t\t Cs \n\t\t \n\t\t \n\t\t A Lecture Notes: Sparse Autoencoder \n\t\t \n\t\t\t 294. 2011. 2020-06-09 \n\t\t \n\t\t \n\t\t\t Stanford University \n\t\t \n\t \n\t Ng A. CS294A Lecture Notes: Sparse Autoencoder. Stanford University. 2011. URL: https://web.stanford.edu/class/cs294a/ sparseAutoencoder.pdf [accessed 2020-06-09]"
+    },
+    {
+      "title": "Clinical practice guideline: safe medication use in the ICU",
+      "authors": [
+        "Kane-Gill Sl",
+        "J Dasta",
+        "M Buckley",
+        "S Devabhakthuni",
+        "M Liu",
+        "H Cohen"
+      ],
+      "year": 2017,
+      "doi": "10.1097/CCM.0000000000002533",
+      "journal": "Crit Care Med",
+      "volume": "45",
+      "issue": "9",
+      "raw": "Clinical practice guideline: safe medication use in the ICU \n\t\t \n\t\t\t Kane-Gill Sl \n\t\t \n\t\t \n\t\t\t J F Dasta \n\t\t \n\t\t \n\t\t\t M S Buckley \n\t\t \n\t\t \n\t\t\t S Devabhakthuni \n\t\t \n\t\t \n\t\t\t M Liu \n\t\t \n\t\t \n\t\t\t H Cohen \n\t\t \n\t\t 10.1097/CCM.0000000000002533 \n\t\t Medline: 28816851 \n\t \n\t \n\t\t Crit Care Med \n\t\t \n\t\t\t 45 \n\t\t\t 9 \n\t\t\t \n\t\t\t 2017 Sep \n\t\t \n\t \n\t Kane-Gill SL, Dasta JF, Buckley MS, Devabhakthuni S, Liu M, Cohen H, et al. Clinical practice guideline: safe medication use in the ICU. Crit Care Med 2017 Sep;45(9):e877-e915. [doi: 10.1097/CCM.0000000000002533] [Medline: 28816851]"
+    },
+    {
+      "title": "Long short-term memory",
+      "authors": [
+        "S Hochreiter",
+        "J Schmidhuber"
+      ],
+      "year": 1997,
+      "doi": "10.1162/neco.1997.9.8.1735",
+      "journal": "Neural Comput",
+      "volume": "9",
+      "issue": "8",
+      "raw": "Long short-term memory \n\t\t \n\t\t\t S Hochreiter \n\t\t \n\t\t \n\t\t\t J Schmidhuber \n\t\t \n\t\t 10.1162/neco.1997.9.8.1735 \n\t\t Medline: 9377276 \n\t \n\t \n\t\t Neural Comput \n\t\t \n\t\t\t 9 \n\t\t\t 8 \n\t\t\t \n\t\t\t 1997 Nov 15 \n\t\t \n\t \n\t Hochreiter S, Schmidhuber J. Long short-term memory. Neural Comput 1997 Nov 15;9(8):1735-1780. [doi: 10.1162/neco.1997.9.8.1735] [Medline: 9377276]"
+    },
+    {
+      "title": "Bedside monitoring of diaphragm electrical activity during mechanical ventilation",
+      "authors": [
+        "C Sinderby",
+        "J Breck",
+        "L Brander"
+      ],
+      "year": 2009,
+      "doi": "10.1007/978-3-540-92276-6_37",
+      "raw": "Bedside monitoring of diaphragm electrical activity during mechanical ventilation \n\t\t \n\t\t\t C Sinderby \n\t\t \n\t\t \n\t\t\t J Breck \n\t\t \n\t\t \n\t\t\t L Brander \n\t\t \n\t\t 10.1007/978-3-540-92276-6_37 \n\t \n\t \n\t\t Yearbook of Intensive Care and Emergency Medicine \n\t\t \n\t\t\t J L Vincent \n\t\t \n\t\t New York, NY \n\t\t \n\t\t\t Springer \n\t\t\t 2009 \n\t\t\t \n\t\t \n\t \n\t Sinderby C, Breck J, Brander L. Bedside monitoring of diaphragm electrical activity during mechanical ventilation. In: Vincent JL, editor. Yearbook of Intensive Care and Emergency Medicine. New York, NY: Springer; 2009:385-393."
+    },
+    {
+      "title": "Sedation and analgesia in the mechanically ventilated patient",
+      "authors": [
+        "S Patel",
+        "J Kress"
+      ],
+      "year": 2012,
+      "doi": "10.1164/rccm.201102-0273ci",
+      "journal": "Am J Respir Crit Care Med",
+      "volume": "185",
+      "issue": "5",
+      "raw": "Sedation and analgesia in the mechanically ventilated patient \n\t\t \n\t\t\t S B Patel \n\t\t \n\t\t \n\t\t\t J P Kress \n\t\t \n\t\t 10.1164/rccm.201102-0273ci \n\t\t Medline: 22016443 \n\t \n\t \n\t\t Am J Respir Crit Care Med \n\t\t \n\t\t\t 185 \n\t\t\t 5 \n\t\t\t \n\t\t\t 2012 Mar 1 \n\t\t \n\t \n\t Patel SB, Kress JP. Sedation and analgesia in the mechanically ventilated patient. Am J Respir Crit Care Med 2012 Mar 1;185(5):486-497. [doi: 10.1164/rccm.201102-0273CI] [Medline: 22016443]"
+    },
+    {
+      "title": "Automatic tube compensation-assisted respiratory rate to tidal volume ratio improves the prediction of weaning outcome",
+      "authors": [
+        "J Cohen",
+        "M Shapiro",
+        "E Grozovski",
+        "P Singer"
+      ],
+      "year": 2002,
+      "doi": "10.1378/chest.122.3.980",
+      "journal": "Chest",
+      "volume": "122",
+      "issue": "3",
+      "raw": "Automatic tube compensation-assisted respiratory rate to tidal volume ratio improves the prediction of weaning outcome \n\t\t \n\t\t\t J Cohen \n\t\t \n\t\t \n\t\t\t M Shapiro \n\t\t \n\t\t \n\t\t\t E Grozovski \n\t\t \n\t\t \n\t\t\t P Singer \n\t\t \n\t\t 10.1378/chest.122.3.980 \n\t\t Medline: 12226043 \n\t \n\t \n\t\t Chest \n\t\t \n\t\t\t 122 \n\t\t\t 3 \n\t\t\t \n\t\t\t 2002 Sep \n\t\t \n\t \n\t Cohen J, Shapiro M, Grozovski E, Singer P. Automatic tube compensation-assisted respiratory rate to tidal volume ratio improves the prediction of weaning outcome. Chest 2002 Sep;122(3):980-984. [doi: 10.1378/chest.122.3.980] [Medline: 12226043]"
+    },
+    {
+      "title": "Clinicians role in reducing lab order frequency in ICU settings",
+      "authors": [
+        "R Kashyap",
+        "T Loftsgard"
+      ],
+      "year": 2015,
+      "doi": "10.4172/jpcic.1000112",
+      "journal": "J Perioper Crit Intens Care Nurs",
+      "volume": "2",
+      "issue": "1",
+      "raw": "Clinicians role in reducing lab order frequency in ICU settings \n\t\t \n\t\t\t R Kashyap \n\t\t \n\t\t \n\t\t\t T O Loftsgard \n\t\t \n\t\t 10.4172/jpcic.1000112 \n\t \n\t \n\t\t J Perioper Crit Intens Care Nurs \n\t\t \n\t\t\t 2 \n\t\t\t 1 \n\t\t\t \n\t\t\t 2015 \n\t\t \n\t \n\t FREE Full text \n\t Kashyap R, Loftsgard TO. Clinicians role in reducing lab order frequency in ICU settings. J Perioper Crit Intens Care Nurs 2015;2(1):320-331 [FREE Full text] [doi: 10.4172/jpcic.1000112]"
+    },
+    {
+      "title": "Towards Real-Time Information Processing of Sensor Network Data Using Computationally Efficient Multi-output Gaussian Processes",
+      "authors": [
+        "M Osborne",
+        "S Roberts",
+        "A Rogers",
+        "S Ramchurn",
+        "N Jennings"
+      ],
+      "year": 2008,
+      "doi": "10.1109/ipsn.2008.25",
+      "raw": "Towards Real-Time Information Processing of Sensor Network Data Using Computationally Efficient Multi-output Gaussian Processes \n\t\t \n\t\t\t M A Osborne \n\t\t \n\t\t \n\t\t\t S J Roberts \n\t\t \n\t\t \n\t\t\t A Rogers \n\t\t \n\t\t \n\t\t\t S D Ramchurn \n\t\t \n\t\t \n\t\t\t N R Jennings \n\t\t \n\t\t 10.1109/ipsn.2008.25 \n\t \n\t \n\t\t International Conference on Information Processing in Sensor Networks \n\t\t St Louis, MO, USA \n\t\t \n\t\t\t 2008. April 22-24, 2008 \n\t\t \n\t \n\t Presented at: IPSN'08 \n\t Osborne MA, Roberts SJ, Rogers A, Ramchurn SD, Jennings NR. Towards Real-Time Information Processing of Sensor Network Data Using Computationally Efficient Multi-output Gaussian Processes. In: International Conference on Information Processing in Sensor Networks. 2008 Presented at: IPSN'08; April 22-24, 2008; St Louis, MO, USA. [doi: 10.1109/ipsn.2008.25]"
+    },
+    {
+      "title": "Information gain and a general measure of correlation",
+      "authors": [
+        "J Kent"
+      ],
+      "year": 1983,
+      "doi": "10.2307/2335954",
+      "journal": "Biometrika",
+      "volume": "70",
+      "issue": "1",
+      "raw": "Information gain and a general measure of correlation \n\t\t \n\t\t\t J T Kent \n\t\t \n\t\t 10.2307/2335954 \n\t \n\t \n\t\t Biometrika \n\t\t \n\t\t\t 70 \n\t\t\t 1 \n\t\t\t \n\t\t\t 1983 Apr \n\t\t \n\t \n\t Kent JT. Information gain and a general measure of correlation. Biometrika 1983 Apr;70(1):163-173. [doi: 10.2307/2335954]"
+    },
+    {
+      "title": "Optimizing drug dosing in the ICU",
+      "authors": [
+        "X Liu",
+        "P Kruger",
+        "M Roberts"
+      ],
+      "year": 2009,
+      "raw": "Optimizing drug dosing in the ICU \n\t\t \n\t\t\t X Liu \n\t\t \n\t\t \n\t\t\t P Kruger \n\t\t \n\t\t \n\t\t\t M S Roberts \n\t\t \n\t \n\t \n\t\t Yearbook of Intensive Care and Emergency Medicine \n\t\t New York, USA \n\t\t \n\t\t\t Springer \n\t\t\t 2009 \n\t\t \n\t \n\t Liu X, Kruger P, Roberts MS. Optimizing drug dosing in the ICU. In: Yearbook of Intensive Care and Emergency Medicine. New York, USA: Springer; 2009."
+    },
+    {
+      "title": "Monitoring and managing raised intracranial pressure after traumatic brain injury",
+      "authors": [
+        "M Smith"
+      ],
+      "year": 2009,
+      "doi": "10.1007/978-0-387-92278-2_73",
+      "raw": "Monitoring and managing raised intracranial pressure after traumatic brain injury \n\t\t \n\t\t\t M Smith \n\t\t \n\t\t 10.1007/978-0-387-92278-2_73 \n\t \n\t \n\t\t Intensive Care Medicine \n\t\t \n\t\t\t J L Vincent \n\t\t \n\t\t New York, NY \n\t\t \n\t\t\t Springer \n\t\t\t 2009 \n\t\t\t \n\t\t \n\t \n\t Smith M. Monitoring and managing raised intracranial pressure after traumatic brain injury. In: Vincent JL, editor. Intensive Care Medicine. New York, NY: Springer; 2009:801-808."
+    },
+    {
+      "title": "BIS -AAI and clinical measures during propofol target controlled infusion with Schnider's pharmacokinetic model",
+      "authors": [
+        "E Iannuzzi",
+        "M Iannuzzi",
+        "G Viola",
+        "L Sidro",
+        "A Cardinale",
+        "M Chiefari"
+      ],
+      "year": 2007,
+      "doi": "10.1093/bja/ael296",
+      "journal": "Minerva Anestesiol",
+      "volume": "73",
+      "issue": "1-2",
+      "raw": "BIS -AAI and clinical measures during propofol target controlled infusion with Schnider's pharmacokinetic model \n\t\t \n\t\t\t E Iannuzzi \n\t\t \n\t\t \n\t\t\t M Iannuzzi \n\t\t \n\t\t \n\t\t\t G Viola \n\t\t \n\t\t \n\t\t\t L Sidro \n\t\t \n\t\t \n\t\t\t A Cardinale \n\t\t \n\t\t \n\t\t\t M Chiefari \n\t\t \n\t\t 10.1093/bja/ael296 \n\t\t Medline: 17115013 \n\t \n\t \n\t\t Minerva Anestesiol \n\t\t \n\t\t\t 73 \n\t\t\t 1-2 \n\t\t\t \n\t\t\t 2007 \n\t\t \n\t \n\t FREE Full text \n\t Iannuzzi E, Iannuzzi M, Viola G, Sidro L, Cardinale A, Chiefari M. BIS -AAI and clinical measures during propofol target controlled infusion with Schnider's pharmacokinetic model. Minerva Anestesiol 2007;73(1-2):23-31 [FREE Full text] [Medline: 17115013]"
+    },
+    {
+      "title": "Emergency reversal of antithrombotic treatment",
+      "authors": [
+        "M Levi"
+      ],
+      "year": 2009,
+      "doi": "10.1007/s11739-008-0201-8",
+      "journal": "Intern Emerg Med",
+      "volume": "4",
+      "issue": "2",
+      "raw": "Emergency reversal of antithrombotic treatment \n\t\t \n\t\t\t M Levi \n\t\t \n\t\t 10.1007/s11739-008-0201-8 \n\t\t Medline: 19002653 \n\t \n\t \n\t\t Intern Emerg Med \n\t\t \n\t\t\t 4 \n\t\t\t 2 \n\t\t\t \n\t\t\t 2009 Apr \n\t\t \n\t \n\t Levi M. Emergency reversal of antithrombotic treatment. Intern Emerg Med 2009 Apr;4(2):137-145. [doi: 10.1007/s11739-008-0201-8] [Medline: 19002653]"
+    },
+    {
+      "title": "Multiparameter intelligent monitoring in intensive care II: a public-access intensive care unit database",
+      "authors": [
+        "M Saeed",
+        "M Villarroel",
+        "A Reisner",
+        "G Clifford",
+        "L Lehman",
+        "G Moody"
+      ],
+      "year": 2011,
+      "doi": "10.1097/ccm.0b013e31820a92c6",
+      "journal": "Crit Care Med",
+      "volume": "39",
+      "issue": "5",
+      "raw": "Multiparameter intelligent monitoring in intensive care II: a public-access intensive care unit database \n\t\t \n\t\t\t M Saeed \n\t\t \n\t\t \n\t\t\t M Villarroel \n\t\t \n\t\t \n\t\t\t A T Reisner \n\t\t \n\t\t \n\t\t\t G Clifford \n\t\t \n\t\t \n\t\t\t L Lehman \n\t\t \n\t\t \n\t\t\t G Moody \n\t\t \n\t\t 10.1097/ccm.0b013e31820a92c6 \n\t\t Medline: 21283005 \n\t \n\t \n\t\t Crit Care Med \n\t\t \n\t\t\t 39 \n\t\t\t 5 \n\t\t\t \n\t\t\t 2011 May \n\t\t \n\t \n\t FREE Full text \n\t Saeed M, Villarroel M, Reisner AT, Clifford G, Lehman L, Moody G, et al. Multiparameter intelligent monitoring in intensive care II: a public-access intensive care unit database. Crit Care Med 2011 May;39(5):952-960 [FREE Full text] [doi: 10.1097/CCM.0b013e31820a92c6] [Medline: 21283005]"
+    },
+    {
+      "title": "Sepsis: a roadmap for future research",
+      "authors": [
+        "J Cohen",
+        "J Vincent",
+        "N Adhikari",
+        "F Machado",
+        "D Angus",
+        "T Calandra"
+      ],
+      "year": 2015,
+      "doi": "10.1016/s1473-3099(15)70112-x",
+      "journal": "Lancet Infect Dis",
+      "volume": "15",
+      "issue": "5",
+      "raw": "Sepsis: a roadmap for future research \n\t\t \n\t\t\t J Cohen \n\t\t \n\t\t \n\t\t\t J Vincent \n\t\t \n\t\t \n\t\t\t N K Adhikari \n\t\t \n\t\t \n\t\t\t F R Machado \n\t\t \n\t\t \n\t\t\t D C Angus \n\t\t \n\t\t \n\t\t\t T Calandra \n\t\t \n\t\t 10.1016/s1473-3099(15)70112-x \n\t\t Medline: 25932591 \n\t \n\t \n\t\t Lancet Infect Dis \n\t\t \n\t\t\t 15 \n\t\t\t 5 \n\t\t\t \n\t\t\t 2015 May \n\t\t \n\t \n\t Cohen J, Vincent J, Adhikari NK, Machado FR, Angus DC, Calandra T, et al. Sepsis: a roadmap for future research. Lancet Infect Dis 2015 May;15(5):581-614. [doi: 10.1016/S1473-3099(15)70112-X] [Medline: 25932591]"
+    },
+    {
+      "title": "The third international consensus definitions for sepsis and septic shock (sepsis-3)",
+      "authors": [
+        "M Singer",
+        "C Deutschman",
+        "C Seymour",
+        "M Shankar-Hari",
+        "D Annane",
+        "M Bauer"
+      ],
+      "year": 2016,
+      "doi": "10.1001/jama.2016.0287",
+      "journal": "J Am Med Assoc",
+      "volume": "315",
+      "issue": "8",
+      "raw": "The third international consensus definitions for sepsis and septic shock (sepsis-3) \n\t\t \n\t\t\t M Singer \n\t\t \n\t\t \n\t\t\t C S Deutschman \n\t\t \n\t\t \n\t\t\t C W Seymour \n\t\t \n\t\t \n\t\t\t M Shankar-Hari \n\t\t \n\t\t \n\t\t\t D Annane \n\t\t \n\t\t \n\t\t\t M Bauer \n\t\t \n\t\t 10.1001/jama.2016.0287 \n\t\t Medline: 26903338 \n\t \n\t \n\t\t J Am Med Assoc \n\t\t \n\t\t\t 315 \n\t\t\t 8 \n\t\t\t \n\t\t\t 2016 Feb 23 \n\t\t \n\t \n\t FREE Full text \n\t Singer M, Deutschman CS, Seymour CW, Shankar-Hari M, Annane D, Bauer M, et al. The third international consensus definitions for sepsis and septic shock (sepsis-3). J Am Med Assoc 2016 Feb 23;315(8):801-810 [FREE Full text] [doi: 10.1001/jama.2016.0287] [Medline: 26903338]"
+    },
+    {
+      "title": "Does the artificial intelligence clinician learn optimal treatment strategies for sepsis in intensive care?",
+      "authors": [
+        "R Jeter",
+        "C Josef",
+        "S Shashikumar",
+        "S Nemati"
+      ],
+      "doi": "10.1101/2021.03.03.21252863",
+      "raw": "Does the artificial intelligence clinician learn optimal treatment strategies for sepsis in intensive care? \n\t\t \n\t\t\t R Jeter \n\t\t \n\t\t \n\t\t\t C Josef \n\t\t \n\t\t \n\t\t\t S Shashikumar \n\t\t \n\t\t \n\t\t\t S Nemati \n\t\t \n\t\t 10.1101/2021.03.03.21252863 \n\t\t arXiv 2019:-epub ahead of print(1902.03271 \n\t\t \n\t \n\t FREE Full text \n\t Jeter R, Josef C, Shashikumar S, Nemati S. Does the artificial intelligence clinician learn optimal treatment strategies for sepsis in intensive care? arXiv 2019:-epub ahead of print(1902.03271) [FREE Full text]"
+    },
+    {
+      "title": "Continuous control with deep reinforcement learning",
+      "authors": [
+        "T Lillicrap",
+        "J Hunt",
+        "A Pritzel",
+        "N Heess",
+        "T Erez",
+        "Y Tassa"
+      ],
+      "raw": "Continuous control with deep reinforcement learning \n\t\t \n\t\t\t T Lillicrap \n\t\t \n\t\t \n\t\t\t J Hunt \n\t\t \n\t\t \n\t\t\t A Pritzel \n\t\t \n\t\t \n\t\t\t N Heess \n\t\t \n\t\t \n\t\t\t T Erez \n\t\t \n\t\t \n\t\t\t Y Tassa \n\t\t \n\t\t arXiv 2015:-epub ahead of print(1509.02971 \n\t\t \n\t \n\t FREE Full text \n\t Lillicrap T, Hunt J, Pritzel A, Heess N, Erez T, Tassa Y, et al. Continuous control with deep reinforcement learning. arXiv 2015:-epub ahead of print(1509.02971) [FREE Full text]"
+    },
+    {
+      "title": "In silico experiments of existing and hypothetical cytokine-directed clinical trials using agent-based modeling",
+      "year": 2004,
+      "doi": "10.1097/01.ccm.0000139707.13729.7d",
+      "journal": "Crit Care Med",
+      "volume": "32",
+      "issue": "10",
+      "raw": "In silico experiments of existing and hypothetical cytokine-directed clinical trials using agent-based modeling \n\t\t \n\t\t\t An G \n\t\t \n\t\t 10.1097/01.ccm.0000139707.13729.7d \n\t\t Medline: 15483414 \n\t \n\t \n\t\t Crit Care Med \n\t\t \n\t\t\t 32 \n\t\t\t 10 \n\t\t\t \n\t\t\t 2004 Oct \n\t\t \n\t \n\t An G. In silico experiments of existing and hypothetical cytokine-directed clinical trials using agent-based modeling. Crit Care Med 2004 Oct;32(10):2050-2060. [doi: 10.1097/01.ccm.0000139707.13729.7d] [Medline: 15483414]"
+    },
+    {
+      "title": "Clinical practice guidelines for the management of pain, agitation, and delirium in adult patients in the intensive care unit",
+      "authors": [
+        "J Barr",
+        "G Fraser",
+        "K Puntillo",
+        "E Ely",
+        "C G\u00e9linas",
+        "J Dasta",
+        "American College",
+        "Care Critical"
+      ],
+      "year": 2013,
+      "doi": "10.1097/ccm.0b013e3182783b72",
+      "journal": "Crit Care Med",
+      "volume": "41",
+      "issue": "1",
+      "raw": "Clinical practice guidelines for the management of pain, agitation, and delirium in adult patients in the intensive care unit \n\t\t \n\t\t\t J Barr \n\t\t \n\t\t \n\t\t\t G L Fraser \n\t\t \n\t\t \n\t\t\t K Puntillo \n\t\t \n\t\t \n\t\t\t E W Ely \n\t\t \n\t\t \n\t\t\t C G\u00e9linas \n\t\t \n\t\t \n\t\t\t J F Dasta \n\t\t \n\t\t \n\t\t\t American College \n\t\t \n\t\t \n\t\t\t Care Critical \n\t\t \n\t\t \n\t\t\t Medicine \n\t\t \n\t\t 10.1097/ccm.0b013e3182783b72 \n\t\t Medline: 23269131 \n\t \n\t \n\t\t Crit Care Med \n\t\t \n\t\t\t 41 \n\t\t\t 1 \n\t\t\t \n\t\t\t 2013 Jan \n\t\t \n\t \n\t Barr J, Fraser GL, Puntillo K, Ely EW, G\u00e9linas C, Dasta JF, American College of Critical Care Medicine. Clinical practice guidelines for the management of pain, agitation, and delirium in adult patients in the intensive care unit. Crit Care Med 2013 Jan;41(1):263-306. [doi: 10.1097/CCM.0b013e3182783b72] [Medline: 23269131]"
+    },
+    {
+      "title": "Continuous infusion versus intermittent bolus dosing of morphine: a comparison of analgesia, tolerance, and subsequent voluntary morphine intake",
+      "authors": [
+        "G Yu",
+        "F Zhang",
+        "S Tang",
+        "M Lai",
+        "R Su",
+        "Z Gong"
+      ],
+      "year": 2014,
+      "doi": "10.1016/j.jpsychires.2014.08.009",
+      "journal": "J Psychiatr Res",
+      "volume": "59",
+      "raw": "Continuous infusion versus intermittent bolus dosing of morphine: a comparison of analgesia, tolerance, and subsequent voluntary morphine intake \n\t\t \n\t\t\t G Yu \n\t\t \n\t\t \n\t\t\t F Zhang \n\t\t \n\t\t \n\t\t\t S Tang \n\t\t \n\t\t \n\t\t\t M Lai \n\t\t \n\t\t \n\t\t\t R Su \n\t\t \n\t\t \n\t\t\t Z Gong \n\t\t \n\t\t 10.1016/j.jpsychires.2014.08.009 \n\t\t Medline: 25193460 \n\t \n\t \n\t\t J Psychiatr Res \n\t\t \n\t\t\t 59 \n\t\t\t \n\t\t\t 2014 Dec \n\t\t \n\t \n\t Yu G, Zhang F, Tang S, Lai M, Su R, Gong Z. Continuous infusion versus intermittent bolus dosing of morphine: a comparison of analgesia, tolerance, and subsequent voluntary morphine intake. J Psychiatr Res 2014 Dec;59:161-166. [doi: 10.1016/j.jpsychires.2014.08.009] [Medline: 25193460]"
+    },
+    {
+      "title": "Morphine: controlled trial of different methods of administration for postoperative pain relief",
+      "authors": [
+        "P Rutter",
+        "F Murphy",
+        "H Dudley"
+      ],
+      "year": 1980,
+      "doi": "10.1136/bmj.280.6206.12",
+      "journal": "Br Med J",
+      "volume": "280",
+      "issue": "6206",
+      "raw": "Morphine: controlled trial of different methods of administration for postoperative pain relief \n\t\t \n\t\t\t P C Rutter \n\t\t \n\t\t \n\t\t\t F Murphy \n\t\t \n\t\t \n\t\t\t H A Dudley \n\t\t \n\t\t 10.1136/bmj.280.6206.12 \n\t\t Medline: 6986940 \n\t \n\t \n\t\t Br Med J \n\t\t \n\t\t\t 280 \n\t\t\t 6206 \n\t\t\t \n\t\t\t 1980 Jan 5 \n\t\t \n\t \n\t FREE Full text \n\t Rutter PC, Murphy F, Dudley HA. Morphine: controlled trial of different methods of administration for postoperative pain relief. Br Med J 1980 Jan 5;280(6206):12-13 [FREE Full text] [doi: 10.1136/bmj.280.6206.12] [Medline: 6986940]"
+    },
+    {
+      "title": "Automatic classification of sedation levels in ICU patients using heart rate variability",
+      "authors": [
+        "S Nagaraj",
+        "L Mcclain",
+        "D Zhou",
+        "S Biswal",
+        "E Rosenthal",
+        "P Purdon"
+      ],
+      "year": 2016,
+      "doi": "10.1097/ccm.0000000000001708",
+      "journal": "Critical Care Medicine",
+      "volume": "44",
+      "issue": "9",
+      "raw": "Automatic classification of sedation levels in ICU patients using heart rate variability \n\t\t \n\t\t\t S B Nagaraj \n\t\t \n\t\t \n\t\t\t L M Mcclain \n\t\t \n\t\t \n\t\t\t D W Zhou \n\t\t \n\t\t \n\t\t\t S Biswal \n\t\t \n\t\t \n\t\t\t E S Rosenthal \n\t\t \n\t\t \n\t\t\t P L Purdon \n\t\t \n\t\t 10.1097/ccm.0000000000001708 \n\t\t Medline: 27035240 \n\t \n\t \n\t\t Critical Care Medicine \n\t\t \n\t\t\t 44 \n\t\t\t 9 \n\t\t\t \n\t\t\t 2016 \n\t\t \n\t \n\t Nagaraj SB, McClain LM, Zhou DW, Biswal S, Rosenthal ES, Purdon PL, et al. Automatic classification of sedation levels in ICU patients using heart rate variability. Critical Care Medicine 2016;44(9):e782-e789. [doi: 10.1097/ccm.0000000000001708] [Medline: 27035240]"
+    },
+    {
+      "title": "Instruments for monitoring intensive care unit sedation",
+      "authors": [
+        "G Carrasco"
+      ],
+      "year": 2000,
+      "doi": "10.1186/cc697",
+      "journal": "Crit Care",
+      "volume": "4",
+      "issue": "4",
+      "raw": "Instruments for monitoring intensive care unit sedation \n\t\t \n\t\t\t G Carrasco \n\t\t \n\t\t 10.1186/cc697 \n\t\t Medline: 11094504 \n\t \n\t \n\t\t Crit Care \n\t\t \n\t\t\t 4 \n\t\t\t 4 \n\t\t\t \n\t\t\t 2000 \n\t\t \n\t \n\t FREE Full text \n\t Carrasco G. Instruments for monitoring intensive care unit sedation. Crit Care 2000;4(4):217-225 [FREE Full text] [doi: 10.1186/cc697] [Medline: 11094504]"
+    },
+    {
+      "title": "Bispectral index for improving intraoperative awareness and early postoperative recovery in adults",
+      "authors": [
+        "S Lewis",
+        "M Pritchard",
+        "L Fawcett",
+        "Y Punjasawadwong"
+      ],
+      "year": 2019,
+      "doi": "10.1002/14651858.CD003843.pub4",
+      "journal": "Cochrane Database Syst Rev",
+      "volume": "9",
+      "issue": "6",
+      "pages": "3843",
+      "raw": "Bispectral index for improving intraoperative awareness and early postoperative recovery in adults \n\t\t \n\t\t\t S R Lewis \n\t\t \n\t\t \n\t\t\t M W Pritchard \n\t\t \n\t\t \n\t\t\t L J Fawcett \n\t\t \n\t\t \n\t\t\t Y Punjasawadwong \n\t\t \n\t\t 10.1002/14651858.CD003843.pub4 \n\t\t Medline: 31557307 \n\t \n\t \n\t\t Cochrane Database Syst Rev \n\t\t \n\t\t\t 9 \n\t\t\t 6 \n\t\t\t 3843 \n\t\t\t 2019 Sep 26 \n\t\t \n\t \n\t FREE Full text \n\t Lewis SR, Pritchard MW, Fawcett LJ, Punjasawadwong Y. Bispectral index for improving intraoperative awareness and early postoperative recovery in adults. Cochrane Database Syst Rev 2019 Sep 26;9(6):CD003843 [FREE Full text] [doi: 10.1002/14651858.CD003843.pub4] [Medline: 31557307]"
+    },
+    {
+      "title": "Partially observable Markov decision processes for spoken dialog systems",
+      "authors": [
+        "J Williams",
+        "S Young"
+      ],
+      "year": 2007,
+      "doi": "10.1016/j.csl.2006.06.008",
+      "journal": "Comput Speech Lang",
+      "volume": "21",
+      "issue": "2",
+      "raw": "Partially observable Markov decision processes for spoken dialog systems \n\t\t \n\t\t\t J D Williams \n\t\t \n\t\t \n\t\t\t S Young \n\t\t \n\t\t 10.1016/j.csl.2006.06.008 \n\t \n\t \n\t\t Comput Speech Lang \n\t\t \n\t\t\t 21 \n\t\t\t 2 \n\t\t\t \n\t\t\t 2007 Apr \n\t\t \n\t \n\t Williams JD, Young S. Partially observable Markov decision processes for spoken dialog systems. Comput Speech Lang 2007 Apr;21(2):393-422. [doi: 10.1016/j.csl.2006.06.008]"
+    },
+    {
+      "title": "Toward Off-Policy Learning Control with Function Approximation",
+      "authors": [
+        "H Maei",
+        "C Szepesv\u00b4ari",
+        "S Bhatnagar",
+        "R Sutton"
+      ],
+      "year": 2010,
+      "raw": "Toward Off-Policy Learning Control with Function Approximation \n\t\t \n\t\t\t H Maei \n\t\t \n\t\t \n\t\t\t C Szepesv\u00b4ari \n\t\t \n\t\t \n\t\t\t S Bhatnagar \n\t\t \n\t\t \n\t\t\t R Sutton \n\t\t \n\t\t \n\t \n\t \n\t\t The 27th International Conference on Machine Learning \n\t\t Haifa, Israel \n\t\t \n\t\t\t 2010. June 21-24, 2010 \n\t\t \n\t \n\t ICML'10 \n\t Maei H, Szepesv\u00b4ari C, Bhatnagar S, Sutton R. Toward Off-Policy Learning Control with Function Approximation. In: The 27th International Conference on Machine Learning. 2010 Presented at: ICML'10; June 21-24, 2010; Haifa, Israel URL: https://icml.cc/Conferences/2010/papers/627.pdf"
+    },
+    {
+      "title": "The eICU research institute -a collaboration between industry, health-care providers, and academia",
+      "authors": [
+        "M Mcshea",
+        "R Holl",
+        "O Badawi",
+        "R Riker",
+        "E Silfen"
+      ],
+      "year": 2010,
+      "doi": "10.1109/memb.2009.935720",
+      "journal": "IEEE Eng Med Biol Mag",
+      "volume": "29",
+      "issue": "2",
+      "raw": "The eICU research institute -a collaboration between industry, health-care providers, and academia \n\t\t \n\t\t\t M Mcshea \n\t\t \n\t\t \n\t\t\t R Holl \n\t\t \n\t\t \n\t\t\t O Badawi \n\t\t \n\t\t \n\t\t\t R R Riker \n\t\t \n\t\t \n\t\t\t E Silfen \n\t\t \n\t\t 10.1109/memb.2009.935720 \n\t\t Medline: 20659837 \n\t \n\t \n\t\t IEEE Eng Med Biol Mag \n\t\t \n\t\t\t 29 \n\t\t\t 2 \n\t\t\t \n\t\t\t 2010 \n\t\t \n\t \n\t McShea M, Holl R, Badawi O, Riker RR, Silfen E. The eICU research institute -a collaboration between industry, health-care providers, and academia. IEEE Eng Med Biol Mag 2010;29(2):18-25. [doi: 10.1109/MEMB.2009.935720] [Medline: 20659837]"
+    },
+    {
+      "title": "Sun X, Feng M Reinforcement Learning for Clinical Decision Support in Critical Care: Comprehensive Review",
+      "authors": [
+        "K Ngiam",
+        "Iw ; Khor",
+        "S Liu",
+        "K See",
+        "K Ngiam",
+        "L Celi"
+      ],
+      "year": 2019,
+      "doi": "10.2196/18477",
+      "journal": "J Med Internet Res",
+      "volume": "20",
+      "issue": "5",
+      "pages": "18477",
+      "raw": "Sun X, Feng M Reinforcement Learning for Clinical Decision Support in Critical Care: Comprehensive Review \n\t\t \n\t\t\t K Y Ngiam \n\t\t \n\t\t \n\t\t\t Iw ; Khor \n\t\t \n\t\t \n\t\t\t S Liu \n\t\t \n\t\t \n\t\t\t K C See \n\t\t \n\t\t \n\t\t\t K Y Ngiam \n\t\t \n\t\t \n\t\t\t L A Celi \n\t\t \n\t\t 10.2196/18477 \n\t\t \n\t \n\t \n\t\t J Med Internet Res \n\t\t \n\t\t\t 20 \n\t\t\t 5 \n\t\t\t 18477 \n\t\t\t 2019 May. 2020 \n\t\t \n\t \n\t WBC: white blood cell Edited by G Eysenbach; submitted 28.02 comments to author 08.04.20 revised version received 05.05.20; accepted 13.05.20 Big data and machine learning algorithms for health-care delivery Lancet Oncol \n\t Ngiam KY, Khor IW. Big data and machine learning algorithms for health-care delivery. Lancet Oncol 2019 May;20(5):e262-e273. [doi: 10.1016/S1470-2045(19)30149-4] WBC: white blood cell Edited by G Eysenbach; submitted 28.02.20; peer-reviewed by A Hallawa, Z Zhang, D Maslove; comments to author 08.04.20; revised version received 05.05.20; accepted 13.05.20; published 20.07.20 Please cite as: Liu S, See KC, Ngiam KY, Celi LA, Sun X, Feng M Reinforcement Learning for Clinical Decision Support in Critical Care: Comprehensive Review J Med Internet Res 2020;22(7):e18477 URL: https://www.jmir.org/2020/7/e18477 doi: 10.2196/18477 PMID: 32706670"
+    },
+    {
+      "authors": [
+        "Kay Liu",
+        "Kee Choong See",
+        "Leo Ngiam",
+        "Xingzhi Anthony Celi",
+        "Mengling Sun"
+      ],
+      "journal": "Originally published in the Journal of Medical Internet Research",
+      "raw": "Kay Liu \n\t\t \n\t\t \n\t\t\t Kee Yuan Choong See \n\t\t \n\t\t \n\t\t\t Leo Ngiam \n\t\t \n\t\t \n\t\t\t Xingzhi Anthony Celi \n\t\t \n\t\t \n\t\t\t Mengling Sun \n\t\t \n\t\t \n\t\t\t Feng \n\t\t \n\t\t \n\t \n\t \n\t\t Originally published in the Journal of Medical Internet Research \n\t\t \n\t \n\t \u00a9Siqi Liu, Kay Choong See, Kee Yuan Ngiam, Leo Anthony Celi, Xingzhi Sun, Mengling Feng. Originally published in the Journal of Medical Internet Research (http://www.jmir.org), 20.07"
+    }
+  ],
+  "num_references": 79,
+  "figures": [
+    {
+      "caption": "Figure 1 .",
+      "description": "Figure 1. Illustration of reinforcement learning in critical care."
+    },
+    {
+      "caption": "Figure 2 .",
+      "description": "Figure 2. Preferred Reporting Items for Systematic Reviews and Meta-Analyses flow diagram of the search strategy."
+    },
+    {
+      "caption": "Figure 3 .",
+      "description": "Figure 3. Mapping of reinforcement learning studies in critical care by application type."
+    },
+    {
+      "type": "table",
+      "caption": "Table 1 .",
+      "description": "Exclusion criteria used to exclude papers."
+    }
+  ],
+  "num_figures": 4,
+  "tables": [
+    {
+      "content": "Criterion number Exclusion criteria Justification Excluded articles, n 1 Duplicates The papers have duplicate titles 39 2 Not a research article The papers were blog articles, reports, comments, or views 23 3 Not written in English The papers were not written in English 6 4 Review The papers were review articles regarding general methods on big 12 data, deep learning, and clinical applications 5 Not applied in the field of The papers did not focus on applications in critical care or intensive 92 critical care care 115"
+    }
+  ],
+  "num_tables": 1,
+  "num_citations": 126,
+  "cited_references": [
+    "b43",
+    "b39",
+    "b14",
+    "b20",
+    "b41",
+    "b51",
+    "b76",
+    "b27",
+    "b33",
+    "b66",
+    "b49",
+    "b16",
+    "b57",
+    "b30",
+    "b71",
+    "b45",
+    "b17",
+    "b53",
+    "b26",
+    "b13",
+    "b62",
+    "b73",
+    "b46",
+    "b23",
+    "b52",
+    "b35",
+    "b31",
+    "b58",
+    "b10",
+    "b68",
+    "b64",
+    "b56",
+    "b75",
+    "b36",
+    "b25",
+    "b54",
+    "b59",
+    "b32",
+    "b67",
+    "b77",
+    "b55",
+    "b28",
+    "b61",
+    "b70",
+    "b29",
+    "b6",
+    "b18",
+    "b9",
+    "b3",
+    "b5",
+    "b8",
+    "b15",
+    "b11",
+    "b37",
+    "b22",
+    "b2",
+    "b72",
+    "b48",
+    "b38",
+    "b4",
+    "b24",
+    "b40",
+    "b7",
+    "b19",
+    "b63",
+    "b42",
+    "b69",
+    "b1",
+    "b34",
+    "b47",
+    "b12",
+    "b60",
+    "b65",
+    "b0",
+    "b21",
+    "b50",
+    "b44",
+    "b74"
+  ],
+  "notes": [
+    "[raw_affiliation] 1  NUS Graduate School for Integrative Science and Engineering , National University of Singapore , Singapore , Singapore",
+    "[raw_affiliation] 2  Saw Swee Hock School of Public Health , National University of Singapore , Singapore , Singapore",
+    "[raw_affiliation] 3  Division of Respiratory & Critical Care Medicine , National University Hospital , Singapore , Singapore",
+    "[raw_affiliation] 4  Group Chief Technology Office , National University Health System , Singapore , Singapore",
+    "[raw_affiliation] 5  Institute for Medical Engineering and Science , Massachusetts Institute of Technology , Cambridge , MA , United States",
+    "[raw_affiliation] 6  Division of Pulmonary , Critical Care and Sleep Medicine , Beth Israel Deaconess Medical Center , Boston , MA , United States",
+    "[raw_affiliation] 7  Ping An Health Technology , Beijing , China School of Public Health",
+    "[raw_affiliation] 2  Saw Swee Hock School of Public Health , National University of Singapore , Singapore , Singapore",
+    "[raw_affiliation] National University of Singapore 12 Science Drive 2 , #10 -01 Singapore , 117549 Singapore",
+    "J Med Internet Res 2020 | vol. 22 | iss. 7 | e18477 | p. 2 https://www.jmir.org/2020/7/e18477 (page number not for citation purposes)",
+    "J Med Internet Res 2020 | vol. 22 | iss. 7 | e18477 | p. 3 https://www.jmir.org/2020/7/e18477 (page number not for citation purposes)",
+    "J Med Internet Res 2020 | vol. 22 | iss. 7 | e18477 | p. 4 https://www.jmir.org/2020/7/e18477 (page number not for citation purposes)",
+    "J Med Internet Res 2020 | vol. 22 | iss. 7 | e18477 | p. 5 https://www.jmir.org/2020/7/e18477 (page number not for citation purposes)",
+    "J Med Internet Res 2020 | vol. 22 | iss. 7 | e18477 | p. 6 https://www.jmir.org/2020/7/e18477 (page number not for citation purposes)",
+    "J Med Internet Res 2020 | vol. 22 | iss. 7 | e18477 | p. 7 https://www.jmir.org/2020/7/e18477 (page number not for citation purposes)",
+    "J Med Internet Res 2020 | vol. 22 | iss. 7 | e18477 | p. 8 https://www.jmir.org/2020/7/e18477 (page number not for citation purposes)",
+    "J Med Internet Res 2020 | vol. 22 | iss. 7 | e18477 | p. 9 https://www.jmir.org/2020/7/e18477 (page number not for citation purposes)",
+    "J Med Internet Res 2020 | vol. 22 | iss. 7 | e18477 | p. 10 https://www.jmir.org/2020/7/e18477 (page number not for citation purposes)",
+    "J Med Internet Res 2020 | vol. 22 | iss. 7 | e18477 | p. 11 https://www.jmir.org/2020/7/e18477 (page number not for citation purposes)",
+    "J Med Internet Res 2020 | vol. 22 | iss. 7 | e18477 | p. 12 https://www.jmir.org/2020/7/e18477 (page number not for citation purposes)",
+    "J Med Internet Res 2020 | vol. 22 | iss. 7 | e18477 | p. 13 https://www.jmir.org/2020/7/e18477 (page number not for citation purposes)",
+    "J Med Internet Res 2020 | vol. 22 | iss. 7 | e18477 | p. 14 https://www.jmir.org/2020/7/e18477 (page number not for citation purposes)",
+    "J Med Internet Res 2020 | vol. 22 | iss. 7 | e18477 | p. 15 https://www.jmir.org/2020/7/e18477 (page number not for citation purposes)",
+    "J Med Internet Res 2020 | vol. 22 | iss. 7 | e18477 | p. 16 https://www.jmir.org/2020/7/e18477 (page number not for citation purposes)",
+    "FREE Full text",
+    "[raw_reference] Almirall D, Compton SN, Gunlicks-Stoessel M, Duan N, Murphy SA. Designing a pilot sequential multiple assignment randomized trial for developing an adaptive treatment strategy. Stat Med 2012 Jul 30;31(17):1887-1902 [FREE Full text] [doi: 10.1002/sim.4512] [Medline: 22438190]",
+    "[raw_reference] Chen Z, Marple K, Salazar E, Gupta G, Tamil L. A physician advisory system for chronic heart failure management based on knowledge patterns. Theor Pract Log Prog 2016 Oct 14;16(5-6):604-618. [doi: 10.1017/S1471068416000429]",
+    "FREE Full text",
+    "[raw_reference] Hannes K, Leys M, Vermeire E, Aertgeerts B, Buntinx F, Depoorter A. Implementing evidence-based medicine in general practice: a focus group based study. BMC Fam Pract 2005 Sep 9;6:37 [FREE Full text] [doi: 10.1186/1471-2296-6-37] [Medline: 16153300]",
+    "FREE Full text",
+    "[raw_reference] Hutchinson A, Baker R. Making use of guidelines in clinical practice. Br Med J 1999 Oct 16;319(7216):1078 [FREE Full text] [doi: 10.1136/bmj.319.7216.1078] [Medline: 10521225]",
+    "[raw_reference] James JT. A new, evidence-based estimate of patient harms associated with hospital care. J Patient Saf 2013 Sep;9(3):122-128. [doi: 10.1097/PTS.0b013e3182948a69] [Medline: 23860193]",
+    "[raw_reference] Nemati S, Ghassemi MM, Clifford GD. Optimal medication dosing from suboptimal clinical examples: a deep reinforcement learning approach. Conf Proc IEEE Eng Med Biol Soc 2016 Aug;2016:2978-2981. [doi: 10.1109/EMBC.2016.7591355] [Medline: 28268938]",
+    "[raw_reference] Zhang Z, Hong Y, Liu N. Scientific evidence underlying the recommendations of critical care clinical practice guidelines: a lack of high level evidence. Intensive Care Med 2018 Jul;44(7):1189-1191. [doi: 10.1007/s00134-018-5142-8] [Medline: 29564478]",
+    "[raw_reference] Laffey JG, Kavanagh BP. Negative trials in critical care: why most research is probably wrong. Lancet Respir Med 2018 Sep;6(9):659-660. [doi: 10.1016/S2213-2600(18)30279-0] [Medline: 30061048]",
+    "[raw_reference] Burke AE, Thaler KM, Geva M, Adiri Y. Feasibility and acceptability of home use of a smartphone-based urine testing application among women in prenatal care. Am J Obstet Gynecol 2019 Nov;221(5):527-528. [doi: 10.1016/j.ajog.2019.06.015] [Medline: 31300161]",
+    "MICCAI'18",
+    "[raw_reference] Laserson J, Lantsman CD, Cohen-Sfady M, Tamir I, Goz E, Brestel C, et al. TextRay: Mining Clinical Reports to Gain a Broad Understanding of Chest X-Rays. In: International Conference on Medical Image Computing and Computer-Assisted Intervention. 2018 Presented at: MICCAI'18; September 16-20, 2018; Granada, Spain. [doi: 10.1007/978-3-030-00934-2_62]",
+    "FREE Full text",
+    "[raw_reference] Choi E, Bahadori MT, Schuetz A, Stewart WF, Sun J. Doctor AI: predicting clinical events via recurrent neural networks. JMLR Workshop Conf Proc 2016 Aug;56:301-318 [FREE Full text] [Medline: 28286600]",
+    "[raw_reference] Fan J, Wang J, Chen Z, Hu C, Zhang Z, Hu W. Automatic treatment planning based on three-dimensional dose distribution predicted from deep learning technique. Med Phys 2019 Jan;46(1):370-381. [doi: 10.1002/mp.13271] [Medline: 30383300]",
+    "[raw_reference] Dagan N, Elnekave E, Barda N, Bregman-Amitai O, Bar A, Orlovsky M, et al. Automated opportunistic osteoporotic fracture risk assessment using computed tomography scans to aid in FRAX underutilization. Nat Med 2020 Jan;26(1):77-82. [doi: 10.1038/s41591-019-0720-z] [Medline: 31932801]",
+    "FREE Full text",
+    "[raw_reference] Watanabe AT, Lim V, Vu HX, Chim R, Weise E, Liu J, et al. Improved cancer detection using artificial intelligence: a retrospective evaluation of missed cancers on mammography. J Digit Imaging 2019 Aug;32(4):625-637 [FREE Full text] [doi: 10.1007/s10278-019-00192-5] [Medline: 31011956]",
+    "[raw_reference] Montague PR. Reinforcement learning: an introduction, by Sutton, RS and Barto, AG. Trends Cogn Sci 1999 Sep;3(9):360. [doi: 10.1016/S1364-6613(99)01331-5]",
+    "[raw_reference] Kiumarsi B, Vamvoudakis KG, Modares H, Lewis FL. Optimal and autonomous control using reinforcement learning: a survey. IEEE Trans Neural Netw Learn Syst 2018 Jun;29(6):2042-2062. [doi: 10.1109/TNNLS.2017.2773458] [Medline: 29771662]",
+    "[raw_reference] Howard RA. Dynamic Programming and Markov Process. New York, USA: MIT Press and Wiley; 1960.",
+    "FREE Full text",
+    "[raw_reference] Mnih V, Kavukcuoglu K, Silver D, Graves A, Antonoglou I, Wierstra D, et al. Playing atari with deep reinforcement learning. arXiv preprint 2013:-epub ahead of print(1312.5602) [FREE Full text]",
+    "[raw_reference] Silver D, Huang A, Maddison CJ, Guez A, Sifre L, van den Driessche G, et al. Mastering the game of Go with deep neural networks and tree search. Nature 2016 Jan 28;529(7587):484-489. [doi: 10.1038/nature16961] [Medline: 26819042]",
+    "[raw_reference] Ng A, Coates A, Diel M, Ganapathi V, Schulte J, Tse B, et al. Autonomous inverted autonomous helicopter flight via reinforcement learning. In: Experimental Robotics IX. New York, USA: Springer; 2006:363-372.",
+    "[raw_reference] Komorowski M, Celi LA, Badawi O, Gordon AC, Faisal AA. The artificial intelligence clinician learns optimal treatment strategies for sepsis in intensive care. Nat Med 2018 Nov;24(11):1716-1720. [doi: 10.1038/s41591-018-0213-5] [Medline: 30349085]",
+    "ECML'05",
+    "[raw_reference] Riedmiller M. Neural Fitted Q Iteration -First Experiences with a Data Efficient Neural Reinforcement Learning Method. In: Proceedings of the European Conference on Machine Learning. 2005 Presented at: ECML'05; October 3-7, 2005; Porto, Portugal URL: https://doi.org/10.1007/11564096_32 [doi: 10.1007/11564096_32]",
+    "Presented at: AAAI'16",
+    "[raw_reference] van Hasselt H, Guez A, Silver D. Deep Reinforcement Learning With Double Q-learning. In: Proceedings of the Thirtieth AAAI Conference on Artificial Intelligence. 2016 Presented at: AAAI'16; February 12-17, 2016; Phoenix, Arizona, USA. [doi: 10.5555/3016100.3016191]",
+    "FREE Full text",
+    "[raw_reference] Mnih V, Puigdomenech A, Mirza M, Graves A, Lillicrap T, Harley T, et al. Asynchronous methods for deep reinforcement learning. Arxiv 2016:-epub ahead of print(1602.01783) [FREE Full text]",
+    "[raw_reference] Doya K, Samejima K, Katagiri K, Kawato M. Multiple model-based reinforcement learning. Neural Comput 2002 Jun;14(6):1347-1369. [doi: 10.1162/089976602753712972] [Medline: 12020450]",
+    "[raw_reference] Arulkumaran K, Deisenroth MP, Brundage M, Bharath AA. Deep reinforcement learning: a brief survey. IEEE Signal Process Mag 2017 Nov;34(6):26-38. [doi: 10.1109/MSP.2017.2743240]",
+    "[raw_reference] Wiering M, van Otterlo M, editors. Reinforcement Learning: State-of-the-Art. Berlin, Heidelberg: Springer-Verlag; 2012.",
+    "[report_type] GitHub",
+    "[raw_reference] Siqi L. Reinforcement-Learning. GitHub. URL: https://github.com/nus-mornin-lab/Reinforcement-Learning [accessed 2020-01-01]",
+    "ICTAI'11",
+    "[raw_reference] Borera EC, Moore BL, Doufas AG, Pyeatt LD. An Adaptive Neural Network Filter for Improved Patient State Estimation in Closed-Loop Anesthesia Control. In: 23rd International Conference on Tools with Artificial Intelligence. 2011 Presented at: ICTAI'11; November 7-9, 2011; Boca Raton, FL, USA. [doi: 10.1109/ictai.2011.15]",
+    "ADPRL'14",
+    "[raw_reference] Padmanabhan R, Meskin N, Haddad WM. Closed-loop Control of Anesthesia and Mean Arterial Pressure Using Reinforcement Learning. In: Symposium on Adaptive Dynamic Programming and Reinforcement Learning. 2014 Presented at: ADPRL'14; December 9-12, 2014; Orlando, FL, USA. [doi: 10.1109/ADPRL.2014.7010644]",
+    "Presented at: CoDIT'17",
+    "[raw_reference] Padmanabhan R, Meskin N, Haddad WM. Reinforcement Learning-Based Control for Combined Infusion of Sedatives and Analgesics. In: 4th International Conference on Control, Decision and Information Technologies. 2017 Presented at: CoDIT'17; April 5-7, 2017; Barcelona, Spain. [doi: 10.1109/codit.2017.8102643]",
+    "[raw_reference] Padmanabhan R, Meskin N, Haddad WM. Optimal adaptive control of drug dosing using integral reinforcement learning. Math Biosci 2019 Mar;309:131-142. [doi: 10.1016/j.mbs.2019.01.012] [Medline: 30735696]",
+    "Presented at: AAAI'18",
+    "[raw_reference] Ghassemi MM, Alhanai T, Westover MB, Mark TG, Nemati S. Personalized Medication Dosing Using Volatile Data Streams. In: Proceedings of the Thirty-Second AAAI Conference on Artificial Intelligence. 2018 Presented at: AAAI'18; February 2-7, 2018; New Orleans, Louisiana, USA URL: https://aaai.org/ocs/index.php/WS/AAAIW18/paper/view/17234",
+    "FREE Full text",
+    "[raw_reference] Lin R, Stanley MD, Ghassemi MM, Nemati S. A deep deterministic policy gradient approach to medication dosing and surveillance in the ICU. Conf Proc IEEE Eng Med Biol Soc 2018 Jul;2018:4927-4931 [FREE Full text] [doi: 10.1109/EMBC.2018.8513203] [Medline: 30441448]",
+    "FREE Full text",
+    "[raw_reference] Raghu A, Komorowski M, Ahmed I, Celi L, Szolovits P, Ghassemi M. Deep reinforcement learning for sepsis treatment. arXiv 2017:-epub ahead of print(1711.09602) [FREE Full text]",
+    "FREE Full text",
+    "[raw_reference] Raghu A, Komorowski M, Celi L, Szolovits P, Ghassemi M. Continuous state-space models for optimal sepsis treatment-a deep reinforcement learning approach. arXiv 2017:-epub ahead of print(1705.08422) [FREE Full text]",
+    "FREE Full text",
+    "[raw_reference] Raghu A, Komorowski M, Singh S. Model-based reinforcement learning for sepsis treatment. arXiv 2018:-epub ahead of print-1811.09602 [FREE Full text]",
+    "[raw_reference] Futoma J, Lin A, Sendak M, Bedoya A, Clement M, O'Brien C, et al. Learning to Treat Sepsis with Multi-Output Gaussian Process Deep Recurrent Q-Networks. OpenReview. 2018. URL: https://openreview.net/forum?id=SyxCqGbRZ [accessed 2020-06-10]",
+    "FREE Full text",
+    "[raw_reference] Peng X, Ding Y, Wihl D, Gottesman O, Komorowski M, Lehman LH, et al. Improving sepsis treatment strategies by combining deep and kernel-based reinforcement learning. AMIA Annu Symp Proc 2018;2018:887-896 [FREE Full text] [Medline: 30815131]",
+    "[raw_reference] Lee D, Srinivasan S, Doshi-Velez F. Truly Batch Apprenticeship Learning with Deep Successor Features. 2019 Presented at: International Joint Conferences on Artificial Intelligence Organization; August 10-16, 2019; Macao, China. [doi: 10.24963/ijcai.2019/819]",
+    "[raw_reference] Lopez-Martinez D, Eschenfeldt P, Ostvar S, Ingram M, Hur C, Picard R. Deep reinforcement learning for optimal critical care pain management with morphine using dueling double-deep Q networks. Conf Proc IEEE Eng Med Biol Soc 2019 Jul;2019:3960-3963. [doi: 10.1109/EMBC.2019.8857295] [Medline: 31946739]",
+    "[report_type] arXiv preprint",
+    "FREE Full text",
+    "[raw_reference] Petersen B, Yang J, Grathwohl WS, Cockrell C, Santiago C, An G, et al. Precision medicine as a control problem: Using simulation and deep reinforcement learning to discover adaptive, personalized multi-cytokine therapy for sepsis. arXiv preprint. arXiv:1802.10440 2018 [FREE Full text]",
+    "FREE Full text",
+    "[raw_reference] Prasad N, Cheng LF, Chivers C, Draugelis M, Engelhardt B. A reinforcement learning approach to weaning of mechanical ventilation in intensive care units. Arxiv 2017:-epub ahead of print(1704.06300) [FREE Full text]",
+    "FREE Full text",
+    "[raw_reference] Cheng L, Prasad N, Engelhardt BE. An optimal policy for patient laboratory tests in intensive care units. Pac Symp Biocomput 2019;24:320-331 [FREE Full text] [Medline: 30864333]",
+    "FREE Full text",
+    "[raw_reference] Yu C, Liu J, Zhao H. Inverse reinforcement learning for intelligent mechanical ventilation and sedative dosing in intensive care units. BMC Med Inform Decis Mak 2019 Apr 9;19(Suppl 2):57 [FREE Full text] [doi: 10.1186/s12911-019-0763-6] [Medline: 30961594]",
+    "FREE Full text",
+    "[raw_reference] Weng W, Gao M, He Z, Yan S, Szolovits P. Representation and reinforcement learning for personalized glycemic control in septic patients. arXiv 2017:-epub ahead of print(1712.00654) [FREE Full text]",
+    "KDD'18",
+    "[raw_reference] Wang L, Zhang W, He X, Zha H. Supervised Reinforcement Learning with Recurrent Neural Network for Dynamic Treatment Recommendation. In: Proceedings of the 24th ACM SIGKDD International Conference on Knowledge Discovery & Data Mining. 2018 Presented at: KDD'18; August 19-23, 2018; London, UK. [doi: 10.1145/3219819.3219961]",
+    "[raw_reference] Manrai AK, Patel CJ, Ioannidis JP. In the era of precision medicine and big data, who is normal? J Am Med Assoc 2018 May 15;319(19):1981-1982. [doi: 10.1001/jama.2018.2009] [Medline: 29710130]",
+    "FREE Full text",
+    "[raw_reference] Johnson AE, Pollard TJ, Shen L, Lehman LH, Feng M, Ghassemi M, et al. MIMIC-III, a freely accessible critical care database. Sci Data 2016 May 24;3:160035 [FREE Full text] [doi: 10.1038/sdata.2016.35] [Medline: 27219127]",
+    "[raw_reference] Ng A. CS294A Lecture Notes: Sparse Autoencoder. Stanford University. 2011. URL: https://web.stanford.edu/class/cs294a/ sparseAutoencoder.pdf [accessed 2020-06-09]",
+    "[raw_reference] Kane-Gill SL, Dasta JF, Buckley MS, Devabhakthuni S, Liu M, Cohen H, et al. Clinical practice guideline: safe medication use in the ICU. Crit Care Med 2017 Sep;45(9):e877-e915. [doi: 10.1097/CCM.0000000000002533] [Medline: 28816851]",
+    "[raw_reference] Hochreiter S, Schmidhuber J. Long short-term memory. Neural Comput 1997 Nov 15;9(8):1735-1780. [doi: 10.1162/neco.1997.9.8.1735] [Medline: 9377276]",
+    "[raw_reference] Sinderby C, Breck J, Brander L. Bedside monitoring of diaphragm electrical activity during mechanical ventilation. In: Vincent JL, editor. Yearbook of Intensive Care and Emergency Medicine. New York, NY: Springer; 2009:385-393.",
+    "[raw_reference] Patel SB, Kress JP. Sedation and analgesia in the mechanically ventilated patient. Am J Respir Crit Care Med 2012 Mar 1;185(5):486-497. [doi: 10.1164/rccm.201102-0273CI] [Medline: 22016443]",
+    "[raw_reference] Cohen J, Shapiro M, Grozovski E, Singer P. Automatic tube compensation-assisted respiratory rate to tidal volume ratio improves the prediction of weaning outcome. Chest 2002 Sep;122(3):980-984. [doi: 10.1378/chest.122.3.980] [Medline: 12226043]",
+    "FREE Full text",
+    "[raw_reference] Kashyap R, Loftsgard TO. Clinicians role in reducing lab order frequency in ICU settings. J Perioper Crit Intens Care Nurs 2015;2(1):320-331 [FREE Full text] [doi: 10.4172/jpcic.1000112]",
+    "Presented at: IPSN'08",
+    "[raw_reference] Osborne MA, Roberts SJ, Rogers A, Ramchurn SD, Jennings NR. Towards Real-Time Information Processing of Sensor Network Data Using Computationally Efficient Multi-output Gaussian Processes. In: International Conference on Information Processing in Sensor Networks. 2008 Presented at: IPSN'08; April 22-24, 2008; St Louis, MO, USA. [doi: 10.1109/ipsn.2008.25]",
+    "[raw_reference] Kent JT. Information gain and a general measure of correlation. Biometrika 1983 Apr;70(1):163-173. [doi: 10.2307/2335954]",
+    "[raw_reference] Liu X, Kruger P, Roberts MS. Optimizing drug dosing in the ICU. In: Yearbook of Intensive Care and Emergency Medicine. New York, USA: Springer; 2009.",
+    "[raw_reference] Smith M. Monitoring and managing raised intracranial pressure after traumatic brain injury. In: Vincent JL, editor. Intensive Care Medicine. New York, NY: Springer; 2009:801-808.",
+    "FREE Full text",
+    "[raw_reference] Iannuzzi E, Iannuzzi M, Viola G, Sidro L, Cardinale A, Chiefari M. BIS -AAI and clinical measures during propofol target controlled infusion with Schnider's pharmacokinetic model. Minerva Anestesiol 2007;73(1-2):23-31 [FREE Full text] [Medline: 17115013]",
+    "[raw_reference] Levi M. Emergency reversal of antithrombotic treatment. Intern Emerg Med 2009 Apr;4(2):137-145. [doi: 10.1007/s11739-008-0201-8] [Medline: 19002653]",
+    "FREE Full text",
+    "[raw_reference] Saeed M, Villarroel M, Reisner AT, Clifford G, Lehman L, Moody G, et al. Multiparameter intelligent monitoring in intensive care II: a public-access intensive care unit database. Crit Care Med 2011 May;39(5):952-960 [FREE Full text] [doi: 10.1097/CCM.0b013e31820a92c6] [Medline: 21283005]",
+    "[raw_reference] Cohen J, Vincent J, Adhikari NK, Machado FR, Angus DC, Calandra T, et al. Sepsis: a roadmap for future research. Lancet Infect Dis 2015 May;15(5):581-614. [doi: 10.1016/S1473-3099(15)70112-X] [Medline: 25932591]",
+    "FREE Full text",
+    "[raw_reference] Singer M, Deutschman CS, Seymour CW, Shankar-Hari M, Annane D, Bauer M, et al. The third international consensus definitions for sepsis and septic shock (sepsis-3). J Am Med Assoc 2016 Feb 23;315(8):801-810 [FREE Full text] [doi: 10.1001/jama.2016.0287] [Medline: 26903338]",
+    "FREE Full text",
+    "[raw_reference] Jeter R, Josef C, Shashikumar S, Nemati S. Does the artificial intelligence clinician learn optimal treatment strategies for sepsis in intensive care? arXiv 2019:-epub ahead of print(1902.03271) [FREE Full text]",
+    "FREE Full text",
+    "[raw_reference] Lillicrap T, Hunt J, Pritzel A, Heess N, Erez T, Tassa Y, et al. Continuous control with deep reinforcement learning. arXiv 2015:-epub ahead of print(1509.02971) [FREE Full text]",
+    "[raw_reference] An G. In silico experiments of existing and hypothetical cytokine-directed clinical trials using agent-based modeling. Crit Care Med 2004 Oct;32(10):2050-2060. [doi: 10.1097/01.ccm.0000139707.13729.7d] [Medline: 15483414]",
+    "[raw_reference] Barr J, Fraser GL, Puntillo K, Ely EW, G\u00e9linas C, Dasta JF, American College of Critical Care Medicine. Clinical practice guidelines for the management of pain, agitation, and delirium in adult patients in the intensive care unit. Crit Care Med 2013 Jan;41(1):263-306. [doi: 10.1097/CCM.0b013e3182783b72] [Medline: 23269131]",
+    "[raw_reference] Yu G, Zhang F, Tang S, Lai M, Su R, Gong Z. Continuous infusion versus intermittent bolus dosing of morphine: a comparison of analgesia, tolerance, and subsequent voluntary morphine intake. J Psychiatr Res 2014 Dec;59:161-166. [doi: 10.1016/j.jpsychires.2014.08.009] [Medline: 25193460]",
+    "FREE Full text",
+    "[raw_reference] Rutter PC, Murphy F, Dudley HA. Morphine: controlled trial of different methods of administration for postoperative pain relief. Br Med J 1980 Jan 5;280(6206):12-13 [FREE Full text] [doi: 10.1136/bmj.280.6206.12] [Medline: 6986940]",
+    "[raw_reference] Nagaraj SB, McClain LM, Zhou DW, Biswal S, Rosenthal ES, Purdon PL, et al. Automatic classification of sedation levels in ICU patients using heart rate variability. Critical Care Medicine 2016;44(9):e782-e789. [doi: 10.1097/ccm.0000000000001708] [Medline: 27035240]",
+    "FREE Full text",
+    "[raw_reference] Carrasco G. Instruments for monitoring intensive care unit sedation. Crit Care 2000;4(4):217-225 [FREE Full text] [doi: 10.1186/cc697] [Medline: 11094504]",
+    "FREE Full text",
+    "[raw_reference] Lewis SR, Pritchard MW, Fawcett LJ, Punjasawadwong Y. Bispectral index for improving intraoperative awareness and early postoperative recovery in adults. Cochrane Database Syst Rev 2019 Sep 26;9(6):CD003843 [FREE Full text] [doi: 10.1002/14651858.CD003843.pub4] [Medline: 31557307]",
+    "[raw_reference] Williams JD, Young S. Partially observable Markov decision processes for spoken dialog systems. Comput Speech Lang 2007 Apr;21(2):393-422. [doi: 10.1016/j.csl.2006.06.008]",
+    "ICML'10",
+    "[raw_reference] Maei H, Szepesv\u00b4ari C, Bhatnagar S, Sutton R. Toward Off-Policy Learning Control with Function Approximation. In: The 27th International Conference on Machine Learning. 2010 Presented at: ICML'10; June 21-24, 2010; Haifa, Israel URL: https://icml.cc/Conferences/2010/papers/627.pdf",
+    "[raw_reference] McShea M, Holl R, Badawi O, Riker RR, Silfen E. The eICU research institute -a collaboration between industry, health-care providers, and academia. IEEE Eng Med Biol Mag 2010;29(2):18-25. [doi: 10.1109/MEMB.2009.935720] [Medline: 20659837]",
+    "WBC: white blood cell Edited by G Eysenbach; submitted 28.02 comments to author 08.04.20 revised version received 05.05.20; accepted 13.05.20 Big data and machine learning algorithms for health-care delivery Lancet Oncol",
+    "[raw_reference] \u00a9Siqi Liu, Kay Choong See, Kee Yuan Ngiam, Leo Anthony Celi, Xingzhi Sun, Mengling Feng. Originally published in the Journal of Medical Internet Research (http://www.jmir.org), 20.07"
+  ],
+  "editors": [
+    "J L Vincent",
+    "J L Vincent"
+  ],
+  "processing_software": {
+    "GROBID": "0.8.2"
+  },
+  "journal": "Journal of Medical Internet Research",
+  "volume": "22",
+  "issue": "7",
+  "pages": "e18477",
+  "zotero_recovery": {
+    "fields_recovered": [
+      "journal"
+    ],
+    "timestamp": "2025-09-01T11:08:22.606063",
+    "zotero_item_type": "journalArticle"
+  }
+}

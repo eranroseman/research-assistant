@@ -1,0 +1,1370 @@
+{
+  "paper_id": "JUJQWC7K",
+  "title": "IntelligentPooling: practical Thompson sampling for mHealth",
+  "abstract": "In mobile health (mHealth) smart devices deliver behavioral treatments repeatedly over time to a user with the goal of helping the user adopt and maintain healthy behaviors. Reinforcement learning appears ideal for learning how to optimally make these sequential treatment decisions. However, significant challenges must be overcome before reinforcement learning can be effectively deployed in a mobile healthcare setting. In this work we are concerned with the following challenges: (1) individuals who are in the same context can exhibit differential response to treatments (2) only a limited amount of data is available for learning on any one individual, and (3) non-stationary responses to treatment. To address these challenges we generalize Thompson-Sampling bandit algorithms to develop Intel-lIgentPoolIng. IntellIgentPoolIng learns personalized treatment policies thus addressing challenge one. To address the second challenge, IntellIgentPoolIng updates each user's degree of personalization while making use of available data on other users to speed up learning. Lastly, IntellIgentPoolIng allows responsivity to vary as a function of a user's time since beginning treatment, thus addressing challenge three.",
+  "year": 2021,
+  "date": "2021-06-21",
+  "authors": [
+    {
+      "name": "Sabina Tomkins",
+      "email": "stomkins@stanford.edu",
+      "orcid": "0000-0002-2632-8173",
+      "affiliation": {
+        "organization": "Stanford University",
+        "institution": "Stanford University",
+        "address": "Stanford, United States of America"
+      }
+    },
+    {
+      "name": "Peng Liao",
+      "email": "pengliao@g.harvard.edu",
+      "affiliation": {
+        "organization": "Harvard University",
+        "institution": "Harvard University",
+        "address": "Cambridge, United States of America"
+      }
+    },
+    {
+      "name": "Predrag Klasnja",
+      "email": "klasnja@umich.edu",
+      "affiliation": {
+        "organization": "University of Michigan",
+        "institution": "University of Michigan",
+        "address": "Ann Arbor, United States of America"
+      }
+    },
+    {
+      "name": "Susan Murphy",
+      "email": "samurphy@fas.harvard.edu",
+      "affiliation": {
+        "organization": "Harvard University",
+        "institution": "Harvard University",
+        "address": "Cambridge, United States of America"
+      }
+    },
+    {
+      "name": "Yuxi Li"
+    },
+    {
+      "name": "Alborz Geramifard"
+    },
+    {
+      "name": "Lihong Li"
+    },
+    {
+      "name": "Csaba Szepesvari"
+    },
+    {
+      "name": "Tao Wang"
+    }
+  ],
+  "doi": "10.1007/s10994-021-05995-8",
+  "orcid": "0000-0002-2632-8173",
+  "md5": "B9A7ECB710042D6ED600BC8F7C87B7EC",
+  "publication": {
+    "journal": "Journal of medical Internet research",
+    "journal_inferred": true
+  },
+  "keywords": [
+    "Thompson sampling",
+    "Mobile health",
+    "Clinical trial",
+    "Physical activity",
+    "Nonstationary environment",
+    "Mixed effects",
+    "Bayesian reward model"
+  ],
+  "funding": [
+    "this article are those of the authors and do not necessarily reflect the official position of the  National Institutes of Health , or any other part of the  U.S. Department of Health and Human Services ."
+  ],
+  "sections": [
+    {
+      "title": "1. Introduction",
+      "text": "Mobile health (mHealth) applications deliver treatments in users' everyday lives to support healthy behaviors. These mHealth applications offer an opportunity to impact health across a diverse range of domains from substance use  (Rabbi et al. 2017) , to disease self-management  (Hamine et al. 2015)  to physical inactivity  (Consolvo et al. 2008) . For example, to help users increase their physical activity, an mHealth application might send walking suggestions at the times and in the contexts (e.g. current location or recent physical activity) when a user is likely to be able to pursue the suggestions. A goal of mHealth applications is to provide treatments in contexts in which users need support while avoiding overtreatment. Over-treatment can lead to user disengagement  (Nahum-Shani et al. 2017) , for example users might ignore treatments or even delete the application. Consequently, the goal is to be able to learn an optimal policy for when and how to intervene for each user and context without over-treating.\n\nContextual bandit algorithms appear ideal for this task. Contextual bandit algorithms have been successful in a range of application settings from news recommendations  (Li et al. 2010)  to education  (Qi et al. 2018) . However, as we discuss below, many challenges remain to adapt contextual bandit algorithms for mHealth settings. Thompson sampling offers an attractive framework for addressing these challenges. In their seminal work  (Agrawal and Goyal 2013) ,  Agrawal and  Goyal show that Thompson sampling for contextual bandits, which works well in practice, can also achieve strong theoretical guarantees. In our work, we propose Thompson sampling contextual bandit algorithm which introduces a mixed effects structure for the weights on the feature vector, an algorithm we call Intel-lIgentPoolIng. We demonstrate empirically that IntellIgentPoolIng has many advantages. We also derive a high-probability regret bound for our approach which achieves similar regret to  (Agrawal and Goyal 2013) . Unlike  (Agrawal and Goyal 2013) , our regret bound depends on the variance components introduced by the mixed effects structure which is at the center of our approach."
+    },
+    {
+      "title": "1.1. Challenges",
+      "text": "There are significant challenges to learning optimal policies in mHealth. This work primarily addresses the challenge of learning personalized user policies from limited data. Contextual bandit algorithms can be viewed as algorithms that use the user's context to adapt treatment. While this approach can have advantages compared to ignoring the user's context, it fails to address that users can respond differentially to treatments even when they appear to be in the same context. This occurs since sensors on smart devices are unlikely to record all aspects of a user's context that affect their health behaviors. For example, the context may not include social constraints on the user (e.g., care-giving responsibilities), which may influence the user's ability to be active. Thus, algorithms that can learn from the differential responsiveness to treatment are desirable. This motivates the need for an algorithm that not only incorporates contextual information, but that can also learn personalized policies. A natural first approach would be to use the algorithm separately for each user, but the algorithm is likely to learn very slowly if data on a user is sparse and/or noisy. However, typically in mHealth studies multiple users are using the application at any given time. Thus an algorithm that pools data over users intelligently so as to speed up learning of personalized policies is desirable."
+    },
+    {
+      "title": "1. 3",
+      "text": "An additional challenge is non-stationary responses to treatment (e.g. non-stationary reward function). For example, in the beginning of a study, a user might be excited to receive a treatment, however after a few weeks this excitement can wane. This motivates the need for algorithms that can learn time-varying treatment policies."
+    },
+    {
+      "title": "1.2. Contributions",
+      "text": "We develop IntellIgentPoolIng, a type of Thompson sampling contextual bandit algorithm specifically designed to overcome the above challenges. Our main contributions are:\n\n\u2022 IntellIgentPoolIng: A Thompson sampling contextual bandit algorithm for rapid personalization in limited data settings. This algorithm employs classical random effects in the reward function  (Raudenbush and Bryk 2002; Laird and Ware 1982)  and empirical  (Bayes Morris 1983; Casella 1985)  to adaptively adjust the degree to which policies are personalized to each user. We present an analysis of this adaptivity in  Sect. 3.5  showing that IntellIgentPoolIng can learn to personalize to a user as a function of the observed variance in the treatment effect both between and within users. \u2022 A high probability regret bound for IntellIgentPoolIng.\n\n\u2022 An empirical evaluation of IntellIgentPoolIng in a simulation environment constructed from mHealth data. IntellIgentPoolIng not only achieves 26% lower regret than state-of-the-art approaches, it also is better able to adapt to the degree of heterogeneity present in a population than this approach. \u2022 Feasibility of IntellIgentPoolIng from a pilot study in a live clinical trial. We demonstrate that IntellIgentPoolIng can be executed in a real-time online environment and show preliminary evidence of this method's effectiveness. \u2022 We show how to modify IntellIgentPoolIng to learn in non-stationary environments.\n\nNext, in Sect. 2 we discuss relevant related work. In Sect. 3 we present IntellIgentPoolIng and provide a high-probability regret bound for this algorithm. We then describe how we use historical data to construct a simulation environment and evaluate our approach against state-of-the-art in Sect. 4. Next, in Sect. 5 we introduce the feasibility study and provide preliminary evidence into the benefits of this approach. We then discuss how to extend this work to include time-varying effects in Sect. 6. Finally, we discuss the limitations with our approach in Sect. 7 before concluding."
+    },
+    {
+      "title": "2. Related work",
+      "text": "To put the proposed work in a broader healthcare perspective, an overview of similar work in mHealth is provided by Sect. 2.1. Next, we discuss the extent to which reinforcement learning/bandit algorithms have been deployed in mHealth settings (Sect. 2.1). IntellI-gentPoolIng has similarities with several modeling approaches, here we discuss the most relevant: multi-task learning, meta-learning, Gaussian processes for Thompson Sampling contextual bandits, and time-delayed bandits. These topics are discussed in Sects. 2.2-2.4."
+    },
+    {
+      "title": "2.1. Connections to Bandit algorithms in mHealth",
+      "text": "Bandit algorithms in mHealth have typically used one of two approaches. The first approach is person specific, that is, an algorithm is deployed separately on each user, such as in  Rabbi et al. 2015; Jaimes et al. 2016; Forman et al. 2018 and Liao et al. 2020 . This approach makes sense when users are highly heterogeneous, that is, their optimal policies differ greatly one from another. However, this approach can present challenges for policy learning when data is scarce and/or noisy, as in our motivating example of encouraging activity in an mHealth study where only a few decision time-points occur each day (see  (Xia 2018)  for an empirical evaluation of the shortcomings of Thompson sampling for personalized contextual bandits in mHealth settings). The second approach completely pools users' data, that is one algorithm is used on all users so as to learn a common treatment policy both in bandit algorithms  (Paredes et al. 2014; Yom-Tov et al. 2017) , and in full reinforcement learning algorithms  (Clarke et al. 2017; Zhou et al. 2018 ). This second approach can potentially learn quickly but may result in poor performance if there is large heterogeneity between users. We compare to these two approaches empirically as they not only represent state-of-the-art in practice, they also represent two intuitive theoretical extremes.\n\nIn IntellIgentPoolIng we strike a balance between these two extremes, adjusting the degree of pooling to the degree that users are similarly responsive. When users are heterogeneous, IntellIgentPoolIng achieves lower regret than the second approach while learning more quickly than the first approach. When users are homogeneous our method performs as well as the second approach."
+    },
+    {
+      "title": "2.2. Connections to multi-task learning and meta-learning",
+      "text": "Following original work on non-pooled linear contextual bandits  (Agrawal and Goyal 2013) , researchers have proposed pooling data in a variety of ways. For example,  Deshmukh et al. (2017)  proposed pooling data from different arms of a single bandit problem. Li and Kar 2015 used context-sensitive clustering to produce aggregate reward estimates for the bandit algorithm. More relevant to this work is multi-task Gaussian Process (GP), e.g.,  Lawrence and Platt 2004; Bonilla et al. 2008 ; Wang and Khardon 2012, however these have been proposed in the prediction as opposed to the reinforcement learning setting. The Gang of Bandits approach  (Cesa-Bianchi et al. 2013) , which is a generalization from the original LinUCB algorithm for a single task  (Li et al. 2010) , has been shown to be successful when there is prior knowledge on the similarities between users. For example, a known social network graph might provide a mechanism for pooling. It was later extended to the Horde of Bandits in  (Vaswani et al. 2017 ) which used Thompson Sampling, allowing the algorithm to deal with a large number of tasks.\n\nEach of the multi-task approaches introduces some concept of similarity between users. The extent to which a given user's data contributes to another user's policy is some function of this similarity measure. This is fundamentally different from the approach taken in IntellIgentPoolIng. Rather than determining the extent to which any two users are similar, IntellIgentPoolIng determines the extent to which a given user's reward function parameters differ from parameters in a population (average over all users) reward function. This approach has the advantage of requiring fewer hyper-parameters, as we do not need to learn a similarity function between users. Instead of a pairwise similarity function it is as if we are learning a similarity between each user and the population average. In the limited data setting, we expect this simpler model to be advantageous.\n\nIn meta-learning, one exploits shared structure across tasks to improve performance on new tasks. IntellIgentPoolIng thus shares similarities with meta-learning for reinforcement learning  (Nagabandi et al. 2018; Finn et al. 2019; Finn et al. 2018; Zintgraf et al. 2019; Gupta et al. 2018; Saemundsson et al. 2018) . At a high level, one can view our method as a form of meta-learning where the population-level parameters are learned from all available data and each user's parameters represent deviations from the shared parameters. However, while meta-learning might require a large collection of source tasks, we demonstrate the efficacy of our approach on data on the small scale found in clinical mHealth studies."
+    },
+    {
+      "title": "2.3. Connections to Gaussian process models for Thompson sampling contextual bandits",
+      "text": "IntellIgentPoolIng is based on Bayesian mixed effects model of the reward, which is similar to using a Gaussian Process (GP) model with a simple form of the kernel. GP models have been used for multi-armed bandits  (Chowdhury and Gopalan 2017; Brochu et al. 2010; Srinivas et al. 2009; Desautels et al. 2014; Wang et al. 2016; Djolonga et al. 2013; Bogunovic et al. 2016)  , and for contextual bandits  (Li et al. 2010; Krause and Ong 2011) . However the above approaches do not structure the way in which the pooling of data across users occurs. IntellIgentPoolIng uses a mixed effects GP model to pool across users in structured manner. Although mixed effects GP models have been previously used for offline data analysis  (Shi et al. 2012; Luo et al. 2018) , to the best of our knowledge they have not been previously used in the online decision making setting considered in this work."
+    },
+    {
+      "title": "2.4. Connection to non-stationary linear bandits",
+      "text": "There is a growing literature investigating how to adapt linear bandit algorithms to changing environments. A common approach is for the learning algorithm to differentially weight data across time.\n\nDifferential weighting is used by both Russac et al. 2019 (using a LinUCB algorithm) and Kim and Tewari 2019 (using perturbation-based algorithms). Cheung et al. 2018 to estimate the parameters in the reward function and (Zhao et al. 2020) restart the algorithm at regular intervals discarding the prior data. Similarly (Bogunovic et al. 2016), using GP-based UCB algorithms, accommodate non-stationarity by both restarting and using an autoregressive model for the rewards function. Kim and Tewari 2020 analyze the non-stationary setting with randomized exploration. Wu et al. introduce a model which detects abrupt time changes cite ( https:// dl. acm. org/ doi/ pdf/ 10. 1145/ 32099  78. 32100 51 ).\n\nIntellIgentPoolIng allows for non-stationary reward functions by the use of time-varying random effects. The correlation between the time-varying random effects induces a weighted estimator whereby more weight is put on the recently collected samples, similar to the discounted estimators in  Russac et al. 2019 and Kim and Tewari 2019. In contrast to existing approaches, IntellIgentPoolIng considers both individual and time-specific variation."
+    },
+    {
+      "title": "3. Intelligent Pooling",
+      "text": "IntellIgentPoolIng is a generalization of a Thompson sampling contextual bandit for learning personalized treatment policies. We first outline the components of IntellIgent-PoolIng and then introduce the problem definition in Sect. 3.2. As our approach offers a natural alternative to two commonly used approaches, we begin by describing these simpler methods in Sect. 3.3. We introduce our method in Sect. 3.4."
+    },
+    {
+      "title": "3.1. Overview",
+      "text": "The central component of IntellIgentPoolIng is a Bayesian model for the reward function. In particular, IntellIgentPoolIng uses a Gaussian mixed effects linear model for the reward function. Mixed effects models are widely used across the health and behavioral sciences to model the variation in the linear model parameters across users  (Raudenbush and Bryk 2002; Laird and Ware 1982)  and within a user across time. Use of these models enhances the ability of domain scientists to inform and critique the model used in Intel-lIgentPoolIng. The properties and pitfalls of these models are well understood; see  (Qian et al. 2019)  for an application of a mixed effects model in mHealth. IntellIgentPoolIng uses Bayesian inference for the mixed effects model. As discussed in Sect. 2.3, a Bayesian mixed effects linear model is a GP model with a simple kernel. This facilitates increasing the flexibility of the model for the reward function, given sufficient data.\n\nFurthermore, IntellIgentPoolIng uses Thompson sampling  (Thompson 1933) , also known as posterior sampling  (Russo and Van Roy 2014) , to select actions. At each decision point, the parameters in the model for the reward function are sampled from their posterior distribution, thus inducing exploration over the action space  (Russo et al. 2018) . These sampled parameters are then used to form an estimated reward function and the action with the highest estimated reward is selected.\n\nThe hyper-parameters (e.g., the variance of the random effects) control the extent of pooling across users and across decision times. The right amount of pooling depends on the heterogeneity among users and the non-stationarity, which is often difficult to pre-specify. Unlike other bandit algorithms in which the hyper-parameters are set at the beginning  (Deshmukh et al. 2017; Cesa-Bianchi et al. 2013; Vaswani et al. 2017) , IntellIgentPool-Ing includes a procedure for updating the hyper-parameters online. In particular, empirical (Bayes Carlin and Louis 2010) is used to update the hyper-parameters in the online setting, as more data becomes available."
+    },
+    {
+      "title": "3.2. Problem formulation",
+      "text": "Consider an mHealth study which will recruit a total of N users. 1 Let i \u2208 [N] = {1, \u2026 , N} be a user index. For each user, we use k \u2208 {1, 2, \u2026 } to index decision times, i.e., times at which a treatment could be provided. Denote by S i,k the states/contexts at the k th deci- sion time of user i. For simplicity, we focus on the case where the action is binary, i.e., A i,k \u2208 {0, 1} . The algorithm can be easily generalized to cases with more than two actions. After the action A i,k is chosen, the reward R i,k is observed. Throughout the remainder of the paper, S, A and R are random variables and we use lower-case (s, a and r) to refer to a realization of these random variables.\n\nBelow we consider a simpler setting where the parameters in the reward are assumed time-stationary. We discuss how to generalize the algorithm to the non-stationary setting in Sect. 6. The goal is to learn personalized treatment policies for each of the N users. We treat this as N contextual bandit problems as the reward function may differ between users. In mHealth settings this might occur due to the inability of sensors to record users' entire contexts. Section 3.3 reviews two approaches for using Thompson Sampling  (Agrawal and Goyal 2012)  and Sect. 3.4 presents IntellIgentPoolIng, our approach for learning the treatment policy for any specific user."
+    },
+    {
+      "title": "3.3. Two Thompson sampling instantiations",
+      "text": "First, consider learning the treatment policy separately per person. We refer to this approach as Person-sPecIfIc. At each decision time k, we would like to select a treatment A i,k \u2208 {0, 1} based on the context S i,k . We model the reward R i,k by a Bayesian linear regression model: for user i and time k where (s, a) is a pre-specified mapping from a context s and treatment a (e.g., those described in Sect. 4.2), w i is a vector of weights which we will learn, and i,k \u223c (0, 2 ) is the error term. The weight vectors {w i } are assumed independent across users and to follow a common prior distribution w i \u223c ( w , w ) . See Fig.  1  for a graphical representation of this approach. Now at the k th decision time with the context S i,k = s , Person-sPecIfIc selects the treat- ment A i,k = 1 with probability where wi,k follows the posterior distribution of the parameters w i in the model (1) given the user's history up to the current decision time k. We emphasize that in this formulation the posterior distribution of w i is formed based each user's own data.\n\nThe opposite approach is to learn a common bandit model for all users. In this approach, the reward model is a single Bayesian regression model with no individual-level parameters:\n\n(1)\n\nFig.  1  Consider a setting with two users, here we show the relationship between select random variables in our model: R i,k the reward for user i at decision time k, 2 i,k the noise for user i at time k and w i the latent weight vector for user i. In Person-sPecIfIc we see that each user's parameters are independent. Only the prior parameter values are shared, all else is updated independently where the common parameters, w , follows the prior distribution w \u223c ( w , w ) . See Fig.  2  for the graphical representation of this approach. We then use the posterior distribution of the weight vector w to sample treatments for each user. Here the posterior is calcu- lated based on the available data from all users observed up to and including time k. This approach, which we refer to as comPlete, may suffer from high bias when there is significant heterogeneity among users."
+    },
+    {
+      "title": "3.4. Intelligent pooling across bandit problems",
+      "text": "IntellIgentPoolIng is an alternative to the two approaches mentioned above. Specifically, in IntellIgentPoolIng data is pooled across users in an adaptive way, i.e., when there is strong homogeneity observed in the current data, the algorithm will pool more from others than when there is strong heterogeneity."
+    },
+    {
+      "title": "3.4.1. Model specification",
+      "text": "We model the reward associated with taking action A i,k for user i at decision time k by the linear model (1). Unlike Person-sPecIfIc where the person-specific weight vectors {w i , i \u2208 [N]} are assumed to be independent to each other, IntellIgentPoolIng imposes structure on the w i 's, in particular, a random-effects structure (Raudenbush and Bryk 2002;  Laird and Ware 1982):\n\nwhere w pop is a population-level parameter and u i is a random effect that represents the person-specific deviation from w pop for user i. The extent to which the posterior means for w pop and u i are based on user i's data relative to the population depends on the variances of the random effects (for a stylized example of this see Sect. 3.5). In Sect. 6 we show how we can modify this structure to include time-specific parameters, or a time-specific random effect. A graphical representation for IntellIgentPoolIng is shown in Fig.  3 .\n\nWe assume the prior on w pop is Gaussian with prior mean w and variance w . u i is also assumed to be Gaussian with mean and covariance u . Furthermore, we assume\n\n..."
+    },
+    {
+      "title": "2,T",
+      "text": "Fig.  2  Consider a setting with two users, here we show the relationship between select random variables in our model: R i,k the reward for user i at decision time k, k the noise at time k and w pop the latent weight vector. In comPlete we see that each user's parameters are the same. With each parameter update the weight vector for every user is also updated for i \u2260 j and . The prior parameters w , w as well as the variance of the random effect u , and the residual variance 2 are hyper-parameters. In (4), there is a the random effect, u i on each element of w i . In practice, one can use domain knowledge to specify which of the parameters should include random effects; this will be the case in the feasibility study described in Sect. 6. Conditioned on the latent variables (w pop , u i ) , as well as the current context and action, the expected reward is"
+    },
+    {
+      "title": "3.4.2. Model connections to Gaussian processes",
+      "text": "Under the Gaussian assumption on the distribution of the reward and prior, the Bayesian linear model of the reward (1) together with the random effect model (4) can be viewed as an example of Gaussian Process with a special kernel (see Eq. 5). We use this connection to derive the posterior distribution and facilitate the hyper-parameter selection. An additional advantage of viewing the Bayesian mixed effects model as a Gaussian Process model is that we can now flexibly redesign our reward model simply by introducing new kernel functions. Here, we assume linear model with a person-specific random effects. In Sect. 6 we discuss a generalization to time-specific random effects. Additionally, one could adopt non-linear kernels and incorporate more complex structures on the reward function."
+    },
+    {
+      "title": "3.4.3. Posterior distribution of the weights on the feature vector",
+      "text": "In the setting where both the prior and the linear model for the reward follow a Gaussian distribution, the posterior distribution of w i follows a Gaussian distribution and there are analytic expressions for these updates, as shown in  (Williams and Rasmussen 2006) . Below we provide the explicit formula of the posterior distribution based on the connection to a Gaussian Process regression. Suppose at the time of updating the posterior distribution, the available data collected from all current users is D , where D consists of n tuples of state, action, reward and user index x = (s, a, r, i) . The mixed effects model (Eqs. 1 and 4) induces a kernel function K. For any two tuples in D , e.g., x l = (s l , a l , r l , i l ), l = 1, 2 Note that the above kernel depends on w and u (one of the hyper-parameters that will be updated using empirical Bayes approach; see below). The kernel matrix is of size n \u00d7 n\n\nFig.  3  Consider a setting with two users, here we show the relationship between select random variables in our model: R i,k the reward for user i at decision time k, i,k the noise for user i at time k, w pop the latent weight vector and u i the random effect for user i. In IntellIgentPoolIng we see that some parameters ( w pop ) are shared across the population which others ( u i ) are user specific and each element is the kernel value between two tuples in D . The posterior mean and vari- ance of w i given the currently available data D can be calculated by where Rn is the vector of the rewards centered by the prior means, i.e., each element cor- responds to a tuple (s, a, r, j) in D given by r -(s, a) \u22a4  w , and M i is a matrix of size n by p (recall p is the length of w i ), with each row corresponding to a tuple (s, a, r, j) in D given by (s, a) \u22a4 ( w + 1 {j=i}  u )."
+    },
+    {
+      "title": "3.4.4. Treatment selection",
+      "text": "To select a treatment for user i at the k th decision time, we use the posterior distribution of w i formed at the most recent update time T. That is, for the context S i,k of user i at the k th decision time, IntellIgentPoolIng selects the treatment A i,k = 1 with the probability calculated in the same formula as in (  2 ) but with a different posterior distribution as discussed above."
+    },
+    {
+      "title": "3.4.5. Setting hyper-parameter values",
+      "text": "Recall that the algorithm requires the hyper-parameters w , w , u , and 2 . The prior mean w and variance w of the population parameter w pop can be set according to previous data or domain knowledge (see Sect. 5 for a discussion on how the prior distribution is set in the feasibility study). As we mention in Sect. 3.1, the variance components in the mixed effects model impact how the users pool the data from others (see Sect. 3.5 for a discussion) and might be difficult to pre-specify. IntellIgentPoolIng uses, at the update times, the empirical (Bayes Carlin and Louis 2010) approach to choose/update = ( u , 2 ) based on the currently available data. To be more specific, suppose at the time of updating the hyper-parameters, the available data is D . We choose to maximize l( |D) , the marginal log-likelihood of the observed reward, marginalized over the population parameters w pop and the random effects u i . The marginal log-likelihood l( |D) can be expressed as where ( ) is the kernel matrix as a function of parameters = ( u , 2 ) . The above opti- mization can be efficiently solved using existing Gaussian Process regression packages; see Sect. 4.2 for more details."
+    },
+    {
+      "title": "3.5. Intuition for the use of random effects",
+      "text": "IntellIgentPoolIng uses random effects to adaptively pool users' data based on the degree to which users exhibit heterogeneous rewards. That is, the person-specific random effect should outweigh the population term if users are highly heterogeneous. If users are highly homogeneous, the person-specific random effect should be outweighed by the population term. The amount of pooling is controlled by the hyper-parameters, e.g., the variance components of the random effects.\n\nTo gain intuition, we consider a simple setting where the feature vector in the reward model (Eq. 1) is one-dimensional (i.e., p = 1 ) and there are only two users (i.e., i = 1, 2 ). Denote the prior distributions of population parameter w pop by (0, 2 w ) and the random effect u i by (0, 2 u ) . Below we investigate how the hyper-parameter (e.g., 2 u in this simple case) impacts the posterior distribution.\n\nLet k i be the number of decision time of user i at an updating time. In this simple setting, the posterior mean of \u01751 can be calculated explicitly:\n\nSimilarly, the posterior mean of w 2 is given by When 2 u \u2192 0 (i.e., the variance of random effect goes to 0), we have \u2192 1 and both pos- terior means ( \u01751 , \u01752 ) approach the posterior mean under comPlete (Eqn 3) using prior (0, 2 w )\n\nAlternatively, when 2 u \u2192 \u221e , we have \u2192 0 and the posterior means ( \u01751 , \u01752 ) each approach their respective posterior means under Person-sPecIfIc (Eqn 1) using a noninformative prior Figure  4  illustrates that when goes from 0 to 1, the posterior mean \u0175i smoothly transitions from the population estimates to the person-specific estimates."
+    },
+    {
+      "title": "3.6. Regret",
+      "text": "We prove a regret bound for a modification of IntellIgentPoolIng similar to that in  Agrawal and Goyal 2012; Vaswani et al. 2017  in a simplified setting. Further details are provided in Appendix 1. Let d be the length of the weight vector w i in the Bayesian mixed effects model of the reward in Eq. 1. Recall that w is the prior covariance of the weight vector w pop , u is the covariance of the random effect u i and 2 is the variance of the error term. Let K i be the number of decision times for user i up to a given calendar time and T = \u2211 N i=1 K i be the total number of decision times encountered by all N users in the study up to the calendar time. We define the regret of the algorithm after T decision times by\n\nTheorem 1 With probability 1 -, where \u2208 (0, 1) the total regret of the modified Thomp- son Sampling with IntellIgentPoolIng after T total number of decision times is:\n\nRemark Observe that, up to logarithmic terms, this regret bound is \u00d5(dN \u221a T) . Recall that  (Vaswani et al. 2017 ) introduces a similar regret bound for a Thompson Sampling algorithm which utilizes user-similarity information. The bound from  (Vaswani et al. 2017) ,\n\nThe posterior mean of w i , \u01751 . As the variance of random effect 2 u decreases, increases and the posterior mean approaches the populationinformed estimation (comPlete) and departs from the personspecific estimation (Person-sPecIfIc).\n\n1 3 \u00d5(dN \u221a T\u2215) , additionally depends on a hyper-parameter that is not included in our model. In  (Vaswani et al. 2017) , controls the strength of prior user-similarity information. Instead of introducing a hyper-parameter our model follows a mixed effects Bayesian structure which allows user similarities (as expressed in the extent to which users' data is pooled) to be updated with new data. Thus, in certain regimes of hyper-parameter , Intel-lIgentPoolIng will incur much smaller regret, as demonstrated empirically in Sect. 4.3."
+    },
+    {
+      "title": "4. Experiments",
+      "text": "This work was conducted to prepare for deployment of IntellIgentPoolIng in a live trial. Thus, to evaluate IntellIgentPoolIng we construct a simulation environment from a precursor trial, HeartstePsV1  (Klasnja et al. 2015) . This simulation allows us to evaluate the proposed algorithm under various settings that may arise in implementation. For example, heterogeneity in the observed rewards may be due to unknown subgroups across which users' reward functions differ. Alternatively, this heterogeneity may vary across users in a more continuous manner. We consider both scenarios in simulated trials. In Sects. 4.1-4.3 we evaluate the performance of IntellIgentPoolIng against baselines and a state-of-the-art algorithm. In Sect. 5 we assess feasibility of IntellIgentPoolIng in a pilot deployment in a clinical trial."
+    },
+    {
+      "title": "4.1. Simulation environment",
+      "text": "HeartstePsV1 was a 6-week micro-randomized trial of an Android-based physical activity intervention with 41 sedentary adults. The intervention consisted of two push interventions: planning and contextually-tailored activity suggestions. Activity suggestions acted as action cues and were designed to provide users with actionable options for engaging in short bouts of activity in their current situation. The content of the suggestions was tailored based on the users' location, weather, time of day, and day of the week. For each individual, on each day of the study, the HeartSteps system randomized whether or not to send an activity suggestion five times a day. The intended outcome of the suggestions-the proximal outcome used to evaluate their efficacy-was the step count in the 30 minutes following suggestion randomization.\n\nHeartstePsV1 data was used to construct all features within the environment, and to guide choices such as how often to update the feature values. Recall that S i,k and R i,k denote the context features and reward of user i at the k th decision time. The reward is the log step counts in the thirty minutes immediately following a decision time. In HeartstePsV1 three treatment actions were considered: A i,k = 1 corresponded to a smartphone notification containing an activity suggestion designed to take 3 minutes to perform, A i,k = 0 corresponded to a smartphone notification containing an anti-sedentary message designed to take approximately 30 seconds to perform and A i,k = -1 corresponded to not sending a message. However, in the simulation only the actions 1, 0 are considered.\n\nFigure  5  describes the simulation while Table  1  describes context features and rewards. Each context feature in Table  1  was constructed from HeartstePsV1 data. For example, we found that in HeartstePsV1 data splitting participants' prior 30 minute step count into the two categories of high or low best explained the reward. Additional details about this process are included in Appendix 4.\n\nThe temperature and location are updated throughout a simulated day according to probabilistic transition functions constructed from HeartstePsV1. The step counts for a simulated user are generated from participants in HeartstePsV1 as follows. We construct a one-hot feature vector containing the group-ID of a participant, the time of day, the day of the week, the temperature, the preceding activity level, and the location. Then for each possible realization of the one-hot encoding we calculate the empirical mean and empirical standard deviation of all step counts observed in HeartstePsV1. The corresponding empirical mean and empirical standard deviation from HeartstePsV1 form S i,k S i,k respectively. At each 30 minute window, if a treatment is not delivered step counts are generated according to  Heterogeneity This model, which we denote HeterogeneIty, allows us to compare the performance of the approaches under different levels of population heterogeneity. The step count after a decision time is a modification of Eq. 8 to reflect the interaction between context and treatment on the reward and heterogeneity in treatment effect. Let be a vector of coefficients of S i,k which weigh the relative contributions of the entries of S i,k that inter- act with treatment on the reward. The magnitude of the entries of are set using Heart-stePsV1.\n\nStep counts ( R i,k ) are generated as\n\nThe inclusion of Z i will allow us to evaluate the relative performance of each approach under different levels of population heterogeneity. Let l i be the entry in i corresponding to the location term for the i th user. We consider three scenarios (shown in Table  6 ) to generate Z i , the person-specific effect, and l i the location-dependent effect. The performance of each algorithm under each scenario will be analyzed in Sect. 4.3. In the smooth scenario, is equal to the standard deviation of the observed treatment effects [f (S i,k ) \u22a4  \u2236 S i,k \u2208 HEARTSTEPSV1] . The settings for all Z i and l i terms are discussed in Sect. D.\n\nIn the bi-modal scenario each simulated user is assigned a base-activity level: low-activity users (group 1) or high-activity users (group 2). When a simulated user joins the trial they are placed into either group one or two with equal probability. Whether or not it is optimal to send a treatment (an activity suggestion) for user i at their k th decision time depends both on their context, and on the values of z 1 , l 1 and z 2 , l 2 . The values of z 1 , l 1 and z 2 , l 2 are set so that for all users in group 1, it is optimal to send a treatment under 75% of the contexts they will experience. Yet for all users in group 2, it is only optimal to send a treatment under 25% of the contexts they will experience. Group membership is not known to any of the algorithms\n\nTable 2. The settings for all values in Table 6 are included in Sect. D."
+    },
+    {
+      "title": "4.2. Model for the reward function in IntellIgentPoolIng",
+      "text": "In Sect. 3 we introduced the feature vector (S i,k , A i,k ) \u2208 \u211d p . This vector is used in the model for the reward and transforms a user's contextual state variables S i,k and the action A i,k as follows:\n\nwhere S i,k = {1, time of day, day of the week, preceding activity level, location} . Recall that the bandit algorithms produce i,k which is the probability that A i,k = 1 . The inclusion of (8)\n\nthe term (A i,ki,k )S i,k is motivated by  Liao et al. 2016; Boruvka et al. 2018; Greenewald et al. 2017 , who demonstrated that action-centering can protect against mis-specification in the baseline effect (e.g., the expected reward under the action 0). In HEARTSTEPSV1 we observed that users varied in their overall responsivity and that a user's location was related to their responsivity. In the simulation, we assume the person-specific random effect on four parameters in the reward model (i.e., the coefficients of terms in S involving the intercept and location). Finally, we constrain the randomization probability to be within [0.1, 0.8] to ensure continual learning. The update time for the hyper-parameters is set to be every 7 days. All approaches are implemented in Python and we implement GP regression with the software package (GPytorch  Gardner et al. 2018) ."
+    },
+    {
+      "title": "4.3. Simulation results",
+      "text": "In this section, we compare the use of mixed effects model for the reward function in INTELLIGENTPOOLING to two standard methods used in mHealth, COMPLETE and PERSON -SPECIFIC from Sect. 3.3. Recall that IntellIgentPoolIng includes person-spe- cific random effects, as described in Eq. 14. In PERSON -SPECIFIC , all users are assumed to be different and there is no pooling of data and in COMPLETE , we treat all users the same and learn one set of parameters across the entire population.\n\nAdditionally, to assess IntellIgentPoolIng's ability to pool across users we compare our approach to Gang of Bandits  (Cesa-Bianchi et al. 2013 ), which we refer to as gan-goB. As this model requires a relational graph between users, we construct a graph using the generative model (  9 ) and Table  6  connecting users according to each of the three settings: homogeneous, bi-modal and smooth. For example, with knowledge of the generative model users can be connected to other users as a function of their Z i terms. As we will not have true access to the underlying generative model in a real-life setting we distort the true graph to reflect this incomplete knowledge. That is we add ties to dissimilar users at 50% of the strength of the ties between similar users.\n\nFrom the generative model (  9 ), the optimal action for user i at the k th decision time is\n\nwhere * i is the optimal for the ith user. In these simulations each trial has 32 users. Each user remains in the trial for 10 weeks and the entire length of the trial is 15 weeks, where the last cohort joins in week six. The number of users who join each week is a function of the recruitment rate observed in HEARTSTEPSV1 . In all settings we run 50 simulated trials.\n\nFirst, Fig.  6  provides the regret averaged across all users across 50 simulated trials where the reward distribution follows (9) for each of the Table  6  categories. The horizontal axis in Fig.  6  is the average regret over all users in their nth week in the trial, e.g. in their first week, their second week, etc. In the bi-modal setting there are two groups, where all users in group one have a positive response to treatment when experiencing their typical context, while the users in group two have a negative response to treatment under their typical context. An optimal policy would learn to not typically send treatments to users in the first group, and to typically send them to users in the second. To evaluate each algorithm's (11)\n\nability to learn this distinction we show the percentage of time each group received a message in Table  3 .\n\nThe relative performance of the approaches depends on the heterogeneity of the population. When the population is very homogenous comPlete excels, while its performance suffers as heterogeneity increases. Person-sPecIfIc is able to personalize; as shown by Table  3 , it can differentiate between individuals. However, it learns slowly and can only approach the performance of comPlete in the smooth setting of Table  6  where users differ the most in their response to treatment. Both IntellIgentPoolIng and gangoB are more adaptive than either comPlete or Person-sPecIfIc. gangoB consistently outperforms Person-sPe-cIfIc and achieves lower regret than comPlete in some settings. In the homeogenous setting we see that gangoB can utilize social information more effectively than Person-sPecIfIc does while in the smooth setting it can adapt to individual differences more effectively than comPlete. Yet, IntellIgentPoolIng demonstrates stronger and swifter adaptability than does gangoB, consistently achieving lower regret at quicker rates. Finally, the algorithms differ in their suitability for real-world applications, especially when data is limited. Table  3  The fraction of time that messages were sent to users in each group Recall at each decision time either an activity suggestion or anti-sedentary message is sent. For group one it is typically optimal to send an activity suggestion, while for group two it is typically optimal to send an anti-sedentary message. Here, IntellIgentPoolIng is best able to learn this dynamic Group one optimal policy = send activity suggestion Group two optimal policy = send anti-sedentary message\n\nComplete 0.49 0.46 Person-specific 0.65 0.49 GangOB 0.57 0.35 IntellIgent-PoolIng 0.59 0.36 1 3 gangoB requires reliable values for hyper-parameters and can depend on fixed knowledge about relationships between users. IntellIgentPoolIng can learn how to pool between individuals over time and without prior knowledge."
+    },
+    {
+      "title": "5. IntellIgentPoolIng feasibility study",
+      "text": "The simulated experiments provide insights into the potential of this approach for a live deployment. As we see reasonable performance in the simulated setting, we now discuss an initial pilot deployment of IntellIgentPoolIng in a real-life physical activity clinical trial."
+    },
+    {
+      "title": "5.1. Feasibility study design",
+      "text": "The feasibility study of IntellIgentPoolIng involves 10 participants added to a larger 90-day clinical trial of HeartSteps v2, an mHealth physical activity intervention. The purpose of the larger clinical trial is to optimize the intervention for individuals with Stage 1 hypertension. Study participants with Stage 1 hypertension were recruited from Kaiser Permanente Washington in Seattle, Washington. The study was approved by the institutional review board of the Kaiser Permanente Washington Health Research Institute (under number 1257484-14). HeartSteps v2 is a cross-platform mHealth application that incorporates several intervention components, including weekly activity goals, feedback on goal progress, planning, motivational messages, prompts to interrupt sedentary behavior, and-most relevant to this paper-actionable, contextually-tailored suggestions for individuals to perform a short physical activity (suggesting, roughly, a 3 to 5 minute walk). In this study physical activity is tracked with a commercial wristband tracker, the Fitbit Versa smart watch.\n\nIn this version of the intervention, activity suggestions are randomized five times per day for each participant on each day of the 90-day trial. These decision times are specified by each user at the start of the study, and they roughly correspond to the participant's typical morning commute, lunch time, mid-afternoon, evening commute, and after dinner periods. The treatment options for activity suggestions are binary: at a decision time, the system can either send or not send a notification with an activity suggestion. When provided, the content of the suggestion is tailored to current sensor data (location, weather, time of day, and day of the week). Examples of these suggestions are provided in  Klasnja et al. 2018 . At a decision time, activity suggestions are randomized only if the system considers that the user is available for the intervention-i.e., that it is appropriate to intervene at that time (see Fig.  8  for criteria used to determine if it is appropriate to send an activity suggestion at a decision time). Subject to these availability criteria, IntellIgentPoolIng determines whether to send a suggestion at each decision time. The posterior distribution was updated once per day, prior to the beginning of each day. Figure  7  provides a schematic of the feasibility study.\n\nThe feasibility study included the second set of 10 participants in the trial of Heart-Steps v2, following the initial 10 enrolled participants. IntellIgentPoolIng (Algorithm 1) is deployed for each of the second set of 10 participants. At each decision time for these 10 participants, IntellIgentPoolIng uses all data up to that decision time (i.e. from the initial ten participants as well as from the subsequent ten participants). Thus the feasibility study allows us to assess performance of IntellIgentPoolIng after the beginning of a study instead of the performance at the beginning of the study (when there is little data) or the performance at the end of the study (when there is a large amount of data and the algorithm can be expected to perform well).\n\nIn the feasibility study, the features used in the reward model were selected to be predictive of the baseline reward and/or the treatment effect, based on the data analysis of Heart-stePsV1; see Sect. 6.2 in  (Liao et al. 2020)  for details. All features used in the reward model are shown in Table  4 . The feature engagement represents the extent to which a user engages with the mHealth application measured as a function of how many screen views are made within the application within a day. The feature dosage represents the extent to which a user has received treatments (activity suggestions). This feature increases and decreases depending on the number of activity suggestions recently received. The feature location refers to whether a user is at home or work (encoded as a 1) or somewhere else (encoded as a 0). The temperature feature value is set according to the temperature at a user's current location (based off of phone GPS). The variation feature value is set according to the variation in step count in the hour around that decision point over the prior seven-day period. As before we construct a feature vector , however here we only use select terms to estimate the treatment effect. Here, (12)"
+    },
+    {
+      "title": "Users enter the trial asynchronously",
+      "text": "A user is available to receive an activity suggestion under the following conditions:\n\n-She is not currently active and has not had a large amount of activity in the last two hours. -She has not recently received a notification with a HeartSteps intervention.\n\n-Her phone has an internet connection and can communicate with the HeartSteps server.\n\n-Her smart watch has been able to communicate with the HeartSteps server in the last ten minutes to provide the current location and step count data."
+    },
+    {
+      "title": "Fig. 8 Availability criteria",
+      "text": "where S i,k = {1, temperature, yesterday's step count, preceding activity level, step variation, step variation, engagement, dosage, location} and S \ufffd i,k = {1, step variation, engagement, dosage, location} is a subset of S i,k .\n\nWe provide a full description of these features in Sect. E. The prior distribution was also constructed based on HeartstePsV1; see Sect. 6.3 in  (Liao et al. 2020 ) for more details. As this feasibility study only includes a small number of users, a simple model with only two person-specific random effects, each on the intercept term in S and S \u2032 (Eq. 12) was deployed.\n\nHere we discuss how much data we have to personalize the policy to each user. Recall the 10 users only receive interventions when they meet the availability criteria outlined in Fig.  8 , thus we find that in practice we have a limited number of decision points to learn a personalized policy from. In the case of perfect availability, we would have at most 450 decision points per person. However due to the criteria in Fig.  8 , the algorithm is used with only approximately 23% of each user's decision points. Pooling users' data allows us to learn more rapidly. On the day that the first pooled user joined the feasibility study there were 107 data points from the first set of 10 users.\n\nThe 10 users received an average number of .20 ( \u00b10.015 ) messages a day. The aver- age log step count in the 30-minute window after a suggestion was sent was 4.47, while it was 3.65 in the 30-minute windows after suggestions were not sent. Figure  9  shows the entire history of treatment selection probabilities for all of the users who received treatment according to IntellIgentPoolIng. We see that the treatment probabilities tended to be low, though they covered the whole range of possible values.\n\nWe would like to assess the ability of IntellIgentPoolIng to personalize and learn quickly. To do so we perform an analysis of the learning algorithms of IntellIgentPoolIng, comPlete and Person-sPecIfIc on batch data containing tuples of (S, A, R). Note that the actions in this batch data were selected by IntellIgentPoolIng, however, here we are not interested in the action selection components of each algorithm but instead on their ability to learn the posterior distribution of the weights on the feature vector.\n\nPersonalization By comparing how the decisions to treat under IntellIgentPoolIng differ from those under comPlete, we gather preliminary evidence concerning whether IntellIgentPoolIng personalizes to users. Figure  10  shows the posterior mean of the coefficient of the A i,k term in the estimation of the treatment effect, for all users in the feasibility study on the 90th day after the last user joined the study. We show this term not only for IntellIgentPoolIng but also for comPlete and Person-sPecIfIc. We see that for some users this coefficient is below zero while for others it is above. While the terms under IntellI-gentPoolIng differ from comPlete they do not vary as much as those learned by Person-sPecIfIc. Yet, crucially, the variance is much lower for these terms.\n\nFigure  11  displays the posterior mean of the coefficient of the A i,k term in the estimation of the treatment effect. This coefficient represents the overall effect of treatment on one of the users, User A. During the prior 7 days User A had not experienced much variation in activity at this time and the user's engagement is low. Note that the treatment appears to have a positive effect on a different user, User B, in this context whereas on User A there is little evidence of a positive effect. If comPlete had been used to determine treatment, User A might have been over-treated.\n\nSpeed of policy learning We consider the speed at which IntellIgentPoolIng diverges from the prior, relative to the speed of divergence for Person-sPecIfIc. Figure  12  provides the Euclidean distance between the learned posterior and prior parameter vectors (averaged across the data from the 10 users at each time). From Fig.  12  we see that Person-sPecIfIc Fig.  9  We see that IntellIgent-PoolIng covers the full range of treatment selection probabilities. The tendency seems to be to send with a lower rather than higher probability Fig.  10  Posterior mean and standard deviation of the coefficient of A i,k in Eq. 12 for all users in the feasibility study hardly varies over time in contrast to IntellIgentPoolIng and comPlete, which suggests that Person-sPecIfIc learns more slowly.\n\nIn conclusion IntellIgentPoolIng was found to be feasible in this study. In particular the algorithm was operationally stable within the computational environment of the study, produced decision probabilities in a timely manner, and did not adversely impact the functioning of the overall mHealth intervention application. Overall, IntellIgentPoolIng produced treatment selection probabilities which covered the full range of available probabilities, though treatments tended to be sent with a low probability."
+    },
+    {
+      "title": "6. Non-stationary environments",
+      "text": "An additional challenge in mHealth settings is that users' response to treatment can vary over time. To address this challenge we show that our underlying model can be extended to include time-varying random effects. This allows each policy to be aware of how a user's response to treatment might vary over time. We propose a new simulation to evaluate this approach and show that IntellIgentPoolIng achieves state-of-the-art regret, adjusting to non-stationarity even as user populations vary from heterogenous to homogenous. Fig. 12 Mean squared distance of the posterior mean from prior mean of the coefficients of A i,k"
+    },
+    {
+      "title": "6.1. Time-varying random effect",
+      "text": "In addition to user-specific random effects we extend our model to include time-specific random effects. Consider the Bayesian mixed effects model with person-specific and timevarying effects: for user i at the k th decision time,\n\nIn addition, we impose the following additive structure on the parameters w i,k :\n\nwhere w pop is the population-level parameter, u i represents the person-specific deviation from w pop for user i and v k is the time-varying random effects allowing w i,k to vary with time in the study.\n\nThe prior terms for this model are as introduced in Sect. 3.4. Additionally, v k has mean and covariance D v . The covariance between two relative decision times in the trial is\n\n. There is no change to Algorithm 1 except that now the algorithm would select the action based on the posterior distribution of w i,k , which depends on both the user and time in the study."
+    },
+    {
+      "title": "6.2. Experiments",
+      "text": "We now modify our original simulation environment so that users' responses will vary over time. To do so we introduce the generative model Disengagement. This generative model captures the phenomenon of disengagement. That is as users are increasingly exposed to treatment over time they can become less responsive. This model adds a further term to (9), A i,k X T w w where X w is defined as follows. Let w i,k be the highest number of weeks user i has completed at time k; X w encodes a user's current week in a trial,\n\nWe set w such that the longer a user has been in treatment, the less they respond to a treatment message. When a simulated user is at a decision time the user will receive a treatment message according to whichever RL policy is being run through the simulation.\n\nIn order to evaluate the effectiveness of our time-varying model we compare to Time-Varying Gaussian Process Thompson Sampling (tV-gP)  (Bogunovic et al. 2016) . This approach incorporates temporal information for non-stationary environments and was shown to be competitive to stationary models. To compare this method to IntellIgent-PoolIng we use a linear kernel for the spatial component. We then modify Eq. 6 to compute the posterior distribution by removing the random-effects and modifying the kernel (Eq. 5) to include the temporal terms introduced in  (Bogunovic et al. 2016) .\n\nFigure  13  provides the regret averaged across all users across 50 simulated trials where the reward distribution follows generative model DISENGAGEMENT . As before the hori- zontal axis in Fig.  13  is the average regret over all users in their n th week in the trial, e.g. in their first week, their second week, etc. In dIsengagement, the time-specific response to treatment is set so that a negative response to treatment is introduced in the seventh week of the trial.\n\nIn the dIsengagement condition as users become increasingly less responsive to treatment good policies should learn to treat less. Thus, Table  5  provides the average number\n\nof times a treatment is sent in the last week of the trial for both the first and last cohort. We expect that a policy which learns not to treat will treat less often in the last week of the last cohort than in the last week of the first cohort."
+    },
+    {
+      "title": "7. Limitations",
+      "text": "A significant limitation with this work is that our pilot study involved a small number of participants. Our results from this work must be considered with caution as preliminary evidence towards the feasibility of deploying IntellIgentPoolIng, and bandit algorithms in general, in mHealth settings. Moreover, we cannot claim to provide generalizable evidence that this algorithm can improve health outcomes; for this larger studies with more participants must be run. We offer our findings as motivation for such future work.\n\nOur proposed model is designed to overcome the challenges faced when learning personalized policies in limited data settings. As such, if data was abundant our model would likely have limited effectiveness compared to more complex models. For example, a more complex model could allow us to pool between users as a function of their similarity. Our Table 5 Average fraction of times treatment was sent (action=1), over 50 simulations (generative model HeterogeneIty with homogenous Z h setting) Cohort one week 10 Cohort six week 10 Complete 0.62 0.44 Person-specific 0.76 0.59 HordeOB-0.50 0.57 TV-GP 0.64 0.31 Intelligent-Pooling 0.30 0.06\n\ncurrent model instead determines the extent to which a given user deviates from the population and does not consider between-user similarities. A limitation with our current understanding of mHealth is that it is unclear what a good similarity measure would be. We leave the question of designing a data-efficient algorithm for learning such a measure as future work.\n\nA component of IntellIgentPoolIng is the use of empirical Bayes to update the model hyper-parameters. Here, we used an approximate procedure. However, with our model it is possible to produce exact updates in a streaming fashion and we are currently developing such an approach.\n\nIdeally, we would evaluate IntellIgentPoolIng against all other approaches in a clinical trial setting. However, here we only demonstrated the feasibility of our approach on a limited number of users and did not have the resources to similarly test the other approaches.\n\nTo overcome this limitation we constructed a realistic simulation environment so that we could evaluate on different populations without the costly investment of designing multiple arms of a real-life trial. While the simulated experiments and the feasibility study together demonstrate the practicality of our approach, in future work one might deploy all potential approaches in simultaneous live trials.\n\nFinally, IntellIgentPoolIng can incorporate a time-specific random effect to capture the phenomenon of responsivity changing over the course of a study. There is much to be improved with this model. For example, the first cohort in a study will not have prior cohorts to learn from, and the final cohort will have the greatest amount of data to benefit from. Other models might treat different cohorts with greater equality. Furthermore, this representation does not incorporate alternative temporal information, such as continually shifting weather patterns, where temperatures might change slowly and gradually alter one's desire to exercise outside."
+    },
+    {
+      "title": "8. Conclusion",
+      "text": "When data on individuals is limited a natural tension exists between personalizing (a choice which can introduce variance) and pooling (a choice which can introduce bias). In this work we have introduced a novel algorithm for personalized reinforcement learning, IntellIgentPoolIng that presents a principled mechanism for balancing this tension. We demonstrate the practicality of our approach in the setting of mHealth. In simulation we achieve improvements of 26% over a state-of-the-art-method, while in a live clinical trial we show that our approach shows promise of personalization on even a limited number of users. We view adaptive pooling as a first step in addressing the trade-offs between personalization and pooling. The question of how to quantify the benefits and risks for individual users is an open direction for future work. Specifically, we assume that the posterior distribution of all users is updated after every decision time and the hyper-parameters are fixed throughout the study. Vaswani et al. (2017)  also provided a regret bound for the Thompson Sampling Horde of Bandits algorithm where the data is pooled using a known, prespecified, social graph. Vaswani et al. (2017)  employ the conceptual framework of  Agrawal and Goyal (2012)  which uses the concept of saturated and unsaturated arms to bound the regret. They show that the regret for playing an arm from the unsaturated set (which includes the optimal arm) can be bounded by a factor of the standard deviation which decreases over time. Additionaly, they show that the probability of playing a saturated arm is small, so that an unsaturated arm will be played at each time with some constant probability. Vaswani et al. (2017)  follow this argument, but adapt their proof to include the prior covariance of the social graph in the bound of the variance. Our proof follows along similar lines with the primary difference being how the prior covariance of all parameters is formulated. Specifically, the prior variance in  Vaswani et al. (2017)  is constructed by the Laplacian matrix of the social graph, whereas ours is constructed based on the Bayesian mixed effects model (4). As a result, while in  Vaswani et al. (2017)  the regret bound is stated in terms of properties of the social graph, our bound depends on properties of our mixed effects model (i.e., the covariance matrix of the random effects).\n\nRecall that w is the prior covariance of the weight vector w pop , u is the covariance of the random effect u i and 2 is the variance of the error term. We assume that both w pop and u i have the same dimensions and that u is invertible. Additionally, for simplicity of presentation we assume that the largest eigenvalue in w is at most d and the largest eigenvalue of u is at most dN.\n\nRecall that Theorem 1 bounds the regret of IntellIgentPoolIng at time T by: with probability 1 -."
+    },
+    {
+      "title": "Proof sketch of Theorem 1",
+      "text": "We align the decision times from all users by the calendar time. Specifically, for a given time t, we retrieve the user index encountered at time t by i(t) and retrieve this user's decision time index by k(t). IntellIgentPoolIng selects an action A i(t),k(t) \u2208 A for time t \u2208 [1, \u2026 , T] . We denote the selected action at time t by A t .\n\nIn this setting, we combine each user specific variable into a global shared variable. Recall that a feature vector (A i,k , S i,k ) encodes contextual variables for the action and state of user i at their k th decision time. For simplicity, we denote by A t the action A i(t),k(t) at time t and denote the vector (A i(t),k(t) , S i(t),k(t) ) at time t by A t ,t . Additionally, we let a,t refer to (a, S i(t),k(t) ) for any a \u2208 A . We introduce a sparse vector A t ,t \u2208 \u211d dN , which contains A t ,t vector among N d-dimensional vectors, the rest of which are zeros .\n\nIn proving the regret we consider the equivalent way of selecting the action. Instead of randomizing the action by the probability, here to select an action we assume the algorithm draws a sample wt = wi(t),k(t) and then selects the action A t = A i(t),k(t) = argmax a\u2208A  T a,t wt that maximizes the sampled reward. Analogously to a,t , we define \u0302 t and \u0303 t as the sparse vec- tors which contain \u0175i(t),k(t) and wi(t),k(t) respectively as the i(t)-th vector among Nd-dimen- sional vector, the rest of which are zeros.\n\nWe concatenate the person-specific parameters w i into \u2208 \u211d dN . Let the prior covari- ance of be  0 = N\u00d7N \u2297  w + N \u2297  u . At time t, all contexts observed thus far, for all\n\n\ufffd users, can be combined into one matrix t \u2208 \u211d t\u00d7dN where a single row s corresponds to a s ,s , the sparse context vector associated with the action A s taken for user i(s) at their k(s)th decision time. Let,  t = 1  2   \u22a4 t  t +  0 . At each decision time t we draw a feature vector \u0303 t \u223c N( \u0302 t , v 2 t  -1 t ). Now, within this framework, we rewrite the instantaneous regret as  t = \u22a4 a * t ,t t -\u22a4 A t ,t t . We prove that with high probability both \u22a4 a,t \u0302 t and \u22a4 a,t \u0303 t are con- centrated around their respective means. The standard deviation around the reward at decision time t for action a is thus s a,t = \u221a \u22a4 a,t  -1 t-1 a,t . We proceed as in  Agrawal and Goyal (2012) ,  Vaswani et al. (2017)  by bounding three terms, the event E t , the event E t and \u2211 T t=1 s 2\n\nDefinition 1 Let -1 umin be the inverse of the smallest eigenvalue of u , umax be the largest eigenvalue of u , pmax be the largest eigenvalue of w and let max = umax + pmax . We assume that umax \u2264 dN and pmax \u2264 d.\n\nDefinition 2 For all a , define  a,t = \u22a4 a,t \u0303 t ."
+    },
+    {
+      "title": "Definition 3",
+      "text": "Definition 4 Define E t and E t as the events that \u22a4 t \u0302 t and A t ,t are concentrated around their respective means. Recall that |A| is the total number of actions. Formally, define E t as the event that Define E t as the event that Let = 1 4e \u221a . Given that the events E t and E t hold with high probability, we follow an argument similar to Lemma 4 of  Agrawal and Goyal (2012)  and obtain the following bound:\n\nTo bound the variance of the selected actions, \u2211 T t=1 s A t ,t , we follow an argument similar to  Vaswani et al. (2017) , and include the prior covariance terms of our model. We prove the following inequality:\n\nwhere C is a constant equal to\n\n-1 umin log(1+ -1 umin 2 )\n\n. By combining Eqs. 15 and 16 we obtain the bound given in Theorem 1. \u25fb Appendix 2: Supporting Lemmas Definition 5 Recall that at time t we define as D t as the history of all observed states, actions, and rewards up to time t. Define filtration F t-1 as the union of history until time t -1 , and the contexts at time t, i.e., F t-1 = {D t-1 , a,t , a \u2208 A}. By definition,\n\nThe following quantities are also determined by the history D t-1 and the contexts, a,t and are included in F t-1 .\n\n\u2022 \u0302 t ,  t-1\n\n\u2022 s a,t \u2200a \u2022 the identity of the optimal action a * t\n\n\u2022 whether E t is true or not\n\nNote that the actual action A t which is selected at decision point t is not included in F t-1 .\n\nWe now address the lemmas used in the proof which differ from  Agrawal and Goyal (2012) ,  Vaswani et al. (2017) .\n\nLemma 1 For \u2208 (0, 1) :\n\n.\n\nThe following holds for all a:\n\n1 3\n\nBy the triangle inequality,\n\nWe now bound the term \u2016 0 \u2016 -1 t-1\n\n. Recall that the prior covariance of\n\nWe can thus write Eq. 17\n\nWe now bound\n\n.\n\nTheorem 2 For any d > 0, t \u2265 1 , with probability at least 1 -, For any n \u00d7 n matrix A, det(A) \u2264 Tr(A)\n\nn n . This implies, log(det(A)) \u2264 nlog Tr(A)   n . Applying this inequality for both t and -1 0 , we obtain:\n\nNext, we use the fact that\n\nWe now return to Eq. 19\n\nProof Let Z l and Y t be defined as follows:\n\nHence, Y t is a super-martingale process:\n\nWe now apply Azuma-Hoeffding inequality. We define\n\n\u2211 T t=1 c 2 t in the above inequality, we obtain that with probability 1 -2 , \u25fb Lemma 3 (Azuma-Hoeffding). If a super-martingale Y t (with t \u2265 0) and its the correspond- ing filtration F t-1 , satisfies |Y t -Y t-1 | \u2264 ct for some constant c for all t = 1, \u2026 , T then for any x \u2265 0:\n\nUsing the determinant-trace inequality, we have the following relation:\n\n2 )y (See argument in  Vaswani et al. (2017) ).\n\nWhere, C = umin log(1 + 1 umin 2 ) By Cauchy Schwartz"
+    },
+    {
+      "title": "\u25fb"
+    },
+    {
+      "title": "Appendix 3: Simulation",
+      "text": "We include additional information about the simulation environment. We first explain general information about the simulation environment. We then provide the procedures for generating state variables (features) in the simulation. Finally, we discuss how we used HeartstePsV1 to arrive at the feature representations used in the simulation.\n\nSimulation dynamics Within the simulation states are updated every thirty minutes. Each thirty minutes is associated with a date-time, thus we can acquire the month from the current time which is useful in updating the temperature. The decision times are set roughly two hours apart from 9:00 to 19:00.\n\nAvailability In the real-study users are not always available to receive treatment for a suite of reasons. For example, they may be driving a vehicle or they might have recently received treatment. Thus, at each decision time we update the context feature Available i \u223c Bernoulli(.8) . for the i th user where Available i is drawn from a Bernoulli. This condition reduces the distance between the settings in the environment and those in a realworld study. At each decision time interventions are only sent to users who are available; i.e. user i cannot receive an intervention when Available i = 0.\n\nRecruitment We follow the recruitment rate observed in HEARTSTEPSV1 . For example, if 20% of the total number of participants were recruited in the third week of HEARTSTEPSV1 we recruit 20% of the total number of participants who will be recruited in the third week of the simulation. To explore the effect of running the study for varying lengths we scale the recruitment rates. For example, if the true study ran for 8 weeks, and we want to run a simulation for three weeks, we proportionally scale the recruitment in each of the three weeks so that the relative recruitment in each week remains the same. In these experiments we would like to recruit the entire population within 6 weeks. Thus about 10% of participants are recruited each week, except for the second week of the study where about 30% of all participants are recruited. This reflects the recruitment rates seen in the study, which were more of less consistent throughout besides one increase in the second week.\n\nWe generate states from historical data. Given relevant context we search historical data for states which match this given context. This subset of matching states can be used to generate new states. We discuss this in more detail in Sect. C.1. Then, we describe in more detail how we generate temperature, location and step counts."
+    },
+    {
+      "title": "Querying history",
+      "text": "Algorithm 2 is used to obtain relevant historical data in order to form a probability distribution over some target feature value. For example, if we would like a probability distribution over discretized temperature IDs under a given context, we would search over the historical data for all temperature IDs present under this context. This set of context-specific temperature IDs can then be used to form a distribution to simulate a new ID. This process of querying historical data is used throughout the simulation and is outlined in Algorithm 2. For example, it is used in generating new step counts, new locations and new temperatures.\n\nAs the simulation environment simulates draws stochastically from a variety of probability distributions, it is possible it draws a state which was not present in the historical dataset. In this case there is a process for finding a matching state. Similarly we might have a state in the historical dataset with insufficient samples to form an informative (not overlynoisy) distribution. In this case we also find a surrogate state with which to generate future step counts. The idea of the process is to find the closest state to the current state, such that this close state has sufficient data to generate a good distribution. Again, given a state, we want to be able to generate a step count from a distribution with sufficient data to inform its parameters. The pseudocode for how we do so is shown in Algorithm 3\n\nThis algorithm takes as input a target state, s * . We also have a dictionary(hasmap) formed from the historical dataset. The keys to this dictionary are the states which existed in the dataset. A value is an array of step counts for this state. This procedure gives the closest state with the most data points to our current state. To be more explicit about lines 8-11. A state is a vector of some length, for example [1, 0, 1]. When we consider all subsets of size 2, we are considering the subsets [1, 0],[1, 1], and [0, 1]. For each of these we can look in the historical data set and find all points where this state was true. Thus for each subset we'll get a new list of points,"
+    },
+    {
+      "title": "Generating temperature",
+      "text": "We mimic a trial where everyone resides in the same general area, such as a city. In this setting everyone experiences the same global temperature. We describe how to obtain temperature at any point in time in Algorithm 4. The temperature is updated exactly five times a day.\n\nIn the following algorithms t, refers to a timestamp, D refers to a historical dataset, K t refers to a set of temperature IDs, and w t-1 refers to the temperature at the previous time stamp. Here, D = HEARTSTEPSV1 and K t = {hot, cold} . The contextual features which influence temperature are time of day, day of the week and the month tod, dow and month respectively. Furthermore, at all times besides the first moment in the trial, the next temperature depends on the current temperature w t-1 ."
+    },
+    {
+      "title": "Generating location",
+      "text": "In the following algorithms t, refers to a timestamp, g u refers to the group id of user i,D refers to a historical dataset, K t refers to a set of location IDs, and l t-1 refers to the location at the previous time stamp. Here, D = HEARTSTEPSV1 and K t = {other, home or work}.\n\nAs in generating temperature, the contextual features which influence location are time of day, day of the week and the month tod, dow and month respectively. Generating location is different from generating temperature in that each user moves from location to location independently. Whereas we model users to share one common temperature, they move from one location to another independently of other users. Thus we also include group id in determining the next location for a given user.\n\n1. User is at a decision time (a) User is available (b) User is not available 2. User is not at a decision time"
+    },
+    {
+      "title": "Generating step-counts",
+      "text": "A new step-count is generated for each User active in the study, every thirty-minutes according to one of the following scenarios: Scenarios 1b and 2 are equivalent with respect to how step-counts are generated; a User's step count either depends on whether or not they received an intervention (when they are at a decision time and available) or it does not (because they were either not at a decision time or not available). Recall, that if a user is available the final step count is generated according to Eq. 25. This equation requires sufficient statistics from HeartstePsV1. The procedure for obtaining these statistics is shown explicitly in Algorithm 6.\n\nHere, t, g u , w t , l u , D refer to the current time in the trial, the group id of the i th user, the tem- perature at time t, the location of the i th user, and a historical dataset, respectively. To find sufficient statistics of step counts, we also employ the time of day and day of the week, tod and dow respectively. Finally, yst(t, u) describes the previous step count as high or low.\n\nfor HeterogeneIty (25) R i,k = ( h(S i,k ) , 2 h(S i,k ) ) + A i,k (f (S i,k ) T i + Z i ).\n\nFor example, consider determining a representation for time of day. We choose a partition to be morning, afternoon, evening. For each thirty-minute step count, if it occurred in the morning we assign it to the morning cluster, if it occurred in the afternoon we assign it to the afternoon cluster, etc. Now we have three clusters of step counts and we can compute the C score of this clustering. We repeat the process for different partitions of the day.\n\nTime of day To discover the representation for time of day which best explained the observed step counts, we considered all sequential partitions from length 2-8. We found that early-day, late-day, and night best explained the data.\n\nDay of the week To discover the representation for day of the week which best explained the observed step counts, we considered two partitions: every day, or weekday/ weekend. We found weekday/weekend to be a better fit to the data.\n\nTemperature Here we choose different percentiles to partition the data. We consider between 2 and 5 partitions  (percentiles at 50, to 20,40,60,80 ). Here we found two partitions to best fit the step counts. We also tried more complicated representations of weather combined with temperature, however for the purpose of this paper we found a simple representation to best allow us to explore the relevant questions in this problem setting.\n\nLocation In representing location we relied on domain knowledge. We found that participants tend to be more responsive when they are either at home or work, than in other places. Thus, we decided to represent location as belonging to one of two categories: home/ work or other."
+    },
+    {
+      "text": "Fig. 5 Contextual features for a simulated User are composed of both general environmental features (such as time of day) and individual features (such as location). At decision times a simulated user receives a message determined by the current treatment policy. Periodically this policy is updated according to a learning algorithm which outputs a new posterior distribution for each User"
+    },
+    {
+      "text": "Fig. 6 Heterogeneity generative model Regret averaged across all users for each week in the trial, i.e. average regret of all users in their first week of the trial"
+    },
+    {
+      "text": "Fig. 7 Setup of feasIBIlItystUdy. Users can receive treatments up to five times a day during the 90 days. Users enter the trial asynchronously"
+    },
+    {
+      "text": "Fig. 11Posterior mean of the coefficient of A i,k in Eq. 12 for users A and B in the feasibility study"
+    },
+    {
+      "text": "Fig. 13 Disengagement generative model Regret averaged across all users for each week in the trial, i.e. average regret of all users in their first week of the trial"
+    },
+    {
+      "text": "[1, 0] = [c 1 , \u2026 , c N1 ] [1, 1] = [c 1 , \u2026 , c N2 ] , [0, 1] = [c 1 , \u2026 , c N3 ] .We now look at N1, N2, N3 and choose the state with the highest value. For example, if the lists were:[1, 0] = [c 1 , \u2026 , c 100 ] [1, 1] = [c 1 , \u2026 , c 2 ] , [0, 1] = [c 1 , \u2026 , c 300 ], we would choose s = [0, 1] . Now if we encounter the state [1, 0, 1] and there is insufficient data to form a distribution from this state, we will instead form it from the values found under the state [0, 1], [c 1 , \u2026 , c 300 ]."
+    },
+    {
+      "text": "The value used in encoding each feature is shown in parentheses For example cold (0) indicates that cold is coded as a 0 wherever this feature is used. A user's state is described as S i,k = {1, time of day, day of the week, preceding activity level, location}"
+    },
+    {
+      "text": "Settings for Z in three cases of homogeneous, bimodal and smoothly varying populations"
+    },
+    {
+      "text": "State feature descriptions for feasIBIlItystUdy"
+    },
+    {
+      "text": "this article are those of the authors and do not necessarily reflect the official position of the  National Institutes of Health , or any other part of the  U.S. Department of Health and Human Services ."
+    },
+    {
+      "title": "Appendix 1: Regret bound",
+      "text": "In this section we prove a high probability regret bound for a modification of IntellIgent-PoolIng in a simplified setting. We modify the Thompson sampling algorithm in Intel-lIgentPoolIng by multiplying the posterior covariance by a tuning parameter, following  Agrawal and Goyal (2012) . This is mainly due to the technical reasons; see  Abeille and Lazaric (2017)  for a discussion. We also simplify the setting in this regret analysis."
+    },
+    {
+      "title": "Appendix 4: Feature construction",
+      "text": "We provide more details on the processes used for feature construction. As stated in the paper we rely heavily on the dataset HeartstePsV1 to make all feature construction decisions. The one exception is in the design of the location feature, for which we had domain knowledge to rely on (more detail below)"
+    },
+    {
+      "title": "Baseline activity",
+      "text": "Each user is assigned to one of two groups: a low-activity group or a high-activity group. These groups are found from the historical data. We perform hierarchical clustering using the method hcluster in scikit-learn  Pedregosa (2011) . We used a euclidean distance metric to cluster the data and found that two groups naturally arose. These groups were consistent with the population of HeartstePsV1, which consisted of participants who were generally either office administrators or students."
+    },
+    {
+      "title": "State features",
+      "text": "We now briefly outline the decisions for the remaining features: time of day, day of the week, and temperature. For each feature we explored various categorical representations. For each, the question was how many categories to use to represent the data. For each feature we followed the same procedure.\n\n1. We chose a number of categories (k) to threshold the data into 2. We partitioned the data into k categories 3. We clustered the step counts according to these k categories 4. We computed the Calinski-Harabasz score of this clustering 5. We chose the final k to be that which provided the highest score For example, consider the task of representing temperature. Let l be a temperature, x be a step count and x l b be a thirty-minute step count occurring when the temperature l was assigned to bucket b. Given a historical dataset, we have a vector where each entry x i,t refers to the thirty-minute step count of user i at time t.\n\n\u2022 Let p be a number of buckets. We create p buckets by finding quantiles of l. For example, if p=2, we find the 50 th quantile of l. A bucket is defined by a tuple of thresholds (th 1 , th 2 ) , such that for a data point d to belong to bucket i, d must be in the range of the tuple ( th 1 \u2264 d < th 2 ). \u2022 For each temperature, we determine the bucket label which best describes this temperature. That is the label y of l, is the bucket for which th y 1 \u2264 sl < th y 2 . \u2022 We now create a vector of labels y, of the same length as . Each y l i,t is the bucket assigned to l i,t . For example, if the temperature for user i at time t falls into the lowest bucket, 0 would be the label assigned to l i,t . This induces a clustering of step-counts where the label is a temperature bucket.\n\n\u2022 We determine the Calabrinski-Harabasz score of this clustering.\n\nWe test this procedure from p equal to 1, through 4."
+    },
+    {
+      "title": "Appendix 5: Feasibility study",
+      "text": "In the clinical trial we describe users' states with the features described in Table  4 . The two features which differ from the simulation environment are engagement and exposure to treatment. We clarify these features below (Table  6 ).\n\nEngagement The engagement variable measures the extent to which a user engages with the mHealth application deployed in the trial. There are several screens within the application that a user can view. Across all users we measure the 40 th percentile of number of screens viewed on day d. If user i views more than this percentile, we set their engagement level to 1, otherwise it is 0.\n\nExposure to treatment This variable captures the extent to which a user is treated, or the treatment dosage experienced by this user. Let D i denote the exposure to treatment for user i. Whenever a message is delivered to a user's phone D i i s updated. That is, if a mes- sage is delivered between time t and t + 1 , D t+1 = D t + 1 . If a message is not delivered, D t+1 = D t . Here, we se according to data from HeartstePsV1 and initialize D to 0. Acknowledgements This material is based upon work supported by: NIH/NIAAA R01AA23187 ,NIH/ NIDA P50DA039838,NIH/NIBIB U54EB020404 and NIH/NCI U01CA229437. The views expressed in"
+    }
+  ],
+  "references": [
+    {
+      "title": "Linear thompson sampling revisited",
+      "authors": [
+        "M Abeille",
+        "A Lazaric"
+      ],
+      "year": 2017,
+      "doi": "10.1214/17-ejs1341si",
+      "journal": "Electronic Journal of Statistics",
+      "volume": "11",
+      "issue": "2",
+      "raw": "Linear thompson sampling revisited \n\t\t \n\t\t\t M Abeille \n\t\t \n\t\t \n\t\t\t A Lazaric \n\t\t \n\t\t 10.1214/17-ejs1341si \n\t \n\t \n\t\t Electronic Journal of Statistics \n\t\t \n\t\t\t 11 \n\t\t\t 2 \n\t\t\t \n\t\t\t 2017 \n\t\t \n\t \n\t Abeille, M., Lazaric, A., et al. (2017). Linear thompson sampling revisited. Electronic Journal of Statistics, 11(2), 5165-5197."
+    },
+    {
+      "title": "Analysis of thompson sampling for the multi-armed bandit problem",
+      "authors": [
+        "S Agrawal",
+        "N Goyal"
+      ],
+      "year": 2012,
+      "raw": "Analysis of thompson sampling for the multi-armed bandit problem \n\t\t \n\t\t\t S Agrawal \n\t\t \n\t\t \n\t\t\t N Goyal \n\t\t \n\t \n\t \n\t\t Conference on Learning Theory \n\t\t \n\t\t\t 2012 \n\t\t\t \n\t\t \n\t \n\t Agrawal, S., & Goyal, N. (2012). Analysis of thompson sampling for the multi-armed bandit problem. In: Conference on Learning Theory, pp 39-1."
+    },
+    {
+      "title": "Thompson sampling for contextual bandits with linear payoffs",
+      "authors": [
+        "S Agrawal",
+        "N Goyal"
+      ],
+      "year": 2013,
+      "raw": "Thompson sampling for contextual bandits with linear payoffs \n\t\t \n\t\t\t S Agrawal \n\t\t \n\t\t \n\t\t\t N Goyal \n\t\t \n\t \n\t \n\t\t International Conference on Machine Learning \n\t\t \n\t\t\t 2013 \n\t\t\t \n\t\t \n\t \n\t Agrawal, S., & Goyal, N. (2013). Thompson sampling for contextual bandits with linear payoffs. In: Inter- national Conference on Machine Learning, pp 127-135."
+    },
+    {
+      "title": "Scikit-learn: Machine learning in Python",
+      "authors": [
+        "F Pedregosa"
+      ],
+      "year": 2011,
+      "journal": "Journal of Machine Learning Research",
+      "volume": "12",
+      "raw": "Scikit-learn: Machine learning in Python \n\t\t \n\t\t\t F Pedregosa \n\t\t \n\t \n\t \n\t\t Journal of Machine Learning Research \n\t\t \n\t\t\t 12 \n\t\t\t \n\t\t\t 2011 \n\t\t \n\t \n\t Pedregosa, F., et al. (2011). Scikit-learn: Machine learning in Python. Journal of Machine Learning Research, 12, 2825-2830."
+    },
+    {
+      "title": "Time-varying Gaussian process bandit optimization",
+      "authors": [
+        "I Bogunovic",
+        "J Scarlett",
+        "V Cevher"
+      ],
+      "year": 2016,
+      "raw": "Time-varying Gaussian process bandit optimization \n\t\t \n\t\t\t I Bogunovic \n\t\t \n\t\t \n\t\t\t J Scarlett \n\t\t \n\t\t \n\t\t\t V Cevher \n\t\t \n\t \n\t \n\t\t Artificial Intelligence and Statistics \n\t\t \n\t\t\t 2016 \n\t\t\t \n\t\t \n\t \n\t Bogunovic, I., Scarlett, J., & Cevher, V. (2016). Time-varying Gaussian process bandit optimization. In: Artificial Intelligence and Statistics, pp 314-323."
+    },
+    {
+      "title": "Multi-task Gaussian process prediction",
+      "authors": [
+        "E Bonilla",
+        "K Chai",
+        "C Williams"
+      ],
+      "year": 2008,
+      "raw": "Multi-task Gaussian process prediction \n\t\t \n\t\t\t E V Bonilla \n\t\t \n\t\t \n\t\t\t K M Chai \n\t\t \n\t\t \n\t\t\t C Williams \n\t\t \n\t \n\t \n\t\t Advances in neural information processing systems \n\t\t \n\t\t\t 2008 \n\t\t\t \n\t\t \n\t \n\t Bonilla, E.V., Chai, K.M., & Williams, C. (2008). Multi-task Gaussian process prediction. In: Advances in neural information processing systems, pp 153-160."
+    },
+    {
+      "title": "Assessing time-varying causal effect moderation in mobile health",
+      "authors": [
+        "A Boruvka",
+        "D Almirall",
+        "K Witkiewitz",
+        "S Murphy"
+      ],
+      "year": 2018,
+      "doi": "10.1080/01621459.2017.1305274",
+      "journal": "Journal of the American Statistical Association",
+      "volume": "113",
+      "issue": "523",
+      "raw": "Assessing time-varying causal effect moderation in mobile health \n\t\t \n\t\t\t A Boruvka \n\t\t \n\t\t \n\t\t\t D Almirall \n\t\t \n\t\t \n\t\t\t K Witkiewitz \n\t\t \n\t\t \n\t\t\t S A Murphy \n\t\t \n\t\t 10.1080/01621459.2017.1305274 \n\t \n\t \n\t\t Journal of the American Statistical Association \n\t\t \n\t\t\t 113 \n\t\t\t 523 \n\t\t\t \n\t\t\t 2018 \n\t\t \n\t \n\t Boruvka, A., Almirall, D., Witkiewitz, K., & Murphy, S. A. (2018). Assessing time-varying causal effect moderation in mobile health. Journal of the American Statistical Association, 113(523), 1112-1121."
+    },
+    {
+      "title": "Portfolio allocation for Bayesian optimization",
+      "authors": [
+        "E Brochu",
+        "M Hoffman",
+        "N De Freitas"
+      ],
+      "year": 2010,
+      "raw": "Portfolio allocation for Bayesian optimization \n\t\t \n\t\t\t E Brochu \n\t\t \n\t\t \n\t\t\t M W Hoffman \n\t\t \n\t\t \n\t\t\t N De Freitas \n\t\t \n\t\t arXiv: 10095 419 \n\t\t \n\t\t\t 2010 \n\t\t \n\t \n\t arXiv preprint \n\t Brochu, E., Hoffman, M.W., & de Freitas, N. (2010). Portfolio allocation for Bayesian optimization. arXiv preprint arXiv: 10095 419."
+    },
+    {
+      "title": "Bayes and empirical Bayes methods for data analysis",
+      "authors": [
+        "B Carlin",
+        "T Louis"
+      ],
+      "year": 2010,
+      "doi": "10.1201/9781420057669",
+      "raw": "Bayes and empirical Bayes methods for data analysis \n\t\t \n\t\t\t B P Carlin \n\t\t \n\t\t \n\t\t\t T A Louis \n\t\t \n\t\t 10.1201/9781420057669 \n\t\t \n\t\t\t 2010 \n\t\t\t Chapman and Hall/CRC \n\t\t \n\t \n\t Carlin, B.P., & Louis, T.A. (2010). Bayes and empirical Bayes methods for data analysis. Chapman and Hall/CRC ."
+    },
+    {
+      "title": "An introduction to empirical Bayes data analysis",
+      "authors": [
+        "G Casella"
+      ],
+      "year": 1985,
+      "doi": "10.1080/00031305.1985.10479400",
+      "journal": "The American Statistician",
+      "volume": "39",
+      "issue": "2",
+      "raw": "An introduction to empirical Bayes data analysis \n\t\t \n\t\t\t G Casella \n\t\t \n\t\t 10.1080/00031305.1985.10479400 \n\t \n\t \n\t\t The American Statistician \n\t\t \n\t\t\t 39 \n\t\t\t 2 \n\t\t\t \n\t\t\t 1985 \n\t\t \n\t \n\t Casella, G. (1985). An introduction to empirical Bayes data analysis. The American Statistician, 39(2), 83-87."
+    },
+    {
+      "title": "A gang of bandits",
+      "authors": [
+        "N Cesa-Bianchi",
+        "C Gentile",
+        "G Zappella"
+      ],
+      "year": 2013,
+      "doi": "10.7551/mitpress/1120.003.0051",
+      "raw": "A gang of bandits \n\t\t \n\t\t\t N Cesa-Bianchi \n\t\t \n\t\t \n\t\t\t C Gentile \n\t\t \n\t\t \n\t\t\t G Zappella \n\t\t \n\t\t 10.7551/mitpress/1120.003.0051 \n\t \n\t \n\t\t Advances in Neural Information Processing Systems \n\t\t \n\t\t\t 2013 \n\t\t\t \n\t\t \n\t \n\t Cesa-Bianchi, N., Gentile, C., & Zappella, G. (2013). A gang of bandits. In: Advances in Neural Informa- tion Processing Systems, pp 737-745."
+    },
+    {
+      "title": "Learning to optimize under non-stationarity",
+      "authors": [
+        "W Cheung",
+        "D Simchi-Levi",
+        "R Zhu"
+      ],
+      "year": 2018,
+      "doi": "10.2139/ssrn.3261050",
+      "raw": "W C Cheung \n\t\t \n\t\t \n\t\t\t D Simchi-Levi \n\t\t \n\t\t \n\t\t\t R Zhu \n\t\t \n\t\t 10.2139/ssrn.3261050 \n\t\t arXiv: 18100 3024 \n\t\t Learning to optimize under non-stationarity \n\t\t \n\t\t\t 2018 \n\t\t \n\t \n\t arXiv preprint \n\t Cheung, W.C., Simchi-Levi, D., & Zhu, R. (2018). Learning to optimize under non-stationarity. arXiv pre- print arXiv: 18100 3024."
+    },
+    {
+      "title": "On kernelized multi-armed bandits",
+      "authors": [
+        "S Chowdhury",
+        "A Gopalan"
+      ],
+      "year": 2017,
+      "volume": "70",
+      "raw": "On kernelized multi-armed bandits \n\t\t \n\t\t\t S R Chowdhury \n\t\t \n\t\t \n\t\t\t A Gopalan \n\t\t \n\t \n\t \n\t\t International Conference on Machine Learning \n\t\t \n\t\t\t 2017 \n\t\t\t 70 \n\t\t\t \n\t\t \n\t \n\t Chowdhury, S. R., & Gopalan, A. (2017). On kernelized multi-armed bandits. International Conference on Machine Learning, 70, 844-853."
+    },
+    {
+      "title": "mstress: A mobile recommender system for just-in-time interventions for stress",
+      "authors": [
+        "S Clarke",
+        "L Jaimes",
+        "M Labrador"
+      ],
+      "year": 2017,
+      "doi": "10.1109/ccnc.2017.8015367",
+      "raw": "mstress: A mobile recommender system for just-in-time interventions for stress \n\t\t \n\t\t\t S Clarke \n\t\t \n\t\t \n\t\t\t L G Jaimes \n\t\t \n\t\t \n\t\t\t M A Labrador \n\t\t \n\t\t 10.1109/ccnc.2017.8015367 \n\t \n\t \n\t\t Consumer Communications & Networking Conference \n\t\t \n\t\t\t 2017 \n\t\t\t \n\t\t \n\t \n\t Clarke, S., Jaimes, L.G., & Labrador, M.A. (2017). mstress: A mobile recommender system for just-in-time interventions for stress. In: Consumer Communications & Networking Conference, pp 1-5."
+    },
+    {
+      "title": "Activity sensing in the wild: a field trial of ubifit garden",
+      "authors": [
+        "S Consolvo",
+        "D Mcdonald",
+        "T Toscos",
+        "M Chen",
+        "J Froehlich",
+        "B Harrison",
+        "P Klasnja",
+        "A Lamarca",
+        "L Legrand",
+        "R Libby"
+      ],
+      "year": 2008,
+      "raw": "Activity sensing in the wild: a field trial of ubifit garden \n\t\t \n\t\t\t S Consolvo \n\t\t \n\t\t \n\t\t\t D W Mcdonald \n\t\t \n\t\t \n\t\t\t T Toscos \n\t\t \n\t\t \n\t\t\t M Y Chen \n\t\t \n\t\t \n\t\t\t J Froehlich \n\t\t \n\t\t \n\t\t\t B Harrison \n\t\t \n\t\t \n\t\t\t P Klasnja \n\t\t \n\t\t \n\t\t\t A Lamarca \n\t\t \n\t\t \n\t\t\t L Legrand \n\t\t \n\t\t \n\t\t\t R Libby \n\t\t \n\t \n\t \n\t\t Proceedings of the SIGCHI conference on human factors in computing systems \n\t\t the SIGCHI conference on human factors in computing systems \n\t\t \n\t\t\t 2008 \n\t\t\t \n\t\t \n\t \n\t Consolvo, S., McDonald, D.W., Toscos, T., Chen, M.Y., Froehlich, J., Harrison, B., Klasnja, P., LaMarca, A., LeGrand, L., & Libby, R., et al. (2008). Activity sensing in the wild: a field trial of ubifit garden. In: Proceedings of the SIGCHI conference on human factors in computing systems, pp 1797-1806."
+    },
+    {
+      "title": "Parallelizing exploration-exploitation tradeoffs in Gaussian process bandit optimization",
+      "authors": [
+        "T Desautels",
+        "A Krause",
+        "J Burdick"
+      ],
+      "year": 2014,
+      "journal": "The Journal of Machine Learning Research",
+      "volume": "15",
+      "issue": "1",
+      "raw": "Parallelizing exploration-exploitation tradeoffs in Gaussian process bandit optimization \n\t\t \n\t\t\t T Desautels \n\t\t \n\t\t \n\t\t\t A Krause \n\t\t \n\t\t \n\t\t\t J W Burdick \n\t\t \n\t \n\t \n\t\t The Journal of Machine Learning Research \n\t\t \n\t\t\t 15 \n\t\t\t 1 \n\t\t\t \n\t\t\t 2014 \n\t\t \n\t \n\t Desautels, T., Krause, A., & Burdick, J. W. (2014). Parallelizing exploration-exploitation tradeoffs in Gauss- ian process bandit optimization. The Journal of Machine Learning Research, 15(1), 3873-3923."
+    },
+    {
+      "title": "Multi-task learning for contextual bandits",
+      "authors": [
+        "A Deshmukh",
+        "U Dogan",
+        "C Scott"
+      ],
+      "year": 2017,
+      "raw": "Multi-task learning for contextual bandits \n\t\t \n\t\t\t A A Deshmukh \n\t\t \n\t\t \n\t\t\t U Dogan \n\t\t \n\t\t \n\t\t\t C Scott \n\t\t \n\t \n\t \n\t\t Advances in Neural Information Processing Systems \n\t\t \n\t\t\t 2017 \n\t\t\t \n\t\t \n\t \n\t Deshmukh, A.A., Dogan, U., & Scott, C. (2017). Multi-task learning for contextual bandits. In: Advances in Neural Information Processing Systems, pp 4848-4856."
+    },
+    {
+      "title": "High-dimensional gaussian process bandits",
+      "authors": [
+        "J Djolonga",
+        "A Krause",
+        "V Cevher"
+      ],
+      "year": 2013,
+      "raw": "High-dimensional gaussian process bandits \n\t\t \n\t\t\t J Djolonga \n\t\t \n\t\t \n\t\t\t A Krause \n\t\t \n\t\t \n\t\t\t V Cevher \n\t\t \n\t \n\t \n\t\t Advances in Neural Information Processing Systems \n\t\t \n\t\t\t 2013 \n\t\t\t \n\t\t \n\t \n\t Djolonga, J., Krause, A., & Cevher, V. (2013). High-dimensional gaussian process bandits. In: Advances in Neural Information Processing Systems, pp 1025-1033."
+    },
+    {
+      "title": "Probabilistic model-agnostic meta-learning",
+      "authors": [
+        "C Finn",
+        "K Xu",
+        "S Levine"
+      ],
+      "year": 2018,
+      "raw": "Probabilistic model-agnostic meta-learning \n\t\t \n\t\t\t C Finn \n\t\t \n\t\t \n\t\t\t K Xu \n\t\t \n\t\t \n\t\t\t S Levine \n\t\t \n\t \n\t \n\t\t Advances in Neural Information Processing Systems \n\t\t \n\t\t\t 2018 \n\t\t\t \n\t\t \n\t \n\t Finn, C., Xu, K., & Levine, S. (2018). Probabilistic model-agnostic meta-learning. In: Advances in Neural Information Processing Systems, pp 9516-9527."
+    },
+    {
+      "title": "Online meta-learning",
+      "authors": [
+        "C Finn",
+        "A Rajeswaran",
+        "S Kakade",
+        "S Levine"
+      ],
+      "year": 2019,
+      "raw": "Online meta-learning \n\t\t \n\t\t\t C Finn \n\t\t \n\t\t \n\t\t\t A Rajeswaran \n\t\t \n\t\t \n\t\t\t S Kakade \n\t\t \n\t\t \n\t\t\t S Levine \n\t\t \n\t\t arXiv: 19020 8438 \n\t\t \n\t\t\t 2019 \n\t\t \n\t \n\t arXiv preprint \n\t Finn, C., Rajeswaran, A., Kakade, S., & Levine, S. (2019). Online meta-learning. arXiv preprint arXiv: 19020 8438."
+    },
+    {
+      "title": "Can the artificial intelligence technique of reinforcement learning use continuously-monitored digital data to optimize treatment for weight loss",
+      "authors": [
+        "E Forman",
+        "S Kerrigan",
+        "M Butryn",
+        "A Juarascio",
+        "S Manasse",
+        "S Onta\u00f1\u00f3n"
+      ],
+      "year": 2018,
+      "doi": "10.1007/s10865-018-9964-1",
+      "journal": "Journal of behavioral medicine",
+      "volume": "42",
+      "issue": "2",
+      "raw": "Can the artificial intelligence technique of reinforcement learning use continuously-monitored digital data to optimize treatment for weight loss \n\t\t \n\t\t\t E M Forman \n\t\t \n\t\t \n\t\t\t S G Kerrigan \n\t\t \n\t\t \n\t\t\t M L Butryn \n\t\t \n\t\t \n\t\t\t A S Juarascio \n\t\t \n\t\t \n\t\t\t S M Manasse \n\t\t \n\t\t \n\t\t\t S Onta\u00f1\u00f3n \n\t\t \n\t\t 10.1007/s10865-018-9964-1 \n\t \n\t \n\t\t Journal of behavioral medicine \n\t\t \n\t\t\t 42 \n\t\t\t 2 \n\t\t\t \n\t\t\t 2018 \n\t\t \n\t \n\t Forman, E. M., Kerrigan, S. G., Butryn, M. L., Juarascio, A. S., Manasse, S. M., Onta\u00f1\u00f3n, S., et al. (2018). Can the artificial intelligence technique of reinforcement learning use continuously-monitored digital data to optimize treatment for weight loss? Journal of behavioral medicine, 42(2), 276-290."
+    },
+    {
+      "title": "Gpytorch: Blackbox matrixmatrix gaussian process inference with gpu acceleration",
+      "authors": [
+        "J Gardner",
+        "G Pleiss",
+        "K Weinberger",
+        "D Bindel",
+        "A Wilson"
+      ],
+      "year": 2018,
+      "raw": "Gpytorch: Blackbox matrixmatrix gaussian process inference with gpu acceleration \n\t\t \n\t\t\t J Gardner \n\t\t \n\t\t \n\t\t\t G Pleiss \n\t\t \n\t\t \n\t\t\t K Q Weinberger \n\t\t \n\t\t \n\t\t\t D Bindel \n\t\t \n\t\t \n\t\t\t A G Wilson \n\t\t \n\t \n\t \n\t\t Advances in Neural Information Processing Systems \n\t\t \n\t\t\t 2018 \n\t\t\t \n\t\t \n\t \n\t Gardner, J., Pleiss, G., Weinberger, K.Q., Bindel, D., & Wilson, A.G. (2018). Gpytorch: Blackbox matrix- matrix gaussian process inference with gpu acceleration. In: Advances in Neural Information Process- ing Systems, pp 7576-7586."
+    },
+    {
+      "title": "Action centered contextual bandits",
+      "authors": [
+        "K Greenewald",
+        "A Tewari",
+        "S Murphy",
+        "P Klasnja"
+      ],
+      "year": 2017,
+      "raw": "Action centered contextual bandits \n\t\t \n\t\t\t K Greenewald \n\t\t \n\t\t \n\t\t\t A Tewari \n\t\t \n\t\t \n\t\t\t S Murphy \n\t\t \n\t\t \n\t\t\t P Klasnja \n\t\t \n\t \n\t \n\t\t Advances in neural information processing systems \n\t\t \n\t\t\t 2017 \n\t\t\t \n\t\t \n\t \n\t Greenewald, K., Tewari, A., Murphy, S., & Klasnja, P. (2017). Action centered contextual bandits. In: Advances in neural information processing systems, pp 5977-5985."
+    },
+    {
+      "title": "Meta-reinforcement learning of structured exploration strategies",
+      "authors": [
+        "A Gupta",
+        "R Mendonca",
+        "Y Liu",
+        "P Abbeel",
+        "S Levine"
+      ],
+      "year": 2018,
+      "raw": "Meta-reinforcement learning of structured exploration strategies \n\t\t \n\t\t\t A Gupta \n\t\t \n\t\t \n\t\t\t R Mendonca \n\t\t \n\t\t \n\t\t\t Y Liu \n\t\t \n\t\t \n\t\t\t P Abbeel \n\t\t \n\t\t \n\t\t\t S Levine \n\t\t \n\t \n\t \n\t\t Advances in Neural Information Processing Systems \n\t\t \n\t\t\t 2018 \n\t\t\t \n\t\t \n\t \n\t Gupta, A., Mendonca, R., Liu, Y., Abbeel, P., & Levine, S. (2018). Meta-reinforcement learning of struc- tured exploration strategies. In: Advances in Neural Information Processing Systems, pp 5302-5311."
+    },
+    {
+      "title": "Impact of mhealth chronic disease management on treatment adherence and patient outcomes: a systematic review",
+      "authors": [
+        "S Hamine",
+        "E Gerth-Guyette",
+        "D Faulx",
+        "B Green",
+        "A Ginsburg"
+      ],
+      "year": 2015,
+      "doi": "10.2196/jmir.3951",
+      "journal": "Journal of medical Internet research",
+      "volume": "17",
+      "issue": "2",
+      "pages": "52",
+      "raw": "Impact of mhealth chronic disease management on treatment adherence and patient outcomes: a systematic review \n\t\t \n\t\t\t S Hamine \n\t\t \n\t\t \n\t\t\t E Gerth-Guyette \n\t\t \n\t\t \n\t\t\t D Faulx \n\t\t \n\t\t \n\t\t\t B B Green \n\t\t \n\t\t \n\t\t\t A S Ginsburg \n\t\t \n\t\t 10.2196/jmir.3951 \n\t \n\t \n\t\t Journal of medical Internet research \n\t\t \n\t\t\t 17 \n\t\t\t 2 \n\t\t\t 52 \n\t\t\t 2015 \n\t\t \n\t \n\t Hamine, S., Gerth-Guyette, E., Faulx, D., Green, B. B., & Ginsburg, A. S. (2015). Impact of mhealth chronic disease management on treatment adherence and patient outcomes: a systematic review. Jour- nal of medical Internet research, 17(2), e52."
+    },
+    {
+      "title": "Preventer, a selection mechanism for just-in-time preventive interventions",
+      "authors": [
+        "L Jaimes",
+        "M Llofriu",
+        "A Raij"
+      ],
+      "year": 2016,
+      "doi": "10.1109/taffc.2015.2490062",
+      "journal": "IEEE Transactions on Affective Computing",
+      "volume": "7",
+      "issue": "3",
+      "raw": "Preventer, a selection mechanism for just-in-time preventive interventions \n\t\t \n\t\t\t L G Jaimes \n\t\t \n\t\t \n\t\t\t M Llofriu \n\t\t \n\t\t \n\t\t\t A Raij \n\t\t \n\t\t 10.1109/taffc.2015.2490062 \n\t \n\t \n\t\t IEEE Transactions on Affective Computing \n\t\t \n\t\t\t 7 \n\t\t\t 3 \n\t\t\t \n\t\t\t 2016 \n\t\t \n\t \n\t Jaimes, L. G., Llofriu, M., & Raij, A. (2016). Preventer, a selection mechanism for just-in-time preventive interventions. IEEE Transactions on Affective Computing, 7(3), 243-257."
+    },
+    {
+      "title": "Near-optimal oracle-efficient algorithms for stationary and non-stationary stochastic linear bandits",
+      "authors": [
+        "B Kim",
+        "A Tewari"
+      ],
+      "year": 2019,
+      "doi": "10.1017/9781108571401.039",
+      "raw": "Near-optimal oracle-efficient algorithms for stationary and non-stationary stochastic linear bandits \n\t\t \n\t\t\t B Kim \n\t\t \n\t\t \n\t\t\t A Tewari \n\t\t \n\t\t 10.1017/9781108571401.039 \n\t\t arXiv: 19120 5695 \n\t\t \n\t\t\t 2019 \n\t\t \n\t \n\t arXiv preprint \n\t Kim, B., Tewari, A. (2019). Near-optimal oracle-efficient algorithms for stationary and non-stationary sto- chastic linear bandits. arXiv preprint arXiv: 19120 5695."
+    },
+    {
+      "title": "Randomized exploration for non-stationary stochastic linear bandits",
+      "authors": [
+        "B Kim",
+        "A Tewari"
+      ],
+      "year": 2020,
+      "raw": "Randomized exploration for non-stationary stochastic linear bandits \n\t\t \n\t\t\t B Kim \n\t\t \n\t\t \n\t\t\t A Tewari \n\t\t \n\t \n\t \n\t\t Conference on Uncertainty in Artificial Intelligence \n\t\t \n\t\t\t 2020 \n\t\t\t \n\t\t \n\t \n\t Kim, B., & Tewari, A. (2020). Randomized exploration for non-stationary stochastic linear bandits. In: Con- ference on Uncertainty in Artificial Intelligence, pp 71-80."
+    },
+    {
+      "title": "Microrandomized trials: An experimental design for developing just-in-time adaptive interventions",
+      "authors": [
+        "P Klasnja",
+        "E Hekler",
+        "S Shiffman",
+        "A Boruvka",
+        "D Almirall",
+        "A Tewari",
+        "S Murphy"
+      ],
+      "year": 2015,
+      "journal": "Health Psychology",
+      "volume": "34",
+      "issue": "S",
+      "pages": "1220",
+      "raw": "Microrandomized trials: An experimental design for developing just-in-time adaptive interventions \n\t\t \n\t\t\t P Klasnja \n\t\t \n\t\t \n\t\t\t E B Hekler \n\t\t \n\t\t \n\t\t\t S Shiffman \n\t\t \n\t\t \n\t\t\t A Boruvka \n\t\t \n\t\t \n\t\t\t D Almirall \n\t\t \n\t\t \n\t\t\t A Tewari \n\t\t \n\t\t \n\t\t\t S A Murphy \n\t\t \n\t \n\t \n\t\t Health Psychology \n\t\t \n\t\t\t 34 \n\t\t\t S \n\t\t\t 1220 \n\t\t\t 2015 \n\t\t \n\t \n\t Klasnja, P., Hekler, E.B., Shiffman, S., Boruvka, A., Almirall, D., Tewari, A., & Murphy, S.A. (2015). Microrandomized trials: An experimental design for developing just-in-time adaptive interventions. Health Psychology 34(S):1220."
+    },
+    {
+      "title": "Efficacy of contextually tailored suggestions for physical activity: A micro-randomized optimization trial of heartsteps",
+      "authors": [
+        "P Klasnja",
+        "S Smith",
+        "N Seewald",
+        "A Lee",
+        "K Hall",
+        "B Luers"
+      ],
+      "year": 2018,
+      "journal": "Annals of Behavioral Medicine",
+      "volume": "53",
+      "issue": "6",
+      "raw": "Efficacy of contextually tailored suggestions for physical activity: A micro-randomized optimization trial of heartsteps \n\t\t \n\t\t\t P Klasnja \n\t\t \n\t\t \n\t\t\t S Smith \n\t\t \n\t\t \n\t\t\t N J Seewald \n\t\t \n\t\t \n\t\t\t A Lee \n\t\t \n\t\t \n\t\t\t K Hall \n\t\t \n\t\t \n\t\t\t B Luers \n\t\t \n\t \n\t \n\t\t Annals of Behavioral Medicine \n\t\t \n\t\t\t 53 \n\t\t\t 6 \n\t\t\t \n\t\t\t 2018 \n\t\t \n\t \n\t Klasnja, P., Smith, S., Seewald, N. J., Lee, A., Hall, K., Luers, B., et al. (2018). Efficacy of contextually tai- lored suggestions for physical activity: A micro-randomized optimization trial of heartsteps. Annals of Behavioral Medicine, 53(6), 573-582."
+    },
+    {
+      "title": "Contextual gaussian process bandit optimization",
+      "authors": [
+        "A Krause",
+        "C Ong"
+      ],
+      "year": 2011,
+      "raw": "Contextual gaussian process bandit optimization \n\t\t \n\t\t\t A Krause \n\t\t \n\t\t \n\t\t\t C S Ong \n\t\t \n\t \n\t \n\t\t Advances in Neural Information Processing Systems \n\t\t \n\t\t\t 2011 \n\t\t\t \n\t\t \n\t \n\t Krause, A., & Ong, C.S. (2011). Contextual gaussian process bandit optimization. In: Advances in Neural Information Processing Systems, pp 2447-2455."
+    },
+    {
+      "title": "Random-effects models for longitudinal data",
+      "authors": [
+        "N Laird",
+        "J Ware"
+      ],
+      "year": 1982,
+      "journal": "Biometrics",
+      "volume": "38",
+      "issue": "4",
+      "raw": "Random-effects models for longitudinal data \n\t\t \n\t\t\t N M Laird \n\t\t \n\t\t \n\t\t\t J H Ware \n\t\t \n\t \n\t \n\t\t Biometrics \n\t\t \n\t\t\t 38 \n\t\t\t 4 \n\t\t\t \n\t\t\t 1982 \n\t\t \n\t \n\t Laird, N. M., Ware, J. H., et al. (1982). Random-effects models for longitudinal data. Biometrics, 38(4), 963-974."
+    },
+    {
+      "title": "Learning to learn with the informative vector machine",
+      "authors": [
+        "N Lawrence",
+        "J Platt"
+      ],
+      "year": 2004,
+      "pages": "65",
+      "raw": "Learning to learn with the informative vector machine \n\t\t \n\t\t\t N D Lawrence \n\t\t \n\t\t \n\t\t\t J C Platt \n\t\t \n\t \n\t \n\t\t International conference on Machine learning \n\t\t \n\t\t\t 2004 \n\t\t\t 65 \n\t\t \n\t \n\t Lawrence, N.D., & Platt, J.C. (2004). Learning to learn with the informative vector machine. In: Interna- tional conference on Machine learning, p 65."
+    },
+    {
+      "title": "A contextual-bandit approach to personalized news article recommendation",
+      "authors": [
+        "L Li",
+        "W Chu",
+        "J Langford",
+        "R Schapire"
+      ],
+      "year": 2010,
+      "doi": "10.1145/1772690.1772758",
+      "raw": "A contextual-bandit approach to personalized news article recommendation \n\t\t \n\t\t\t L Li \n\t\t \n\t\t \n\t\t\t W Chu \n\t\t \n\t\t \n\t\t\t J Langford \n\t\t \n\t\t \n\t\t\t R E Schapire \n\t\t \n\t\t 10.1145/1772690.1772758 \n\t \n\t \n\t\t Proceedings of the Conference on World wide web \n\t\t the Conference on World wide web \n\t\t \n\t\t\t 2010 \n\t\t\t \n\t\t \n\t \n\t Li, L., Chu, W., Langford, J., & Schapire, R.E. (2010). A contextual-bandit approach to personalized news article recommendation. In: Proceedings of the Conference on World wide web, pp 661-670."
+    },
+    {
+      "title": "Context-aware bandits",
+      "authors": [
+        "S Li",
+        "P Kar"
+      ],
+      "year": 2015,
+      "raw": "S Li \n\t\t \n\t\t \n\t\t\t P Kar \n\t\t \n\t\t arXiv: 15100 3164 \n\t\t Context-aware bandits \n\t\t \n\t\t\t 2015 \n\t\t \n\t \n\t arXiv preprint \n\t Li, S., & Kar, P. (2015). Context-aware bandits. arXiv preprint arXiv: 15100 3164."
+    },
+    {
+      "title": "Sample size calculations for micro-randomized trials in mhealth",
+      "authors": [
+        "P Liao",
+        "P Klasnja",
+        "A Tewari",
+        "S Murphy"
+      ],
+      "year": 2016,
+      "journal": "Statistics in medicine",
+      "volume": "35",
+      "issue": "12",
+      "raw": "Sample size calculations for micro-randomized trials in mhealth \n\t\t \n\t\t\t P Liao \n\t\t \n\t\t \n\t\t\t P Klasnja \n\t\t \n\t\t \n\t\t\t A Tewari \n\t\t \n\t\t \n\t\t\t S A Murphy \n\t\t \n\t \n\t \n\t\t Statistics in medicine \n\t\t \n\t\t\t 35 \n\t\t\t 12 \n\t\t\t \n\t\t\t 2016 \n\t\t \n\t \n\t Liao, P., Klasnja, P., Tewari, A., & Murphy, S. A. (2016). Sample size calculations for micro-randomized trials in mhealth. Statistics in medicine, 35(12), 1944-1971."
+    },
+    {
+      "title": "Personalized heartsteps: A reinforcement learning algorithm for optimizing physical activity",
+      "authors": [
+        "P Liao",
+        "K Greenewald",
+        "P Klasnja",
+        "S Murphy"
+      ],
+      "year": 2020,
+      "doi": "10.1145/3381007",
+      "volume": "4",
+      "raw": "Personalized heartsteps: A reinforcement learning algorithm for optimizing physical activity \n\t\t \n\t\t\t P Liao \n\t\t \n\t\t \n\t\t\t K Greenewald \n\t\t \n\t\t \n\t\t\t P Klasnja \n\t\t \n\t\t \n\t\t\t S Murphy \n\t\t \n\t\t 10.1145/3381007 \n\t \n\t \n\t\t Proceedings of the Conference on Interactive, Mobile, Wearable and Ubiquitous Technologies \n\t\t the Conference on Interactive, Mobile, Wearable and Ubiquitous Technologies \n\t\t \n\t\t\t 2020 \n\t\t\t 4 \n\t\t\t \n\t\t \n\t \n\t Liao, P., Greenewald, K., Klasnja, P., & Murphy, S. (2020). Personalized heartsteps: A reinforcement learn- ing algorithm for optimizing physical activity. Proceedings of the Conference on Interactive, Mobile, Wearable and Ubiquitous Technologies, 4(1), 1-22."
+    },
+    {
+      "title": "Mixed-effects Gaussian process modeling approach with application in injection molding processes",
+      "authors": [
+        "L Luo",
+        "Y Yao",
+        "F Gao",
+        "C Zhao"
+      ],
+      "year": 2018,
+      "doi": "10.1016/j.jprocont.2017.12.003",
+      "journal": "Journal of Process Control",
+      "volume": "62",
+      "raw": "Mixed-effects Gaussian process modeling approach with application in injection molding processes \n\t\t \n\t\t\t L Luo \n\t\t \n\t\t \n\t\t\t Y Yao \n\t\t \n\t\t \n\t\t\t F Gao \n\t\t \n\t\t \n\t\t\t C Zhao \n\t\t \n\t\t 10.1016/j.jprocont.2017.12.003 \n\t \n\t \n\t\t Journal of Process Control \n\t\t \n\t\t\t 62 \n\t\t\t \n\t\t\t 2018 \n\t\t \n\t \n\t Luo, L., Yao, Y., Gao, F., & Zhao, C. (2018). Mixed-effects Gaussian process modeling approach with application in injection molding processes. Journal of Process Control, 62, 37-43."
+    },
+    {
+      "title": "Parametric empirical Bayes inference: theory and applications",
+      "authors": [
+        "C Morris"
+      ],
+      "year": 1983,
+      "doi": "10.1080/01621459.1983.10477920",
+      "journal": "Journal of the American statistical Association",
+      "volume": "78",
+      "issue": "381",
+      "raw": "Parametric empirical Bayes inference: theory and applications \n\t\t \n\t\t\t C N Morris \n\t\t \n\t\t 10.1080/01621459.1983.10477920 \n\t \n\t \n\t\t Journal of the American statistical Association \n\t\t \n\t\t\t 78 \n\t\t\t 381 \n\t\t\t \n\t\t\t 1983 \n\t\t \n\t \n\t Morris, C. N. (1983). Parametric empirical Bayes inference: theory and applications. Journal of the Ameri- can statistical Association, 78(381), 47-55."
+    },
+    {
+      "title": "Deep online learning via meta-learning: Continual adaptation for model-based rl",
+      "authors": [
+        "A Nagabandi",
+        "C Finn",
+        "S Levine"
+      ],
+      "year": 2018,
+      "raw": "Deep online learning via meta-learning: Continual adaptation for model-based rl \n\t\t \n\t\t\t A Nagabandi \n\t\t \n\t\t \n\t\t\t C Finn \n\t\t \n\t\t \n\t\t\t S Levine \n\t\t \n\t\t arXiv: 18120 7671 \n\t\t \n\t\t\t 2018 \n\t\t \n\t \n\t arXiv preprint \n\t Nagabandi, A., Finn, C., & Levine, S. (2018). Deep online learning via meta-learning: Continual adaptation for model-based rl. arXiv preprint arXiv: 18120 7671."
+    },
+    {
+      "title": "Just-in-time adaptive interventions (JITAIs) in mobile health: key components and design principles for ongoing health behavior support",
+      "authors": [
+        "I Nahum-Shani",
+        "S Smith",
+        "B Spring",
+        "L Collins",
+        "K Witkiewitz",
+        "A Tewari",
+        "S Murphy"
+      ],
+      "year": 2017,
+      "journal": "Annals of Behavioral Medicine",
+      "volume": "52",
+      "issue": "6",
+      "raw": "Just-in-time adaptive interventions (JITAIs) in mobile health: key components and design principles for ongoing health behavior support \n\t\t \n\t\t\t I Nahum-Shani \n\t\t \n\t\t \n\t\t\t S N Smith \n\t\t \n\t\t \n\t\t\t B J Spring \n\t\t \n\t\t \n\t\t\t L M Collins \n\t\t \n\t\t \n\t\t\t K Witkiewitz \n\t\t \n\t\t \n\t\t\t A Tewari \n\t\t \n\t\t \n\t\t\t S A Murphy \n\t\t \n\t \n\t \n\t\t Annals of Behavioral Medicine \n\t\t \n\t\t\t 52 \n\t\t\t 6 \n\t\t\t 2017 \n\t\t \n\t \n\t Nahum-Shani, I., Smith, S. N., Spring, B. J., Collins, L. M., Witkiewitz, K., Tewari, A., & Murphy, S. A. (2017). Just-in-time adaptive interventions (JITAIs) in mobile health: key components and design prin- ciples for ongoing health behavior support. Annals of Behavioral Medicine, 52(6)."
+    },
+    {
+      "title": "Poptherapy: Coping with stress through pop-culture",
+      "authors": [
+        "P Paredes",
+        "R Gilad-Bachrach",
+        "M Czerwinski",
+        "A Roseway",
+        "K Rowan",
+        "J Hernandez"
+      ],
+      "year": 2014,
+      "raw": "Poptherapy: Coping with stress through pop-culture \n\t\t \n\t\t\t P Paredes \n\t\t \n\t\t \n\t\t\t R Gilad-Bachrach \n\t\t \n\t\t \n\t\t\t M Czerwinski \n\t\t \n\t\t \n\t\t\t A Roseway \n\t\t \n\t\t \n\t\t\t K Rowan \n\t\t \n\t\t \n\t\t\t J Hernandez \n\t\t \n\t \n\t \n\t\t Conference on Pervasive Computing Technologies for Healthcare \n\t\t \n\t\t\t 2014 \n\t\t\t \n\t\t \n\t \n\t Paredes, P., Gilad-Bachrach, R., Czerwinski, M., Roseway, A., Rowan, K., & Hernandez, J. (2014). Pop- therapy: Coping with stress through pop-culture. In: Conference on Pervasive Computing Technologies for Healthcare, pp 109-117."
+    },
+    {
+      "title": "Bandit learning with implicit feedback",
+      "authors": [
+        "Y Qi",
+        "Q Wu",
+        "H Wang",
+        "J Tang",
+        "M Sun"
+      ],
+      "year": 2018,
+      "journal": "Advances in Neural Information Processing Systems",
+      "volume": "31",
+      "raw": "Bandit learning with implicit feedback \n\t\t \n\t\t\t Y Qi \n\t\t \n\t\t \n\t\t\t Q Wu \n\t\t \n\t\t \n\t\t\t H Wang \n\t\t \n\t\t \n\t\t\t J Tang \n\t\t \n\t\t \n\t\t\t M Sun \n\t\t \n\t \n\t \n\t\t Advances in Neural Information Processing Systems \n\t\t \n\t\t\t 31 \n\t\t\t \n\t\t\t 2018 \n\t\t \n\t \n\t Qi, Y., Wu, Q., Wang, H., Tang, J., & Sun, M. (2018). Bandit learning with implicit feedback. Advances in Neural Information Processing Systems, 31, 7276-7286."
+    },
+    {
+      "title": "Linear mixed models under endogeneity: modeling sequential treatment effects with application to a mobile health study",
+      "authors": [
+        "T Qian",
+        "P Klasnja",
+        "S Murphy"
+      ],
+      "year": 2019,
+      "raw": "Linear mixed models under endogeneity: modeling sequential treatment effects with application to a mobile health study \n\t\t \n\t\t\t T Qian \n\t\t \n\t\t \n\t\t\t P Klasnja \n\t\t \n\t\t \n\t\t\t S A Murphy \n\t\t \n\t\t arXiv: 19021 0861 \n\t\t \n\t\t\t 2019 \n\t\t \n\t \n\t arXiv preprint \n\t Qian, T., Klasnja, P., & Murphy, S.A. (2019). Linear mixed models under endogeneity: modeling sequential treatment effects with application to a mobile health study. arXiv preprint arXiv: 19021 0861."
+    },
+    {
+      "title": "Mybehavior: automatic personalized health feedback from user behaviors and preferences using smartphones",
+      "authors": [
+        "M Rabbi",
+        "M Aung",
+        "M Zhang",
+        "T Choudhury"
+      ],
+      "year": 2015,
+      "raw": "Mybehavior: automatic personalized health feedback from user behaviors and preferences using smartphones \n\t\t \n\t\t\t M Rabbi \n\t\t \n\t\t \n\t\t\t M H Aung \n\t\t \n\t\t \n\t\t\t M Zhang \n\t\t \n\t\t \n\t\t\t T Choudhury \n\t\t \n\t \n\t \n\t\t Proceedings of the Conference on Pervasive and Ubiquitous Computing \n\t\t the Conference on Pervasive and Ubiquitous Computing \n\t\t \n\t\t\t 2015 \n\t\t\t \n\t\t \n\t \n\t Rabbi, M., Aung, M.H., Zhang, M., & Choudhury, T. (2015). Mybehavior: automatic personalized health feedback from user behaviors and preferences using smartphones. In: Proceedings of the Conference on Pervasive and Ubiquitous Computing, pp 707-718."
+    },
+    {
+      "title": "SARA: a mobile app to engage users in health data collection",
+      "authors": [
+        "M Rabbi",
+        "M Philyaw-Kotov",
+        "J Lee",
+        "A Mansour",
+        "L Dent",
+        "X Wang",
+        "R Cunningham",
+        "E Bonar",
+        "I Nahum-Shani",
+        "P Klasnja"
+      ],
+      "year": 2017,
+      "doi": "10.1145/3123024.3125611",
+      "raw": "SARA: a mobile app to engage users in health data collection \n\t\t \n\t\t\t M Rabbi \n\t\t \n\t\t \n\t\t\t M Philyaw-Kotov \n\t\t \n\t\t \n\t\t\t J Lee \n\t\t \n\t\t \n\t\t\t A Mansour \n\t\t \n\t\t \n\t\t\t L Dent \n\t\t \n\t\t \n\t\t\t X Wang \n\t\t \n\t\t \n\t\t\t R Cunningham \n\t\t \n\t\t \n\t\t\t E Bonar \n\t\t \n\t\t \n\t\t\t I Nahum-Shani \n\t\t \n\t\t \n\t\t\t P Klasnja \n\t\t \n\t\t 10.1145/3123024.3125611 \n\t \n\t \n\t\t Joint Conference on Pervasive and Ubiquitous Computing and the International Symposium on Wearable Computers \n\t\t \n\t\t\t 2017 \n\t\t\t \n\t\t \n\t \n\t Rabbi, M., Philyaw-Kotov, M., Lee, J., Mansour, A., Dent, L., Wang, X., Cunningham, R., Bonar, E., Nahum-Shani, I., & Klasnja, P., et al. (2017). SARA: a mobile app to engage users in health data col- lection. In: Joint Conference on Pervasive and Ubiquitous Computing and the International Sympo- sium on Wearable Computers, pp 781-789."
+    },
+    {
+      "title": "Hierarchical linear models: Applications and data analysis methods",
+      "authors": [
+        "S Raudenbush",
+        "A Bryk"
+      ],
+      "year": 2002,
+      "volume": "1",
+      "raw": "Hierarchical linear models: Applications and data analysis methods \n\t\t \n\t\t\t S W Raudenbush \n\t\t \n\t\t \n\t\t\t A S Bryk \n\t\t \n\t\t \n\t\t\t 2002 \n\t\t\t 1 \n\t\t \n\t \n\t Raudenbush, S.W., & Bryk, A.S. (2002). Hierarchical linear models: Applications and data analysis meth- ods, vol 1."
+    },
+    {
+      "title": "Weighted linear bandits for non-stationary environments",
+      "authors": [
+        "Y Russac",
+        "C Vernade",
+        "O Capp\u00e9"
+      ],
+      "year": 2019,
+      "raw": "Weighted linear bandits for non-stationary environments \n\t\t \n\t\t\t Y Russac \n\t\t \n\t\t \n\t\t\t C Vernade \n\t\t \n\t\t \n\t\t\t O Capp\u00e9 \n\t\t \n\t \n\t \n\t\t Advances in Neural Information Processing Systems \n\t\t \n\t\t\t 2019 \n\t\t\t \n\t\t \n\t \n\t Russac, Y., Vernade, C., & Capp\u00e9, O. (2019). Weighted linear bandits for non-stationary environments. In: Advances in Neural Information Processing Systems, pp 12017-12026."
+    },
+    {
+      "title": "Learning to optimize via posterior sampling",
+      "authors": [
+        "D Russo",
+        "B Van Roy"
+      ],
+      "year": 2014,
+      "journal": "Mathematics of Operations Research",
+      "volume": "39",
+      "issue": "4",
+      "raw": "Learning to optimize via posterior sampling \n\t\t \n\t\t\t D Russo \n\t\t \n\t\t \n\t\t\t B Van Roy \n\t\t \n\t \n\t \n\t\t Mathematics of Operations Research \n\t\t \n\t\t\t 39 \n\t\t\t 4 \n\t\t\t \n\t\t\t 2014 \n\t\t \n\t \n\t Russo, D., & Van Roy, B. (2014). Learning to optimize via posterior sampling. Mathematics of Operations Research, 39(4), 1221-1243."
+    },
+    {
+      "title": "A tutorial on thompson sampling",
+      "authors": [
+        "D Russo",
+        "B Roy",
+        "A Kazerouni",
+        "I Osband",
+        "Z Wen"
+      ],
+      "year": 2018,
+      "doi": "10.1561/2200000070",
+      "journal": "Foundations and Trends in Machine Learning",
+      "volume": "11",
+      "issue": "1",
+      "raw": "A tutorial on thompson sampling \n\t\t \n\t\t\t D J Russo \n\t\t \n\t\t \n\t\t\t B V Roy \n\t\t \n\t\t \n\t\t\t A Kazerouni \n\t\t \n\t\t \n\t\t\t I Osband \n\t\t \n\t\t \n\t\t\t Z Wen \n\t\t \n\t\t 10.1561/2200000070 \n\t\t \n\t \n\t \n\t\t Foundations and Trends in Machine Learning \n\t\t \n\t\t\t 11 \n\t\t\t 1 \n\t\t\t \n\t\t\t 2018 \n\t\t \n\t \n\t Russo, D.J., Roy, B.V., Kazerouni, A., Osband, I., & Wen, Z. (2018). A tutorial on thompson sampling. Foundations and Trends in Machine Learning 11(1):1-96, https:// doi. org/ 10. 1561/ 22000 00070."
+    },
+    {
+      "title": "Meta reinforcement learning with latent variable gaussian processes",
+      "authors": [
+        "S Saemundsson",
+        "K Hofmann",
+        "M Deisenroth"
+      ],
+      "year": 2018,
+      "raw": "Meta reinforcement learning with latent variable gaussian processes \n\t\t \n\t\t\t S Saemundsson \n\t\t \n\t\t \n\t\t\t K Hofmann \n\t\t \n\t\t \n\t\t\t M P Deisenroth \n\t\t \n\t\t arXiv: 18030 7551 \n\t\t \n\t\t\t 2018 \n\t\t \n\t \n\t arXiv preprint \n\t Saemundsson, S., Hofmann, K., & Deisenroth, M.P. (2018). Meta reinforcement learning with latent vari- able gaussian processes. arXiv preprint arXiv: 18030 7551."
+    },
+    {
+      "title": "Mixed-effects Gaussian process functional regression models with application to dose-response curve prediction",
+      "authors": [
+        "J Shi",
+        "B Wang",
+        "E Will",
+        "R West"
+      ],
+      "year": 2012,
+      "journal": "Statistics in medicine",
+      "volume": "31",
+      "issue": "26",
+      "raw": "Mixed-effects Gaussian process functional regression models with application to dose-response curve prediction \n\t\t \n\t\t\t J Shi \n\t\t \n\t\t \n\t\t\t B Wang \n\t\t \n\t\t \n\t\t\t E Will \n\t\t \n\t\t \n\t\t\t R West \n\t\t \n\t \n\t \n\t\t Statistics in medicine \n\t\t \n\t\t\t 31 \n\t\t\t 26 \n\t\t\t \n\t\t\t 2012 \n\t\t \n\t \n\t Shi, J., Wang, B., Will, E., & West, R. (2012). Mixed-effects Gaussian process functional regression models with application to dose-response curve prediction. Statistics in medicine, 31(26), 3165-3177."
+    },
+    {
+      "title": "Gaussian process optimization in the bandit setting: No regret and experimental design",
+      "authors": [
+        "N Srinivas",
+        "A Krause",
+        "S Kakade",
+        "M Seeger"
+      ],
+      "year": 2009,
+      "raw": "Gaussian process optimization in the bandit setting: No regret and experimental design \n\t\t \n\t\t\t N Srinivas \n\t\t \n\t\t \n\t\t\t A Krause \n\t\t \n\t\t \n\t\t\t S M Kakade \n\t\t \n\t\t \n\t\t\t M Seeger \n\t\t \n\t \n\t \n\t\t International Conference on Machine Learning \n\t\t \n\t\t\t 2009 \n\t\t\t \n\t\t \n\t \n\t Srinivas, N., Krause, A., Kakade, S.M., & Seeger, M. (2009). Gaussian process optimization in the ban- dit setting: No regret and experimental design. International Conference on Machine Learning p 1015-1022."
+    },
+    {
+      "title": "On the likelihood that one unknown probability exceeds another in view of the evidence of two samples",
+      "authors": [
+        "W Thompson"
+      ],
+      "year": 1933,
+      "journal": "Biometrika",
+      "volume": "25",
+      "issue": "3/4",
+      "raw": "On the likelihood that one unknown probability exceeds another in view of the evidence of two samples \n\t\t \n\t\t\t W R Thompson \n\t\t \n\t \n\t \n\t\t Biometrika \n\t\t \n\t\t\t 25 \n\t\t\t 3/4 \n\t\t\t \n\t\t\t 1933 \n\t\t \n\t \n\t Thompson, W. R. (1933). On the likelihood that one unknown probability exceeds another in view of the evidence of two samples. Biometrika, 25(3/4), 285-294."
+    },
+    {
+      "title": "Horde of bandits using Gaussian Markov random fields",
+      "authors": [
+        "S Vaswani",
+        "M Schmidt",
+        "L Lakshmanan"
+      ],
+      "year": 2017,
+      "raw": "Horde of bandits using Gaussian Markov random fields \n\t\t \n\t\t\t S Vaswani \n\t\t \n\t\t \n\t\t\t M Schmidt \n\t\t \n\t\t \n\t\t\t L Lakshmanan \n\t\t \n\t \n\t \n\t\t Artificial Intelligence and Statistics \n\t\t \n\t\t\t 2017 \n\t\t\t \n\t\t \n\t \n\t Vaswani, S., Schmidt, M., & Lakshmanan, L. (2017). Horde of bandits using Gaussian Markov random fields. In: Artificial Intelligence and Statistics, pp 690-699."
+    },
+    {
+      "title": "Nonparametric Bayesian mixed-effect model: A sparse Gaussian process approach",
+      "authors": [
+        "Y Wang",
+        "R Khardon"
+      ],
+      "year": 2012,
+      "raw": "Nonparametric Bayesian mixed-effect model: A sparse Gaussian process approach \n\t\t \n\t\t\t Y Wang \n\t\t \n\t\t \n\t\t\t R Khardon \n\t\t \n\t\t arXiv: 12116 653 \n\t\t \n\t\t\t 2012 \n\t\t \n\t \n\t arXiv preprint \n\t Wang, Y., & Khardon, R. (2012). Nonparametric Bayesian mixed-effect model: A sparse Gaussian process approach. arXiv preprint arXiv: 12116 653."
+    },
+    {
+      "title": "Optimization as estimation with Gaussian processes in bandit settings",
+      "authors": [
+        "Z Wang",
+        "B Zhou",
+        "S Jegelka"
+      ],
+      "year": 2016,
+      "raw": "Optimization as estimation with Gaussian processes in bandit settings \n\t\t \n\t\t\t Z Wang \n\t\t \n\t\t \n\t\t\t B Zhou \n\t\t \n\t\t \n\t\t\t S Jegelka \n\t\t \n\t \n\t \n\t\t Artificial Intelligence and Statistics \n\t\t \n\t\t\t 2016 \n\t\t\t \n\t\t \n\t \n\t Wang, Z., Zhou, B., & Jegelka, S. (2016). Optimization as estimation with Gaussian processes in bandit set- tings. In: Artificial Intelligence and Statistics, pp 1022-1031."
+    },
+    {
+      "title": "Gaussian processes for machine learning",
+      "authors": [
+        "C Williams",
+        "C Rasmussen"
+      ],
+      "year": 2006,
+      "volume": "2",
+      "raw": "C K Williams \n\t\t \n\t\t \n\t\t\t C E Rasmussen \n\t\t \n\t\t Gaussian processes for machine learning \n\t\t MA \n\t\t \n\t\t\t MIT press Cambridge \n\t\t\t 2006 \n\t\t\t 2 \n\t\t \n\t \n\t Williams, C. K., & Rasmussen, C. E. (2006). Gaussian processes for machine learning (Vol. 2). MA: MIT press Cambridge."
+    },
+    {
+      "title": "The price of personalization: An application of contextual bandits to mobile health",
+      "authors": [
+        "I Xia"
+      ],
+      "year": 2018,
+      "raw": "The price of personalization: An application of contextual bandits to mobile health \n\t\t \n\t\t\t I Xia \n\t\t \n\t\t \n\t\t\t 2018 \n\t\t \n\t \n\t Senior thesis \n\t Xia, I. (2018). The price of personalization: An application of contextual bandits to mobile health. Senior thesis."
+    },
+    {
+      "title": "Encouraging physical activity in patients with diabetes: intervention using a reinforcement learning system",
+      "authors": [
+        "E Yom-Tov",
+        "G Feraru",
+        "M Kozdoba",
+        "S Mannor",
+        "M Tennenholtz",
+        "I Hochberg"
+      ],
+      "year": 2017,
+      "journal": "Journal of medical Internet research",
+      "volume": "19",
+      "issue": "10",
+      "pages": "338",
+      "raw": "Encouraging physical activity in patients with diabetes: intervention using a reinforcement learning system \n\t\t \n\t\t\t E Yom-Tov \n\t\t \n\t\t \n\t\t\t G Feraru \n\t\t \n\t\t \n\t\t\t M Kozdoba \n\t\t \n\t\t \n\t\t\t S Mannor \n\t\t \n\t\t \n\t\t\t M Tennenholtz \n\t\t \n\t\t \n\t\t\t I Hochberg \n\t\t \n\t \n\t \n\t\t Journal of medical Internet research \n\t\t \n\t\t\t 19 \n\t\t\t 10 \n\t\t\t 338 \n\t\t\t 2017 \n\t\t \n\t \n\t Yom-Tov, E., Feraru, G., Kozdoba, M., Mannor, S., Tennenholtz, M., & Hochberg, I. (2017). Encouraging physical activity in patients with diabetes: intervention using a reinforcement learning system. Journal of medical Internet research, 19(10), e338."
+    },
+    {
+      "title": "A simple approach for non-stationary linear bandits",
+      "authors": [
+        "P Zhao",
+        "L Zhang",
+        "Y Jiang",
+        "Z Zhou"
+      ],
+      "year": 2020,
+      "raw": "A simple approach for non-stationary linear bandits \n\t\t \n\t\t\t P Zhao \n\t\t \n\t\t \n\t\t\t L Zhang \n\t\t \n\t\t \n\t\t\t Y Jiang \n\t\t \n\t\t \n\t\t\t Z H Zhou \n\t\t \n\t \n\t \n\t\t Proceedings of the Conference on Artificial Intelligence and Statistics \n\t\t the Conference on Artificial Intelligence and Statistics \n\t\t \n\t\t\t 2020 \n\t\t\t \n\t\t \n\t \n\t Zhao, P., Zhang, L., Jiang, Y., & Zhou, Z.H. (2020). A simple approach for non-stationary linear bandits. In: Proceedings of the Conference on Artificial Intelligence and Statistics, pp 746-755."
+    },
+    {
+      "title": "Personalizing mobile fitness apps using reinforcement learning",
+      "authors": [
+        "M Zhou",
+        "Y Mintz",
+        "Y Fukuoka",
+        "K Goldberg",
+        "E Flowers",
+        "P Kaminsky",
+        "A Castillejo",
+        "A Aswani"
+      ],
+      "year": 2018,
+      "raw": "Personalizing mobile fitness apps using reinforcement learning \n\t\t \n\t\t\t M Zhou \n\t\t \n\t\t \n\t\t\t Y Mintz \n\t\t \n\t\t \n\t\t\t Y Fukuoka \n\t\t \n\t\t \n\t\t\t K Goldberg \n\t\t \n\t\t \n\t\t\t E Flowers \n\t\t \n\t\t \n\t\t\t P Kaminsky \n\t\t \n\t\t \n\t\t\t A Castillejo \n\t\t \n\t\t \n\t\t\t A Aswani \n\t\t \n\t \n\t \n\t\t CEUR workshop proceedings \n\t\t \n\t\t\t 2018. 2068 \n\t\t \n\t \n\t Zhou, M., Mintz, Y., Fukuoka, Y., Goldberg, K., Flowers, E., Kaminsky, P., Castillejo, A., & Aswani, A. (2018). Personalizing mobile fitness apps using reinforcement learning. In: CEUR workshop proceed- ings, vol 2068."
+    },
+    {
+      "title": "CAML: Fast context adaptation via meta-learning",
+      "authors": [
+        "L Zintgraf",
+        "K Shiarlis",
+        "V Kurin",
+        "K Hofmann",
+        "S Whiteson"
+      ],
+      "year": 2019,
+      "raw": "CAML: Fast context adaptation via meta-learning \n\t\t \n\t\t\t L M Zintgraf \n\t\t \n\t\t \n\t\t\t K Shiarlis \n\t\t \n\t\t \n\t\t\t V Kurin \n\t\t \n\t\t \n\t\t\t K Hofmann \n\t\t \n\t\t \n\t\t\t S Whiteson \n\t\t \n\t \n\t \n\t\t International Conference on Machine Learning \n\t\t \n\t\t\t 2019 \n\t\t\t \n\t\t \n\t \n\t Zintgraf, L.M., Shiarlis, K., Kurin, V., Hofmann, K., & Whiteson, S. (2019). CAML: Fast context adapta- tion via meta-learning. In: International Conference on Machine Learning, pp 7693-7702."
+    }
+  ],
+  "num_references": 63,
+  "figures": [
+    {
+      "caption": "Fig. 5",
+      "description": "Fig. 5 Contextual features for a simulated User are composed of both general environmental features (such as time of day) and individual features (such as location). At decision times a simulated user receives a message determined by the current treatment policy. Periodically this policy is updated according to a learning algorithm which outputs a new posterior distribution for each User"
+    },
+    {
+      "caption": "Fig. 6",
+      "description": "Fig. 6 Heterogeneity generative model Regret averaged across all users for each week in the trial, i.e. average regret of all users in their first week of the trial"
+    },
+    {
+      "caption": "Fig. 7",
+      "description": "Fig. 7 Setup of feasIBIlItystUdy. Users can receive treatments up to five times a day during the 90 days. Users enter the trial asynchronously"
+    },
+    {
+      "caption": "Fig. 11",
+      "description": "Fig. 11Posterior mean of the coefficient of A i,k in Eq. 12 for users A and B in the feasibility study"
+    },
+    {
+      "caption": "Fig. 13",
+      "description": "Fig. 13 Disengagement generative model Regret averaged across all users for each week in the trial, i.e. average regret of all users in their first week of the trial"
+    },
+    {
+      "caption": "T"
+    },
+    {
+      "description": "[1, 0] = [c 1 , \u2026 , c N1 ] [1, 1] = [c 1 , \u2026 , c N2 ] , [0, 1] = [c 1 , \u2026 , c N3 ] .We now look at N1, N2, N3 and choose the state with the highest value. For example, if the lists were:[1, 0] = [c 1 , \u2026 , c 100 ] [1, 1] = [c 1 , \u2026 , c 2 ] , [0, 1] = [c 1 , \u2026 , c 300 ], we would choose s = [0, 1] . Now if we encounter the state [1, 0, 1] and there is insufficient data to form a distribution from this state, we will instead form it from the values found under the state [0, 1], [c 1 , \u2026 , c 300 ]."
+    },
+    {
+      "type": "table",
+      "caption": "Table 1",
+      "description": "The value used in encoding each feature is shown in parentheses For example cold (0) indicates that cold is coded as a 0 wherever this feature is used. A user's state is described as S i,k = {1, time of day, day of the week, preceding activity level, location}"
+    },
+    {
+      "type": "table",
+      "caption": "Table 2",
+      "description": "Settings for Z in three cases of homogeneous, bimodal and smoothly varying populations"
+    },
+    {
+      "type": "table",
+      "caption": "Table 4",
+      "description": "State feature descriptions for feasIBIlItystUdy"
+    }
+  ],
+  "num_figures": 10,
+  "tables": [
+    {
+      "content": "Name Value User Specific Time of day Morning 9:00 and 15:00 (0) No Afternoon 15:00 and 21:00 (1) Day of the week Weekday (0) or Weekend (1) No Temperature Cold (0) or Hot (1) No Preceding activity level Low (0) or High (1) Yes Location Other (0) or Home/work (1) Yes Intercept 1 Yes Reward Step count Continuous on log scale Yes"
+    },
+    {
+      "content": "Homogeneous Bi-modal Smooth"
+    },
+    {
+      "content": "State Features Name Value User specific Included in treatment effect Temperature Continuous Yes No Yesterday's step count Continuous Yes No Prior 30-minute step count Continuous Yes No Step variation level Discrete Yes Yes Engagement with mobile application Discrete Yes Yes Dosage Continuous Yes Yes Location Discrete Yes Yes Intercept 1 Yes Yes Reward Step count Continuous on log scale Yes NA"
+    }
+  ],
+  "num_tables": 3,
+  "license": "\u00a9 The Author(s), under exclusive licence to Springer Science+Business Media LLC, part of Springer Nature 2021",
+  "license_type": "unknown",
+  "formulas": [
+    {
+      "text": "R i,k = \ud835\udf19(S i,k , A i,k ) \u22a4 w i + \ud835\udf16 i,k , (2) \ud835\udf0b i,k = Pr{\ud835\udf19(s, 1) \u22a4 wi,k > \ud835\udf19(s, 0) \u22a4 wi,k } R 1,1 R 1,2 R 1,3 ... R 1,T 1,1 1,2 1,3 ... 1,T w 1 R 2,1 R 2,2 R 2,3 2,1 2,2 2,3 ... ... R 2,T 2,T w 2"
+    },
+    {
+      "text": "(3) R i,k = \ud835\udf19(S i,k , A i,k ) \u22a4 w + \ud835\udf16 i,k . (4) w i = w pop + u i , R 1,1 R 1,2 R 1,3 ... R 1,T 1,1 1,2 1,3 ... 1,T w pop R 2,1 R 2,2 R 2,3 ... ... R 2,T 2,1 2,2 2,3"
+    },
+    {
+      "text": "E[R i,k |w pop , u i , S i,k = s, A i,k = a] = (s, a) T (w pop + u i ). (5) K(x 1 , x 2 ) = \ud835\udf19(s 1 , a 1 ) \u22a4 (\ud835\udef4 w + 1 {i 1 =i 2 } \ud835\udef4 u )\ud835\udf19(s 2 , a 2 ). R 1,1 R 1,2 R 1,3 ... R 1,T 1,1 1,2 1,3 ... 1,T u 1 w pop R 2,1 R 2,2 R 2,3 2,1 2,2 2,3 ... ... R 2,T 2,T u 2"
+    },
+    {
+      "text": "(6) \u0175i = \ud835\udf07 w + M \u22a4 i ( + \ud835\udf0e 2 \ud835\udf16 I n ) -1 Rn \ud835\udef4 i = \ud835\udef4 w + \ud835\udef4 u -M \u22a4 i ( + \ud835\udf0e 2 \ud835\udf16 I n ) -1 M i (7) l(\ud835\udf06|D) = - 1 2 R\u22a4 n [ (\ud835\udf06) + \ud835\udf0e 2 \ud835\udf16 I n ] -1 Rn + log det[ (\ud835\udf06) + \ud835\udf0e 2 \ud835\udf16 I n ] + n log(2\ud835\udf0b)"
+    },
+    {
+      "text": "where for i = 1, 2 , C i = \u2211 k i k=1 (A i,k , S i,k ) 2 , Y i = \u2211 k i k=1 (A i,k , S i,k )R i,k , = 2 w \u2215( 2 w + 2 u ) and = 2 \u2215 2 w ."
+    },
+    {
+      "text": "\u01751 = [\ud835\udeff\ud835\udefe + (1 -\ud835\udefe 2 )C 2 ]Y 1 + \ud835\udeff\ud835\udefe 2 Y 2 (1 -\ud835\udefe 2 )C 1 C 2 + \ud835\udeff\ud835\udefe(C 1 + C 2 ) + (\ud835\udeff\ud835\udefe) 2 \u01752 = [\ud835\udeff\ud835\udefe + (1 -\ud835\udefe 2 )C 1 ]Y 2 + \ud835\udeff\ud835\udefe 2 Y 1 (1 -\ud835\udefe 2 )C 1 C 2 + \ud835\udeff\ud835\udefe(C 1 + C 2 ) + (\ud835\udeff\ud835\udefe) 2 1 3"
+    },
+    {
+      "text": "R(T) = \u2211 N i=1 \u2211 K i k=1 max a (S i,k , a) T w i -(S i,k , A i,k ) T w i ."
+    },
+    {
+      "text": "\u01751 , \u01752 \u2192 Y 1 + Y 2 C 1 + C 2 + \ud835\udeff . \u01751 \u2192 Y 1 C 1 , \u01752 \u2192 Y 2 C 2 . R(T) = \u00d5\ufffd dN \u221a T \ufffd log \ufffd (Tr(\ud835\udef4 w ) + Tr(\ud835\udef4 u ) + Tr(\ud835\udef4 -1 u )) d + T \ud835\udf0e 2 \ud835\udf16 dN \ufffd log 1 \ud835\udeff \ufffd Fig. 4"
+    },
+    {
+      "text": "R i,k = ( S i,k , 2 S i,k ). (9) R i,k = ( S i,k , 2 S i,k ) + A i,k (S T i,k i + Z i ). ( 10"
+    },
+    {
+      "text": ") (S i,k , A i,k ) T = S T i,k , i,k S T i,k , (A i,k -i,k )S i,k ,"
+    },
+    {
+      "text": "Z i = 0 l i =0 Z i , l i = z 1 , l 1 if i \u2208 group one z 2 , l 2 if i \u2208 group two Z i \u223c N(0, 2 ) l i \u223c N(0, 2 l )"
+    },
+    {
+      "text": "a * i,k = 1 {S T i,k * i +Z i \u22650} . The regret is"
+    },
+    {
+      "text": "regret i,k = |S T i,k * i + Z i |1 {a * i,k \u2260A i,k }"
+    },
+    {
+      "text": "(S i,k , A i,k ) T = S T i,k , i,k S \ufffd T i,k , (A i,k -i,k )S \ufffd i,k ,"
+    },
+    {
+      "text": "Cov(v k , v k \ufffd ) = (k, k \ufffd )D v , where (k, k \ufffd ) = exp(-dist(k, k \ufffd ) 2 \u2215 ) for a distance function, dist and"
+    },
+    {
+      "text": "X w = [1 {w i,k =0} , \u2026 , 1 {w i,k =11} ] ."
+    },
+    {
+      "text": "(13) R i,k = \ud835\udf19(S i,k , A i,k ) \u22a4 w i,k + \ud835\udf16 i,k . (14) w i,k = w pop + u i + v k ,"
+    },
+    {
+      "text": "R(T) = \u00d5\ufffd dN \u221a T \ufffd log \ufffd (Tr(\ud835\udef4 w ) + Tr(\ud835\udef4 u ) + Tr(\ud835\udef4 -1 u )) d + T \ud835\udf0e 2 \ud835\udf16 dN \ufffd log 1 \ud835\udeff"
+    },
+    {
+      "text": "A t ,t"
+    },
+    {
+      "text": "l t = \ufffd dNlog \ufffd 1 + max -1 umin + t -1 umin dN \ufffd + \ufffd N pmax + umax v t = 2 \ufffd dNlog \ufffd 1 + max -1 umin + t -1 umin dN \ufffd g t = min{ \u221a 4dNln(t), \u221a 4ln(\ufffdA\ufffdt)}v t + l T . \u2200a \u2236 | \u22a4 a,t \u0302 t -\u22a4 a,t | \u2264 l t s a,t . \u2200a \u2236 |\ud835\udf03 A t ,t -\u22a4 A t ,t \u0302 t | \u2264 min{4dNlog(t), 4log(|A|t)}v t s a,t . (15) R(T) \u2264 3g T T \ufffd t=1 s A t ,t + 2g T T \ufffd t=1 1 t 2 + 6g T \u221a \ufffdA\ufffdTlog(2\u2215 ). ( 16"
+    },
+    {
+      "text": ") T \ufffd t=1 s A t ,t \u2264 \u221a dNT \ufffd C \ufffd log \ufffd (Tr( w ) + Tr( u ) + Tr( -1 u )) d + T 2 dN \ufffd\ufffd ,"
+    },
+    {
+      "text": "F 1 \u2286 F 2 \u22ef \u2286 F t-1 ."
+    },
+    {
+      "text": "\u2022 the distribution of N( \u0302 t , v 2 t \ud835\udefa -1 t-1 )"
+    },
+    {
+      "text": "Proof The true reward at time t, R t = \u22a4 A t ,t + \ud835\udf16 t . Let, \ud835\udefa t \u0302 t = \ud835\udf0e 2 \ud835\udf16 . Define t-1 \u2211 t-1 l=1 l a l ,l"
+    },
+    {
+      "text": "Pr(E t ) \u2265 1 - 2 t-1 = t-1 \u2211 l=1 (R l -\u22a4 a l ,l ) a l ,l = t-1 \u2211 l=1 (R l a l ,l -a l ,l \u22a4 a l ,l ) t-1 = b t-1 - t-1 \u2211 l=1 ( a l ,l \u22a4 a l ,l ) = b t-1 -\ud835\udf0e 2 \ud835\udf16 (\ud835\udefa t-1 \u0302 t -\ud835\udefa t-1 + \ud835\udef4 0 ) \u0302 t -= \ud835\udefa -1 t-1 t-1 \ud835\udf0e 2 \ud835\udf16 -\ud835\udef4 0 . \ufffd \u22a4 a,t \u0302 t -\u22a4 a,t \ufffd = \ufffd \u22a4 a,t ( \u0302 t -)\ufffd \u2264 \ufffd \ufffd a,t \ud835\udefa -1 t-1 \ufffd t-1 \ud835\udf0e 2 \ud835\udf16 -\ud835\udef4 0 \ufffd \ufffd \ufffd \u2264 \u2016 a,t \u2016 \ud835\udefa -1 t-1 \ufffd \ufffd \ufffd \ufffd t-1 \ud835\udf0e 2 \ud835\udf16 -\ud835\udef4 0 \ufffd \ufffd \ufffd\ud835\udefa -1 t-1 \ufffd ."
+    },
+    {
+      "text": ", \ud835\udef4 0 = N\u00d7N \u2297 \ud835\udef4 w + N \u2297 \ud835\udef4 u . For bounding \u2016 a,t \u2016 -1 t-1 , note that"
+    },
+    {
+      "text": "\u2016 \u2016 \u2016 t-1 \u2016 \u2016 \u2016 -1 t-1"
+    },
+    {
+      "text": "(17) \ufffd \u22a4 a,t \u0302 t -\u22a4 a,t \ufffd \u2264 \ufffd \ufffd \ufffd t-1 \ud835\udf0e 2 \ud835\udf16 \ufffd \ufffd \ufffd\ud835\udefa -1 t-1 + \u2016\ud835\udef4 0 \u2016 \ud835\udefa -1 t-1 \ufffd \ud835\udf08 max (\ud835\udef4 0 ) = \ud835\udf08 max ( N\u00d7N \u2297 \ud835\udef4 w + N \u2297 \ud835\udef4 u ) = \ud835\udf08 max ( N\u00d7N ) \u22c5 \ud835\udf08 max (\ud835\udef4 w ) + \ud835\udf08 max ( N ) \u22c5 \ud835\udf08 max (\ud835\udef4 u ) = N\ud835\udf08 max (\ud835\udef4 w ) + \ud835\udf08 max (\ud835\udef4 u ) = N\ud835\udf0e pmax + \ud835\udf0e umax \u2016\ud835\udef4 0 \u2016 \ud835\udefa -1 t-1 \u2264 \u2016\ud835\udef4 0 \u2016 \ud835\udef4 -1 0 = \ufffd \ud835\udef4 \u22a4 0 \ud835\udef4 -1 0 \ud835\udef4 0 = \ufffd \u22a4 \ud835\udef4 0 \u2264 \u221a \ud835\udf08 max (\ud835\udef4 0 )\u2016 \u2016 2 \u2264 \u221a \ud835\udf08 max (\ud835\udef4 0 ) \u2264 \ufffd N\ud835\udf0e pmax + \ud835\udf0e umax \u2016 a,t \u2016 \ud835\udefa -1 t-1 = \ufffd \u22a4 a,t \ud835\udefa -1 t-1 a,t = s a,t . (18) \ufffd \u22a4 a,t \u0302 t -\u22a4 a,t \ufffd \u2264 s a,t \ufffd 1 \ud835\udf0e \ud835\udf16 \ufffd \ufffd \ufffd t-1 \ufffd \ufffd \ufffd\ud835\udefa -1 t-1 + \u221a n\ud835\udf0e pmax + \ud835\udf0e umax \ufffd \u2016 \u2016 \u2016 t-1 \u2016 \u2016 \u2016 2 -1 t-1 \u2264 2 2 log det t 1 2 det 0 -1 2 \u2264 2 2 log(det t 1 2 ) + log(det 0 -1 2 ) -log( ) \u2264 2 log(det t ) + log(det 0 -1 ) -2log( ) . (19) \u2016 \u2016 \u2016 t-1 \u2016 \u2016 \u2016 -1 t-1 \u2264 dN 2 log Tr( t ) dN + log Tr( -1 0 ) dN - 2 dN log( )"
+    },
+    {
+      "text": "\u25fb Lemma 2 With probability 1 - 2 ,"
+    },
+    {
+      "text": "\ud835\udefa t = \ud835\udef4 0 + \ud835\udef4 t l=1 a l ,l \u22a4 a l ,l \u21d2 Tr(\ud835\udefa t ) \u2264 Tr(\ud835\udef4 0 ) + t Tr(\ud835\udef4 0 ) = Tr( N\u00d7N \u2297 \ud835\udef4 w + N \u2297 \ud835\udef4 u ) = Tr( N\u00d7N ) \u22c5 Tr(\ud835\udef4 w ) + Tr( N ) \u22c5 Tr(\ud835\udef4 u ) = NTr(\ud835\udef4 w ) + NTr(\ud835\udef4 u ) = N(Tr(\ud835\udef4 w ) + Tr(\ud835\udef4 u )) \u2016 \u2016 \u2016 t-1 \u2016 \u2016 \u2016 2 \ud835\udefa -1 t-1 \u2264 dN\ud835\udf0e 2 \ud835\udf16 log Tr(\ud835\udef4 0 ) + t dN + log Tr(\ud835\udef4 -1 0 ) dN - 2 dN log(\ud835\udeff) \u2264 dN\ud835\udf0e 2 \ud835\udf16 log Tr(\ud835\udef4 )Tr(\ud835\udef4 -1 0 ) + tTr(\ud835\udef4 -1 0 ) d 2 N 2 -log(\ud835\udeff 2 dN ) = dN\ud835\udf0e 2 \ud835\udf16 log Tr(\ud835\udef4 0 )Tr(\ud835\udef4 -1 0 ) + tTr(\ud835\udef4 -1 0 ) d 2 N 2 \ud835\udeff \u2264 dN\ud835\udf0e 2 \ud835\udf16 log d 2 N 2 \ud835\udf0e max \ud835\udf0e -1 umin + tdN\ud835\udf0e -1 umin d 2 N 2 \ud835\udeff = dN\ud835\udf0e 2 \ud835\udf16 log \ud835\udf0e max \ud835\udf0e -1 umin \ud835\udeff + t\ud835\udf0e -1 umin dN\ud835\udeff \u2016 \u2016 \u2016 t-1 \u2016 \u2016 \u2016\ud835\udefa -1 t-1 \u2264 \ud835\udf0e \ud835\udf16 \u221a dNlog \ud835\udf0e max \ud835\udf0e -1 umin \ud835\udeff + t\ud835\udf0e -1 umin dN\ud835\udeff \u2016 \u2016 \u2016 t-1 \u2016 \u2016 \u2016\ud835\udefa -1 t-1 \u2264 \ud835\udf0e \ud835\udf16 \u221a dNlog 1 + \ud835\udf0e max \ud835\udf0e -1 umin \ud835\udeff + t\ud835\udf0e -1 umin dN\ud835\udeff | \u22a4 a,t \u0302 t -\u22a4 a,t | \u2264 s a,t \u221a dNlog 1 + \ud835\udf0e max \ud835\udf0e -1 umin \ud835\udeff + t\ud835\udf0e -1 umin dN\ud835\udeff + \u221a N\ud835\udf0e pmax + \ud835\udf0e umax \u2264 s a,t l t (20) T \u2211 t=1 regret(t) \u2264 T \u2211 t=1 3g t s t + T \u2211 t=1 2g t t 2 s t + \u221a \u221a \u221a \u221a 2 T \u2211 t=1 36g 2 t 2 ln( 2 ) Z l = regret(l) - 3g l s l - 2g l l 2 s l Y l = t \u2211 l=1 Z l"
+    },
+    {
+      "text": "Y 0 = 0 . Note that |Y t -Y t-1 | = |Z l | is bounded by 1 + 3g l -2g l . Hence, c = 6g t . Setting a = \ufffd 2 ln( 2 )"
+    },
+    {
+      "text": "Lemma 4 \u2211 T t=1 s A t ,t \u2264 \u221a dNT \ufffd C \ufffd log \ufffd (Tr( w )+Tr( u )+Tr( -1 u )) d + T 2 dN \ufffd\ufffd For simplicity, we let s A t ,t = s t below. [Y t -Y t-1 |F t-1 ] = [Z t ] = [regret(t)||F t-1 ] - 3g l s l - 2g l l 2 s l [regret(t)|F t-1 ] \u2264 [ t |F t-1 ] \u2264 3g l s l + 2g l l 2 s l [Y t -Y t-1 |F t-1 ] \u2264 0 (21) Y t \u2264 \u221a \u221a \u221a \u221a 2 ln( 2 ) T \u2211 t=1 36g 2 t ( 22"
+    },
+    {
+      "text": ") T \u2211 t=1 regret(t) - 3g t s t - 2g t t 2 s t \u2264 \u221a \u221a \u221a \u221a 2 ln( 2 ) T \u2211 t=1 36g 2 t (23) T \u2211 t=1 regret(t) \u2264 T \u2211 t=1 3g t s t + T \u2211 t=1 2g t t 2 s t + \u221a \u221a \u221a \u221a 2 ln( 2 ) T \u2211 t=1 36g 2 t (24) Pr(Y t -Y 0 \u2265 x) \u2264 exp \ufffd -x 2 2 \u2211 T t=1 c 2 t \ufffd 1 3"
+    },
+    {
+      "text": "det| N\u00d7N \u2297 \ud835\udef4 w | + det| N \u2297 \ud835\udef4 u |) = det| N\u00d7N | d det|\ud835\udef4 w | N + det| N | d det|\ud835\udef4 u | N = det|\ud835\udef4 u | N log(det|\ud835\udefa t |) \u2265 log(det|\ud835\udef4 0 |) + T \u2211 t=1 log(1 + s 2 t \ud835\udf0e 2 \ud835\udf16 ) \u2265 log(det| N\u00d7N \u2297 \ud835\udef4 w | + det| N \u2297 \ud835\udef4 u |) + T \u2211 t=1 log(1 + s 2 t \ud835\udf0e 2 \ud835\udf16 ) = nlog(det|\ud835\udef4 u |) + T \u2211 t=1 log(1 + s 2 t \ud835\udf0e 2 \ud835\udf16 ) Tr(\ud835\udefa t ) \u2264 Tr(\ud835\udef4 0 ) + T \ud835\udf0e 2 \ud835\udf16 = Tr( N\u00d7N \u2297 \ud835\udef4 w ) + Tr( N \u2297 \ud835\udef4 u ) + T \ud835\udf0e 2 \ud835\udf16 = Tr( N\u00d7N )Tr(\ud835\udef4 w ) + Tr( N )Tr(\ud835\udef4 u ) + T \ud835\udf0e 2 \ud835\udf16 = NTr(\ud835\udef4 w ) + NTr(\ud835\udef4 u ) + T \ud835\udf0e 2 \ud835\udf16 1 3 Let, s 2 t \u2264 -1 umin . For all y \u2208 [0, -1 umin ] log(1 + y 2 ) \u2265 1 -1 umin log(1 + -1 umin"
+    },
+    {
+      "text": "1 dN Tr( t ) dN \u2265 det| t | dNlog( 1 dN Tr( t )) \u2265 log(det| t |) dNlog( 1 dN Tr( t )) \u2265 log(det| t |) dNlog( 1 dN (Tr( 0 ) + T 2 )) \u2265 log(det| t |) \u2265 Nlog(det| u |) + T \u2211 t=1 log(1 + s 2 t 2 ) dNlog( 1 dN (Tr( 0 ) + T 2 )) \u2265 Nlog(det| u |) + T \u2211 t=1 log(1 + s 2 t 2 ) dNlog( 1 dN (Tr( 0 ) + T 2 )) -Nlog(det| u |) \u2265 T \u2211 t=1 log(1 + s 2 t 2 ) dNlog( 1 dN (Tr( 0 ) + T 2 )) + Nlog(det| -1 u )| \u2265 T \u2211 t=1 log(1 + s 2 t 2 ) dNlog( 1 dN (Tr( 0 ) + T 2 )) + dNlog( 1 d Tr( -1 u )) \u2265 T \u2211 t=1 log(1 + s 2 t 2 ) dN log( 1 dN (Tr( 0 ) + T 2 )) + log( 1 d Tr( -1 u )) \u2265 T \u2211 t=1 log(1 + s 2 t 2 ) dN log(( Tr( 0 ) 2 + T 2 dN )) + log( 1 d Tr( -1 u )) \u2265 T \u2211 t=1 log(1 + s 2 t 2 ) dN log( Tr( 0 ) 2 + T + NTr( -1 u ) 2 2 dN ) \u2265 T \u2211 t=1 log(1 + s 2 t 2 ) dN log( (nTr( w ) + NTr( u )) 2 + T + NTr( -1 u ) 2 2 dN ) \u2265 T \u2211 t=1 log(1 + s 2 t 2 ) dN log( (Tr( w ) + Tr( u ) + Tr( -1 u )) d + T 2 dN ) \u2265 T \u2211 t=1 log(1 + s 2 t 2 ) log(1 + s 2 t 2 ) \u2265 1 -1 umin log(1 + -1 umin 2 )s 2 t ) 1 umin log(1 + 1 umin 2 ) log(1 + s 2 t 2 ) \u2264 s 2 t T \u2211 t=1 s 2 t \u2264 C T \u2211 t=1 log(1 + s 2 t 2 )"
+    },
+    {
+      "text": "\ufffd t=1 s t \u2264 \u221a T \ufffd \ufffd \ufffd \ufffd T \ufffd t=1 s 2 t T \ufffd t=1 s t \u2264 \u221a T \ufffd \ufffd \ufffd \ufffd C T \ufffd t=1 log(1 + s 2 t 2 ) T \ufffd t=1 s t \u2264 \u221a T \ufffd CdN \ufffd log \ufffd (Tr( w ) + Tr( u ) + Tr( -1 u )) d + T 2 dN \ufffd\ufffd T \ufffd t=1 s t \u2264 \u221a dNT \ufffd C \ufffd log \ufffd (Tr( w ) + Tr( u ) + Tr( -1 u )) d + T 2 dN \ufffd\ufffd 1 3"
+    }
+  ],
+  "num_formulas": 36,
+  "num_citations": 95,
+  "cited_references": [
+    "b3",
+    "b57",
+    "b13",
+    "b39",
+    "b41",
+    "b18",
+    "b44",
+    "b49",
+    "b2",
+    "b14",
+    "b17",
+    "b36",
+    "b25",
+    "b59",
+    "b9",
+    "b1",
+    "b35",
+    "b20",
+    "b43",
+    "b51",
+    "b21",
+    "b47",
+    "b40",
+    "b12",
+    "b42",
+    "b31",
+    "b30",
+    "b54",
+    "b61",
+    "b52",
+    "b29",
+    "b16",
+    "b37",
+    "b46",
+    "b15",
+    "b23",
+    "b32",
+    "b5",
+    "b19",
+    "b28",
+    "b45",
+    "b10",
+    "b24",
+    "b56",
+    "b4",
+    "b62",
+    "b50",
+    "b33",
+    "b6",
+    "b7",
+    "b48",
+    "b53",
+    "b22",
+    "b58",
+    "b0",
+    "b26"
+  ],
+  "notes": [
+    "[raw_affiliation] 1  Stanford University , Stanford , United States of America",
+    "[raw_affiliation] 2  Harvard University , Cambridge , United States of America",
+    "[raw_affiliation] 3  University of Michigan , Ann Arbor , United States of America",
+    "[raw_affiliation] 2  Harvard University , Cambridge , United States of America",
+    "[submission] Received: 16 May 2020 / Revised: 10 December 2020 / Accepted: 11 May 2021 /",
+    "More generally, one can consider the setting where users become known to an algorithm over time. For example, users may open or delete accounts on an online shopping platform.",
+    "[raw_reference] Abeille, M., Lazaric, A., et al. (2017). Linear thompson sampling revisited. Electronic Journal of Statistics, 11(2), 5165-5197.",
+    "[raw_reference] Agrawal, S., & Goyal, N. (2012). Analysis of thompson sampling for the multi-armed bandit problem. In: Conference on Learning Theory, pp 39-1.",
+    "[raw_reference] Agrawal, S., & Goyal, N. (2013). Thompson sampling for contextual bandits with linear payoffs. In: Inter- national Conference on Machine Learning, pp 127-135.",
+    "[raw_reference] Pedregosa, F., et al. (2011). Scikit-learn: Machine learning in Python. Journal of Machine Learning Research, 12, 2825-2830.",
+    "[raw_reference] Bogunovic, I., Scarlett, J., & Cevher, V. (2016). Time-varying Gaussian process bandit optimization. In: Artificial Intelligence and Statistics, pp 314-323.",
+    "[raw_reference] Bonilla, E.V., Chai, K.M., & Williams, C. (2008). Multi-task Gaussian process prediction. In: Advances in neural information processing systems, pp 153-160.",
+    "[raw_reference] Boruvka, A., Almirall, D., Witkiewitz, K., & Murphy, S. A. (2018). Assessing time-varying causal effect moderation in mobile health. Journal of the American Statistical Association, 113(523), 1112-1121.",
+    "[report_type] arXiv preprint",
+    "[raw_reference] Brochu, E., Hoffman, M.W., & de Freitas, N. (2010). Portfolio allocation for Bayesian optimization. arXiv preprint arXiv: 10095 419.",
+    "[raw_reference] Carlin, B.P., & Louis, T.A. (2010). Bayes and empirical Bayes methods for data analysis. Chapman and Hall/CRC .",
+    "[raw_reference] Casella, G. (1985). An introduction to empirical Bayes data analysis. The American Statistician, 39(2), 83-87.",
+    "[raw_reference] Cesa-Bianchi, N., Gentile, C., & Zappella, G. (2013). A gang of bandits. In: Advances in Neural Informa- tion Processing Systems, pp 737-745.",
+    "[report_type] arXiv preprint",
+    "[raw_reference] Cheung, W.C., Simchi-Levi, D., & Zhu, R. (2018). Learning to optimize under non-stationarity. arXiv pre- print arXiv: 18100 3024.",
+    "[raw_reference] Chowdhury, S. R., & Gopalan, A. (2017). On kernelized multi-armed bandits. International Conference on Machine Learning, 70, 844-853.",
+    "[raw_reference] Clarke, S., Jaimes, L.G., & Labrador, M.A. (2017). mstress: A mobile recommender system for just-in-time interventions for stress. In: Consumer Communications & Networking Conference, pp 1-5.",
+    "[raw_reference] Consolvo, S., McDonald, D.W., Toscos, T., Chen, M.Y., Froehlich, J., Harrison, B., Klasnja, P., LaMarca, A., LeGrand, L., & Libby, R., et al. (2008). Activity sensing in the wild: a field trial of ubifit garden. In: Proceedings of the SIGCHI conference on human factors in computing systems, pp 1797-1806.",
+    "[raw_reference] Desautels, T., Krause, A., & Burdick, J. W. (2014). Parallelizing exploration-exploitation tradeoffs in Gauss- ian process bandit optimization. The Journal of Machine Learning Research, 15(1), 3873-3923.",
+    "[raw_reference] Deshmukh, A.A., Dogan, U., & Scott, C. (2017). Multi-task learning for contextual bandits. In: Advances in Neural Information Processing Systems, pp 4848-4856.",
+    "[raw_reference] Djolonga, J., Krause, A., & Cevher, V. (2013). High-dimensional gaussian process bandits. In: Advances in Neural Information Processing Systems, pp 1025-1033.",
+    "[raw_reference] Finn, C., Xu, K., & Levine, S. (2018). Probabilistic model-agnostic meta-learning. In: Advances in Neural Information Processing Systems, pp 9516-9527.",
+    "[report_type] arXiv preprint",
+    "[raw_reference] Finn, C., Rajeswaran, A., Kakade, S., & Levine, S. (2019). Online meta-learning. arXiv preprint arXiv: 19020 8438.",
+    "[raw_reference] Forman, E. M., Kerrigan, S. G., Butryn, M. L., Juarascio, A. S., Manasse, S. M., Onta\u00f1\u00f3n, S., et al. (2018). Can the artificial intelligence technique of reinforcement learning use continuously-monitored digital data to optimize treatment for weight loss? Journal of behavioral medicine, 42(2), 276-290.",
+    "[raw_reference] Gardner, J., Pleiss, G., Weinberger, K.Q., Bindel, D., & Wilson, A.G. (2018). Gpytorch: Blackbox matrix- matrix gaussian process inference with gpu acceleration. In: Advances in Neural Information Process- ing Systems, pp 7576-7586.",
+    "[raw_reference] Greenewald, K., Tewari, A., Murphy, S., & Klasnja, P. (2017). Action centered contextual bandits. In: Advances in neural information processing systems, pp 5977-5985.",
+    "[raw_reference] Gupta, A., Mendonca, R., Liu, Y., Abbeel, P., & Levine, S. (2018). Meta-reinforcement learning of struc- tured exploration strategies. In: Advances in Neural Information Processing Systems, pp 5302-5311.",
+    "[raw_reference] Hamine, S., Gerth-Guyette, E., Faulx, D., Green, B. B., & Ginsburg, A. S. (2015). Impact of mhealth chronic disease management on treatment adherence and patient outcomes: a systematic review. Jour- nal of medical Internet research, 17(2), e52.",
+    "[raw_reference] Jaimes, L. G., Llofriu, M., & Raij, A. (2016). Preventer, a selection mechanism for just-in-time preventive interventions. IEEE Transactions on Affective Computing, 7(3), 243-257.",
+    "[report_type] arXiv preprint",
+    "[raw_reference] Kim, B., Tewari, A. (2019). Near-optimal oracle-efficient algorithms for stationary and non-stationary sto- chastic linear bandits. arXiv preprint arXiv: 19120 5695.",
+    "[raw_reference] Kim, B., & Tewari, A. (2020). Randomized exploration for non-stationary stochastic linear bandits. In: Con- ference on Uncertainty in Artificial Intelligence, pp 71-80.",
+    "[raw_reference] Klasnja, P., Hekler, E.B., Shiffman, S., Boruvka, A., Almirall, D., Tewari, A., & Murphy, S.A. (2015). Microrandomized trials: An experimental design for developing just-in-time adaptive interventions. Health Psychology 34(S):1220.",
+    "[raw_reference] Klasnja, P., Smith, S., Seewald, N. J., Lee, A., Hall, K., Luers, B., et al. (2018). Efficacy of contextually tai- lored suggestions for physical activity: A micro-randomized optimization trial of heartsteps. Annals of Behavioral Medicine, 53(6), 573-582.",
+    "[raw_reference] Krause, A., & Ong, C.S. (2011). Contextual gaussian process bandit optimization. In: Advances in Neural Information Processing Systems, pp 2447-2455.",
+    "[raw_reference] Laird, N. M., Ware, J. H., et al. (1982). Random-effects models for longitudinal data. Biometrics, 38(4), 963-974.",
+    "[raw_reference] Lawrence, N.D., & Platt, J.C. (2004). Learning to learn with the informative vector machine. In: Interna- tional conference on Machine learning, p 65.",
+    "[raw_reference] Li, L., Chu, W., Langford, J., & Schapire, R.E. (2010). A contextual-bandit approach to personalized news article recommendation. In: Proceedings of the Conference on World wide web, pp 661-670.",
+    "[report_type] arXiv preprint",
+    "[raw_reference] Li, S., & Kar, P. (2015). Context-aware bandits. arXiv preprint arXiv: 15100 3164.",
+    "[raw_reference] Liao, P., Klasnja, P., Tewari, A., & Murphy, S. A. (2016). Sample size calculations for micro-randomized trials in mhealth. Statistics in medicine, 35(12), 1944-1971.",
+    "[raw_reference] Liao, P., Greenewald, K., Klasnja, P., & Murphy, S. (2020). Personalized heartsteps: A reinforcement learn- ing algorithm for optimizing physical activity. Proceedings of the Conference on Interactive, Mobile, Wearable and Ubiquitous Technologies, 4(1), 1-22.",
+    "[raw_reference] Luo, L., Yao, Y., Gao, F., & Zhao, C. (2018). Mixed-effects Gaussian process modeling approach with application in injection molding processes. Journal of Process Control, 62, 37-43.",
+    "[raw_reference] Morris, C. N. (1983). Parametric empirical Bayes inference: theory and applications. Journal of the Ameri- can statistical Association, 78(381), 47-55.",
+    "[report_type] arXiv preprint",
+    "[raw_reference] Nagabandi, A., Finn, C., & Levine, S. (2018). Deep online learning via meta-learning: Continual adaptation for model-based rl. arXiv preprint arXiv: 18120 7671.",
+    "[raw_reference] Nahum-Shani, I., Smith, S. N., Spring, B. J., Collins, L. M., Witkiewitz, K., Tewari, A., & Murphy, S. A. (2017). Just-in-time adaptive interventions (JITAIs) in mobile health: key components and design prin- ciples for ongoing health behavior support. Annals of Behavioral Medicine, 52(6).",
+    "[raw_reference] Paredes, P., Gilad-Bachrach, R., Czerwinski, M., Roseway, A., Rowan, K., & Hernandez, J. (2014). Pop- therapy: Coping with stress through pop-culture. In: Conference on Pervasive Computing Technologies for Healthcare, pp 109-117.",
+    "[raw_reference] Qi, Y., Wu, Q., Wang, H., Tang, J., & Sun, M. (2018). Bandit learning with implicit feedback. Advances in Neural Information Processing Systems, 31, 7276-7286.",
+    "[report_type] arXiv preprint",
+    "[raw_reference] Qian, T., Klasnja, P., & Murphy, S.A. (2019). Linear mixed models under endogeneity: modeling sequential treatment effects with application to a mobile health study. arXiv preprint arXiv: 19021 0861.",
+    "[raw_reference] Rabbi, M., Aung, M.H., Zhang, M., & Choudhury, T. (2015). Mybehavior: automatic personalized health feedback from user behaviors and preferences using smartphones. In: Proceedings of the Conference on Pervasive and Ubiquitous Computing, pp 707-718.",
+    "[raw_reference] Rabbi, M., Philyaw-Kotov, M., Lee, J., Mansour, A., Dent, L., Wang, X., Cunningham, R., Bonar, E., Nahum-Shani, I., & Klasnja, P., et al. (2017). SARA: a mobile app to engage users in health data col- lection. In: Joint Conference on Pervasive and Ubiquitous Computing and the International Sympo- sium on Wearable Computers, pp 781-789.",
+    "[raw_reference] Raudenbush, S.W., & Bryk, A.S. (2002). Hierarchical linear models: Applications and data analysis meth- ods, vol 1.",
+    "[raw_reference] Russac, Y., Vernade, C., & Capp\u00e9, O. (2019). Weighted linear bandits for non-stationary environments. In: Advances in Neural Information Processing Systems, pp 12017-12026.",
+    "[raw_reference] Russo, D., & Van Roy, B. (2014). Learning to optimize via posterior sampling. Mathematics of Operations Research, 39(4), 1221-1243.",
+    "[raw_reference] Russo, D.J., Roy, B.V., Kazerouni, A., Osband, I., & Wen, Z. (2018). A tutorial on thompson sampling. Foundations and Trends in Machine Learning 11(1):1-96, https:// doi. org/ 10. 1561/ 22000 00070.",
+    "[report_type] arXiv preprint",
+    "[raw_reference] Saemundsson, S., Hofmann, K., & Deisenroth, M.P. (2018). Meta reinforcement learning with latent vari- able gaussian processes. arXiv preprint arXiv: 18030 7551.",
+    "[raw_reference] Shi, J., Wang, B., Will, E., & West, R. (2012). Mixed-effects Gaussian process functional regression models with application to dose-response curve prediction. Statistics in medicine, 31(26), 3165-3177.",
+    "[raw_reference] Srinivas, N., Krause, A., Kakade, S.M., & Seeger, M. (2009). Gaussian process optimization in the ban- dit setting: No regret and experimental design. International Conference on Machine Learning p 1015-1022.",
+    "[raw_reference] Thompson, W. R. (1933). On the likelihood that one unknown probability exceeds another in view of the evidence of two samples. Biometrika, 25(3/4), 285-294.",
+    "[raw_reference] Vaswani, S., Schmidt, M., & Lakshmanan, L. (2017). Horde of bandits using Gaussian Markov random fields. In: Artificial Intelligence and Statistics, pp 690-699.",
+    "[report_type] arXiv preprint",
+    "[raw_reference] Wang, Y., & Khardon, R. (2012). Nonparametric Bayesian mixed-effect model: A sparse Gaussian process approach. arXiv preprint arXiv: 12116 653.",
+    "[raw_reference] Wang, Z., Zhou, B., & Jegelka, S. (2016). Optimization as estimation with Gaussian processes in bandit set- tings. In: Artificial Intelligence and Statistics, pp 1022-1031.",
+    "[raw_reference] Williams, C. K., & Rasmussen, C. E. (2006). Gaussian processes for machine learning (Vol. 2). MA: MIT press Cambridge.",
+    "[report_type] Senior thesis",
+    "[raw_reference] Xia, I. (2018). The price of personalization: An application of contextual bandits to mobile health. Senior thesis.",
+    "[raw_reference] Yom-Tov, E., Feraru, G., Kozdoba, M., Mannor, S., Tennenholtz, M., & Hochberg, I. (2017). Encouraging physical activity in patients with diabetes: intervention using a reinforcement learning system. Journal of medical Internet research, 19(10), e338.",
+    "[raw_reference] Zhao, P., Zhang, L., Jiang, Y., & Zhou, Z.H. (2020). A simple approach for non-stationary linear bandits. In: Proceedings of the Conference on Artificial Intelligence and Statistics, pp 746-755.",
+    "[raw_reference] Zhou, M., Mintz, Y., Fukuoka, Y., Goldberg, K., Flowers, E., Kaminsky, P., Castillejo, A., & Aswani, A. (2018). Personalizing mobile fitness apps using reinforcement learning. In: CEUR workshop proceed- ings, vol 2068.",
+    "[raw_reference] Zintgraf, L.M., Shiarlis, K., Kurin, V., Hofmann, K., & Whiteson, S. (2019). CAML: Fast context adapta- tion via meta-learning. In: International Conference on Machine Learning, pp 7693-7702."
+  ],
+  "processing_software": {
+    "GROBID": "0.8.2"
+  }
+}

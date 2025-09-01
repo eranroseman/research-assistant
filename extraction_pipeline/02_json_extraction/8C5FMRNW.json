@@ -1,0 +1,869 @@
+{
+  "paper_id": "8C5FMRNW",
+  "title": "Can AI Help Reduce Disparities in General Medical and Mental Health Care?",
+  "abstract": "Background: As machine learning becomes increasingly common in health care applications, concerns have been raised about bias in these systems' data, algorithms, and recommendations. Simply put, as health care improves for some, it might not improve for all. Methods: Two case studies are examined using a machine learning algorithm on unstructured clinical and psychiatric notes to predict intensive care unit (ICU) mortality and 30-day psychiatric readmission with respect to race, gender, and insurance payer type as a proxy for socioeconomic status. Results: Clinical note topics and psychiatric note topics were heterogenous with respect to race, gender, and insurance payer type, which reflects known clinical findings. Differences in prediction accuracy and therefore machine bias are shown with respect to gender and insurance type for ICU mortality and with respect to insurance policy for psychiatric 30-day readmission. Conclusions: This analysis can provide a framework for assessing and identifying disparate impacts of artificial intelligence in health care. \n Bias in Machine Learning Models While health care is an inherently data-driven field, most clinicians operate with limited evidence guiding their decisions. Randomized trials estimate average treatment effects for a trial population, but participants in clinical trials often aren't representative of the patient population that ultimately receives the treatment with respect to race and gender.  1, 2 As a result, drugs and interventions are not tailored to historically mistreated groups; for example, women, minority groups, and obese patients tend to have generally poorer treatment options and longitudinal health outcomes.  [3] [4] [5] [6] [7] [8] [9]  Advances in artificial intelligence (AI) and machine learning offer the potential to provide personalized care by taking into account granular patient differences. Machine learning using images, clinical notes, and other electronic health record (EHR) data has been",
+  "year": 2015,
+  "date": "2015",
+  "authors": [
+    {
+      "name": "Irene Chen"
+    },
+    {
+      "name": "Peter Szolovits"
+    },
+    {
+      "name": "Marzyeh Ghassemi"
+    }
+  ],
+  "doi": "10.1371/journal.pmed.1001918",
+  "issn": "2376-6980",
+  "md5": "C9F7B103E53FC4085C0DD8C08E960E17",
+  "publication": {
+    "journal": "JAMA",
+    "journal_inferred": true
+  },
+  "funding": [
+    "",
+    "Acknowledgements The authors thank  Willie Boag  and  Tristan Naumann  at  MIT  for help wrangling the data. This work was supported in part by a grant from the  National Institute of Mental Health  ( 1R01MH106577 )."
+  ],
+  "sections": [
+    {
+      "text": "successful in several clinical tasks such as detection of diabetic retinopathy  10  and distinguishing between malignant and nonmalignant skin lesions in dermatoscopic images.  11 Prior research has established that machine learning using clinical notes to supplement lab tests and other structured data is more accurate than an algorithm using structured data alone in classifying patients with rheumatoid arthritis  12  and in predicting mortality  13  and the onset of critical care interventions  14  in intensive care settings. This same ability to discern among patients brings with it the risk of amplifying existing biases, which can be especially concerning in sensitive areas like health care.  15, 16 Because machine learning models are powered by data, bias can be encoded by modeling choices or even within the data itself.  17 Ideally, algorithms would have access to exhaustive sources of population EHR data to create representative models for diagnosing diseases, predicting adverse effects, and recommending ongoing treatments.  18 However, such comprehensive data sources are not often available, and recent work has demonstrated bias in critical care interventions. For example, recent Canadian immigrants are more likely to receive aggressive care in the ICU than other Canadian residents.  19  contrast to critical care, psychiatry relies more heavily on analysis of clinical notes for patient assessment and treatment. Text is a rich source of unstructured information for machine learning models, but the subjective and expressive nature of the data also makes text a strong potential source of bias.  20, 21 Racism has established impacts on chronic and acute health,  22  which would affect EHR data. In addition, mental health problems of racial groups often depend heavily on the larger social context in which the group is embedded,  22  which would also influence clinical prediction based on EHR data.\n\nIn prior work, the first author and colleagues formalized a framework for decomposing sources of unfairness in prediction tasks, including an analysis of racial bias for prediction of hospital mortality from clinical notes.  23 In contrast to human bias, algorithmic bias occurs when an AI model, trained on a given data set, produces results that may be completely unintended by the model creators. The authors used the publicly available Medical Information Mart for Intensive Care (MIMIC-III) v1.4,  24 which contains deidentified electronic health record data from 53 423 intensive care unit (ICU) admissions for 38 597 adult patients from Beth Israel Deaconess Medical Center from 2001 to 2012. After restricting the data set to ICU admissions lasting over 48 hours and excluding discharge summaries, the researchers created a final data set of 25 879 patient stay notes and demonstrated that prediction errors for patient mortality differ between races.  23  this paper, we explore the potential impacts of bias in 2 algorithms, one for predicting patient mortality in an ICU and the other for predicting 30-day psychiatric readmission in an inpatient psychiatric unit. We expand on the first author's previous research, discussed above, on bias in ICU patient mortality prediction using the same MIMIC-III data set cohort with gender and insurance type in addition to race as demographic groups. We also analyzed potential bias in 30-day psychiatric readmission prediction for the same demographic groups.\n\nBecause unstructured clinical notes from the EHR contain valuable information for prediction tasks-including information about the patient's race, gender, and insurance type-we focus on clinical narrative notes in EHR data available for each stay. We examine bias, as measured by differences in model error rates in patient outcomes between groups, and show that in the ICU data set, differences in error rates in mortality for gender and insurance type are statistically significant and that in the psychiatric data set, only the difference in error rates in 30-day readmission for insurance type is statistically significant."
+    },
+    {
+      "title": "Data and Methods",
+      "text": "Data. We analyze prediction error in psychiatric readmissions at a New England hospital in a data set containing 4214 deidentified notes from 3202 patients, collected from stays between 2011 and 2015. We extracted notes, patient race, gender, insurance payer type, and 30-day psychiatric readmission from every patient stay. The data set is racially imbalanced but has relative gender parity. We use the insurance payer typepublic, private, and other insurance-as a proxy for socioeconomic status. (See Supplementary Appendix Table  S1  for demographic information.)\n\nWe also examine prediction error in ICU mortality using the MIMIC-III v1.4 data set with the cohort selection explained earlier. (See Supplementary Appendix Table  S2  for demographic information.) For race, gender, and insurance payer type, we compare error rates for psychiatric readmission with error rates for ICU mortality in order to examine unfairness across different data sets and the clinical generalizability of our methods.\n\nMethods. We use topic modeling with latent Dirichlet allocation  25  (LDA) to uncover 50 topics (eg, depression, pulmonary disease; see Supplementary Appendix Tables  S3  and  S4  for example topics) and corresponding enrichment values for race, gender,  17, 26  and insurance type. We used 1500 iterations of Gibbs sampling to learn the 50 topics of the LDA for each data set. For the psychiatric data set, topics were learned using the LDA Python package  27  whereas for the ICU clinical notes, topics were learned using Mallet.  28 This difference in software arose from restrictions on the servers hosting the respective data sources.) Following prior work on enrichment of topics in clinical notes,  13, 26  we computed enrichment values for topics for race, gender, and insurance type.\n\nWe predict hospital mortality with ICU notes and 30-day psychiatric readmission with psychiatric notes using logistic regression with L1 regularization (implemented by Python package scikit-learn  29  with a hyperparameter of C = 1) using an 80/20 split for training and testing data over 50 trials. For both hospital mortality and psychiatric readmission, we report the error rate (zero-one loss) of the learned model for each demographic group and the 95% confidence interval. Text was vectorized using TF-IDF  30  on the most frequent 5000 words for each data set. We report the area under the receiver operator curve (AUC)  31  for overall model performance as well as the generalized zero-one loss as a performance metric.  32 Following prior work,  23  we use the Tukey range test,  33  which allows for pairwise comparisons among more than two groups, to test whether differences in error rates between groups are statistically significant. All Tukey range test error rate comparisons were performed using the Python package statsmodels.  34 r cohort selection code for MIMIC-III v1.4 and our analysis code are made publicly available to enable reproducibility and further study.  35 sults: Enrichment of Topic Modeled Notes Psychiatric note topics. White patients had higher topic enrichment values for the anxiety  36  and chronic pain topics, while black, Hispanic, and Asian patients had higher topic enrichment values for the psychosis topic.  37 Male patients had higher topic enrichment values than female patients for substance abuse (0.024 v 0.015), whereas female patients had higher topic enrichment values than male patients for general depression (0.021 v 0.019) and treatment resistant depression (0.025 v 0.015), reflecting known clinical findings.  38, 39 Previous work has shown that those with serious mental illness are more likely to have public insurance than private  39  ; we similarly find that private insurance patients have higher topic enrichment values than public insurance patients for anxiety (0.029 v 0.0156) and general depression (0.026 v 0.017). However, public insurance patients have higher topic enrichment values than private insurance patients for substance abuse (0.022 v 0.016). S3 ) and more refined topics than psychiatric notes due to the larger data source (25 879 v 4214 patients). As in the psychiatric data set, male patients have higher topic enrichment values for substance use than female patients (0.027 v 0.011), whereas female patients have higher topic enrichment values for pulmonary disease than male patients (0.026 v 0.016), potentially reflecting known underdiagnosis of chronic obstructive pulmonary disease in women.  40, 41 Verifying known clinical trends, Asian patients have the highest topic enrichment values for cancer (0.036), followed by white patients (0.021), other patients (0.016), and black and Hispanic patients (0.015).  42 Black patients have the highest topic enrichment values for kidney problems (0.061), followed by Hispanic patients (0.027), Asian patients (0.022), white patients (0.015), and other patients (0.014).  42 Hispanic patients have the highest topic enrichment values for liver concerns (0.034), followed by other patients (0.024), Asian patients (0.023), white patients (0.019), and black patients (0.014).  43 Finally, white patients have the highest topic enrichment values for atrial fibrillation (0.022), followed by other patients (0.017), Asian patients (0.015), black patients (0.013), and Hispanic patients (0.011).  44 blic and private insurance patients vary mainly in the severity of conditions they are being treated for. Those with public insurance often have multiple chronic conditions that require regular care.  45 In particular, compared with private insurance patients, public insurance patients have higher topic enrichment values for atrial fibrillation (0.24 v 0.013), pacemakers (0.023 v 0.014), and dialysis (0.023 v 0.013). However, compared with public insurance patients, private insurance patients have higher topic enrichment values for fractures (0.035 v 0.012), lymphoma (0.030 v 0.015), and aneurysms (0.028 v 0.016)."
+    },
+    {
+      "title": "ICU note topics. Intensive care unit clinical notes have a different range of topics (see Supplementary Appendix Table",
+      "text": "In sum, our results for gender and race reflect known specific clinical findings, whereas our results for insurance type reflect known differences in patterns of ICU usage between public insurance patients and private insurance patients."
+    },
+    {
+      "title": "Results: Quantifying Disparities in Care With AI",
+      "text": "After establishing that findings from the clinical notes reflect known disparities in patient population and experience, we evaluated whether predictions made from such notes are fair. There are multiple definitions of algorithmic fairness  [46] [47] [48] [49]  ; here we compare differences in error rates in ICU mortality and 30-day psychiatric readmission for race, gender, and insurance type.\n\nPrediction error in the ICU model. Unstructured clinical notes are a powerful source of information in predicting patient mortality-our models achieve an AUC 31 of 0.84 using only the ICU notes. Adding demographic information (age, race, gender, insurance type), improves AUC slightly, to 0.85. As shown in Figures  1  and  2 , error rates for gender and insurance type all have nonoverlapping confidence intervals. For gender, female patients have a higher model error rate than male patients; for insurance type, public insurance patients have a much higher model error rate than private insurance patients. All results are statistically significant at the 95% confidence level. Figure 2. 95% Confidence Intervals for Error Rate (Zero-One Loss) in ICU Mortality for Insurance Type\n\nPrediction in the psychiatric setting. In contrast to ICU mortality, predicting 30-day psychiatric readmission is significantly more challenging, leading to lower model accuracy.  50 One potential cause could be the importance of unmeasured residential, employment, and environmental factors in predicting short-term psychiatric readmission.  51 Another factor could be the level of hospital intervention, such as outpatient appointments.  52 mparison of prediction errors in ICU and psychiatric models. We compare differences in error rates in 30-day psychiatric readmission and ICU mortality for race, gender, and insurance type. Figure  3  shows differences in error rates in psychiatric readmission between racial groups, which were not statistically significant, with black patients having the highest error rate for psychiatric readmission. Differences in error rates in ICU mortality were also observed between racial groups. 23 We show consistent gender differences across data sets in Figures  1  and  4 , with the highest error rates for female patients, although the difference in error rates between genders was only statistically significant for ICU mortality. Note that because of the smaller size of the psychiatric notes data set, the confidence intervals overlap; however, the heterogeneity in topic enrichment values aligns with the higher error rates for female patients. Interestingly, model prediction errors for insurance type were statistically significant for both data sets (Figures  2  and  5 ), but the group with highest error rate changes. While public insurance patients have the highest error rate for ICU mortality, private insurance patients have the highest error rate for psychiatric readmission. These differences in error rates for insurance type may indicate that insurance type affects patient care in ICU and psychiatric settings differently. We note that public insurance patients have higher baseline hospital mortality rates, whereas private insurance patients have higher baseline 30-day psychiatric readmission (see Supplementary Appendix Table  S1 ). Such variation in baseline rates could be due to the previously noted prevalence of chronic conditions in public insurance patients,  45  making these patients more likely to need the ICU for regular care of multiple chronic conditions. Public insurance patients are also more likely to have serious mental illness than private insurance patients,  39  indicating that they may not come into a psychiatric hospital unless the situation is dire. In both data sets, predictions are better captured by notes for patients in the group that uses the care setting more regularly (ie, public insurance patients in the ICU and private insurance patients in the psychiatric hospital)."
+    },
+    {
+      "title": "Responding to Algorithmic Biases in Machine Learning",
+      "text": "AI and machine learning may enable faster, more accurate, and more comprehensive health care. We believe a closely cooperative relationship between clinicians and AIrather than a competitive one 53 -is necessary for illuminating areas of disparate health care impact.  51 For example, a clinician should be able to provide feedback for the algorithm to implement, and the algorithm could actively query the clinician about uncertain cases. Indeed, algorithmic scrutiny is vital to both the short-term and longterm robustness of the health care system.\n\nIn this paper, we have considered questions related to the disparate impact that AI may have in health care-in particular, on ICU mortality and 30-day psychiatric readmissions. Based on clinical notes, we demonstrated heterogeneity in the topics emphasized across race, gender, and insurance type, which tracks with known health disparities. We also showed statistically significant differences in error rates in ICU mortality for race, gender, and insurance type and in 30-day psychiatric readmission for insurance type.\n\nIn light of known clinical biases, how can AI assist in improving patient care? With increasing involvement of machine learning in health care decisions, it is crucial to assess any algorithmic biases introduced  54  by comparing prediction accuracy between demographic groups. Once algorithmic bias is uncovered, clinicians and AI must work together to identify the sources of algorithmic bias and improve models through better data collection and model improvements."
+    },
+    {
+      "text": "Figure 1. 95% Confidence Intervals for Error Rate (Zero-One Loss) in ICU Mortality for Gender"
+    },
+    {
+      "text": "Figure 3. 95% Confidence Intervals for Error Rate (Zero-One Loss) in Psychiatric Readmission for Racial Groups"
+    },
+    {
+      "text": "Figure 4. 95% Confidence Intervals for Error Rate (Zero-One Loss) in Psychiatric Readmission for Gender"
+    },
+    {
+      "text": "Figure 5. 95% Confidence Intervals for Error Rate (Zero-One Loss) in Psychiatric Readmission for Insurance Type"
+    },
+    {
+      "title": "Acknowledgements",
+      "text": "The authors thank  Willie Boag  and  Tristan Naumann  at  MIT  for help wrangling the data. This work was supported in part by a grant from the  National Institute of Mental Health  ( 1R01MH106577 )."
+    },
+    {
+      "text": "Irene Y. Chen is a doctoral student in electrical engineering and computer science at the Massachusetts Institute of Technology (MIT) in Cambridge, Massachusetts. She is also pursuing a graduate education in medical sciences certificate in the Harvard-MIT Program in Health Sciences and Technology. She received a bachelor of arts degree in applied math-economics and computer science and a master of science degree in computational science and engineering from Harvard University.\n\nPeter Szolovits, PhD is a professor of computer science and engineering and the head of the Clinical Decision-Making Group within the Computer Science and Artificial Intelligence Laboratory at the Massachusetts Institute of Technology (MIT) in Cambridge, Massachusetts. He is also an associate member of the MIT Institute for Medical Engineering and Science and on the faculty of the Harvard-MIT Program in Health Sciences and Technology.\n\nMarzyeh Ghassemi, PhD is an assistant professor of computer science and medicine at the University of Toronto and a faculty member at the Vector Institute, both in in Ontario, Canada. She previously served as a visiting researcher at Alphabet Inc. within its life sciences research organization, Verily, and as a postdoctoral fellow at the Massachusetts Institute of Technology, where she earned a PhD in electrical engineering and computer science."
+    },
+    {
+      "title": "Citation"
+    },
+    {
+      "title": "Conflict of Interest Disclosure",
+      "text": "The author(s) had no conflicts of interest to disclose.\n\nThe viewpoints expressed in this article are those of the author(s) and do not necessarily reflect the views and policies of the AMA."
+    }
+  ],
+  "references": [
+    {
+      "title": "Diversity in clinical and biomedical research: a promise yet to be fulfilled",
+      "authors": [
+        "S Oh",
+        "J Galanter",
+        "N Thakur"
+      ],
+      "year": 2015,
+      "doi": "10.1371/journal.pmed.1001918",
+      "journal": "PLoS Med",
+      "volume": "12",
+      "issue": "12",
+      "pages": "1001918",
+      "raw": "Diversity in clinical and biomedical research: a promise yet to be fulfilled \n\t\t \n\t\t\t S S Oh \n\t\t \n\t\t \n\t\t\t J Galanter \n\t\t \n\t\t \n\t\t\t N Thakur \n\t\t \n\t\t 10.1371/journal.pmed.1001918 \n\t \n\t \n\t\t PLoS Med \n\t\t \n\t\t\t 12 \n\t\t\t 12 \n\t\t\t 1001918 \n\t\t\t 2015 \n\t\t \n\t \n\t Oh SS, Galanter J, Thakur N, et al. Diversity in clinical and biomedical research: a promise yet to be fulfilled. PLoS Med. 2015;12(12):e1001918."
+    },
+    {
+      "title": "Women's Hospital. Ten years of health advancements for women of all ages, ethnicities and nations",
+      "authors": [
+        "Mary Horrigan",
+        "Connors Center"
+      ],
+      "year": 2018,
+      "raw": "Mary Horrigan \n\t\t \n\t\t \n\t\t\t Connors Center \n\t\t \n\t\t \n\t\t\t Brigham \n\t\t \n\t\t \n\t\t Women's Hospital. Ten years of health advancements for women of all ages, ethnicities and nations \n\t\t \n\t\t\t August 9, 2018 \n\t\t \n\t \n\t Mary Horrigan Connors Center, Brigham and Women's Hospital. Ten years of health advancements for women of all ages, ethnicities and nations. https://www.brighamandwomens.org/assets/BWH/womens- health/pdfs/connors-center-ten-year-report.pdf. Accessed August 9, 2018."
+    },
+    {
+      "title": "Racial and ethnic disparities in palliative care",
+      "authors": [
+        "K Johnson"
+      ],
+      "year": 2013,
+      "doi": "10.1089/jpm.2013.9468",
+      "journal": "J Palliat Med",
+      "volume": "16",
+      "issue": "11",
+      "raw": "Racial and ethnic disparities in palliative care \n\t\t \n\t\t\t K S Johnson \n\t\t \n\t\t 10.1089/jpm.2013.9468 \n\t \n\t \n\t\t J Palliat Med \n\t\t \n\t\t\t 16 \n\t\t\t 11 \n\t\t\t \n\t\t\t 2013 \n\t\t \n\t \n\t Johnson KS. Racial and ethnic disparities in palliative care. J Palliat Med. 2013;16(11):1329-1334."
+    },
+    {
+      "title": "Impact of weight bias and stigma on quality of care and outcomes for patients with obesity",
+      "authors": [
+        "S Phelan",
+        "D Burgess",
+        "M Yeazel",
+        "W Hellerstedt",
+        "J Griffin",
+        "M Van Ryn"
+      ],
+      "year": 2015,
+      "journal": "Obes Rev",
+      "volume": "16",
+      "issue": "4",
+      "raw": "Impact of weight bias and stigma on quality of care and outcomes for patients with obesity \n\t\t \n\t\t\t S M Phelan \n\t\t \n\t\t \n\t\t\t D J Burgess \n\t\t \n\t\t \n\t\t\t M W Yeazel \n\t\t \n\t\t \n\t\t\t W L Hellerstedt \n\t\t \n\t\t \n\t\t\t J M Griffin \n\t\t \n\t\t \n\t\t\t M Van Ryn \n\t\t \n\t \n\t \n\t\t Obes Rev \n\t\t \n\t\t\t 16 \n\t\t\t 4 \n\t\t\t \n\t\t\t 2015 \n\t\t \n\t \n\t Phelan SM, Burgess DJ, Yeazel MW, Hellerstedt WL, Griffin JM, van Ryn M. Impact of weight bias and stigma on quality of care and outcomes for patients with obesity. Obes Rev. 2015;16(4):319-326."
+    },
+    {
+      "title": "The influence of gender on the frequency of pain and sedative medication administered to postoperative patients",
+      "authors": [
+        "K Calderone"
+      ],
+      "year": 1990,
+      "journal": "Sex Roles",
+      "volume": "23",
+      "issue": "11-12",
+      "raw": "The influence of gender on the frequency of pain and sedative medication administered to postoperative patients \n\t\t \n\t\t\t K L Calderone \n\t\t \n\t \n\t \n\t\t Sex Roles \n\t\t \n\t\t\t 23 \n\t\t\t 11-12 \n\t\t\t \n\t\t\t 1990 \n\t\t \n\t \n\t Calderone KL. The influence of gender on the frequency of pain and sedative medication administered to postoperative patients. Sex Roles. 1990;23(11- 12):713-725."
+    },
+    {
+      "title": "Sex differences in pain: a brief review of clinical and experimental findings",
+      "authors": [
+        "E Bartley",
+        "R Fillingim"
+      ],
+      "year": 2013,
+      "doi": "10.1093/bja/aet127",
+      "journal": "Br J Anaesth",
+      "volume": "111",
+      "issue": "1",
+      "raw": "Sex differences in pain: a brief review of clinical and experimental findings \n\t\t \n\t\t\t E J Bartley \n\t\t \n\t\t \n\t\t\t R B Fillingim \n\t\t \n\t\t 10.1093/bja/aet127 \n\t \n\t \n\t\t Br J Anaesth \n\t\t \n\t\t\t 111 \n\t\t\t 1 \n\t\t\t \n\t\t\t 2013 \n\t\t \n\t \n\t Bartley EJ, Fillingim RB. Sex differences in pain: a brief review of clinical and experimental findings. Br J Anaesth. 2013;111(1):52-58."
+    },
+    {
+      "title": "The girl who cried pain: a bias against women in the treatment of pain",
+      "authors": [
+        "D Hoffmann",
+        "A Tarzian"
+      ],
+      "year": 2001,
+      "journal": "J Law Med Ethics",
+      "volume": "29",
+      "issue": "1",
+      "raw": "The girl who cried pain: a bias against women in the treatment of pain \n\t\t \n\t\t\t D E Hoffmann \n\t\t \n\t\t \n\t\t\t A J Tarzian \n\t\t \n\t \n\t \n\t\t J Law Med Ethics \n\t\t \n\t\t\t 29 \n\t\t\t 1 \n\t\t\t \n\t\t\t 2001 \n\t\t \n\t \n\t Hoffmann DE, Tarzian AJ. The girl who cried pain: a bias against women in the treatment of pain. J Law Med Ethics. 2001;29(1):13-27."
+    },
+    {
+      "title": "The black-white disparity in pregnancyrelated mortality from 5 conditions: differences in prevalence and case-fatality rates",
+      "authors": [
+        "M Tucker",
+        "C Berg",
+        "W Callaghan",
+        "J Hsia"
+      ],
+      "year": 2007,
+      "journal": "Am J Public Health",
+      "volume": "97",
+      "issue": "2",
+      "raw": "The black-white disparity in pregnancyrelated mortality from 5 conditions: differences in prevalence and case-fatality rates \n\t\t \n\t\t\t M J Tucker \n\t\t \n\t\t \n\t\t\t C J Berg \n\t\t \n\t\t \n\t\t\t W M Callaghan \n\t\t \n\t\t \n\t\t\t J Hsia \n\t\t \n\t \n\t \n\t\t Am J Public Health \n\t\t \n\t\t\t 97 \n\t\t\t 2 \n\t\t\t \n\t\t\t 2007 \n\t\t \n\t \n\t Tucker MJ, Berg CJ, Callaghan WM, Hsia J. The black-white disparity in pregnancy- related mortality from 5 conditions: differences in prevalence and case-fatality rates. Am J Public Health. 2007;97(2):247-251."
+    },
+    {
+      "title": "Reducing disparities in severe maternal morbidity and mortality",
+      "authors": [
+        "E Howell"
+      ],
+      "year": 2018,
+      "doi": "10.1097/grf.0000000000000349",
+      "journal": "Clin Obstet Gynecol",
+      "volume": "61",
+      "issue": "2",
+      "raw": "Reducing disparities in severe maternal morbidity and mortality \n\t\t \n\t\t\t E A Howell \n\t\t \n\t\t 10.1097/grf.0000000000000349 \n\t \n\t \n\t\t Clin Obstet Gynecol \n\t\t \n\t\t\t 61 \n\t\t\t 2 \n\t\t\t \n\t\t\t 2018 \n\t\t \n\t \n\t Howell EA. Reducing disparities in severe maternal morbidity and mortality. Clin Obstet Gynecol. 2018;61(2):387-399."
+    },
+    {
+      "title": "Development and validation of a deep learning algorithm for detection of diabetic retinopathy in retinal fundus photographs",
+      "authors": [
+        "V Gulshan",
+        "L Peng",
+        "M Coram"
+      ],
+      "year": 2016,
+      "journal": "JAMA",
+      "volume": "316",
+      "issue": "22",
+      "raw": "Development and validation of a deep learning algorithm for detection of diabetic retinopathy in retinal fundus photographs \n\t\t \n\t\t\t V Gulshan \n\t\t \n\t\t \n\t\t\t L Peng \n\t\t \n\t\t \n\t\t\t M Coram \n\t\t \n\t \n\t \n\t\t JAMA \n\t\t \n\t\t\t 316 \n\t\t\t 22 \n\t\t\t \n\t\t\t 2016 \n\t\t \n\t \n\t Gulshan V, Peng L, Coram M, et al. Development and validation of a deep learning algorithm for detection of diabetic retinopathy in retinal fundus photographs. JAMA. 2016;316(22):2402-2410."
+    },
+    {
+      "title": "Dermatologist-level classification of skin cancer with deep neural networks",
+      "authors": [
+        "A Esteva",
+        "B Kuprel",
+        "R Novoa"
+      ],
+      "year": 2017,
+      "journal": "Nature",
+      "volume": "542",
+      "issue": "7639",
+      "raw": "Dermatologist-level classification of skin cancer with deep neural networks \n\t\t \n\t\t\t A Esteva \n\t\t \n\t\t \n\t\t\t B Kuprel \n\t\t \n\t\t \n\t\t\t R A Novoa \n\t\t \n\t \n\t \n\t\t Nature \n\t\t \n\t\t\t 542 \n\t\t\t 7639 \n\t\t\t \n\t\t\t 2017 \n\t\t \n\t \n\t Esteva A, Kuprel B, Novoa RA, et al. Dermatologist-level classification of skin cancer with deep neural networks. Nature. 2017;542(7639):115-118."
+    },
+    {
+      "title": "Electronic medical records for discovery research in rheumatoid arthritis",
+      "authors": [
+        "K Liao",
+        "T Cai",
+        "V Gainer"
+      ],
+      "year": 2010,
+      "journal": "Arthritis Care Res",
+      "volume": "62",
+      "issue": "8",
+      "raw": "Electronic medical records for discovery research in rheumatoid arthritis \n\t\t \n\t\t\t K P Liao \n\t\t \n\t\t \n\t\t\t T Cai \n\t\t \n\t\t \n\t\t\t V Gainer \n\t\t \n\t \n\t \n\t\t Arthritis Care Res \n\t\t \n\t\t\t 62 \n\t\t\t 8 \n\t\t\t \n\t\t\t 2010 \n\t\t\t Hoboken) \n\t\t \n\t \n\t Liao KP, Cai T, Gainer V, et al. Electronic medical records for discovery research in rheumatoid arthritis. Arthritis Care Res (Hoboken). 2010;62(8):1120-1127."
+    },
+    {
+      "title": "Unfolding physiological state: mortality modelling in intensive care units",
+      "authors": [
+        "M Ghassemi",
+        "T Naumann",
+        "F Doshi-Velez"
+      ],
+      "year": 2014,
+      "journal": "KDD",
+      "volume": "2014",
+      "raw": "Unfolding physiological state: mortality modelling in intensive care units \n\t\t \n\t\t\t M Ghassemi \n\t\t \n\t\t \n\t\t\t T Naumann \n\t\t \n\t\t \n\t\t\t F Doshi-Velez \n\t\t \n\t \n\t \n\t\t KDD \n\t\t \n\t\t\t 2014 \n\t\t\t \n\t\t\t 2014 \n\t\t \n\t \n\t Ghassemi M, Naumann T, Doshi-Velez F, et al. Unfolding physiological state: mortality modelling in intensive care units. KDD. 2014;2014:75-84."
+    },
+    {
+      "title": "Predicting intervention onset in the ICU with switching state space models",
+      "authors": [
+        "M Ghassemi",
+        "M Wu",
+        "M Hughes",
+        "P Szolovits",
+        "F Doshi-Velez"
+      ],
+      "year": 2017,
+      "journal": "AMIA Jt Summits Transl Sci Proc",
+      "volume": "2017",
+      "raw": "Predicting intervention onset in the ICU with switching state space models \n\t\t \n\t\t\t M Ghassemi \n\t\t \n\t\t \n\t\t\t M Wu \n\t\t \n\t\t \n\t\t\t M C Hughes \n\t\t \n\t\t \n\t\t\t P Szolovits \n\t\t \n\t\t \n\t\t\t F Doshi-Velez \n\t\t \n\t \n\t \n\t\t AMIA Jt Summits Transl Sci Proc \n\t\t \n\t\t\t 2017 \n\t\t\t \n\t\t\t 2017 \n\t\t \n\t \n\t Ghassemi M, Wu M, Hughes MC, Szolovits P, Doshi-Velez F. Predicting intervention onset in the ICU with switching state space models. AMIA Jt Summits Transl Sci Proc. 2017;2017:82-91."
+    },
+    {
+      "title": "Fairness in precision medicine",
+      "authors": [
+        "K Ferryman",
+        "M Pitcan"
+      ],
+      "year": 2018,
+      "journal": "Data & Society",
+      "issue": "18",
+      "raw": "Fairness in precision medicine \n\t\t \n\t\t\t K Ferryman \n\t\t \n\t\t \n\t\t\t M Pitcan \n\t\t \n\t\t \n\t \n\t \n\t\t Data & Society \n\t\t \n\t\t\t 18 \n\t\t\t Feb2018. February 26, 2018. August 9, 2018 \n\t\t \n\t \n\t Ferryman K, Pitcan M. Fairness in precision medicine. Data & Society. https://datasociety.net/wp- content/uploads/2018/02/Data.Society.Fairness.In_.Precision.Medicine.Feb2018 .FINAL-2.26.18.pdf. Published February 26, 2018. Accessed August 9, 2018."
+    },
+    {
+      "title": "Machine bias",
+      "authors": [
+        "J Angwin",
+        "J Larson",
+        "S Mattu",
+        "L Kirchner"
+      ],
+      "year": 2016,
+      "journal": "ProPublica",
+      "raw": "Machine bias \n\t\t \n\t\t\t J Angwin \n\t\t \n\t\t \n\t\t\t J Larson \n\t\t \n\t\t \n\t\t\t S Mattu \n\t\t \n\t\t \n\t\t\t L Kirchner \n\t\t \n\t\t \n\t \n\t \n\t\t ProPublica \n\t\t \n\t\t\t May 23, 2016. August 9, 2018 \n\t\t \n\t \n\t Angwin J, Larson J, Mattu S, Kirchner L. Machine bias. ProPublica. May 23, 2016. https://www.propublica.org/article/machine-bias-risk-assessments-in-criminal- sentencing. Accessed August 9, 2018."
+    },
+    {
+      "title": "AI can be sexist and racist-it's time to make it fair",
+      "authors": [
+        "J Zou",
+        "L Schiebinger"
+      ],
+      "year": 2018,
+      "doi": "10.1038/d41586-018-05707-8",
+      "journal": "Nature",
+      "volume": "559",
+      "issue": "7714",
+      "raw": "AI can be sexist and racist-it's time to make it fair \n\t\t \n\t\t\t J Zou \n\t\t \n\t\t \n\t\t\t L Schiebinger \n\t\t \n\t\t 10.1038/d41586-018-05707-8 \n\t \n\t \n\t\t Nature \n\t\t \n\t\t\t 559 \n\t\t\t 7714 \n\t\t\t \n\t\t\t 2018 \n\t\t \n\t \n\t Zou J, Schiebinger L. AI can be sexist and racist-it's time to make it fair. Nature. 2018;559(7714):324-326."
+    },
+    {
+      "title": "Opportunities in machine learning for healthcare",
+      "authors": [
+        "M Ghassemi",
+        "T Naumann",
+        "P Schulam",
+        "A Beam",
+        "R Ranganath"
+      ],
+      "year": 2018,
+      "raw": "Opportunities in machine learning for healthcare \n\t\t \n\t\t\t M Ghassemi \n\t\t \n\t\t \n\t\t\t T Naumann \n\t\t \n\t\t \n\t\t\t P Schulam \n\t\t \n\t\t \n\t\t\t A L Beam \n\t\t \n\t\t \n\t\t\t R Ranganath \n\t\t \n\t\t \n\t\t \n\t\t\t June 1, 2018. Updated June 5, 2018. August 9, 2018 \n\t\t \n\t \n\t arXiv \n\t Ghassemi M, Naumann T, Schulam P, Beam AL, Ranganath R. Opportunities in machine learning for healthcare. arXiv. https://arxiv.org/abs/1806.00388. Published June 1, 2018. Updated June 5, 2018. Accessed August 9, 2018."
+    },
+    {
+      "title": "Association between immigrant status and endof-life care in Ontario, Canada",
+      "authors": [
+        "C Yarnell",
+        "L Fu",
+        "D Manuel"
+      ],
+      "year": 2017,
+      "doi": "10.1001/jama.2017.14418",
+      "journal": "JAMA",
+      "volume": "318",
+      "issue": "15",
+      "raw": "Association between immigrant status and endof-life care in Ontario, Canada \n\t\t \n\t\t\t C J Yarnell \n\t\t \n\t\t \n\t\t\t L Fu \n\t\t \n\t\t \n\t\t\t D Manuel \n\t\t \n\t\t 10.1001/jama.2017.14418 \n\t \n\t \n\t\t JAMA \n\t\t \n\t\t\t 318 \n\t\t\t 15 \n\t\t\t \n\t\t\t 2017 \n\t\t \n\t \n\t Yarnell CJ, Fu L, Manuel D, et al. Association between immigrant status and end- of-life care in Ontario, Canada. JAMA. 2017;318(15):1479-1488."
+    },
+    {
+      "title": "Word embeddings quantify 100 years of gender and ethnic stereotypes",
+      "authors": [
+        "N Garg",
+        "L Schiebinger",
+        "D Jurafsky",
+        "J Zou"
+      ],
+      "year": 2018,
+      "journal": "Proc Natl Acad Sci",
+      "volume": "115",
+      "issue": "16",
+      "raw": "Word embeddings quantify 100 years of gender and ethnic stereotypes \n\t\t \n\t\t\t N Garg \n\t\t \n\t\t \n\t\t\t L Schiebinger \n\t\t \n\t\t \n\t\t\t D Jurafsky \n\t\t \n\t\t \n\t\t\t J Zou \n\t\t \n\t \n\t \n\t\t Proc Natl Acad Sci \n\t\t \n\t\t\t 115 \n\t\t\t 16 \n\t\t\t \n\t\t\t 2018 \n\t\t\t USA \n\t\t \n\t \n\t Garg N, Schiebinger L, Jurafsky D, Zou J. Word embeddings quantify 100 years of gender and ethnic stereotypes. Proc Natl Acad Sci USA. 2018;115(16):e3635- e3644."
+    },
+    {
+      "title": "Race and mental health: patterns and challenges",
+      "authors": [
+        "D Williams",
+        "M Costa",
+        "J Leavell"
+      ],
+      "year": 2017,
+      "doi": "10.1017/cbo9780511984945.018",
+      "raw": "Race and mental health: patterns and challenges \n\t\t \n\t\t\t D R Williams \n\t\t \n\t\t \n\t\t\t M Costa \n\t\t \n\t\t \n\t\t\t J P Leavell \n\t\t \n\t\t 10.1017/cbo9780511984945.018 \n\t \n\t \n\t\t A Handbook for the Study of Mental Health: Social Contexts, Theories, and Systems \n\t\t \n\t\t\t T L Scheid \n\t\t \n\t\t \n\t\t\t Brown \n\t\t \n\t\t \n\t\t\t Tn \n\t\t \n\t\t New York, NY \n\t\t \n\t\t\t Cambridge University Press \n\t\t\t 2017 \n\t\t\t \n\t\t \n\t \n\t 3rd ed \n\t Williams DR, Costa M, Leavell JP. Race and mental health: patterns and challenges. In: Scheid TL, Brown, TN, eds. A Handbook for the Study of Mental Health: Social Contexts, Theories, and Systems. 3rd ed. New York, NY: Cambridge University Press; 2017:281-304."
+    },
+    {
+      "title": "Racial discrimination and racial disparities in health",
+      "authors": [
+        "N Priest",
+        "D Williams"
+      ],
+      "year": 2017,
+      "raw": "Racial discrimination and racial disparities in health \n\t\t \n\t\t\t N Priest \n\t\t \n\t\t \n\t\t\t D R Williams \n\t\t \n\t \n\t \n\t\t The Oxford Handbook of Stigma, Discrimination, and Health \n\t\t \n\t\t\t B Major \n\t\t \n\t\t \n\t\t\t J F Dovidio \n\t\t \n\t\t \n\t\t\t B G Link \n\t\t \n\t\t New York, NY \n\t\t \n\t\t\t Oxford University Press \n\t\t\t 2017 \n\t\t\t \n\t\t \n\t \n\t Priest N, Williams DR. Racial discrimination and racial disparities in health. In: Major B, Dovidio JF, Link BG, eds. The Oxford Handbook of Stigma, Discrimination, and Health. New York, NY: Oxford University Press; 2017:163-182."
+    },
+    {
+      "title": "Why is my classifier discriminatory? arXiv",
+      "authors": [
+        "I Chen",
+        "F Johansson",
+        "D Sontag"
+      ],
+      "year": 2018,
+      "raw": "I Chen \n\t\t \n\t\t \n\t\t\t F D Johansson \n\t\t \n\t\t \n\t\t\t D Sontag \n\t\t \n\t\t \n\t\t Why is my classifier discriminatory? arXiv \n\t\t \n\t\t\t May 30, 2018. August 9, 2018 \n\t\t \n\t \n\t Chen I, Johansson FD, Sontag D. Why is my classifier discriminatory? arXiv. https://arxiv.org/abs/1805.12002. Published May 30, 2018. Accessed August 9, 2018."
+    },
+    {
+      "title": "MIMIC-III, a freely accessible critical care database",
+      "authors": [
+        "Aew Johnson",
+        "T Pollard",
+        "L Shen"
+      ],
+      "year": 2016,
+      "doi": "10.1038/sdata.2016.35",
+      "journal": "Sci Data",
+      "volume": "3",
+      "pages": "160035",
+      "raw": "MIMIC-III, a freely accessible critical care database \n\t\t \n\t\t\t Aew Johnson \n\t\t \n\t\t \n\t\t\t T J Pollard \n\t\t \n\t\t \n\t\t\t L Shen \n\t\t \n\t\t 10.1038/sdata.2016.35 \n\t \n\t \n\t\t Sci Data \n\t\t \n\t\t\t 3 \n\t\t\t 160035 \n\t\t\t 2016 \n\t\t \n\t \n\t Johnson AEW, Pollard TJ, Shen L, et al. MIMIC-III, a freely accessible critical care database. Sci Data. 2016;3:160035."
+    },
+    {
+      "title": "Latent Dirichlet allocation",
+      "authors": [
+        "D Blei",
+        "A Ng",
+        "M Jordan"
+      ],
+      "year": 2003,
+      "doi": "10.7551/mitpress/1120.003.0082",
+      "journal": "J Mach Learn Res",
+      "volume": "3",
+      "raw": "Latent Dirichlet allocation \n\t\t \n\t\t\t D M Blei \n\t\t \n\t\t \n\t\t\t A Y Ng \n\t\t \n\t\t \n\t\t\t M I Jordan \n\t\t \n\t\t 10.7551/mitpress/1120.003.0082 \n\t \n\t \n\t\t J Mach Learn Res \n\t\t \n\t\t\t 3 \n\t\t\t \n\t\t\t 2003 \n\t\t \n\t \n\t Blei DM, Ng AY, Jordan MI. Latent Dirichlet allocation. J Mach Learn Res. 2003;3:993-1022."
+    },
+    {
+      "title": "Unsupervised pattern discovery in electronic health care data using probabilistic clustering models",
+      "authors": [
+        "B Marlin",
+        "D Kale",
+        "R Khemani",
+        "R Wetzel"
+      ],
+      "year": 2012,
+      "doi": "10.1145/2110363.2110408",
+      "raw": "Unsupervised pattern discovery in electronic health care data using probabilistic clustering models \n\t\t \n\t\t\t B M Marlin \n\t\t \n\t\t \n\t\t\t D C Kale \n\t\t \n\t\t \n\t\t\t R G Khemani \n\t\t \n\t\t \n\t\t\t R C Wetzel \n\t\t \n\t\t 10.1145/2110363.2110408 \n\t \n\t \n\t\t Proceedings of the 2nd ACM SIGHIT International Health Informatics Symposium \n\t\t the 2nd ACM SIGHIT International Health Informatics Symposium Miami, FL \n\t\t \n\t\t\t January 28-30, 2012 \n\t\t\t \n\t\t \n\t \n\t Marlin BM, Kale DC, Khemani RG, Wetzel RC. Unsupervised pattern discovery in electronic health care data using probabilistic clustering models. In: Proceedings of the 2nd ACM SIGHIT International Health Informatics Symposium; January 28- 30, 2012; Miami, FL:389-398."
+    },
+    {
+      "title": "topic modeling with latent Dirichlet allocation",
+      "authors": [
+        "A Riddell"
+      ],
+      "year": 2018,
+      "raw": "A Riddell \n\t\t \n\t\t \n\t\t\t Ida \n\t\t \n\t\t \n\t\t topic modeling with latent Dirichlet allocation \n\t\t \n\t\t\t August 6, 2018 \n\t\t \n\t \n\t GitHub \n\t Riddell A. Ida: topic modeling with latent Dirichlet allocation. GitHub. https://github.com/lda-project/lda. Accessed August 6, 2018."
+    },
+    {
+      "title": "Mallet: a machine learning for language toolkit",
+      "authors": [
+        "A Mccallum"
+      ],
+      "year": 2002,
+      "raw": "Mallet: a machine learning for language toolkit \n\t\t \n\t\t\t A K Mccallum \n\t\t \n\t\t \n\t\t \n\t\t\t 2002. August 6, 2018 \n\t\t \n\t\t \n\t\t\t University of Massachusetts Amherst \n\t\t \n\t \n\t McCallum AK. Mallet: a machine learning for language toolkit. University of Massachusetts Amherst. http://mallet.cs.umass.edu/. Published 2002. Accessed August 6, 2018."
+    },
+    {
+      "title": "Scikit-learn: machine learning in python",
+      "authors": [
+        "F Pedregosa",
+        "G Varoquaux",
+        "A Gramfort"
+      ],
+      "year": 2011,
+      "journal": "J Mach Learn Res",
+      "volume": "12",
+      "raw": "Scikit-learn: machine learning in python \n\t\t \n\t\t\t F Pedregosa \n\t\t \n\t\t \n\t\t\t G Varoquaux \n\t\t \n\t\t \n\t\t\t A Gramfort \n\t\t \n\t \n\t \n\t\t J Mach Learn Res \n\t\t \n\t\t\t 12 \n\t\t\t \n\t\t\t 2011 \n\t\t \n\t \n\t Pedregosa F, Varoquaux G, Gramfort A, et al. Scikit-learn: machine learning in python. J Mach Learn Res. 2011;12:2825-2830."
+    },
+    {
+      "title": "A statistical interpretation of term specificity and its application in retrieval",
+      "authors": [
+        "K Jones"
+      ],
+      "year": 1972,
+      "journal": "J Doc",
+      "volume": "28",
+      "issue": "1",
+      "raw": "A statistical interpretation of term specificity and its application in retrieval \n\t\t \n\t\t\t K S Jones \n\t\t \n\t \n\t \n\t\t J Doc \n\t\t \n\t\t\t 28 \n\t\t\t 1 \n\t\t\t \n\t\t\t 1972 \n\t\t \n\t \n\t Jones KS. A statistical interpretation of term specificity and its application in retrieval. J Doc. 1972;28(1):11-21."
+    },
+    {
+      "title": "The use of the area under the ROC curve in the evaluation of machine learning algorithms",
+      "authors": [
+        "A Bradley"
+      ],
+      "year": 1997,
+      "journal": "Pattern Recognit",
+      "volume": "30",
+      "issue": "7",
+      "raw": "The use of the area under the ROC curve in the evaluation of machine learning algorithms \n\t\t \n\t\t\t A P Bradley \n\t\t \n\t \n\t \n\t\t Pattern Recognit \n\t\t \n\t\t\t 30 \n\t\t\t 7 \n\t\t\t \n\t\t\t 1997 \n\t\t \n\t \n\t Bradley AP. The use of the area under the ROC curve in the evaluation of machine learning algorithms. Pattern Recognit. 1997;30(7):1145-1159."
+    },
+    {
+      "title": "On fairness and calibration",
+      "authors": [
+        "G Pleiss",
+        "M Raghavan",
+        "F Wu",
+        "J Kleinberg",
+        "K Weinberger"
+      ],
+      "year": 2017,
+      "raw": "On fairness and calibration \n\t\t \n\t\t\t G Pleiss \n\t\t \n\t\t \n\t\t\t M Raghavan \n\t\t \n\t\t \n\t\t\t F Wu \n\t\t \n\t\t \n\t\t\t J Kleinberg \n\t\t \n\t\t \n\t\t\t K Q Weinberger \n\t\t \n\t \n\t \n\t\t Proceedings of the 31st International Conferences on Neural Information Processing Systems \n\t\t the 31st International Conferences on Neural Information Processing Systems \n\t\t \n\t\t\t December 4-9, 2017 \n\t\t \n\t \n\t Pleiss G, Raghavan M, Wu F, Kleinberg J, Weinberger KQ. On fairness and calibration. In: Proceedings of the 31st International Conferences on Neural Information Processing Systems; December 4-9, 2017;"
+    },
+    {
+      "title": "Comparing individual means in the analysis of variance",
+      "authors": [
+        "J Tukey"
+      ],
+      "year": 1949,
+      "doi": "10.2307/3001913",
+      "journal": "Biometrics",
+      "volume": "5",
+      "issue": "2",
+      "raw": "Comparing individual means in the analysis of variance \n\t\t \n\t\t\t J W Tukey \n\t\t \n\t\t 10.2307/3001913 \n\t \n\t \n\t\t Biometrics \n\t\t \n\t\t\t 5 \n\t\t\t 2 \n\t\t\t \n\t\t\t 1949 \n\t\t \n\t \n\t Tukey JW. Comparing individual means in the analysis of variance. Biometrics. 1949;5(2):99-114."
+    },
+    {
+      "title": "Statsmodels: econometric and statistical modeling with python",
+      "authors": [
+        "S Seabold",
+        "J Perktold"
+      ],
+      "year": 2010,
+      "doi": "10.25080/majora-92bf1922-011",
+      "raw": "Statsmodels: econometric and statistical modeling with python \n\t\t \n\t\t\t S Seabold \n\t\t \n\t\t \n\t\t\t J Perktold \n\t\t \n\t\t 10.25080/majora-92bf1922-011 \n\t \n\t \n\t\t Proceedings of the 9th Python in Science Conference \n\t\t the 9th Python in Science Conference Austin, TX \n\t\t \n\t\t\t June 28-July 3, 2010 \n\t\t\t \n\t\t \n\t \n\t Seabold S, Perktold J. Statsmodels: econometric and statistical modeling with python. In: Proceedings of the 9th Python in Science Conference; June 28-July 3, 2010; Austin, TX:57-61."
+    },
+    {
+      "title": "Reproducibility in critical care: a mortality prediction case study",
+      "authors": [
+        "Aew Johnson",
+        "T Pollard",
+        "R Mark"
+      ],
+      "year": 2017,
+      "raw": "Reproducibility in critical care: a mortality prediction case study \n\t\t \n\t\t\t Aew Johnson \n\t\t \n\t\t \n\t\t\t T J Pollard \n\t\t \n\t\t \n\t\t\t R G Mark \n\t\t \n\t \n\t \n\t\t Proceedings of the 2nd Machine Learning for Healthcare Conference \n\t\t the 2nd Machine Learning for Healthcare Conference Boston, MA \n\t\t \n\t\t\t 2017 \n\t\t\t \n\t\t \n\t \n\t Johnson AEW, Pollard TJ, Mark RG. Reproducibility in critical care: a mortality prediction case study. In: Proceedings of the 2nd Machine Learning for Healthcare Conference; 2017; Boston, MA:361-376."
+    },
+    {
+      "title": "Gender differences in primary substance of abuse across age groups",
+      "authors": [
+        "K Smith"
+      ],
+      "year": 2014,
+      "doi": "10.1037/e476292006-001",
+      "raw": "K Smith \n\t\t \n\t\t 10.1037/e476292006-001 \n\t\t \n\t\t Gender differences in primary substance of abuse across age groups \n\t\t Rockville, MD \n\t\t \n\t\t\t Substance Abuse and Mental Health Services Administration \n\t\t\t 2014. August 9, 2018 \n\t\t\t \n\t\t \n\t \n\t Center for Behavioral Health Statistics and Quality \n\t Smith K. Gender differences in primary substance of abuse across age groups. In: Center for Behavioral Health Statistics and Quality, Substance Abuse and Mental Health Services Administration, US Department of Health and Human Services. The CBHSQ Report. Rockville, MD: Substance Abuse and Mental Health Services Administration; 2014:1-18. https://www.ncbi.nlm.nih.gov/books/NBK384845/. Accessed August 9, 2018."
+    },
+    {
+      "title": "Why is depression more common among women than among men?",
+      "authors": [
+        "C Kuehner"
+      ],
+      "year": 2017,
+      "doi": "10.1016/s2215-0366(16)30263-2",
+      "journal": "Lancet Psychiatry",
+      "volume": "4",
+      "issue": "2",
+      "raw": "Why is depression more common among women than among men? \n\t\t \n\t\t\t C Kuehner \n\t\t \n\t\t 10.1016/s2215-0366(16)30263-2 \n\t \n\t \n\t\t Lancet Psychiatry \n\t\t \n\t\t\t 4 \n\t\t\t 2 \n\t\t\t \n\t\t\t 2017 \n\t\t \n\t \n\t Kuehner C. Why is depression more common among women than among men? Lancet Psychiatry. 2017;4(2):146-158."
+    },
+    {
+      "title": "Contemporary use and practice of electroconvulsive therapy worldwide",
+      "authors": [
+        "K Leiknes",
+        "Jarosh-Von Schweder",
+        "L H\u00f8ie"
+      ],
+      "year": 2012,
+      "journal": "Brain Behav",
+      "volume": "2",
+      "issue": "3",
+      "raw": "Contemporary use and practice of electroconvulsive therapy worldwide \n\t\t \n\t\t\t K A Leiknes \n\t\t \n\t\t \n\t\t\t Jarosh-Von Schweder \n\t\t \n\t\t \n\t\t\t L H\u00f8ie \n\t\t \n\t\t \n\t\t\t B \n\t\t \n\t \n\t \n\t\t Brain Behav \n\t\t \n\t\t\t 2 \n\t\t\t 3 \n\t\t\t \n\t\t\t 2012 \n\t\t \n\t \n\t Leiknes KA, Jarosh-von Schweder L, H\u00f8ie B. Contemporary use and practice of electroconvulsive therapy worldwide. Brain Behav. 2012;2(3):283-344."
+    },
+    {
+      "title": "Access and cost barriers to mental health care, by insurance status, 1999-2010",
+      "authors": [
+        "K Rowan",
+        "D Mcalpine",
+        "L Blewett"
+      ],
+      "year": 2013,
+      "doi": "10.1377/hlthaff.2013.0133",
+      "journal": "Health Aff (Millwood)",
+      "volume": "32",
+      "issue": "10",
+      "raw": "Access and cost barriers to mental health care, by insurance status, 1999-2010 \n\t\t \n\t\t\t K Rowan \n\t\t \n\t\t \n\t\t\t D D Mcalpine \n\t\t \n\t\t \n\t\t\t L A Blewett \n\t\t \n\t\t 10.1377/hlthaff.2013.0133 \n\t \n\t \n\t\t Health Aff (Millwood) \n\t\t \n\t\t\t 32 \n\t\t\t 10 \n\t\t\t \n\t\t\t 2013 \n\t\t \n\t \n\t Rowan K, McAlpine DD, Blewett LA. Access and cost barriers to mental health care, by insurance status, 1999-2010. Health Aff (Millwood). 2013;32(10):1723- 1730."
+    },
+    {
+      "title": "Gender bias in the diagnosis of COPD",
+      "authors": [
+        "K Chapman",
+        "D Tashkin",
+        "D Pye"
+      ],
+      "year": 2001,
+      "doi": "10.1378/chest.119.6.1691",
+      "journal": "Chest",
+      "volume": "119",
+      "issue": "6",
+      "raw": "Gender bias in the diagnosis of COPD \n\t\t \n\t\t\t K R Chapman \n\t\t \n\t\t \n\t\t\t D P Tashkin \n\t\t \n\t\t \n\t\t\t D J Pye \n\t\t \n\t\t 10.1378/chest.119.6.1691 \n\t \n\t \n\t\t Chest \n\t\t \n\t\t\t 119 \n\t\t\t 6 \n\t\t\t \n\t\t\t 2001 \n\t\t \n\t \n\t Chapman KR, Tashkin DP, Pye DJ. Gender bias in the diagnosis of COPD. Chest. 2001;119(6):1691-1695."
+    },
+    {
+      "title": "Gender and chronic obstructive pulmonary disease: why it matters",
+      "authors": [
+        "M Han",
+        "D Postma",
+        "D Mannino"
+      ],
+      "year": 2007,
+      "doi": "10.1164/rccm.200704-553cc",
+      "journal": "Am J Respir Crit Care Med",
+      "volume": "176",
+      "issue": "12",
+      "raw": "Gender and chronic obstructive pulmonary disease: why it matters \n\t\t \n\t\t\t M K Han \n\t\t \n\t\t \n\t\t\t D Postma \n\t\t \n\t\t \n\t\t\t D M Mannino \n\t\t \n\t\t 10.1164/rccm.200704-553cc \n\t \n\t \n\t\t Am J Respir Crit Care Med \n\t\t \n\t\t\t 176 \n\t\t\t 12 \n\t\t\t \n\t\t\t 2007 \n\t\t \n\t \n\t Han MK, Postma D, Mannino DM, et al. Gender and chronic obstructive pulmonary disease: why it matters. Am J Respir Crit Care Med. 2007;176(12):1179-1184."
+    },
+    {
+      "title": "The burden of cancer in Asian Americans: a report of national mortality trends by Asian ethnicity",
+      "authors": [
+        "C Thompson",
+        "S Gomez",
+        "K Hastings"
+      ],
+      "year": 2016,
+      "journal": "Cancer Epidemiol Biomarkers Prev",
+      "volume": "25",
+      "issue": "10",
+      "raw": "The burden of cancer in Asian Americans: a report of national mortality trends by Asian ethnicity \n\t\t \n\t\t\t C A Thompson \n\t\t \n\t\t \n\t\t\t S L Gomez \n\t\t \n\t\t \n\t\t\t K G Hastings \n\t\t \n\t \n\t \n\t\t Cancer Epidemiol Biomarkers Prev \n\t\t \n\t\t\t 25 \n\t\t\t 10 \n\t\t\t \n\t\t\t 2016 \n\t\t \n\t \n\t Thompson CA, Gomez SL, Hastings KG, et al. The burden of cancer in Asian Americans: a report of national mortality trends by Asian ethnicity. Cancer Epidemiol Biomarkers Prev. 2016;25(10):1371-1382."
+    },
+    {
+      "title": "Chronic liver disease in the Hispanic population of the United States",
+      "authors": [
+        "A Carrion",
+        "R Ghanta",
+        "O Carrasquillo",
+        "P Martin"
+      ],
+      "year": 2011,
+      "journal": "Clin Gastroenterol Hepatol",
+      "volume": "9",
+      "issue": "10",
+      "raw": "Chronic liver disease in the Hispanic population of the United States \n\t\t \n\t\t\t A F Carrion \n\t\t \n\t\t \n\t\t\t R Ghanta \n\t\t \n\t\t \n\t\t\t O Carrasquillo \n\t\t \n\t\t \n\t\t\t P Martin \n\t\t \n\t \n\t \n\t\t Clin Gastroenterol Hepatol \n\t\t \n\t\t\t 9 \n\t\t\t 10 \n\t\t\t \n\t\t\t 2011 \n\t\t \n\t \n\t Carrion AF, Ghanta R, Carrasquillo O, Martin P. Chronic liver disease in the Hispanic population of the United States. Clin Gastroenterol Hepatol. 2011;9(10):834-841."
+    },
+    {
+      "title": "Racial/ethnic differences in the prevalence of atrial fibrillation among older adults-a cross-sectional study",
+      "authors": [
+        "A Shen",
+        "R Contreras",
+        "S Sobnosky"
+      ],
+      "year": 2010,
+      "journal": "J Natl Med Assoc",
+      "volume": "102",
+      "issue": "10",
+      "raw": "Racial/ethnic differences in the prevalence of atrial fibrillation among older adults-a cross-sectional study \n\t\t \n\t\t\t A Y Shen \n\t\t \n\t\t \n\t\t\t R Contreras \n\t\t \n\t\t \n\t\t\t S Sobnosky \n\t\t \n\t \n\t \n\t\t J Natl Med Assoc \n\t\t \n\t\t\t 102 \n\t\t\t 10 \n\t\t\t \n\t\t\t 2010 \n\t\t \n\t \n\t Shen AY, Contreras R, Sobnosky S, et al. Racial/ethnic differences in the prevalence of atrial fibrillation among older adults-a cross-sectional study. J Natl Med Assoc. 2010;102(10):906-913."
+    },
+    {
+      "title": "Disability, health, and multiple chronic conditions among people eligible for both Medicare and Medicaid, 2005-2010",
+      "authors": [
+        "M Fox",
+        "A Reichard"
+      ],
+      "year": 2013,
+      "journal": "Prev Chronic Dis",
+      "volume": "10",
+      "pages": "e157",
+      "raw": "Disability, health, and multiple chronic conditions among people eligible for both Medicare and Medicaid, 2005-2010 \n\t\t \n\t\t\t M H Fox \n\t\t \n\t\t \n\t\t\t A Reichard \n\t\t \n\t \n\t \n\t\t Prev Chronic Dis \n\t\t \n\t\t\t 10 \n\t\t\t e157 \n\t\t\t 2013 \n\t\t \n\t \n\t Fox MH, Reichard A. Disability, health, and multiple chronic conditions among people eligible for both Medicare and Medicaid, 2005-2010. Prev Chronic Dis. 2013;10:e157."
+    },
+    {
+      "title": "Fairness through awareness",
+      "authors": [
+        "C Dwork",
+        "M Hardt",
+        "T Pitassi",
+        "O Reingold",
+        "R Zemel"
+      ],
+      "year": 2012,
+      "doi": "10.1145/2090236.2090255",
+      "raw": "Fairness through awareness \n\t\t \n\t\t\t C Dwork \n\t\t \n\t\t \n\t\t\t M Hardt \n\t\t \n\t\t \n\t\t\t T Pitassi \n\t\t \n\t\t \n\t\t\t O Reingold \n\t\t \n\t\t \n\t\t\t R Zemel \n\t\t \n\t\t 10.1145/2090236.2090255 \n\t \n\t \n\t\t Proceedings of the 3rd Innovations in Theoretical Computer Science Conference \n\t\t the 3rd Innovations in Theoretical Computer Science Conference Cambridge, MA \n\t\t \n\t\t\t January 8-10, 2012 \n\t\t\t \n\t\t \n\t \n\t Dwork C, Hardt M, Pitassi T, Reingold O, Zemel R. Fairness through awareness. In: Proceedings of the 3rd Innovations in Theoretical Computer Science Conference; January 8-10, 2012; Cambridge, MA:214-226."
+    },
+    {
+      "title": "Equality of opportunity in supervised learning",
+      "authors": [
+        "M Hardt",
+        "E Price",
+        "N Srebro"
+      ],
+      "year": 2016,
+      "raw": "Equality of opportunity in supervised learning \n\t\t \n\t\t\t M Hardt \n\t\t \n\t\t \n\t\t\t E Price \n\t\t \n\t\t \n\t\t\t N Srebro \n\t\t \n\t \n\t \n\t\t Proceedings of the 30th International Conference on Neural Information Processing Systems \n\t\t the 30th International Conference on Neural Information Processing Systems Barcelona, Spain \n\t\t \n\t\t\t December 5-10, 2016 \n\t\t\t \n\t\t \n\t \n\t Hardt M, Price E, Srebro N, et al. Equality of opportunity in supervised learning. In: Proceedings of the 30th International Conference on Neural Information Processing Systems; December 5-10, 2016; Barcelona, Spain:3323-3331."
+    },
+    {
+      "title": "Learning fair representations",
+      "authors": [
+        "R Zemel",
+        "Y Wu",
+        "K Swersky",
+        "T Pitassi",
+        "C Dwork"
+      ],
+      "year": 2013,
+      "raw": "Learning fair representations \n\t\t \n\t\t\t R Zemel \n\t\t \n\t\t \n\t\t\t Y Wu \n\t\t \n\t\t \n\t\t\t K Swersky \n\t\t \n\t\t \n\t\t\t T Pitassi \n\t\t \n\t\t \n\t\t\t C Dwork \n\t\t \n\t \n\t \n\t\t Proceedings of the 30th International Conference on Machine Learning \n\t\t the 30th International Conference on Machine Learning Atlanta, GA \n\t\t \n\t\t\t June 16-21, 2013 \n\t\t\t \n\t\t \n\t \n\t Zemel R, Wu Y, Swersky K, Pitassi T, Dwork C. Learning fair representations. In: Proceedings of the 30th International Conference on Machine Learning; June 16- 21, 2013; Atlanta, GA:325-333."
+    },
+    {
+      "title": "Preventing fairness gerrymandering: auditing and learning for subgroup fairness",
+      "authors": [
+        "M Kearns",
+        "S Neel",
+        "A Roth",
+        "Z Wu"
+      ],
+      "year": 2018,
+      "raw": "Preventing fairness gerrymandering: auditing and learning for subgroup fairness \n\t\t \n\t\t\t M J Kearns \n\t\t \n\t\t \n\t\t\t S Neel \n\t\t \n\t\t \n\t\t\t A Roth \n\t\t \n\t\t \n\t\t\t Z S Wu \n\t\t \n\t \n\t \n\t\t Proceedings of the 35th International Conference on Machine Learning \n\t\t the 35th International Conference on Machine Learning Stockholm, Sweden \n\t\t \n\t\t\t July 10-15, 2018 \n\t\t\t \n\t\t \n\t \n\t Kearns MJ, Neel S, Roth A, Wu ZS. Preventing fairness gerrymandering: auditing and learning for subgroup fairness. In: Proceedings of the 35th International Conference on Machine Learning; July 10-15, 2018; Stockholm, Sweden:2564- 2572."
+    },
+    {
+      "title": "Predicting early psychiatric readmission with natural language processing of narrative discharge summaries",
+      "authors": [
+        "A Rumshisky",
+        "M Ghassemi",
+        "T Naumann"
+      ],
+      "year": 2016,
+      "doi": "10.1038/tp.2015.182",
+      "journal": "Transl Psychiatry",
+      "volume": "6",
+      "issue": "10",
+      "pages": "e921",
+      "raw": "Predicting early psychiatric readmission with natural language processing of narrative discharge summaries \n\t\t \n\t\t\t A Rumshisky \n\t\t \n\t\t \n\t\t\t M Ghassemi \n\t\t \n\t\t \n\t\t\t T Naumann \n\t\t \n\t\t 10.1038/tp.2015.182 \n\t \n\t \n\t\t Transl Psychiatry \n\t\t \n\t\t\t 6 \n\t\t\t 10 \n\t\t\t e921 \n\t\t\t 2016 \n\t\t \n\t \n\t Rumshisky A, Ghassemi M, Naumann T, et al. Predicting early psychiatric readmission with natural language processing of narrative discharge summaries. Transl Psychiatry. 2016;6(10):e921."
+    },
+    {
+      "title": "Predicting time to readmission in patients with recent histories of recurrent psychiatric hospitalization: a matched-control survival analysis",
+      "authors": [
+        "T Schmutte",
+        "C Dunn",
+        "W Sledge"
+      ],
+      "year": 2010,
+      "doi": "10.1097/nmd.0b013e3181fe726b",
+      "journal": "J Nerv Ment Dis",
+      "volume": "198",
+      "issue": "12",
+      "raw": "Predicting time to readmission in patients with recent histories of recurrent psychiatric hospitalization: a matched-control survival analysis \n\t\t \n\t\t\t T Schmutte \n\t\t \n\t\t \n\t\t\t C L Dunn \n\t\t \n\t\t \n\t\t\t W H Sledge \n\t\t \n\t\t 10.1097/nmd.0b013e3181fe726b \n\t \n\t \n\t\t J Nerv Ment Dis \n\t\t \n\t\t\t 198 \n\t\t\t 12 \n\t\t\t \n\t\t\t 2010 \n\t\t \n\t \n\t Schmutte T, Dunn CL, Sledge WH. Predicting time to readmission in patients with recent histories of recurrent psychiatric hospitalization: a matched-control survival analysis. J Nerv Ment Dis. 2010;198(12):860-863."
+    },
+    {
+      "title": "Effects of discharge planning and compliance with outpatient appointments on readmission rates",
+      "authors": [
+        "E Nelson",
+        "M Maruish",
+        "J Axler"
+      ],
+      "year": 2000,
+      "journal": "Psychiatr Serv",
+      "volume": "51",
+      "issue": "7",
+      "pages": "53",
+      "raw": "Effects of discharge planning and compliance with outpatient appointments on readmission rates \n\t\t \n\t\t\t E A Nelson \n\t\t \n\t\t \n\t\t\t M E Maruish \n\t\t \n\t\t \n\t\t\t J L Axler \n\t\t \n\t \n\t \n\t\t Psychiatr Serv \n\t\t \n\t\t\t 51 \n\t\t\t 7 \n\t\t\t 53 \n\t\t\t 2000 \n\t\t \n\t \n\t Nelson EA, Maruish ME, Axler JL. Effects of discharge planning and compliance with outpatient appointments on readmission rates. Psychiatr Serv. 2000;51(7):885-889. 53"
+    },
+    {
+      "title": "AI versus doctors [news",
+      "year": 2017,
+      "journal": "IEEE Spectr",
+      "volume": "54",
+      "issue": "10",
+      "pages": "13",
+      "raw": "AI versus doctors [news \n\t \n\t \n\t\t IEEE Spectr \n\t\t \n\t\t\t 54 \n\t\t\t 10 \n\t\t\t 13 \n\t\t\t 2017 \n\t\t \n\t \n\t AI versus doctors [news]. IEEE Spectr. 2017;54(10):13."
+    },
+    {
+      "title": "Want less-biased decisions? Use algorithms",
+      "authors": [
+        "A Miller"
+      ],
+      "year": 2018,
+      "journal": "Harvard Business Review",
+      "raw": "Want less-biased decisions? Use algorithms \n\t\t \n\t\t\t A P Miller \n\t\t \n\t\t \n\t \n\t \n\t\t Harvard Business Review \n\t\t \n\t\t\t July 26, 2018. August 9, 2018 \n\t\t \n\t \n\t Miller AP. Want less-biased decisions? Use algorithms. Harvard Business Review. July 26, 2018. https://hbr.org/2018/07/want-less-biased-decisions-use- algorithms. Accessed August 9, 2018."
+    }
+  ],
+  "num_references": 54,
+  "figures": [
+    {
+      "caption": "Figure 1 .Figure 2 .",
+      "description": "Figure 1. 95% Confidence Intervals for Error Rate (Zero-One Loss) in ICU Mortality for Gender"
+    },
+    {
+      "caption": "Figure 3 .",
+      "description": "Figure 3. 95% Confidence Intervals for Error Rate (Zero-One Loss) in Psychiatric Readmission for Racial Groups"
+    },
+    {
+      "caption": "Figure 4 .",
+      "description": "Figure 4. 95% Confidence Intervals for Error Rate (Zero-One Loss) in Psychiatric Readmission for Gender"
+    },
+    {
+      "caption": "Figure 5 .",
+      "description": "Figure 5. 95% Confidence Intervals for Error Rate (Zero-One Loss) in Psychiatric Readmission for Insurance Type"
+    }
+  ],
+  "num_figures": 4,
+  "num_citations": 55,
+  "cited_references": [
+    "b13",
+    "b39",
+    "b41",
+    "b18",
+    "b44",
+    "b49",
+    "b14",
+    "b17",
+    "b36",
+    "b25",
+    "b9",
+    "b35",
+    "b20",
+    "b43",
+    "b21",
+    "b51",
+    "b47",
+    "b40",
+    "b12",
+    "b42",
+    "b30",
+    "b31",
+    "b29",
+    "b16",
+    "b37",
+    "b46",
+    "b15",
+    "b23",
+    "b32",
+    "b19",
+    "b28",
+    "b45",
+    "b10",
+    "b38",
+    "b24",
+    "b50",
+    "b33",
+    "b48",
+    "b11",
+    "b53",
+    "b22",
+    "b34",
+    "b27",
+    "b26"
+  ],
+  "notes": [
+    "[raw_reference] Oh SS, Galanter J, Thakur N, et al. Diversity in clinical and biomedical research: a promise yet to be fulfilled. PLoS Med. 2015;12(12):e1001918.",
+    "[raw_reference] Mary Horrigan Connors Center, Brigham and Women's Hospital. Ten years of health advancements for women of all ages, ethnicities and nations. https://www.brighamandwomens.org/assets/BWH/womens- health/pdfs/connors-center-ten-year-report.pdf. Accessed August 9, 2018.",
+    "[raw_reference] Johnson KS. Racial and ethnic disparities in palliative care. J Palliat Med. 2013;16(11):1329-1334.",
+    "[raw_reference] Phelan SM, Burgess DJ, Yeazel MW, Hellerstedt WL, Griffin JM, van Ryn M. Impact of weight bias and stigma on quality of care and outcomes for patients with obesity. Obes Rev. 2015;16(4):319-326.",
+    "[raw_reference] Calderone KL. The influence of gender on the frequency of pain and sedative medication administered to postoperative patients. Sex Roles. 1990;23(11- 12):713-725.",
+    "[raw_reference] Bartley EJ, Fillingim RB. Sex differences in pain: a brief review of clinical and experimental findings. Br J Anaesth. 2013;111(1):52-58.",
+    "[raw_reference] Hoffmann DE, Tarzian AJ. The girl who cried pain: a bias against women in the treatment of pain. J Law Med Ethics. 2001;29(1):13-27.",
+    "[raw_reference] Tucker MJ, Berg CJ, Callaghan WM, Hsia J. The black-white disparity in pregnancy- related mortality from 5 conditions: differences in prevalence and case-fatality rates. Am J Public Health. 2007;97(2):247-251.",
+    "[raw_reference] Howell EA. Reducing disparities in severe maternal morbidity and mortality. Clin Obstet Gynecol. 2018;61(2):387-399.",
+    "[raw_reference] Gulshan V, Peng L, Coram M, et al. Development and validation of a deep learning algorithm for detection of diabetic retinopathy in retinal fundus photographs. JAMA. 2016;316(22):2402-2410.",
+    "[raw_reference] Esteva A, Kuprel B, Novoa RA, et al. Dermatologist-level classification of skin cancer with deep neural networks. Nature. 2017;542(7639):115-118.",
+    "[raw_reference] Liao KP, Cai T, Gainer V, et al. Electronic medical records for discovery research in rheumatoid arthritis. Arthritis Care Res (Hoboken). 2010;62(8):1120-1127.",
+    "[raw_reference] Ghassemi M, Naumann T, Doshi-Velez F, et al. Unfolding physiological state: mortality modelling in intensive care units. KDD. 2014;2014:75-84.",
+    "[raw_reference] Ghassemi M, Wu M, Hughes MC, Szolovits P, Doshi-Velez F. Predicting intervention onset in the ICU with switching state space models. AMIA Jt Summits Transl Sci Proc. 2017;2017:82-91.",
+    "[raw_reference] Ferryman K, Pitcan M. Fairness in precision medicine. Data & Society. https://datasociety.net/wp- content/uploads/2018/02/Data.Society.Fairness.In_.Precision.Medicine.Feb2018 .FINAL-2.26.18.pdf. Published February 26, 2018. Accessed August 9, 2018.",
+    "[raw_reference] Angwin J, Larson J, Mattu S, Kirchner L. Machine bias. ProPublica. May 23, 2016. https://www.propublica.org/article/machine-bias-risk-assessments-in-criminal- sentencing. Accessed August 9, 2018.",
+    "[raw_reference] Zou J, Schiebinger L. AI can be sexist and racist-it's time to make it fair. Nature. 2018;559(7714):324-326.",
+    "[report_type] arXiv",
+    "[raw_reference] Ghassemi M, Naumann T, Schulam P, Beam AL, Ranganath R. Opportunities in machine learning for healthcare. arXiv. https://arxiv.org/abs/1806.00388. Published June 1, 2018. Updated June 5, 2018. Accessed August 9, 2018.",
+    "[raw_reference] Yarnell CJ, Fu L, Manuel D, et al. Association between immigrant status and end- of-life care in Ontario, Canada. JAMA. 2017;318(15):1479-1488.",
+    "[raw_reference] Garg N, Schiebinger L, Jurafsky D, Zou J. Word embeddings quantify 100 years of gender and ethnic stereotypes. Proc Natl Acad Sci USA. 2018;115(16):e3635- e3644.",
+    "3rd ed",
+    "[raw_reference] Williams DR, Costa M, Leavell JP. Race and mental health: patterns and challenges. In: Scheid TL, Brown, TN, eds. A Handbook for the Study of Mental Health: Social Contexts, Theories, and Systems. 3rd ed. New York, NY: Cambridge University Press; 2017:281-304.",
+    "[raw_reference] Priest N, Williams DR. Racial discrimination and racial disparities in health. In: Major B, Dovidio JF, Link BG, eds. The Oxford Handbook of Stigma, Discrimination, and Health. New York, NY: Oxford University Press; 2017:163-182.",
+    "[raw_reference] Chen I, Johansson FD, Sontag D. Why is my classifier discriminatory? arXiv. https://arxiv.org/abs/1805.12002. Published May 30, 2018. Accessed August 9, 2018.",
+    "[raw_reference] Johnson AEW, Pollard TJ, Shen L, et al. MIMIC-III, a freely accessible critical care database. Sci Data. 2016;3:160035.",
+    "[raw_reference] Blei DM, Ng AY, Jordan MI. Latent Dirichlet allocation. J Mach Learn Res. 2003;3:993-1022.",
+    "[raw_reference] Marlin BM, Kale DC, Khemani RG, Wetzel RC. Unsupervised pattern discovery in electronic health care data using probabilistic clustering models. In: Proceedings of the 2nd ACM SIGHIT International Health Informatics Symposium; January 28- 30, 2012; Miami, FL:389-398.",
+    "[report_type] GitHub",
+    "[raw_reference] Riddell A. Ida: topic modeling with latent Dirichlet allocation. GitHub. https://github.com/lda-project/lda. Accessed August 6, 2018.",
+    "[raw_reference] McCallum AK. Mallet: a machine learning for language toolkit. University of Massachusetts Amherst. http://mallet.cs.umass.edu/. Published 2002. Accessed August 6, 2018.",
+    "[raw_reference] Pedregosa F, Varoquaux G, Gramfort A, et al. Scikit-learn: machine learning in python. J Mach Learn Res. 2011;12:2825-2830.",
+    "[raw_reference] Jones KS. A statistical interpretation of term specificity and its application in retrieval. J Doc. 1972;28(1):11-21.",
+    "[raw_reference] Bradley AP. The use of the area under the ROC curve in the evaluation of machine learning algorithms. Pattern Recognit. 1997;30(7):1145-1159.",
+    "[raw_reference] Pleiss G, Raghavan M, Wu F, Kleinberg J, Weinberger KQ. On fairness and calibration. In: Proceedings of the 31st International Conferences on Neural Information Processing Systems; December 4-9, 2017;",
+    "[raw_reference] Tukey JW. Comparing individual means in the analysis of variance. Biometrics. 1949;5(2):99-114.",
+    "[raw_reference] Seabold S, Perktold J. Statsmodels: econometric and statistical modeling with python. In: Proceedings of the 9th Python in Science Conference; June 28-July 3, 2010; Austin, TX:57-61.",
+    "[raw_reference] Johnson AEW, Pollard TJ, Mark RG. Reproducibility in critical care: a mortality prediction case study. In: Proceedings of the 2nd Machine Learning for Healthcare Conference; 2017; Boston, MA:361-376.",
+    "Center for Behavioral Health Statistics and Quality",
+    "[raw_reference] Smith K. Gender differences in primary substance of abuse across age groups. In: Center for Behavioral Health Statistics and Quality, Substance Abuse and Mental Health Services Administration, US Department of Health and Human Services. The CBHSQ Report. Rockville, MD: Substance Abuse and Mental Health Services Administration; 2014:1-18. https://www.ncbi.nlm.nih.gov/books/NBK384845/. Accessed August 9, 2018.",
+    "[raw_reference] Kuehner C. Why is depression more common among women than among men? Lancet Psychiatry. 2017;4(2):146-158.",
+    "[raw_reference] Leiknes KA, Jarosh-von Schweder L, H\u00f8ie B. Contemporary use and practice of electroconvulsive therapy worldwide. Brain Behav. 2012;2(3):283-344.",
+    "[raw_reference] Rowan K, McAlpine DD, Blewett LA. Access and cost barriers to mental health care, by insurance status, 1999-2010. Health Aff (Millwood). 2013;32(10):1723- 1730.",
+    "[raw_reference] Chapman KR, Tashkin DP, Pye DJ. Gender bias in the diagnosis of COPD. Chest. 2001;119(6):1691-1695.",
+    "[raw_reference] Han MK, Postma D, Mannino DM, et al. Gender and chronic obstructive pulmonary disease: why it matters. Am J Respir Crit Care Med. 2007;176(12):1179-1184.",
+    "[raw_reference] Thompson CA, Gomez SL, Hastings KG, et al. The burden of cancer in Asian Americans: a report of national mortality trends by Asian ethnicity. Cancer Epidemiol Biomarkers Prev. 2016;25(10):1371-1382.",
+    "[raw_reference] Carrion AF, Ghanta R, Carrasquillo O, Martin P. Chronic liver disease in the Hispanic population of the United States. Clin Gastroenterol Hepatol. 2011;9(10):834-841.",
+    "[raw_reference] Shen AY, Contreras R, Sobnosky S, et al. Racial/ethnic differences in the prevalence of atrial fibrillation among older adults-a cross-sectional study. J Natl Med Assoc. 2010;102(10):906-913.",
+    "[raw_reference] Fox MH, Reichard A. Disability, health, and multiple chronic conditions among people eligible for both Medicare and Medicaid, 2005-2010. Prev Chronic Dis. 2013;10:e157.",
+    "[raw_reference] Dwork C, Hardt M, Pitassi T, Reingold O, Zemel R. Fairness through awareness. In: Proceedings of the 3rd Innovations in Theoretical Computer Science Conference; January 8-10, 2012; Cambridge, MA:214-226.",
+    "[raw_reference] Hardt M, Price E, Srebro N, et al. Equality of opportunity in supervised learning. In: Proceedings of the 30th International Conference on Neural Information Processing Systems; December 5-10, 2016; Barcelona, Spain:3323-3331.",
+    "[raw_reference] Zemel R, Wu Y, Swersky K, Pitassi T, Dwork C. Learning fair representations. In: Proceedings of the 30th International Conference on Machine Learning; June 16- 21, 2013; Atlanta, GA:325-333.",
+    "[raw_reference] Kearns MJ, Neel S, Roth A, Wu ZS. Preventing fairness gerrymandering: auditing and learning for subgroup fairness. In: Proceedings of the 35th International Conference on Machine Learning; July 10-15, 2018; Stockholm, Sweden:2564- 2572.",
+    "[raw_reference] Rumshisky A, Ghassemi M, Naumann T, et al. Predicting early psychiatric readmission with natural language processing of narrative discharge summaries. Transl Psychiatry. 2016;6(10):e921.",
+    "[raw_reference] Schmutte T, Dunn CL, Sledge WH. Predicting time to readmission in patients with recent histories of recurrent psychiatric hospitalization: a matched-control survival analysis. J Nerv Ment Dis. 2010;198(12):860-863.",
+    "[raw_reference] Nelson EA, Maruish ME, Axler JL. Effects of discharge planning and compliance with outpatient appointments on readmission rates. Psychiatr Serv. 2000;51(7):885-889. 53",
+    "[raw_reference] AI versus doctors [news]. IEEE Spectr. 2017;54(10):13.",
+    "[raw_reference] Miller AP. Want less-biased decisions? Use algorithms. Harvard Business Review. July 26, 2018. https://hbr.org/2018/07/want-less-biased-decisions-use- algorithms. Accessed August 9, 2018."
+  ],
+  "editors": [
+    "T L Scheid",
+    "Brown",
+    "Tn",
+    "B Major",
+    "J F Dovidio",
+    "B G Link"
+  ],
+  "processing_software": {
+    "GROBID": "0.8.2"
+  }
+}

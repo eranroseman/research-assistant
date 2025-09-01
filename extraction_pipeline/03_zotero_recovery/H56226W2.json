@@ -1,0 +1,805 @@
+{
+  "paper_id": "H56226W2",
+  "title": "Use of a machine learning framework to predict substance use disorder treatment success",
+  "abstract": "There are several methods for building prediction models. The wealth of currently available modeling techniques usually forces the researcher to judge, a priori, what will likely be the best method. Super learning (SL) is a methodology that facilitates this decision by combining all identified prediction algorithms pertinent for a particular prediction problem. SL generates a final model that is at least as good as any of the other models considered for predicting the outcome. The overarching aim of this work is to introduce SL to analysts and practitioners. This work compares the performance of logistic regression, penalized regression, random forests, deep learning neural networks, and SL to predict successful substance use disorders (SUD) treatment. A nationwide database including 99,013 SUD treatment patients was used. All algorithms were evaluated using the area under the receiver operating characteristic curve (AUC) in a test sample that was not included in the training sample used to fit the prediction models. AUC for the models ranged between 0.793 and 0.820. SL was superior to all but one of the algorithms compared. An explanation of SL steps is provided. SL is the first step in targeted learning, an analytic framework that yields double robust effect estimation and inference with fewer assumptions than the usual parametric methods. Different aspects of SL depending on the context, its function within the targeted learning framework, and the benefits of this methodology in the addiction field are discussed.",
+  "year": 2017,
+  "date": "2017-04-10",
+  "authors": [
+    {
+      "name": "Laura Acion",
+      "email": "laura.acion@ic.fcen.uba.ar",
+      "affiliation": {
+        "organization": "Instituto de Ca \u00b4lculo",
+        "department": "Instituto de Ca \u00b4lculo",
+        "institution": "Universidad de Buenos Aires",
+        "address": "Buenos Aires, Argentina"
+      }
+    },
+    {
+      "name": "Diana Kelmansky",
+      "affiliation": {
+        "organization": "Instituto de Ca \u00b4lculo",
+        "department": "Instituto de Ca \u00b4lculo",
+        "institution": "Universidad de Buenos Aires",
+        "address": "Buenos Aires, Argentina"
+      }
+    },
+    {
+      "name": "Mark Van Der Laan",
+      "affiliation": {
+        "organization": "Division of Biostatistics",
+        "department": "Division of Biostatistics",
+        "institution": "University of California",
+        "address": "Berkeley, California, United States of America"
+      }
+    },
+    {
+      "name": "Ethan Sahker",
+      "affiliation": {
+        "organization": "Iowa Consortium for Substance Abuse Research and Evaluation",
+        "department": "Iowa Consortium for Substance Abuse Research and Evaluation",
+        "institution": "University of Iowa",
+        "address": "Iowa City, Iowa, United States of America"
+      }
+    },
+    {
+      "name": "Deshauna Jones",
+      "affiliation": {
+        "organization": "Iowa Consortium for Substance Abuse Research and Evaluation",
+        "department": "Iowa Consortium for Substance Abuse Research and Evaluation",
+        "institution": "University of Iowa",
+        "address": "Iowa City, Iowa, United States of America"
+      }
+    },
+    {
+      "name": "Stephan Arndt",
+      "affiliation": {
+        "organization": "Iowa Consortium for Substance Abuse Research and Evaluation",
+        "department": "Iowa Consortium for Substance Abuse Research and Evaluation",
+        "institution": "University of Iowa",
+        "address": "Iowa City, Iowa, United States of America"
+      }
+    },
+    {
+      "affiliation": {
+        "organization": "Institute for Tobacco Research and Policy Studies",
+        "department": "Institute for Tobacco Research and Policy Studies",
+        "address": "UNITED STATES"
+      }
+    }
+  ],
+  "doi": "10.1371/journal.pone.0175383",
+  "md5": "404A850430740362570C8C17D13AEB82",
+  "publication": {
+    "journal": "Drug and alcohol dependence",
+    "journal_inferred": true
+  },
+  "funding": [
+    "",
+    "",
+    "Acknowledgments This work was partially funded by postdoctoral fellowship  2651/2014  awarded to  Dr. Acion  by  CONICET . The authors thank all open source software developers that made the analysis possible."
+  ],
+  "sections": [
+    {
+      "title": "Introduction",
+      "text": "There are several methods for building prediction models. Prediction models are often generated using some form of linear or logistic regression-e.g. [1] [2] [3] [4] . More recently, other learning algorithms such as random forests (RF) or artificial neural networks (ANN) are being used for prediction in the health sciences-e.g. [5] [6] [7] . These new techniques may be able to enhance prediction, thus improving the chances of matching patients to the most effective treatments.\n\nThe wealth of currently available modeling techniques usually forces the researcher to judge, a priori, what will likely be the best prediction method. Super learning (SL)  [8]  is a methodology that facilitates this decision by combining all identified prediction algorithms pertinent for a particular prediction problem. SL generates a final model that is at least as good as any of the other models considered for predicting the outcome. This property of SL is both theoretically  [8]  and empirically supported  [9] . The goal of this paper is to introduce various prediction methods, some of which are novel to the field of substance use disorders (SUD) treatment.\n\nAccounting for individual patient characteristics to maximize positive outcomes is at the heart of precision medicine. SUD treatment is one of the many areas that can greatly benefit from optimizing patients' pathways to the best possible treatment outcome. For example, United States estimates indicate only 19.8% of cases in need of alcohol use disorders treatment were ever treated  [10] . Identifying key predictors of successful treatment can serve to discover disparities, strengths and weaknesses in service delivery, eventually increasing treatment success and reducing unmet treatment needs  [11] [12] [13] .\n\nThe first step in identifying key characteristics for matching patients to the most effective treatments is to predict who will succeed at a given treatment. The importance of this topic is reflected by the rich literature aiming to identify patients' characteristics increasing the efficacy of SUD treatment (e.g. [4, [14] [15] [16] ). The methodological focus of this paper leaves a substantive literature review regarding SUD treatment success out of its scope. Some of the literature predicting successful SUD treatment takes advantage of large publicly available datasets such as the Substance Abuse and Mental Health Services Administration Treatment Episode Data Set-Discharges (TEDS-D)  [17] . The main advantage of datasets such as TEDS-D is the large number of records available including important patient characteristics and treatment features. Due to the computer power required when large data sets with numerous predictors are used, the advantage of working with large datasets or big data used to be also the greatest disadvantage for applying sophisticated prediction algorithms such as SL or other sophisticated machine learning methods. Computer power is currently less of a problem thanks to technological advances and an active open source software developer community. For instance, the open source community has optimized SL and other machine learning algorithms for the analysis of big data using open source software  [18] .\n\nMost of the methods featured in this paper were not used to analyze TEDS-D before. The aim is to evaluate what method works best at predicting successful treatment using a real life large database. Rather than a dataset tailored to showcase the methods properties, we use a dataset commonly used in the SUD field. We hypothesized that SL will generate the best prediction model as measured by the area under the receiver operating characteristic curve (AUC) evaluated in a test sample not included in the training sample used to fit all prediction models.\n\nThe use of SL as a prediction tool of success in SUD treatment may contribute to the literature by bettering the ability to identify treatment outcome disparities that, when addressed, may lead to improve patients' treatment outcomes."
+    },
+    {
+      "title": "Materials and methods"
+    },
+    {
+      "title": "Data",
+      "text": "To illustrate different prediction analytic approaches, we focused in SUD outpatient treatment for Hispanics during adulthood using publicly available TEDS-D 2006-2011 data  [17] . TEDS-D is an excellent example of a large administrative dataset that may be of interest to addiction researchers in real life. This dataset allows us to illustrate the use of the methodologies introduced in this work within a realistic setting.\n\nOutcome. Treatment completed was considered a successful treatment discharge status, all other treatment discharge reasons (e.g., left against professional advice, incarcerated, other) were considered as indicators of non-successful treatment. Treatment completion is a standard process outcome measure because it predicts longer-term outcomes such as less future criminal involvement, fewer readmissions, employment and income one year after treatment  [19] [20] [21] [22] .\n\nPredictors. Twenty eight predictors recorded by TEDS-D were included in the analysis. Predictors include 10 patient characteristics (i.e., age, gender, race-e.g., White, Black-, ethnicity-indicating patient's specific Hispanic origin, marital status, education, employment status, pregnant at time of admission, veteran status, and living arrangement), 3 treatment characteristics (i.e., intensity, medication-assisted opioid therapy, and length of stay), principal source of referral, summary of type of problematic substance (with categories \"alcohol only\", \"other drugs only\", or \"alcohol and drugs\"), and mental health problem. TEDS-D records thorough information about substances of misuse. This includes the following 12 predictors: primary, secondary, and tertiary substance problem, usual route of administration, frequency of use, and age at first use. The substances include: alcohol, cocaine/crack, marijuana/hashish, prescription opiates/synthetics, and methamphetamine use. Several other drug use categories were collapsed for analysis because of low percentages.\n\nInclusion criteria. TEDS-D includes all admissions/discharges rather than individuals. Consequently, only records that indicate the individual had no prior SUD treatment were included in the analyses. Part of our previous work focuses on racial and ethnic minorities  [11, 12, 23, 24] . It is known that racial and ethnic minorities vary in their treatment access and success levels  [25] [26] [27] . Thus, we restricted our analysis only to cases indicating a Hispanic/Latino ethnicity, 18 years old or older, and treatment in outpatient service settings. We focused on outpatient service settings because criteria for treatment completion/success (i.e., the outcome of interest) and duration for other types of services (e.g.,  24 -hour inpatient, detoxificationonly) and outpatient services are often very different. This is a sample arbitrarily chosen to exemplify the different analytical approaches. The choice is based on our previous knowledge in this field and not on the results obtained after using the methods described in the following paragraphs.\n\nExclusion criteria. Records with missing data in any of the predictors, the outcome, or characteristics used for determining inclusion in the study were excluded from the analysis. Since not all states collect the same information for their patients, from a total of 9,829,536 records, 4,385,825 (45%) had all required data complete.\n\nThese inclusion and exclusion criteria did not affect the performance of SL when compared to the rest of the analytical strategies used. A total of 99,013 records representing unique individuals were selected according to the inclusion and exclusion criteria and were used in the analysis. This sample was separated in a training set with 80% of the sample (n = 79,210) and a test set with the remaining 20% (n = 19,802).\n\nBecause these data represent public information and there is no subject identification, the University of Iowa Human Subjects Office Institutional Review Board exempted this study from review."
+    },
+    {
+      "title": "Statistical analysis",
+      "text": "The goal of the analysis was to compare results of classical analytical strategies that are commonly used to address prediction of treatment success (e.g., logistic regression) alongside results of newer methods for prediction (e.g., ANN). We also compared SL results. SL is an ensemble machine learning methodology that encompasses all other methodologies in its library and has demonstrated (both theoretical and empirical) superiority for prediction  [8, 9] .\n\nFormally, the analysis is as follows. Let W = {W 1 , . . ., W k } denote the predictors of interest and Y represent the binary outcome treatment success (Yes/No). Let O = (W, Y) be a random variable such that O~P 0 (i.e., the true probability distribution of O is P 0 ). Since only records that indicate the individual had no prior treatment in a drug or alcohol program were included in the analyses, we assumed that the individuals observed can be represented as independent and identically distributed observations of the random variable O. For each individual i, Y i and W i are observed. We sought to estimate \"\n\n, the probability of succeeding in treatment given the predictors of interest. \"\n\nQ 0 is unknown. Hence, we aimed to find the best estimator of \" Q 0 . This was achieved by maximizing the AUC. We did this using logistic regression, 3 types of penalized regression, RF, ANN, and the corresponding SL that includes these algorithms in its library. SL also maximized the AUC.\n\nWe used 2 mechanisms to avoid overfitting. The analysis used 2-fold cross-validation (CV) using 80% of the data set (n = 79,210) and the final model was validated using 19,802 randomly selected individuals that were only included in the test set (Fig  1 ). All analytic approaches explored were compared using the AUC in the test set. The best analytic strategy for predicting treatment success was identified as the model maximizing AUC. The AUC is a convenient measure of prediction success that can be interpreted as the probability that any of the algorithms ranks a randomly chosen successful patient higher than a randomly chosen unsuccessful patient  [28] . AUC ranges from 0 to 1, AUC = 1 means perfect prediction and AUC = 0.5 suggests chance levels of prediction.\n\nWe used at least 2 different configurations for each analytic strategy compared. The first approach included all 28 predictors available. Since it can be useful to reduce the number of predictors considered and simplify the final prediction formula, we also selected a subset of the 10 predictors with highest variable importance in a RF model. In decreasing order of importance, these predictors were: length of stay, age, principal source of referral, primary problematic substance, its age of first use, and its frequency of use, employment level, SUD type (i.e., only alcohol, only drugs, or both alcohol and drugs), education level, and patient's specific Hispanic origin (e.g., Puerto Rican, Mexican, Cuban).\n\nFor each set of predictors, the following algorithms were compared: logistic regression, least absolute shrinkage and selection operator (lasso), ridge, and elastic net penalized regressions  [29] , RF  [30] , ANN  [29, 31] , and SL  [8] . Since none of the aforementioned regression models considered interaction effects in the predictive model, an additional model including terms for all predictors and selected 2-way interactions was also added to the SL library for each type of regression. Two-way interactions were initially screened using all possible logistic regression models of 2 predictors at a time and their 2-way interaction. All interactions with p-values<0.0001 were included along with all predictors in the regression models of the SL library. We compared 17 algorithms/algorithm configurations.\n\nThere is a multitude of other analytic strategies that could be chosen  [29] ; however, to illustrate SL use for predicting treatment success when compared to other methods, we consider the chosen algorithms are adequate. In this context, where the data generating model is unknown, SL will be superior to the rest of the methodologies, regardless of the set of algorithms initially chosen. Some characteristics of the chosen algorithms are presented subsequently.\n\nLogistic regression. Logistic parametric regression is the most commonly used algorithm for prediction in the SUD treatment outcomes field. Logistic regression is easily implemented and interpreted. However, logistic regression assumptions are strong and, since the true data generating model is unknown, these assumptions are usually violated. For example, including many predictors, their interactions, and/or other higher order terms in a logistic regression model does not guarantee that it is the best model, due, for example, to collinearity between the predictors included (which increases variability) or model misspecification (which introduces bias).\n\nPenalized regression. Penalized regression (such as lasso, ridge regression, or elastic nets) offers an alternative to parametric regression models. The 3 types of penalized regression applied in this work vary in their variance/bias tradeoffs depending on the characteristics of the predictor set. For example, lasso will select only one term from a set of correlated predictors. This may not be appropriate. In fact, when the number of predictors is small compared to the number of independent observations, ridge regression outperforms lasso when variables are highly correlated. Additionally, if the true data generating model has only a few predictors but the candidate models have a large number of predictors; lasso may eliminate predictors that were not in the data generating model. On the other hand, ridge regression will keep all terms in the final model. The elastic net penalized regression provides some balance between lasso and the ridge regressions.\n\nIn the example presented here, there are 28 categorical predictors that correspond to 135 terms when the model is parametrized using dummy variables. The screening step for the most relevant 2-way interactions of these 135 terms, preselected 257 2-way interaction terms. Thus, the regression models including all predictors and selected interactions had 393 terms including the intercept. While logistic regression estimated 393 parameters for this model, lasso estimated parameters only for terms uncorrelated with each other and zeroed-out the rest; ridge regression kept all 393 but down weighted each term. In this way, penalized regression allows for tuning large models adapting them to the information provided by the data.\n\nRandom forests. RF is a recursive partitioning method popular in many fields with highdimensional data (e.g., genomics). RF can evaluate a number of predictor variables even in the presence of complex interactions, including those that are not possible to model using regression. RF is an ensemble of classification and regression trees constructed on bootstrap samples. Unlike individual trees, RF is more protective against overfitting.\n\nArtificial neural networks. An ANN uses interconnected nodes within various layers to explain an outcome given a set of predictors. The relationships between the nodes are defined by weights calculated using a given rule. The initial weights are preassigned by the analyst. The ANN algorithm iterates adjusting the weights. At the end of each iteration, the performance at outcome prediction is evaluated. ANNs efficiently generate non-linear classification rules but can be prone to overfitting. More recently, some types of ANN are referred to as deep learning  [31] . Deep learning allows modeling multiple levels of non-linearity in the data and is scalable to large datasets and big data in general. We used deep learning ANN with hidden layer sizes of 200.\n\nSuper learning. SL is a generalization of the stacking algorithm  [32] , an ensemble machine learning method that takes a weighted average of all other algorithms considered for prediction and produces a single prediction function (PF) with optimal tradeoff between variance and bias. SL is very flexible for learning from the data as it combines the strengths of all methodologies considered (including different configurations of the same algorithm) while minimizing modelling flaws. Another advantage of SL is that it eliminates the need to select a priori a single or a few methodologies for the analysis. SL allows analyzing the data using simultaneously all the methodologies the researcher considers suitable.\n\nFig  1  depicts the work flow used to analyze the data and details all the steps necessary for running SL. The input of the analysis consists of the training and test data sets together with the algorithmic library. Since we used 2-fold CV to obtain each algorithm PF, as well as, the SL PF, the training set was initially partitioned in 2 blocks. Each algorithm in the library was fitted using each block independently. We used the data block excluded from the model fitting to calculate the CV AUC for each algorithm in the library. We averaged both CV AUCs, resulting in a single training set CV AUC for each algorithm. Up to this step, model fitting follows a regular 2-fold CV modelling path. The PF of discrete SL, a simpler version of SL, is the PF of the algorithm with the minimum CV AUC.\n\nHowever, SL performs better when a weighted combination of the algorithms' PFs is used. Thus, the next step for obtaining SL PF is to calculate a weight for each algorithm PF. This is done regressing Y on the values of Y predicted by each algorithm in the library. Next, each algorithm is fitted using the whole training set and the SL PF is obtained by applying the estimated weights to the algorithm predictions for each observation.\n\nIt can be demonstrated that using 2-fold CV, the procedure can end here and the AUCs of fitting each algorithm and SL to the whole training dataset would suffice for SL to outperform the rest of the algorithms without overfitting. However, we included an additional validation step: all the PFs obtained with the training set, where used to predict SUD treatment success in the test data set. We calculated AUCs compared to evaluate all models adjusted using the test dataset.\n\nA thorough description of all the algorithms used in this work is out of the scope of this manuscript. The interested reader will find further details about SL in van der Laan and Rose  [33]  and about the rest of the aforementioned methodologies in Friedman et al  [29]  and Bengio  [31] .\n\nModels were fitted using the open source R programming language  [34]  and the H2O R interface version 3.8.2.2  [35]  that optimizes all the analytical methods used for large datasets. The h2oEnsemble package version 0.1.8 [36]  was used to fit the SL model. We set all tuning parameters for each algorithm in the SL library (e.g., the ANN implementation used in this manuscript has over 20 parameters) to their default values. The analysis took about 2.5 hours to run in a Windows 7 Professional desktop computer with 8-core i7-3770 3.40 Ghz CPU and 8 Gb RAM. Most of the analytic time was used to fit the four regression models including 2-way interaction terms. The other 13 algorithms, including SL, required only about 6 minutes of the 2.5 hours. AUC confidence intervals and variances were estimated using the Delong and colleagues methodology  [37]  as implemented in the R package pROC  [38] . Briefly, Delong et al  [37]  used the equality between AUC and the Mann-Whitney U statistic and asymptotic normality to analytically derive variance and confidence interval estimators for AUC."
+    },
+    {
+      "title": "Results",
+      "text": "Treatment success rate and characteristics for the patients included in the analyses are shown in Table  1 . For brevity, only gender and the top 10 most important predictors as identified by RF were included in the table.\n\nTable  2  shows the AUC in the test set (N = 19,802) for the 17 algorithms/algorithm configurations compared. All AUC are between 0.793 and 0.820. This indicates that, for this set of models, the probability that any of the algorithms will rank a randomly chosen successful patient higher than a randomly chosen unsuccessful patient is between 0.793 and 0.820. This is usually considered a good performance for prediction models.\n\nAs hypothesized, SL shows the largest AUC. SL performance is very closely followed by RF including all predictors. For this particular example, the algorithm with the worst performance is logistic regression including all predictors and selected 2-way interactions. The relative improvement in AUC of SL is 3.3% when compared to the worst prediction method. Also, the AUC for SL has the smallest estimated variance. The rest of the models considered have estimated AUC variances up to 19% higher than SL. As revealed by Fig 2, SL AUC is higher than AUC for all other models, with the exception of the RF model including all predictors.\n\nAlso, in most cases, the models including all predictors performed slightly better (but not statistically so) than the models including only the top 10 predictors selected in the initial screening step to simplify the prediction model. All parametric regression models both penalized and non-penalized approaches performed almost identically with respect to AUC for models not including interactions. This behavior could have been anticipated since a model with only 28 predictors can be considered too small for a data set this size. However, for models including all predictors and selected 2-way interactions, lasso outperformed the other 3 regression models. AUC for lasso was higher than for ridge and logistic regressions."
+    },
+    {
+      "title": "Discussion",
+      "text": "This work compared 17 models for predicting successful completion of SUD treatment. Both traditional and newer analytic strategies were equated in a nationwide large dataset. Particularly, super learning, an ensemble machine learning algorithm, was introduced for the first time to the study of SUD treatment success using large datasets. As expected, SL showed the best predictive performance.\n\nIn this particular example, SL superiority was meager when compared to more traditional models such as logistic regression. This result was not at all evident before analyzing these data. We understand this may dampen the interest in this work. However, we think that the finding that there are no major differences in the solutions of all methods is important in itself and worth discussing. Unlike what happens with other predictive models, the lack of substantive difference between SL and the rest of the models used means that: a) any of these methods could be used for these data and b) there are no major problems in the assumptions of the different models used. These findings are never evident before or after analyzing a dataset when analysis is performed using a traditional analytical approach. Sensitivity analysis is one approach used to address this limitation of traditional methods. In this sense, SL serves as a tool to streamlining and improving sensitivity analysis for prediction. SL does not require that\n\nTable 1. Sample characteristics (N = 99,013). Total N (%) SUD Treatment Success Yes 44,748 (45.2%) No 54,265 (54.8%) Gender Male 77,123 (77.9%) Female 21,890 (22.1%)\n\na model is chosen a priori, at the end of the analysis results in the best model, and, if there are no substantial differences with the rest of the models, SL provides a solid justification for the use of any of the models. SL is a valuable, but underutilized, tool for obtaining robust prediction results as required, for example, by the National Institutes of Health  [39] .\n\nIn addition, even small improvements in prediction can have a high impact depending on each particular problem. In this case, a small prediction improvement could significantly impact patients' outcomes and/or treatment costs. In other cases, small prediction improvements could save lives. Since SL is theoretically proven to perform as well or better than the best model included in its library, the results presented here are relevant to illustrate the use of SL in the SUD treatment outcome prediction field.\n\nIn other applications, SL has shown 44% and 12% increase in performance when compared to ANN and RF, respectively  [40] . Also, SL has shown as good or significantly better predictive performance than linear regression and other methods when used in 13 real datasets-see Fig 3.4 in  [40] . In fact, stacking algorithms similar to SL are usually among the type of algorithms that win prediction contests such as the Heritage Provider Network Health Prize  [41] . The Heritage Provider Network Health Prize was a competition to develop a predictive algorithm helping identify patients most likely to be admitted to healthcare providers.\n\nThe results of this work should be interpreted as an illustration of the presented statistical methods in a realistic setting. The practical conclusions should be seen in light of the data limitations. Analysis was restricted to Hispanics and very few features describing the type of treatment and how treatment was administered were included. There may be considerable reservation with using treatment completion as an indicator of treatment success. While posttreatment follow-up outcome measures of abstinence or reduced use would be best, such\n\nTable 2. AUC in the test set (N = 19,802) for each algorithm and algorithm parametrization used. Model AUC b \u03c3 2 Super Learning 0.820 0.165 Random Forests All Predictors 0.816 0.173 Lasso All Predictors + 2-Way Interactions 0.805 0.185 Lasso All Predictors 0.805 0.185 Elastic Net All Predictors 0.805 0.185 Logistic Regression All Predictors 0.805 0.185 Ridge Regression All Predictors 0.805 0.185 ANN Top 10 Predictors 0.805 0.185 Elastic Net All Predictors + 2-Way Interactions 0.804 0.186 ANN All Predictors 0.803 0.186 Lasso Top 10 Predictors 0.801 0.189 Elastic Net Top 10 Predictors 0.801 0.189 Ridge Regression Top 10 Predictors 0.801 0.189 Logistic Regression Top 10 Predictors 0.801 0.189 Random Forests Top 10 Predictors 0.797 0.191 Ridge Regr. All Predictors + 2-Way Interactions 0.793 0.197 Logistic Regr. All Predictors + 2-Way Interactions 0.793 0.197  https://doi.org/10.1371/journal.pone.0175383.t002 Fig 2. 95% confidence intervals for AUC of each model compared. https://doi.org/10.1371/journal.pone.0175383.g002\n\nnation-wide data collection efforts were out of the scope of this project. While these are important limitations to inform treatment success prediction, these issues do not affect the main goal of this work.\n\nTraditional analytical approaches for prediction may not only consider the prediction performance of a model, but also its ecological validity for a given research area. That is one of the reasons logistic regression could be preferred over SL for predicting SUD treatment success. While the model proposed by SL is designed to excel at prediction, it is not meant to be interpreted or to be used for effect estimation. If the true or close to true data generating model is included in the SL library, SL will likely have a low gain in predictive performance and its lack of interpretability could discourage its use. However, most of the time, researchers are uncertain about the model that generated the data. When ecological validity is important in a prediction context, SL could be used as a simpler model validator if an interpretable model in its library is close to SL in predictive performance. In the example presented here, SL has significantly better predictive performance than logistic regression; thus, it would be difficult to defend any of the logistic regression models used in this application in lieu of SL. On the other hand, these data show that, if the ecologically validity of RF models could be easily assessed, the use of the RF model with all the predictors could be used instead of the SL model.\n\nWhen the goal of the research is to interpret the effect of different predictors in the outcome, SL can be used in the context of the targeted learning framework  [33] . SL is the first stage for obtaining doubly-robust effect estimates using targeted maximum loss-based estimation (TMLE)  [42] . TMLE is an estimation technique that allows for double robust estimation of effects with fewer untestable assumptions than the usual parametric methods used for estimation. TMLE can be applied either in a causality framework or in a merely associative framework (additional details about TMLE is out of the scope of this work, we recommend  [33]  for further information). Using the prediction model suggested by SL and TMLE, one could answer questions such as \"What is the treatment success rate difference between Hispanics with comorbid psychiatric disorders and those without comorbid disorders?\" and \"Is this difference different from zero?\" In contrast, statistical inference is not possible in machine learning methodologies such as RF or deep learning. This important limitation of machine learning algorithms is overcome by targeted learning, the first analytical framework that provides estimates and hypothesis testing while using machine learning  [43] . Future directions of this work include determining the benefits of applying targeted learning for different effect estimations and inference in the addiction field."
+    },
+    {
+      "text": "Fig 1. Analytic work flow. https://doi.org/10.1371/journal.pone.0175383.g001"
+    },
+    {
+      "text": "(Continued)"
+    },
+    {
+      "title": "Acknowledgments",
+      "text": "This work was partially funded by postdoctoral fellowship  2651/2014  awarded to  Dr. Acion  by  CONICET . The authors thank all open source software developers that made the analysis possible."
+    },
+    {
+      "text": "This work was funded by  Consejo de Investigaciones Cient\u0131 \u00b4ficas y Te \u00b4cnicas  Postdoctoral Fellowship  2651/2014  awarded to LA."
+    },
+    {
+      "text": "All data are available at  https://www.icpsr.umich.edu/icpsrweb/ICPSR/  studies/30122 ."
+    }
+  ],
+  "references": [
+    {
+      "title": ") Hallucinogens 293 (0.3%) Other Sedatives 320 (0.3%) Other Stimulants 234 (0.2%) Other 313 (0.3%) Frequency of Primary Substance Use Not in the past month 41,529 (",
+      "doi": "10.1371/journal.pone.0175383.t001",
+      "journal": "Puerto Rican",
+      "volume": "31",
+      "issue": "31.4%",
+      "pages": "47",
+      "raw": ") Hallucinogens 293 (0.3%) Other Sedatives 320 (0.3%) Other Stimulants 234 (0.2%) Other 313 (0.3%) Frequency of Primary Substance Use Not in the past month 41,529 ( \n\t\t 10.1371/journal.pone.0175383.t001 \n\t \n\t \n\t\t Puerto Rican \n\t\t \n\t\t\t 31 \n\t\t\t 31.4% \n\t\t\t 47 \n\t\t\t 21-24 16,886 (17.1%) 25-29 19,625 (19.8%) 30-34 15,121 (15.3%) 35-39 11,725 (11.8%) 40-44 9,436 (9.5%) 45-49 6,988 (7.1. 12-14 17,577 (17.8%) 15-17 31,306 (31.6%) 18-20 22,949 (23.2%) 21-24 10,895 \n\t\t \n\t \n\t Mexican 25,190 (25.4%) Cuban 2,683 (2.7%) Other/Unspecified 40,093 (40.5%) Age (years) 18-20 11,479 (11.6%) %) 50-54 4,172 (4.2%) 55+ 3,581 (3.6%) Education (years) <9 17,170 (17.3%) 9-11 31,507 (31.8%) 12 34,329 (34.7%) 13-15 13,062 (13.2%) 16+ 2,945 (3.0%) Employment Full Time 34,586 (34.9%) Part Time 10,392 (10.5%) Unemployed 29,635 (29.9%) Not in Labor Force 24,400 (24.6%) Primary Substance Alcohol 50,782 (51.3%) Marijuana 26,269 (26.5%) Cocaine 8,554 (8.6%) Non-Prescription Opiates 7,791 (7.9%) Methamphetamine 2,312 (2.3%) Prescription Opiates and Synthetics 2,145 (2.2% 41.9%) 1-3 times past month 20,766 (21.0%) 1-2 times past week 11,770 (11.9%) (Continued) 3-6 times past week 8,272 (8.4%) Daily 16,676 (16.8%) Age of First Primary Substance Use (years) <10 4,825 (4.9%) \n\t Puerto Rican 31,047 (31.4%) Mexican 25,190 (25.4%) Cuban 2,683 (2.7%) Other/Unspecified 40,093 (40.5%) Age (years) 18-20 11,479 (11.6%) 21-24 16,886 (17.1%) 25-29 19,625 (19.8%) 30-34 15,121 (15.3%) 35-39 11,725 (11.8%) 40-44 9,436 (9.5%) 45-49 6,988 (7.1%) 50-54 4,172 (4.2%) 55+ 3,581 (3.6%) Education (years) <9 17,170 (17.3%) 9-11 31,507 (31.8%) 12 34,329 (34.7%) 13-15 13,062 (13.2%) 16+ 2,945 (3.0%) Employment Full Time 34,586 (34.9%) Part Time 10,392 (10.5%) Unemployed 29,635 (29.9%) Not in Labor Force 24,400 (24.6%) Primary Substance Alcohol 50,782 (51.3%) Marijuana 26,269 (26.5%) Cocaine 8,554 (8.6%) Non-Prescription Opiates 7,791 (7.9%) Methamphetamine 2,312 (2.3%) Prescription Opiates and Synthetics 2,145 (2.2%) Hallucinogens 293 (0.3%) Other Sedatives 320 (0.3%) Other Stimulants 234 (0.2%) Other 313 (0.3%) Frequency of Primary Substance Use Not in the past month 41,529 (41.9%) 1-3 times past month 20,766 (21.0%) 1-2 times past week 11,770 (11.9%) (Continued) 3-6 times past week 8,272 (8.4%) Daily 16,676 (16.8%) Age of First Primary Substance Use (years) <10 4,825 (4.9%) 12-14 17,577 (17.8%) 15-17 31,306 (31.6%) 18-20 22,949 (23.2%) 21-24 10,895 (11.0%) 25-29 5,768 (5.8%) 30-34 2,535 (2.6%) 35-39 1,573 (1.6%) 40-44 816 (0.8%) 45-49 435 (0.4%) 50-54 211 (0.2%) 55+ 123 (0.1%) Substance Abuse Type Alcohol Only 34,827 (35.2%) Other Drugs Only 29,887 (30.2%) Alcohol and Drugs 34,299 (34.6%) Source of Referral Self 16,910 (17.1%) Alcohol/Drug Abuse Care Provider 3,655 (3.7%) Other Health Care Provider 4,013 (4.1%) School 341 (0.3%) Employer 1,350 (1.4%) Other Community Referral 15,503 (15.7%) Criminal Justice Referral 57,241 (57.8%) Length of Stay (days) 1-30 19,942 (20.1%) 31-60 15,296 (15.4%) 61-90 12,476 (12.6%) 91-120 12,397 (12.5%) 121 or longer 38,902 (39.3%) https://doi.org/10.1371/journal.pone.0175383.t001 References"
+    },
+    {
+      "title": "Increased risk of alcohol and drug use among children from deployed military families",
+      "authors": [
+        "L Acion",
+        "M Ramirez",
+        "R Jorge",
+        "S Arndt"
+      ],
+      "year": 2013,
+      "doi": "10.1111/add.12161",
+      "journal": "Addiction",
+      "volume": "108",
+      "issue": "8",
+      "raw": "Increased risk of alcohol and drug use among children from deployed military families \n\t\t \n\t\t\t L Acion \n\t\t \n\t\t \n\t\t\t M R Ramirez \n\t\t \n\t\t \n\t\t\t R E Jorge \n\t\t \n\t\t \n\t\t\t S Arndt \n\t\t \n\t\t 10.1111/add.12161 \n\t\t \n\t \n\t \n\t\t Addiction \n\t\t \n\t\t\t 108 \n\t\t\t 8 \n\t\t\t \n\t\t\t 2013 \n\t\t \n\t \n\t Acion L, Ramirez MR, Jorge RE, Arndt S. Increased risk of alcohol and drug use among children from deployed military families. Addiction. 2013; 108(8):1418-25. https://doi.org/10.1111/add.12161 PMID: 23441867"
+    },
+    {
+      "title": "Sociodemographic Disparities Associated With Perceived Causes of Unmet Need for Mental Health Care",
+      "authors": [
+        "S Alang"
+      ],
+      "year": 2015,
+      "doi": "10.1037/prj0000113",
+      "journal": "Psychiatr Rehabil J",
+      "volume": "38",
+      "issue": "4",
+      "pages": "293",
+      "raw": "Sociodemographic Disparities Associated With Perceived Causes of Unmet Need for Mental Health Care \n\t\t \n\t\t\t S M Alang \n\t\t \n\t\t 10.1037/prj0000113 \n\t\t \n\t \n\t \n\t\t Psychiatr Rehabil J \n\t\t \n\t\t\t 38 \n\t\t\t 4 \n\t\t\t 293 \n\t\t\t 2015 \n\t\t \n\t \n\t Alang SM. Sociodemographic Disparities Associated With Perceived Causes of Unmet Need for Mental Health Care. Psychiatr Rehabil J. 2015; 38(4):293. https://doi.org/10.1037/prj0000113 PMID: 25664758"
+    },
+    {
+      "title": "Binge drinking and the risk of suicidal thoughts, plans, and attempts",
+      "authors": [
+        "C Glasheen",
+        "M Pemberton",
+        "R Lipari",
+        "E Copello",
+        "M Mattson"
+      ],
+      "year": 2015,
+      "doi": "10.1016/j.addbeh.2014.12.005",
+      "journal": "Addictive Behaviors",
+      "volume": "43",
+      "raw": "Binge drinking and the risk of suicidal thoughts, plans, and attempts \n\t\t \n\t\t\t C Glasheen \n\t\t \n\t\t \n\t\t\t M R Pemberton \n\t\t \n\t\t \n\t\t\t R Lipari \n\t\t \n\t\t \n\t\t\t E A Copello \n\t\t \n\t\t \n\t\t\t M E Mattson \n\t\t \n\t\t 10.1016/j.addbeh.2014.12.005 \n\t\t 25553510 \n\t\t \n\t \n\t \n\t\t Addictive Behaviors \n\t\t \n\t\t\t 43 \n\t\t\t \n\t\t\t 2015 \n\t\t \n\t \n\t Glasheen C, Pemberton MR, Lipari R, Copello EA, Mattson ME. Binge drinking and the risk of suicidal thoughts, plans, and attempts. Addictive Behaviors. 2015; 43:42-9. https://doi.org/10.1016/j.addbeh. 2014.12.005 PMID: 25553510"
+    },
+    {
+      "title": "National Analysis of Differences Among Substance Abuse Treatment Outcomes: College Student and Nonstudent Emerging Adults",
+      "authors": [
+        "E Sahker",
+        "L Acion",
+        "S Arndt"
+      ],
+      "year": 2015,
+      "doi": "10.1080/07448481.2014.990970",
+      "journal": "Journal of American College Health",
+      "volume": "63",
+      "issue": "2",
+      "raw": "National Analysis of Differences Among Substance Abuse Treatment Outcomes: College Student and Nonstudent Emerging Adults \n\t\t \n\t\t\t E Sahker \n\t\t \n\t\t \n\t\t\t L Acion \n\t\t \n\t\t \n\t\t\t S Arndt \n\t\t \n\t\t 10.1080/07448481.2014.990970 \n\t\t 25470217 \n\t\t \n\t \n\t \n\t\t Journal of American College Health \n\t\t \n\t\t\t 63 \n\t\t\t 2 \n\t\t\t \n\t\t\t 2015 \n\t\t \n\t \n\t Sahker E, Acion L, Arndt S. National Analysis of Differences Among Substance Abuse Treatment Out- comes: College Student and Nonstudent Emerging Adults. Journal of American College Health. 2015; 63(2):118-24. https://doi.org/10.1080/07448481.2014.990970 PMID: 25470217"
+    },
+    {
+      "title": "Individualized relapse prediction: Personality measures and striatal and insular activity during reward-processing robustly predict relapse",
+      "authors": [
+        "J Gowin",
+        "T Ball",
+        "M Wittmann",
+        "S Tapert",
+        "M Paulus"
+      ],
+      "year": 2015,
+      "doi": "10.1016/j.drugalcdep.2015.04.018",
+      "journal": "Drug and alcohol dependence",
+      "volume": "152",
+      "raw": "Individualized relapse prediction: Personality measures and striatal and insular activity during reward-processing robustly predict relapse \n\t\t \n\t\t\t J L Gowin \n\t\t \n\t\t \n\t\t\t T M Ball \n\t\t \n\t\t \n\t\t\t M Wittmann \n\t\t \n\t\t \n\t\t\t S F Tapert \n\t\t \n\t\t \n\t\t\t M P Paulus \n\t\t \n\t\t 10.1016/j.drugalcdep.2015.04.018 \n\t\t 25977206 \n\t\t \n\t \n\t \n\t\t Drug and alcohol dependence \n\t\t \n\t\t\t 152 \n\t\t\t \n\t\t\t 2015 \n\t\t \n\t \n\t Gowin JL, Ball TM, Wittmann M, Tapert SF, Paulus MP. Individualized relapse prediction: Personality measures and striatal and insular activity during reward-processing robustly predict relapse. Drug and alcohol dependence. 2015; 152:93-101. https://doi.org/10.1016/j.drugalcdep.2015.04.018 PMID: 25977206"
+    },
+    {
+      "title": "Predicting prolonged length of hospital stay in older emergency department users: use of a novel analysis method, the Artificial Neural Network",
+      "authors": [
+        "C Launay",
+        "H Rivi\u00e8re",
+        "A Kabeshova",
+        "O Beauchet"
+      ],
+      "year": 2015,
+      "doi": "10.1016/j.ejim.2015.06.002",
+      "journal": "European journal of internal medicine",
+      "volume": "26",
+      "issue": "7",
+      "raw": "Predicting prolonged length of hospital stay in older emergency department users: use of a novel analysis method, the Artificial Neural Network \n\t\t \n\t\t\t C Launay \n\t\t \n\t\t \n\t\t\t H Rivi\u00e8re \n\t\t \n\t\t \n\t\t\t A Kabeshova \n\t\t \n\t\t \n\t\t\t O Beauchet \n\t\t \n\t\t 10.1016/j.ejim.2015.06.002 \n\t\t 26142183 \n\t\t \n\t \n\t \n\t\t European journal of internal medicine \n\t\t \n\t\t\t 26 \n\t\t\t 7 \n\t\t\t \n\t\t\t 2015 \n\t\t \n\t \n\t Launay C, Rivi\u00e8re H, Kabeshova A, Beauchet O. Predicting prolonged length of hospital stay in older emergency department users: use of a novel analysis method, the Artificial Neural Network. European journal of internal medicine. 2015; 26(7):478-82. https://doi.org/10.1016/j.ejim.2015.06.002 PMID: 26142183"
+    },
+    {
+      "title": "Predicting general criminal recidivism in mentally disordered offenders using a random forest approach",
+      "authors": [
+        "M Pflueger",
+        "I Franke",
+        "M Graf",
+        "H Hachtel"
+      ],
+      "year": 2015,
+      "doi": "10.1186/s12888-015-0447-4",
+      "journal": "BMC psychiatry",
+      "volume": "15",
+      "issue": "1",
+      "pages": "1",
+      "raw": "Predicting general criminal recidivism in mentally disordered offenders using a random forest approach \n\t\t \n\t\t\t M O Pflueger \n\t\t \n\t\t \n\t\t\t I Franke \n\t\t \n\t\t \n\t\t\t M Graf \n\t\t \n\t\t \n\t\t\t H Hachtel \n\t\t \n\t\t 10.1186/s12888-015-0447-4 \n\t \n\t \n\t\t BMC psychiatry \n\t\t \n\t\t\t 15 \n\t\t\t 1 \n\t\t\t 1 \n\t\t\t 2015 \n\t\t \n\t \n\t Pflueger MO, Franke I, Graf M, Hachtel H. Predicting general criminal recidivism in mentally disordered offenders using a random forest approach. BMC psychiatry. 2015; 15(1):1."
+    },
+    {
+      "title": "Super learner. Statistical applications in genetics and molecular biology",
+      "authors": [
+        "M Van Der Laan",
+        "E Polley",
+        "A Hubbard"
+      ],
+      "year": 2007,
+      "volume": "6",
+      "raw": "Super learner. Statistical applications in genetics and molecular biology \n\t\t \n\t\t\t M J Van Der Laan \n\t\t \n\t\t \n\t\t\t E C Polley \n\t\t \n\t\t \n\t\t\t A E Hubbard \n\t\t \n\t\t \n\t\t\t 2007 \n\t\t\t 6 \n\t\t \n\t \n\t van der Laan MJ, Polley EC, Hubbard AE. Super learner. Statistical applications in genetics and molec- ular biology. 2007; 6(1)."
+    },
+    {
+      "title": "Super learning. Targeted Learning",
+      "authors": [
+        "E Polley",
+        "S Rose",
+        "M Van Der Laan"
+      ],
+      "year": 2011,
+      "doi": "10.1007/978-1-4419-9782-1_3",
+      "raw": "Super learning. Targeted Learning \n\t\t \n\t\t\t E C Polley \n\t\t \n\t\t \n\t\t\t S Rose \n\t\t \n\t\t \n\t\t\t M J Van Der Laan \n\t\t \n\t\t 10.1007/978-1-4419-9782-1_3 \n\t\t \n\t\t\t 2011 \n\t\t\t Springer \n\t\t\t \n\t\t \n\t \n\t Polley EC, Rose S, van der Laan MJ. Super learning. Targeted Learning: Springer; 2011. p. 43-66."
+    },
+    {
+      "title": "Epidemiology of DSM-5 alcohol use disorder: results from the National Epidemiologic Survey on Alcohol and Related Conditions III",
+      "authors": [
+        "B Grant",
+        "R Goldstein",
+        "T Saha",
+        "S Chou",
+        "J Jung",
+        "H Zhang"
+      ],
+      "year": 2015,
+      "doi": "10.1001/jamapsychiatry.2015.0584",
+      "journal": "JAMA psychiatry",
+      "volume": "72",
+      "issue": "8",
+      "raw": "Epidemiology of DSM-5 alcohol use disorder: results from the National Epidemiologic Survey on Alcohol and Related Conditions III \n\t\t \n\t\t\t B F Grant \n\t\t \n\t\t \n\t\t\t R B Goldstein \n\t\t \n\t\t \n\t\t\t T D Saha \n\t\t \n\t\t \n\t\t\t S P Chou \n\t\t \n\t\t \n\t\t\t J Jung \n\t\t \n\t\t \n\t\t\t H Zhang \n\t\t \n\t\t 10.1001/jamapsychiatry.2015.0584 \n\t\t 26039070 \n\t\t \n\t \n\t \n\t\t JAMA psychiatry \n\t\t \n\t\t\t 72 \n\t\t\t 8 \n\t\t\t \n\t\t\t 2015 \n\t\t \n\t \n\t Grant BF, Goldstein RB, Saha TD, Chou SP, Jung J, Zhang H, et al. Epidemiology of DSM-5 alcohol use disorder: results from the National Epidemiologic Survey on Alcohol and Related Conditions III. JAMA psychiatry. 2015; 72(8):757-66. https://doi.org/10.1001/jamapsychiatry.2015.0584 PMID: 26039070"
+    },
+    {
+      "title": "How the states stack up: Disparities in substance abuse outpatient treatment completion rates for minorities",
+      "authors": [
+        "S Arndt",
+        "L Acion",
+        "K White"
+      ],
+      "year": 2013,
+      "doi": "10.1016/j.drugalcdep.2013.03.015",
+      "journal": "Drug and alcohol dependence",
+      "volume": "132",
+      "issue": "3",
+      "raw": "How the states stack up: Disparities in substance abuse outpatient treatment completion rates for minorities \n\t\t \n\t\t\t S Arndt \n\t\t \n\t\t \n\t\t\t L Acion \n\t\t \n\t\t \n\t\t\t K White \n\t\t \n\t\t 10.1016/j.drugalcdep.2013.03.015 \n\t\t 23664124 \n\t\t \n\t \n\t \n\t\t Drug and alcohol dependence \n\t\t \n\t\t\t 132 \n\t\t\t 3 \n\t\t\t \n\t\t\t 2013 \n\t\t \n\t \n\t Arndt S, Acion L, White K. How the states stack up: Disparities in substance abuse outpatient treatment completion rates for minorities. Drug and alcohol dependence. 2013; 132(3):547-54. https://doi.org/10. 1016/j.drugalcdep.2013.03.015 PMID: 23664124"
+    },
+    {
+      "title": "Evaluating racial disparity in referral source and successful completion of substance abuse treatment",
+      "authors": [
+        "E Sahker",
+        "M Toussaint",
+        "M Ramirez",
+        "S Ali",
+        "S Arndt"
+      ],
+      "year": 2015,
+      "doi": "10.1016/j.addbeh.2015.04.006",
+      "journal": "Addictive behaviors",
+      "volume": "48",
+      "raw": "Evaluating racial disparity in referral source and successful completion of substance abuse treatment \n\t\t \n\t\t\t E Sahker \n\t\t \n\t\t \n\t\t\t M N Toussaint \n\t\t \n\t\t \n\t\t\t M Ramirez \n\t\t \n\t\t \n\t\t\t S R Ali \n\t\t \n\t\t \n\t\t\t S Arndt \n\t\t \n\t\t 10.1016/j.addbeh.2015.04.006 \n\t\t 25935719 \n\t\t \n\t \n\t \n\t\t Addictive behaviors \n\t\t \n\t\t\t 48 \n\t\t\t \n\t\t\t 2015 \n\t\t \n\t \n\t Sahker E, Toussaint MN, Ramirez M, Ali SR, Arndt S. Evaluating racial disparity in referral source and successful completion of substance abuse treatment. Addictive behaviors. 2015; 48:25-9. https://doi. org/10.1016/j.addbeh.2015.04.006 PMID: 25935719"
+    },
+    {
+      "title": "Ethnic disparities in unmet need for alcoholism, drug abuse, and mental health care",
+      "authors": [
+        "K Wells",
+        "R Klap",
+        "A Koike",
+        "C Sherbourne"
+      ],
+      "year": 2001,
+      "doi": "10.1176/appi.ajp.158.12.2027",
+      "journal": "American Journal of Psychiatry",
+      "volume": "158",
+      "issue": "12",
+      "raw": "Ethnic disparities in unmet need for alcoholism, drug abuse, and mental health care \n\t\t \n\t\t\t K Wells \n\t\t \n\t\t \n\t\t\t R Klap \n\t\t \n\t\t \n\t\t\t A Koike \n\t\t \n\t\t \n\t\t\t C Sherbourne \n\t\t \n\t\t 10.1176/appi.ajp.158.12.2027 \n\t\t 11729020 \n\t\t \n\t \n\t \n\t\t American Journal of Psychiatry \n\t\t \n\t\t\t 158 \n\t\t\t 12 \n\t\t\t \n\t\t\t 2001 \n\t\t \n\t \n\t Wells K, Klap R, Koike A, Sherbourne C. Ethnic disparities in unmet need for alcoholism, drug abuse, and mental health care. American Journal of Psychiatry. 2001; 158(12):2027-2032. https://doi.org/10. 1176/appi.ajp.158.12.2027 PMID: 11729020"
+    },
+    {
+      "title": "The Role of Psychiatric Disorders in Predicting Drug Dependence Treatment Outcomes",
+      "authors": [
+        "W Compton",
+        "L Cottler",
+        "J Jacobs",
+        "A Ben-Abdallah",
+        "E Spitznagel"
+      ],
+      "year": 2003,
+      "doi": "10.1176/appi.ajp.160.5.890",
+      "journal": "American Journal of Psychiatry",
+      "volume": "160",
+      "issue": "5",
+      "raw": "The Role of Psychiatric Disorders in Predicting Drug Dependence Treatment Outcomes \n\t\t \n\t\t\t W M Compton \n\t\t \n\t\t \n\t\t\t Iii \n\t\t \n\t\t \n\t\t\t L B Cottler \n\t\t \n\t\t \n\t\t\t J L Jacobs \n\t\t \n\t\t \n\t\t\t A Ben-Abdallah \n\t\t \n\t\t \n\t\t\t E L Spitznagel \n\t\t \n\t\t 10.1176/appi.ajp.160.5.890 \n\t\t 12727692 \n\t\t \n\t \n\t \n\t\t American Journal of Psychiatry \n\t\t \n\t\t\t 160 \n\t\t\t 5 \n\t\t\t \n\t\t\t 2003 \n\t\t \n\t \n\t Compton WM III, Cottler LB, Jacobs JL, Ben-Abdallah A, Spitznagel EL. The Role of Psychiatric Disor- ders in Predicting Drug Dependence Treatment Outcomes. American Journal of Psychiatry. 2003; 160 (5):890-5. https://doi.org/10.1176/appi.ajp.160.5.890 PMID: 12727692"
+    },
+    {
+      "title": "Differences in successful treatment completion among pregnant and non-pregnant American women",
+      "authors": [
+        "E Sahker",
+        "J Mccabe",
+        "S Arndt"
+      ],
+      "year": 2015,
+      "doi": "10.1007/s00737-015-0520-5",
+      "journal": "Archives of Women's Mental Health",
+      "volume": "19",
+      "issue": "1",
+      "raw": "Differences in successful treatment completion among pregnant and non-pregnant American women \n\t\t \n\t\t\t E Sahker \n\t\t \n\t\t \n\t\t\t J E Mccabe \n\t\t \n\t\t \n\t\t\t S Arndt \n\t\t \n\t\t 10.1007/s00737-015-0520-5 \n\t\t \n\t \n\t \n\t\t Archives of Women's Mental Health \n\t\t \n\t\t\t 19 \n\t\t\t 1 \n\t\t\t \n\t\t\t 2015 \n\t\t \n\t \n\t Sahker E, McCabe JE, Arndt S. Differences in successful treatment completion among pregnant and non-pregnant American women. Archives of Women's Mental Health. 2015; 19(1):79-86. https://doi. org/10.1007/s00737-015-0520-5 PMID: 25824855"
+    },
+    {
+      "title": "Motivation as a predictor of early dropout from drug abuse treatment",
+      "authors": [
+        "D Simpson",
+        "G Joe"
+      ],
+      "year": 1993,
+      "doi": "10.1037/0033-3204.30.2.357",
+      "journal": "Psychotherapy: Theory, research, practice, training",
+      "volume": "30",
+      "issue": "2",
+      "pages": "357",
+      "raw": "Motivation as a predictor of early dropout from drug abuse treatment \n\t\t \n\t\t\t D D Simpson \n\t\t \n\t\t \n\t\t\t G W Joe \n\t\t \n\t\t 10.1037/0033-3204.30.2.357 \n\t \n\t \n\t\t Psychotherapy: Theory, research, practice, training \n\t\t \n\t\t\t 30 \n\t\t\t 2 \n\t\t\t 357 \n\t\t\t 1993 \n\t\t \n\t \n\t Simpson DD, Joe GW. Motivation as a predictor of early dropout from drug abuse treatment. Psycho- therapy: Theory, research, practice, training. 1993; 30(2):357."
+    },
+    {
+      "title": "Substance Abuse and Mental Health Services Administration",
+      "year": 2014,
+      "doi": "10.3886/icpsr30122.v2",
+      "raw": "Substance Abuse and Mental Health Services Administration \n\t\t 10.3886/icpsr30122.v2 \n\t \n\t \n\t\t Office of Applied Statistics. Treatment Episode Data Set-Discharges (TEDS-D) -Concatenated, 2006 to 2011 \n\t\t \n\t\t\t ICPSR \n\t\t\t 2014 \n\t\t \n\t\t \n\t\t\t Inter-university Consortium for Political and Social Research \n\t\t \n\t \n\t distributor \n\t United States Department of Health and Human Services. Substance Abuse and Mental Health Ser- vices Administration. Office of Applied Statistics. Treatment Episode Data Set-Discharges (TEDS-D) -Concatenated, 2006 to 2011. Inter-university Consortium for Political and Social Research (ICPSR) [distributor]; 2014."
+    },
+    {
+      "title": "Scalable Ensemble Learning and Computationally Efficient Variance Estimation: University of California",
+      "authors": [
+        "E Ledell"
+      ],
+      "year": 2015,
+      "doi": "10.1201/b19567-29",
+      "raw": "Scalable Ensemble Learning and Computationally Efficient Variance Estimation: University of California \n\t\t \n\t\t\t E E Ledell \n\t\t \n\t\t 10.1201/b19567-29 \n\t\t \n\t\t\t 2015 \n\t\t\t Berkeley \n\t\t \n\t \n\t LeDell EE. Scalable Ensemble Learning and Computationally Efficient Variance Estimation: University of California, Berkeley; 2015."
+    },
+    {
+      "title": "The effect of treatment completion and length of stay on employment and crime in outpatient drug-free treatment",
+      "authors": [
+        "G Zarkin",
+        "L Dunlap",
+        "J Bray",
+        "W Wechsberg"
+      ],
+      "year": 2002,
+      "doi": "10.1016/s0740-5472(02)00273-8",
+      "journal": "Journal of Substance Abuse Treatment",
+      "volume": "23",
+      "issue": "4",
+      "raw": "The effect of treatment completion and length of stay on employment and crime in outpatient drug-free treatment \n\t\t \n\t\t\t G A Zarkin \n\t\t \n\t\t \n\t\t\t L J Dunlap \n\t\t \n\t\t \n\t\t\t J W Bray \n\t\t \n\t\t \n\t\t\t W M Wechsberg \n\t\t \n\t\t 10.1016/s0740-5472(02)00273-8 \n\t\t 12495788 \n\t \n\t \n\t\t Journal of Substance Abuse Treatment \n\t\t \n\t\t\t 23 \n\t\t\t 4 \n\t\t\t \n\t\t\t 2002 \n\t\t \n\t \n\t Zarkin GA, Dunlap LJ, Bray JW, Wechsberg WM. The effect of treatment completion and length of stay on employment and crime in outpatient drug-free treatment. Journal of Substance Abuse Treatment. 2002; 23(4):261-71. PMID: 12495788"
+    },
+    {
+      "title": "Adapting Washington Circle performance measures for public sector substance abuse treatment systems",
+      "authors": [
+        "D Garnick",
+        "M Lee",
+        "C Horgan",
+        "A Acevedo",
+        "Wcps Workgroup"
+      ],
+      "year": 2009,
+      "doi": "10.1016/j.jsat.2008.06.008",
+      "journal": "Journal of Substance Abuse Treatment",
+      "volume": "36",
+      "issue": "3",
+      "raw": "Adapting Washington Circle performance measures for public sector substance abuse treatment systems \n\t\t \n\t\t\t D W Garnick \n\t\t \n\t\t \n\t\t\t M T Lee \n\t\t \n\t\t \n\t\t\t C M Horgan \n\t\t \n\t\t \n\t\t\t A Acevedo \n\t\t \n\t\t \n\t\t\t Wcps Workgroup \n\t\t \n\t\t 10.1016/j.jsat.2008.06.008 \n\t\t 18722075 \n\t\t \n\t \n\t \n\t\t Journal of Substance Abuse Treatment \n\t\t \n\t\t\t 36 \n\t\t\t 3 \n\t\t\t \n\t\t\t 2009 \n\t\t \n\t \n\t Garnick DW, Lee MT, Horgan CM, Acevedo A, Workgroup WCPS. Adapting Washington Circle perfor- mance measures for public sector substance abuse treatment systems. Journal of Substance Abuse Treatment. 2009; 36(3):265-77. https://doi.org/10.1016/j.jsat.2008.06.008 PMID: 18722075"
+    },
+    {
+      "title": "Client and program factors associated with dropout from court mandated drug treatment",
+      "authors": [
+        "E Evans",
+        "L Li",
+        "Y-I Hser"
+      ],
+      "year": 2009,
+      "doi": "10.1016/j.evalprogplan.2008.12.003",
+      "journal": "Evaluation and program planning",
+      "volume": "32",
+      "issue": "3",
+      "raw": "Client and program factors associated with dropout from court mandated drug treatment \n\t\t \n\t\t\t E Evans \n\t\t \n\t\t \n\t\t\t L Li \n\t\t \n\t\t \n\t\t\t Y-I Hser \n\t\t \n\t\t 10.1016/j.evalprogplan.2008.12.003 \n\t\t 19150133 \n\t\t \n\t \n\t \n\t\t Evaluation and program planning \n\t\t \n\t\t\t 32 \n\t\t\t 3 \n\t\t\t \n\t\t\t 2009 \n\t\t \n\t \n\t Evans E, Li L, Hser Y-I. Client and program factors associated with dropout from court mandated drug treatment. Evaluation and program planning. 2009; 32(3):204-12. https://doi.org/10.1016/j. evalprogplan.2008.12.003 PMID: 19150133"
+    },
+    {
+      "title": "TOPPS-II Interstate Cooperative Study Group. Drug treatment completion and post-discharge employment in the TOPPS-II Interstate Cooperative Study",
+      "year": 2003,
+      "doi": "10.1016/s0740-5472(03)00050-3",
+      "journal": "Journal of Substance Abuse Treatment",
+      "volume": "25",
+      "issue": "1",
+      "raw": "TOPPS-II Interstate Cooperative Study Group. Drug treatment completion and post-discharge employment in the TOPPS-II Interstate Cooperative Study \n\t\t 10.1016/s0740-5472(03)00050-3 \n\t\t 14512103 \n\t \n\t \n\t\t Journal of Substance Abuse Treatment \n\t\t \n\t\t\t 25 \n\t\t\t 1 \n\t\t\t \n\t\t\t 2003 \n\t\t \n\t \n\t TOPPS-II Interstate Cooperative Study Group. Drug treatment completion and post-discharge employ- ment in the TOPPS-II Interstate Cooperative Study. Journal of Substance Abuse Treatment. 2003; 25 (1):9-18. PMID: 14512103"
+    },
+    {
+      "title": "Asian American and Pacific Islander Substance Use Treatment Admission Trends",
+      "authors": [
+        "E Sahker",
+        "C Yeung",
+        "Y Loh",
+        "S Park",
+        "S Arndt"
+      ],
+      "year": 2017,
+      "doi": "10.1016/j.drugalcdep.2016.11.022",
+      "journal": "Drug and alcohol dependence",
+      "volume": "171",
+      "raw": "Asian American and Pacific Islander Substance Use Treatment Admission Trends \n\t\t \n\t\t\t E Sahker \n\t\t \n\t\t \n\t\t\t C Yeung \n\t\t \n\t\t \n\t\t\t Y Loh \n\t\t \n\t\t \n\t\t\t S Park \n\t\t \n\t\t \n\t\t\t S Arndt \n\t\t \n\t\t 10.1016/j.drugalcdep.2016.11.022 \n\t\t 27988403 \n\t\t \n\t \n\t \n\t\t Drug and alcohol dependence \n\t\t \n\t\t\t 171 \n\t\t\t \n\t\t\t 2017 \n\t\t \n\t \n\t Sahker E, Yeung C, Loh Y, Park S, Arndt S. Asian American and Pacific Islander Substance Use Treat- ment Admission Trends. Drug and alcohol dependence. 2017; 171:1-8. https://doi.org/10.1016/j. drugalcdep.2016.11.022 PMID: 27988403"
+    },
+    {
+      "title": "A brief report on Hispanic youth marijuana use: Trends in substance abuse treatment admissions in the United States",
+      "authors": [
+        "Ms Marzell",
+        "G Pro",
+        "S Arndt"
+      ],
+      "year": 2016,
+      "doi": "10.1080/15332640.2015.1108256",
+      "journal": "Journal of ethnicity and substance abuse",
+      "raw": "A brief report on Hispanic youth marijuana use: Trends in substance abuse treatment admissions in the United States \n\t\t \n\t\t\t Ms E Marzell \n\t\t \n\t\t \n\t\t\t G Pro \n\t\t \n\t\t \n\t\t\t S Arndt \n\t\t \n\t\t 10.1080/15332640.2015.1108256 \n\t \n\t \n\t\t Journal of ethnicity and substance abuse \n\t\t \n\t\t\t \n\t\t\t 2016 \n\t\t \n\t \n\t Marzell MS E.; Pro G.; Arndt S. A brief report on Hispanic youth marijuana use: Trends in substance abuse treatment admissions in the United States. Journal of ethnicity and substance abuse. 2016:1-10."
+    },
+    {
+      "title": "Substance Abuse and Mental Health Services Administration. The NSDUH Report: Need for and Receipt of Substance Use Treatment among Hispanics",
+      "year": 2012,
+      "doi": "10.19070/2379-1586-1600021",
+      "raw": "10.19070/2379-1586-1600021 \n\t\t Substance Abuse and Mental Health Services Administration. The NSDUH Report: Need for and Receipt of Substance Use Treatment among Hispanics \n\t\t Rockville, MD \n\t\t \n\t\t\t 2012 \n\t\t \n\t \n\t Substance Abuse and Mental Health Services Administration. The NSDUH Report: Need for and Receipt of Substance Use Treatment among Hispanics. Rockville, MD: 2012."
+    },
+    {
+      "title": "Substance Abuse and Mental Health Services Administration. The NSDUH Report: Need for and Receipt of Substance Use Treatment among American Indians or Alaska Natives",
+      "year": 2012,
+      "raw": "Substance Abuse and Mental Health Services Administration. The NSDUH Report: Need for and Receipt of Substance Use Treatment among American Indians or Alaska Natives \n\t\t Rockville, MD \n\t\t \n\t\t\t 2012 \n\t\t \n\t \n\t Substance Abuse and Mental Health Services Administration. The NSDUH Report: Need for and Receipt of Substance Use Treatment among American Indians or Alaska Natives. Rockville, MD: 2012."
+    },
+    {
+      "title": "Need for and Receipt of Substance Use Treatment among Blacks",
+      "year": 2013,
+      "doi": "10.1037/e440632005-001",
+      "raw": "Need for and Receipt of Substance Use Treatment among Blacks \n\t\t 10.1037/e440632005-001 \n\t\t \n\t\t\t 2013 \n\t\t\t Substance Abuse and Mental Health Services Administration \n\t\t \n\t \n\t Substance Abuse and Mental Health Services Administration. Need for and Receipt of Substance Use Treatment among Blacks. 2013."
+    },
+    {
+      "title": "Probabilistic index: An intuitive non-parametric approach to measuring the size of treatment effects",
+      "authors": [
+        "L Acion",
+        "J Peterson",
+        "S Temple",
+        "S Arndt"
+      ],
+      "year": 2006,
+      "doi": "10.1002/sim.2256",
+      "journal": "Statistics in medicine",
+      "volume": "25",
+      "issue": "4",
+      "raw": "Probabilistic index: An intuitive non-parametric approach to measuring the size of treatment effects \n\t\t \n\t\t\t L Acion \n\t\t \n\t\t \n\t\t\t J J Peterson \n\t\t \n\t\t \n\t\t\t S Temple \n\t\t \n\t\t \n\t\t\t S Arndt \n\t\t \n\t\t 10.1002/sim.2256 \n\t\t \n\t \n\t \n\t\t Statistics in medicine \n\t\t \n\t\t\t 25 \n\t\t\t 4 \n\t\t\t \n\t\t\t 2006 \n\t\t \n\t \n\t Acion L, Peterson JJ, Temple S, Arndt S. Probabilistic index: An intuitive non-parametric approach to measuring the size of treatment effects. Statistics in medicine. 2006; 25(4):591-602. https://doi.org/10. 1002/sim.2256 PMID: 16143965"
+    },
+    {
+      "title": "The elements of statistical learning: Springer series in statistics",
+      "authors": [
+        "J Friedman",
+        "T Hastie",
+        "R Tibshirani"
+      ],
+      "year": 2001,
+      "raw": "The elements of statistical learning: Springer series in statistics \n\t\t \n\t\t\t J Friedman \n\t\t \n\t\t \n\t\t\t T Hastie \n\t\t \n\t\t \n\t\t\t R Tibshirani \n\t\t \n\t\t \n\t\t\t 2001 \n\t\t\t Springer \n\t\t\t Berlin \n\t\t \n\t \n\t Friedman J, Hastie T, Tibshirani R. The elements of statistical learning: Springer series in statistics Springer, Berlin; 2001."
+    },
+    {
+      "title": "Random Forests",
+      "authors": [
+        "L Breiman"
+      ],
+      "year": 2001,
+      "doi": "10.1023/a:1010933404324",
+      "journal": "Machine Learning",
+      "volume": "45",
+      "issue": "1",
+      "raw": "Random Forests \n\t\t \n\t\t\t L Breiman \n\t\t \n\t\t 10.1023/a:1010933404324 \n\t \n\t \n\t\t Machine Learning \n\t\t \n\t\t\t 45 \n\t\t\t 1 \n\t\t\t \n\t\t\t 2001 \n\t\t \n\t \n\t Breiman L. Random Forests. Machine Learning. 2001; 45(1):5-32."
+    },
+    {
+      "title": "Learning deep architectures for AI",
+      "authors": [
+        "Y Bengio"
+      ],
+      "year": 2009,
+      "journal": "Foundations and trends\u00ae in Machine Learning",
+      "volume": "2",
+      "issue": "1",
+      "raw": "Learning deep architectures for AI \n\t\t \n\t\t\t Y Bengio \n\t\t \n\t \n\t \n\t\t Foundations and trends\u00ae in Machine Learning \n\t\t \n\t\t\t 2 \n\t\t\t 1 \n\t\t\t \n\t\t\t 2009 \n\t\t \n\t \n\t Bengio Y. Learning deep architectures for AI. Foundations and trends\u00ae in Machine Learning. 2009; 2 (1):1-127."
+    },
+    {
+      "title": "Stacked generalization",
+      "authors": [
+        "D Wolpert"
+      ],
+      "year": 1992,
+      "doi": "10.1016/s0893-6080(05)80023-1",
+      "journal": "Neural networks",
+      "volume": "5",
+      "issue": "2",
+      "raw": "Stacked generalization \n\t\t \n\t\t\t D H Wolpert \n\t\t \n\t\t 10.1016/s0893-6080(05)80023-1 \n\t \n\t \n\t\t Neural networks \n\t\t \n\t\t\t 5 \n\t\t\t 2 \n\t\t\t \n\t\t\t 1992 \n\t\t \n\t \n\t Wolpert DH. Stacked generalization. Neural networks. 1992; 5(2):241-59."
+    },
+    {
+      "title": "Targeted learning: causal inference for observational and experimental data",
+      "authors": [
+        "M Van Der Laan",
+        "S Rose"
+      ],
+      "year": 2011,
+      "doi": "10.1007/978-1-4419-9782-1",
+      "raw": "Targeted learning: causal inference for observational and experimental data \n\t\t \n\t\t\t M J Van Der Laan \n\t\t \n\t\t \n\t\t\t S Rose \n\t\t \n\t\t 10.1007/978-1-4419-9782-1 \n\t\t \n\t\t\t 2011 \n\t\t\t Springer Science & Business Media \n\t\t \n\t \n\t Van der Laan MJ, Rose S. Targeted learning: causal inference for observational and experimental data: Springer Science & Business Media; 2011."
+    },
+    {
+      "title": "R: A language and environment for statistical computing",
+      "authors": [
+        "Team Core"
+      ],
+      "year": 2016,
+      "raw": "R: A language and environment for statistical computing \n\t\t \n\t\t\t Team Core \n\t\t \n\t \n\t \n\t\t R Foundation for Statistical Computing \n\t\t Vienna, Austria \n\t\t \n\t\t\t 2016 \n\t\t \n\t \n\t R Core Team. R: A language and environment for statistical computing. R Foundation for Statistical Computing, Vienna, Austria. 2016."
+    },
+    {
+      "title": "with contributions from the H2O.ai team. h2o: R Interface for H2",
+      "authors": [
+        "S Aiello",
+        "Tom Maj"
+      ],
+      "year": 2015,
+      "journal": "O. R package version",
+      "volume": "3",
+      "issue": "8",
+      "raw": "with contributions from the H2O.ai team. h2o: R Interface for H2 \n\t\t \n\t\t\t S K Aiello \n\t\t \n\t\t \n\t\t\t Tom ; Maj \n\t\t \n\t\t \n\t\t\t Petr \n\t\t \n\t \n\t \n\t\t O. R package version \n\t\t \n\t\t\t 3 \n\t\t\t 8 \n\t\t\t 2015 \n\t\t \n\t \n\t Aiello SK, Tom; Maj, Petr; with contributions from the H2O.ai team. h2o: R Interface for H2O. R package version 3.8.2.2. 2015."
+    },
+    {
+      "title": "h2oEnsemble: H2O Ensemble Learning",
+      "authors": [
+        "E Ledell"
+      ],
+      "year": 2016,
+      "journal": "R package version",
+      "volume": "0",
+      "issue": "1",
+      "raw": "h2oEnsemble: H2O Ensemble Learning \n\t\t \n\t\t\t E E Ledell \n\t\t \n\t \n\t \n\t\t R package version \n\t\t \n\t\t\t 0 \n\t\t\t 1 \n\t\t\t 2016 \n\t\t \n\t \n\t LeDell EE. h2oEnsemble: H2O Ensemble Learning. R package version 0.1.8. 2016."
+    },
+    {
+      "title": "Comparing the areas under two or more correlated receiver operating characteristic curves: a nonparametric approach",
+      "authors": [
+        "E Delong",
+        "D Delong",
+        "Clarke-Pearson Dl"
+      ],
+      "year": 1988,
+      "doi": "10.2307/2531595",
+      "journal": "Biometrics",
+      "raw": "Comparing the areas under two or more correlated receiver operating characteristic curves: a nonparametric approach \n\t\t \n\t\t\t E R Delong \n\t\t \n\t\t \n\t\t\t D M Delong \n\t\t \n\t\t \n\t\t\t Clarke-Pearson Dl \n\t\t \n\t\t 10.2307/2531595 \n\t\t 3203132 \n\t \n\t \n\t\t Biometrics \n\t\t \n\t\t\t \n\t\t\t 1988 \n\t\t \n\t \n\t DeLong ER, DeLong DM, Clarke-Pearson DL. Comparing the areas under two or more correlated receiver operating characteristic curves: a nonparametric approach. Biometrics. 1988:837-45. PMID: 3203132"
+    },
+    {
+      "title": "pROC: an open-source package for R and S+ to analyze and compare ROC curves",
+      "authors": [
+        "X Robin",
+        "N Turck",
+        "A Hainard",
+        "N Tiberti",
+        "F Lisacek",
+        "J-C Sanchez"
+      ],
+      "year": 2011,
+      "doi": "10.1186/1471-2105-12-77",
+      "journal": "BMC bioinformatics",
+      "volume": "12",
+      "issue": "1",
+      "pages": "1",
+      "raw": "pROC: an open-source package for R and S+ to analyze and compare ROC curves \n\t\t \n\t\t\t X Robin \n\t\t \n\t\t \n\t\t\t N Turck \n\t\t \n\t\t \n\t\t\t A Hainard \n\t\t \n\t\t \n\t\t\t N Tiberti \n\t\t \n\t\t \n\t\t\t F Lisacek \n\t\t \n\t\t \n\t\t\t J-C Sanchez \n\t\t \n\t\t 10.1186/1471-2105-12-77 \n\t \n\t \n\t\t BMC bioinformatics \n\t\t \n\t\t\t 12 \n\t\t\t 1 \n\t\t\t 1 \n\t\t\t 2011 \n\t\t \n\t \n\t Robin X, Turck N, Hainard A, Tiberti N, Lisacek F, Sanchez J-C, et al. pROC: an open-source package for R and S+ to analyze and compare ROC curves. BMC bioinformatics. 2011; 12(1):1."
+    },
+    {
+      "title": "Research instructions for NIH and other PHS agencies",
+      "year": 2016,
+      "doi": "10.1016/b978-0-323-91259-4.00018-7",
+      "raw": "Research instructions for NIH and other PHS agencies \n\t\t 10.1016/b978-0-323-91259-4.00018-7 \n\t\t \n\t\t \n\t\t\t 2016 \n\t\t \n\t\t \n\t\t\t National Institutes of Health \n\t\t \n\t \n\t cited 2017 01/24/2017 \n\t National Institutes of Health. Research instructions for NIH and other PHS agencies 2016 [cited 2017 01/24/2017]. Available from: https://grants.nih.gov/grants/how-to-apply-application-guide/forms-d/ research-forms-d.pdf."
+    },
+    {
+      "title": "Mortality risk score prediction in an elderly population using machine learning",
+      "authors": [
+        "S Rose"
+      ],
+      "year": 2013,
+      "doi": "10.1093/aje/kws241",
+      "journal": "American journal of epidemiology",
+      "volume": "177",
+      "issue": "5",
+      "raw": "Mortality risk score prediction in an elderly population using machine learning \n\t\t \n\t\t\t S Rose \n\t\t \n\t\t 10.1093/aje/kws241 \n\t\t \n\t \n\t \n\t\t American journal of epidemiology \n\t\t \n\t\t\t 177 \n\t\t\t 5 \n\t\t\t \n\t\t\t 2013 \n\t\t \n\t \n\t Rose S. Mortality risk score prediction in an elderly population using machine learning. American journal of epidemiology. 2013; 177(5):443-52. https://doi.org/10.1093/aje/kws241 PMID: 23364879"
+    },
+    {
+      "title": "Heritage Provider Network Health Prize Round 1 Milestone Prize: How we did it-Team",
+      "authors": [
+        "P Brierley",
+        "D Vogel",
+        "R Axelrod"
+      ],
+      "year": 2011,
+      "journal": "Market Makers",
+      "raw": "Heritage Provider Network Health Prize Round 1 Milestone Prize: How we did it-Team \n\t\t \n\t\t\t P Brierley \n\t\t \n\t\t \n\t\t\t D Vogel \n\t\t \n\t\t \n\t\t\t R Axelrod \n\t\t \n\t \n\t \n\t\t Market Makers \n\t\t \n\t\t\t 2011 \n\t\t \n\t \n\t Brierley P, Vogel D, Axelrod R. Heritage Provider Network Health Prize Round 1 Milestone Prize: How we did it-Team 'Market Makers'. 2011."
+    },
+    {
+      "title": "Why TMLE? Targeted Learning",
+      "authors": [
+        "S Rose",
+        "M Van Der Laan"
+      ],
+      "year": 2011,
+      "doi": "10.1007/978-1-4419-9782-1_6",
+      "raw": "Why TMLE? Targeted Learning \n\t\t \n\t\t\t S Rose \n\t\t \n\t\t \n\t\t\t M J Van Der Laan \n\t\t \n\t\t 10.1007/978-1-4419-9782-1_6 \n\t\t \n\t\t\t 2011 \n\t\t\t Springer \n\t\t\t \n\t\t \n\t \n\t Rose S, van der Laan MJ. Why TMLE? Targeted Learning: Springer; 2011. p. 101-18."
+    },
+    {
+      "title": "Targeted Learning for Variable Importance",
+      "authors": [
+        "S Rose"
+      ],
+      "year": 2016,
+      "doi": "10.1201/b19567-34",
+      "journal": "Handbook of Big Data",
+      "pages": "411",
+      "raw": "Targeted Learning for Variable Importance \n\t\t \n\t\t\t S Rose \n\t\t \n\t\t 10.1201/b19567-34 \n\t \n\t \n\t\t Handbook of Big Data \n\t\t \n\t\t\t 411 \n\t\t\t 2016 \n\t\t \n\t \n\t Rose S. Targeted Learning for Variable Importance. Handbook of Big Data. 2016: 411."
+    }
+  ],
+  "num_references": 44,
+  "figures": [
+    {
+      "caption": "Fig 1 .",
+      "description": "Fig 1. Analytic work flow. https://doi.org/10.1371/journal.pone.0175383.g001"
+    },
+    {
+      "type": "table",
+      "caption": "Table 1 .",
+      "description": "(Continued)"
+    }
+  ],
+  "num_figures": 2,
+  "tables": [
+    {
+      "content": "Total N (%)"
+    }
+  ],
+  "num_tables": 1,
+  "license": "\u00a9 2017 Acion et al. This is an open access article distributed under the terms of the Creative Commons Attribution License, which permits unrestricted use, distribution, and reproduction in any medium, provided the original author and source are credited.",
+  "license_type": "unknown",
+  "formulas": [
+    {
+      "text": "Q 0 \u00bc P 0 \u00f0Y \u00bc YesjW \u00de-i.e."
+    }
+  ],
+  "num_formulas": 1,
+  "num_citations": 61,
+  "cited_references": [
+    "b32",
+    "b43",
+    "b39",
+    "b38",
+    "b4",
+    "b14",
+    "b17",
+    "b20",
+    "b24",
+    "b40",
+    "b41",
+    "b26",
+    "b28",
+    "b13",
+    "b27",
+    "b33",
+    "b16",
+    "b7",
+    "b23",
+    "b29",
+    "b19",
+    "b6",
+    "b42",
+    "b18",
+    "b30",
+    "b1",
+    "b35",
+    "b9",
+    "b31",
+    "b10",
+    "b3",
+    "b5",
+    "b34",
+    "b8",
+    "b12",
+    "b15",
+    "b11",
+    "b36",
+    "b37",
+    "b25",
+    "b22",
+    "b21",
+    "b2"
+  ],
+  "notes": [
+    "[raw_affiliation] 1  Instituto de Ca \u00b4lculo , Facultad de Ciencias Exactas y Naturales , Universidad de Buenos Aires , CONICET , Buenos Aires , Argentina ,",
+    "[raw_affiliation] 2  Iowa Consortium for Substance Abuse Research and Evaluation , University of Iowa , Iowa City , Iowa , United States of America ,",
+    "[raw_affiliation] 1  Instituto de Ca \u00b4lculo , Facultad de Ciencias Exactas y Naturales , Universidad de Buenos Aires , CONICET , Buenos Aires , Argentina ,",
+    "[raw_affiliation] 3  Division of Biostatistics , University of California , Berkeley , California , United States of America ,",
+    "[raw_affiliation] 2  Iowa Consortium for Substance Abuse Research and Evaluation , University of Iowa , Iowa City , Iowa , United States of America ,",
+    "[raw_affiliation] 4  Counseling Psychology Program , Department of Psychological and Quantitative Foundations , College of Education , University of Iowa , Iowa City , Iowa , United States of America ,",
+    "[raw_affiliation] 2  Iowa Consortium for Substance Abuse Research and Evaluation , University of Iowa , Iowa City , Iowa , United States of America ,",
+    "[raw_affiliation] 2  Iowa Consortium for Substance Abuse Research and Evaluation , University of Iowa , Iowa City , Iowa , United States of America ,",
+    "[raw_affiliation] 5  Department of Psychiatry , Roy J and Lucille A Carver College of Medicine , University of Iowa , Iowa City , Iowa , United States of America ,",
+    "[raw_affiliation] 6  Department of Biostatistics , College of Public Health , University of Iowa , Iowa City , Iowa , United States of America",
+    "[raw_affiliation] Institute for Tobacco Research and Policy Studies , UNITED STATES",
+    "[submission] Received: August 12, 2016 Accepted: March 24, 2017",
+    "PLOS ONE | https://doi.org/10.1371/journal.pone.0175383April 10, 2017",
+    "[raw_reference] Acion L, Ramirez MR, Jorge RE, Arndt S. Increased risk of alcohol and drug use among children from deployed military families. Addiction. 2013; 108(8):1418-25. https://doi.org/10.1111/add.12161 PMID: 23441867",
+    "[raw_reference] Alang SM. Sociodemographic Disparities Associated With Perceived Causes of Unmet Need for Mental Health Care. Psychiatr Rehabil J. 2015; 38(4):293. https://doi.org/10.1037/prj0000113 PMID: 25664758",
+    "[raw_reference] Glasheen C, Pemberton MR, Lipari R, Copello EA, Mattson ME. Binge drinking and the risk of suicidal thoughts, plans, and attempts. Addictive Behaviors. 2015; 43:42-9. https://doi.org/10.1016/j.addbeh. 2014.12.005 PMID: 25553510",
+    "[raw_reference] Sahker E, Acion L, Arndt S. National Analysis of Differences Among Substance Abuse Treatment Out- comes: College Student and Nonstudent Emerging Adults. Journal of American College Health. 2015; 63(2):118-24. https://doi.org/10.1080/07448481.2014.990970 PMID: 25470217",
+    "[raw_reference] Gowin JL, Ball TM, Wittmann M, Tapert SF, Paulus MP. Individualized relapse prediction: Personality measures and striatal and insular activity during reward-processing robustly predict relapse. Drug and alcohol dependence. 2015; 152:93-101. https://doi.org/10.1016/j.drugalcdep.2015.04.018 PMID: 25977206",
+    "[raw_reference] Launay C, Rivi\u00e8re H, Kabeshova A, Beauchet O. Predicting prolonged length of hospital stay in older emergency department users: use of a novel analysis method, the Artificial Neural Network. European journal of internal medicine. 2015; 26(7):478-82. https://doi.org/10.1016/j.ejim.2015.06.002 PMID: 26142183",
+    "[raw_reference] Pflueger MO, Franke I, Graf M, Hachtel H. Predicting general criminal recidivism in mentally disordered offenders using a random forest approach. BMC psychiatry. 2015; 15(1):1.",
+    "[raw_reference] van der Laan MJ, Polley EC, Hubbard AE. Super learner. Statistical applications in genetics and molec- ular biology. 2007; 6(1).",
+    "[raw_reference] Polley EC, Rose S, van der Laan MJ. Super learning. Targeted Learning: Springer; 2011. p. 43-66.",
+    "[raw_reference] Grant BF, Goldstein RB, Saha TD, Chou SP, Jung J, Zhang H, et al. Epidemiology of DSM-5 alcohol use disorder: results from the National Epidemiologic Survey on Alcohol and Related Conditions III. JAMA psychiatry. 2015; 72(8):757-66. https://doi.org/10.1001/jamapsychiatry.2015.0584 PMID: 26039070",
+    "[raw_reference] Arndt S, Acion L, White K. How the states stack up: Disparities in substance abuse outpatient treatment completion rates for minorities. Drug and alcohol dependence. 2013; 132(3):547-54. https://doi.org/10. 1016/j.drugalcdep.2013.03.015 PMID: 23664124",
+    "[raw_reference] Sahker E, Toussaint MN, Ramirez M, Ali SR, Arndt S. Evaluating racial disparity in referral source and successful completion of substance abuse treatment. Addictive behaviors. 2015; 48:25-9. https://doi. org/10.1016/j.addbeh.2015.04.006 PMID: 25935719",
+    "[raw_reference] Wells K, Klap R, Koike A, Sherbourne C. Ethnic disparities in unmet need for alcoholism, drug abuse, and mental health care. American Journal of Psychiatry. 2001; 158(12):2027-2032. https://doi.org/10. 1176/appi.ajp.158.12.2027 PMID: 11729020",
+    "[raw_reference] Compton WM III, Cottler LB, Jacobs JL, Ben-Abdallah A, Spitznagel EL. The Role of Psychiatric Disor- ders in Predicting Drug Dependence Treatment Outcomes. American Journal of Psychiatry. 2003; 160 (5):890-5. https://doi.org/10.1176/appi.ajp.160.5.890 PMID: 12727692",
+    "[raw_reference] Sahker E, McCabe JE, Arndt S. Differences in successful treatment completion among pregnant and non-pregnant American women. Archives of Women's Mental Health. 2015; 19(1):79-86. https://doi. org/10.1007/s00737-015-0520-5 PMID: 25824855",
+    "[raw_reference] Simpson DD, Joe GW. Motivation as a predictor of early dropout from drug abuse treatment. Psycho- therapy: Theory, research, practice, training. 1993; 30(2):357.",
+    "distributor",
+    "[raw_reference] United States Department of Health and Human Services. Substance Abuse and Mental Health Ser- vices Administration. Office of Applied Statistics. Treatment Episode Data Set-Discharges (TEDS-D) -Concatenated, 2006 to 2011. Inter-university Consortium for Political and Social Research (ICPSR) [distributor]; 2014.",
+    "[raw_reference] LeDell EE. Scalable Ensemble Learning and Computationally Efficient Variance Estimation: University of California, Berkeley; 2015.",
+    "[raw_reference] Zarkin GA, Dunlap LJ, Bray JW, Wechsberg WM. The effect of treatment completion and length of stay on employment and crime in outpatient drug-free treatment. Journal of Substance Abuse Treatment. 2002; 23(4):261-71. PMID: 12495788",
+    "[raw_reference] Garnick DW, Lee MT, Horgan CM, Acevedo A, Workgroup WCPS. Adapting Washington Circle perfor- mance measures for public sector substance abuse treatment systems. Journal of Substance Abuse Treatment. 2009; 36(3):265-77. https://doi.org/10.1016/j.jsat.2008.06.008 PMID: 18722075",
+    "[raw_reference] Evans E, Li L, Hser Y-I. Client and program factors associated with dropout from court mandated drug treatment. Evaluation and program planning. 2009; 32(3):204-12. https://doi.org/10.1016/j. evalprogplan.2008.12.003 PMID: 19150133",
+    "[raw_reference] TOPPS-II Interstate Cooperative Study Group. Drug treatment completion and post-discharge employ- ment in the TOPPS-II Interstate Cooperative Study. Journal of Substance Abuse Treatment. 2003; 25 (1):9-18. PMID: 14512103",
+    "[raw_reference] Sahker E, Yeung C, Loh Y, Park S, Arndt S. Asian American and Pacific Islander Substance Use Treat- ment Admission Trends. Drug and alcohol dependence. 2017; 171:1-8. https://doi.org/10.1016/j. drugalcdep.2016.11.022 PMID: 27988403",
+    "[raw_reference] Marzell MS E.; Pro G.; Arndt S. A brief report on Hispanic youth marijuana use: Trends in substance abuse treatment admissions in the United States. Journal of ethnicity and substance abuse. 2016:1-10.",
+    "[raw_reference] Substance Abuse and Mental Health Services Administration. The NSDUH Report: Need for and Receipt of Substance Use Treatment among Hispanics. Rockville, MD: 2012.",
+    "[raw_reference] Substance Abuse and Mental Health Services Administration. The NSDUH Report: Need for and Receipt of Substance Use Treatment among American Indians or Alaska Natives. Rockville, MD: 2012.",
+    "[raw_reference] Substance Abuse and Mental Health Services Administration. Need for and Receipt of Substance Use Treatment among Blacks. 2013.",
+    "[raw_reference] Acion L, Peterson JJ, Temple S, Arndt S. Probabilistic index: An intuitive non-parametric approach to measuring the size of treatment effects. Statistics in medicine. 2006; 25(4):591-602. https://doi.org/10. 1002/sim.2256 PMID: 16143965",
+    "[raw_reference] Friedman J, Hastie T, Tibshirani R. The elements of statistical learning: Springer series in statistics Springer, Berlin; 2001.",
+    "[raw_reference] Breiman L. Random Forests. Machine Learning. 2001; 45(1):5-32.",
+    "[raw_reference] Bengio Y. Learning deep architectures for AI. Foundations and trends\u00ae in Machine Learning. 2009; 2 (1):1-127.",
+    "[raw_reference] Wolpert DH. Stacked generalization. Neural networks. 1992; 5(2):241-59.",
+    "[raw_reference] Van der Laan MJ, Rose S. Targeted learning: causal inference for observational and experimental data: Springer Science & Business Media; 2011.",
+    "[raw_reference] R Core Team. R: A language and environment for statistical computing. R Foundation for Statistical Computing, Vienna, Austria. 2016.",
+    "[raw_reference] Aiello SK, Tom; Maj, Petr; with contributions from the H2O.ai team. h2o: R Interface for H2O. R package version 3.8.2.2. 2015.",
+    "[raw_reference] LeDell EE. h2oEnsemble: H2O Ensemble Learning. R package version 0.1.8. 2016.",
+    "[raw_reference] DeLong ER, DeLong DM, Clarke-Pearson DL. Comparing the areas under two or more correlated receiver operating characteristic curves: a nonparametric approach. Biometrics. 1988:837-45. PMID: 3203132",
+    "[raw_reference] Robin X, Turck N, Hainard A, Tiberti N, Lisacek F, Sanchez J-C, et al. pROC: an open-source package for R and S+ to analyze and compare ROC curves. BMC bioinformatics. 2011; 12(1):1.",
+    "cited 2017 01/24/2017",
+    "[raw_reference] National Institutes of Health. Research instructions for NIH and other PHS agencies 2016 [cited 2017 01/24/2017]. Available from: https://grants.nih.gov/grants/how-to-apply-application-guide/forms-d/ research-forms-d.pdf.",
+    "[raw_reference] Rose S. Mortality risk score prediction in an elderly population using machine learning. American journal of epidemiology. 2013; 177(5):443-52. https://doi.org/10.1093/aje/kws241 PMID: 23364879",
+    "[raw_reference] Brierley P, Vogel D, Axelrod R. Heritage Provider Network Health Prize Round 1 Milestone Prize: How we did it-Team 'Market Makers'. 2011.",
+    "[raw_reference] Rose S, van der Laan MJ. Why TMLE? Targeted Learning: Springer; 2011. p. 101-18.",
+    "[raw_reference] Rose S. Targeted Learning for Variable Importance. Handbook of Big Data. 2016: 411."
+  ],
+  "processing_software": {
+    "GROBID": "0.8.2"
+  },
+  "journal": "PLOS One",
+  "volume": "12",
+  "issue": "4",
+  "pages": "e0175383",
+  "zotero_recovery": {
+    "fields_recovered": [
+      "journal"
+    ],
+    "timestamp": "2025-09-01T11:08:20.745966",
+    "zotero_item_type": "journalArticle"
+  }
+}

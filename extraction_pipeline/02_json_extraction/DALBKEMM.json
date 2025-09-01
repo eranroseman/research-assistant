@@ -1,0 +1,1055 @@
+{
+  "paper_id": "DALBKEMM",
+  "title": "The future of digital health with federated learning",
+  "abstract": "Data-driven machine learning (ML) has emerged as a promising approach for building accurate and robust statistical models from medical data, which is collected in huge volumes by modern healthcare systems. Existing medical data is not fully exploited by ML primarily because it sits in data silos and privacy concerns restrict access to this data. However, without access to sufficient data, ML will be prevented from reaching its full potential and, ultimately, from making the transition from research to clinical practice. This paper considers key factors contributing to this issue, explores how federated learning (FL) may provide a solution for the future of digital health and highlights the challenges and considerations that need to be addressed.",
+  "year": 2015,
+  "date": "2015",
+  "authors": [
+    {
+      "name": "Nicola Rieke",
+      "email": "nrieke@nvidia.com",
+      "orcid": "0000-0003-0241-9334",
+      "affiliation": {
+        "organization": "NVIDIA GmbH",
+        "institution": "NVIDIA GmbH",
+        "address": "Munich, Germany"
+      }
+    },
+    {
+      "name": "Jonny Hancox",
+      "affiliation": {
+        "organization": "NVIDIA Ltd",
+        "institution": "NVIDIA Ltd",
+        "address": "Reading, UK"
+      }
+    },
+    {
+      "name": "Wenqi Li",
+      "orcid": "0000-0003-1081-2830",
+      "affiliation": {
+        "organization": "NVIDIA Ltd",
+        "institution": "NVIDIA Ltd",
+        "address": "Cambridge, UK"
+      }
+    },
+    {
+      "name": "Fausto Milletar\u00ec",
+      "affiliation": {
+        "organization": "NVIDIA GmbH",
+        "institution": "NVIDIA GmbH",
+        "address": "Munich, Germany"
+      }
+    },
+    {
+      "name": "Holger Roth",
+      "orcid": "0000-0002-3662-8743",
+      "affiliation": {
+        "organization": "NVIDIA Corporation",
+        "institution": "NVIDIA Corporation",
+        "address": "Bethesda, USA"
+      }
+    },
+    {
+      "name": "Shadi Albarqouni",
+      "orcid": "0000-0003-2157-2211",
+      "affiliation": {
+        "organization": "Technical University of Munich (TUM)",
+        "institution": "Technical University of Munich (TUM)",
+        "address": "Munich, Germany"
+      }
+    },
+    {
+      "name": "Spyridon Bakas",
+      "affiliation": {
+        "organization": "University of Pennsylvania (UPenn)",
+        "institution": "University of Pennsylvania (UPenn)",
+        "address": "Philadelphia, PA, USA"
+      }
+    },
+    {
+      "name": "Mathieu Galtier",
+      "affiliation": {
+        "organization": "Owkin",
+        "institution": "Owkin",
+        "address": "Paris, France"
+      }
+    },
+    {
+      "name": "Bennett Landman",
+      "orcid": "0000-0001-5733-2127",
+      "affiliation": {
+        "organization": "Vanderbilt University",
+        "institution": "Vanderbilt University",
+        "address": "Nashville, TN, USA"
+      }
+    },
+    {
+      "name": "Klaus Maier-Hein",
+      "orcid": "0000-0002-6626-2463",
+      "affiliation": {
+        "organization": "German Cancer Research Center (DKFZ)",
+        "department": "German Cancer Research Center (DKFZ)",
+        "address": "Heidelberg, Germany"
+      }
+    },
+    {
+      "name": "S\u00e9bastien Ourselin",
+      "affiliation": {
+        "organization": "King's College London (KCL)",
+        "institution": "King's College London (KCL)",
+        "address": "London, UK"
+      }
+    },
+    {
+      "name": "Micah Sheller",
+      "affiliation": {
+        "organization": "Intel Corporation",
+        "institution": "Intel Corporation",
+        "address": "Santa Clara, CA, USA"
+      }
+    },
+    {
+      "name": "Ronald Summers",
+      "orcid": "0000-0001-8081-7376",
+      "affiliation": {
+        "organization": "Clinical Center",
+        "department": "Clinical Center",
+        "institution": "National Institutes of Health (NIH)",
+        "address": "Bethesda, MD, USA"
+      }
+    },
+    {
+      "name": "Andrew Trask",
+      "affiliation": {
+        "organization": "OpenMined",
+        "department": "OpenMined",
+        "address": "Oxford, UK"
+      }
+    },
+    {
+      "name": "Daguang Xu",
+      "affiliation": {
+        "organization": "NVIDIA Corporation",
+        "institution": "NVIDIA Corporation",
+        "address": "Bethesda, USA"
+      }
+    },
+    {
+      "name": "Maximilian Baust",
+      "affiliation": {
+        "organization": "NVIDIA GmbH",
+        "institution": "NVIDIA GmbH",
+        "address": "Munich, Germany"
+      }
+    },
+    {
+      "name": "M Cardoso",
+      "orcid": "0000-0003-1284-2558",
+      "affiliation": {
+        "organization": "King's College London (KCL)",
+        "institution": "King's College London (KCL)",
+        "address": "London, UK"
+      }
+    }
+  ],
+  "doi": "10.1038/s41746-020-00323-1",
+  "orcid": "0000-0003-1284-2558",
+  "md5": "8CFB56992341035515BA142C74F22B2B",
+  "publication": {
+    "journal": "PLoS Comput. Biol",
+    "journal_inferred": true
+  },
+  "funding": [
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    ""
+  ],
+  "sections": [
+    {
+      "title": "INTRODUCTION",
+      "text": "Research on artificial intelligence (AI), and particularly the advances in machine learning (ML) and deep learning (DL)  1  have led to disruptive innovations in radiology, pathology, genomics and other fields. Modern DL models feature millions of parameters that need to be learned from sufficiently large curated data sets in order to achieve clinical-grade accuracy, while being safe, fair, equitable and generalising well to unseen data  [2] [3] [4] [5]  .\n\nFor example, training an AI-based tumour detector requires a large database encompassing the full spectrum of possible anatomies, pathologies, and input data types. Data like this is hard to obtain, because health data is highly sensitive and its usage is tightly regulated  6  . Even if data anonymisation could bypass these limitations, it is now well understood that removing metadata such as patient name or date of birth is often not enough to preserve privacy  7  . It is, for example, possible to reconstruct a patient's face from computed tomography (CT) or magnetic resonance imaging (MRI) data  8  . Another reason why data sharing is not systematic in healthcare is that collecting, curating, and maintaining a high-quality data set takes considerable time, effort, and expense. Consequently such data sets may have significant business value, making it less likely that they will be freely shared. Instead, data collectors often retain fine-grained control over the data that they have gathered.\n\nFederated learning (FL)  [9] [10] [11]  is a learning paradigm seeking to address the problem of data governance and privacy by training algorithms collaboratively without exchanging the data itself. Originally developed for different domains, such as mobile and edge device use cases  12  , it recently gained traction for healthcare applications  [13] [14] [15] [16] [17] [18] [19] [20]  . FL enables gaining insights collaboratively, e.g., in the form of a consensus model, without moving patient data beyond the firewalls of the institutions in which they reside. Instead, the ML process occurs locally at each participating institution and only model characteristics (e.g., parameters, gradients) are transferred as depicted in Fig.  1 . Recent research has shown that models trained by FL can achieve performance levels comparable to ones trained on centrally hosted data sets and superior to models that only see isolated single-institutional data  16, 17  .\n\nA successful implementation of FL could thus hold a significant potential for enabling precision medicine at large-scale, leading to models that yield unbiased decisions, optimally reflect an individual's physiology, and are sensitive to rare diseases while respecting governance and privacy concerns. However, FL still requires rigorous technical consideration to ensure that the algorithm is proceeding optimally without compromising safety or patient privacy. Nevertheless, it has the potential to overcome the limitations of approaches that require a single pool of centralised data.\n\nWe envision a federated future for digital health and with this perspective paper, we share our consensus view with the aim of providing context and detail for the community regarding the benefits and impact of FL for medical applications (section \"Datadriven medicine requires federated efforts\"), as well as highlighting key considerations and challenges of implementing FL for digital health (section \"Technical considerations\")."
+    },
+    {
+      "title": "DATA-DRIVEN MEDICINE REQUIRES FEDERATED EFFORTS",
+      "text": "ML and especially DL is becoming the de facto knowledge discovery approach in many industries, but successfully implementing data-driven applications requires large and diverse data sets. However, medical data sets are difficult to obtain (subsection \"The reliance on data\"). FL addresses this issue by enabling collaborative learning without centralising data (subsection \"The promise of federated efforts\") and has already found its way to digital health applications (subsection \"Current FL efforts for digital health\"). This new learning paradigm requires consideration from, but also offers benefits to, various healthcare stakeholders (section \"Impact on stakeholders\").\n\nThe reliance on data Data-driven approaches rely on data that truly represent the underlying data distribution of the problem. While this is a wellknown requirement, state-of-the-art algorithms are usually evaluated on carefully curated data sets, often originating from only a few sources. This can introduce biases where demographics (e.g., gender, age) or technical imbalances (e.g., acquisition protocol, equipment manufacturer) skew predictions and adversely affect the accuracy for certain groups or sites. However, to capture subtle relationships between disease patterns, socioeconomic and genetic factors, as well as complex and rare cases, it is crucial to expose a model to diverse cases.\n\nThe need for large databases for AI training has spawned many initiatives seeking to pool data from multiple institutions. This data is often amassed into so-called Data Lakes. These have been built with the aim of leveraging either the commercial value of data, e.g., IBM's Merge Healthcare acquisition  21  , or as a resource for economic growth and scientific progress, e.g., NHS Scotland's National Safe Haven  22  , French Health Data Hub  23  , and Health Data Research UK  24  .\n\nSubstantial, albeit smaller, initiatives include the Human Connectome  25  , the UK Biobank  26  , the Cancer Imaging Archive (TCIA)  27  , NIH CXR8  28  , NIH DeepLesion 29 , the Cancer Genome Atlas (TCGA)  30  , the Alzheimer's Disease Neuroimaging Initiative (ADNI)  31  , as well as medical grand challenges 32 such as the CAMELYON challenge  33  , the International multimodal Brain Tumor Segmentation (BraTS) challenge  [34] [35] [36]  or the Medical Segmentation Decathlon  37  . Public medical data is usually task-or disease-specific and often released with varying degrees of license restrictions, sometimes limiting its exploitation.\n\nCentralising or releasing data, however, poses not only regulatory, ethical and legal challenges, related to privacy and data protection, but also technical ones. Anonymising, controlling access and safely transferring healthcare data is a non-trivial, and sometimes impossible task. Anonymised data from the electronic health record can appear innocuous and GDPR/PHI compliant, but just a few data elements may allow for patient reidentification  7  . The same applies to genomic data and medical images making them as unique as a fingerprint  38  . Therefore, unless the anonymisation process destroys the fidelity of the data, likely rendering it useless, patient reidentification or information leakage cannot be ruled out. Gated access for approved users is often proposed as a putative solution to this issue. However, besides limiting data availability, this is only practical for cases in which the consent granted by the data owners is unconditional, since recalling data from those who may have had access to the data is practically unenforceable."
+    },
+    {
+      "title": "The promise of federated efforts",
+      "text": "The promise of FL is simple-to address privacy and data governance challenges by enabling ML from non-co-located data. In a FL setting, each data controller not only defines its own governance processes and associated privacy policies, but also controls data access and has the ability to revoke it. This includes both the training, as well as the validation phase. In this way, FL could create new opportunities, e.g., by allowing large-scale, ininstitutional validation, or by enabling novel research on rare diseases, where the incident rates are low and data sets at each single institution are too small. Moving the model to the data and not vice versa has another major advantage: high-dimensional, storage-intense medical data does not have to be duplicated from local institutions in a centralised pool and duplicated again by every user that uses this data for local model training. As the model is transferred to the local institutions, it can scale naturally with a potentially growing global data set without disproportionately increasing data storage requirements.\n\nAs depicted in Fig.  2 , a FL workflow can be realised with different topologies and compute plans. The two most common ones for healthcare applications are via an aggregation server  [16] [17] [18]  and peer to peer approaches  15, 39  . In all cases, FL implicitly offers a certain degree of privacy, as FL participants never directly access data from other institutions and only receive model parameters that are aggregated over several participants. In a FL workflow with aggregation server, the participating institutions can even remain unknown to each other. However, it has been shown that the models Fig.  1  Example federated learning (FL) workflows and difference to learning on a Centralised Data Lake. a FL aggregation server-the typical FL workflow in which a federation of training nodes receive the global model, resubmit their partially trained models to a central server intermittently for aggregation and then continue training on the consensus model that the server returns. b FL peer to peer-alternative formulation of FL in which each training node exchanges its partially trained models with some or all of its peers and each does its own aggregation. c Centralised training-the general non-FL training workflow in which data acquiring sites donate their data to a central Data Lake from which they and others are able to extract data for local, independent training. themselves can, under certain conditions, memorise information  [40] [41] [42] [43]  . Therefore, mechanisms such as differential privacy  44, 45  or learning from encrypted data have been proposed to further enhance privacy in a FL setting (c.f. section \"Technical considerations\"). Overall, the potential of FL for healthcare applications has sparked interest in the community  46  and FL techniques are a growing area of research  12, 20  .\n\nCurrent FL efforts for digital health Since FL is a general learning paradigm that removes the data pooling requirement for AI model development, the application range of FL spans the whole of AI for healthcare. By providing an opportunity to capture larger data variability and to analyse patients across different demographics, FL may enable disruptive innovations for the future but is also being employed right now.\n\nIn the context of electronic health records (EHR), for example, FL helps to represent and to find clinically similar patients  13, 47  , as well as predicting hospitalisations due to cardiac events  14  , mortality and ICU stay time  19  . The applicability and advantages of FL have also been demonstrated in the field of medical imaging, for whole-brain segmentation in MRI  15  , as well as brain tumour segmentation  16, 17  . Recently, the technique has been employed for fMRI classification to find reliable disease-related biomarkers  18  and suggested as a promising approach in the context of COVID-19  48  .\n\nIt is worth noting that FL efforts require agreements to define the scope, aim and technologies used which, since it is still novel, can be difficult to pin down. In this context, today's large-scale initiatives really are the pioneers of tomorrow's standards for safe, fair and innovative collaboration in healthcare applications.\n\nThese include consortia that aim to advance academic research, such as the Trustworthy Federated Data Analytics (TFDA) project  49  and the German Cancer Consortium's Joint Imaging Platform  50  , which enable decentralised research across German medical imaging research institutions. Another example is an international research collaboration that uses FL for the development of AI models for the assessment of mammograms  51  . The study showed that the FL-generated models outperformed those trained on a single institute's data and were more generalisable, so that they still performed well on other institutes' data. However, FL is not limited just to academic environments.\n\nBy linking healthcare institutions, not restricted to research centres, FL can have direct clinical impact. The on-going HealthChain project 52 , for example, aims to develop and deploy a FL framework across four hospitals in France. This solution generates common models that can predict treatment response for breast cancer and melanoma patients. It helps oncologists to determine the most effective treatment for each patient from their histology slides or dermoscopy images. Another large-scale effort is the Federated Tumour Segmentation (FeTS) initiative  53  , which is an international federation of 30 committed healthcare institutions using an open-source FL framework with a graphical user interface. The aim is to improve tumour boundary detection, including brain glioma, breast tumours, liver tumours and bone lesions from multiple myeloma patients.\n\nAnother area of impact is within industrial research and translation. FL enables collaborative research for, even competing, companies. In this context, one of the largest initiatives is the Melloddy project  54  . It is a project aiming to deploy multi-task FL across the data sets of 10 pharmaceutical companies. By training a common predictive model, which infers how chemical compounds bind to proteins, partners intend to optimise the drug discovery process without revealing their highly valuable in-house data.\n\nImpact on stakeholders FL comprises a paradigm shift from centralised data lakes and it is important to understand its impact on the various stakeholders in a FL ecosystem.\n\nClinicians. Clinicians are usually exposed to a sub-group of the population based on their location and demographic environment, which may cause biased assumptions about the probability of certain diseases or their interconnection. By using ML-based systems, e.g., as a second reader, they can augment their own expertise with expert knowledge from other institutions, ensuring a consistency of diagnosis not attainable today. While this applies to ML-based system in general, systems trained in a federated fashion are potentially able to yield even less biased decisions and higher sensitivity to rare cases as they were likely exposed to a more complete data distribution. However, this demands some up-front effort such as compliance with agreements, e.g., regarding the data structure, annotation and report protocol, which is necessary to ensure that the information is presented to collaborators in a commonly understood format. Patients. Patients are usually treated locally. Establishing FL on a global scale could ensure high quality of clinical decisions regardless of the treatment location. In particular, patients requiring medical attention in remote areas could benefit from the same high-quality ML-aided diagnoses that are available in hospitals with a large number of cases. The same holds true for rare, or geographically uncommon, diseases, that are likely to have milder consequences if faster and more accurate diagnoses can be made. FL may also lower the hurdle for becoming a data donor, since patients can be reassured that the data remains with their own institution and data access can be revoked.\n\nHospitals and practices. Hospitals and practices can remain in full control and possession of their patient data with complete traceability of data access, limiting the risk of misuse by third parties. However, this will require investment in on-premise computing infrastructure or private-cloud service provision and adherence to standardised and synoptic data formats so that ML models can be trained and evaluated seamlessly. The amount of necessary compute capability depends of course on whether a site is only participating in evaluation and testing efforts or also in training efforts. Even relatively small institutions can participate and they will still benefit from collective models generated.\n\nResearchers and AI developers. Researchers and AI developers stand to benefit from access to a potentially vast collection of realworld data, which will particularly impact smaller research labs and start-ups. Thus, resources can be directed towards solving clinical needs and associated technical problems rather than relying on the limited supply of open data sets. At the same time, it will be necessary to conduct research on algorithmic strategies for federated training, e.g., how to combine models or updates efficiently, how to be robust to distribution shifts  11, 12, 20  . FL-based development implies also that the researcher or AI developer cannot investigate or visualise all of the data on which the model is trained, e.g., it is not possible to look at an individual failure case to understand why the current model performs poorly on it.\n\nHealthcare providers. Healthcare providers in many countries are affected by the on-going paradigm shift from volume-based, i.e., fee-for-service-based, to value-based healthcare, which is in turn strongly connected to the successful establishment of precision medicine. This is not about promoting more expensive individualised therapies but instead about achieving better outcomes sooner through more focused treatment, thereby reducing the cost. FL has the potential to increase the accuracy and robustness of healthcare AI, while reducing costs and improving patient outcomes, and may therefore be vital to precision medicine.\n\nManufacturers. Manufacturers of healthcare software and hardware could benefit from FL as well, since combining the learning from many devices and applications, without revealing patientspecific information, can facilitate the continuous validation or improvement of their ML-based systems. However, realising such a capability may require significant upgrades to local compute, data storage, networking capabilities and associated software."
+    },
+    {
+      "title": "TECHNICAL CONSIDERATIONS",
+      "text": "FL is perhaps best-known from the work of Kone\u010dn\u1ef3 et al.  55  , but various other definitions have been proposed in the literature  9, 11, 12, 20  . A FL workflow (Fig.  1 ) can be realised via different topologies and compute plans (Fig.  2 ), but the goal remains the same, i.e., to combine knowledge learned from non-co-located data. In this section, we will discuss in more detail what FL is, as well as highlighting the key challenges and technical considerations that arise when applying FL in digital health.\n\nFederated learning definition FL is a learning paradigm in which multiple parties train collaboratively without the need to exchange or centralise data sets. A general formulation of FL reads as follows: Let L denote a global loss function obtained via a weighted combination of K local losses fL k g K k\u00bc1 , computed from private data X k , which is residing at the individual involved parties and never shared among them:\n\nwhere w k > 0 denote the respective weight coefficients.\n\nIn practice, each participant typically obtains and refines a global consensus model by conducting a few rounds of optimisation locally and before sharing updates, either directly or via a parameter server. The more rounds of local training are performed, the less it is guaranteed that the overall procedure is minimising (Eq. 1)  9, 12  . The actual process for aggregating parameters depends on the network topology, as nodes might be segregated into subnetworks due to geographical or legal constraints (see Fig.  2 ). Aggregation strategies can rely on a single aggregating node (hub and spokes models), or on multiple nodes without any centralisation. An example is peer-to-peer FL, where connections exist between all or a subset of the participants and model updates are shared only between directly connected sites  15, 56  , whereas an example of centralised FL aggregation is given in Algorithm 1. Note that aggregation strategies do not necessarily require information about the full model update; clients might chose to share only a subset of the model parameters for the sake of reducing communication overhead, ensure better privacy preservation  10  or to produce multi-task learning algorithms having only part of their parameters learned in a federated manner.\n\nA unifying framework enabling various training schemes may disentangle compute resources (data and servers) from the compute plan, as depicted in Fig.  2 . The latter defines the trajectory of a model across several partners, to be trained and evaluated on specific data sets.\n\n11: end procedure"
+    },
+    {
+      "title": "Challenges and considerations",
+      "text": "Despite the advantages of FL, it does not solve all issues that are inherent to learning on medical data. A successful model training still depends on factors like data quality, bias and standardisation 2 . These issues have to be solved for both federated and nonfederated learning efforts via appropriate measures, such as careful study design, common protocols for data acquisition, structured reporting and sophisticated methodologies for discovering bias and hidden stratification. In the following, we touch upon the key aspects of FL that of particular relevance when applied to digital health and need to be taken into account when establishing FL. For technical details and in-depth discussion, we refer the reader to recent surveys  11, 12, 20  .\n\nData heterogeneity. Medical data is particularly diverse-not only because of the variety of modalities, dimensionality and characteristics in general, but even within a specific protocol due to factors such as acquisition differences, brand of the medical device or local demographics. FL may help address certain sources of bias through potentially increased diversity of data sources, but inhomogeneous data distribution poses a challenge for FL algorithms and strategies, as many are assuming independently and identically distributed (IID) data across the participants. In general, strategies such as FedAvg 9 are prone to fail under these conditions  9, 57, 58  , in part defeating the very purpose of collaborative learning strategies. Recent results, however, indicate that FL training is still feasible  59  , even if medical data is not uniformly distributed across the institutions  16, 17  or includes a local bias  51  . Research addressing this problem includes, for example, FedProx 57 , part-data-sharing strategy  58  and FL with domainadaptation  18  . Another challenge is that data heterogeneity may lead to a situation in which the global optimal solution may not be optimal for an individual local participant. The definition of model training optimality should, therefore, be agreed by all participants before training.\n\nPrivacy and security. Healthcare data is highly sensitive and must be protected accordingly, following appropriate confidentiality procedures. Therefore, some of the key considerations are the trade-offs, strategies and remaining risks regarding the privacypreserving potential of FL. Privacy vs. performance: It is important to note that FL does not solve all potential privacy issues and-similar to ML algorithms in general-will always carry some risks. Privacy-preserving techniques for FL offer levels of protection that exceed today's current commercially available ML models  12  . However, there is a trade-off in terms of performance and these techniques may affect, for example, the accuracy of the final model  10  . Furthermore, future techniques and/or ancillary data could be used to compromise a model previously considered to be low-risk.\n\nLevel of trust: Broadly speaking, participating parties can enter two types of FL collaboration:\n\nTrusted-for FL consortia in which all parties are considered trustworthy and are bound by an enforceable collaboration agreement, we can eliminate many of the more nefarious motivations, such as deliberate attempts to extract sensitive information or to intentionally corrupt the model. This reduces the need for sophisticated counter-measures, falling back to the principles of standard collaborative research.\n\nNon-trusted-in FL systems that operate on larger scales, it might be impractical to establish an enforceable collaborative agreement. Some clients may deliberately try to degrade performance, bring the system down or extract information from other parties. Hence, security strategies will be required to mitigate these risks such as, advanced encryption of model submissions, secure authentication of all parties, traceability of actions, differential privacy, verification systems, execution integrity, model confidentiality and protections against adversarial attacks.\n\nInformation leakage: By definition, FL systems avoid sharing healthcare data among participating institutions. However, the shared information may still indirectly expose private data used for local training, e.g., by model inversion  60  of the model updates, the gradients themselves  61  or adversarial attacks  62, 63  . FL is different from traditional training insofar as the training process is exposed to multiple parties, thereby increasing the risk of leakage via reverseengineering if adversaries can observe model changes over time, observe specific model updates (i.e., a single institution's update), or manipulate the model (e.g., induce additional memorisation by others through gradient-ascent-style attacks). Developing countermeasures, such as limiting the granularity of the updates and adding noise  16, 18  and ensuring adequate differential privacy  44  , may be needed and is still an active area of research  12  .\n\nTraceability and accountability. As per all safety-critical applications, the reproducibility of a system is important for FL in healthcare. In contrast to centralised training, FL requires multiparty computations in environments that exhibit considerable variety in terms of hardware, software and networks. Traceability of all system assets including data access history, training configurations, and hyperparameter tuning throughout the training processes is thus mandatory. In particular in non-trusted federations, traceability and accountability processes require execution integrity. After the training process reaches the mutually agreed model optimality criteria, it may also be helpful to measure the amount of contribution from each participant, such as computational resources consumed, quality of the data used for local training, etc. These measurements could then be used to determine relevant compensation, and establish a revenue model among the participants  64  . One implication of FL is that researchers are not able to investigate data upon which models are being trained to make sense of unexpected results. Moreover, taking statistical measurements of their training data as part of the model development workflow will need to be approved by the collaborating parties as not violating privacy. Although each site will have access to its own raw data, federations may decide to provide some sort of secure intra-node viewing facility to cater for this need or may provide some other way to increase explainability and interpretability of the global model. System architecture. Unlike running large-scale FL amongst consumer devices such as McMahan et al.  9  , healthcare institutional participants are equipped with relatively powerful computational resources and reliable, higher-throughput networks enabling training of larger models with many more local training steps, and sharing more model information between nodes. These unique characteristics of FL in healthcare also bring challenges such as ensuring data integrity when communicating by use of redundant nodes, designing secure encryption methods to prevent data leakage, or designing appropriate node schedulers to make best-use of the distributed computational devices and reduce idle time.\n\nThe administration of such a federation can be realised in different ways. In situations requiring the most stringent data privacy between parties, training may operate via some sort of \"honest broker\" system, in which a trusted third party acts as the intermediary and facilitates access to data. This setup requires an independent entity controlling the overall system, which may not always be desirable, since it could involve additional cost and procedural viscosity. However, it has the advantage that the precise internal mechanisms can be abstracted away from the clients, making the system more agile and simpler to update. In a peer-topeer system each site interacts directly with some or all of the other participants. In other words, there is no gatekeeper function, all protocols must be agreed up-front, which requires significant agreement efforts, and changes must be made in a synchronised fashion by all parties to avoid problems. Additionally, in a trustlessbased architecture the platform operator may be cryptographically locked into being honest by means of a secure protocol, but this may introduce significant computational overheads. CONCLUSION ML, and particularly DL, has led to a wide range of innovations in the area of digital healthcare. As all ML methods benefit greatly from the ability to access data that approximates the true global distribution, FL is a promising approach to obtain powerful, accurate, safe, robust and unbiased models. By enabling multiple parties to train collaboratively the need to exchange or centralise data sets, FL neatly addresses issues related to egress of sensitive medical data. As a consequence, it may open novel research and business avenues and has the potential to improve patient care globally. However, already today, FL has an impact on nearly all stakeholders and the entire treatment cycle, ranging from improved medical image analysis providing clinicians with better diagnostic tools, over true precision medicine by helping to find similar patients, to collaborative and accelerated drug discovery decreasing cost and time-to-market for pharma companies. Not all technical questions have been answered yet and FL will certainly be an active research area throughout the next decade  12  . Despite this, we truly believe that its potential impact on precision medicine and ultimately improving medical care is very promising."
+    },
+    {
+      "text": "Fig. 2 Overview of different FL design choices. FL topologies-communication architecture of a federation. a Centralised: the aggregation server coordinates the training iterations and collects, aggregates and distributes the models to and from the Training Nodes (Hub & Spoke). b Decentralised: each training node is connected to one or more peers and aggregation occurs on each node in parallel. c Hierarchical: federated networks can be composed from several sub-federations, which can be built from a mix of Peer to Peer and Aggregation Server federations (d)). FL compute plans-trajectory of a model across several partners. e Sequential training/cyclic transfer learning. f Aggregation server, g Peer to Peer."
+    },
+    {
+      "text": "Example of a FL algorithm 16  via Hub & Spoke (Centralised topology) with FedAvg aggregation 9 . Require: num_federated_rounds T 1: procedure AGGREGATING 2: Initialise global model: W (0) 3: for t \u2190 1 \u22ef T do 4: for client k \u2190 1 \u22ef K do \u22b3 Run in parallel 5: Send W (t-1) to client k Receive model updates and number of local training iterations \u00f0\u0394W"
+    },
+    {
+      "title": "ACKNOWLEDGEMENTS",
+      "text": "This work was supported by the  UK Research and Innovation London Medical Imaging & Artificial Intelligence Centre for Value-Based Healthcare , by the  Wellcome/ EPSRC Centre for Medical Engineering  ( WT203148/Z/16/Z ), by the  Wellcome Flagship Programme  ( WT213038/Z/18/Z ), by the  Intramural Research Programme of the National Institutes of Health (NIH) Clinical Center , by the  National Cancer Institute  of the  NIH  under award number  U01CA242871 , by the  National Institute of Neurological Disorders and Stroke of the NIH  under award number  R01NS042645 , as well as by the  Helmholtz Initiative and Networking Fund  (project \" Trustworthy Federated Data Analytics \") and the  PRIME programme  of the  German Academic Exchange Service (DAAD)  with funds from the  German Federal Ministry of Education and Research (BMBF) . The content and opinions expressed in this publication is solely the responsibility of the authors and do not necessarily represent those of the institutions they are affiliated with, e.g., the  U.S. Department of Health and Human Services  or the  National Institutes of Health . Open access funding provided by  Projekt DEAL ."
+    },
+    {
+      "title": "Reporting summary",
+      "text": "Further information on research design is available in the Nature Research Reporting Summary linked to this article."
+    },
+    {
+      "title": "AUTHOR CONTRIBUTIONS"
+    },
+    {
+      "title": "ADDITIONAL INFORMATION",
+      "text": "Supplementary information is available for this paper at  https://doi.org/10.1038/  s41746-020-00323-1 .\n\nCorrespondence and requests for materials should be addressed to N.R.\n\nReprints and permission information is available at  http://www.nature.com/  reprints  Publisher's note Springer Nature remains neutral with regard to jurisdictional claims in published maps and institutional affiliations."
+    }
+  ],
+  "references": [
+    {
+      "title": "Deep learning",
+      "authors": [
+        "Y Lecun",
+        "Y Bengio",
+        "G Hinton"
+      ],
+      "year": 2015,
+      "journal": "Nature",
+      "volume": "521",
+      "pages": "436",
+      "raw": "Deep learning \n\t\t \n\t\t\t Y Lecun \n\t\t \n\t\t \n\t\t\t Y Bengio \n\t\t \n\t\t \n\t\t\t G Hinton \n\t\t \n\t \n\t \n\t\t Nature \n\t\t \n\t\t\t 521 \n\t\t\t 436 \n\t\t\t 2015 \n\t\t \n\t \n\t LeCun, Y., Bengio, Y. & Hinton, G. Deep learning. Nature 521, 436 (2015)."
+    },
+    {
+      "title": "Deep learning in medicine-promise, progress, and challenges",
+      "authors": [
+        "F Wang",
+        "L Casalino",
+        "D Khullar"
+      ],
+      "year": 2019,
+      "doi": "10.1001/jamainternmed.2018.7117",
+      "journal": "JAMA Intern. Med",
+      "volume": "179",
+      "raw": "Deep learning in medicine-promise, progress, and challenges \n\t\t \n\t\t\t F Wang \n\t\t \n\t\t \n\t\t\t L P Casalino \n\t\t \n\t\t \n\t\t\t D Khullar \n\t\t \n\t\t 10.1001/jamainternmed.2018.7117 \n\t \n\t \n\t\t JAMA Intern. Med \n\t\t \n\t\t\t 179 \n\t\t\t \n\t\t\t 2019 \n\t\t \n\t \n\t Wang, F., Casalino, L. P. & Khullar, D. Deep learning in medicine-promise, pro- gress, and challenges. JAMA Intern. Med. 179, 293-294 (2019)."
+    },
+    {
+      "title": "Deep learning: a primer for radiologists",
+      "authors": [
+        "G Chartrand"
+      ],
+      "year": 2017,
+      "journal": "Radiographics",
+      "volume": "37",
+      "raw": "Deep learning: a primer for radiologists \n\t\t \n\t\t\t G Chartrand \n\t\t \n\t \n\t \n\t\t Radiographics \n\t\t \n\t\t\t 37 \n\t\t\t \n\t\t\t 2017 \n\t\t \n\t \n\t Chartrand, G. et al. Deep learning: a primer for radiologists. Radiographics 37, 2113-2131 (2017)."
+    },
+    {
+      "title": "Clinically applicable deep learning for diagnosis and referral in retinal disease",
+      "authors": [
+        "J De Fauw"
+      ],
+      "year": 2018,
+      "journal": "Nat. Med",
+      "volume": "24",
+      "pages": "1342",
+      "raw": "Clinically applicable deep learning for diagnosis and referral in retinal disease \n\t\t \n\t\t\t J De Fauw \n\t\t \n\t \n\t \n\t\t Nat. Med \n\t\t \n\t\t\t 24 \n\t\t\t 1342 \n\t\t\t 2018 \n\t\t \n\t \n\t De Fauw, J. et al. Clinically applicable deep learning for diagnosis and referral in retinal disease. Nat. Med. 24, 1342 (2018)."
+    },
+    {
+      "title": "Revisiting unreasonable effectiveness of data in deep learning era",
+      "authors": [
+        "C Sun",
+        "A Shrivastava",
+        "S Singh",
+        "A Gupta"
+      ],
+      "year": 2017,
+      "raw": "Revisiting unreasonable effectiveness of data in deep learning era \n\t\t \n\t\t\t C Sun \n\t\t \n\t\t \n\t\t\t A Shrivastava \n\t\t \n\t\t \n\t\t\t S Singh \n\t\t \n\t\t \n\t\t\t A Gupta \n\t\t \n\t \n\t \n\t\t Proceedings of the IEEE international conference on computer vision \n\t\t the IEEE international conference on computer vision \n\t\t \n\t\t\t IEEE \n\t\t\t 2017 \n\t\t\t \n\t\t \n\t \n\t Sun, C., Shrivastava, A., Singh, S. & Gupta, A. Revisiting unreasonable effectiveness of data in deep learning era. In Proceedings of the IEEE international conference on computer vision, 843-852 (IEEE, 2017)."
+    },
+    {
+      "title": "A systematic review of barriers to data sharing in public health",
+      "authors": [
+        "W Van Panhuis"
+      ],
+      "year": 2014,
+      "journal": "BMC Public Health",
+      "volume": "14",
+      "pages": "1144",
+      "raw": "A systematic review of barriers to data sharing in public health \n\t\t \n\t\t\t W G Van Panhuis \n\t\t \n\t \n\t \n\t\t BMC Public Health \n\t\t \n\t\t\t 14 \n\t\t\t 1144 \n\t\t\t 2014 \n\t\t \n\t \n\t Van Panhuis, W. G. et al. A systematic review of barriers to data sharing in public health. BMC Public Health 14, 1144 (2014)."
+    },
+    {
+      "title": "Estimating the success of reidentifications in incomplete datasets using generative models",
+      "authors": [
+        "L Rocher",
+        "J Hendrickx",
+        "Y.-A De Montjoye"
+      ],
+      "year": 2019,
+      "doi": "10.1038/s41467-019-10933-3",
+      "journal": "Nat. Commun",
+      "volume": "10",
+      "raw": "Estimating the success of reidentifications in incomplete datasets using generative models \n\t\t \n\t\t\t L Rocher \n\t\t \n\t\t \n\t\t\t J M Hendrickx \n\t\t \n\t\t \n\t\t\t Y.-A De Montjoye \n\t\t \n\t\t 10.1038/s41467-019-10933-3 \n\t \n\t \n\t\t Nat. Commun \n\t\t \n\t\t\t 10 \n\t\t\t \n\t\t\t 2019 \n\t\t \n\t \n\t Rocher, L., Hendrickx, J. M. & De Montjoye, Y.-A. Estimating the success of re- identifications in incomplete datasets using generative models. Nat. Commun. 10, 1-9 (2019)."
+    },
+    {
+      "title": "Identification of anonymous mri research participants with face-recognition software",
+      "authors": [
+        "C Schwarz"
+      ],
+      "year": 2019,
+      "doi": "10.1056/nejmc1908881",
+      "journal": "N. Engl. J. Med",
+      "volume": "381",
+      "raw": "Identification of anonymous mri research participants with face-recognition software \n\t\t \n\t\t\t C G Schwarz \n\t\t \n\t\t 10.1056/nejmc1908881 \n\t \n\t \n\t\t N. Engl. J. Med \n\t\t \n\t\t\t 381 \n\t\t\t \n\t\t\t 2019 \n\t\t \n\t \n\t Schwarz, C. G. et al. Identification of anonymous mri research participants with face-recognition software. N. Engl. J. Med. 381, 1684-1686 (2019)."
+    },
+    {
+      "title": "Communicationefficient learning of deep networks from decentralized data",
+      "authors": [
+        "B Mcmahan",
+        "E Moore",
+        "D Ramage",
+        "S Hampson",
+        "B Arcas"
+      ],
+      "year": 2017,
+      "raw": "Communicationefficient learning of deep networks from decentralized data \n\t\t \n\t\t\t B Mcmahan \n\t\t \n\t\t \n\t\t\t E Moore \n\t\t \n\t\t \n\t\t\t D Ramage \n\t\t \n\t\t \n\t\t\t S Hampson \n\t\t \n\t\t \n\t\t\t B A Arcas \n\t\t \n\t\t \n\t \n\t \n\t\t Artificial Intelligence and Statistics \n\t\t \n\t\t\t 2017 \n\t\t\t \n\t\t \n\t \n\t McMahan, B., Moore, E., Ramage, D., Hampson, S. & y Arcas, B. A. Communication- efficient learning of deep networks from decentralized data. In Artificial Intelligence and Statistics, 1273-1282. https://scholar.google.de/scholar?hl=de&as_sdt=0% 2C5&q=Communicationefficient+learning+of+deep+networks+from +decentralized+data&btnG= (2017)."
+    },
+    {
+      "title": "Federated learning: Challenges, methods, and future directions",
+      "authors": [
+        "T Li",
+        "A Sahu",
+        "A Talwalkar",
+        "V Smith"
+      ],
+      "year": 2020,
+      "journal": "IEEE Signal Processing Magazine",
+      "volume": "37",
+      "raw": "Federated learning: Challenges, methods, and future directions \n\t\t \n\t\t\t T Li \n\t\t \n\t\t \n\t\t\t A K Sahu \n\t\t \n\t\t \n\t\t\t A Talwalkar \n\t\t \n\t\t \n\t\t\t V Smith \n\t\t \n\t \n\t \n\t\t IEEE Signal Processing Magazine \n\t\t \n\t\t\t 37 \n\t\t\t \n\t\t\t 2020 \n\t\t\t IEEE \n\t\t \n\t \n\t Li, T., Sahu, A. K., Talwalkar, A. & Smith, V. Federated learning: Challenges, methods, and future directions. IEEE Signal Processing Magazine 37, 50-60 (IEEE, 2020)."
+    },
+    {
+      "title": "Federated machine learning: concept and applications",
+      "authors": [
+        "Q Yang",
+        "Y Liu",
+        "T Chen",
+        "Y Tong"
+      ],
+      "year": 2019,
+      "doi": "10.1145/3298981",
+      "journal": "ACM Trans. Intell. Syst. Technol. (TIST)",
+      "volume": "10",
+      "pages": "12",
+      "raw": "Federated machine learning: concept and applications \n\t\t \n\t\t\t Q Yang \n\t\t \n\t\t \n\t\t\t Y Liu \n\t\t \n\t\t \n\t\t\t T Chen \n\t\t \n\t\t \n\t\t\t Y Tong \n\t\t \n\t\t 10.1145/3298981 \n\t \n\t \n\t\t ACM Trans. Intell. Syst. Technol. (TIST) \n\t\t \n\t\t\t 10 \n\t\t\t 12 \n\t\t\t 2019 \n\t\t \n\t \n\t Yang, Q., Liu, Y., Chen, T. & Tong, Y. Federated machine learning: concept and applications. ACM Trans. Intell. Syst. Technol. (TIST) 10, 12 (2019)."
+    },
+    {
+      "title": "Advances and open problems in federated learning",
+      "authors": [
+        "P Kairouz"
+      ],
+      "year": 2019,
+      "raw": "Advances and open problems in federated learning \n\t\t \n\t\t\t P Kairouz \n\t\t \n\t\t arXiv:1912.04977 \n\t\t \n\t\t\t 2019 \n\t\t \n\t \n\t arXiv preprint \n\t Kairouz, P. et al. Advances and open problems in federated learning. arXiv pre- print arXiv:1912.04977 (2019)."
+    },
+    {
+      "title": "Privacy-preserving patient similarity learning in a federated environment: development and analysis",
+      "authors": [
+        "J Lee"
+      ],
+      "year": 2018,
+      "journal": "JMIR Med. Inform",
+      "volume": "6",
+      "pages": "20",
+      "raw": "Privacy-preserving patient similarity learning in a federated environment: development and analysis \n\t\t \n\t\t\t J Lee \n\t\t \n\t \n\t \n\t\t JMIR Med. Inform \n\t\t \n\t\t\t 6 \n\t\t\t 20 \n\t\t\t 2018 \n\t\t \n\t \n\t Lee, J. et al. Privacy-preserving patient similarity learning in a federated envir- onment: development and analysis. JMIR Med. Inform. 6, e20 (2018)."
+    },
+    {
+      "title": "Federated learning of predictive models from federated electronic health records",
+      "authors": [
+        "T Brisimi"
+      ],
+      "year": 2018,
+      "doi": "10.1016/j.ijmedinf.2018.01.007",
+      "journal": "Int. J. Med. Inform",
+      "volume": "112",
+      "raw": "Federated learning of predictive models from federated electronic health records \n\t\t \n\t\t\t T S Brisimi \n\t\t \n\t\t 10.1016/j.ijmedinf.2018.01.007 \n\t \n\t \n\t\t Int. J. Med. Inform \n\t\t \n\t\t\t 112 \n\t\t\t \n\t\t\t 2018 \n\t\t \n\t \n\t Brisimi, T. S. et al. Federated learning of predictive models from federated elec- tronic health records. Int. J. Med. Inform. 112, 59-67 (2018)."
+    },
+    {
+      "title": "Braintorrent: a peerto-peer environment for decentralized federated learning",
+      "authors": [
+        "A Roy",
+        "S Siddiqui",
+        "S P\u00f6lsterl",
+        "N Navab",
+        "C Wachinger"
+      ],
+      "year": 2019,
+      "raw": "Braintorrent: a peerto-peer environment for decentralized federated learning \n\t\t \n\t\t\t A G Roy \n\t\t \n\t\t \n\t\t\t S Siddiqui \n\t\t \n\t\t \n\t\t\t S P\u00f6lsterl \n\t\t \n\t\t \n\t\t\t N Navab \n\t\t \n\t\t \n\t\t\t C Wachinger \n\t\t \n\t\t arXiv:1905.06731 \n\t\t \n\t\t\t 2019 \n\t\t \n\t \n\t arXiv preprint \n\t Roy, A. G., Siddiqui, S., P\u00f6lsterl, S., Navab, N. & Wachinger, C. Braintorrent: a peer- to-peer environment for decentralized federated learning. arXiv preprint arXiv:1905.06731 (2019)."
+    },
+    {
+      "title": "Privacy-preserving federated brain tumour segmentation",
+      "authors": [
+        "W Li"
+      ],
+      "year": 2019,
+      "raw": "Privacy-preserving federated brain tumour segmentation \n\t\t \n\t\t\t W Li \n\t\t \n\t \n\t \n\t\t International Workshop on Machine Learning in Medical Imaging \n\t\t \n\t\t\t Springer \n\t\t\t 2019 \n\t\t\t \n\t\t \n\t \n\t Li, W. et al. Privacy-preserving federated brain tumour segmentation. In Inter- national Workshop on Machine Learning in Medical Imaging, 133-141 (Springer, 2019)."
+    },
+    {
+      "title": "Multi-institutional deep learning modeling without sharing patient data: a feasibility study on brain tumor segmentation",
+      "authors": [
+        "M Sheller",
+        "G Reina",
+        "B Edwards",
+        "J Martin",
+        "S Bakas"
+      ],
+      "year": 2018,
+      "raw": "Multi-institutional deep learning modeling without sharing patient data: a feasibility study on brain tumor segmentation \n\t\t \n\t\t\t M J Sheller \n\t\t \n\t\t \n\t\t\t G A Reina \n\t\t \n\t\t \n\t\t\t B Edwards \n\t\t \n\t\t \n\t\t\t J Martin \n\t\t \n\t\t \n\t\t\t S Bakas \n\t\t \n\t \n\t \n\t\t International MICCAI Brainlesion Workshop \n\t\t \n\t\t\t Springer \n\t\t\t 2018 \n\t\t\t \n\t\t \n\t \n\t Sheller, M. J., Reina, G. A., Edwards, B., Martin, J. & Bakas, S. Multi-institutional deep learning modeling without sharing patient data: a feasibility study on brain tumor segmentation. In International MICCAI Brainlesion Workshop, 92-104 (Springer, 2018)."
+    },
+    {
+      "title": "Multi-site fmri analysis using privacy-preserving federated learning and domain adaptation: abide results",
+      "authors": [
+        "X Li"
+      ],
+      "year": 2020,
+      "doi": "10.1016/j.media.2020.101765",
+      "raw": "Multi-site fmri analysis using privacy-preserving federated learning and domain adaptation: abide results \n\t\t \n\t\t\t X Li \n\t\t \n\t\t 10.1016/j.media.2020.101765 \n\t\t arXiv:2001.05647 \n\t\t \n\t\t\t 2020 \n\t\t \n\t \n\t arXiv preprint \n\t Li, X. et al. Multi-site fmri analysis using privacy-preserving federated learning and domain adaptation: abide results. arXiv preprint arXiv:2001.05647 (2020)."
+    },
+    {
+      "title": "Patient clustering improves efficiency of federated machine learning to predict mortality and hospital stay time using distributed electronic medical records",
+      "authors": [
+        "L Huang"
+      ],
+      "year": 2019,
+      "journal": "J. Biomed. Inform",
+      "volume": "99",
+      "pages": "103291",
+      "raw": "Patient clustering improves efficiency of federated machine learning to predict mortality and hospital stay time using distributed electronic medical records \n\t\t \n\t\t\t L Huang \n\t\t \n\t \n\t \n\t\t J. Biomed. Inform \n\t\t \n\t\t\t 99 \n\t\t\t 103291 \n\t\t\t 2019 \n\t\t \n\t \n\t Huang, L. et al. Patient clustering improves efficiency of federated machine learning to predict mortality and hospital stay time using distributed electronic medical records. J. Biomed. Inform. 99, 103291 (2019)."
+    },
+    {
+      "title": "Federated learning for healthcare informatics",
+      "authors": [
+        "J Xu",
+        "F Wang"
+      ],
+      "year": 2019,
+      "raw": "Federated learning for healthcare informatics \n\t\t \n\t\t\t J Xu \n\t\t \n\t\t \n\t\t\t F Wang \n\t\t \n\t\t arXiv:1911.06270 \n\t\t \n\t\t\t 2019 \n\t\t \n\t \n\t arXiv preprint \n\t Xu, J. & Wang, F. Federated learning for healthcare informatics. arXiv preprint arXiv:1911.06270 (2019)."
+    },
+    {
+      "title": "Ibm's merge healthcare acquisition",
+      "authors": [
+        "A Roy",
+        "A Banerjee"
+      ],
+      "year": 2015,
+      "raw": "A Roy \n\t\t \n\t\t \n\t\t\t A Banerjee \n\t\t \n\t\t \n\t\t Ibm's merge healthcare acquisition \n\t\t \n\t\t\t 2015. Accessed 10 February 2020 \n\t\t \n\t \n\t Roy, A. & Banerjee, A. Ibm's merge healthcare acquisition. https://www.reuters. com/article/us-merge-healthcare-m-a-ibm/ibm-to-buy-merge-healthcare-in-1- billion-deal-idUSKCN0QB1ML20150806 (2015) (Accessed 10 February 2020)."
+    },
+    {
+      "title": "Nhs scotland's national safe haven",
+      "year": 2015,
+      "doi": "10.12681/eadd/55979",
+      "raw": "10.12681/eadd/55979 \n\t\t \n\t\t Nhs scotland's national safe haven \n\t\t \n\t\t\t 2015. Accessed 10 February 2020 \n\t\t \n\t \n\t Nhs scotland's national safe haven. https://www.gov.scot/publications/charter-safe- havens-scotland-handling-unconsented-data-national-health-service-patient- records-support-research-statistics/pages/4/ (2015) (Accessed 10 February 2020)."
+    },
+    {
+      "title": "The french health data hub and the german medical informatics initiatives: Two national projects to promote data sharing in healthcare",
+      "authors": [
+        "M Cuggia",
+        "S Combes"
+      ],
+      "year": 2019,
+      "journal": "Yearbook Med. Informat",
+      "volume": "28",
+      "raw": "The french health data hub and the german medical informatics initiatives: Two national projects to promote data sharing in healthcare \n\t\t \n\t\t\t M Cuggia \n\t\t \n\t\t \n\t\t\t S Combes \n\t\t \n\t \n\t \n\t\t Yearbook Med. Informat \n\t\t \n\t\t\t 28 \n\t\t\t \n\t\t\t 2019 \n\t\t \n\t \n\t Cuggia, M. & Combes, S. The french health data hub and the german medical informatics initiatives: Two national projects to promote data sharing in health- care. Yearbook Med. Informat. 28, 195-202 (2019)."
+    },
+    {
+      "title": "The human connectome: a structural description of the human brain",
+      "authors": [
+        "O Sporns",
+        "G Tononi",
+        "R K\u00f6tter"
+      ],
+      "year": 2005,
+      "doi": "10.1371/journal.pcbi.0010042",
+      "journal": "PLoS Comput. Biol",
+      "volume": "1",
+      "pages": "42",
+      "raw": "The human connectome: a structural description of the human brain \n\t\t \n\t\t\t O Sporns \n\t\t \n\t\t \n\t\t\t G Tononi \n\t\t \n\t\t \n\t\t\t R K\u00f6tter \n\t\t \n\t\t 10.1371/journal.pcbi.0010042 \n\t\t \n\t \n\t \n\t\t PLoS Comput. Biol \n\t\t \n\t\t\t 1 \n\t\t\t 42 \n\t\t\t 2005 \n\t\t \n\t \n\t Sporns, O., Tononi, G. & K\u00f6tter, R. The human connectome: a structural description of the human brain. PLoS Comput. Biol. 1, e42, https://doi.org/ 10.1371/journal.pcbi.0010042 (2005)."
+    },
+    {
+      "title": "Uk biobank: an open access resource for identifying the causes of a wide range of complex diseases of middle and old age",
+      "authors": [
+        "C Sudlow"
+      ],
+      "year": 2015,
+      "doi": "10.1371/journal.pmed.1001779",
+      "journal": "PLoS Med",
+      "volume": "12",
+      "pages": "1001779",
+      "raw": "Uk biobank: an open access resource for identifying the causes of a wide range of complex diseases of middle and old age \n\t\t \n\t\t\t C Sudlow \n\t\t \n\t\t 10.1371/journal.pmed.1001779 \n\t\t \n\t \n\t \n\t\t PLoS Med \n\t\t \n\t\t\t 12 \n\t\t\t 1001779 \n\t\t\t 2015 \n\t\t \n\t \n\t Sudlow, C. et al. Uk biobank: an open access resource for identifying the causes of a wide range of complex diseases of middle and old age. PLoS Med. 12, e1001779. https://doi.org/10.1371/journal.pmed.1001779 (2015)."
+    },
+    {
+      "title": "The cancer imaging archive (tcia): maintaining and operating a public information repository",
+      "authors": [
+        "K Clark"
+      ],
+      "year": 2013,
+      "doi": "10.1007/s10278-013-9622-7",
+      "journal": "J. Digit. Imaging",
+      "volume": "26",
+      "raw": "The cancer imaging archive (tcia): maintaining and operating a public information repository \n\t\t \n\t\t\t K Clark \n\t\t \n\t\t 10.1007/s10278-013-9622-7 \n\t \n\t \n\t\t J. Digit. Imaging \n\t\t \n\t\t\t 26 \n\t\t\t \n\t\t\t 2013 \n\t\t \n\t \n\t Clark, K. et al. The cancer imaging archive (tcia): maintaining and operating a public information repository. J. Digit. Imaging. 26, 1045-1057 (2013)."
+    },
+    {
+      "title": "Chestx-ray8: Hospital-scale chest X-ray database and benchmarks on weakly-supervised classification and localization of common thorax diseases",
+      "authors": [
+        "X Wang"
+      ],
+      "year": 2017,
+      "raw": "Chestx-ray8: Hospital-scale chest X-ray database and benchmarks on weakly-supervised classification and localization of common thorax diseases \n\t\t \n\t\t\t X Wang \n\t\t \n\t \n\t \n\t\t Proceedings of the IEEE conference on computer vision and pattern recognition \n\t\t the IEEE conference on computer vision and pattern recognition \n\t\t \n\t\t\t IEEE \n\t\t\t 2017 \n\t\t\t \n\t\t \n\t \n\t Wang, X. et al. Chestx-ray8: Hospital-scale chest X-ray database and benchmarks on weakly-supervised classification and localization of common thorax diseases. In Proceedings of the IEEE conference on computer vision and pattern recognition, 2097-2106 (IEEE, 2017)."
+    },
+    {
+      "title": "automated mining of largescale lesion annotations and universal lesion detection with deep learning",
+      "authors": [
+        "K Yan",
+        "X Wang",
+        "L Lu",
+        "R Summers"
+      ],
+      "year": 2018,
+      "doi": "10.1117/1.jmi.5.3.036501",
+      "journal": "J Med. Imaging",
+      "volume": "5",
+      "pages": "36501",
+      "raw": "automated mining of largescale lesion annotations and universal lesion detection with deep learning \n\t\t \n\t\t\t K Yan \n\t\t \n\t\t \n\t\t\t X Wang \n\t\t \n\t\t \n\t\t\t L Lu \n\t\t \n\t\t \n\t\t\t R M Summers \n\t\t \n\t\t \n\t\t\t Deeplesion \n\t\t \n\t\t 10.1117/1.jmi.5.3.036501 \n\t \n\t \n\t\t J Med. Imaging \n\t\t \n\t\t\t 5 \n\t\t\t 36501 \n\t\t\t 2018 \n\t\t \n\t \n\t Yan, K., Wang, X., Lu, L. & Summers, R. M. Deeplesion: automated mining of large- scale lesion annotations and universal lesion detection with deep learning. J Med. Imaging. 5, 036501 (2018)."
+    },
+    {
+      "title": "The cancer genome atlas (tcga): an immeasurable source of knowledge",
+      "authors": [
+        "K Tomczak",
+        "P Czerwi\u0144ska",
+        "M Wiznerowicz"
+      ],
+      "year": 2015,
+      "journal": "Contemp. Oncol",
+      "volume": "19",
+      "pages": "68",
+      "raw": "The cancer genome atlas (tcga): an immeasurable source of knowledge \n\t\t \n\t\t\t K Tomczak \n\t\t \n\t\t \n\t\t\t P Czerwi\u0144ska \n\t\t \n\t\t \n\t\t\t M Wiznerowicz \n\t\t \n\t \n\t \n\t\t Contemp. Oncol \n\t\t \n\t\t\t 19 \n\t\t\t 68 \n\t\t\t 2015 \n\t\t \n\t \n\t Tomczak, K., Czerwi\u0144ska, P. & Wiznerowicz, M. The cancer genome atlas (tcga): an immeasurable source of knowledge. Contemp. Oncol. 19, A68 (2015)."
+    },
+    {
+      "title": "The alzheimer's disease neuroimaging initiative (adni): Mri methods",
+      "authors": [
+        "Jack Jr"
+      ],
+      "year": 2008,
+      "journal": "J. Magn. Reson. Imaging",
+      "volume": "27",
+      "raw": "The alzheimer's disease neuroimaging initiative (adni): Mri methods \n\t\t \n\t\t\t Jack Jr \n\t\t \n\t\t \n\t\t\t C R \n\t\t \n\t \n\t \n\t\t J. Magn. Reson. Imaging \n\t\t \n\t\t\t 27 \n\t\t\t \n\t\t\t 2008 \n\t\t \n\t \n\t Jack Jr., C. R. et al. The alzheimer's disease neuroimaging initiative (adni): Mri methods. J. Magn. Reson. Imaging 27, 685-691 (2008)."
+    },
+    {
+      "title": "Grand Challenge-a Platform for End-to-end Development of Machine Learning Solutions in Biomedical Imaging",
+      "year": 2020,
+      "doi": "10.21428/55f96fb6",
+      "raw": "Grand Challenge-a Platform for End-to-end Development of Machine Learning Solutions in Biomedical Imaging \n\t\t 10.21428/55f96fb6 \n\t\t \n\t\t \n\t\t\t 2020. Accessed 24 July 2020 \n\t\t \n\t \n\t Grand Challenge-a Platform for End-to-end Development of Machine Learning Solutions in Biomedical Imaging. https://grand-challenge.org/ (2020) (Accessed 24 July 2020)."
+    },
+    {
+      "title": "h&e-stained sentinel lymph node sections of breast cancer patients: the camelyon dataset",
+      "authors": [
+        "G Litjens"
+      ],
+      "doi": "10.1093/gigascience/giy065",
+      "journal": "GigaScience",
+      "volume": "7",
+      "pages": "65",
+      "raw": "h&e-stained sentinel lymph node sections of breast cancer patients: the camelyon dataset \n\t\t \n\t\t\t G Litjens \n\t\t \n\t\t 10.1093/gigascience/giy065 \n\t \n\t \n\t\t GigaScience \n\t\t \n\t\t\t 7 \n\t\t\t 65 \n\t\t\t 1399. 2018 \n\t\t \n\t \n\t Litjens, G. et al. 1399 h&e-stained sentinel lymph node sections of breast cancer patients: the camelyon dataset. GigaScience 7, giy065 (2018)."
+    },
+    {
+      "title": "The multimodal brain tumor image segmentation benchmark (brats)",
+      "authors": [
+        "B Menze"
+      ],
+      "year": 2014,
+      "journal": "IEEE Trans. Med. Imaging",
+      "volume": "34",
+      "raw": "The multimodal brain tumor image segmentation benchmark (brats) \n\t\t \n\t\t\t B H Menze \n\t\t \n\t \n\t \n\t\t IEEE Trans. Med. Imaging \n\t\t \n\t\t\t 34 \n\t\t\t \n\t\t\t 2014 \n\t\t \n\t \n\t Menze, B. H. et al. The multimodal brain tumor image segmentation benchmark (brats). IEEE Trans. Med. Imaging 34, 1993-2024 (2014)."
+    },
+    {
+      "title": "Identifying the best machine learning algorithms for brain tumor segmentation, progression assessment, and overall survival prediction in the brats challenge",
+      "authors": [
+        "S Bakas"
+      ],
+      "year": 2018,
+      "raw": "Identifying the best machine learning algorithms for brain tumor segmentation, progression assessment, and overall survival prediction in the brats challenge \n\t\t \n\t\t\t S Bakas \n\t\t \n\t\t arXiv:1811.02629 \n\t\t \n\t\t\t 2018 \n\t\t \n\t \n\t arXiv preprint \n\t Bakas, S. et al. Identifying the best machine learning algorithms for brain tumor segmentation, progression assessment, and overall survival prediction in the brats challenge. arXiv preprint arXiv:1811.02629 (2018)."
+    },
+    {
+      "title": "Advancing the cancer genome atlas glioma MRI collections with expert segmentation labels and radiomic features",
+      "authors": [
+        "S Bakas"
+      ],
+      "year": 2017,
+      "doi": "10.1038/sdata.2017.117",
+      "journal": "Sci. Data",
+      "volume": "4",
+      "pages": "170117",
+      "raw": "Advancing the cancer genome atlas glioma MRI collections with expert segmentation labels and radiomic features \n\t\t \n\t\t\t S Bakas \n\t\t \n\t\t 10.1038/sdata.2017.117 \n\t \n\t \n\t\t Sci. Data \n\t\t \n\t\t\t 4 \n\t\t\t 170117 \n\t\t\t 2017 \n\t\t \n\t \n\t Bakas, S. et al. Advancing the cancer genome atlas glioma MRI collections with expert segmentation labels and radiomic features. Sci. Data 4, 170117 (2017)."
+    },
+    {
+      "title": "A large annotated medical image dataset for the development and evaluation of segmentation algorithms",
+      "authors": [
+        "A Simpson"
+      ],
+      "year": 2019,
+      "raw": "A large annotated medical image dataset for the development and evaluation of segmentation algorithms \n\t\t \n\t\t\t A L Simpson \n\t\t \n\t\t arXiv:1902.09063 \n\t\t \n\t\t\t 2019 \n\t\t \n\t \n\t arXiv preprint \n\t Simpson, A. L. et al. A large annotated medical image dataset for the develop- ment and evaluation of segmentation algorithms. arXiv preprint arXiv:1902.09063 (2019)."
+    },
+    {
+      "title": "Quantifying differences and similarities in whole-brain white matter architecture using local connectome fingerprints",
+      "authors": [
+        "F.-C Yeh"
+      ],
+      "year": 2016,
+      "doi": "10.1371/journal.pcbi.1005203",
+      "journal": "PLoS Comput. Biol",
+      "volume": "12",
+      "pages": "1005203",
+      "raw": "Quantifying differences and similarities in whole-brain white matter architecture using local connectome fingerprints \n\t\t \n\t\t\t F.-C Yeh \n\t\t \n\t\t 10.1371/journal.pcbi.1005203 \n\t \n\t \n\t\t PLoS Comput. Biol \n\t\t \n\t\t\t 12 \n\t\t\t 1005203 \n\t\t\t 2016 \n\t\t \n\t \n\t Yeh, F.-C. et al. Quantifying differences and similarities in whole-brain white matter architecture using local connectome fingerprints. PLoS Comput. Biol. 12, e1005203 (2016)."
+    },
+    {
+      "title": "Distributed deep learning networks among institutions for medical imaging",
+      "authors": [
+        "K Chang"
+      ],
+      "year": 2018,
+      "journal": "J. Am. Med. Inform. Assoc",
+      "volume": "25",
+      "raw": "Distributed deep learning networks among institutions for medical imaging \n\t\t \n\t\t\t K Chang \n\t\t \n\t \n\t \n\t\t J. Am. Med. Inform. Assoc \n\t\t \n\t\t\t 25 \n\t\t\t \n\t\t\t 2018 \n\t\t \n\t \n\t Chang, K. et al. Distributed deep learning networks among institutions for medical imaging. J. Am. Med. Inform. Assoc. 25, 945-954 (2018)."
+    },
+    {
+      "title": "Membership inference attacks against machine learning models",
+      "authors": [
+        "R Shokri",
+        "M Stronati",
+        "C Song",
+        "V Shmatikov"
+      ],
+      "year": 2017,
+      "raw": "Membership inference attacks against machine learning models \n\t\t \n\t\t\t R Shokri \n\t\t \n\t\t \n\t\t\t M Stronati \n\t\t \n\t\t \n\t\t\t C Song \n\t\t \n\t\t \n\t\t\t V Shmatikov \n\t\t \n\t \n\t \n\t\t 2017 IEEE Symposium on Security and Privacy (SP) \n\t\t \n\t\t\t IEEE \n\t\t\t 2017 \n\t\t\t \n\t\t \n\t \n\t Shokri, R., Stronati, M., Song, C. & Shmatikov, V. Membership inference attacks against machine learning models. In 2017 IEEE Symposium on Security and Privacy (SP), 3-18 (IEEE, 2017)."
+    },
+    {
+      "title": "White-box vs blackbox: Bayes optimal strategies for membership inference",
+      "authors": [
+        "A Sablayrolles",
+        "M Douze",
+        "Y Ollivier",
+        "C Schmid",
+        "H J\u00e9gou"
+      ],
+      "year": 2019,
+      "raw": "White-box vs blackbox: Bayes optimal strategies for membership inference \n\t\t \n\t\t\t A Sablayrolles \n\t\t \n\t\t \n\t\t\t M Douze \n\t\t \n\t\t \n\t\t\t Y Ollivier \n\t\t \n\t\t \n\t\t\t C Schmid \n\t\t \n\t\t \n\t\t\t H J\u00e9gou \n\t\t \n\t\t \n\t \n\t \n\t\t Proceedings of the 36th International Conference on Machine Learning, {ICML} 97 \n\t\t \n\t\t\t K Chaudhuri \n\t\t \n\t\t \n\t\t\t R Salakhutdinov \n\t\t \n\t\t the 36th International Conference on Machine Learning, {ICML} 97 \n\t\t \n\t\t\t PMLR \n\t\t\t 2019 \n\t\t\t \n\t\t \n\t \n\t Sablayrolles, A., Douze, M., Ollivier, Y., Schmid, C. & J\u00e9gou, H. White-box vs black- box: Bayes optimal strategies for membership inference. In Chaudhuri, K. & Sal- akhutdinov, R. (eds) Proceedings of the 36th International Conference on Machine Learning, {ICML} 97, 5558-5567. http://proceedings.mlr.press/v97/sablayrolles19a. html (PMLR, 2019)."
+    },
+    {
+      "title": "Understanding deep learning requires rethinking generalization",
+      "authors": [
+        "C Zhang",
+        "S Bengio",
+        "M Hardt",
+        "B Recht",
+        "O Vinyals"
+      ],
+      "year": 2017,
+      "doi": "10.1145/3446776",
+      "raw": "Understanding deep learning requires rethinking generalization \n\t\t \n\t\t\t C Zhang \n\t\t \n\t\t \n\t\t\t S Bengio \n\t\t \n\t\t \n\t\t\t M Hardt \n\t\t \n\t\t \n\t\t\t B Recht \n\t\t \n\t\t \n\t\t\t O Vinyals \n\t\t \n\t\t 10.1145/3446776 \n\t\t \n\t \n\t \n\t\t 5th International Conference on Learning Representations, {ICLR} \n\t\t \n\t\t\t 2017 \n\t\t \n\t \n\t Zhang, C., Bengio, S., Hardt, M., Recht, B. & Vinyals, O. Understanding deep learning requires rethinking generalization. In 5th International Conference on Learning Representations, {ICLR}. https://openreview.net/forum?id=Sy8gdB9xx, (OpenReview.net, 2017)."
+    },
+    {
+      "title": "The secret sharer: evaluating and testing unintended memorization in neural networks",
+      "authors": [
+        "N Carlini",
+        "C Liu",
+        "\u00da Erlingsson",
+        "J Kos",
+        "D Song"
+      ],
+      "year": 2019,
+      "volume": "28",
+      "raw": "The secret sharer: evaluating and testing unintended memorization in neural networks \n\t\t \n\t\t\t N Carlini \n\t\t \n\t\t \n\t\t\t C Liu \n\t\t \n\t\t \n\t\t\t \u00da Erlingsson \n\t\t \n\t\t \n\t\t\t J Kos \n\t\t \n\t\t \n\t\t\t D Song \n\t\t \n\t\t \n\t \n\t \n\t\t {USENIX} Security Symposium ({USENIX} Security 19 \n\t\t \n\t\t\t N Heninger \n\t\t \n\t\t \n\t\t\t P Traynor \n\t\t \n\t\t Santa Clara, CA, USA \n\t\t \n\t\t\t 2019 \n\t\t\t 28 \n\t\t\t \n\t\t \n\t \n\t Carlini, N., Liu, C., Erlingsson, \u00da., Kos, J. & Song, D. The secret sharer: evaluating and testing unintended memorization in neural networks. In Heninger, N. & Traynor, P. (eds) 28th {USENIX} Security Symposium ({USENIX} Security 19, 267-284. https://www.usenix.org/conference/usenixsecurity19/presentation/carlini ({USE- NIX} Association, Santa Clara, CA, USA, 2019)."
+    },
+    {
+      "title": "Deep learning with differential privacy",
+      "authors": [
+        "M Abadi"
+      ],
+      "year": 2016,
+      "doi": "10.1145/2976749.2978318",
+      "raw": "Deep learning with differential privacy \n\t\t \n\t\t\t M Abadi \n\t\t \n\t\t 10.1145/2976749.2978318 \n\t \n\t \n\t\t Proceedings of the 2016 ACM SIGSAC Conference on Computer and Communications Security \n\t\t the 2016 ACM SIGSAC Conference on Computer and Communications Security \n\t\t \n\t\t\t ACM \n\t\t\t 2016 \n\t\t\t \n\t\t \n\t \n\t Abadi, M. et al. Deep learning with differential privacy. In Proceedings of the 2016 ACM SIGSAC Conference on Computer and Communications Security, 308-318 (ACM, 2016)."
+    },
+    {
+      "title": "Privacy-preserving deep learning",
+      "authors": [
+        "R Shokri",
+        "V Shmatikov"
+      ],
+      "year": 2015,
+      "raw": "Privacy-preserving deep learning \n\t\t \n\t\t\t R Shokri \n\t\t \n\t\t \n\t\t\t V Shmatikov \n\t\t \n\t \n\t \n\t\t Proceedings of the 22nd ACM SIGSAC conference on computer and communications security \n\t\t the 22nd ACM SIGSAC conference on computer and communications security \n\t\t \n\t\t\t ACM \n\t\t\t 2015 \n\t\t \n\t \n\t Shokri, R. & Shmatikov, V. Privacy-preserving deep learning. In Proceedings of the 22nd ACM SIGSAC conference on computer and communications security, (ACM, 2015)."
+    },
+    {
+      "title": "A roadmap for foundational research on artificial intelligence in medical imaging: from the 2018 nih/rsna/acr/the academy workshop",
+      "authors": [
+        "C Langlotz"
+      ],
+      "year": 2019,
+      "doi": "10.1148/radiol.2019190613",
+      "journal": "Radiology",
+      "volume": "291",
+      "raw": "A roadmap for foundational research on artificial intelligence in medical imaging: from the 2018 nih/rsna/acr/the academy workshop \n\t\t \n\t\t\t C P Langlotz \n\t\t \n\t\t 10.1148/radiol.2019190613 \n\t \n\t \n\t\t Radiology \n\t\t \n\t\t\t 291 \n\t\t\t \n\t\t\t 2019 \n\t\t \n\t \n\t Langlotz, C. P. et al. A roadmap for foundational research on artificial intelligence in medical imaging: from the 2018 nih/rsna/acr/the academy workshop. Radi- ology 291, 781-791 (2019)."
+    },
+    {
+      "title": "Federated Tensor Factorization for Computational Phenotyping",
+      "authors": [
+        "Y Kim",
+        "J Sun",
+        "H Yu",
+        "X Jiang"
+      ],
+      "year": 2017,
+      "doi": "10.1145/3097983.3098118",
+      "raw": "Federated Tensor Factorization for Computational Phenotyping \n\t\t \n\t\t\t Y Kim \n\t\t \n\t\t \n\t\t\t J Sun \n\t\t \n\t\t \n\t\t\t H Yu \n\t\t \n\t\t \n\t\t\t X Jiang \n\t\t \n\t\t 10.1145/3097983.3098118 \n\t\t \n\t \n\t \n\t\t Proceedings of the 23rd {ACM} {SIGKDD} International Conference on Knowledge Discoveryand Data Mining \n\t\t the 23rd {ACM} {SIGKDD} International Conference on Knowledge Discoveryand Data Mining Halifax, NS, Canada \n\t\t \n\t\t\t ACM \n\t\t\t 2017 \n\t\t\t \n\t\t \n\t \n\t Kim, Y., Sun, J., Yu, H. & Jiang, X. Federated Tensor Factorization for Computa- tional Phenotyping. In Proceedings of the 23rd {ACM} {SIGKDD} International Conference on Knowledge Discoveryand Data Mining. 887-895. https://doi.org/ 10.1145/3097983.3098118 (ACM, Halifax, NS, Canada, 2017)."
+    },
+    {
+      "title": "Federated deep learning via neural architecture search",
+      "authors": [
+        "C He",
+        "M Annavaram",
+        "S Avestimehr"
+      ],
+      "year": 2020,
+      "doi": "10.1609/aaai.v36i6.20643",
+      "raw": "Federated deep learning via neural architecture search \n\t\t \n\t\t\t C He \n\t\t \n\t\t \n\t\t\t M Annavaram \n\t\t \n\t\t \n\t\t\t S Avestimehr \n\t\t \n\t\t \n\t\t\t Fednas \n\t\t \n\t\t 10.1609/aaai.v36i6.20643 \n\t\t \n\t\t \n\t\t\t 2020 \n\t\t \n\t \n\t He, C., Annavaram, M. & Avestimehr, S. Fednas: Federated deep learning via neural architecture search. https://sites.google.com/view/cvpr20-nas/ (2020)."
+    },
+    {
+      "title": "Trustworthy federated data analytics",
+      "year": 2020,
+      "raw": "Trustworthy federated data analytics \n\t\t \n\t\t\t 2020. Accessed 28 May 2020 \n\t\t \n\t \n\t Trustworthy federated data analytics (tfda). https://tfda.hmsp.center/ (2020) (Accessed 28 May 2020)."
+    },
+    {
+      "title": "Joint Imaging Platform",
+      "year": 2020,
+      "doi": "10.1055/s-0040-1703123",
+      "raw": "10.1055/s-0040-1703123 \n\t\t \n\t\t Joint Imaging Platform \n\t\t \n\t\t\t 2020. Accessed 28 May 2020 \n\t\t \n\t \n\t Joint Imaging Platform (Jip). https://jip.dktk.dkfz.de/jiphomepage/ (2020) (Accessed 28 May 2020)."
+    },
+    {
+      "title": "Medical institutions collaborate to improve mammogram assessment ai",
+      "year": 2020,
+      "doi": "10.53347/rid-77107",
+      "raw": "10.53347/rid-77107 \n\t\t \n\t\t Medical institutions collaborate to improve mammogram assessment ai \n\t\t \n\t\t\t 2020. 28 May 2020 \n\t\t \n\t \n\t Medical institutions collaborate to improve mammogram assessment ai. https:// blogs.nvidia.com/blog/2020/04/15/federated-learning-mammogram- assessment/ (2020) (Accessed 28 May 2020)."
+    },
+    {
+      "title": "The federated tumor segmentation (fets) initiative",
+      "year": 2020,
+      "doi": "10.1093/neuonc/noab196.532",
+      "raw": "10.1093/neuonc/noab196.532 \n\t\t \n\t\t The federated tumor segmentation (fets) initiative \n\t\t \n\t\t\t 2020. Accessed 28 May 2020 \n\t\t \n\t \n\t The federated tumor segmentation (fets) initiative. https://www.fets.ai (2020) (Accessed 28 May 2020)."
+    },
+    {
+      "title": "Machine learning ledger orchestration for drug discovery",
+      "year": 2020,
+      "doi": "10.3030/831472",
+      "raw": "10.3030/831472 \n\t\t \n\t\t Machine learning ledger orchestration for drug discovery \n\t\t \n\t\t\t 2020. 28 May 2020 \n\t\t \n\t \n\t Machine learning ledger orchestration for drug discovery. https://cordis.europa. eu/project/id/831472 (2020). Accessed 28 May 2020."
+    },
+    {
+      "title": "Federated optimization: Distributed machine learning for on-device intelligence",
+      "authors": [
+        "` Kone\u010dny",
+        "J Mcmahan",
+        "H Ramage",
+        "D Richt\u00e1rik"
+      ],
+      "year": 2016,
+      "raw": "Federated optimization: Distributed machine learning for on-device intelligence \n\t\t \n\t\t\t ` Kone\u010dny \n\t\t \n\t\t \n\t\t\t J Mcmahan \n\t\t \n\t\t \n\t\t\t H B Ramage \n\t\t \n\t\t \n\t\t\t D Richt\u00e1rik \n\t\t \n\t\t \n\t\t\t P \n\t\t \n\t\t arXiv:1610.02527 \n\t\t \n\t\t\t 2016 \n\t\t \n\t \n\t arXiv preprint \n\t Kone\u010dny`, J., McMahan, H. B., Ramage, D. & Richt\u00e1rik, P. Federated optimization: Distributed machine learning for on-device intelligence. arXiv preprint arXiv:1610.02527 (2016)."
+    },
+    {
+      "title": "Peer-to-peer federated learning on graphs",
+      "authors": [
+        "A Lalitha",
+        "O Kilinc",
+        "T Javidi",
+        "F Koushanfar"
+      ],
+      "year": 2019,
+      "raw": "Peer-to-peer federated learning on graphs \n\t\t \n\t\t\t A Lalitha \n\t\t \n\t\t \n\t\t\t O C Kilinc \n\t\t \n\t\t \n\t\t\t T Javidi \n\t\t \n\t\t \n\t\t\t F Koushanfar \n\t\t \n\t\t arXiv:1901.11173 \n\t\t \n\t\t\t 2019 \n\t\t \n\t \n\t arXiv preprint \n\t Lalitha, A., Kilinc, O. C., Javidi, T. & Koushanfar, F. Peer-to-peer federated learning on graphs. arXiv preprint arXiv:1901.11173 (2019)."
+    },
+    {
+      "title": "Federated optimization in heterogeneous networks",
+      "authors": [
+        "T Li",
+        "A Sahu",
+        "M Zaheer",
+        "M Sanjabi",
+        "A Talwalkar",
+        "V Smith"
+      ],
+      "year": 2018,
+      "raw": "Federated optimization in heterogeneous networks \n\t\t \n\t\t\t T Li \n\t\t \n\t\t \n\t\t\t A K Sahu \n\t\t \n\t\t \n\t\t\t M Zaheer \n\t\t \n\t\t \n\t\t\t M Sanjabi \n\t\t \n\t\t \n\t\t\t A Talwalkar \n\t\t \n\t\t \n\t\t\t V Smith \n\t\t \n\t\t arXiv:1812.06127 \n\t\t \n\t\t\t 2018 \n\t\t \n\t \n\t arXiv preprint \n\t Li, T., Sahu, A. K., Zaheer, M., Sanjabi, M., Talwalkar, A. & Smith, V. Federated optimization in heterogeneous networks. arXiv preprint arXiv:1812.06127 (2018)."
+    },
+    {
+      "title": "Federated learning with non-iid data",
+      "authors": [
+        "Y Zhao"
+      ],
+      "year": 2018,
+      "raw": "Federated learning with non-iid data \n\t\t \n\t\t\t Y Zhao \n\t\t \n\t\t arxivabs/1806.00582 \n\t\t \n\t\t\t 2018 \n\t\t \n\t \n\t Zhao, Y. et al. Federated learning with non-iid data. arxivabs/1806.00582 (2018)."
+    },
+    {
+      "title": "On the convergence of fedavg on non-IID data",
+      "authors": [
+        "X Li",
+        "K Huang",
+        "W Yang",
+        "S Wang",
+        "Z Zhang"
+      ],
+      "year": 2020,
+      "raw": "X Li \n\t\t \n\t\t \n\t\t\t K Huang \n\t\t \n\t\t \n\t\t\t W Yang \n\t\t \n\t\t \n\t\t\t S Wang \n\t\t \n\t\t \n\t\t\t Z Zhang \n\t\t \n\t\t \n\t\t On the convergence of fedavg on non-IID data \n\t\t \n\t\t\t 2020 \n\t\t \n\t \n\t Li, X., Huang, K., Yang, W., Wang, S. & Zhang, Z. On the convergence of fedavg on non-IID data. https://openreview.net/forum?id=HJxNAnVtDS (2020)."
+    },
+    {
+      "title": "P3sgd: patient privacy preserving SGD for regularizing deep CNNs in pathological image classification",
+      "authors": [
+        "B Wu"
+      ],
+      "year": 2019,
+      "raw": "P3sgd: patient privacy preserving SGD for regularizing deep CNNs in pathological image classification \n\t\t \n\t\t\t B Wu \n\t\t \n\t \n\t \n\t\t Proceedings of the IEEE Conference on Computer Vision and Pattern Recognition \n\t\t the IEEE Conference on Computer Vision and Pattern Recognition \n\t\t \n\t\t\t 2019 \n\t\t\t \n\t\t \n\t \n\t Wu, B. et al. P3sgd: patient privacy preserving SGD for regularizing deep CNNs in pathological image classification. In Proceedings of the IEEE Conference on Com- puter Vision and Pattern Recognition (pp. 2099-2108) (2019)."
+    },
+    {
+      "title": "Deep leakage from gradients",
+      "authors": [
+        "L Zhu",
+        "Z Liu",
+        "S Han"
+      ],
+      "year": 2019,
+      "raw": "Deep leakage from gradients \n\t\t \n\t\t\t L Zhu \n\t\t \n\t\t \n\t\t\t Z Liu \n\t\t \n\t\t \n\t\t\t S Han \n\t\t \n\t\t \n\t \n\t \n\t\t Advances in Neural Information Processing Systems 32: Annual Conference on Neural Information Processing Systems \n\t\t \n\t\t\t H M Wallach \n\t\t \n\t\t \n\t\t\t 2019 \n\t\t\t \n\t\t \n\t \n\t Zhu, L., Liu, Z. & Han, S. Deep leakage from gradients. In Wallach, H. M. et al. (eds) Advances in Neural Information Processing Systems 32: Annual Conference on Neural Information Processing Systems, 14747-14756. http://papers.nips.cc/paper/ 9617-deep-leakage-from-gradients (2019)."
+    },
+    {
+      "title": "Beyond inferring class representatives: user-level privacy leakage from federated learning",
+      "authors": [
+        "Z Wang"
+      ],
+      "year": 2019,
+      "doi": "10.1109/INFOCOM.2019.8737416",
+      "raw": "Beyond inferring class representatives: user-level privacy leakage from federated learning \n\t\t \n\t\t\t Z Wang \n\t\t \n\t\t 10.1109/INFOCOM.2019.8737416 \n\t\t {INFOCOM} 2512-2520 \n\t\t \n\t \n\t \n\t\t {IEEE} Conferenceon Computer Communications \n\t\t Paris, France \n\t\t \n\t\t\t IEEE \n\t\t\t 2019. 2019 \n\t\t \n\t \n\t Wang, Z. et al. Beyond inferring class representatives: user-level privacy leakage from federated learning. In 2019 {IEEE} Conferenceon Computer Communications, {INFOCOM} 2512-2520. https://doi.org/10.1109/INFOCOM.2019.8737416 (IEEE, Paris, France, 2019)."
+    },
+    {
+      "title": "Deep models under the gan: information leakage from collaborative deep learning",
+      "authors": [
+        "B Hitaj",
+        "G Ateniese",
+        "F Perez-Cruz"
+      ],
+      "year": 2017,
+      "doi": "10.1145/3133956.3134012",
+      "raw": "Deep models under the gan: information leakage from collaborative deep learning \n\t\t \n\t\t\t B Hitaj \n\t\t \n\t\t \n\t\t\t G Ateniese \n\t\t \n\t\t \n\t\t\t F Perez-Cruz \n\t\t \n\t\t 10.1145/3133956.3134012 \n\t \n\t \n\t\t Proceedings of the 2017 ACM SIGSAC Conference on Computer and Communications Security, CCS'17 \n\t\t the 2017 ACM SIGSAC Conference on Computer and Communications Security, CCS'17 New York, NY, USA \n\t\t \n\t\t\t Association for Computing Machinery \n\t\t\t 2017 \n\t\t\t \n\t\t \n\t \n\t Hitaj, B., Ateniese, G. & Perez-Cruz, F. Deep models under the gan: information leakage from collaborative deep learning. In Proceedings of the 2017 ACM SIGSAC Conference on Computer and Communications Security, CCS'17, 603-618 (Asso- ciation for Computing Machinery, New York, NY, USA, 2017)."
+    },
+    {
+      "title": "Data shapley: Equitable valuation of data for machine learning",
+      "authors": [
+        "A Ghorbani",
+        "J Zou"
+      ],
+      "year": 2019,
+      "raw": "Data shapley: Equitable valuation of data for machine learning \n\t\t \n\t\t\t A Ghorbani \n\t\t \n\t\t \n\t\t\t J Zou \n\t\t \n\t \n\t \n\t\t International Conference on Machine Learning \n\t\t \n\t\t\t 2019 \n\t\t\t \n\t\t \n\t \n\t Ghorbani, A. & Zou, J. Data shapley: Equitable valuation of data for machine learning. In International Conference on Machine Learning (pp. 2242-2251) (2019)."
+    }
+  ],
+  "num_references": 62,
+  "figures": [
+    {
+      "caption": "Fig. 2",
+      "description": "Fig. 2 Overview of different FL design choices. FL topologies-communication architecture of a federation. a Centralised: the aggregation server coordinates the training iterations and collects, aggregates and distributes the models to and from the Training Nodes (Hub & Spoke). b Decentralised: each training node is connected to one or more peers and aggregation occurs on each node in parallel. c Hierarchical: federated networks can be composed from several sub-federations, which can be built from a mix of Peer to Peer and Aggregation Server federations (d)). FL compute plans-trajectory of a model across several partners. e Sequential training/cyclic transfer learning. f Aggregation server, g Peer to Peer."
+    },
+    {
+      "caption": "Algorithm 1 . 6 :",
+      "description": "Example of a FL algorithm 16  via Hub & Spoke (Centralised topology) with FedAvg aggregation 9 . Require: num_federated_rounds T 1: procedure AGGREGATING 2: Initialise global model: W (0) 3: for t \u2190 1 \u22ef T do 4: for client k \u2190 1 \u22ef K do \u22b3 Run in parallel 5: Send W (t-1) to client k Receive model updates and number of local training iterations \u00f0\u0394W"
+    }
+  ],
+  "num_figures": 2,
+  "formulas": [
+    {
+      "text": "min \u03d5 L\u00f0X; \u03d5\u00de with L\u00f0X; \u03d5\u00de \u00bc X K k\u00bc1 w k L k \u00f0X k ; \u03d5\u00de; (1)"
+    },
+    {
+      "text": "k ; N k \u00de from client's local training with L k \u00f0X k ; W \u00f0t\u00c01\u00de \u00de 7: end for 8: W \u00f0t\u00de W \u00f0t\u00c01\u00de \u00fe 1 P k Nk P k \u00f0N k \u00c1 W \u00f0t\u00c01\u00de k \u00de 9: end for 10: return W (t) \u00f0t\u00c01\u00de"
+    }
+  ],
+  "num_formulas": 2,
+  "num_citations": 106,
+  "cited_references": [
+    "b3",
+    "b57",
+    "b13",
+    "b39",
+    "b41",
+    "b18",
+    "b44",
+    "b49",
+    "b2",
+    "b58",
+    "b14",
+    "b17",
+    "b36",
+    "b25",
+    "b59",
+    "b9",
+    "b1",
+    "b35",
+    "b20",
+    "b60",
+    "b43",
+    "b21",
+    "b51",
+    "b47",
+    "b40",
+    "b12",
+    "b42",
+    "b31",
+    "b54",
+    "b61",
+    "b52",
+    "b29",
+    "b16",
+    "b37",
+    "b46",
+    "b15",
+    "b23",
+    "b32",
+    "b5",
+    "b19",
+    "b28",
+    "b45",
+    "b10",
+    "b38",
+    "b24",
+    "b4",
+    "b55",
+    "b56",
+    "b50",
+    "b33",
+    "b7",
+    "b48",
+    "b11",
+    "b8",
+    "b53",
+    "b22",
+    "b34",
+    "b6",
+    "b0",
+    "b26"
+  ],
+  "notes": [
+    "[raw_affiliation] 1  NVIDIA GmbH , Munich , Germany.",
+    "[raw_affiliation] 2  Technical University of Munich (TUM) , Munich , Germany.",
+    "[raw_affiliation] 3  NVIDIA Ltd , Reading , UK.",
+    "[raw_affiliation] 4  NVIDIA Ltd , Cambridge , UK.",
+    "[raw_affiliation] 1  NVIDIA GmbH , Munich , Germany.",
+    "[raw_affiliation] 5  NVIDIA Corporation , Bethesda , USA.",
+    "[raw_affiliation] 2  Technical University of Munich (TUM) , Munich , Germany.",
+    "[raw_affiliation] 6  Imperial College London , London , UK.",
+    "[raw_affiliation] 7  University of Pennsylvania (UPenn) , Philadelphia , PA , USA.",
+    "[raw_affiliation] 8  Owkin , Paris , France.",
+    "[raw_affiliation] 9  Vanderbilt University , Nashville , TN , USA.",
+    "[raw_affiliation] 10  German Cancer Research Center (DKFZ) , Heidelberg , Germany.",
+    "[raw_affiliation] 11  Heidelberg University Hospital , Heidelberg , Germany.",
+    "[raw_affiliation] 12  King's College London (KCL) , London , UK.",
+    "[raw_affiliation] 13  Intel Corporation , Santa Clara , CA , USA.",
+    "[raw_affiliation] 14  Clinical Center , National Institutes of Health (NIH) , Bethesda , MD , USA.",
+    "[raw_affiliation] 15  OpenMined , Oxford , UK.",
+    "[raw_affiliation] 16  University of Oxford , Oxford , UK.",
+    "[raw_affiliation] 17  Centre for the Governance of AI (GovAI) , Oxford , UK. Seoul National University Bundang Hospital",
+    "[raw_affiliation] 5  NVIDIA Corporation , Bethesda , USA.",
+    "[raw_affiliation] 1  NVIDIA GmbH , Munich , Germany.",
+    "[raw_affiliation] 12  King's College London (KCL) , London , UK.",
+    "[submission] Received: 17 March 2020; Accepted: 12 August 2020;",
+    "npj Digital Medicine (2020) 119Seoul National University Bundang Hospital 1234567890():,;",
+    "Seoul National University Bundang Hospital npj Digital Medicine (2020) 119",
+    "npj Digital Medicine (2020) 119Seoul National University Bundang Hospital",
+    "[raw_reference] LeCun, Y., Bengio, Y. & Hinton, G. Deep learning. Nature 521, 436 (2015).",
+    "[raw_reference] Wang, F., Casalino, L. P. & Khullar, D. Deep learning in medicine-promise, pro- gress, and challenges. JAMA Intern. Med. 179, 293-294 (2019).",
+    "[raw_reference] Chartrand, G. et al. Deep learning: a primer for radiologists. Radiographics 37, 2113-2131 (2017).",
+    "[raw_reference] De Fauw, J. et al. Clinically applicable deep learning for diagnosis and referral in retinal disease. Nat. Med. 24, 1342 (2018).",
+    "[raw_reference] Sun, C., Shrivastava, A., Singh, S. & Gupta, A. Revisiting unreasonable effectiveness of data in deep learning era. In Proceedings of the IEEE international conference on computer vision, 843-852 (IEEE, 2017).",
+    "[raw_reference] Van Panhuis, W. G. et al. A systematic review of barriers to data sharing in public health. BMC Public Health 14, 1144 (2014).",
+    "[raw_reference] Rocher, L., Hendrickx, J. M. & De Montjoye, Y.-A. Estimating the success of re- identifications in incomplete datasets using generative models. Nat. Commun. 10, 1-9 (2019).",
+    "[raw_reference] Schwarz, C. G. et al. Identification of anonymous mri research participants with face-recognition software. N. Engl. J. Med. 381, 1684-1686 (2019).",
+    "[raw_reference] McMahan, B., Moore, E., Ramage, D., Hampson, S. & y Arcas, B. A. Communication- efficient learning of deep networks from decentralized data. In Artificial Intelligence and Statistics, 1273-1282. https://scholar.google.de/scholar?hl=de&as_sdt=0% 2C5&q=Communicationefficient+learning+of+deep+networks+from +decentralized+data&btnG= (2017).",
+    "[raw_reference] Li, T., Sahu, A. K., Talwalkar, A. & Smith, V. Federated learning: Challenges, methods, and future directions. IEEE Signal Processing Magazine 37, 50-60 (IEEE, 2020).",
+    "[raw_reference] Yang, Q., Liu, Y., Chen, T. & Tong, Y. Federated machine learning: concept and applications. ACM Trans. Intell. Syst. Technol. (TIST) 10, 12 (2019).",
+    "[report_type] arXiv preprint",
+    "[raw_reference] Kairouz, P. et al. Advances and open problems in federated learning. arXiv pre- print arXiv:1912.04977 (2019).",
+    "[raw_reference] Lee, J. et al. Privacy-preserving patient similarity learning in a federated envir- onment: development and analysis. JMIR Med. Inform. 6, e20 (2018).",
+    "[raw_reference] Brisimi, T. S. et al. Federated learning of predictive models from federated elec- tronic health records. Int. J. Med. Inform. 112, 59-67 (2018).",
+    "[report_type] arXiv preprint",
+    "[raw_reference] Roy, A. G., Siddiqui, S., P\u00f6lsterl, S., Navab, N. & Wachinger, C. Braintorrent: a peer- to-peer environment for decentralized federated learning. arXiv preprint arXiv:1905.06731 (2019).",
+    "[raw_reference] Li, W. et al. Privacy-preserving federated brain tumour segmentation. In Inter- national Workshop on Machine Learning in Medical Imaging, 133-141 (Springer, 2019).",
+    "[raw_reference] Sheller, M. J., Reina, G. A., Edwards, B., Martin, J. & Bakas, S. Multi-institutional deep learning modeling without sharing patient data: a feasibility study on brain tumor segmentation. In International MICCAI Brainlesion Workshop, 92-104 (Springer, 2018).",
+    "[report_type] arXiv preprint",
+    "[raw_reference] Li, X. et al. Multi-site fmri analysis using privacy-preserving federated learning and domain adaptation: abide results. arXiv preprint arXiv:2001.05647 (2020).",
+    "[raw_reference] Huang, L. et al. Patient clustering improves efficiency of federated machine learning to predict mortality and hospital stay time using distributed electronic medical records. J. Biomed. Inform. 99, 103291 (2019).",
+    "[report_type] arXiv preprint",
+    "[raw_reference] Xu, J. & Wang, F. Federated learning for healthcare informatics. arXiv preprint arXiv:1911.06270 (2019).",
+    "[raw_reference] Roy, A. & Banerjee, A. Ibm's merge healthcare acquisition. https://www.reuters. com/article/us-merge-healthcare-m-a-ibm/ibm-to-buy-merge-healthcare-in-1- billion-deal-idUSKCN0QB1ML20150806 (2015) (Accessed 10 February 2020).",
+    "[raw_reference] Nhs scotland's national safe haven. https://www.gov.scot/publications/charter-safe- havens-scotland-handling-unconsented-data-national-health-service-patient- records-support-research-statistics/pages/4/ (2015) (Accessed 10 February 2020).",
+    "[raw_reference] Cuggia, M. & Combes, S. The french health data hub and the german medical informatics initiatives: Two national projects to promote data sharing in health- care. Yearbook Med. Informat. 28, 195-202 (2019).",
+    "[raw_reference] Sporns, O., Tononi, G. & K\u00f6tter, R. The human connectome: a structural description of the human brain. PLoS Comput. Biol. 1, e42, https://doi.org/ 10.1371/journal.pcbi.0010042 (2005).",
+    "[raw_reference] Sudlow, C. et al. Uk biobank: an open access resource for identifying the causes of a wide range of complex diseases of middle and old age. PLoS Med. 12, e1001779. https://doi.org/10.1371/journal.pmed.1001779 (2015).",
+    "[raw_reference] Clark, K. et al. The cancer imaging archive (tcia): maintaining and operating a public information repository. J. Digit. Imaging. 26, 1045-1057 (2013).",
+    "[raw_reference] Wang, X. et al. Chestx-ray8: Hospital-scale chest X-ray database and benchmarks on weakly-supervised classification and localization of common thorax diseases. In Proceedings of the IEEE conference on computer vision and pattern recognition, 2097-2106 (IEEE, 2017).",
+    "[raw_reference] Yan, K., Wang, X., Lu, L. & Summers, R. M. Deeplesion: automated mining of large- scale lesion annotations and universal lesion detection with deep learning. J Med. Imaging. 5, 036501 (2018).",
+    "[raw_reference] Tomczak, K., Czerwi\u0144ska, P. & Wiznerowicz, M. The cancer genome atlas (tcga): an immeasurable source of knowledge. Contemp. Oncol. 19, A68 (2015).",
+    "[raw_reference] Jack Jr., C. R. et al. The alzheimer's disease neuroimaging initiative (adni): Mri methods. J. Magn. Reson. Imaging 27, 685-691 (2008).",
+    "[raw_reference] Grand Challenge-a Platform for End-to-end Development of Machine Learning Solutions in Biomedical Imaging. https://grand-challenge.org/ (2020) (Accessed 24 July 2020).",
+    "[raw_reference] Litjens, G. et al. 1399 h&e-stained sentinel lymph node sections of breast cancer patients: the camelyon dataset. GigaScience 7, giy065 (2018).",
+    "[raw_reference] Menze, B. H. et al. The multimodal brain tumor image segmentation benchmark (brats). IEEE Trans. Med. Imaging 34, 1993-2024 (2014).",
+    "[report_type] arXiv preprint",
+    "[raw_reference] Bakas, S. et al. Identifying the best machine learning algorithms for brain tumor segmentation, progression assessment, and overall survival prediction in the brats challenge. arXiv preprint arXiv:1811.02629 (2018).",
+    "[raw_reference] Bakas, S. et al. Advancing the cancer genome atlas glioma MRI collections with expert segmentation labels and radiomic features. Sci. Data 4, 170117 (2017).",
+    "[report_type] arXiv preprint",
+    "[raw_reference] Simpson, A. L. et al. A large annotated medical image dataset for the develop- ment and evaluation of segmentation algorithms. arXiv preprint arXiv:1902.09063 (2019).",
+    "[raw_reference] Yeh, F.-C. et al. Quantifying differences and similarities in whole-brain white matter architecture using local connectome fingerprints. PLoS Comput. Biol. 12, e1005203 (2016).",
+    "[raw_reference] Chang, K. et al. Distributed deep learning networks among institutions for medical imaging. J. Am. Med. Inform. Assoc. 25, 945-954 (2018).",
+    "[raw_reference] Shokri, R., Stronati, M., Song, C. & Shmatikov, V. Membership inference attacks against machine learning models. In 2017 IEEE Symposium on Security and Privacy (SP), 3-18 (IEEE, 2017).",
+    "[raw_reference] Sablayrolles, A., Douze, M., Ollivier, Y., Schmid, C. & J\u00e9gou, H. White-box vs black- box: Bayes optimal strategies for membership inference. In Chaudhuri, K. & Sal- akhutdinov, R. (eds) Proceedings of the 36th International Conference on Machine Learning, {ICML} 97, 5558-5567. http://proceedings.mlr.press/v97/sablayrolles19a. html (PMLR, 2019).",
+    "[raw_reference] Zhang, C., Bengio, S., Hardt, M., Recht, B. & Vinyals, O. Understanding deep learning requires rethinking generalization. In 5th International Conference on Learning Representations, {ICLR}. https://openreview.net/forum?id=Sy8gdB9xx, (OpenReview.net, 2017).",
+    "[raw_reference] Carlini, N., Liu, C., Erlingsson, \u00da., Kos, J. & Song, D. The secret sharer: evaluating and testing unintended memorization in neural networks. In Heninger, N. & Traynor, P. (eds) 28th {USENIX} Security Symposium ({USENIX} Security 19, 267-284. https://www.usenix.org/conference/usenixsecurity19/presentation/carlini ({USE- NIX} Association, Santa Clara, CA, USA, 2019).",
+    "[raw_reference] Abadi, M. et al. Deep learning with differential privacy. In Proceedings of the 2016 ACM SIGSAC Conference on Computer and Communications Security, 308-318 (ACM, 2016).",
+    "[raw_reference] Shokri, R. & Shmatikov, V. Privacy-preserving deep learning. In Proceedings of the 22nd ACM SIGSAC conference on computer and communications security, (ACM, 2015).",
+    "[raw_reference] Langlotz, C. P. et al. A roadmap for foundational research on artificial intelligence in medical imaging: from the 2018 nih/rsna/acr/the academy workshop. Radi- ology 291, 781-791 (2019).",
+    "[raw_reference] Kim, Y., Sun, J., Yu, H. & Jiang, X. Federated Tensor Factorization for Computa- tional Phenotyping. In Proceedings of the 23rd {ACM} {SIGKDD} International Conference on Knowledge Discoveryand Data Mining. 887-895. https://doi.org/ 10.1145/3097983.3098118 (ACM, Halifax, NS, Canada, 2017).",
+    "[raw_reference] He, C., Annavaram, M. & Avestimehr, S. Fednas: Federated deep learning via neural architecture search. https://sites.google.com/view/cvpr20-nas/ (2020).",
+    "[raw_reference] Trustworthy federated data analytics (tfda). https://tfda.hmsp.center/ (2020) (Accessed 28 May 2020).",
+    "[raw_reference] Joint Imaging Platform (Jip). https://jip.dktk.dkfz.de/jiphomepage/ (2020) (Accessed 28 May 2020).",
+    "[raw_reference] Medical institutions collaborate to improve mammogram assessment ai. https:// blogs.nvidia.com/blog/2020/04/15/federated-learning-mammogram- assessment/ (2020) (Accessed 28 May 2020).",
+    "[raw_reference] The federated tumor segmentation (fets) initiative. https://www.fets.ai (2020) (Accessed 28 May 2020).",
+    "[raw_reference] Machine learning ledger orchestration for drug discovery. https://cordis.europa. eu/project/id/831472 (2020). Accessed 28 May 2020.",
+    "[report_type] arXiv preprint",
+    "[raw_reference] Kone\u010dny`, J., McMahan, H. B., Ramage, D. & Richt\u00e1rik, P. Federated optimization: Distributed machine learning for on-device intelligence. arXiv preprint arXiv:1610.02527 (2016).",
+    "[report_type] arXiv preprint",
+    "[raw_reference] Lalitha, A., Kilinc, O. C., Javidi, T. & Koushanfar, F. Peer-to-peer federated learning on graphs. arXiv preprint arXiv:1901.11173 (2019).",
+    "[report_type] arXiv preprint",
+    "[raw_reference] Li, T., Sahu, A. K., Zaheer, M., Sanjabi, M., Talwalkar, A. & Smith, V. Federated optimization in heterogeneous networks. arXiv preprint arXiv:1812.06127 (2018).",
+    "[raw_reference] Zhao, Y. et al. Federated learning with non-iid data. arxivabs/1806.00582 (2018).",
+    "[raw_reference] Li, X., Huang, K., Yang, W., Wang, S. & Zhang, Z. On the convergence of fedavg on non-IID data. https://openreview.net/forum?id=HJxNAnVtDS (2020).",
+    "[raw_reference] Wu, B. et al. P3sgd: patient privacy preserving SGD for regularizing deep CNNs in pathological image classification. In Proceedings of the IEEE Conference on Com- puter Vision and Pattern Recognition (pp. 2099-2108) (2019).",
+    "[raw_reference] Zhu, L., Liu, Z. & Han, S. Deep leakage from gradients. In Wallach, H. M. et al. (eds) Advances in Neural Information Processing Systems 32: Annual Conference on Neural Information Processing Systems, 14747-14756. http://papers.nips.cc/paper/ 9617-deep-leakage-from-gradients (2019).",
+    "[raw_reference] Wang, Z. et al. Beyond inferring class representatives: user-level privacy leakage from federated learning. In 2019 {IEEE} Conferenceon Computer Communications, {INFOCOM} 2512-2520. https://doi.org/10.1109/INFOCOM.2019.8737416 (IEEE, Paris, France, 2019).",
+    "[raw_reference] Hitaj, B., Ateniese, G. & Perez-Cruz, F. Deep models under the gan: information leakage from collaborative deep learning. In Proceedings of the 2017 ACM SIGSAC Conference on Computer and Communications Security, CCS'17, 603-618 (Asso- ciation for Computing Machinery, New York, NY, USA, 2017).",
+    "[raw_reference] Ghorbani, A. & Zou, J. Data shapley: Equitable valuation of data for machine learning. In International Conference on Machine Learning (pp. 2242-2251) (2019)."
+  ],
+  "editors": [
+    "K Chaudhuri",
+    "R Salakhutdinov",
+    "N Heninger",
+    "P Traynor",
+    "H M Wallach"
+  ],
+  "processing_software": {
+    "GROBID": "0.8.2"
+  }
+}

@@ -1,0 +1,816 @@
+{
+  "paper_id": "BWSE35XB",
+  "title": "Predicting use of a gait-stabilizing device using a Wii Balance Board",
+  "abstract": "Gait-stabilizing devices (GSDs) are effective at preventing falls, but people are often reluctant to use them until after experiencing a fall. Inexpensive, convenient, and effective methods for predicting which patients need GSDs could help improve adoption. The purpose of this study was to determine if a Wii Balance Board (WBB) can be used to determine whether or not patients use a GSD. We prospectively recruited participants ages 70-100, some who used GSDs and some who did not. Participants first answered questions from the Modified Vulnerable Elders Survey, and then completed a grip-strength test using a handgrip dynamometer. Finally, they were asked to complete a series of four 30-second balance tests on a WBB in random order: (1) eyes open, feet apart; (2) eyes open, feet together; (3) eyes closed, feet apart; and (4) eyes closed, feet together. The four-test series was repeated a second time in the same random order. The resulting data, represented as 25 features extracted from the questionnaires and the grip test, and data from the eight balance tests, were used to predict a subject's GSD use using generalized functional linear models based on the Bernoulli distribution. 268 participants were consented; 62 were missing data elements and were removed from analysis; 109 were not GSD users and 97 were GSD users. The use of velocity and acceleration information from the WBB improved upon predictions based solely on grip strength, demographic, and survey variables. The WBB is a convenient, inexpensive, and easy-to-use device that can be used to recommend whether or not patients should be using a GSD.",
+  "year": 2023,
+  "date": "2023-10-05",
+  "authors": [
+    {
+      "name": "Sean Mullan",
+      "orcid": "0000-0003-4832-4453",
+      "affiliation": {
+        "organization": "Department of Computer Science",
+        "department": "Department of Computer Science",
+        "institution": "University of Iowa",
+        "address": "Iowa City, Iowa, United States of America"
+      }
+    },
+    {
+      "name": "Nicholas Evans",
+      "orcid": "0000-0002-5015-7183",
+      "affiliation": {
+        "organization": "Department of Internal Medicine",
+        "department": "Department of Internal Medicine",
+        "institution": "University of Iowa",
+        "address": "Iowa City, Iowa, United States of America"
+      }
+    },
+    {
+      "name": "Daniel Sewell",
+      "affiliation": {
+        "organization": "Department of Biostatistics",
+        "department": "Department of Biostatistics",
+        "institution": "University of Iowa",
+        "address": "Iowa City, Iowa, United States of America"
+      }
+    },
+    {
+      "name": "Shelby Francis",
+      "orcid": "0000-0002-1155-1794",
+      "affiliation": {
+        "organization": "Department of Internal Medicine",
+        "department": "Department of Internal Medicine",
+        "institution": "University of Iowa",
+        "address": "Iowa City, Iowa, United States of America"
+      }
+    },
+    {
+      "name": "Linnea Polgreen",
+      "affiliation": {
+        "organization": "Department of Pharmacy Practice and Science",
+        "department": "Department of Pharmacy Practice and Science",
+        "institution": "University of Iowa",
+        "address": "Iowa City, Iowa, United States of America"
+      }
+    },
+    {
+      "name": "Alberto Segre",
+      "affiliation": {
+        "organization": "Department of Computer Science",
+        "department": "Department of Computer Science",
+        "institution": "University of Iowa",
+        "address": "Iowa City, Iowa, United States of America"
+      }
+    },
+    {
+      "name": "Philip Polgreen",
+      "email": "philip-polgreen@uiowa.edu",
+      "affiliation": {
+        "organization": "Department of Internal Medicine",
+        "department": "Department of Internal Medicine",
+        "institution": "University of Iowa",
+        "address": "Iowa City, Iowa, United States of America"
+      }
+    },
+    {
+      "affiliation": {
+        "organization": "Opole University of Technology",
+        "institution": "Opole University of Technology",
+        "address": "POLAND"
+      }
+    }
+  ],
+  "doi": "10.1371/journal.pone.0292548",
+  "orcid": "0000-0002-1155-1794",
+  "md5": "900A7B4A95FA4FE77E36890884947C8E",
+  "publication": {
+    "journal": "Journal of the American Geriatrics Society",
+    "journal_inferred": true
+  },
+  "funding": [
+    "",
+    ""
+  ],
+  "sections": [
+    {
+      "title": "Introduction",
+      "text": "Falls are the leading cause of injury among older adults  [1, 2] . Nearly half of the population over the age of 80 suffers from at least one fall per yea  [3] . According to the Centers for Disease Control and Prevention, approximately 27,000 older adults die due to falls, and almost 800,000 people require hospitalization after a fall each year  [1] . Fall-related injuries are a major reason for loss of independence among older adults  [4, 5] , and the fear of falling is detrimental to quality of life for older adults  [6] .\n\nSeveral successful programs for preventing falls exist, such as exercise programs  [7] [8] [9] , medication review  [7, 10] , and interventions to make home environments safer (e.g., installing hand rails, safer bath mats, etc.)  [11] . In addition to these strategies, gait-stabilizing devices (GSDs) such as canes or walkers may also help prevent falls  [12] . GSDs have been shown to be effective particularly in adverse conditions such as the presence of snow or ice  [13] . Unfortunately, empirical evidence suggests that most at-risk individuals are not using GSDs when they fall: indeed, many at-risk individuals do not start using such devices until after experiencing a severe fall  [14] . Given that canes and walkers are inexpensive and effective fall-prevention measures, encouraging their use has the potential to greatly improve quality of life for at-risk individuals, if only those at risk could be easily identified.\n\nSimple survey-based risk assessment scores are available to help determine the risk of future falls for seniors  [15, 16] . Unfortunately, these require trained survey administrators and may be subject to recall bias. In contrast, performative evaluations (e.g., the \"Functional Reach\" test) require subjects to execute specified tasks  [17] [18] [19] . While such tests have been empirically validated, they must also be administered by trained personnel and can be too time consuming to be useful in busy clinical settings such as primary care clinics. Fall detection using cameras, smartphones, and accelerometers have been proposed, but further testing is needed  [20] . Finally, tests based on specialized technology (e.g., devices with force plates) have also been developed  [21] [22] [23] , but these devices are expensive and impractical when used outside research settings or large clinical centers.\n\nThe goal of this project was to build an accurate and inexpensive system to determine if an individual uses GSDs. To do this, we used the output (i.e., the trace of a patient's shifting center of gravity) from an inexpensive and readily available device, the Wii Balance Board (WBB), to measure postural stability among older adults who use GSDs well as those who do not use GSDs. Then, after combining these data with measurements of grip strength and a few survey questions, we used logistic regression to determine GSD use. The resulting classification system could potentially, in the future, be used to recommend GSD use to new individuals explicitly based on their overall similarity to GSD users in the model. Because people are often reluctant to use a GSD, the ability to quickly and reliably screen non-GSD users whose stability profile aligns more with GSD users identifies a promising target population for a wide range of fall-reduction interventions."
+    },
+    {
+      "title": "Materials and methods"
+    },
+    {
+      "title": "Participants",
+      "text": "In our community, we estimated that approximately 10,000 people were eligible for this study. Two hundred and sixty-eight participants between 70 and 100 years of age were recruited: sixty-two had missing data elements and were excluded, but both GSD (i.e., canes, walkers, etc.) users and non-GSD users were included in the final pool. Participants were recruited from multiple retirement communities and nursing homes across the state of Iowa; the Internal Medicine Clinic at the University of Iowa Hospitals and Clinics; a mass email sent to all University of Iowa students, faculty, and staff; and the Seniors Together in Aging Research (STAR) Registry. All participants provided written informed consent. The study was approved by the University of Iowa Institutional Review Board."
+    },
+    {
+      "title": "Procedures",
+      "text": "The study consisted of one appointment lasting 20 to 30 minutes. Each participant was asked to self-identify as a GSD user (GSD+) or a GSD non-user (GSD-). Participants completed a short questionnaire that consisted of the Vulnerable Elders Survey  [24] , the participant's sex, and how many falls and/or near falls they had experienced in the last year. Responses were recorded by a research team member.\n\nNext, participants completed a grip-strength test using a handgrip dynamometer (Jamar, Creative Health Products, Plymouth, MI, USA). Each participant was instructed to sit in an armless chair preferably without leaning back against the chair. With elbows flexed at a 90\u00e5 ngle and not touching the side of the body, participants were then asked to first inhale and then exhale while squeezing the dynamometer as firmly and quickly as possible. Grip strength was measured twice for each hand, alternating between hands to allow for recovery time.\n\nFinally, participants were asked to complete a series of four balance tests while standing as still as possible on a WBB. Each test consisted of holding one of four specified poses for 30 seconds:  (1)  eyes open, feet apart;  (2)  eyes open, feet together; (3) eyes closed, feet apart; and (4) eyes closed, feet together (see  Fig 1) . Pose ordering was randomized for each participant. Participants were allowed to rest as needed between balance tests, and all four tests were repeated a second time (in the same initially randomized order). Upon completion of the appointment, participants were mailed a US$5 check for their participation. The research team members were trained to \"spot\" each participant throughout the balance testing as a precautionary measure. A visualization of each subject's balance was provided."
+    },
+    {
+      "title": "Data preparation",
+      "text": "Each participant was labeled GSD+ or GSD-depending on how they self-identified: this is the \"ground truth\" value we are interested in learning to predict. Survey responses were encoded using a Likert scale from 0 ('Poor') to 4 ('Excellent') or 0 ('No Difficulty') to 4 ('Unable to do') as appropriate to each individual question, and handgrip scores were measured in kilograms (kgs) of pressure. Together with age and sex, this provided a total of 25 non-WBB features per participant (age, sex, 19 survey responses, and 4 grip strength measures collected over two trials). Seven subjects were missing 4 or fewer values in the demographics, survey, and grip variables. For these subjects we imputed the missing values using predictive mean matching via multivariate imputation by chained equations  [25] . Data from the balance tests were encoded as sequences of X and Y center of balance locations in roughly 0.02 second intervals. From these data, we computed the sequences of velocity and acceleration metrics, where velocity is defined as change in X and Y location per timestep, and acceleration is defined as the rate of change in velocity per unit of time. To ensure data from different subjects and different trials were comparable, we considered the velocity/acceleration every 1/10 th second, so that each test contains 300 (= 30/0\ufffd1) velocity measurements and 300 acceleration measurements. For each test within each trial, we created a feature by taking the sum of the square of these 300 velocity measurements and treated this feature as a functional covariate; we treated acceleration similarly. We also aggregated these data across all four tests in trial 1 as well as over all eight tests in both trials. This yielded 20 functional variables per subject (8 tests + aggregation over trial 1 + aggregation over both trials, x2 for both velocity and acceleration)."
+    },
+    {
+      "title": "Models",
+      "text": "We fit generalized functional linear models based on the Bernoulli distribution, using the functional covariates as well as the survey responses and grip strength measurements with the goal of determining the added value of the WBB data. Each predictive model had either zero or one functional covariate, as there were insufficient data to estimate more than one functional covariate at a time.\n\nModel performance was evaluated through 10-fold cross validation, where participants were randomly assorted into 10 like-sized subgroups and the models were trained on either 185 or 186 participants (90%) from 9 of these groups and then tested on the remaining 20 or 21 participants (10%) in the last group. Within each fold, we used backward selection with AIC as the selection criterion on the 25 non-WBB variables. For each functional covariate, we then used functional data analysis (FA) to combine the selected non-WBB variables with the functional variable. FA estimates regression curves for functional variables in addition to regression coefficients for non-WBB variables. These regression curves are integrated against the functional variable to determine the predicted probability of needing a GSD. Some subjects were unable to complete any of their balance trials without assistance. Under the logic that such an individual is more likely to need a GSD than even the least stable subjects who were able to complete their balance trials without assistance, we automatically set their predicted value to be GSD+. That is, if a subject were able to complete their balance trials without assistance, we used the generalized functional linear models to predict GSD+/GSD-, and if a subject were not able to complete their balance trials without assistance we predicted GSD+. The outof-sample predictive performance of these models was evaluated using area under the ROC curve (AUC), accuracy, sensitivity, and specificity. The threshold for making precise predictions from predicted probabilities was set in such a way to ensure a specificity of 0\ufffd75 or greater. All analyses were conducted using R version 4.0.4 [26] ."
+    },
+    {
+      "title": "Results",
+      "text": "Two-hundred sixty-eight people participated in this study. Twenty-one were removed because of equipment error, 39 subjects were missing survey data, and 2 participants were missing WBB data. Of the remaining 206 participants, 109 self-identified as GSD-, and 97 self-identified as GSD+. Characteristics of the participants can be found in Table  1 .\n\nTable  2  shows how many folds (i.e., training data sets) included each non-WBB variable, as well as which variables were included when performing backward selection on the entire data set. The out-of-sample prediction performance is given in Table  3 . All WBB functional variables helped to improve the predictive performance. The best performing model corresponded to the inclusion of the velocity aggregated over the first four tests. However, even using a single test such as \"eyes closed, feet together\" made meaningful improvements in the predictive performance compared to only using the non-WBB covariates.\n\nInspecting the FA regression curves provides insight into the time period during which the balance board data helps to predict GSD. Fig  3  shows the regression curves and their 95% confidence bands for the best predictive model, i.e., the model with non-WBB covariates and the velocity aggregated over the four tests in trial 1. This curve shows that the balance board data statistically significantly improved predictions from ~2.25 sec to ~6.50 sec."
+    },
+    {
+      "title": "Discussion",
+      "text": "Our results demonstrate that we can accurately identify people who currently use a GSD based on their answers to a few simple questions and their performance on a brief balance test using only inexpensive equipment. Given the accuracy of our results, our system could be used to recommend the use of GSDs to people who are currently not using one but that would likely benefit from a GSD and other fall-prevention interventions. Our system also produces a convincing comparative visualization of each participant's postural stability, which can be used to better communicate a subject's relative instability, possibly helping to overcome device-adoption barriers.\n\nThe risk for falls is often multi-factorial. Our approach quickly measures two important risk factors including postural stability (via the WBB) and grip strength (via a simple handgrip dynamometer). Our best performing model included velocity aggregated over the first 4 tests in trial 1. Given the ease of our approach, it provides a few distinct advantages. First, our approach could be used quickly and efficiently (about 5 minutes per patient) in a clinical setting without the use of specialized or expensive equipment (WBB are out of production but\n\nTable 1. Participant characteristics based on Gait-Stabilizing-Device (GSD) Group. GSD+ (n = 97) GSD-(n = 109) p-value Median (IQR) Median (IQR) Age 87.0 (81.0, 91.0) 79.0 (74.0, 84.0) <0.001 Grip (kg) Right 1 16.0 (12.0, 20.0) 24.0 (18.0, 30.5) <0.001 Left 1 14.0 (12.0, 20.0) 21 (16.0, 28.0) <0.001 Right 2 16.0 (12.0, 22.0) 24.0 (18.0, 30.0) <0.001 Left 2 14.0 (12.0, 20.5) 22.0 (16.0, 28.0) <0.001 N (%) N (%) Sex 0.557 Male 31 (32.0) 40 (36.7) Female 66 (68.0) 69 (63.3) Near Fall in Past Year 60 (61.9) 52 (47.7) 0.05 Fallen in Past Year 58 (59.8) 31 (28.4) <0.001 Location of Falls Inside Home 52 (53.6) 19 (17.4) <0.001 Outside Home or Yard 12 (12.4) 14 (12.8) 1 In Community 9 (9.3) 8 (7.3) 0.623 Difficulty (Yes) Shopping for Personal Items 15 (15.5) 1 (0.9) <0.001 Managing Money 4 (4.1) 0 (0.0) 0.048 Walking Across the Room (using GSD OK) 6 (6.2) 2 (1.8) 0.152 Doing Light Housework (washing dishes) 8 (8.2) 0 (0.0) 0.002 Bathing or Showering 32 (33.0) 1 (0.9) <0.001 Health Rating Compared to Peers (0 = Poor; 1 = Fair; 2 = Good; 3 = Very good; 4 = Excellent) <0.001 0 1 (1.0) 2 (1.8) 1 26 (26.8) 3 (2.8) 2 45 (46.4) 31 (28.4) 3 18 (18.6) 48 (44.0) 4 7 (7.2) 25 (22.9) Difficulty (0 = None; 1 = Little; 2 = Some; 3 = Much; 4 = Unable to do) Stooping, Crouching, Kneeling <0.001 0 7 (7.2) 46 (42.2) 1 13 (13.4) 32 (29.4) 2 28 (28.9) 22 (20.2) 3 16 (16.5) 7 (6.4) 4 33 (34.0) 2 (1.8) Lifting/Carrying 10 Pounds <0.001 0 53 (54.6) 92 (84.4) 1 18 (18.6) 8 (7.3) 2 11 (11.3) 8 (7.3)\n\nused WBB can easily be purchased for approximately $25). Also, the WBB is small, portable and could be placed next to a scale. It does not need personnel with specific training or a large, designated space both of which may be difficult to obtain in many clinical settings. Second, our approach produces an objective measurement. While the Get-Up-and-Go test, as well as other functional tests geared toward older adults/seniors  [27] , have been validated, and used in machine-learning models  [28] [29] [30] , because these tests are based on an observer with a timer, there may be some subjectivity associated with interpretation of observations that may vary by observer, especially in busy clinical settings. Third, the data we collect measuring postural stability can be readily reduced to an informative graphical visualization so that patients can easily compare their results to population averages. While not an objective of our study, participants and family members frequently asked to see the trace after the study was completed and found the trace helpful, allowing them to easily interpret the results. Future work will need to determine if and to what extent such information influences patients enough to change behavior (e.g., increase the likelihood that a patient would agree to acquire and use a GSD.) Despite the effectiveness of GSDs, possession of a GSD does not ensure its use. Furthermore, it is difficult to monitor adherence to such devices. Indeed, people who do fall and own\n\nHeavy Housework (floors, windows) <0.001\n\n.2) 5 (4.7) 4 46 (47.4) 6 (5.7) P-values computed using Fisher's exact test (categorical variables) or Kruskal Wallis (continuous variables). https://doi.org/10.1371/journal.pone.0292548.t001\n\na GSD are often not using it at the time of their fall  [14] . In recent years, a growing body of qualitative research has provided some insight into factors that may influence people's willingness to use GSDs  [31] [32] [33] . These studies suggest that the use of GSDs negatively affect selfidentity and impose many cognitive, behavioral, and pragmatic adaptations. More specifically, personal beliefs concerning physical, psychological and social consequences of device use and the ease or difficulty anticipated in successfully incorporating the device into one's daily activities appear to be the key factors influencing the decisions to accept or reject GSDs  [31] [32] [33] .\n\nOur approach, with its clear visualization of postural stability could be used to help encourage GSD use among people who have such a device, but who do not use it regularly. Our approach could also be used to screen patients who would likely benefit from a wide range of other fall-prevention efforts. In addition, given the granularity of our postural stability measurements, we might be able to build new models in future applications to determine if we can detect improvements in postural stability. For example, while our FA model was successful at prediction, the number of subjects in our study was sufficiently small as to preclude the use of multiple functional covariates in the same model. Indeed, while we built a similar FA model using squared acceleration rather than velocity with very similar results, there were insufficient data to include both velocity and acceleration functional covariates simultaneously. We believe it likely that given a larger number of subjects we would be able to train FA models using more\n\nTable 3. Out-of-sample prediction performance for each of the 21 models. Trial 1 Only Trials 1 and 2 Specificity Sensitivity Accuracy AUC Specificity Sensitivity Accuracy AUC Velocity Open/ Together 0\ufffd752 0\ufffd887 0\ufffd816 0\ufffd884 0\ufffd752 0\ufffd887 0\ufffd816 0\ufffd884\n\nhttps://doi.org/10.1371/journal.pone.0292548.t003 nuanced functional covariates, thereby enabling us to build a more accurate and comprehensive picture of patients' postural stability. The WBB has previously been used to assess postural stability, a well described risk factor for falls. In general, the WBB compares favorably to research-grade force plates, which are much more expensive  [34] . WBBs have also been used to predict future fall risk  [35, 36] , and complement the Get-Up-and-Go test  [37] . However, these approaches have been mostly confined to research settings and have not been widely generalized to busy clinical settings. Given the initial popularity of the device in gaming systems, and because Nintendo is no longer supporting the use of the WBB with its newer gaming systems, there will be a steady and inexpensive supply of these devices and systems as people upgrade to newer platforms for years to come.\n\nOur results are subject to several limitations. First, our results are based on a limited sample of only 206 participants, albeit one with a relatively balanced training set (49% of subjects used GSDs). While our population is limited, in general, increasing our sample should increase and not decrease our model's performance. Second, it may be that some of the people in our study were assigned to either the GSD+ or GSD-group incorrectly. Third, recommendations alone may not be convincing enough to change user behavior and increase GSD use: future work will be needed to show if our more objective approach can be used to change adherence to GSDs. Fourth, the signals from the WBB are noisy, but we were still able to predict GSD use. Finally, for the purposes of this initial work, we did not distinguish between different types of GSDs (i.e., canes vs. walkers). Future work including larger samples and ways to include patient and family preference are needed. In conclusion, despite these limitations, we demonstrate a convenient, inexpensive and easy-to-use approach for identifying patients who are currently using a GSD."
+    },
+    {
+      "text": "Fig 2 gives examples of GSD+ and a GSD-individuals."
+    },
+    {
+      "text": "Fig 1. WBB used for four balance trials. When completing a \"feet together\" trials, participants were asked to stand on the black footprints. When completing a \"feet apart\" trials, participants were asked to stand on the gold footprints. https://doi.org/10.1371/journal.pone.0292548.g001"
+    },
+    {
+      "text": "Fig 2. Visualizations of a GSD+ (top) and a GSD-(bottom) individual's center of balance over the duration of a \"eyes closed, feet apart\" trial. The left graph of each sample shows the participant's center of balance over time, and the right graphs show the corresponding velocity and acceleration plotted over time. https://doi.org/10.1371/journal.pone.0292548.g002"
+    },
+    {
+      "text": "Number of folds (out of 10) which led to the inclusion of each non-WBB covariate when performing backwardIncluded when performing model selection on the full data set https://doi.org/10.1371/journal.pone.0292548.t002"
+    },
+    {
+      "text": "Fig 3. Regression curve (black) from the functional data analysis and the 95% confidence bands (gray), using the velocity aggregated over the four tests of trial 1 as the functional covariate, where the horizontal axis is the time since beginning the test. The dashed horizonal line is located at zero: locations where the curve is above this line represents time periods where large values of velocity increase the predicted probability of needing a GSD. The region statistically significantly different from zero is from 2.25 sec to 6.44 sec. (hatched region), indicating the period during when large velocities would predict a high probability of needing a GSD. https://doi.org/10.1371/journal.pone.0292548.g003"
+    },
+    {
+      "text": "(Continued)"
+    },
+    {
+      "text": "This study was funded by a pilot grant from the  University of Iowa Injury Prevention and Research Center and the Clinical and Translational Science Award  from the  National Institutes of Health  # UL1 TR002537 . Study sponsors did not have a role in study design, data collection, analysis or interpretation of data, writing of the manuscript, or decision to submit the manuscript for publication."
+    },
+    {
+      "text": "The data for this project can be accessed at:  https://www.kaggle.  com/datasets/danielksewell/wii-balance-board- movement-of-theelderly/ . DOI: 10.34740/kaggle/ dsv/3907218."
+    },
+    {
+      "title": "Author Contributions",
+      "text": "Conceptualization: Nicholas J. Evans, Shelby L. Francis, Linnea A. Polgreen, Alberto M.\n\nSegre, Philip M. Polgreen.\n\nData curation: Shelby L. Francis.\n\nFormal analysis: Sean M. Mullan, Daniel K. Sewell.\n\nFunding acquisition: Philip M. Polgreen.\n\nMethodology: Shelby L. Francis, Linnea A. Polgreen, Alberto M. Segre, Philip M. Polgreen.\n\nProject administration: Shelby L. Francis.\n\nResources: Nicholas J. Evans, Philip M. Polgreen.\n\nSoftware: Sean M. Mullan, Nicholas J. Evans.\n\nWriting -original draft: Sean M. Mullan, Daniel K. Sewell, Shelby L. Francis, Linnea A. Polgreen.\n\nWriting -review & editing: Nicholas J. Evans, Daniel K. Sewell, Shelby L. Francis, Linnea A.\n\nPolgreen, Alberto M. Segre, Philip M. Polgreen."
+    }
+  ],
+  "references": [
+    {
+      "title": "Falls and fall injuries among adults aged\ufffd 65 years-United States, 2014",
+      "authors": [
+        "G Bergen",
+        "M Stevens",
+        "E Burns"
+      ],
+      "year": 2016,
+      "doi": "10.15585/mmwr.mm6537a2",
+      "journal": "Morbidity and Mortality Weekly Report",
+      "volume": "65",
+      "issue": "37",
+      "raw": "Falls and fall injuries among adults aged\ufffd 65 years-United States, 2014 \n\t\t \n\t\t\t G Bergen \n\t\t \n\t\t \n\t\t\t M R Stevens \n\t\t \n\t\t \n\t\t\t E R Burns \n\t\t \n\t\t 10.15585/mmwr.mm6537a2 \n\t \n\t \n\t\t Morbidity and Mortality Weekly Report \n\t\t \n\t\t\t 65 \n\t\t\t 37 \n\t\t\t \n\t\t\t 2016 \n\t\t \n\t \n\t Bergen G, Stevens MR, Burns ER. Falls and fall injuries among adults aged\ufffd 65 years-United States, 2014. Morbidity and Mortality Weekly Report. 2016; 65(37):993-998."
+    },
+    {
+      "title": "Self-reported falls and fall-related injuries among persons aged\ufffd 65 years-United States, 2006",
+      "authors": [
+        "J Stevens",
+        "K Mack",
+        "L Paulozzi",
+        "M Ballesteros"
+      ],
+      "year": 2008,
+      "doi": "10.1016/j.jsr.2008.05.002",
+      "journal": "Journal of safety research",
+      "volume": "39",
+      "issue": "3",
+      "raw": "Self-reported falls and fall-related injuries among persons aged\ufffd 65 years-United States, 2006 \n\t\t \n\t\t\t J A Stevens \n\t\t \n\t\t \n\t\t\t K A Mack \n\t\t \n\t\t \n\t\t\t L J Paulozzi \n\t\t \n\t\t \n\t\t\t M F Ballesteros \n\t\t \n\t\t 10.1016/j.jsr.2008.05.002 \n\t \n\t \n\t\t Journal of safety research \n\t\t \n\t\t\t 39 \n\t\t\t 3 \n\t\t\t \n\t\t\t 2008 \n\t\t \n\t \n\t Stevens JA, Mack KA, Paulozzi LJ, Ballesteros MF. Self-reported falls and fall-related injuries among persons aged\ufffd 65 years-United States, 2006. Journal of safety research. 2008; 39(3):345-349."
+    },
+    {
+      "title": "Risk factors for falls among elderly persons living in the community",
+      "authors": [
+        "M Tinetti",
+        "M Speechley",
+        "S Ginter"
+      ],
+      "year": 1988,
+      "doi": "10.1056/nejm198812293192604",
+      "journal": "New England journal of medicine",
+      "volume": "319",
+      "issue": "26",
+      "raw": "Risk factors for falls among elderly persons living in the community \n\t\t \n\t\t\t M E Tinetti \n\t\t \n\t\t \n\t\t\t M Speechley \n\t\t \n\t\t \n\t\t\t S F Ginter \n\t\t \n\t\t 10.1056/nejm198812293192604 \n\t\t 3205267 \n\t\t \n\t \n\t \n\t\t New England journal of medicine \n\t\t \n\t\t\t 319 \n\t\t\t 26 \n\t\t\t \n\t\t\t 1988 \n\t\t \n\t \n\t Tinetti ME, Speechley M, Ginter SF. Risk factors for falls among elderly persons living in the community. New England journal of medicine. 1988; 319(26):1701-1707. https://doi.org/10.1056/ NEJM198812293192604 PMID: 3205267"
+    },
+    {
+      "title": "The effect of falls and fall injuries on functioning in community-dwelling older persons",
+      "authors": [
+        "M Tinetti",
+        "C Williams"
+      ],
+      "year": 1998,
+      "doi": "10.1093/gerona/53a.2.m112",
+      "journal": "The Journals of Gerontology Series A: Biological Sciences and Medical Sciences",
+      "volume": "53",
+      "issue": "2",
+      "raw": "The effect of falls and fall injuries on functioning in community-dwelling older persons \n\t\t \n\t\t\t M E Tinetti \n\t\t \n\t\t \n\t\t\t C S Williams \n\t\t \n\t\t 10.1093/gerona/53a.2.m112 \n\t\t \n\t \n\t \n\t\t The Journals of Gerontology Series A: Biological Sciences and Medical Sciences \n\t\t \n\t\t\t 53 \n\t\t\t 2 \n\t\t\t \n\t\t\t 1998 \n\t\t \n\t \n\t Tinetti ME, Williams CS. The effect of falls and fall injuries on functioning in community-dwelling older persons. The Journals of Gerontology Series A: Biological Sciences and Medical Sciences. 1998; 53 (2):M112-M119. https://doi.org/10.1093/gerona/53a.2.m112 PMID: 9520917"
+    },
+    {
+      "title": "Falls, injuries due to falls, and the risk of admission to a nursing home",
+      "authors": [
+        "M Tinetti",
+        "C Williams"
+      ],
+      "year": 1997,
+      "doi": "10.1056/nejm199710303371806",
+      "journal": "New England journal of medicine",
+      "volume": "337",
+      "issue": "18",
+      "raw": "Falls, injuries due to falls, and the risk of admission to a nursing home \n\t\t \n\t\t\t M E Tinetti \n\t\t \n\t\t \n\t\t\t C S Williams \n\t\t \n\t\t 10.1056/nejm199710303371806 \n\t\t 9345078 \n\t\t \n\t \n\t \n\t\t New England journal of medicine \n\t\t \n\t\t\t 337 \n\t\t\t 18 \n\t\t\t \n\t\t\t 1997 \n\t\t \n\t \n\t Tinetti ME, Williams CS. Falls, injuries due to falls, and the risk of admission to a nursing home. New England journal of medicine. 1997; 337(18):1279-1284. https://doi.org/10.1056/ NEJM199710303371806 PMID: 9345078"
+    },
+    {
+      "title": "The impact of surgical-site infections following orthopedic surgery at a community hospital and a university hospital adverse quality of life, excess length of stay, and extra cost",
+      "authors": [
+        "J Whitehouse",
+        "N Friedman",
+        "K Kirkland",
+        "W Richardson",
+        "D Sexton"
+      ],
+      "year": 2002,
+      "doi": "10.1086/502033",
+      "journal": "Infection Control & Hospital Epidemiology",
+      "volume": "23",
+      "issue": "4",
+      "raw": "The impact of surgical-site infections following orthopedic surgery at a community hospital and a university hospital adverse quality of life, excess length of stay, and extra cost \n\t\t \n\t\t\t J D Whitehouse \n\t\t \n\t\t \n\t\t\t N D Friedman \n\t\t \n\t\t \n\t\t\t K B Kirkland \n\t\t \n\t\t \n\t\t\t W J Richardson \n\t\t \n\t\t \n\t\t\t D J Sexton \n\t\t \n\t\t 10.1086/502033 \n\t \n\t \n\t\t Infection Control & Hospital Epidemiology \n\t\t \n\t\t\t 23 \n\t\t\t 4 \n\t\t\t \n\t\t\t 2002 \n\t\t \n\t \n\t Whitehouse JD, Friedman ND, Kirkland KB, Richardson WJ, Sexton DJ. The impact of surgical-site infections following orthopedic surgery at a community hospital and a university hospital adverse quality of life, excess length of stay, and extra cost. Infection Control & Hospital Epidemiology. 2002; 23 (4):183-189."
+    },
+    {
+      "title": "Interventions for preventing falls in older people living in the community",
+      "authors": [
+        "L Gillespie",
+        "M Robertson",
+        "W Gillespie"
+      ],
+      "year": 2012,
+      "doi": "10.1002/14651858.cd007146.pub3",
+      "journal": "Cochrane database of systematic reviews",
+      "issue": "9",
+      "raw": "Interventions for preventing falls in older people living in the community \n\t\t \n\t\t\t L D Gillespie \n\t\t \n\t\t \n\t\t\t M C Robertson \n\t\t \n\t\t \n\t\t\t W J Gillespie \n\t\t \n\t\t 10.1002/14651858.cd007146.pub3 \n\t\t 22972103 \n\t\t \n\t \n\t \n\t\t Cochrane database of systematic reviews \n\t\t \n\t\t\t 9 \n\t\t\t 2012 \n\t\t \n\t \n\t Gillespie LD, Robertson MC, Gillespie WJ, et al. Interventions for preventing falls in older people living in the community. Cochrane database of systematic reviews. 2012;(9). https://doi.org/10.1002/ 14651858.CD007146.pub3 PMID: 22972103"
+    },
+    {
+      "title": "Step training improves reaction time, gait and balance and reduces falls in older people: a systematic review and meta-analysis",
+      "authors": [
+        "Y Okubo",
+        "D Schoene",
+        "S Lord"
+      ],
+      "year": 2017,
+      "doi": "10.1136/bjsports-2015-095452",
+      "journal": "British journal of sports medicine",
+      "volume": "51",
+      "issue": "7",
+      "raw": "Step training improves reaction time, gait and balance and reduces falls in older people: a systematic review and meta-analysis \n\t\t \n\t\t\t Y Okubo \n\t\t \n\t\t \n\t\t\t D Schoene \n\t\t \n\t\t \n\t\t\t S R Lord \n\t\t \n\t\t 10.1136/bjsports-2015-095452 \n\t\t \n\t \n\t \n\t\t British journal of sports medicine \n\t\t \n\t\t\t 51 \n\t\t\t 7 \n\t\t\t \n\t\t\t 2017 \n\t\t \n\t \n\t Okubo Y, Schoene D, Lord SR. Step training improves reaction time, gait and balance and reduces falls in older people: a systematic review and meta-analysis. British journal of sports medicine. 2017; 51 (7):586-593. https://doi.org/10.1136/bjsports-2015-095452 PMID: 26746905"
+    },
+    {
+      "title": "Trail-walking exercise and fall risk factors in community-dwelling older adults: preliminary results of a randomized controlled trial",
+      "authors": [
+        "M Yamada",
+        "B Tanaka",
+        "K Nagai",
+        "T Aoyama",
+        "N Ichihashi"
+      ],
+      "year": 2010,
+      "doi": "10.1111/j.1532-5415.2010.03059.x",
+      "journal": "Journal of the American Geriatrics Society",
+      "volume": "58",
+      "issue": "10",
+      "raw": "Trail-walking exercise and fall risk factors in community-dwelling older adults: preliminary results of a randomized controlled trial \n\t\t \n\t\t\t M Yamada \n\t\t \n\t\t \n\t\t\t B Tanaka \n\t\t \n\t\t \n\t\t\t K Nagai \n\t\t \n\t\t \n\t\t\t T Aoyama \n\t\t \n\t\t \n\t\t\t N Ichihashi \n\t\t \n\t\t 10.1111/j.1532-5415.2010.03059.x \n\t\t 20831723 \n\t\t \n\t \n\t \n\t\t Journal of the American Geriatrics Society \n\t\t \n\t\t\t 58 \n\t\t\t 10 \n\t\t\t \n\t\t\t 2010 \n\t\t \n\t \n\t Yamada M, Tanaka B, Nagai K, Aoyama T, Ichihashi N. Trail-walking exercise and fall risk factors in community-dwelling older adults: preliminary results of a randomized controlled trial. Journal of the American Geriatrics Society. 2010; 58(10):1946-1951. https://doi.org/10.1111/j.1532-5415.2010. 03059.x PMID: 20831723"
+    },
+    {
+      "title": "A Quality Use of Medicines program for general practitioners and older people: a cluster randomised controlled trial",
+      "authors": [
+        "S Pit",
+        "J Byles",
+        "D Henry",
+        "L Holt",
+        "V Hansen",
+        "D Bowman"
+      ],
+      "year": 2007,
+      "doi": "10.5694/j.1326-5377.2007.tb01110.x",
+      "journal": "Medical Journal of Australia",
+      "volume": "187",
+      "issue": "1",
+      "raw": "A Quality Use of Medicines program for general practitioners and older people: a cluster randomised controlled trial \n\t\t \n\t\t\t S W Pit \n\t\t \n\t\t \n\t\t\t J E Byles \n\t\t \n\t\t \n\t\t\t D A Henry \n\t\t \n\t\t \n\t\t\t L Holt \n\t\t \n\t\t \n\t\t\t V Hansen \n\t\t \n\t\t \n\t\t\t D A Bowman \n\t\t \n\t\t 10.5694/j.1326-5377.2007.tb01110.x \n\t\t 17605699 \n\t\t \n\t \n\t \n\t\t Medical Journal of Australia \n\t\t \n\t\t\t 187 \n\t\t\t 1 \n\t\t\t \n\t\t\t 2007 \n\t\t \n\t \n\t Pit SW, Byles JE, Henry DA, Holt L, Hansen V, Bowman DA. A Quality Use of Medicines program for general practitioners and older people: a cluster randomised controlled trial. Medical Journal of Austra- lia. 2007; 187(1):23-30. https://doi.org/10.5694/j.1326-5377.2007.tb01110.x PMID: 17605699"
+    },
+    {
+      "title": "Home modifications to reduce injuries from falls in the home injury prevention intervention (HIPI) study: a cluster-randomised controlled trial",
+      "authors": [
+        "M Keall",
+        "N Pierse",
+        "P Howden-Chapman"
+      ],
+      "year": 2015,
+      "doi": "10.1016/S0140-6736%2814%2961006-0",
+      "journal": "The Lancet",
+      "volume": "385",
+      "raw": "Home modifications to reduce injuries from falls in the home injury prevention intervention (HIPI) study: a cluster-randomised controlled trial \n\t\t \n\t\t\t M D Keall \n\t\t \n\t\t \n\t\t\t N Pierse \n\t\t \n\t\t \n\t\t\t P Howden-Chapman \n\t\t \n\t\t 10.1016/S0140-6736%2814%2961006-0 \n\t\t \n\t \n\t \n\t\t The Lancet \n\t\t \n\t\t\t 385 \n\t\t\t \n\t\t\t 2015. 9964 \n\t\t \n\t \n\t Keall MD, Pierse N, Howden-Chapman P, et al. Home modifications to reduce injuries from falls in the home injury prevention intervention (HIPI) study: a cluster-randomised controlled trial. The Lancet. 2015; 385(9964):231-238. https://doi.org/10.1016/S0140-6736(14)61006-0 PMID: 25255696"
+    },
+    {
+      "title": "Mobility device use in older adults and incidence of falls and worry about falling: Findings from the 2011-2012 national health and aging trends study",
+      "authors": [
+        "N Gell",
+        "R Wallace",
+        "A Lacroix",
+        "T Mroz",
+        "K Patel"
+      ],
+      "year": 2015,
+      "doi": "10.1111/jgs.13393",
+      "journal": "Journal of the American Geriatrics Society",
+      "volume": "63",
+      "issue": "5",
+      "raw": "Mobility device use in older adults and incidence of falls and worry about falling: Findings from the 2011-2012 national health and aging trends study \n\t\t \n\t\t\t N M Gell \n\t\t \n\t\t \n\t\t\t R B Wallace \n\t\t \n\t\t \n\t\t\t A Z Lacroix \n\t\t \n\t\t \n\t\t\t T M Mroz \n\t\t \n\t\t \n\t\t\t K V Patel \n\t\t \n\t\t 10.1111/jgs.13393 \n\t\t \n\t \n\t \n\t\t Journal of the American Geriatrics Society \n\t\t \n\t\t\t 63 \n\t\t\t 5 \n\t\t\t \n\t\t\t 2015 \n\t\t \n\t \n\t Gell NM, Wallace RB, LaCroix AZ, Mroz TM, Patel KV. Mobility device use in older adults and incidence of falls and worry about falling: Findings from the 2011-2012 national health and aging trends study. Journal of the American Geriatrics Society. 2015; 63(5):853-859. https://doi.org/10.1111/jgs.13393 PMID: 25953070"
+    },
+    {
+      "title": "A simple gait-stabilizing device reduces outdoor falls and nonserious injurious falls in fall-prone older people during the winter",
+      "authors": [
+        "F Mckiernan"
+      ],
+      "year": 2005,
+      "doi": "10.1111/j.1532-5415.2005.53302.x",
+      "journal": "Journal of the American Geriatrics Society",
+      "volume": "53",
+      "issue": "6",
+      "raw": "A simple gait-stabilizing device reduces outdoor falls and nonserious injurious falls in fall-prone older people during the winter \n\t\t \n\t\t\t F E Mckiernan \n\t\t \n\t\t 10.1111/j.1532-5415.2005.53302.x \n\t\t 15935015 \n\t\t \n\t \n\t \n\t\t Journal of the American Geriatrics Society \n\t\t \n\t\t\t 53 \n\t\t\t 6 \n\t\t\t \n\t\t\t 2005 \n\t\t \n\t \n\t McKiernan FE. A simple gait-stabilizing device reduces outdoor falls and nonserious injurious falls in fall-prone older people during the winter. Journal of the American Geriatrics Society. 2005; 53(6):943- 947. https://doi.org/10.1111/j.1532-5415.2005.53302.x PMID: 15935015"
+    },
+    {
+      "title": "Do canes or walkers make any difference? Nonuse and fall injuries",
+      "authors": [
+        "C Luz",
+        "T Bush",
+        "X Shen"
+      ],
+      "year": 2017,
+      "doi": "10.1093/geront/gnv096",
+      "journal": "The Gerontologist",
+      "volume": "57",
+      "issue": "2",
+      "raw": "Do canes or walkers make any difference? Nonuse and fall injuries \n\t\t \n\t\t\t C Luz \n\t\t \n\t\t \n\t\t\t T Bush \n\t\t \n\t\t \n\t\t\t X Shen \n\t\t \n\t\t 10.1093/geront/gnv096 \n\t\t \n\t \n\t \n\t\t The Gerontologist \n\t\t \n\t\t\t 57 \n\t\t\t 2 \n\t\t\t \n\t\t\t 2017 \n\t\t \n\t \n\t Luz C, Bush T, Shen X. Do canes or walkers make any difference? Nonuse and fall injuries. The Geron- tologist. 2017; 57(2):211-218. https://doi.org/10.1093/geront/gnv096 PMID: 26209797"
+    },
+    {
+      "title": "Fall-risk screening test: a prospective study on predictors for falls in community-dwelling elderly",
+      "authors": [
+        "A Tromp",
+        "S Pluijm",
+        "J Smit",
+        "D Deeg",
+        "L Bouter",
+        "P Lips"
+      ],
+      "year": 2001,
+      "doi": "10.1016/s0895-4356%2801%2900349-3",
+      "journal": "Journal of clinical epidemiology",
+      "volume": "54",
+      "issue": "8",
+      "raw": "Fall-risk screening test: a prospective study on predictors for falls in community-dwelling elderly \n\t\t \n\t\t\t A Tromp \n\t\t \n\t\t \n\t\t\t S Pluijm \n\t\t \n\t\t \n\t\t\t J Smit \n\t\t \n\t\t \n\t\t\t D Deeg \n\t\t \n\t\t \n\t\t\t L Bouter \n\t\t \n\t\t \n\t\t\t P Lips \n\t\t \n\t\t 10.1016/s0895-4356%2801%2900349-3 \n\t\t \n\t \n\t \n\t\t Journal of clinical epidemiology \n\t\t \n\t\t\t 54 \n\t\t\t 8 \n\t\t\t \n\t\t\t 2001 \n\t\t \n\t \n\t Tromp A, Pluijm S, Smit J, Deeg D, Bouter L, Lips P. Fall-risk screening test: a prospective study on pre- dictors for falls in community-dwelling elderly. Journal of clinical epidemiology. 2001; 54(8):837-844. https://doi.org/10.1016/s0895-4356(01)00349-3 PMID: 11470394"
+    },
+    {
+      "title": "Predictive performance of a fall risk assessment tool for community-dwelling older people (FRAT-up) in 4 European cohorts",
+      "authors": [
+        "P Palumbo",
+        "J Klenk",
+        "L Cattelani"
+      ],
+      "year": 2016,
+      "doi": "10.1016/j.jamda.2016.07.015",
+      "journal": "Journal of the American Medical Directors Association",
+      "volume": "17",
+      "issue": "12",
+      "raw": "Predictive performance of a fall risk assessment tool for community-dwelling older people (FRAT-up) in 4 European cohorts \n\t\t \n\t\t\t P Palumbo \n\t\t \n\t\t \n\t\t\t J Klenk \n\t\t \n\t\t \n\t\t\t L Cattelani \n\t\t \n\t\t 10.1016/j.jamda.2016.07.015 \n\t\t 27594522 \n\t\t \n\t \n\t \n\t\t Journal of the American Medical Directors Association \n\t\t \n\t\t\t 17 \n\t\t\t 12 \n\t\t\t \n\t\t\t 2016 \n\t\t \n\t \n\t Palumbo P, Klenk J, Cattelani L, et al. Predictive performance of a fall risk assessment tool for commu- nity-dwelling older people (FRAT-up) in 4 European cohorts. Journal of the American Medical Directors Association. 2016; 17(12):1106-1113. https://doi.org/10.1016/j.jamda.2016.07.015 PMID: 27594522"
+    },
+    {
+      "title": "Functional reach: predictive validity in a sample of elderly male veterans",
+      "authors": [
+        "P Duncan",
+        "S Studenski",
+        "J Chandler",
+        "B Prescott"
+      ],
+      "year": 1992,
+      "doi": "10.1093/geronj/47.3.m93",
+      "journal": "Journal of gerontology",
+      "volume": "47",
+      "issue": "3",
+      "raw": "Functional reach: predictive validity in a sample of elderly male veterans \n\t\t \n\t\t\t P W Duncan \n\t\t \n\t\t \n\t\t\t S Studenski \n\t\t \n\t\t \n\t\t\t J Chandler \n\t\t \n\t\t \n\t\t\t B Prescott \n\t\t \n\t\t 10.1093/geronj/47.3.m93 \n\t\t \n\t \n\t \n\t\t Journal of gerontology \n\t\t \n\t\t\t 47 \n\t\t\t 3 \n\t\t\t \n\t\t\t 1992 \n\t\t \n\t \n\t Duncan PW, Studenski S, Chandler J, Prescott B. Functional reach: predictive validity in a sample of elderly male veterans. Journal of gerontology. 1992; 47(3):M93-M98. https://doi.org/10.1093/geronj/ 47.3.m93 PMID: 1573190"
+    },
+    {
+      "title": "Is a fall just a fall: correlates of falling in healthy older persons. The Health, Aging and Body Composition Study",
+      "authors": [
+        "N De Rekeneire",
+        "M Visser",
+        "R Peila"
+      ],
+      "year": 2003,
+      "doi": "10.1046/j.1365-2389.2003.51267.x",
+      "journal": "Journal of the American Geriatrics Society",
+      "volume": "51",
+      "issue": "6",
+      "raw": "Is a fall just a fall: correlates of falling in healthy older persons. The Health, Aging and Body Composition Study \n\t\t \n\t\t\t N De Rekeneire \n\t\t \n\t\t \n\t\t\t M Visser \n\t\t \n\t\t \n\t\t\t R Peila \n\t\t \n\t\t 10.1046/j.1365-2389.2003.51267.x \n\t\t 12757573 \n\t\t \n\t \n\t \n\t\t Journal of the American Geriatrics Society \n\t\t \n\t\t\t 51 \n\t\t\t 6 \n\t\t\t \n\t\t\t 2003 \n\t\t \n\t \n\t De Rekeneire N, Visser M, Peila R, et al. Is a fall just a fall: correlates of falling in healthy older persons. The Health, Aging and Body Composition Study. Journal of the American Geriatrics Society. 2003; 51 (6):841-846. https://doi.org/10.1046/j.1365-2389.2003.51267.x PMID: 12757573"
+    },
+    {
+      "title": "Validity of divided attention tasks in predicting falls in older individuals: a preliminary study",
+      "authors": [
+        "J Verghese",
+        "H Buschke",
+        "L Viola"
+      ],
+      "year": 2002,
+      "doi": "10.1046/j.1532-5415.2002.50415.x",
+      "journal": "Journal of the American Geriatrics Society",
+      "volume": "50",
+      "issue": "9",
+      "raw": "Validity of divided attention tasks in predicting falls in older individuals: a preliminary study \n\t\t \n\t\t\t J Verghese \n\t\t \n\t\t \n\t\t\t H Buschke \n\t\t \n\t\t \n\t\t\t L Viola \n\t\t \n\t\t 10.1046/j.1532-5415.2002.50415.x \n\t\t 12383157 \n\t\t \n\t \n\t \n\t\t Journal of the American Geriatrics Society \n\t\t \n\t\t\t 50 \n\t\t\t 9 \n\t\t\t \n\t\t\t 2002 \n\t\t \n\t \n\t Verghese J, Buschke H, Viola L, et al. Validity of divided attention tasks in predicting falls in older individ- uals: a preliminary study. Journal of the American Geriatrics Society. 2002; 50(9):1572-1576. https:// doi.org/10.1046/j.1532-5415.2002.50415.x PMID: 12383157"
+    },
+    {
+      "title": "The state of knowledge on technologies and their use for fall detection: A scoping review",
+      "authors": [
+        "N Lapierre",
+        "N Neubauer",
+        "Miguel Cruz",
+        "Rios Rincon",
+        "A Liu",
+        "L Rousseau"
+      ],
+      "year": 2018,
+      "doi": "10.1016/j.ijmedinf.2017.12.015",
+      "journal": "International Journal of Medical Informatics",
+      "volume": "111",
+      "raw": "The state of knowledge on technologies and their use for fall detection: A scoping review \n\t\t \n\t\t\t N Lapierre \n\t\t \n\t\t \n\t\t\t N Neubauer \n\t\t \n\t\t \n\t\t\t Miguel - Cruz \n\t\t \n\t\t \n\t\t\t A \n\t\t \n\t\t \n\t\t\t Rios Rincon \n\t\t \n\t\t \n\t\t\t A Liu \n\t\t \n\t\t \n\t\t\t L Rousseau \n\t\t \n\t\t \n\t\t\t J \n\t\t \n\t\t 10.1016/j.ijmedinf.2017.12.015 \n\t\t 29425635 \n\t\t \n\t \n\t \n\t\t International Journal of Medical Informatics \n\t\t \n\t\t\t 111 \n\t\t\t \n\t\t\t 2018. 03/01. 2018 \n\t\t \n\t \n\t Lapierre N, Neubauer N, Miguel-Cruz A, Rios Rincon A, Liu L, Rousseau J. The state of knowledge on technologies and their use for fall detection: A scoping review. International Journal of Medical Informat- ics. 2018/03/01/ 2018; 111:58-71. https://doi.org/10.1016/j.ijmedinf.2017.12.015 PMID: 29425635"
+    },
+    {
+      "title": "Force platform balance measures as predictors of indoor and outdoor falls in community-dwelling women aged 63-76 years",
+      "authors": [
+        "S Pajala",
+        "P Era",
+        "M Koskenvuo",
+        "J Kaprio",
+        "T To \u00a8rma \u00a8kangas",
+        "T Rantanen"
+      ],
+      "year": 2008,
+      "doi": "10.1093/gerona/63.2.171",
+      "journal": "The Journals of Gerontology Series A: Biological Sciences and Medical Sciences",
+      "volume": "63",
+      "issue": "2",
+      "raw": "Force platform balance measures as predictors of indoor and outdoor falls in community-dwelling women aged 63-76 years \n\t\t \n\t\t\t S Pajala \n\t\t \n\t\t \n\t\t\t P Era \n\t\t \n\t\t \n\t\t\t M Koskenvuo \n\t\t \n\t\t \n\t\t\t J Kaprio \n\t\t \n\t\t \n\t\t\t T To \u00a8rma \u00a8kangas \n\t\t \n\t\t \n\t\t\t T Rantanen \n\t\t \n\t\t 10.1093/gerona/63.2.171 \n\t\t \n\t \n\t \n\t\t The Journals of Gerontology Series A: Biological Sciences and Medical Sciences \n\t\t \n\t\t\t 63 \n\t\t\t 2 \n\t\t\t \n\t\t\t 2008 \n\t\t \n\t \n\t Pajala S, Era P, Koskenvuo M, Kaprio J, To \u00a8rma \u00a8kangas T, Rantanen T. Force platform balance mea- sures as predictors of indoor and outdoor falls in community-dwelling women aged 63-76 years. The Journals of Gerontology Series A: Biological Sciences and Medical Sciences. 2008; 63(2):171-178. https://doi.org/10.1093/gerona/63.2.171 PMID: 18314453"
+    },
+    {
+      "title": "Falls prediction in elderly people: a 1-year prospective study",
+      "authors": [
+        "J Swanenburg",
+        "E De Bruin",
+        "D Uebelhart",
+        "T Mulder"
+      ],
+      "year": 2010,
+      "doi": "10.1016/j.gaitpost.2009.11.013",
+      "journal": "Gait & posture",
+      "volume": "31",
+      "issue": "3",
+      "raw": "Falls prediction in elderly people: a 1-year prospective study \n\t\t \n\t\t\t J Swanenburg \n\t\t \n\t\t \n\t\t\t E D De Bruin \n\t\t \n\t\t \n\t\t\t D Uebelhart \n\t\t \n\t\t \n\t\t\t T Mulder \n\t\t \n\t\t 10.1016/j.gaitpost.2009.11.013 \n\t\t 20047833 \n\t\t \n\t \n\t \n\t\t Gait & posture \n\t\t \n\t\t\t 31 \n\t\t\t 3 \n\t\t\t \n\t\t\t 2010 \n\t\t \n\t \n\t Swanenburg J, de Bruin ED, Uebelhart D, Mulder T. Falls prediction in elderly people: a 1-year prospec- tive study. Gait & posture. 2010; 31(3):317-321. https://doi.org/10.1016/j.gaitpost.2009.11.013 PMID: 20047833"
+    },
+    {
+      "title": "Classification of elderly as fallers and non-fallers using centre of pressure velocity",
+      "authors": [
+        "D Hewson",
+        "N Singh",
+        "H Snoussi",
+        "J Duchene"
+      ],
+      "year": 2010,
+      "doi": "10.1109/iembs.2010.5627649",
+      "journal": "IEEE",
+      "raw": "Classification of elderly as fallers and non-fallers using centre of pressure velocity \n\t\t \n\t\t\t D J Hewson \n\t\t \n\t\t \n\t\t\t N K Singh \n\t\t \n\t\t \n\t\t\t H Snoussi \n\t\t \n\t\t \n\t\t\t J Duchene \n\t\t \n\t\t 10.1109/iembs.2010.5627649 \n\t \n\t \n\t\t IEEE \n\t\t \n\t\t\t \n\t\t\t 2010 \n\t\t \n\t \n\t Hewson DJ, Singh NK, Snoussi H, Duchene J. Classification of elderly as fallers and non-fallers using centre of pressure velocity. IEEE; 2010:3678-3681."
+    },
+    {
+      "title": "The Vulnerable Elders Survey: a tool for identifying vulnerable older people in the community",
+      "authors": [
+        "D Saliba",
+        "M Elliott",
+        "L Rubenstein"
+      ],
+      "year": 2001,
+      "doi": "10.1046/j.1532-5415.2001.49281.x",
+      "journal": "Journal of the American Geriatrics Society",
+      "volume": "49",
+      "issue": "12",
+      "raw": "The Vulnerable Elders Survey: a tool for identifying vulnerable older people in the community \n\t\t \n\t\t\t D Saliba \n\t\t \n\t\t \n\t\t\t M Elliott \n\t\t \n\t\t \n\t\t\t L Z Rubenstein \n\t\t \n\t\t 10.1046/j.1532-5415.2001.49281.x \n\t\t 11844005 \n\t\t \n\t \n\t \n\t\t Journal of the American Geriatrics Society \n\t\t \n\t\t\t 49 \n\t\t\t 12 \n\t\t\t \n\t\t\t 2001 \n\t\t \n\t \n\t Saliba D, Elliott M, Rubenstein LZ, et al. The Vulnerable Elders Survey: a tool for identifying vulnerable older people in the community. Journal of the American Geriatrics Society. 2001; 49(12):1691-1699. https://doi.org/10.1046/j.1532-5415.2001.49281.x PMID: 11844005"
+    },
+    {
+      "title": "mice: Multivariate imputation by chained equations in R",
+      "authors": [
+        "S Van Buuren",
+        "K Groothuis-Oudshoorn"
+      ],
+      "year": 2011,
+      "doi": "10.32614/cran.package.mice",
+      "journal": "Journal of statistical software",
+      "volume": "45",
+      "issue": "1",
+      "raw": "mice: Multivariate imputation by chained equations in R \n\t\t \n\t\t\t S Van Buuren \n\t\t \n\t\t \n\t\t\t K Groothuis-Oudshoorn \n\t\t \n\t\t 10.32614/cran.package.mice \n\t \n\t \n\t\t Journal of statistical software \n\t\t \n\t\t\t 45 \n\t\t\t 1 \n\t\t\t \n\t\t\t 2011 \n\t\t \n\t \n\t Van Buuren S, Groothuis-Oudshoorn K. mice: Multivariate imputation by chained equations in R. Jour- nal of statistical software. 2011; 45(1):1-67."
+    },
+    {
+      "title": "R: A language and environment for statistical computing",
+      "authors": [
+        "R Core"
+      ],
+      "year": 2022,
+      "doi": "10.32614/r.manuals",
+      "raw": "R: A language and environment for statistical computing \n\t\t \n\t\t\t R Core \n\t\t \n\t\t \n\t\t\t Team \n\t\t \n\t\t 10.32614/r.manuals \n\t\t \n\t \n\t \n\t\t R Foundation for Statistical Computing \n\t\t Vienna, Austria \n\t\t \n\t\t\t 2022 \n\t\t \n\t \n\t Core R. TEAM, 2022. R: A language and environment for statistical computing. R Foundation for Statis- tical Computing, Vienna, Austria. Online: https://www.r-project.org. 2022;"
+    },
+    {
+      "title": "Senior fitness test manual",
+      "authors": [
+        "R Rikli",
+        "C Jones"
+      ],
+      "year": 2013,
+      "doi": "10.1097/00005768-199905001-02042",
+      "journal": "Human kinetics",
+      "raw": "Senior fitness test manual \n\t\t \n\t\t\t R E Rikli \n\t\t \n\t\t \n\t\t\t C J Jones \n\t\t \n\t\t 10.1097/00005768-199905001-02042 \n\t \n\t \n\t\t Human kinetics \n\t\t \n\t\t\t 2013 \n\t\t \n\t \n\t Rikli RE, Jones CJ. Senior fitness test manual. Human kinetics; 2013."
+    },
+    {
+      "title": "Simplified decision-tree algorithm to predict falls for community-dwelling older adults",
+      "authors": [
+        "K Makino",
+        "S Lee",
+        "S Bae"
+      ],
+      "year": 2021,
+      "doi": "10.3390/jcm10215184",
+      "journal": "Journal of clinical medicine",
+      "volume": "10",
+      "issue": "21",
+      "pages": "5184",
+      "raw": "Simplified decision-tree algorithm to predict falls for community-dwelling older adults \n\t\t \n\t\t\t K Makino \n\t\t \n\t\t \n\t\t\t S Lee \n\t\t \n\t\t \n\t\t\t S Bae \n\t\t \n\t\t 10.3390/jcm10215184 \n\t\t \n\t \n\t \n\t\t Journal of clinical medicine \n\t\t \n\t\t\t 10 \n\t\t\t 21 \n\t\t\t 5184 \n\t\t\t 2021 \n\t\t \n\t \n\t Makino K, Lee S, Bae S, et al. Simplified decision-tree algorithm to predict falls for community-dwelling older adults. Journal of clinical medicine. 2021; 10(21):5184. https://doi.org/10.3390/jcm10215184 PMID: 34768703"
+    },
+    {
+      "title": "Machine learning in aging: an example of developing prediction models for serious fall injury in older adults",
+      "authors": [
+        "J Speiser",
+        "K Callahan",
+        "D Houston"
+      ],
+      "year": 2021,
+      "doi": "10.1093/gerona/glaa138",
+      "journal": "The Journals of Gerontology: Series A",
+      "volume": "76",
+      "issue": "4",
+      "raw": "Machine learning in aging: an example of developing prediction models for serious fall injury in older adults \n\t\t \n\t\t\t J L Speiser \n\t\t \n\t\t \n\t\t\t K E Callahan \n\t\t \n\t\t \n\t\t\t D K Houston \n\t\t \n\t\t 10.1093/gerona/glaa138 \n\t\t \n\t \n\t \n\t\t The Journals of Gerontology: Series A \n\t\t \n\t\t\t 76 \n\t\t\t 4 \n\t\t\t \n\t\t\t 2021 \n\t\t \n\t \n\t Speiser JL, Callahan KE, Houston DK, et al. Machine learning in aging: an example of developing pre- diction models for serious fall injury in older adults. The Journals of Gerontology: Series A. 2021; 76 (4):647-654. https://doi.org/10.1093/gerona/glaa138 PMID: 32498077"
+    },
+    {
+      "title": "Accelerometer-based predictive models of fall risk in older women: a pilot study",
+      "authors": [
+        "A Hua",
+        "Z Quicksall",
+        "C Di"
+      ],
+      "year": 2018,
+      "doi": "10.1038/s41746-018-0033-5",
+      "journal": "NPJ digital medicine",
+      "volume": "1",
+      "issue": "1",
+      "raw": "Accelerometer-based predictive models of fall risk in older women: a pilot study \n\t\t \n\t\t\t A Hua \n\t\t \n\t\t \n\t\t\t Z Quicksall \n\t\t \n\t\t \n\t\t\t C Di \n\t\t \n\t\t 10.1038/s41746-018-0033-5 \n\t\t \n\t \n\t \n\t\t NPJ digital medicine \n\t\t \n\t\t\t 1 \n\t\t\t 1 \n\t\t\t \n\t\t\t 2018 \n\t\t \n\t \n\t Hua A, Quicksall Z, Di C, et al. Accelerometer-based predictive models of fall risk in older women: a pilot study. NPJ digital medicine. 2018; 1(1):1-8. https://doi.org/10.1038/s41746-018-0033-5 PMID: 31304307"
+    },
+    {
+      "title": "Exploring seniors' views on the use of assistive devices in fall prevention",
+      "authors": [
+        "F Aminzadeh",
+        "N Edwards"
+      ],
+      "year": 1998,
+      "doi": "10.1111/j.1525-1446.1998.tb00353.x",
+      "journal": "Public health nursing",
+      "volume": "15",
+      "issue": "4",
+      "raw": "Exploring seniors' views on the use of assistive devices in fall prevention \n\t\t \n\t\t\t F Aminzadeh \n\t\t \n\t\t \n\t\t\t N Edwards \n\t\t \n\t\t 10.1111/j.1525-1446.1998.tb00353.x \n\t\t 9682623 \n\t\t \n\t \n\t \n\t\t Public health nursing \n\t\t \n\t\t\t 15 \n\t\t\t 4 \n\t\t\t \n\t\t\t 1998 \n\t\t \n\t \n\t Aminzadeh F, Edwards N. Exploring seniors' views on the use of assistive devices in fall prevention. Public health nursing. 1998; 15(4):297-304. https://doi.org/10.1111/j.1525-1446.1998.tb00353.x PMID: 9682623"
+    },
+    {
+      "title": "Assistive technology and the newly disabled adult: adaptation to wheelchair use",
+      "authors": [
+        "P Bates",
+        "J Spencer",
+        "M Young",
+        "D Rintala"
+      ],
+      "year": 1993,
+      "doi": "10.5014/ajot.47.11.1014",
+      "journal": "American Journal of Occupational Therapy",
+      "volume": "47",
+      "issue": "11",
+      "raw": "Assistive technology and the newly disabled adult: adaptation to wheelchair use \n\t\t \n\t\t\t P S Bates \n\t\t \n\t\t \n\t\t\t J C Spencer \n\t\t \n\t\t \n\t\t\t M E Young \n\t\t \n\t\t \n\t\t\t D H Rintala \n\t\t \n\t\t 10.5014/ajot.47.11.1014 \n\t\t 8279496 \n\t\t \n\t \n\t \n\t\t American Journal of Occupational Therapy \n\t\t \n\t\t\t 47 \n\t\t\t 11 \n\t\t\t \n\t\t\t 1993 \n\t\t \n\t \n\t Bates PS, Spencer JC, Young ME, Rintala DH. Assistive technology and the newly disabled adult: adaptation to wheelchair use. American Journal of Occupational Therapy. 1993; 47(11):1014-1021. https://doi.org/10.5014/ajot.47.11.1014 PMID: 8279496"
+    },
+    {
+      "title": "The cultural context of polio biographies",
+      "authors": [
+        "J Scheer",
+        "M Luborsky"
+      ],
+      "year": 1991,
+      "raw": "The cultural context of polio biographies \n\t\t \n\t\t\t J Scheer \n\t\t \n\t\t \n\t\t\t M L Luborsky \n\t\t \n\t\t \n\t\t\t 1991 \n\t\t\t SLACK Incorporated \n\t\t\t Thorofare, NJ \n\t\t \n\t \n\t Scheer J, Luborsky ML. The cultural context of polio biographies. SLACK Incorporated Thorofare, NJ; 1991."
+    },
+    {
+      "title": "Reliability and validity of the Wii Balance Board for assessment of standing balance: A systematic review",
+      "authors": [
+        "R Clark",
+        "B Mentiplay",
+        "Y-H Pua",
+        "K Bower"
+      ],
+      "year": 2018,
+      "doi": "10.1016/j.gaitpost.2017.12.022",
+      "journal": "Gait & posture",
+      "volume": "61",
+      "raw": "Reliability and validity of the Wii Balance Board for assessment of standing balance: A systematic review \n\t\t \n\t\t\t R A Clark \n\t\t \n\t\t \n\t\t\t B F Mentiplay \n\t\t \n\t\t \n\t\t\t Y-H Pua \n\t\t \n\t\t \n\t\t\t K J Bower \n\t\t \n\t\t 10.1016/j.gaitpost.2017.12.022 \n\t\t 29304510 \n\t\t \n\t \n\t \n\t\t Gait & posture \n\t\t \n\t\t\t 61 \n\t\t\t \n\t\t\t 2018 \n\t\t \n\t \n\t Clark RA, Mentiplay BF, Pua Y-H, Bower KJ. Reliability and validity of the Wii Balance Board for assess- ment of standing balance: A systematic review. Gait & posture. 2018; 61:40-54. https://doi.org/10. 1016/j.gaitpost.2017.12.022 PMID: 29304510"
+    },
+    {
+      "title": "Increased postural sway during quiet stance as a risk factor for prospective falls in community-dwelling elderly individuals",
+      "authors": [
+        "J Johansson",
+        "Y Nordstro \u00a8m A, Gustafson",
+        "G Westling"
+      ],
+      "year": 2017,
+      "doi": "10.1093/ageing/afx083",
+      "journal": "Age and ageing",
+      "volume": "46",
+      "issue": "6",
+      "raw": "Increased postural sway during quiet stance as a risk factor for prospective falls in community-dwelling elderly individuals \n\t\t \n\t\t\t J Johansson \n\t\t \n\t\t \n\t\t\t Y Nordstro \u00a8m A, Gustafson \n\t\t \n\t\t \n\t\t\t G Westling \n\t\t \n\t\t \n\t\t\t Nordstro \u00a8m P \n\t\t \n\t\t 10.1093/ageing/afx083 \n\t\t \n\t \n\t \n\t\t Age and ageing \n\t\t \n\t\t\t 46 \n\t\t\t 6 \n\t\t\t \n\t\t\t 2017 \n\t\t \n\t \n\t Johansson J, Nordstro \u00a8m A, Gustafson Y, Westling G, Nordstro \u00a8m P. Increased postural sway during quiet stance as a risk factor for prospective falls in community-dwelling elderly individuals. Age and age- ing. 2017; 46(6):964-970. https://doi.org/10.1093/ageing/afx083 PMID: 28531243"
+    },
+    {
+      "title": "Elderly fall risk prediction using static posturography",
+      "authors": [
+        "J Howcroft",
+        "E Lemaire",
+        "J Kofman",
+        "W Mcilroy"
+      ],
+      "year": 2017,
+      "doi": "10.1371/journal.pone.0172398",
+      "journal": "PLoS one",
+      "volume": "12",
+      "issue": "2",
+      "pages": "172398",
+      "raw": "Elderly fall risk prediction using static posturography \n\t\t \n\t\t\t J Howcroft \n\t\t \n\t\t \n\t\t\t E D Lemaire \n\t\t \n\t\t \n\t\t\t J Kofman \n\t\t \n\t\t \n\t\t\t W E Mcilroy \n\t\t \n\t\t 10.1371/journal.pone.0172398 \n\t\t 28222191 \n\t\t \n\t \n\t \n\t\t PLoS one \n\t\t \n\t\t\t 12 \n\t\t\t 2 \n\t\t\t 172398 \n\t\t\t 2017 \n\t\t \n\t \n\t Howcroft J, Lemaire ED, Kofman J, McIlroy WE. Elderly fall risk prediction using static posturography. PLoS one. 2017; 12(2):e0172398. https://doi.org/10.1371/journal.pone.0172398 PMID: 28222191"
+    },
+    {
+      "title": "Novel use of the Wii Balance Board to prospectively predict falls in community-dwelling older adults",
+      "authors": [
+        "B-C Kwok",
+        "R Clark",
+        "Y-H Pua"
+      ],
+      "year": 2015,
+      "doi": "10.1016/j.clinbiomech.2015.03.006",
+      "journal": "Clinical biomechanics",
+      "volume": "30",
+      "issue": "5",
+      "raw": "Novel use of the Wii Balance Board to prospectively predict falls in community-dwelling older adults \n\t\t \n\t\t\t B-C Kwok \n\t\t \n\t\t \n\t\t\t R A Clark \n\t\t \n\t\t \n\t\t\t Y-H Pua \n\t\t \n\t\t 10.1016/j.clinbiomech.2015.03.006 \n\t\t 25796535 \n\t\t \n\t \n\t \n\t\t Clinical biomechanics \n\t\t \n\t\t\t 30 \n\t\t\t 5 \n\t\t\t \n\t\t\t 2015 \n\t\t \n\t \n\t Kwok B-C, Clark RA, Pua Y-H. Novel use of the Wii Balance Board to prospectively predict falls in com- munity-dwelling older adults. Clinical biomechanics. 2015; 30(5):481-484. https://doi.org/10.1016/j. clinbiomech.2015.03.006 PMID: 25796535"
+    }
+  ],
+  "num_references": 37,
+  "figures": [
+    {
+      "description": "Fig 2 gives examples of GSD+ and a GSD-individuals."
+    },
+    {
+      "caption": "Fig 1 .",
+      "description": "Fig 1. WBB used for four balance trials. When completing a \"feet together\" trials, participants were asked to stand on the black footprints. When completing a \"feet apart\" trials, participants were asked to stand on the gold footprints. https://doi.org/10.1371/journal.pone.0292548.g001"
+    },
+    {
+      "caption": "Fig 2 .",
+      "description": "Fig 2. Visualizations of a GSD+ (top) and a GSD-(bottom) individual's center of balance over the duration of a \"eyes closed, feet apart\" trial. The left graph of each sample shows the participant's center of balance over time, and the right graphs show the corresponding velocity and acceleration plotted over time. https://doi.org/10.1371/journal.pone.0292548.g002"
+    },
+    {
+      "caption": "Table 2 . 1 *",
+      "description": "Number of folds (out of 10) which led to the inclusion of each non-WBB covariate when performing backwardIncluded when performing model selection on the full data set https://doi.org/10.1371/journal.pone.0292548.t002"
+    },
+    {
+      "caption": "Fig 3 .",
+      "description": "Fig 3. Regression curve (black) from the functional data analysis and the 95% confidence bands (gray), using the velocity aggregated over the four tests of trial 1 as the functional covariate, where the horizontal axis is the time since beginning the test. The dashed horizonal line is located at zero: locations where the curve is above this line represents time periods where large values of velocity increase the predicted probability of needing a GSD. The region statistically significantly different from zero is from 2.25 sec to 6.44 sec. (hatched region), indicating the period during when large velocities would predict a high probability of needing a GSD. https://doi.org/10.1371/journal.pone.0292548.g003"
+    },
+    {
+      "type": "table",
+      "caption": "Table 1 .",
+      "description": "(Continued)"
+    }
+  ],
+  "num_figures": 6,
+  "tables": [
+    {
+      "content": "GSD+ GSD- p-value (n = 97) (n = 109) 4 11 (11.3) 0 (0.0) Reaching/Extending Arms Overhead 0.001 0 69 (71.1) 100 (91.7) 1 12 (12.4) 5 (4.6) 2 10 (10.3) 4 (3.7) 3 3 (3.1) 0 (0.0) 4 3 (3.1) 0 (0.0) Writing/Handling/Grasping Small Objects <0.001 0 59 (60.8) 96 (88.1) 1 21 (21.6) 10 (9.2) 2 12 (12.4) 3 (2.8) 3 5 (5.2) 0 (0.0) 4 0 (0) 0 (0.0) Walking a Quarter of a Mile <0.001 0 43 (44.3) 91 (83.5) 1 16 (16.5) 9 (8.3) 2 9 (9.3) 7 (6.4)"
+    }
+  ],
+  "num_tables": 1,
+  "license": "\u00a9 2023 Mullan et al. This is an open access article distributed under the terms of the Creative Commons Attribution License, which permits unrestricted use, distribution, and reproduction in any medium, provided the original author and source are credited.",
+  "license_type": "unknown",
+  "formulas": [
+    {
+      "text": "0 12 (12.4) 66 (62.3) 1 17 (17.5) 20 (18.9) 2 14 (14.4) 9 (8.5) 3 8 (8"
+    },
+    {
+      "text": "Open/Apart 0\ufffd752 0\ufffd897 0\ufffd820 0\ufffd885 0\ufffd752 0\ufffd897 0\ufffd820 0\ufffd885 Closed/Together 0\ufffd752 0\ufffd887 0\ufffd816 0\ufffd896 0\ufffd752 0\ufffd887 0\ufffd816 0\ufffd896 Closed/Apart 0\ufffd752 0\ufffd866 0\ufffd806 0\ufffd880 0\ufffd752 0\ufffd866 0\ufffd806 0\ufffd880 All 0\ufffd752 0\ufffd918 0\ufffd830 0\ufffd899 0\ufffd752 0\ufffd866 0\ufffd806 0\ufffd881 Acceleration Open/Together 0\ufffd752 0\ufffd845 0\ufffd796 0\ufffd878 0\ufffd752 0\ufffd845 0\ufffd796 0\ufffd878 Open/Apart 0\ufffd752 0\ufffd856 0\ufffd801 0\ufffd883 0\ufffd752 0\ufffd856 0\ufffd801 0\ufffd883 Closed/Together 0\ufffd752 0\ufffd876 0\ufffd811 0\ufffd886 0\ufffd752 0\ufffd876 0\ufffd811 0\ufffd886 Closed/Apart 0\ufffd752 0\ufffd876 0\ufffd811 0\ufffd877 0\ufffd752 0\ufffd876 0\ufffd811 0\ufffd877 All 0\ufffd752 0\ufffd835 0\ufffd791 0\ufffd893 0\ufffd752 0\ufffd876 0\ufffd811 0\ufffd883 Non-WBB Variables 0\ufffd752 0\ufffd804 0\ufffd777 0\ufffd873"
+    }
+  ],
+  "num_formulas": 2,
+  "num_citations": 46,
+  "cited_references": [
+    "b3",
+    "b13",
+    "b18",
+    "b2",
+    "b14",
+    "b17",
+    "b36",
+    "b25",
+    "b9",
+    "b1",
+    "b35",
+    "b20",
+    "b21",
+    "b12",
+    "b30",
+    "b31",
+    "b29",
+    "b16",
+    "b15",
+    "b23",
+    "b32",
+    "b5",
+    "b19",
+    "b28",
+    "b10",
+    "b27",
+    "b24",
+    "b4",
+    "b33",
+    "b7",
+    "b11",
+    "b8",
+    "b22",
+    "b34",
+    "b6",
+    "b0",
+    "b26"
+  ],
+  "notes": [
+    "[raw_affiliation] 1  Department of Computer Science , University of Iowa , Iowa City , Iowa , United States of America ,",
+    "[raw_affiliation] 2  Department of Internal Medicine , University of Iowa , Iowa City , Iowa , United States of America ,",
+    "[raw_affiliation] 3  Department of Biostatistics , University of Iowa , Iowa City , Iowa , United States of America ,",
+    "[raw_affiliation] 2  Department of Internal Medicine , University of Iowa , Iowa City , Iowa , United States of America ,",
+    "[raw_affiliation] 4  Department of Pharmacy Practice and Science , University of Iowa , Iowa City , Iowa , United States of America ,",
+    "[raw_affiliation] 1  Department of Computer Science , University of Iowa , Iowa City , Iowa , United States of America ,",
+    "[raw_affiliation] 2  Department of Internal Medicine , University of Iowa , Iowa City , Iowa , United States of America ,",
+    "[raw_affiliation] 5  Department of Epidemiology , University of Iowa , Iowa City , Iowa , United States of America",
+    "[raw_affiliation] Opole University of Technology : Politechnika Opolska , POLAND",
+    "[submission] Received: December 6, 2022 Accepted: September 22, 2023",
+    "PLOS ONE | https://doi.org/10.1371/journal.pone.0292548October 5, 2023",
+    "(4.1) 1 (0.9) (Continued )",
+    "[raw_reference] Bergen G, Stevens MR, Burns ER. Falls and fall injuries among adults aged\ufffd 65 years-United States, 2014. Morbidity and Mortality Weekly Report. 2016; 65(37):993-998.",
+    "[raw_reference] Stevens JA, Mack KA, Paulozzi LJ, Ballesteros MF. Self-reported falls and fall-related injuries among persons aged\ufffd 65 years-United States, 2006. Journal of safety research. 2008; 39(3):345-349.",
+    "[raw_reference] Tinetti ME, Speechley M, Ginter SF. Risk factors for falls among elderly persons living in the community. New England journal of medicine. 1988; 319(26):1701-1707. https://doi.org/10.1056/ NEJM198812293192604 PMID: 3205267",
+    "[raw_reference] Tinetti ME, Williams CS. The effect of falls and fall injuries on functioning in community-dwelling older persons. The Journals of Gerontology Series A: Biological Sciences and Medical Sciences. 1998; 53 (2):M112-M119. https://doi.org/10.1093/gerona/53a.2.m112 PMID: 9520917",
+    "[raw_reference] Tinetti ME, Williams CS. Falls, injuries due to falls, and the risk of admission to a nursing home. New England journal of medicine. 1997; 337(18):1279-1284. https://doi.org/10.1056/ NEJM199710303371806 PMID: 9345078",
+    "[raw_reference] Whitehouse JD, Friedman ND, Kirkland KB, Richardson WJ, Sexton DJ. The impact of surgical-site infections following orthopedic surgery at a community hospital and a university hospital adverse quality of life, excess length of stay, and extra cost. Infection Control & Hospital Epidemiology. 2002; 23 (4):183-189.",
+    "[raw_reference] Gillespie LD, Robertson MC, Gillespie WJ, et al. Interventions for preventing falls in older people living in the community. Cochrane database of systematic reviews. 2012;(9). https://doi.org/10.1002/ 14651858.CD007146.pub3 PMID: 22972103",
+    "[raw_reference] Okubo Y, Schoene D, Lord SR. Step training improves reaction time, gait and balance and reduces falls in older people: a systematic review and meta-analysis. British journal of sports medicine. 2017; 51 (7):586-593. https://doi.org/10.1136/bjsports-2015-095452 PMID: 26746905",
+    "[raw_reference] Yamada M, Tanaka B, Nagai K, Aoyama T, Ichihashi N. Trail-walking exercise and fall risk factors in community-dwelling older adults: preliminary results of a randomized controlled trial. Journal of the American Geriatrics Society. 2010; 58(10):1946-1951. https://doi.org/10.1111/j.1532-5415.2010. 03059.x PMID: 20831723",
+    "[raw_reference] Pit SW, Byles JE, Henry DA, Holt L, Hansen V, Bowman DA. A Quality Use of Medicines program for general practitioners and older people: a cluster randomised controlled trial. Medical Journal of Austra- lia. 2007; 187(1):23-30. https://doi.org/10.5694/j.1326-5377.2007.tb01110.x PMID: 17605699",
+    "[raw_reference] Keall MD, Pierse N, Howden-Chapman P, et al. Home modifications to reduce injuries from falls in the home injury prevention intervention (HIPI) study: a cluster-randomised controlled trial. The Lancet. 2015; 385(9964):231-238. https://doi.org/10.1016/S0140-6736(14)61006-0 PMID: 25255696",
+    "[raw_reference] Gell NM, Wallace RB, LaCroix AZ, Mroz TM, Patel KV. Mobility device use in older adults and incidence of falls and worry about falling: Findings from the 2011-2012 national health and aging trends study. Journal of the American Geriatrics Society. 2015; 63(5):853-859. https://doi.org/10.1111/jgs.13393 PMID: 25953070",
+    "[raw_reference] McKiernan FE. A simple gait-stabilizing device reduces outdoor falls and nonserious injurious falls in fall-prone older people during the winter. Journal of the American Geriatrics Society. 2005; 53(6):943- 947. https://doi.org/10.1111/j.1532-5415.2005.53302.x PMID: 15935015",
+    "[raw_reference] Luz C, Bush T, Shen X. Do canes or walkers make any difference? Nonuse and fall injuries. The Geron- tologist. 2017; 57(2):211-218. https://doi.org/10.1093/geront/gnv096 PMID: 26209797",
+    "[raw_reference] Tromp A, Pluijm S, Smit J, Deeg D, Bouter L, Lips P. Fall-risk screening test: a prospective study on pre- dictors for falls in community-dwelling elderly. Journal of clinical epidemiology. 2001; 54(8):837-844. https://doi.org/10.1016/s0895-4356(01)00349-3 PMID: 11470394",
+    "[raw_reference] Palumbo P, Klenk J, Cattelani L, et al. Predictive performance of a fall risk assessment tool for commu- nity-dwelling older people (FRAT-up) in 4 European cohorts. Journal of the American Medical Directors Association. 2016; 17(12):1106-1113. https://doi.org/10.1016/j.jamda.2016.07.015 PMID: 27594522",
+    "[raw_reference] Duncan PW, Studenski S, Chandler J, Prescott B. Functional reach: predictive validity in a sample of elderly male veterans. Journal of gerontology. 1992; 47(3):M93-M98. https://doi.org/10.1093/geronj/ 47.3.m93 PMID: 1573190",
+    "[raw_reference] De Rekeneire N, Visser M, Peila R, et al. Is a fall just a fall: correlates of falling in healthy older persons. The Health, Aging and Body Composition Study. Journal of the American Geriatrics Society. 2003; 51 (6):841-846. https://doi.org/10.1046/j.1365-2389.2003.51267.x PMID: 12757573",
+    "[raw_reference] Verghese J, Buschke H, Viola L, et al. Validity of divided attention tasks in predicting falls in older individ- uals: a preliminary study. Journal of the American Geriatrics Society. 2002; 50(9):1572-1576. https:// doi.org/10.1046/j.1532-5415.2002.50415.x PMID: 12383157",
+    "[raw_reference] Lapierre N, Neubauer N, Miguel-Cruz A, Rios Rincon A, Liu L, Rousseau J. The state of knowledge on technologies and their use for fall detection: A scoping review. International Journal of Medical Informat- ics. 2018/03/01/ 2018; 111:58-71. https://doi.org/10.1016/j.ijmedinf.2017.12.015 PMID: 29425635",
+    "[raw_reference] Pajala S, Era P, Koskenvuo M, Kaprio J, To \u00a8rma \u00a8kangas T, Rantanen T. Force platform balance mea- sures as predictors of indoor and outdoor falls in community-dwelling women aged 63-76 years. The Journals of Gerontology Series A: Biological Sciences and Medical Sciences. 2008; 63(2):171-178. https://doi.org/10.1093/gerona/63.2.171 PMID: 18314453",
+    "[raw_reference] Swanenburg J, de Bruin ED, Uebelhart D, Mulder T. Falls prediction in elderly people: a 1-year prospec- tive study. Gait & posture. 2010; 31(3):317-321. https://doi.org/10.1016/j.gaitpost.2009.11.013 PMID: 20047833",
+    "[raw_reference] Hewson DJ, Singh NK, Snoussi H, Duchene J. Classification of elderly as fallers and non-fallers using centre of pressure velocity. IEEE; 2010:3678-3681.",
+    "[raw_reference] Saliba D, Elliott M, Rubenstein LZ, et al. The Vulnerable Elders Survey: a tool for identifying vulnerable older people in the community. Journal of the American Geriatrics Society. 2001; 49(12):1691-1699. https://doi.org/10.1046/j.1532-5415.2001.49281.x PMID: 11844005",
+    "[raw_reference] Van Buuren S, Groothuis-Oudshoorn K. mice: Multivariate imputation by chained equations in R. Jour- nal of statistical software. 2011; 45(1):1-67.",
+    "[raw_reference] Core R. TEAM, 2022. R: A language and environment for statistical computing. R Foundation for Statis- tical Computing, Vienna, Austria. Online: https://www.r-project.org. 2022;",
+    "[raw_reference] Rikli RE, Jones CJ. Senior fitness test manual. Human kinetics; 2013.",
+    "[raw_reference] Makino K, Lee S, Bae S, et al. Simplified decision-tree algorithm to predict falls for community-dwelling older adults. Journal of clinical medicine. 2021; 10(21):5184. https://doi.org/10.3390/jcm10215184 PMID: 34768703",
+    "[raw_reference] Speiser JL, Callahan KE, Houston DK, et al. Machine learning in aging: an example of developing pre- diction models for serious fall injury in older adults. The Journals of Gerontology: Series A. 2021; 76 (4):647-654. https://doi.org/10.1093/gerona/glaa138 PMID: 32498077",
+    "[raw_reference] Hua A, Quicksall Z, Di C, et al. Accelerometer-based predictive models of fall risk in older women: a pilot study. NPJ digital medicine. 2018; 1(1):1-8. https://doi.org/10.1038/s41746-018-0033-5 PMID: 31304307",
+    "[raw_reference] Aminzadeh F, Edwards N. Exploring seniors' views on the use of assistive devices in fall prevention. Public health nursing. 1998; 15(4):297-304. https://doi.org/10.1111/j.1525-1446.1998.tb00353.x PMID: 9682623",
+    "[raw_reference] Bates PS, Spencer JC, Young ME, Rintala DH. Assistive technology and the newly disabled adult: adaptation to wheelchair use. American Journal of Occupational Therapy. 1993; 47(11):1014-1021. https://doi.org/10.5014/ajot.47.11.1014 PMID: 8279496",
+    "[raw_reference] Scheer J, Luborsky ML. The cultural context of polio biographies. SLACK Incorporated Thorofare, NJ; 1991.",
+    "[raw_reference] Clark RA, Mentiplay BF, Pua Y-H, Bower KJ. Reliability and validity of the Wii Balance Board for assess- ment of standing balance: A systematic review. Gait & posture. 2018; 61:40-54. https://doi.org/10. 1016/j.gaitpost.2017.12.022 PMID: 29304510",
+    "[raw_reference] Johansson J, Nordstro \u00a8m A, Gustafson Y, Westling G, Nordstro \u00a8m P. Increased postural sway during quiet stance as a risk factor for prospective falls in community-dwelling elderly individuals. Age and age- ing. 2017; 46(6):964-970. https://doi.org/10.1093/ageing/afx083 PMID: 28531243",
+    "[raw_reference] Howcroft J, Lemaire ED, Kofman J, McIlroy WE. Elderly fall risk prediction using static posturography. PLoS one. 2017; 12(2):e0172398. https://doi.org/10.1371/journal.pone.0172398 PMID: 28222191",
+    "[raw_reference] Kwok B-C, Clark RA, Pua Y-H. Novel use of the Wii Balance Board to prospectively predict falls in com- munity-dwelling older adults. Clinical biomechanics. 2015; 30(5):481-484. https://doi.org/10.1016/j. clinbiomech.2015.03.006 PMID: 25796535"
+  ],
+  "processing_software": {
+    "GROBID": "0.8.2"
+  }
+}

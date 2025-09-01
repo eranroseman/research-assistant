@@ -1,0 +1,578 @@
+{
+  "paper_id": "SFESXCQ4",
+  "title": "Preference-Based Assessments Computing PROPr Utility Scores for PROMIS \u00ae Profile Instruments",
+  "abstract": "Objectives: The Patient-Reported Outcomes Measurement Information System \u00ae (PROMIS) Profile instruments measure health status on 8 PROMIS domains. The PROMIS-Preference (PROPr) score provides a preference-based summary score for health states defined by 7 PROMIS domains. The Profile and PROPr share 6 domains; PROPr has 1 unique domain (Cognitive Function-Abilities), and the Profile has 2 unique domains (Anxiety and Pain Intensity). We produce an equation for calculating PROPr utility scores with Profile data. Methods: We used data from 3982 members of US online survey panels who have scores on all 9 PROMIS domains. We used a 70%/30% split for model fit/validation. Using root-mean-square error and mean error on the utility scale, we compared models for predicting the missing Cognitive Function score via (A) the population average; (B) a score representing excellent cognitive function; (C) a score representing poor cognitive function; (D) a score predicted from linear regression of the 8 profile domains; and (E) a score predicted from a Bayesian neural network of the 8 profile domains. Results: The mean errors in the validation sample on the PROPr scale (which ranges from -0.022 to 1.00) for the models were: (A) 0.025, (B) 0.067, (C) -0.23, (D) 0.018, and (E) 0.018. The root-mean-square errors were: (A) 0.097, (B) 0.12, (C) 0.29, (D) 0.095, and (E) 0.094. \n Conclusion: Although the Bayesian neural network had the best root-mean-square error for producing PROPr utility scores from Profile instruments, linear regression performs almost as well and is easier to use. We recommend the linear model for producing PROPr utility scores for PROMIS Profiles.",
+  "year": 2007,
+  "date": "2007",
+  "authors": [
+    {
+      "name": "Barry Dewitt",
+      "email": "barrydewitt@cmu.edu",
+      "affiliation": {
+        "organization": "Department of Engineering & Public Policy",
+        "department": "Department of Engineering & Public Policy",
+        "institution": "Carnegie Mellon University",
+        "address": "Pittsburgh, PA, USA;"
+      }
+    },
+    {
+      "name": "Hawre Jalal",
+      "affiliation": {
+        "organization": "Department of Health Policy and Management",
+        "department": "Department of Health Policy and Management",
+        "institution": "University of Pittsburgh",
+        "address": "Pittsburgh, PA, USA;"
+      }
+    },
+    {
+      "name": "Janel Hanmer",
+      "affiliation": {
+        "organization": "Division of General Internal Medicine",
+        "department": "Division of General Internal Medicine",
+        "institution": "University of Pittsburgh",
+        "address": "Pittsburgh, PA, USA"
+      }
+    },
+    {
+      "affiliation": {
+        "organization": "Department of Engineering & Public Policy",
+        "department": "Department of Engineering & Public Policy",
+        "institution": "Carnegie Mellon University",
+        "address": "5000 Forbes Avenue, 15217, Pittsburgh, PA, USA"
+      }
+    }
+  ],
+  "doi": "10.1016/j.jval.2019.09.2752",
+  "md5": "31A29619DDBC401D53FBB1704705E02F",
+  "publication": {
+    "journal": "Qual Life Res",
+    "journal_inferred": true
+  },
+  "keywords": [
+    "health utility",
+    "patient-reported outcomes",
+    "PROMIS",
+    "PROPr"
+  ],
+  "funding": [
+    "",
+    "",
+    "Acknowledgments The authors would like to thank the audience of the  International Society  for Quality of Life Research annual meeting, October 2018 and the anonymous reviewers, as well as the respondents to the surveys used in this study. Sources of financial support:  Barry Dewitt  was supported by the  Riksbanken Jubileumsfond program  on Science and  Proven Experience . Janel Hanmer  and  Hawre Jalal  were supported by the  National Institutes of Health  through Grant Number  KL2 TR001856 ."
+  ],
+  "sections": [
+    {
+      "title": "Introduction",
+      "text": "Health-related quality of life (HRQL) measurements usually follow one of two approaches. The psychometric approach describes health states using psychometric testing theories. The econometric approach combines a rudimentary descriptive system for health states with a scoring function to attach utilities to those states. Although both are used for population health studies and clinical trials, only the econometric approach can be used for costutility analyses.\n\nThe Patient-Reported Outcomes Measurement Information System \u00ae (PROMIS) is an initiative supported by the National Institutes of Health (NIH) that produces scales for various domains of HRQL, such as cognitive function, depression, and physical function, using psychometric methodology from item response theory (IRT).  1, 2 PROMIS measures are freely available and used widely.  [3] [4] [5] [6]  The PROMIS-Preference (PROPr) scoring system is based on multi-attribute utility theory, taking health states described by PROMIS and attaching utilities to them so that they can be easily compared.  7 By using PROMIS as its descriptive system for health states, PROPr combines the advantages of psychometric systems-increased reliability and validity of health state measurements-with the usefulness of a value-based econometric system.\n\nThe PROPr scoring system is a societal preference-based measure of HRQL based on 7 PROMIS domains: Cognitive Function-Abilities, Depression, Fatigue, Pain Interference, Physical Function, Sleep Disturbance, and Ability to Participate in Social Roles and Activities. PROPr allows for the calculation of preference-based summary scores for any study that collects measurements on its 7 PROMIS domains. The PROPr scoring system connects the psychometrically advanced measurement system represented by PROMIS with best practices in utility-based scoring system construction. PROPr allows PROMIS data to be used to produce health utilities, be incorporated in economic and decision analyses, and be used to construct quality-adjusted lifeyears (QALYs). PROPr was developed as a generic societalpreference based HRQL instrument. Its development, including the choice of its PROMIS domains, are described elsewhere.  [7] [8] [9] [10] [11] [12]  Briefly, it was produced using preference elicitations of a US sample representative of the general population (n = 983) via the standard gamble technique. Its minimum score is -0.022, dead has a score of 0, and the maximum score is 1.\n\nPROMIS Profile instruments are widely used standardized short-form questionnaires.  6 Our own scoping review of the literature found that over 20 000 PROMIS Profile survey administrations have been reported. All PROMIS Profile instruments produce measurements on 8 PROMIS domains, 6 of which are used in PROPr and 2 of which are not included in PROPr (Anxiety and Pain Intensity) (see Figure  1 ). Studies that use PROMIS Profile instruments cannot calculate a PROPr summary score with their data unless they have a way to predict the missing Cognitive Function score. Here, we compare various methods for predicting a Cognitive Function score from PROMIS Profile data, with the goal of producing a summary PROPr score for those data. Our goal is to find a model that allows those with PROMIS Profile data to produce a PROPr score with a high level of confidence while also presenting the user with a model that is straightforward to implement, lest it be misapplied or misunderstood."
+    },
+    {
+      "title": "Methods",
+      "text": "We begin with a detailed overview of the measures used in the study, and the data we used to select a model for calculating PROPr scores for PROMIS Profile data. We then describe the candidate models."
+    },
+    {
+      "title": "PROMIS measures",
+      "text": "PROMIS is an NIH-funded initiative for producing psychometrically advanced patient-reported outcomes that are free to use and available for dozens of health domains.  1, 13 Every PROMIS domain produces a measurement on a latent unidimensional scale called \"theta.\" For example, responses to any set of items (questions) from the PROMIS Depression domain would produce a depression score. The underlying IRT calibration is on theta with a population mean of 0 and a standard deviation of 1. PROMIS scores are usually reported on the T-score metric, which is a transformation so that the population mean is 50 with a standard deviation of 10.\n\nOne advantage of IRT-based measures is that scores produced by different sets of items from a domain are commensurable.  14 This feature makes PROMIS suitable for a variety of data-collecting contexts, ranging from population surveys to clinical encounters, as the set of questions can be tailored to the scenario at hand. PROMIS can be administered with computer adaptive testing, which presents an individual with the most informative set of questions available and can use stopping rules to produce a theta estimate with a given level of uncertainty. Standardized short-forms are also commonly used, which give the same set of questions to all participants. Because PROMIS is based on IRT, a score from a computer adaptive test and a score from a short form on the same PROMIS domain can be compared.\n\nPROMIS Profile instruments are widely used standardized sets of short forms, intended to provide a general HRQL measure. There are a variety in use, such as the PROMIS-29, the PROMIS-43, and the PROMIS-57 (see  http://www.healthmeasures.net/ ). They all measure 8 PROMIS domains: Anxiety, Depression, Fatigue, Pain Intensity, Pain Interference, Physical Function, Sleep Disturbance, and Ability to Participate in Social Roles and Activities."
+    },
+    {
+      "title": "The PROMIS-Preference (PROPr) Scoring System",
+      "text": "The PROMIS-Preference (PROPr) scoring system allows preference-based scores to be estimated from health states described by 7 PROMIS domains. The 7 domains are used to generate single-attribute utility scores-one for each domain-using 7 single-attribute utility functions. These are then combined using multi-attribute utility theory to produce a summary score. Cognitive Function-Abilities Depression Fatigue Pain Interference Physical Function Sleep Disturbance Social Roles Anxiety Pain Intensity PROMIS Profile PROPr PROMIS indicates Patient-Reported Outcomes Measurement Information System; PROPr, PROMIS-Preference scoring system."
+    },
+    {
+      "title": "Data Source",
+      "text": "We used data from 3982 members of US online survey panels who responded to items from 9 PROMIS domains: the 8 included in the PROMIS Profile instruments plus Cognitive Function-Abilities. The data came from 2 sources. Of the 3982 participants, 983 came from the PROPr estimation survey, which was used to produce the PROPr summary scoring function.  7, 9 he other 2999 came from the Profiles-Health Utility Index (HUI) survey.  15 Both surveys have been described in detail elsewhere.  7, 15 cores for each PROMIS domain were calculated using the scoring service from the HealthMeasures Assessment Center ( https://www.assessmentcenter.net/ac_scoringservice ), with the default adult calibration sample consistent with the Profile v2.0 scoring. PROPr scores were calculated using a freely available scoring algorithm ( https://github.com/janelhanmer/PROPr )."
+    },
+    {
+      "title": "Modeling"
+    },
+    {
+      "title": "Model descriptions",
+      "text": "The Model D uses forward and backward stepwise regression without interactions to choose a candidate model, where the smallest model is the intercept-only model and the largest is expressed in Equation  1 :\n\nEquation 1: Predicting Cognitive Function scores in a linear regression model, with the PROMIS Profile domains as independent variables.\n\nHere, q domain is the theta score on the given domain, S pain is the pain intensity score (q pain is the pain interference score), and \u03b5 is an error term. The qs are unbounded, and the pain intensity score (S pain ) is on a 0-10 scale with unit intervals.\n\nModel E implements a machine learning procedure called a multi-layer perceptron neural network. The neural network is particularly suited to discovering nonlinear relationships between the independent variables (8 PROMIS domain scores) and the dependent variable (the Cognitive Function scores). It is a Bayesian neural network because it uses a Bayesian regularization backpropagation process to choose the hyperparameters of the model.  16, 17 All analyses were run in R (version 3.4.4). The Bayesian neural network was estimated using the keras package (version 2.2.4), using the TensorFlow backend and rstan (version 2.18.2). We varied the number of layers in the neural network (from 2 to 100) and the number of nodes in each layer (from 5 to 100)."
+    },
+    {
+      "title": "Model comparison procedure",
+      "text": "The data set described earlier includes the required information to calculate a PROPr score for all participants. Therefore we used the data set to predict Cognitive Function thetas using the models from the previous section, using those predicted thetas to produce PROPr scores and comparing the predicted PROPr scores with true PROPr scores. We evaluated model fit using mean-error (ME) and root-mean-square error (rMSE). We split the data randomly into a 70%/30% training/validation set for cross-validation, fitting the models on the training set and calculating MEs and rMSEs on the validation set (n training \u00bc 2786 and n training \u00bc 1196). That split was chosen because the machine-learning method is data dependent in a way that usual parametric regression is not. Although the parameter estimates of the latter are obviously data-dependent, the actual functional form of the machine-learning model depends on the data set as well-not just its (hyper)parameters values. In addition, to compare model performance among the competing models, one needs to have a common group for out-ofsample validation. The rMSEs calculated on the validation set provided an unbiased estimate of generalization error.\n\nWe As a robustness check, we repeated the above procedure stratifying the validation set by the number of chronic conditions reported by the participants,  7, 15  and by binning the Cognitive Function theta scores, based on the quartiles of those scores across the whole data set. These procedures were intended to stress each model's performance by adjusting the health of the validation sample. We also computed correlations between observed and predicted scores and prediction bias, as well as the means and standard deviations of observed and predicted scores by age and gender, all on the validation set."
+    },
+    {
+      "title": "Results",
+      "text": "Table  1  shows the demographic characteristics of the sample, including the number of chronic conditions reported by the participants.\n\nThe results of both stepwise regression procedures selected the largest model (Equation  1 ) as the candidate linear model. We observed suppression effects on Fatigue and Pain Interference (ie, negative zero-order correlations of around -0.3 for each with the dependent variable, but positive coefficients in the model). We re-estimated the model, removing those two domains. That yielded a model with no suppression effects and similar model fit (the difference in variance-explained occurred at the thousandths decimal place). Because worse fatigue or worse pain should not predict better utilities-by predicting better cognitive function-we continued our analyses with the model that omits Pain Interference and Fatigue.\n\nThe neural network's performance plateaued quickly with the increase in the number of hidden layers and hidden nodes. We relied on using the validation data set to avoid overfitting the neural network. The model's performance started to plateau when we used 10 hidden nodes and 2 layers. As expected, larger models had better fitting scores to the training data set but lower scores for the validation data set.\n\nTable  2  shows the results of calculating rMSE and ME on the PROPr scale (columns 1 and 2), and the rMSE and ME on the Cognitive Function theta scale (columns 3 and 4). The PROPr scale ranges from -0.022 to 1 and the Cognitive Function theta scale is unbounded, although the observed range of cognitive function in these data is -2.70 to 1.67.\n\nIn terms of rMSE on both the PROPr scale and the Cognitive Function scale, the Bayesian neural network performed best, followed by the linear model, the zero model, the ceiling model, and the floor model.\n\nExcept for the low score constant model (the floor model), the other models tended to overpredict the Cognitive Function score (and hence the PROPr score).\n\nFigure  2  shows the rMSE on the PROPr scale when the validation set is split into those who reported 0, 1, 2, 3, 4, and 51 chronic conditions (see Table  1 ). The Bayesian neural network performed best, followed by the linear model, the zero model, the ceiling model, and the floor model. Figure  3  shows model performance when the validation set is divided by the sample quantiles of Cognitive Function scores. Here, the linear model, neural network, and zero model performed best in the middle two quartiles, with the floor and ceiling unsurprisingly producing the best predictions for the lowest and highest cognitive function scores, respectively.\n\nPrediction bias and correlations between observed and predicted scores are in Table  3 , showing high correlations and a tendency for overprediction (except for the floor model, as one would expect). Table  4  shows the mean actual and predicted scores by age and gender for each of the models."
+    },
+    {
+      "title": "Discussion",
+      "text": "We compared 5 models for producing PROPr preference scores using PROMIS Profile data. PROMIS Profile instruments are widely used standardized questionnaires for measuring HRQL and provide PROMIS scores for 8 domains: Anxiety, Depression, Fatigue, Pain Intensity, Pain Interference, Physical Function, Sleep Disturbance, and Ability to Participate in Social Roles and Activities. To generate PROPr scores, measurements on 7 PROMIS domains are required, which include 6 of the PROMIS Profile domains (all except Anxiety and Pain Intensity) and a measurement on the Cognitive Function-Abilities domain. Thus, without true Cognitive Function scores, it is necessary to predict them for PROMIS Profile datasets so that those data can be used to inform economic, decision, and public-health analyses via utility values generated from PROPr. Our analyses have produced models with generalization error less than 10% of the PROPr scale, allowing the generation of a PROPr score for datasets with only PROMIS Profile data.\n\nWe found that a linear model is nearly as good at predicting Cognitive Function scores as a Bayesian neural network. Our results, we believe, are largely driven by the way that the PROMIS domains in PROPr were chosen. They were selected to be structurally independent, meaning that, given a pair of domains, any combination of theta values could conceivably occur.  11 Structural and statistical independence are related, but neither one is necessary nor sufficient for the other. The fact that a linear model with no interactions or transformations performs almost as well as the Bayesian neural network can be seen as an additional empirical validation of the domain selection method. That is, the PROMIS domains in PROPr contain only so much information about each other, and about Cognitive Function in particular; including more complicated terms in the model-the Bayesian neural network excels at discovering nonlinear relationships-only improves prediction by a small amount. The good performance overall of the zero model further demonstrates the difficulty of the prediction task. Thus, although we believe the out-of-sample performance demonstrates that one can estimate a PROPr score with the PROMIS Profile, we do not endorse the use of Table  2 . Root-mean-square error and mean error of the five models, calculated on the validation data set. The second and third columns show the results on the PROPr utility scale, and the fourth and fifth columns show the results on the Cognitive Function-Abilities scale."
+    },
+    {
+      "title": "Model",
+      "text": "RMSE (PROPr) ME (PROPr) RMSE (cog) ME (cog) (A) Zero 0.0966 0.0251 1.0867 0.2435 (B) Ceiling 0.1178 0.0673 1.7296 1.3675 (C) Floor 0.2860 -0.2308 2.0958 -1.8085 (D) Linear model 0.0946 0.0175 0.954 0.0399 (E) Bayesian neural network 0.0938 0.0175 0.9357 0.0300 Cog indicates Cognitive Function-Abilities scale; ME, mean error; PROPr, PROMIS-preference; RMSE, root-mean-squared error.\n\nthese models for the prediction of Cognitive Function scores for other purposes. In addition, we recommend that any researcher designing a new data collection with PROMIS measures who also wants to compute health utility scores include the 7 domains from PROPr so that their data set has complete measurements. In the case where a researcher is considering a PROMIS Profile, that can be accomplished by adding only two additional Cognitive Function-Abilities items (e.g., see the \"PROMIS-29 1 2\" at  http://www.healthmeasures.net ). Thus our analyses suggest that the linear model is sufficient for the task at hand, performing almost as well as a neural network with many more parameters. The linear model is easy to implement as it requires knowing only the 6 coefficients and the intercept value. It is also a method that should be familiar to policy analysts and researchers across public health, health, pharmaco-economics, and decision analysis. Table  5  shows the regression coefficients of the linear model estimated from the entire data set. The entries in Table  5  can be used to predict the missing Cognitive Function score, and then the complete vector of 7 PROMIS scores can be used as input to the PROPr summary scoring function to obtain a PROPr score. An appendix (see Supplemental Materials Section) provides example code showing an implementation of the model in Table  5  and the computation of a confidence interval for an estimate of a conditional mean Cognitive Function score.\n\nDuring the course of the study, we also investigated the candidate models under linear equating, a common practice in health-utility mapping studies, where predicted scores are linearly transformed to have the same mean and standard deviation as the observed scores, to counteract regression to the mean.  15, 18, 19 Nevertheless, unlike mapping studies, the dependent variable in our models was a health domain, not a utility, which would then be used as input together with other health domain measurements to estimate a health utility score. As such, we are attempting to best predict cognitive function in order to produce PROPr scores and thus should be minimizing rMSE, rather than scale-aligning, as in the mapping literature.\n\nBecause PROPr was estimated using a sample whose demographics match the general population, it is not surprising that the unconditional population mean is worse in terms of rMSE than the nonconstant models, and that it would not perform as well in samples with Cognitive Function scores very different from the mean (eg, in those with excellent health or with conditions affecting cognition). As with other generic societal preference-based scores, PROPr is relevant in analyses using patient data when a societal perspective is required. Nevertheless, in a PROMIS Profile data set with vastly different participant characteristics than the data we used in our study, our recommended model might not perform as well as it would for data sets from other community samples. Care should be taken in such instances to consider whether, and if so, how, relationships among the PROMIS domains could differ in those contexts, and whether the results of our study are still appropriate.\n\nThe Profiles-HUI sample had more unhealthy participants than would be expected from a probability sample of the US general population. Depending on the true relationships among the PROMIS domains, it could be the case that the model selection procedure is sensitive to the health of the sample. Operationalizing health by the number of chronic conditions (Figure  2 ), the models perform in the same order and with Both the PROPr survey data and Profiles-HUI survey data are publicly available.  20, 21 Our goal was to produce a method that could work for anyone who collected PROMIS Profile data. The two surveys we used both share variables beyond the 8 PROMIS domains used in our models, such as age and sex and common chronic conditions. A researcher whose data shares these variables could use our approach to build a better model. Furthermore, a researcher with a sample of the general population that is missing the Cognitive Function score for other reasons (ie, who truly has missing data in the sense of Little and Rubin's seminal work) could combine their data with the PROPr and Profiles-HUI surveys and use multiple imputation to complete their analyses.  22, 23 e aimed to produce a recommendation that could be used with individual-level data coming from any PROMIS Profile instrument, and thus we restricted our set of independent variables to the PROMIS domains used in the PROMIS Profile. As PROPr's summary scoring function is multiplicative, and thus"
+    },
+    {
+      "title": "Conclusion",
+      "text": "With the model presented in Table  5 , any researcher or analyst with a data set that administered a PROMIS Profile instrument can now use that data to produce utility-based summary scores using the PROPr scoring system. Many more data sets can now be used for health valuation, and thus be incorporated in analyses that require those numbers, such as cost-effectiveness analyses. The linear model we recommend is easily implementable in any statistical programming language (see the Appendix in the Supplemental Materials section), and the PROPr scoring system is free to use, with freely available code in R and SAS, which can be translated to other programming languages."
+    },
+    {
+      "text": "Six of the PROPr domains are shared with the PROMIS Profile instruments: Depression, Fatigue, Pain Interference, Physical Function, Sleep Disturbance, and Ability to Participate in Social Roles and Activities. The seventh is Cognitive Function-Abilities. Without a Cognitive Function score, those with PROMIS Profile data cannot produce a single-attribute Cognitive Function utility score and thus a PROPr summary score."
+    },
+    {
+      "text": "Figure 1. Venn diagram showing the PROMIS domains included in the PROMIS Profile instruments and those required to generate a PROPr utility score."
+    },
+    {
+      "text": "range of Cognitive Function theta scores captured by PROPr is -2.052 to 1.124. We chose to compare 5 models for producing PROPr scores when Cognitive Function scores are missing: A. The zero model, which uses the population average Cognitive Function score (q cognition \u00bc 0). B. The ceiling model, which uses a score representing excellent cognitive function, q cognition \u00bc 1:124, the lowest Cognitive Function score to produce a utility of 1 in the single-attribute Cognitive Function utility scale. C. The floor model, which uses a score representing poor cognitive function, q cognition \u00bc 2 2:052, which is the highest Cognitive Function score to produce a utility of 0 in the single-attribute Cognitive Function utility scale. D. A linear regression model, which predicts the Cognitive Function score as a function of the 8 PROMIS Profile domains. The selection of a functional form is described below. E. A Bayesian neural network, which predicts the Cognitive Function score and where the feature data are the 8 PROMIS Profile domain scores. These models predict the missing Cognitive Function score, which is then used to produce a single-attribute Cognitive Function utility that is combined with the other 6 single-attribute utilities to produce the PROPr summary score. Models A to C are constant models-predicting the same PROMIS Cognitive Function theta score for every participant. The population average theta value (zero model [A]) is 0 by construction and receives a utility value of 0.858 on the single-attribute Cognitive Function utility scale. A value of 1.124 was used as a score representing excellent cognitive function (ceiling model [B]), as it is the lowest theta value receiving a utility of 1 in the PROPr Cognitive Function utility scale, which is the highest possible utility. Similarly, a value of -2.052 was used as a score representing poor cognitive function (floor model [C]) because it is the highest theta value receiving a utility of 0 in the PROPr Cognitive Function utility scale, which is the lowest possible utility of the scale. These 3 constant models were chosen to represent na\u00efve approaches to adding a Cognitive Function score to PROMIS Profile data."
+    },
+    {
+      "text": "calculated ME and rMSE on the Cognitive Function theta scores and the resulting PROPr scores. The former refers to comparing predicted Cognitive Function theta scores with the true Cognitive Function theta scores. The latter refers to using the predicted Cognitive Function theta score along with the 6 other (true) PROMIS domain scores included in the PROPr scoring system to generate a predicted PROPr score and comparing it with the true PROPr score."
+    },
+    {
+      "text": "Figure 2. Root-mean-square error on the PROPr scale, dividing the validation set by self-reported chronic conditions."
+    },
+    {
+      "text": "Figure 3. Root-mean-square error on the PROPr scale, dividing the validation set by sample quartile on Cognitive Function-Abilities.The \"1\" indicates the group whose cognitive function score fell within the minimum to the first quartile; \"2,\" the group whose score fell within the first quartile to the median; \"3,\" the group whose score fell within the median to the third quartile, and \"4,\" the group whose score fell within the third quartile to the maximum."
+    },
+    {
+      "text": "Demographic information of the study sample, which is composed of two surveys, the PROPr and Profiles-HUI survey. The last column compares the makeup of those surveys with the 2010 US Census for the demographic variables and the National Health Interview Survey 2016 for the health-related variables."
+    },
+    {
+      "text": "Prediction bias (mean of predictions minus mean of observed scores) and Pearson correlation between predictions and observed scores for each model on the validation set, all on the PROPr scale."
+    },
+    {
+      "text": "Mean and standard deviations of observed scores and predicted scores of the validation set, by age and gender.* indicates female; LM, linear model; M, male; NM, neural network. *Two participants were removed from these calculations: one, who reported an impossible age, and another who was the only person in the PROPr survey data set to respond \"other\" when asked to self-report their gender."
+    },
+    {
+      "text": "Regression table for the recommended linear model, estimated on the entire data set."
+    },
+    {
+      "title": "Acknowledgments",
+      "text": "The authors would like to thank the audience of the  International Society  for Quality of Life Research annual meeting, October 2018 and the anonymous reviewers, as well as the respondents to the surveys used in this study.\n\nSources of financial support:  Barry Dewitt  was supported by the  Riksbanken Jubileumsfond program  on Science and  Proven Experience . Janel Hanmer  and  Hawre Jalal  were supported by the  National Institutes of Health  through Grant Number  KL2 TR001856 ."
+    },
+    {
+      "title": "Supplemental Materials",
+      "text": "Supplementary data associated with this article can be found in the online version at  https://doi.org/10.1016/j.jval.2019.09.2752 ."
+    }
+  ],
+  "references": [
+    {
+      "title": "The patient-reported outcomes measurement information system (PROMIS): progress of an NIH roadmap cooperative group during its first two years",
+      "authors": [
+        "D Cella",
+        "S Yount",
+        "N Rothrock"
+      ],
+      "year": 2007,
+      "doi": "10.1097/01.mlr.0000258615.42478.55",
+      "journal": "Med Care",
+      "volume": "45",
+      "issue": "5",
+      "raw": "The patient-reported outcomes measurement information system (PROMIS): progress of an NIH roadmap cooperative group during its first two years \n\t\t \n\t\t\t D Cella \n\t\t \n\t\t \n\t\t\t S Yount \n\t\t \n\t\t \n\t\t\t N Rothrock \n\t\t \n\t\t 10.1097/01.mlr.0000258615.42478.55 \n\t \n\t \n\t\t Med Care \n\t\t \n\t\t\t 45 \n\t\t\t 5 \n\t\t\t \n\t\t\t 2007 \n\t\t \n\t \n\t Cella D, Yount S, Rothrock N, et al. The patient-reported outcomes measurement information system (PROMIS): progress of an NIH roadmap cooperative group during its first two years. Med Care. 2007;45(5):3-11."
+    },
+    {
+      "title": "NIH's transformative opportunities for the behavioral and social sciences",
+      "authors": [
+        "F Collins",
+        "W Riley"
+      ],
+      "year": 2016,
+      "doi": "10.1126/scitranslmed.aai9374",
+      "journal": "Sci Transl Med",
+      "volume": "8",
+      "raw": "NIH's transformative opportunities for the behavioral and social sciences \n\t\t \n\t\t\t F S Collins \n\t\t \n\t\t \n\t\t\t W T Riley \n\t\t \n\t\t 10.1126/scitranslmed.aai9374 \n\t \n\t \n\t\t Sci Transl Med \n\t\t \n\t\t\t 8 \n\t\t\t \n\t\t\t 2016 \n\t\t \n\t \n\t Collins FS, Riley WT. NIH's transformative opportunities for the behavioral and social sciences. Sci Transl Med. 2016;8(366ed14)."
+    },
+    {
+      "title": "PROMIS \u00ae adult health profiles: efficient short-form measures of seven health domains",
+      "authors": [
+        "D Cella",
+        "S Choi",
+        "D Condon"
+      ],
+      "year": 2019,
+      "doi": "10.1016/j.jval.2019.02.004",
+      "journal": "Value Heal",
+      "volume": "22",
+      "issue": "5",
+      "raw": "PROMIS \u00ae adult health profiles: efficient short-form measures of seven health domains \n\t\t \n\t\t\t D Cella \n\t\t \n\t\t \n\t\t\t S W Choi \n\t\t \n\t\t \n\t\t\t D M Condon \n\t\t \n\t\t 10.1016/j.jval.2019.02.004 \n\t \n\t \n\t\t Value Heal \n\t\t \n\t\t\t 22 \n\t\t\t 5 \n\t\t\t \n\t\t\t 2019 \n\t\t \n\t \n\t Cella D, Choi SW, Condon DM, et al. PROMIS \u00ae adult health profiles: efficient short-form measures of seven health domains. Value Heal. 2019;22(5):537-544."
+    },
+    {
+      "title": "PROMIS\u00ae: standardizing the patient voice in health psychology research and practice",
+      "authors": [
+        "S Yount",
+        "D Cella",
+        "S Blozis"
+      ],
+      "year": 2019,
+      "doi": "10.1037/hea0000741",
+      "journal": "Heal Psychol",
+      "volume": "38",
+      "issue": "5",
+      "raw": "PROMIS\u00ae: standardizing the patient voice in health psychology research and practice \n\t\t \n\t\t\t S E Yount \n\t\t \n\t\t \n\t\t\t D Cella \n\t\t \n\t\t \n\t\t\t S Blozis \n\t\t \n\t\t 10.1037/hea0000741 \n\t \n\t \n\t\t Heal Psychol \n\t\t \n\t\t\t 38 \n\t\t\t 5 \n\t\t\t \n\t\t\t 2019 \n\t\t \n\t \n\t Yount SE, Cella D, Blozis S. PROMIS\u00ae: standardizing the patient voice in health psychology research and practice. Heal Psychol. 2019;38(5):343-346."
+    },
+    {
+      "year": 2019,
+      "doi": "10.1186/s41687-020-0176-4",
+      "raw": "Healthmeasures \n\t\t \n\t\t \n\t\t\t Promis \n\t\t \n\t\t 10.1186/s41687-020-0176-4 \n\t\t \n\t\t \n\t\t\t August 22, 2019 \n\t\t \n\t \n\t HealthMeasures. PROMIS. http://www.healthmeasures.net/explore- measurement-systems/promis. Accessed August 22, 2019."
+    },
+    {
+      "title": "The use of PROMIS and assessment center to deliver patient-reported outcome measures in clinical research",
+      "authors": [
+        "R Gershon",
+        "N Rothrock",
+        "R Hanrahan",
+        "M Bass",
+        "D Cella"
+      ],
+      "year": 2010,
+      "journal": "J Appl Meas",
+      "volume": "11",
+      "issue": "3",
+      "raw": "The use of PROMIS and assessment center to deliver patient-reported outcome measures in clinical research \n\t\t \n\t\t\t R C Gershon \n\t\t \n\t\t \n\t\t\t N Rothrock \n\t\t \n\t\t \n\t\t\t R Hanrahan \n\t\t \n\t\t \n\t\t\t M Bass \n\t\t \n\t\t \n\t\t\t D Cella \n\t\t \n\t \n\t \n\t\t J Appl Meas \n\t\t \n\t\t\t 11 \n\t\t\t 3 \n\t\t\t \n\t\t\t 2010 \n\t\t \n\t \n\t Gershon RC, Rothrock N, Hanrahan R, Bass M, Cella D. The use of PROMIS and assessment center to deliver patient-reported outcome measures in clinical research. J Appl Meas. 2010;11(3):304-314."
+    },
+    {
+      "title": "Estimation of a preference-based summary score for the patient-reported outcomes measurement information system: The PROMIS\u00ae-preference (PROPr) scoring system",
+      "authors": [
+        "B Dewitt",
+        "D Feeny",
+        "B Fischhoff"
+      ],
+      "year": 2018,
+      "doi": "10.1177/0272989x18776637",
+      "journal": "Med Decis Mak",
+      "volume": "38",
+      "issue": "6",
+      "raw": "Estimation of a preference-based summary score for the patient-reported outcomes measurement information system: The PROMIS\u00ae-preference (PROPr) scoring system \n\t\t \n\t\t\t B Dewitt \n\t\t \n\t\t \n\t\t\t D Feeny \n\t\t \n\t\t \n\t\t\t B Fischhoff \n\t\t \n\t\t 10.1177/0272989x18776637 \n\t \n\t \n\t\t Med Decis Mak \n\t\t \n\t\t\t 38 \n\t\t\t 6 \n\t\t\t \n\t\t\t 2018 \n\t\t \n\t \n\t Dewitt B, Feeny D, Fischhoff B, et al. Estimation of a preference-based summary score for the patient-reported outcomes measurement informa- tion system: The PROMIS\u00ae-preference (PROPr) scoring system. Med Decis Mak. 2018;38(6):683-698."
+    },
+    {
+      "title": "Evaluation of options for presenting healthstates from PROMIS\u00ae item banks for valuation exercises",
+      "authors": [
+        "J Hanmer",
+        "D Cella",
+        "D Feeny"
+      ],
+      "year": 2018,
+      "doi": "10.1007/s11136-018-1852-1",
+      "journal": "Qual Life Res",
+      "volume": "27",
+      "issue": "7",
+      "raw": "Evaluation of options for presenting healthstates from PROMIS\u00ae item banks for valuation exercises \n\t\t \n\t\t\t J Hanmer \n\t\t \n\t\t \n\t\t\t D Cella \n\t\t \n\t\t \n\t\t\t D Feeny \n\t\t \n\t\t 10.1007/s11136-018-1852-1 \n\t \n\t \n\t\t Qual Life Res \n\t\t \n\t\t\t 27 \n\t\t\t 7 \n\t\t\t \n\t\t\t 2018 \n\t\t \n\t \n\t Hanmer J, Cella D, Feeny D, et al. Evaluation of options for presenting health- states from PROMIS\u00ae item banks for valuation exercises. Qual Life Res. 2018;27(7):1835-1843."
+    },
+    {
+      "title": "Cross-sectional validation of the PROMIS-Preference scoring system",
+      "authors": [
+        "J Hanmer",
+        "B Dewitt",
+        "L Yu"
+      ],
+      "year": 2018,
+      "doi": "10.1371/journal.pone.0201093",
+      "journal": "PLoS One",
+      "volume": "13",
+      "issue": "7",
+      "pages": "e0201093",
+      "raw": "Cross-sectional validation of the PROMIS-Preference scoring system \n\t\t \n\t\t\t J Hanmer \n\t\t \n\t\t \n\t\t\t B Dewitt \n\t\t \n\t\t \n\t\t\t L Yu \n\t\t \n\t\t 10.1371/journal.pone.0201093 \n\t \n\t \n\t\t PLoS One \n\t\t \n\t\t\t 13 \n\t\t\t 7 \n\t\t\t e0201093 \n\t\t\t 2018 \n\t\t \n\t \n\t Hanmer J, Dewitt B, Yu L, et al. Cross-sectional validation of the PROMIS- Preference scoring system. PLoS One. 2018;13(7):e0201093."
+    },
+    {
+      "title": "PROMIS-Preference (PROPr) Score Construction-A",
+      "authors": [
+        "J Hanmer",
+        "B Dewitt"
+      ],
+      "year": 2017,
+      "raw": "PROMIS-Preference (PROPr) Score Construction-A \n\t\t \n\t\t\t J Hanmer \n\t\t \n\t\t \n\t\t\t B Dewitt \n\t\t \n\t\t \n\t\t \n\t\t\t 2017. August 22, 2019 \n\t\t \n\t \n\t Technical Report \n\t Hanmer J, Dewitt B. PROMIS-Preference (PROPr) Score Construction-A Tech- nical Report. 2017. janelhanmer.pitt.edu/PROPr.html. Accessed August 22, 2019."
+    },
+    {
+      "title": "Selection of key health domains from PROMIS\u00ae for a generic preference-based scoring system",
+      "authors": [
+        "J Hanmer",
+        "D Cella",
+        "D Feeny"
+      ],
+      "year": 2017,
+      "doi": "10.1007/s11136-017-1686-2",
+      "journal": "Qual Life Res",
+      "raw": "Selection of key health domains from PROMIS\u00ae for a generic preference-based scoring system \n\t\t \n\t\t\t J Hanmer \n\t\t \n\t\t \n\t\t\t D Cella \n\t\t \n\t\t \n\t\t\t D Feeny \n\t\t \n\t\t 10.1007/s11136-017-1686-2 \n\t \n\t \n\t\t Qual Life Res \n\t\t \n\t\t\t \n\t\t\t 2017 \n\t\t \n\t \n\t Hanmer J, Cella D, Feeny D, et al. Selection of key health domains from PROMIS\u00ae for a generic preference-based scoring system. Qual Life Res. 2017:1-9."
+    },
+    {
+      "title": "The PROMIS of QALYs",
+      "authors": [
+        "J Hanmer",
+        "D Feeny",
+        "B Fischhoff"
+      ],
+      "year": 2015,
+      "doi": "10.1186/s12955-015-0321-6",
+      "journal": "Health Qual Life Outcomes",
+      "volume": "13",
+      "pages": "122",
+      "raw": "The PROMIS of QALYs \n\t\t \n\t\t\t J Hanmer \n\t\t \n\t\t \n\t\t\t D Feeny \n\t\t \n\t\t \n\t\t\t B Fischhoff \n\t\t \n\t\t 10.1186/s12955-015-0321-6 \n\t \n\t \n\t\t Health Qual Life Outcomes \n\t\t \n\t\t\t 13 \n\t\t\t 122 \n\t\t\t 2015 \n\t\t \n\t \n\t Hanmer J, Feeny D, Fischhoff B, et al. The PROMIS of QALYs. Health Qual Life Outcomes. 2015;13:122."
+    },
+    {
+      "title": "The future of outcomes measurement: item banking, tailored short-forms, and computerized adaptive assessment",
+      "authors": [
+        "D Cella",
+        "Gershon Lai",
+        "J Choi"
+      ],
+      "year": 2007,
+      "doi": "10.1007/s11136-007-9204-6",
+      "journal": "Qual Life Res",
+      "volume": "16",
+      "issue": "1",
+      "raw": "The future of outcomes measurement: item banking, tailored short-forms, and computerized adaptive assessment \n\t\t \n\t\t\t D Cella \n\t\t \n\t\t \n\t\t\t Gershon R Lai \n\t\t \n\t\t \n\t\t\t J S Choi \n\t\t \n\t\t \n\t\t\t S \n\t\t \n\t\t 10.1007/s11136-007-9204-6 \n\t \n\t \n\t\t Qual Life Res \n\t\t \n\t\t\t 16 \n\t\t\t 1 \n\t\t\t \n\t\t\t 2007 \n\t\t \n\t \n\t Cella D, Gershon R, Lai JS, Choi S. The future of outcomes measurement: item banking, tailored short-forms, and computerized adaptive assessment. Qual Life Res. 2007;16(SUPPL. 1):133-141."
+    },
+    {
+      "title": "Item Response Theory for Psychologists",
+      "authors": [
+        "S Embretson",
+        "S Reise"
+      ],
+      "year": 2000,
+      "raw": "Item Response Theory for Psychologists \n\t\t \n\t\t\t S Embretson \n\t\t \n\t\t \n\t\t\t S P Reise \n\t\t \n\t\t \n\t\t\t 2000 \n\t\t\t Lawrence Erlbaum Associates, Inc \n\t\t\t Mahwah, NJ \n\t\t \n\t \n\t Embretson S, Reise SP. Item Response Theory for Psychologists. Mahwah, NJ: Lawrence Erlbaum Associates, Inc.; 2000."
+    },
+    {
+      "title": "Using linear equating to map PROMIS\u00ae global health items and the PROMIS-29 V2",
+      "authors": [
+        "R Hays",
+        "D Revicki",
+        "D Feeny",
+        "P Fayers",
+        "K Spritzer",
+        "D Cella"
+      ],
+      "doi": "10.1007/s40273-016-0408-x",
+      "raw": "Using linear equating to map PROMIS\u00ae global health items and the PROMIS-29 V2 \n\t\t \n\t\t\t R D Hays \n\t\t \n\t\t \n\t\t\t D A Revicki \n\t\t \n\t\t \n\t\t\t D Feeny \n\t\t \n\t\t \n\t\t\t P Fayers \n\t\t \n\t\t \n\t\t\t K L Spritzer \n\t\t \n\t\t \n\t\t\t D Cella \n\t\t \n\t\t 10.1007/s40273-016-0408-x \n\t\t \n\t \n\t Hays RD, Revicki DA, Feeny D, Fayers P, Spritzer KL, Cella D. Using linear equating to map PROMIS\u00ae global health items and the PROMIS-29 V2."
+    },
+    {
+      "title": "0 profile measure to the health utilities index mark 3",
+      "year": 2016,
+      "doi": "10.1007/s40273-016-0408-x",
+      "journal": "Pharmacoeconomics",
+      "volume": "34",
+      "issue": "10",
+      "raw": "0 profile measure to the health utilities index mark 3 \n\t\t 10.1007/s40273-016-0408-x \n\t \n\t \n\t\t Pharmacoeconomics \n\t\t \n\t\t\t 34 \n\t\t\t 10 \n\t\t\t \n\t\t\t 2016 \n\t\t \n\t \n\t 0 profile measure to the health utilities index mark 3. Pharmacoeconomics. 2016;34(10):1015-1022."
+    },
+    {
+      "title": "Bayesian interpolation",
+      "authors": [
+        "Djc Mackay"
+      ],
+      "year": 1992,
+      "doi": "10.1162/neco.1992.4.3.415",
+      "journal": "Neural Comput",
+      "volume": "4",
+      "raw": "Bayesian interpolation \n\t\t \n\t\t\t Djc Mackay \n\t\t \n\t\t 10.1162/neco.1992.4.3.415 \n\t \n\t \n\t\t Neural Comput \n\t\t \n\t\t\t 4 \n\t\t\t \n\t\t\t 1992 \n\t\t \n\t \n\t MacKay DJC. Bayesian interpolation. Neural Comput. 1992;4:415-447."
+    },
+    {
+      "title": "Gauss-Newton approximation to Bayesian learning",
+      "authors": [
+        "F Foresee",
+        "M Hagan"
+      ],
+      "year": 1997,
+      "raw": "Gauss-Newton approximation to Bayesian learning \n\t\t \n\t\t\t F D Foresee \n\t\t \n\t\t \n\t\t\t M T Hagan \n\t\t \n\t \n\t \n\t\t Proceedings of the International Joint Conference on Neural Networks \n\t\t the International Joint Conference on Neural Networks \n\t\t \n\t\t\t 1997 \n\t\t \n\t \n\t Foresee FD, Hagan MT. Gauss-Newton approximation to Bayesian learning. In: Proceedings of the International Joint Conference on Neural Networks. 1997."
+    },
+    {
+      "title": "Mapping PROMIS global health items to EuroQol (EQ-5D) utility scores using linear and equipercentile equating",
+      "authors": [
+        "N Thompson",
+        "B Lapin",
+        "I Katzan"
+      ],
+      "year": 2017,
+      "doi": "10.1007/s40273-017-0541-1",
+      "journal": "Pharmacoeconomics",
+      "volume": "35",
+      "issue": "11",
+      "raw": "Mapping PROMIS global health items to EuroQol (EQ-5D) utility scores using linear and equipercentile equating \n\t\t \n\t\t\t N R Thompson \n\t\t \n\t\t \n\t\t\t B R Lapin \n\t\t \n\t\t \n\t\t\t I L Katzan \n\t\t \n\t\t 10.1007/s40273-017-0541-1 \n\t \n\t \n\t\t Pharmacoeconomics \n\t\t \n\t\t\t 35 \n\t\t\t 11 \n\t\t\t \n\t\t\t 2017 \n\t\t \n\t \n\t Thompson NR, Lapin BR, Katzan IL. Mapping PROMIS global health items to EuroQol (EQ-5D) utility scores using linear and equipercentile equating. Pharmacoeconomics. 2017;35(11):1167-1176."
+    },
+    {
+      "title": "Should linking replace regression when mapping from profile-based measures to preference-based measures?",
+      "authors": [
+        "P Fayers",
+        "R Hays"
+      ],
+      "year": 2014,
+      "doi": "10.1016/j.jval.2013.12.002",
+      "journal": "Value Heal",
+      "volume": "17",
+      "issue": "2",
+      "raw": "Should linking replace regression when mapping from profile-based measures to preference-based measures? \n\t\t \n\t\t\t P M Fayers \n\t\t \n\t\t \n\t\t\t R D Hays \n\t\t \n\t\t 10.1016/j.jval.2013.12.002 \n\t \n\t \n\t\t Value Heal \n\t\t \n\t\t\t 17 \n\t\t\t 2 \n\t\t\t \n\t\t\t 2014 \n\t\t \n\t \n\t Fayers PM, Hays RD. Should linking replace regression when mapping from profile-based measures to preference-based measures? Value Heal. 2014;17(2):261-265."
+    },
+    {
+      "title": "PROMIS Profiles-HUI data",
+      "authors": [
+        "D Cella"
+      ],
+      "year": 2017,
+      "raw": "PROMIS Profiles-HUI data \n\t\t \n\t\t\t D Cella \n\t\t \n\t\t \n\t\t\t 2017 \n\t\t \n\t\t \n\t\t\t Harvard Dataverse \n\t\t \n\t \n\t Cella D. PROMIS Profiles-HUI data. Harvard Dataverse. 2017."
+    },
+    {
+      "title": "Creating the PROMIS-Preference (PROPr) Score",
+      "authors": [
+        "B Dewitt",
+        "J Hanmer"
+      ],
+      "year": 2016,
+      "doi": "10.1016/j.jval.2019.09.2752",
+      "raw": "Creating the PROMIS-Preference (PROPr) Score \n\t\t \n\t\t\t B Dewitt \n\t\t \n\t\t \n\t\t\t J Hanmer \n\t\t \n\t\t 10.1016/j.jval.2019.09.2752 \n\t\t \n\t\t\t 2016 \n\t\t \n\t \n\t Dewitt B, Hanmer J. Creating the PROMIS-Preference (PROPr) Score; 2016."
+    },
+    {
+      "title": "Multiple imputation to deal with missing EQ-5D-3L data: Should we impute individual domains or the actual index?",
+      "authors": [
+        "C Simons",
+        "O Rivero-Arias",
+        "L Yu",
+        "J Simon"
+      ],
+      "year": 2015,
+      "doi": "10.1007/s11136-014-0837-y",
+      "journal": "Qual Life Res",
+      "volume": "24",
+      "issue": "4",
+      "raw": "Multiple imputation to deal with missing EQ-5D-3L data: Should we impute individual domains or the actual index? \n\t\t \n\t\t\t C L Simons \n\t\t \n\t\t \n\t\t\t O Rivero-Arias \n\t\t \n\t\t \n\t\t\t L M Yu \n\t\t \n\t\t \n\t\t\t J Simon \n\t\t \n\t\t 10.1007/s11136-014-0837-y \n\t\t \n\t \n\t \n\t\t Qual Life Res \n\t\t \n\t\t\t 24 \n\t\t\t 4 \n\t\t\t \n\t\t\t 2015 \n\t\t \n\t \n\t Simons CL, Rivero-Arias O, Yu LM, Simon J. Multiple imputation to deal with missing EQ-5D-3L data: Should we impute individual domains or the actual index? Qual Life Res. 2015;24(4):805-815. https://doi.org/10.1007/s11136- 014-0837-y."
+    },
+    {
+      "title": "Tutorial in biostatistics multiple imputation using chained equations : issues and guidance for practice",
+      "authors": [
+        "I White",
+        "A Wood"
+      ],
+      "year": 2011,
+      "doi": "10.1002/sim.4067",
+      "raw": "Tutorial in biostatistics multiple imputation using chained equations : issues and guidance for practice \n\t\t \n\t\t\t I R White \n\t\t \n\t\t \n\t\t\t A M Wood \n\t\t \n\t\t 10.1002/sim.4067 \n\t\t \n\t\t\t 2011 \n\t\t \n\t \n\t White IR, Wood AM. Tutorial in biostatistics multiple imputation using chained equations : issues and guidance for practice; 2011."
+    }
+  ],
+  "num_references": 24,
+  "figures": [
+    {
+      "description": "Six of the PROPr domains are shared with the PROMIS Profile instruments: Depression, Fatigue, Pain Interference, Physical Function, Sleep Disturbance, and Ability to Participate in Social Roles and Activities. The seventh is Cognitive Function-Abilities. Without a Cognitive Function score, those with PROMIS Profile data cannot produce a single-attribute Cognitive Function utility score and thus a PROPr summary score."
+    },
+    {
+      "caption": "Figure 1 .",
+      "description": "Figure 1. Venn diagram showing the PROMIS domains included in the PROMIS Profile instruments and those required to generate a PROPr utility score."
+    },
+    {
+      "description": "range of Cognitive Function theta scores captured by PROPr is -2.052 to 1.124. We chose to compare 5 models for producing PROPr scores when Cognitive Function scores are missing: A. The zero model, which uses the population average Cognitive Function score (q cognition \u00bc 0). B. The ceiling model, which uses a score representing excellent cognitive function, q cognition \u00bc 1:124, the lowest Cognitive Function score to produce a utility of 1 in the single-attribute Cognitive Function utility scale. C. The floor model, which uses a score representing poor cognitive function, q cognition \u00bc 2 2:052, which is the highest Cognitive Function score to produce a utility of 0 in the single-attribute Cognitive Function utility scale. D. A linear regression model, which predicts the Cognitive Function score as a function of the 8 PROMIS Profile domains. The selection of a functional form is described below. E. A Bayesian neural network, which predicts the Cognitive Function score and where the feature data are the 8 PROMIS Profile domain scores. These models predict the missing Cognitive Function score, which is then used to produce a single-attribute Cognitive Function utility that is combined with the other 6 single-attribute utilities to produce the PROPr summary score. Models A to C are constant models-predicting the same PROMIS Cognitive Function theta score for every participant. The population average theta value (zero model [A]) is 0 by construction and receives a utility value of 0.858 on the single-attribute Cognitive Function utility scale. A value of 1.124 was used as a score representing excellent cognitive function (ceiling model [B]), as it is the lowest theta value receiving a utility of 1 in the PROPr Cognitive Function utility scale, which is the highest possible utility. Similarly, a value of -2.052 was used as a score representing poor cognitive function (floor model [C]) because it is the highest theta value receiving a utility of 0 in the PROPr Cognitive Function utility scale, which is the lowest possible utility of the scale. These 3 constant models were chosen to represent na\u00efve approaches to adding a Cognitive Function score to PROMIS Profile data."
+    },
+    {
+      "description": "calculated ME and rMSE on the Cognitive Function theta scores and the resulting PROPr scores. The former refers to comparing predicted Cognitive Function theta scores with the true Cognitive Function theta scores. The latter refers to using the predicted Cognitive Function theta score along with the 6 other (true) PROMIS domain scores included in the PROPr scoring system to generate a predicted PROPr score and comparing it with the true PROPr score."
+    },
+    {
+      "caption": "Figure 2 .",
+      "description": "Figure 2. Root-mean-square error on the PROPr scale, dividing the validation set by self-reported chronic conditions."
+    },
+    {
+      "caption": "Figure 3 .",
+      "description": "Figure 3. Root-mean-square error on the PROPr scale, dividing the validation set by sample quartile on Cognitive Function-Abilities.The \"1\" indicates the group whose cognitive function score fell within the minimum to the first quartile; \"2,\" the group whose score fell within the first quartile to the median; \"3,\" the group whose score fell within the median to the third quartile, and \"4,\" the group whose score fell within the third quartile to the maximum."
+    },
+    {
+      "type": "table",
+      "caption": "Table 1 .",
+      "description": "Demographic information of the study sample, which is composed of two surveys, the PROPr and Profiles-HUI survey. The last column compares the makeup of those surveys with the 2010 US Census for the demographic variables and the National Health Interview Survey 2016 for the health-related variables."
+    },
+    {
+      "type": "table",
+      "caption": "Table 3 .",
+      "description": "Prediction bias (mean of predictions minus mean of observed scores) and Pearson correlation between predictions and observed scores for each model on the validation set, all on the PROPr scale."
+    },
+    {
+      "type": "table",
+      "caption": "Table 4 .",
+      "description": "Mean and standard deviations of observed scores and predicted scores of the validation set, by age and gender.* indicates female; LM, linear model; M, male; NM, neural network. *Two participants were removed from these calculations: one, who reported an impossible age, and another who was the only person in the PROPr survey data set to respond \"other\" when asked to self-report their gender."
+    },
+    {
+      "type": "table",
+      "caption": "Table 5 .",
+      "description": "Regression table for the recommended linear model, estimated on the entire data set."
+    }
+  ],
+  "num_figures": 10,
+  "tables": [
+    {
+      "content": "PROPr estimation Profiles-HUI survey 2010 US census survey"
+    },
+    {
+      "content": "Model Prediction bias Correlation (A) Zero 0.0251 0.930 (B) Ceiling 0.0672 0.930 (C) Floor -0.231 0.930 (D) Linear model 0.0176 0.932 (E) Bayesian neural network 0.0175 0.933"
+    },
+    {
+      "content": "Age Gender n Observed Zero Ceiling Floor LM NN 18-24 M 62 0.387 (0.257) 0.457 (0.243) 0.504 (0.267) 0.170 (0.0975) 0.452 (0.255) 0.451 (0.257) F 69 0.395 (0.277) 0.426 (0.257) 0.471 (0.283) 0.158 (0.103) 0.419 (0.269) 0.417 (0.270) 25-34 M 107 0.308 (0.209) 0.362 (0.210) 0.399 (0.231) 0.132 (0.0844) 0.350 (0.219) 0.348 (0.221) F 117 0.383 (0.233) 0.421 (0.226) 0.464 (0.249) 0.155 (0.0909) 0.413 (0.235) 0.411 (0.237) 35-44 M 96 0.314 (0.223) 0.361 (0.245) 0.399 (0.269) 0.131 (0.0982) 0.352 (0.254) 0.351 (0.256) F 105 0.383 (0.272) 0.407 (0.248) 0.450 (0.273) 0.150 (0.0998) 0.400 (0.257) 0.400 (0.259) 45-54 M 111 0.376 (0.256) 0.396 (0.229) 0.437 (0.252) 0.145 (0.0919) 0.386 (0.240) 0.386 (0.243) F 115 0.364 (0.276) 0.378 (0.251) 0.418 (0.276) 0.138 (0.101) 0.371 (0.260) 0.371 (0.263) 55-64 M 82 0.408 (0.267) 0.428 (0.258) 0.473 (0.283) 0.158 (0.103) 0.423 (0.270) 0.425 (0.274) F 104 0.467 (0.261) 0.468 (0.237) 0.516 (0.260) 0.174 (0.0950) 0.463 (0.246) 0.465 (0.250) 65-74 M 63 0.460 (0.272) 0.454 (0.250) 0.501 (0.275) 0.169 (0.100) 0.451 (0.262) 0.450 (0.264) F 56 0.447 (0.221) 0.441 (0.201) 0.487 (0.221) 0.163 (0.0808) 0.435 (0.209) 0.436 (0.211) 75-84 M 30 0.371 (0.269) 0.391 (0.247) 0.432 (0.271) 0.143 (0.0989) 0.385 (0.263) 0.388 (0.272) F 34 0.326 (0.215) 0.335 (0.204) 0.370 (0.224) 0.121 (0.0821) 0.324 (0.212) 0.324 (0.217) 85+ M 24 0.303 (0.251) 0.317 (0.250) 0.351 (0.275) 0.114 (0.100) 0.308 (0.260) 0.312 (0.266) F 19 0.260 (0.146) 0.268 (0.132) 0.297 (0.145) 0.0941 (0.0533) 0.256 (0.136) 0.255 (0.137)"
+    },
+    {
+      "content": "Dependent variable cognitive function Depression -0.037 (0.025) Physical functioning 0.118* (0.023) Sleep -0.223* (0.021) Social roles 0.051  \u2020 (0.025) Anxiety -0.168* (0.027) Pain intensity -0.006 (0.007) Constant 0.009 (0.030) Observations 3982 R 2 0.209 Adjusted R 2 0.208 Residual standard error 0.931 (df = 3975) F statistic 175.082* (df = 6; 3975)"
+    }
+  ],
+  "num_tables": 4,
+  "formulas": [
+    {
+      "text": "q cognition \u00bc b 0 1 b 1 q anxiety 1 b 2 q depression 1 b 3 q fatigue 1 b 4 q physical 1 b 5 q pain 1b 6 S pain 1 b 7 q sleep 1 b 8 q social 1\u03b5:"
+    }
+  ],
+  "num_formulas": 1,
+  "num_citations": 34,
+  "cited_references": [
+    "b4",
+    "b14",
+    "b17",
+    "b20",
+    "b13",
+    "b16",
+    "b7",
+    "b23",
+    "b19",
+    "b6",
+    "b18",
+    "b1",
+    "b9",
+    "b10",
+    "b3",
+    "b5",
+    "b8",
+    "b12",
+    "b11",
+    "b22",
+    "b0",
+    "b21",
+    "b2"
+  ],
+  "notes": [
+    "[raw_affiliation] 1  Department of Engineering & Public Policy , Carnegie Mellon University , Pittsburgh , PA , USA;",
+    "[raw_affiliation] 2  Department of Health Policy and Management , Graduate School of Public Health , University of Pittsburgh , Pittsburgh , PA , USA;",
+    "[raw_affiliation] 3  Division of General Internal Medicine , University of Pittsburgh , Pittsburgh , PA , USA.",
+    "[raw_affiliation] Department of Engineering & Public Policy , Carnegie Mellon University , 5000 Forbes Avenue , Pittsburgh , PA , 15217 , USA",
+    "PROPr indicates PROMIS-Preference score. nonlinear, individual-level PROMIS data is required to produce PROPr values. Sample statistics, such as the mean PROMIS domain scores of a sample, cannot be used to generate a mean PROPr score for the sample; instead, the individual PROMIS scores of the sample are required.",
+    "F",
+    "*P , .01 \u2020 P , .05",
+    "[raw_reference] Cella D, Yount S, Rothrock N, et al. The patient-reported outcomes measurement information system (PROMIS): progress of an NIH roadmap cooperative group during its first two years. Med Care. 2007;45(5):3-11.",
+    "[raw_reference] Collins FS, Riley WT. NIH's transformative opportunities for the behavioral and social sciences. Sci Transl Med. 2016;8(366ed14).",
+    "[raw_reference] Cella D, Choi SW, Condon DM, et al. PROMIS \u00ae adult health profiles: efficient short-form measures of seven health domains. Value Heal. 2019;22(5):537-544.",
+    "[raw_reference] Yount SE, Cella D, Blozis S. PROMIS\u00ae: standardizing the patient voice in health psychology research and practice. Heal Psychol. 2019;38(5):343-346.",
+    "[raw_reference] HealthMeasures. PROMIS. http://www.healthmeasures.net/explore- measurement-systems/promis. Accessed August 22, 2019.",
+    "[raw_reference] Gershon RC, Rothrock N, Hanrahan R, Bass M, Cella D. The use of PROMIS and assessment center to deliver patient-reported outcome measures in clinical research. J Appl Meas. 2010;11(3):304-314.",
+    "[raw_reference] Dewitt B, Feeny D, Fischhoff B, et al. Estimation of a preference-based summary score for the patient-reported outcomes measurement informa- tion system: The PROMIS\u00ae-preference (PROPr) scoring system. Med Decis Mak. 2018;38(6):683-698.",
+    "[raw_reference] Hanmer J, Cella D, Feeny D, et al. Evaluation of options for presenting health- states from PROMIS\u00ae item banks for valuation exercises. Qual Life Res. 2018;27(7):1835-1843.",
+    "[raw_reference] Hanmer J, Dewitt B, Yu L, et al. Cross-sectional validation of the PROMIS- Preference scoring system. PLoS One. 2018;13(7):e0201093.",
+    "[report_type] Technical Report",
+    "[raw_reference] Hanmer J, Dewitt B. PROMIS-Preference (PROPr) Score Construction-A Tech- nical Report. 2017. janelhanmer.pitt.edu/PROPr.html. Accessed August 22, 2019.",
+    "[raw_reference] Hanmer J, Cella D, Feeny D, et al. Selection of key health domains from PROMIS\u00ae for a generic preference-based scoring system. Qual Life Res. 2017:1-9.",
+    "[raw_reference] Hanmer J, Feeny D, Fischhoff B, et al. The PROMIS of QALYs. Health Qual Life Outcomes. 2015;13:122.",
+    "[raw_reference] Cella D, Gershon R, Lai JS, Choi S. The future of outcomes measurement: item banking, tailored short-forms, and computerized adaptive assessment. Qual Life Res. 2007;16(SUPPL. 1):133-141.",
+    "[raw_reference] Embretson S, Reise SP. Item Response Theory for Psychologists. Mahwah, NJ: Lawrence Erlbaum Associates, Inc.; 2000.",
+    "[raw_reference] Hays RD, Revicki DA, Feeny D, Fayers P, Spritzer KL, Cella D. Using linear equating to map PROMIS\u00ae global health items and the PROMIS-29 V2.",
+    "[raw_reference] 0 profile measure to the health utilities index mark 3. Pharmacoeconomics. 2016;34(10):1015-1022.",
+    "[raw_reference] MacKay DJC. Bayesian interpolation. Neural Comput. 1992;4:415-447.",
+    "[raw_reference] Foresee FD, Hagan MT. Gauss-Newton approximation to Bayesian learning. In: Proceedings of the International Joint Conference on Neural Networks. 1997.",
+    "[raw_reference] Thompson NR, Lapin BR, Katzan IL. Mapping PROMIS global health items to EuroQol (EQ-5D) utility scores using linear and equipercentile equating. Pharmacoeconomics. 2017;35(11):1167-1176.",
+    "[raw_reference] Fayers PM, Hays RD. Should linking replace regression when mapping from profile-based measures to preference-based measures? Value Heal. 2014;17(2):261-265.",
+    "[raw_reference] Cella D. PROMIS Profiles-HUI data. Harvard Dataverse. 2017.",
+    "[raw_reference] Dewitt B, Hanmer J. Creating the PROMIS-Preference (PROPr) Score; 2016.",
+    "[raw_reference] Simons CL, Rivero-Arias O, Yu LM, Simon J. Multiple imputation to deal with missing EQ-5D-3L data: Should we impute individual domains or the actual index? Qual Life Res. 2015;24(4):805-815. https://doi.org/10.1007/s11136- 014-0837-y.",
+    "[raw_reference] White IR, Wood AM. Tutorial in biostatistics multiple imputation using chained equations : issues and guidance for practice; 2011."
+  ],
+  "processing_software": {
+    "GROBID": "0.8.2"
+  },
+  "journal": "Value in Health",
+  "volume": "23",
+  "issue": "3",
+  "pages": "370-378",
+  "zotero_recovery": {
+    "fields_recovered": [
+      "journal"
+    ],
+    "timestamp": "2025-09-01T11:08:22.085088",
+    "zotero_item_type": "journalArticle"
+  }
+}

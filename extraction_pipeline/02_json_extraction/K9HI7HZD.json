@@ -1,0 +1,1005 @@
+{
+  "paper_id": "K9HI7HZD",
+  "title": "Sample size calculators for planning stepped-wedge cluster randomized trials: a review and comparison",
+  "abstract": "Recent years have seen a surge of interest in stepped-wedge cluster randomized trials (SW-CRTs). SW-CRTs include several design variations and methodology is rapidly developing. Accordingly, a variety of power and sample size calculation software for SW-CRTs has been developed. However, each calculator may support only a selected set of design features and may not be appropriate for all scenarios. Currently, there is no resource to assist researchers in selecting the most appropriate calculator for planning their trials. In this paper, we review and classify 18 existing calculators that can be implemented in major platforms, such as R, SAS, Stata, Microsoft Excel, PASS and nQuery. After reviewing the main sample size considerations for SW-CRTs, we summarize the features supported by the available calculators, including the types of designs, outcomes, correlation structures and treatment effects; whether incomplete designs, cluster-size variation or secular trends are accommodated; and the analytical approach used. We then discuss in more detail four main calculators and identify their strengths and limitations. We illustrate how to use these four calculators to compute power for two real SW-CRTs with a continuous and binary outcome and compare the results. We show that the choice of calculator can make a substantial difference in the calculated power and explain these differences. Finally, we make recommendations for implementing sample size or power calculations using the available calculators. An R Shiny app is available for users to select the calculator that meets their requirements ( https://douyang.shi  nyapps.io/swcrtcalculator/ ).",
+  "year": 2025,
+  "date": "2025-08-16",
+  "authors": [
+    {
+      "name": "Yongdong Ouyang",
+      "email": "youyang@ohri.ca",
+      "affiliation": {
+        "organization": "Clinical Epidemiology Program",
+        "department": "Clinical Epidemiology Program",
+        "institution": "Ottawa Hospital Research Institute",
+        "address": "Ottawa, ON, Canada"
+      }
+    },
+    {
+      "name": "Fan Li",
+      "affiliation": {
+        "organization": "Department of Biostatistics",
+        "department": "Department of Biostatistics",
+        "institution": "Yale School of Public Health",
+        "address": "New Haven, CT, USA"
+      }
+    },
+    {
+      "name": "John Preisser",
+      "affiliation": {
+        "organization": "Department of Biostatistics",
+        "department": "Department of Biostatistics",
+        "institution": "University of North Carolina at Chapel Hill",
+        "address": "Chapel Hill, NC, USA"
+      }
+    },
+    {
+      "name": "Monica Taljaard",
+      "affiliation": {
+        "organization": "Clinical Epidemiology Program",
+        "department": "Clinical Epidemiology Program",
+        "institution": "Ottawa Hospital Research Institute",
+        "address": "Ottawa, ON, Canada"
+      }
+    }
+  ],
+  "doi": "10.1093/ije/dyac123",
+  "md5": "3CABE00778E23F6FE373CD31429D74F6",
+  "publication": {
+    "journal": "Stat Med",
+    "journal_inferred": true
+  },
+  "keywords": [
+    "Stepped-wedge design",
+    "power",
+    "sample size",
+    "software",
+    "correlation structures"
+  ],
+  "funding": [
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "Acknowledgements We thank  Ying Zhang  (zying@live.unc.edu) who provided instructions on how to specify the parameters in CRTFASTGEEPWR."
+  ],
+  "sections": [
+    {
+      "title": "Introduction",
+      "text": "In recent years, the stepped-wedge cluster randomized trial (SW-CRT) design has been increasing in popularity.  [1] [2] 2] [3] [4]  In SW-CRTs (Figure  1a ), each cluster begins in the control condition. At different time points, clusters are randomized to cross over to the intervention condition until by the end of the trial, all clusters have received the intervention. In a complete SW-CRT design, measurements are taken from each cluster in each period. The SW-CRT can help facilitate recruitment when stakeholders perceive there are benefits to being exposed to the intervention at some point during the trial.  5, 6 The design is also attractive when the goal is to implement the intervention in all clusters but there are inadequate resources to do so in all clusters simultaneously.  5, 6 Despite their potential advantages, the use of stepped-wedge (SW) designs must be appropriately justified and researchers must be aware of the potential risks of bias.  7, 8 ethods for planning SW-CRTs are rapidly evolving and a variety of sample size calculation methods and tools are now available. Applied statisticians are faced with a bewildering array of choices and there is no centralized discussion of the functionalities of different calculators. We aim to provide a comprehensive overview of the trial design features that can be accommodated by available power and sample size calculators for SW-CRTs, illustrate how to use the main calculators and provide a guide to allow users to select the most appropriate calculators for their studies.\n\nThe rest of the article is organized as follows. We start with an overview of SW-CRTs, including major features to consider in sample size calculation. We then provide a detailed review of four main calculators including their strengths and limitations. Using two example trials, we then illustrate how to use these calculators to obtain power for each of the trials and compare the results across the four calculators. We conclude by summarizing our findings and making recommendations for selecting the most appropriate calculator in practice."
+    },
+    {
+      "title": "Main factors to consider when planning a SW-CRT"
+    },
+    {
+      "title": "Types of SW designs based on sampling structure",
+      "text": "There are three main types of SW-CRTs, depending on the sampling structure.  9 In a cross-sectional design, outcomes are measured on different participants over time so each participant contributes outcomes to either the control or intervention condition but not both. In the closed cohort design, the same participants are measured repeatedly over time so each participant contributes outcomes under both the control and intervention conditions. The open cohort is a variation on the closed cohort in which participants may join or leave the cohort during the trial and thus at least some participants contribute outcomes under both control and intervention conditions.  10 The majority of work on sample size calculation for SW-CRTs has focused on crosssectional or closed cohort designs; open cohort designs have received relatively little development except for the work by Kasza et al.  10  Recent work has started to consider cross-sectional designs arising from the common scenario in which participants are recruited continuously in time (but exposed for only a short period) as a special class of design requiring different correlation structures, called 'continuous-time decay', and different analytical approaches.  9, 11 Further work is required but some methodology for continuous-time decay has already been developed by Grantham et al.  12  that includes an R Shiny web app to determine power for some scenarios, assuming individual measurement times are evenly spaced within each interval. In practice, cross-sectional designs are often considered to be approximations of continuous recruitment short exposure designs and, depending on the assumed correlation structure, sample size calculators based on discrete sampling may yield identical calculations."
+    },
+    {
+      "title": "Incomplete designs",
+      "text": "Standard SW-CRTs collect data in each cluster period. Incomplete SW-CRTs are designs that do not collect data in all cluster periods.  13, 14 Figure  1b  illustrates a design in which no data are collected during the period immediately prior to the intervention. These 'transition periods' allow extra time to implement the intervention or for the intervention to start exerting its effect. Each sequence can have one or more transition periods.  14 Figure  1c  illustrates a design in which each cluster has the same number of control and intervention periods, but not all clusters enter and exit at the same time. This type of design is called a staircase design.  15"
+    },
+    {
+      "title": "Correlation structures and statistical models for SW-CRTs",
+      "text": "In a SW-CRT, the intervention effect is partially confounded with the time effect (i.e. secular trend) by design; therefore, the analytical model must always account for time to obtain unbiased inferences. It is further well known that CRTs must account for the correlation among multiple responses from different individuals within the same cluster. In a post-test-only parallel-arm CRT, the degree of clustering is usually measured using a single intra-cluster correlation coefficient (ICC), defined as the ratio of the between-cluster variance and the sum of the between-cluster and within-cluster variances.  16 In multi-period CRTs, such as SW-CRTs, correlation structures may be more complex as outcomes are measured in different periods. Nevertheless, the initial statistical model for SW-CRTs developed by Hussey and Hughes was a random intercepts model that assumed a single exchangeable correlation, i.e. the correlation between any two individuals from the same cluster is the same regardless of their distance apart in time.  2  Building upon earlier work on multi-period parallel-arm CRTs,  17  Hooper et al.  18  and separately Girling and Hemming  19  introduced a conditional (i.e. mixed-effects) model (referred to as the Hooper/Girling model) that allows the within-period ICC (wp-ICC) (i.e. the correlation between two individuals from the same cluster and same period) to differ from the between-period ICC (bp-ICC) (i.e. the correlation between two individuals from the same cluster but different periods). We would typically expect the bp-ICC to be less than the wp-ICC. The ratio of the bp-ICC and wp-ICC is called the Cluster Autocorrelation Coefficient (CAC), which is typically <1.  18, 20 Li 21 referred to this as a nested exchangeable correlation structure. In a cohort design, an additional correlation is needed to account for repeated measures on the same individual over time. In the Hooper/Girling model, this correlation was introduced through the addition of a patient-level random effect and quantified as an Individual Autocorrelation Coefficient (IAC), which implies a constant correlation in the repeated measures on the same individual over time.  18 Li 21 referred to this as a block exchangeable correlation structure.\n\nIntuitively, within a cluster, the responses from individuals between two consecutive periods are usually more correlated than those separated by a longer interval. Therefore, assuming a constant bp-ICC may not be realistic, Kasza et al.  22  proposed an extension to the Hooper/ Girling model that allows the bp-ICC to decay exponentially. In this case, the CAC refers to the rate of exponential decay per period. In the case of a cohort design, individuallevel correlation is also required and there are two possibilities: either a constant individual-level correlation over time (specified through an IAC) or allowing individuallevel correlations to decay exponentially (referred to as the proportional decay structure).  21 s an alternative to mixed-effects models, Li et al.  23  proposed a marginal model based on generalized estimating equations (GEE) and corresponding power and sample size calculation methodology allowing for both crosssectional and closed cohort SW-CRT designs. In a cohort setting, it is worth noting that in a marginal model, the correlation in repeated measures on the same individual is modelled directly through the within-individual ICC (wi-ICC) and is not identical to the IAC referred to above in the context of a mixed-effects model. A comprehensive overview of statistical models available for SW-CRTs can be found in Li et al.  24  In addition to the above correlation structures that are based on time (period), correlation structures can also be allowed to depend on exposure. This is referred to as cluster-treatment effect heterogeneity and is accomplished by including a random cluster by treatment effect in the analytical model.  25, 26 fferent ways to specify treatment effects\n\nThe most common way to model a treatment effect in a SW-CRT is as a time-averaged effect (step/immediate change),  2  which implies an immediate effect that is sustained. With this specification, the average response across the intervention periods is compared with that across the control periods (Figure  2a ). In some situations, the intervention will not be fully implemented in the period immediately after crossing over or may have a delayed effect. This can be handled by specifying a fractional treatment indicator.  2, 25 For example, using prior knowledge, one may specify that the treatment will only be 50% effective during the first intervention period and code the treatment indicator as 0.5 in that period. When the treatment effect is anticipated to be gradual across multiple periods, one can assign fractional values to consecutive periods (assuming the fractions are known) (Figure  2b ). More generally, rather than estimating a single treatment effect, one may allow the treatment effect to vary in an unrestricted way according to the number of periods of exposure to the intervention. This is referred to as general time-on-treatment effects  24, 25  ; it requires that an adequate number of clusters are available given the desired number of treatment effects. A more parsimonious version is to assume a constant (linear) change with increasing duration of exposure (called a linear time-on-treatment effect).  24 Linear time-ontreatment can also be viewed as a special case of fractional treatment indicators but where the fractions are equally spaced and determined by the maximum exposure time (Figure  2c )."
+    },
+    {
+      "title": "Analytical approximation for non-continuous outcomes",
+      "text": "For non-continuous (binary and count) outcomes, a common approach to sample size calculation is to use the normal approximation.  2, 27 However, this approach has several issues. First, it requires the specification of an absolute difference even if relative measures are of interest. Second, the variance of the estimated treatment effect for non-continuous outcomes theoretically depends on the assumed treatment effect as well as on the size of any time effects, whereas under the normal approximation it depends on neither. Several recent methods have shifted away from normal approximation approaches towards methods based on maximum-likelihood estimation (MLE)  28  of the generalized linear mixed-model (GLMM) or marginal models using GEE.  23, 29 These methods allow users to specify odds ratios and risk ratios directly in their sample size calculation procedures. Moreover, they allow the variance to depend on the assumed treatment effect and thus require the effect of secular trends to be incorporated in the power calculation. Although the analytical model should always include time effects to account for potential secular trends, power calculations for continuous outcomes are not affected by the magnitude of the secular trends.\n\nTable  1  summarizes these and other features that researchers need to consider when designing a SW-CRT."
+    },
+    {
+      "title": "Summary of available sample size and power calculators",
+      "text": "To date, 18 power and sample size calculators for SW-CRTs have been developed for implementation in R, online via an R Shiny app, or in SAS, Stata, Excel, PASS  31  and nQuery.  32 A standalone calculator maintained by the National Institutes of Health has also recently become available.  33 A summary of the functionality of the calculators with respect to the major features described in Table  1  is presented in Supplementary File 1, Tables S1-S6 (available as Supplementary data at IJE online) organized by software platform. Each calculator is also classified based on how correlation structures need to be specified (i.e. in  Allow the between-period ICC to be different from the within-period ICC (often specified using the CAC, which is the ratio of the between-period to the within-period ICC) Exponential decay Specify a within-period ICC and a CAC measuring the exponential rate of decay in the between-period ICC per period Cohort designs Exchangeable As for cross-sectional design; in addition, assume a constant within-individual correlation over time Block exchangeable\n\nAs for cross-sectional design; in addition, assume a constant within-individual correlation over time Proportional decay\n\nAs for cross-sectional design; in addition, specify an exponential decay in the within-individual correlation over time Type of treatment effect Average (immediate) effect Intervention leads to step change (immediate change) Delayed or gradual effect Allows gradual treatment effect or partial exposure to the intervention Linear time-on-treatment effect Allows the treatment to increase linearly with duration of exposure General time-on-treatment effect Allows the treatment effect to vary in an unrestricted way, according to the number of periods of exposure to the intervention Link function (for binary outcomes) Identity (Risk Difference), Log (Relative Risk), Logit (Odds Ratio) Equal or Unequal allocation Same or different number of clusters per sequence; calculators that allow users to upload a userdefined design matrix may allow users to explore power implications of different allocations Varying or fixed cluster sizes Allowing cluster (or cluster-period) sizes to vary across clusters can affect power. Often specified in terms of a coefficient of cluster-size variation Incomplete design Data are not collected from some clusters in some periods either to allow for a transition period or to ease the data collection burden (see Figure  1 ). Calculators that allow users to upload or define their own design matrix provide more flexibility over specifying incomplete designs Analytic model Mixed-effects regression or marginal model (generalized estimating equations) Different methods to specify correlation Different calculators may require different inputs to measure correlation. The most common approach is to specify anticipated intra-cluster correlation coefficients. An alternative is to specify the anticipated variance or standard deviation of the random-effects distributions. Finally, the coefficient of outcome variation can sometimes be specified Cluster-treatment heterogeneity Users may allow treatment effects to vary randomly across clusters (which can reduce power) Multilevel clustering More than two levels of clustering during each time period, e.g. patients may be clustered within providers who are clustered within primary care practices Hybrid design\n\nThe design contains a mixture of SW-CRT and parallel CRT (see Girling et al.  19"
+    },
+    {
+      "title": "for details) Continuous or categorical time effects",
+      "text": "Users may model secular trends using fixed categorical or fixed continuous effects. Whether linear or categorical time effects are incorporated in complete stepped-wedge designs has no influence on continuous outcomes  30"
+    },
+    {
+      "title": "Magnitude of time effect",
+      "text": "Users may specify the expected secular trend, which, in the case of a non-continuous outcome, can affect power ICC, intra-cluster correlation coefficient; CAC, Cluster Autocorrelation Coefficient; SW-CRT, stepped-wedge cluster randomized trial; CRT, cluster randomized trial.\n\nterms of coefficient of variation (CV) of outcomes, ICCs or variance components of random effects) and whether the calculator allows for unequal cluster-period sizes, unequal allocation of clusters to sequences and whether the user can specify their own design matrix. Note that any calculator that can support a user-specified design matrix can typically also be used for other multiple-period designs (such as repeated parallel-arm or multiple-period cluster crossovers) as the sample size methodology underlying all these designs is similar. We also indicate whether clustertreatment effect heterogeneity, continuous time effects (as opposed to only categorical), subclusters (i.e. more than two levels of clusters within each period) and hybrid designs (i.e. a mixture of parallel and SW-CRTs) can be accommodated.  19 A Shiny app is available ( https://douyang.  shinyapps.io/swcrtcalculator/ ) in which users can obtain a list of calculators that accommodate their selected design features. Among available calculators, we now review in more detail four main packages that offer many of the available features."
+    },
+    {
+      "title": "SHINYCRT by Hemming et al."
+    },
+    {
+      "title": "Overview",
+      "text": "\u2022 A menu-based web app (RShiny app) that calculates power and sample size for SW-CRTs under linear mixedeffects models.  27  Type of design and outcome: cross-sectional and closed cohort designs with continuous, binary and count outcomes using the normal approximation method. \u2022 Correlation structures: exchangeable (users need to specify a common wp-ICC); block or nested exchangeable (specify the wp-ICC and CAC as well as an IAC for cohort designs); exponential decay (specify the wp-ICC and CAC for the decay per period, as well as a constant IAC for cohort designs). Exponential decay is referred to as 'discrete time decay' in this app.\n\nImportant features and strengths SHINYCRT automatically displays power or sample size curves. Users can either provide sample sizes per cluster period to calculate the power or specify a target power to obtain the required sample sizes. In addition to the specified 'base' ICC values, users can conduct a sensitivity analysis by specifying the upper and lower bounds of the wp-ICC. The plot will automatically include results for lower and higher CAC values (80% and 120% of the specified CAC) as a sensitivity analysis. Users can upload their own design matrices to accommodate unequal numbers of clusters per sequence. Uploading a design matrix also activates additional features including an option for accommodating clustertreatment heterogeneity. The design matrix may contain empty cells to allow for incomplete designs or cells with fractions to accommodate delayed or linear time-ontreatment effects (although the design matrix will be displayed as integers). This calculator can also accommodate unequal cluster sizes by specifying a CV for cluster-size variation. Instead of a z-test, users can request a t-test with degrees of freedom equal to the number of cluster periods minus the number of periods minus one, although the t-test is not available for exponential decay or when uploading a user-specified design matrix. An attractive feature of this app is that in addition to SW-CRT, menu options include other multiple-period designs, e.g. parallel-arm and multiple-period cluster crossover designs."
+    },
+    {
+      "title": "Limitations",
+      "text": "The SHINYCRT web app has multiple features and allows substantial flexibility in specifying a design, but also has some limitations. First, methods for binary and count outcomes use a normal approximation; thus, the magnitude of time effects on power cannot be accommodated. Second, only identity link functions are allowed; thus, when the research requires log or logit links, the sample size calculation procedure may not be compatible with the analytical approach. Third, in the case of closed cohort designs, the app only allows constant individual-level correlation, even though proportional decay may be more appropriate. Fourth, the t-distribution approximation was still under development at the time of submission. Finally, the RShiny app platform limits the number of hours the app can run on the server. When the quota has been reached in a particular month, users will have to find an alternative way to access the calculator."
+    },
+    {
+      "title": "SWDPWR by Chen et al."
+    },
+    {
+      "title": "Overview",
+      "text": "\u2022 A calculator running in R, RShiny and SAS that calculates power and sample size for SW-CRTs using GEE or GLMM with MLE.  34  Type of design and outcome: cross-sectional and closed cohort designs with continuous and binary outcomes under identity, log and logit link functions. \u2022 Correlation structures: block or nested exchangeable correlation structures (including exchangeable as a special case); wp-ICC and bp-ICC must be specified for cross-sectional designs (specified as equal to obtain exchangeable correlation); for cohort designs, wi-ICC must also be specified."
+    },
+    {
+      "title": "Important features and strengths",
+      "text": "The most significant feature of this calculator is the availability of GEE and MLE to obtain more accurate sample size estimates for binary outcomes. When the research requires relative measures, the implementation of log and logit link functions allows users to specify relative treatment effects directly. When assuming no secular trend, users can specify the target difference by either (i) specifying the expected response in the control condition at the beginning of the study and the expected response in the intervention condition at the end or (ii) replacing the expected response in the intervention condition at the end of the study with the effect size. To accommodate a secular trend, users can specify the expected response in the control condition at the beginning and end of the study (i.e. assuming the intervention has not been introduced) in addition to the target difference. Users can upload a design matrix and accommodate hybrid designs and designs with different numbers of clusters per sequence."
+    },
+    {
+      "title": "Limitations",
+      "text": "The SWDPWR calculator has some limitations. First, it does not allow for exponential or proportional decay and cannot accommodate count outcomes. Second, with the conditional model, a maximum cluster-period size of 150 is allowed for binary outcomes and the calculator is further limited to cross-sectional designs with exchangeable correlation. If larger cluster-period sizes, cohort designs or more complex correlation structures are desired, GEE must be used instead. Third, when specifying no time effects, i.e. the same expected response in the control condition at the beginning and end, the time variable will be removed from the underlying model used for calculation, which is incompatible with recommendations to always include time effects in the analytical model. Fourth, there is currently no option for choosing a t-test when the number of clusters is small. Finally, incomplete designs (including transition periods), cluster-treatment heterogeneity, unequal cluster sizes and delayed or time-on-treatment effects are not available."
+    },
+    {
+      "title": "SWCRTDESIGN by Hughes et al."
+    },
+    {
+      "title": "Overview",
+      "text": "\u2022 A calculator running in R and RShiny app that calculates power and sample size for SW-CRTs under a linear mixed-effects model.  35  Type of design and outcome: cross-sectional designs with continuous and binary outcomes under an identity link function. For non-continuous outcomes, a new method that includes log and logit link functions and that can provide more accurate estimates than MLE even with a small number of clusters is being planned as a future addition.  36  Correlation structure: exchangeable and nested exchangeable correlation structures. Users can specify the wp-ICC and CAC or standard deviations for random intercepts, random treatment effects across clusters and random cluster by time effects; the correlation between random intercepts and random treatment effects can also be specified (most other calculators assume independence)."
+    },
+    {
+      "title": "Important features and strengths",
+      "text": "The most important contribution of this package is to allow the intervention effect to vary across clusters by including a random treatment effect.  25 To activate this feature, users must input standard deviations of the anticipated random effects (rather than ICCs). In the accompanying Shiny app, delayed or linear time-on-treatment effects can be accommodated by allowing fractional treatment indicators; however, general time-on-treatment effects are not available. Designs must be specified via the function 'swDns'. Users can specify the number of clusters changing from control to intervention at each step. An incomplete design can be constructed by specifying a cluster-period size of 0 in select periods."
+    },
+    {
+      "title": "Limitations",
+      "text": "SWCRTDESIGN has several limitations. First, calculations for binary outcomes are only available using the normal approximation and for count outcomes only via simulation. Second, it cannot be used for cohort designs. Third, exponential or proportional decay cannot be accommodated. Fourth, there is no option for choosing a t-distribution when the number of clusters is small. Fifth, compared with other packages, specifying incomplete designs is less straightforward: a complete design matrix must be specified using 'swDns' followed by specification of clusterperiod sizes. Finally, delayed treatment effects are only available in the Shiny app version so far, but relevant code for simulation-based power calculation can be performed by modifying the code provided in Voldal et al.  35"
+    },
+    {
+      "title": "CRTFASTGEEPWR by Zhang and Preisser"
+    },
+    {
+      "title": "Overview",
+      "text": "\u2022 An SAS macro that calculates power for SW-CRT based on GEE analysis of a marginal model.  37, 38  Type of design and outcome: cross-sectional or closed cohort designs with continuous, binary and count outcomes and identity, log and logit link functions.\n\n\u2022 Correlation structure: nested or block exchangeable (including exchangeable as a special case) and exponential or proportional decay. Under proportional decay, the calculator requires the bp-ICC and wi-ICC to decay at the same rate."
+    },
+    {
+      "title": "Important features and strengths",
+      "text": "Users can specify either time-averaged or 'incremental' intervention effects, the latter using fractional treatment values for linear time-on-treatment effects. Additionally, time effects can be specified as either categorical or linear (continuous). Both intervention and time effects are specified as regression parameters on the scale of the link function. The model with categorical time effects implies an expected proportion/rate under the control condition for each time period, whereas specification of linear time effects requires the user to specify both a fixed intercept and slope that determine marginal means for the outcome under the control condition.\n\nUsers are required to enter the number of clusters per sequence, which may vary. A required design pattern matrix for sequence-periods uses 0 for control periods, 1 for intervention periods and 2 for empty cells (for incomplete designs). Users may determine power for the normal approximation or from a t-distribution with choice of degrees of freedom (the number of clusters minus two or the number of clusters minus the number of parameters in the model). Unequal cluster-period sizes can be accommodated; however, users must enter the cluster-period sizes rather than a single CV."
+    },
+    {
+      "title": "Limitations",
+      "text": "There are few limitations to this calculator. First, clustertreatment effect heterogeneity cannot be accommodated. Second, for binary and count outcomes, the magnitude of secular trends is relevant but the calculator only considers these parameters on the link function scale, so the user will need to use inverse link functions to convert proportions and rates in case of a non-identity link.  23"
+    },
+    {
+      "title": "Other calculators",
+      "text": "The above four calculators may cover most scenarios of interest; features of other available calculators are summarized in the tables and available in our app and only briefly highlighted here. For Stata users, POWERSWGEE  39  might offer the most flexibility and has similar functionalities as CRTFASTGEEPWR. Notably, when specifying the proportional decay structure, it allows bp-ICC and individual-level correlation to decay at different rates. However, POWERSWGEE currently cannot accommodate incomplete designs. A few calculators in our review accommodate special features, e.g. designs with subclusters  40  ; a calculator is also available to determine allocation-based power.  41, 42 The choice of calculators that can deal with open cohort designs is limited  10, 43  ; however, a reviewer pointed out that by multiplying IAC by one minus the churn rate (the rate that participants leave the trial), calculators that support closed cohort designs can also be used for open cohort designs. This observation will hold for continuous outcomes under a constant individuallevel correlation. Conversely, calculators for open cohort designs can also support closed cohort and cross-sectional designs by setting the churn rate to 0 or 1.\n\nDuring peer review, a new standalone calculator (SWGRT 33 ) became available and was added to our manuscript. SWGRT can support continuous and binary outcomes, all three types of designs and available correlation structures, and is accompanied by excellent documentation. A notable feature of this calculator is that it can incorporate the effect of covariate adjustments in the design. It also allows an ICC obtained from a block exchangeable model to be converted to a discrete time decay ICC.  10  However, it is based on the normal approximation for binary outcomes and cannot deal with incomplete designs, unequal allocation and user-specified design matrices. Finally, it only allows the calculation of the required number of clusters per sequence for a pre-specified treatment effect and a minimum of two clusters per sequence is required."
+    },
+    {
+      "title": "Examples",
+      "text": "In this section, we illustrate power calculations using each of the four packages for two published trials: Girls on the Go!  44  and the Washington State Expedited Partner Therapy (EPT) trial.  45 We show how the sample size parameters should be specified in each package and compare the obtained power values across the four packages. We make comparisons under exchangeable, nested or block exchangeable and exponential or proportional decay structures. We were able to obtain realistic parameter values under these correlation structures using real data from both trials. The code used to implement the calculations is presented in Sections 1 and 2 of Supplementary File 2 (available as Supplementary data at IJE online) or RPubs ( https://rpubs.com/derek6561/swcrtcalculator ).\n\n'Girls on the Go!' trial 'Girls on the Go!' is a closed cohort SW-CRT designed to determine whether a 10-week programme that incorporates interactive and practical learning would help to increase self-esteem, self-confidence and body image among school girls aged 10-16 years in Melbourne, Victoria, Australia.  44 The trial was designed with three sequences and four periods with two clusters per sequence (a total of six clusters) and 10 participants per cluster, i.e. a total sample size of 60 participants. There were no transition periods. The primary outcome was continuous: a measure of selfesteem on a scale from 0 to 40. The sample size parameter values including ICC estimates under the three different correlation structures from the CLOUDbank data set, which is a repository of ICC values under different correlation structures, are summarized in Table  2 .  46  Due to the small number of clusters, we illustrate power with both a z-test and a t-test. SWCRTDESIGN was excluded from this example as it cannot be used for cohort designs. Power calculations when using SWDPWR and CRTFASTGEEPWR are shown both with and without time effects. (This does not contradict an earlier statement that the magnitude of time effects is irrelevant for continuous outcomes but was included to illustrate how SWDPWR handles time effects compared with other packages.)\n\nThe power when using the three main calculators under these assumptions is presented in Table  3 . Not surprisingly, the power did not differ much whether GLMM or GEE was used. Whereas power was substantially different under different correlation structures, power was similar across the different calculators when using the normal distribution. Under the no-time-effect scenario however, SWDPWR yields substantially higher power due to fixed time effect parameters being excluded from the model, leaving fewer fixed parameters to estimate. Therefore, to approximate the results of CRTFASTGEEPWR assuming a null secular trend (where the analytical model includes time effects), users must specify a small secular trend in SWDPWR. As expected, the magnitude of time effects in the linear model is irrelevant to CRTFASTGEEPWR. Note that power from CRTFASTGEEPWR is based on an exponentially decaying wi-ICC, whereas SHINYCRT assumes a constant IAC; nevertheless, the power obtained was comparable. When using the t-distribution, calculated power in SHINYCRT and CRTFASTGEEPWR were substantially different (76% vs 50%) due to the degrees of freedom implemented being different (19 in SHINYCRT vs 4 in CRTFASTGEEPWR, i.e. the number of clusters minus two)."
+    },
+    {
+      "title": "Community EPT trial",
+      "text": "The Washington State EPT trial is a cross-sectional SW-CRT designed to evaluate the impact of promoting the use of EPT on the decrease of Chlamydia test positivity among women.  45 The trial was designed with four sequences and five periods. Each sequence has 6, 6, 6 and 4 clusters, respectively (a total of 22 clusters). The average clusterperiod size was 305 participants, i.e. a total sample size of 33 550 participants. There were no transition periods. The primary outcome was binary: prevalence of Chlamydia positivity. The sample size parameter values including ICC estimates under the three different correlation structures, from reanalysis of the real EPT trial data,  47, 48  are summarized in Table  4 . Since the magnitude of any assumed time effects will impact the power for binary outcomes, we assessed power assuming (i) no time effect, (ii) a small time effect equal to half the size of the treatment effect and (iii) a moderate time effect equal to the treatment effect.\n\nThe power when using the four main calculators is presented in Table  5 . The power was dramatically different under different assumed correlation structures. The power did not appear to differ based on whether GLMM or GEE was used, but when assuming no time effects, SWDPWR a SHINYCRT requires IAC; SWDPWR and CRTFASTGEEPWR require within-individual ICC. We used the same value for both parameters. b Assumed 0.1 in SWDPWR where specification of time effects is necessary to avoid inflating power; changing the value of assumed time effects will not change power as the outcome is continuous gave substantially different results to the other packages, as explained earlier. When the time effects were not null, the power from SWDPWR and CRTFASTGEEPWR was similar but substantially different from the power under the normal approximation in SHINYCRT and SWCRTDESIGN (since the normal approximation does not rely on the magnitude of time effects). The differences tend to increase when the time effects increase.\n\nThe logit link can also be specified for the mean model in SWDPWR and CRTFASTGEEPWR (see Supplementary File 2, Section 3, available as Supplementary data at IJE online). Both calculators require users to specify the effect size on the log scale and the ICC of the binary outcomes on the proportions scale. Whereas SWDPWR requires the time effect to be specified as proportions, CRTFASTGEEPWR requires all marginal mean model parameters (i.e. period and intervention effects) to be specified on the link function scale."
+    },
+    {
+      "title": "Summary and recommendations",
+      "text": "There are several key considerations when designing a SW-CRT and choosing a power and sample size calculator. For a continuous or non-continuous outcome when the normal approximation is appropriate (i.e. where there is a relatively large number of clusters and/or the anticipated proportion is not too close to 0 or 1) and when anticipated secular trends are small, SHINYCRT is potentially the best choice for most users. It is free to access and provides an intuitive interface. It can accommodate continuous, binary and count outcomes as well as cross-sectional and closed cohort designs under the three types of correlation structures. It allows for incomplete designs and cluster-treatment heterogeneity. Furthermore, it automatically implements a sensitivity analysis for the assumed correlation parameters. However, for non-continuous outcomes in which relative effects are of interest or when extreme baseline rates/proportions or large time effects are expected, CRTFASTGEEPWR seems to be the better choice. This SAS macro allows for cross-sectional and closed cohort designs, incorporates all correlation structures considered herein and can accommodate incomplete designs, fractional treatment effects and both categorical and linear time effects. However, non-SAS users or users who do not want to use GEE may use SWDPWR instead as long as they have a complete design with a continuous or binary outcome (exchangeable correlation only) and do not require decaying correlation structures or delayed treatment effects. When using SWDPWR, users should incorporate non-zero time effects (even for continuous outcomes), otherwise the calculation will be based on a model that excludes the time effect coefficients and this could yield spuriously high power. g This is a manual correction for the DF used in SHINYCRT based on its documentation; the actual implementation is under development.\n\nAlthough users may select the calculator most convenient to them facilitated by our Shiny app, a good rule of thumb when not all requirements can be met is to prioritize those factors that have the most impact on power in their scenario. As our examples illustrate, an important consideration is the assumed correlation structure: assuming an overly simple correlation structure (e.g. exchangeable) when a more complex correlation structure (e.g. block exchangeable or exponential decay) is appropriate can lead to power being overestimated.  49 Ideally, ICC values should be informed by analysing existing data (e.g. historical or routinely collected data) under a similar setting over a similar study duration. A practical approach is to select the best-fitting correlation structure based on information criteria, i.e. AIC (Akaike Information Criterion) and BIC (Bayesian Information Criterion).  50 egardless of the availability of prior data, it is always good practice to check the sensitivity of the calculations by assuming a range of plausible ICC values. When there are no prior data to inform the choice of correlation structure, we would recommend using a nested or block exchangeable correlation for binary outcomes and exponential or proportional decay for continuous outcomes. For non-continuous outcomes, the type of approximation used is also critical. For non-continuous outcomes, users must consider whether strong time effects are anticipated and choose a calculator that can accommodate such effects. As shown in our example, with binary outcomes, the normal approximation works poorly if the baseline proportion is away from 0.5 and the time effect is not null. A similar observation was made by Zhou et al.  28  Finally, for continuous outcomes with a small number of clusters, using the t-test is generally advised, but users must be aware that different degree-of-freedom options are implemented in different calculators and the best choice for degree of freedom remains unclear."
+    },
+    {
+      "text": "Figure 1 (a) Stepped-wedge design with five sequences and six periods (steps). (b) Stepped-wedge design with transition periods. (c) 'Staircase' stepped-wedge design."
+    },
+    {
+      "text": "Figure 2 (a) Design matrix for a stepped-wedge design with time-averaged treatment effect. (b) Design matrix for a stepped-wedge design with delayed/gradual treatment effect and known fractions. (c) Design matrix for a stepped-wedge design with linear time-on-treatment effects (treatment increases linearly with duration of exposure)."
+    },
+    {
+      "text": "Common features that users need to consider or specify when designing a stepped-wedge cluster randomized trial"
+    },
+    {
+      "text": "Sample size calculation parameter values used for the 'Girls on the Go' trial (continuous outcome)"
+    },
+    {
+      "text": "Power calculated under the main software packages for the 'Girls on the Go' trial"
+    },
+    {
+      "text": "Sample size calculation parameter values used for the Expedited Partner Therapy trial (binary outcome)"
+    },
+    {
+      "text": "Power calculated under the main software packages for the Expedited Partner Therapy trial"
+    },
+    {
+      "title": "Acknowledgements",
+      "text": "We thank  Ying Zhang  (zying@live.unc.edu) who provided instructions on how to specify the parameters in CRTFASTGEEPWR."
+    },
+    {
+      "text": "Funding M.T. and F.L. are supported by the  National Institute of Aging (NIA) of the National Institutes of Health (NIH)  under Award Number  U54AG063546 , which funds  NIA Imbedded Pragmatic Alzheimer's Disease  and  AD-Related Dementias Clinical Trials Collaboratory   (NIA IMPACT Collaboratory) . Y.O. is funded by the  Ontario SPOR SUPPORT Unit , which is supported by the  Canadian Institutes of Health Research and the Province of Ontario . J.S.P. and F.L. are supported through  Patient-Centered Outcomes Research Institute V R  ( PCORI V R Award   ME-2019C1-16196 ). The statements presented in this article are solely the responsibility of the authors and do not necessarily represent the views of the  NIH  nor PCORI V R , its  Board of Governors or Methodology Committee ."
+    },
+    {
+      "title": "Data availability",
+      "text": "There are no new data associated with this article."
+    },
+    {
+      "title": "Ethics approval",
+      "text": "Not applicable."
+    },
+    {
+      "title": "Supplementary data",
+      "text": "Supplementary data are available at IJE online."
+    },
+    {
+      "title": "Author contributions",
+      "text": "Y.O. led the writing of the manuscript, developed the idea with M.T., extracted the software information, created tables and figures, and developed the Shiny app. M.T. conceived of the ideas, helped with data extraction and co-led the writing. F.L. participated in the development of the idea and helped with data extraction. J.S.P. critically reviewed the methods and ideas. All authors contributed to writing, drafting and editing the manuscript."
+    },
+    {
+      "title": "Conflict of interest",
+      "text": "Y.O. is the author for CRTpowerdist calculator; M.T. is a co-author of the SHINYCRT calculator; F.L. is co-author of SWDPWR and CRTFASTGEEPWR; J.S.P. is author of CRTFASTGEEPWR. J.S.P. has received a stipend for service as a merit reviewer from PCORI V R . J.S.P. did not serve on the Merit Review panel that reviewed this project."
+    }
+  ],
+  "references": [
+    {
+      "title": "The stepped wedge trial design: a systematic review",
+      "authors": [
+        "C Brown",
+        "R Lilford"
+      ],
+      "year": 2006,
+      "journal": "BMC Med Res Methodol",
+      "volume": "6",
+      "pages": "54",
+      "raw": "The stepped wedge trial design: a systematic review \n\t\t \n\t\t\t C A Brown \n\t\t \n\t\t \n\t\t\t R J Lilford \n\t\t \n\t \n\t \n\t\t BMC Med Res Methodol \n\t\t \n\t\t\t 6 \n\t\t\t 54 \n\t\t\t 2006 \n\t\t \n\t \n\t Brown CA, Lilford RJ. The stepped wedge trial design: a system- atic review. BMC Med Res Methodol 2006;6:54."
+    },
+    {
+      "title": "Design and analysis of stepped wedge cluster randomized trials",
+      "authors": [
+        "M Hussey",
+        "J Hughes"
+      ],
+      "year": 2007,
+      "doi": "10.1016/j.cct.2006.05.007",
+      "journal": "Contemp Clin Trials",
+      "volume": "28",
+      "raw": "Design and analysis of stepped wedge cluster randomized trials \n\t\t \n\t\t\t M A Hussey \n\t\t \n\t\t \n\t\t\t J P Hughes \n\t\t \n\t\t 10.1016/j.cct.2006.05.007 \n\t \n\t \n\t\t Contemp Clin Trials \n\t\t \n\t\t\t 28 \n\t\t\t \n\t\t\t 2007 \n\t\t \n\t \n\t Hussey MA, Hughes JP. Design and analysis of stepped wedge cluster randomized trials. Contemp Clin Trials 2007;28:182-91."
+    },
+    {
+      "title": "Systematic review of stepped wedge cluster randomized trials shows that design is particularly used to evaluate interventions during routine implementation",
+      "authors": [
+        "N Mdege",
+        "M-S Man",
+        "Taylor Brown"
+      ],
+      "year": 2011,
+      "journal": "J Clin Epidemiol",
+      "volume": "64",
+      "raw": "Systematic review of stepped wedge cluster randomized trials shows that design is particularly used to evaluate interventions during routine implementation \n\t\t \n\t\t\t N D Mdege \n\t\t \n\t\t \n\t\t\t M-S Man \n\t\t \n\t\t \n\t\t\t Taylor Nee Brown \n\t\t \n\t\t \n\t\t\t C A \n\t\t \n\t \n\t \n\t\t J Clin Epidemiol \n\t\t \n\t\t\t 64 \n\t\t\t \n\t\t\t 2011 \n\t\t \n\t \n\t Mdege ND, Man M-S, Taylor Nee Brown CA et al. Systematic review of stepped wedge cluster randomized trials shows that design is particularly used to evaluate interventions during rou- tine implementation. J Clin Epidemiol 2011;64:936-48."
+    },
+    {
+      "title": "The stepped wedge cluster randomised trial: rationale, design, analysis, and reporting",
+      "authors": [
+        "K Hemming",
+        "T Haines",
+        "P Chilton"
+      ],
+      "year": 2015,
+      "doi": "10.1136/bmj.h391",
+      "journal": "BMJ",
+      "volume": "350",
+      "pages": "391",
+      "raw": "The stepped wedge cluster randomised trial: rationale, design, analysis, and reporting \n\t\t \n\t\t\t K Hemming \n\t\t \n\t\t \n\t\t\t T P Haines \n\t\t \n\t\t \n\t\t\t P J Chilton \n\t\t \n\t\t 10.1136/bmj.h391 \n\t \n\t \n\t\t BMJ \n\t\t \n\t\t\t 350 \n\t\t\t 391 \n\t\t\t 2015 \n\t\t \n\t \n\t Hemming K, Haines TP, Chilton PJ et al. The stepped wedge cluster randomised trial: rationale, design, analysis, and report- ing. BMJ 2015;350:h391."
+    },
+    {
+      "title": "Five questions to consider before conducting a stepped wedge trial",
+      "authors": [
+        "J Hargreaves",
+        "A Copas",
+        "E Beard"
+      ],
+      "year": 2015,
+      "journal": "Trials",
+      "volume": "16",
+      "pages": "350",
+      "raw": "Five questions to consider before conducting a stepped wedge trial \n\t\t \n\t\t\t J R Hargreaves \n\t\t \n\t\t \n\t\t\t A J Copas \n\t\t \n\t\t \n\t\t\t E Beard \n\t\t \n\t \n\t \n\t\t Trials \n\t\t \n\t\t\t 16 \n\t\t\t 350 \n\t\t\t 2015 \n\t\t \n\t \n\t Hargreaves JR, Copas AJ, Beard E et al. Five questions to consider before conducting a stepped wedge trial. Trials 2015;16:350."
+    },
+    {
+      "title": "Logistic, ethical, and political dimensions of stepped wedge trials: critical review and case studies",
+      "authors": [
+        "A Prost",
+        "A Binik",
+        "I Abubakar"
+      ],
+      "year": 2015,
+      "doi": "10.1186/s13063-015-0837-4",
+      "journal": "Trials",
+      "volume": "16",
+      "pages": "351",
+      "raw": "Logistic, ethical, and political dimensions of stepped wedge trials: critical review and case studies \n\t\t \n\t\t\t A Prost \n\t\t \n\t\t \n\t\t\t A Binik \n\t\t \n\t\t \n\t\t\t I Abubakar \n\t\t \n\t\t 10.1186/s13063-015-0837-4 \n\t \n\t \n\t\t Trials \n\t\t \n\t\t\t 16 \n\t\t\t 351 \n\t\t\t 2015 \n\t\t \n\t \n\t Prost A, Binik A, Abubakar I et al. Logistic, ethical, and political dimensions of stepped wedge trials: critical review and case stud- ies. Trials 2015;16:351."
+    },
+    {
+      "title": "Reflection on modern methods: when is a stepped-wedge cluster randomized trial a good study design choice?",
+      "authors": [
+        "K Hemming",
+        "M Taljaard"
+      ],
+      "year": 2020,
+      "journal": "Int J Epidemiol",
+      "volume": "49",
+      "raw": "Reflection on modern methods: when is a stepped-wedge cluster randomized trial a good study design choice? \n\t\t \n\t\t\t K Hemming \n\t\t \n\t\t \n\t\t\t M Taljaard \n\t\t \n\t \n\t \n\t\t Int J Epidemiol \n\t\t \n\t\t\t 49 \n\t\t\t \n\t\t\t 2020 \n\t\t \n\t \n\t Hemming K, Taljaard M. Reflection on modern methods: when is a stepped-wedge cluster randomized trial a good study design choice? Int J Epidemiol 2020;49:1043-52."
+    },
+    {
+      "title": "Introducing the new CONSORT extension for stepped-wedge cluster randomised trials",
+      "authors": [
+        "K Hemming",
+        "M Taljaard",
+        "J Grimshaw"
+      ],
+      "year": 2019,
+      "journal": "Trials",
+      "volume": "20",
+      "pages": "68",
+      "raw": "Introducing the new CONSORT extension for stepped-wedge cluster randomised trials \n\t\t \n\t\t\t K Hemming \n\t\t \n\t\t \n\t\t\t M Taljaard \n\t\t \n\t\t \n\t\t\t J Grimshaw \n\t\t \n\t \n\t \n\t\t Trials \n\t\t \n\t\t\t 20 \n\t\t\t 68 \n\t\t\t 2019 \n\t\t \n\t \n\t Hemming K, Taljaard M, Grimshaw J. Introducing the new CONSORT extension for stepped-wedge cluster randomised tri- als. Trials 2019;20:68."
+    },
+    {
+      "title": "Designing a stepped wedge trial: three main designs, carry-over effects and randomisation approaches",
+      "authors": [
+        "A Copas",
+        "J Lewis",
+        "J Thompson"
+      ],
+      "year": 2015,
+      "journal": "Trials",
+      "volume": "16",
+      "pages": "352",
+      "raw": "Designing a stepped wedge trial: three main designs, carry-over effects and randomisation approaches \n\t\t \n\t\t\t A J Copas \n\t\t \n\t\t \n\t\t\t J J Lewis \n\t\t \n\t\t \n\t\t\t J A Thompson \n\t\t \n\t \n\t \n\t\t Trials \n\t\t \n\t\t\t 16 \n\t\t\t 352 \n\t\t\t 2015 \n\t\t \n\t \n\t Copas AJ, Lewis JJ, Thompson JA et al. Designing a stepped wedge trial: three main designs, carry-over effects and random- isation approaches. Trials 2015;16:352."
+    },
+    {
+      "title": "Sample size and power calculations for open cohort longitudinal cluster randomized trials",
+      "authors": [
+        "J Kasza",
+        "R Hooper",
+        "A Copas"
+      ],
+      "year": 2020,
+      "doi": "10.1002/sim.8519",
+      "journal": "Stat Med",
+      "volume": "36",
+      "raw": "Sample size and power calculations for open cohort longitudinal cluster randomized trials \n\t\t \n\t\t\t J Kasza \n\t\t \n\t\t \n\t\t\t R Hooper \n\t\t \n\t\t \n\t\t\t A Copas \n\t\t \n\t\t 10.1002/sim.8519 \n\t \n\t \n\t\t Stat Med \n\t\t \n\t\t\t 36 \n\t\t\t \n\t\t\t 2020 \n\t\t \n\t \n\t Kasza J, Hooper R, Copas A et al. Sample size and power calcu- lations for open cohort longitudinal cluster randomized trials. Stat Med 2020;36:1871-83."
+    },
+    {
+      "title": "Stepped wedge trials with continuous recruitment require new ways of thinking",
+      "authors": [
+        "R Hooper",
+        "A Copas"
+      ],
+      "year": 2019,
+      "journal": "J Clin Epidemiol",
+      "volume": "116",
+      "raw": "Stepped wedge trials with continuous recruitment require new ways of thinking \n\t\t \n\t\t\t R Hooper \n\t\t \n\t\t \n\t\t\t A Copas \n\t\t \n\t \n\t \n\t\t J Clin Epidemiol \n\t\t \n\t\t\t 116 \n\t\t\t \n\t\t\t 2019 \n\t\t \n\t \n\t Hooper R, Copas A. Stepped wedge trials with continuous re- cruitment require new ways of thinking. J Clin Epidemiol 2019; 116:161-66."
+    },
+    {
+      "title": "Accounting for a decaying correlation structure in cluster randomized trials with continuous recruitment",
+      "authors": [
+        "K Grantham",
+        "J Kasza",
+        "S Heritier"
+      ],
+      "year": 2019,
+      "doi": "10.1002/sim.8089",
+      "journal": "Stat Med",
+      "volume": "38",
+      "raw": "Accounting for a decaying correlation structure in cluster randomized trials with continuous recruitment \n\t\t \n\t\t\t K L Grantham \n\t\t \n\t\t \n\t\t\t J Kasza \n\t\t \n\t\t \n\t\t\t S Heritier \n\t\t \n\t\t 10.1002/sim.8089 \n\t \n\t \n\t\t Stat Med \n\t\t \n\t\t\t 38 \n\t\t\t \n\t\t\t 2019 \n\t\t \n\t \n\t Grantham KL, Kasza J, Heritier S et al. Accounting for a decay- ing correlation structure in cluster randomized trials with contin- uous recruitment. Stat Med 2019;38:1918-34."
+    },
+    {
+      "title": "Information content of cluster-period cells in stepped wedge trials",
+      "authors": [
+        "J Kasza",
+        "A Forbes"
+      ],
+      "year": 2019,
+      "journal": "Biometrics",
+      "volume": "75",
+      "raw": "Information content of cluster-period cells in stepped wedge trials \n\t\t \n\t\t\t J Kasza \n\t\t \n\t\t \n\t\t\t A B Forbes \n\t\t \n\t \n\t \n\t\t Biometrics \n\t\t \n\t\t\t 75 \n\t\t\t \n\t\t\t 2019 \n\t\t \n\t \n\t Kasza J, Forbes AB. Information content of cluster-period cells in stepped wedge trials. Biometrics 2019;75:144-52."
+    },
+    {
+      "title": "Stepped-wedge cluster randomised controlled trials: a generic framework including parallel and multiple-level designs",
+      "authors": [
+        "K Hemming",
+        "R Lilford",
+        "A Girling"
+      ],
+      "year": 2015,
+      "journal": "Stat Med",
+      "volume": "34",
+      "raw": "Stepped-wedge cluster randomised controlled trials: a generic framework including parallel and multiple-level designs \n\t\t \n\t\t\t K Hemming \n\t\t \n\t\t \n\t\t\t R Lilford \n\t\t \n\t\t \n\t\t\t A J Girling \n\t\t \n\t \n\t \n\t\t Stat Med \n\t\t \n\t\t\t 34 \n\t\t\t \n\t\t\t 2015 \n\t\t \n\t \n\t Hemming K, Lilford R, Girling AJ. Stepped-wedge cluster rando- mised controlled trials: a generic framework including parallel and multiple-level designs. Stat Med 2015;34:181-96."
+    },
+    {
+      "title": "The hunt for efficient, incomplete designs for stepped wedge trials with continuous recruitment and continuous outcome measures",
+      "authors": [
+        "R Hooper",
+        "J Kasza",
+        "A Forbes"
+      ],
+      "year": 2020,
+      "doi": "10.1186/s12874-020-01155-z",
+      "journal": "BMC Med Res Methodol",
+      "volume": "20",
+      "pages": "279",
+      "raw": "The hunt for efficient, incomplete designs for stepped wedge trials with continuous recruitment and continuous outcome measures \n\t\t \n\t\t\t R Hooper \n\t\t \n\t\t \n\t\t\t J Kasza \n\t\t \n\t\t \n\t\t\t A Forbes \n\t\t \n\t\t 10.1186/s12874-020-01155-z \n\t \n\t \n\t\t BMC Med Res Methodol \n\t\t \n\t\t\t 20 \n\t\t\t 279 \n\t\t\t 2020 \n\t\t \n\t \n\t Hooper R, Kasza J, Forbes A. The hunt for efficient, incomplete designs for stepped wedge trials with continuous recruitment and continuous outcome measures. BMC Med Res Methodol 2020;20:279."
+    },
+    {
+      "title": "Design considerations in the estimation of intraclass correlation",
+      "authors": [
+        "A Donner",
+        "J Koval"
+      ],
+      "year": 1982,
+      "doi": "10.1111/j.1469-1809.1982.tb00718.x",
+      "journal": "Ann Hum Genet",
+      "volume": "46",
+      "raw": "Design considerations in the estimation of intraclass correlation \n\t\t \n\t\t\t A Donner \n\t\t \n\t\t \n\t\t\t J J Koval \n\t\t \n\t\t 10.1111/j.1469-1809.1982.tb00718.x \n\t \n\t \n\t\t Ann Hum Genet \n\t\t \n\t\t\t 46 \n\t\t\t \n\t\t\t 1982 \n\t\t \n\t \n\t Donner A, Koval JJ. Design considerations in the estimation of intraclass correlation. Ann Hum Genet 1982;46:271-77."
+    },
+    {
+      "title": "Analysis of data from group-randomized trials with repeat observations on the same groups",
+      "authors": [
+        "D Murray",
+        "P Hannan",
+        "R Wolfinger"
+      ],
+      "year": 1998,
+      "journal": "Statist Med",
+      "volume": "17",
+      "raw": "Analysis of data from group-randomized trials with repeat observations on the same groups \n\t\t \n\t\t\t D M Murray \n\t\t \n\t\t \n\t\t\t P J Hannan \n\t\t \n\t\t \n\t\t\t R D Wolfinger \n\t\t \n\t \n\t \n\t\t Statist Med \n\t\t \n\t\t\t 17 \n\t\t\t \n\t\t\t 1998 \n\t\t \n\t \n\t Murray DM, Hannan PJ, Wolfinger RD et al. Analysis of data from group-randomized trials with repeat observations on the same groups. Statist Med 1998;17:1581-600."
+    },
+    {
+      "title": "Sample size calculation for stepped wedge and other longitudinal cluster randomised trials",
+      "authors": [
+        "R Hooper",
+        "S Teerenstra",
+        "E De Hoop"
+      ],
+      "year": 2016,
+      "doi": "10.1002/sim.7028",
+      "journal": "Stat Med",
+      "volume": "35",
+      "raw": "Sample size calculation for stepped wedge and other longitudinal cluster randomised trials \n\t\t \n\t\t\t R Hooper \n\t\t \n\t\t \n\t\t\t S Teerenstra \n\t\t \n\t\t \n\t\t\t E De Hoop \n\t\t \n\t\t 10.1002/sim.7028 \n\t \n\t \n\t\t Stat Med \n\t\t \n\t\t\t 35 \n\t\t\t \n\t\t\t 2016 \n\t\t \n\t \n\t Hooper R, Teerenstra S, de Hoop E et al. Sample size calculation for stepped wedge and other longitudinal cluster randomised tri- als. Stat Med 2016;35:4718-28."
+    },
+    {
+      "title": "Statistical efficiency and optimal design for stepped cluster studies under linear mixed effects models",
+      "authors": [
+        "A Girling",
+        "K Hemming"
+      ],
+      "year": 2016,
+      "doi": "10.1002/sim.6850",
+      "journal": "Stat Med",
+      "volume": "35",
+      "raw": "Statistical efficiency and optimal design for stepped cluster studies under linear mixed effects models \n\t\t \n\t\t\t A J Girling \n\t\t \n\t\t \n\t\t\t K Hemming \n\t\t \n\t\t 10.1002/sim.6850 \n\t \n\t \n\t\t Stat Med \n\t\t \n\t\t\t 35 \n\t\t\t \n\t\t\t 2016 \n\t\t \n\t \n\t Girling AJ, Hemming K. Statistical efficiency and optimal design for stepped cluster studies under linear mixed effects models. Stat Med 2016;35:2149-66."
+    },
+    {
+      "title": "Intra-cluster and inter-period correlation coefficients for cross-sectional cluster randomised controlled trials for type-2 diabetes in UK primary care",
+      "authors": [
+        "J Martin",
+        "A Girling",
+        "K Nirantharakumar"
+      ],
+      "year": 2016,
+      "doi": "10.1186/s13063-016-1532-9",
+      "journal": "Trials",
+      "volume": "17",
+      "pages": "402",
+      "raw": "Intra-cluster and inter-period correlation coefficients for cross-sectional cluster randomised controlled trials for type-2 diabetes in UK primary care \n\t\t \n\t\t\t J Martin \n\t\t \n\t\t \n\t\t\t A Girling \n\t\t \n\t\t \n\t\t\t K Nirantharakumar \n\t\t \n\t\t 10.1186/s13063-016-1532-9 \n\t \n\t \n\t\t Trials \n\t\t \n\t\t\t 17 \n\t\t\t 402 \n\t\t\t 2016 \n\t\t \n\t \n\t Martin J, Girling A, Nirantharakumar K et al. Intra-cluster and inter-period correlation coefficients for cross-sectional cluster randomised controlled trials for type-2 diabetes in UK primary care. Trials 2016;17:402."
+    },
+    {
+      "title": "Design and analysis considerations for cohort stepped wedge cluster randomized trials with a decay correlation structure",
+      "authors": [
+        "F Li"
+      ],
+      "year": 2020,
+      "doi": "10.1002/sim.8415",
+      "journal": "Stat Med",
+      "volume": "39",
+      "raw": "Design and analysis considerations for cohort stepped wedge cluster randomized trials with a decay correlation structure \n\t\t \n\t\t\t F Li \n\t\t \n\t\t 10.1002/sim.8415 \n\t \n\t \n\t\t Stat Med \n\t\t \n\t\t\t 39 \n\t\t\t \n\t\t\t 2020 \n\t\t \n\t \n\t Li F. Design and analysis considerations for cohort stepped wedge cluster randomized trials with a decay correlation struc- ture. Stat Med 2020;39:438-55."
+    },
+    {
+      "title": "Impact of non-uniform correlation structure on sample size and power in multiple-period cluster randomised trials",
+      "authors": [
+        "J Kasza",
+        "K Hemming",
+        "R Hooper"
+      ],
+      "year": 2019,
+      "doi": "10.1177/0962280217734981",
+      "journal": "Stat Methods Med Res",
+      "volume": "28",
+      "raw": "Impact of non-uniform correlation structure on sample size and power in multiple-period cluster randomised trials \n\t\t \n\t\t\t J Kasza \n\t\t \n\t\t \n\t\t\t K Hemming \n\t\t \n\t\t \n\t\t\t R Hooper \n\t\t \n\t\t 10.1177/0962280217734981 \n\t \n\t \n\t\t Stat Methods Med Res \n\t\t \n\t\t\t 28 \n\t\t\t \n\t\t\t 2019 \n\t\t \n\t \n\t Kasza J, Hemming K, Hooper R et al. Impact of non-uniform corre- lation structure on sample size and power in multiple-period cluster randomised trials. Stat Methods Med Res 2019;28:703-16."
+    },
+    {
+      "title": "Sample size determination for GEE analyses of stepped wedge cluster randomized trials",
+      "authors": [
+        "F Li",
+        "E Turner",
+        "J Preisser"
+      ],
+      "year": 2018,
+      "doi": "10.1111/biom.12918",
+      "journal": "Biometrics",
+      "volume": "74",
+      "raw": "Sample size determination for GEE analyses of stepped wedge cluster randomized trials \n\t\t \n\t\t\t F Li \n\t\t \n\t\t \n\t\t\t E L Turner \n\t\t \n\t\t \n\t\t\t J S Preisser \n\t\t \n\t\t 10.1111/biom.12918 \n\t \n\t \n\t\t Biometrics \n\t\t \n\t\t\t 74 \n\t\t\t \n\t\t\t 2018 \n\t\t \n\t \n\t Li F, Turner EL, Preisser JS. Sample size determination for GEE analyses of stepped wedge cluster randomized trials. Biometrics 2018;74:1450-58."
+    },
+    {
+      "title": "Mixed-effects models for the design and analysis of stepped wedge cluster randomized trials: an overview",
+      "authors": [
+        "F Li",
+        "J Hughes",
+        "K Hemming"
+      ],
+      "year": 2021,
+      "doi": "10.1177/0962280220932962",
+      "journal": "Stat Methods Med Res",
+      "volume": "30",
+      "raw": "Mixed-effects models for the design and analysis of stepped wedge cluster randomized trials: an overview \n\t\t \n\t\t\t F Li \n\t\t \n\t\t \n\t\t\t J P Hughes \n\t\t \n\t\t \n\t\t\t K Hemming \n\t\t \n\t\t 10.1177/0962280220932962 \n\t \n\t \n\t\t Stat Methods Med Res \n\t\t \n\t\t\t 30 \n\t\t\t \n\t\t\t 2021 \n\t\t \n\t \n\t Li F, Hughes JP, Hemming K et al. Mixed-effects models for the design and analysis of stepped wedge cluster randomized trials: an overview. Stat Methods Med Res 2021;30:612-39."
+    },
+    {
+      "title": "Current issues in the design and analysis of stepped wedge trials",
+      "authors": [
+        "J Hughes",
+        "T Granston",
+        "P Heagerty"
+      ],
+      "year": 2015,
+      "doi": "10.1016/j.cct.2015.07.006",
+      "journal": "Contemp Clin Trials",
+      "volume": "45",
+      "raw": "Current issues in the design and analysis of stepped wedge trials \n\t\t \n\t\t\t J P Hughes \n\t\t \n\t\t \n\t\t\t T S Granston \n\t\t \n\t\t \n\t\t\t P J Heagerty \n\t\t \n\t\t 10.1016/j.cct.2015.07.006 \n\t \n\t \n\t\t Contemp Clin Trials \n\t\t \n\t\t\t 45 \n\t\t\t \n\t\t\t 2015 \n\t\t \n\t \n\t Hughes JP, Granston TS, Heagerty PJ. Current issues in the de- sign and analysis of stepped wedge trials. Contemp Clin Trials 2015;45:55-60."
+    },
+    {
+      "title": "Modeling clustering and treatment effect heterogeneity in parallel and stepped-wedge cluster randomized trials",
+      "authors": [
+        "K Hemming",
+        "M Taljaard",
+        "A Forbes"
+      ],
+      "year": 2018,
+      "journal": "Stat Med",
+      "volume": "37",
+      "raw": "Modeling clustering and treatment effect heterogeneity in parallel and stepped-wedge cluster randomized trials \n\t\t \n\t\t\t K Hemming \n\t\t \n\t\t \n\t\t\t M Taljaard \n\t\t \n\t\t \n\t\t\t A Forbes \n\t\t \n\t \n\t \n\t\t Stat Med \n\t\t \n\t\t\t 37 \n\t\t\t \n\t\t\t 2018 \n\t\t \n\t \n\t Hemming K, Taljaard M, Forbes A. Modeling clustering and treatment effect heterogeneity in parallel and stepped-wedge cluster randomized trials. Stat Med 2018;37:883-98."
+    },
+    {
+      "title": "A tutorial on sample size calculation for multiple-period cluster randomized parallel, cross-over and stepped-wedge trials using the Shiny CRT Calculator",
+      "authors": [
+        "K Hemming",
+        "J Kasza",
+        "R Hooper"
+      ],
+      "year": 2020,
+      "journal": "Int J Epidemiol",
+      "volume": "49",
+      "raw": "A tutorial on sample size calculation for multiple-period cluster randomized parallel, cross-over and stepped-wedge trials using the Shiny CRT Calculator \n\t\t \n\t\t\t K Hemming \n\t\t \n\t\t \n\t\t\t J Kasza \n\t\t \n\t\t \n\t\t\t R Hooper \n\t\t \n\t \n\t \n\t\t Int J Epidemiol \n\t\t \n\t\t\t 49 \n\t\t\t \n\t\t\t 2020 \n\t\t \n\t \n\t Hemming K, Kasza J, Hooper R et al. A tutorial on sample size calculation for multiple-period cluster randomized parallel, cross-over and stepped-wedge trials using the Shiny CRT Calculator. Int J Epidemiol 2020;49:979-95."
+    },
+    {
+      "title": "A maximum likelihood approach to power calculations for stepped wedge designs of binary outcomes",
+      "authors": [
+        "X Zhou",
+        "X Liao",
+        "L Kunz"
+      ],
+      "year": 2020,
+      "doi": "10.1093/biostatistics/kxy031",
+      "journal": "Biostatistics",
+      "volume": "21",
+      "raw": "A maximum likelihood approach to power calculations for stepped wedge designs of binary outcomes \n\t\t \n\t\t\t X Zhou \n\t\t \n\t\t \n\t\t\t X Liao \n\t\t \n\t\t \n\t\t\t L M Kunz \n\t\t \n\t\t 10.1093/biostatistics/kxy031 \n\t \n\t \n\t\t Biostatistics \n\t\t \n\t\t\t 21 \n\t\t\t \n\t\t\t 2020 \n\t\t \n\t \n\t Zhou X, Liao X, Kunz LM et al. A maximum likelihood ap- proach to power calculations for stepped wedge designs of bi- nary outcomes. Biostatistics 2020;21:102-21."
+    },
+    {
+      "title": "An integrated population-averaged approach to the design, analysis and sample size determination of cluster-unit trials",
+      "authors": [
+        "J Preisser",
+        "M Young",
+        "D Zaccaro"
+      ],
+      "year": 2003,
+      "doi": "10.1002/sim.1379",
+      "journal": "Stat Med",
+      "volume": "22",
+      "raw": "An integrated population-averaged approach to the design, analysis and sample size determination of cluster-unit trials \n\t\t \n\t\t\t J S Preisser \n\t\t \n\t\t \n\t\t\t M L Young \n\t\t \n\t\t \n\t\t\t D J Zaccaro \n\t\t \n\t\t 10.1002/sim.1379 \n\t \n\t \n\t\t Stat Med \n\t\t \n\t\t\t 22 \n\t\t\t \n\t\t\t 2003 \n\t\t \n\t \n\t Preisser JS, Young ML, Zaccaro DJ et al. An integrated population-averaged approach to the design, analysis and sam- ple size determination of cluster-unit trials. Stat Med 2003;22: 1235-54."
+    },
+    {
+      "title": "Time parameterizations in cluster randomized trial planning",
+      "authors": [
+        "K Grantham",
+        "A Forbes",
+        "S Heritier"
+      ],
+      "year": 2020,
+      "doi": "10.1080/00031305.2019.1623072",
+      "journal": "The American Statistician",
+      "volume": "74",
+      "raw": "Time parameterizations in cluster randomized trial planning \n\t\t \n\t\t\t K L Grantham \n\t\t \n\t\t \n\t\t\t A B Forbes \n\t\t \n\t\t \n\t\t\t S Heritier \n\t\t \n\t\t 10.1080/00031305.2019.1623072 \n\t \n\t \n\t\t The American Statistician \n\t\t \n\t\t\t 74 \n\t\t\t \n\t\t\t 2020 \n\t\t \n\t \n\t Grantham KL, Forbes AB, Heritier S et al. Time parameteriza- tions in cluster randomized trial planning. The American Statistician 2020;74:184-89."
+    },
+    {
+      "title": "PASS 2021 Power Analysis and Sample Size Software",
+      "year": 2021,
+      "doi": "10.1177/089443939201000319",
+      "raw": "10.1177/089443939201000319 \n\t\t \n\t\t PASS 2021 Power Analysis and Sample Size Software \n\t\t Kaysville, UT, USA \n\t\t \n\t\t\t NCSS LLC \n\t\t\t December 2021 \n\t\t \n\t \n\t date last accessed \n\t NCSS LLC. PASS 2021 Power Analysis and Sample Size Software. Kaysville, UT, USA. https://www.ncss.com/software/ pass/ (20 December 2021, date last accessed)."
+    },
+    {
+      "title": "Statsols. nQuery Sample Size and Power Calculation",
+      "year": 2021,
+      "raw": "Statsols. nQuery Sample Size and Power Calculation \n\t\t Cork \n\t\t \n\t\t\t Statistical Solutions Ltd \n\t\t\t 20 December 2021 \n\t\t \n\t \n\t date last accessed \n\t Statsols. nQuery Sample Size and Power Calculation. Cork: Statistical Solutions Ltd. https://www.statsols.com (20 December 2021, date last accessed)."
+    },
+    {
+      "title": "swdpwr: A SAS macro and an R package for power calculations in stepped wedge cluster randomized trials",
+      "authors": [
+        "J Chen",
+        "X Zhou",
+        "F Li"
+      ],
+      "year": 2022,
+      "doi": "10.1016/j.cmpb.2021.106522",
+      "journal": "Comput Methods Programs Biomed",
+      "volume": "213",
+      "pages": "106522",
+      "raw": "swdpwr: A SAS macro and an R package for power calculations in stepped wedge cluster randomized trials \n\t\t \n\t\t\t J Chen \n\t\t \n\t\t \n\t\t\t X Zhou \n\t\t \n\t\t \n\t\t\t F Li \n\t\t \n\t\t 10.1016/j.cmpb.2021.106522 \n\t \n\t \n\t\t Comput Methods Programs Biomed \n\t\t \n\t\t\t 213 \n\t\t\t 106522 \n\t\t\t 2022 \n\t\t \n\t \n\t Chen J, Zhou X, Li F et al. swdpwr: A SAS macro and an R package for power calculations in stepped wedge cluster random- ized trials. Comput Methods Programs Biomed 2022;213:106522."
+    },
+    {
+      "title": "swCRTdesign: an RPackage for stepped wedge trial design and analysis",
+      "authors": [
+        "E Voldal",
+        "N Hakhu",
+        "F Xia"
+      ],
+      "year": 2020,
+      "journal": "Comput Methods Programs Biomed",
+      "volume": "196",
+      "pages": "105514",
+      "raw": "swCRTdesign: an RPackage for stepped wedge trial design and analysis \n\t\t \n\t\t\t E C Voldal \n\t\t \n\t\t \n\t\t\t N R Hakhu \n\t\t \n\t\t \n\t\t\t F Xia \n\t\t \n\t \n\t \n\t\t Comput Methods Programs Biomed \n\t\t \n\t\t\t 196 \n\t\t\t 105514 \n\t\t\t 2020 \n\t\t \n\t \n\t Voldal EC, Hakhu NR, Xia F et al. swCRTdesign: an RPackage for stepped wedge trial design and analysis. Comput Methods Programs Biomed 2020;196:105514."
+    },
+    {
+      "title": "Power and sample size calculation for stepped-wedge designs with discrete outcomes",
+      "authors": [
+        "F Xia",
+        "J Hughes",
+        "E Voldal"
+      ],
+      "year": 2021,
+      "doi": "10.1186/s13063-021-05542-9",
+      "journal": "Trials",
+      "volume": "22",
+      "pages": "598",
+      "raw": "Power and sample size calculation for stepped-wedge designs with discrete outcomes \n\t\t \n\t\t\t F Xia \n\t\t \n\t\t \n\t\t\t J P Hughes \n\t\t \n\t\t \n\t\t\t E C Voldal \n\t\t \n\t\t 10.1186/s13063-021-05542-9 \n\t \n\t \n\t\t Trials \n\t\t \n\t\t\t 22 \n\t\t\t 598 \n\t\t\t 2021 \n\t\t \n\t \n\t Xia F, Hughes JP, Voldal EC et al. Power and sample size calcu- lation for stepped-wedge designs with discrete outcomes. Trials 2021;22:598."
+    },
+    {
+      "title": "Preisser-Software",
+      "authors": [
+        "J Preisser",
+        "S John"
+      ],
+      "year": 2021,
+      "raw": "J S Preisser \n\t\t \n\t\t \n\t\t\t S John \n\t\t \n\t\t \n\t\t Preisser-Software \n\t\t \n\t\t\t December 2021 \n\t\t \n\t \n\t CRTFASTGEEPWR date last accessed \n\t Preisser JS, John S. Preisser-Software. CRTFASTGEEPWR. http:// www.bios.unc.edu/~preisser/personal/crtfastgeepwr/ (18 December 2021, date last accessed)."
+    },
+    {
+      "title": "%CRTFASTGEEPWR: a SAS macro for power of the generalized estimating equations of multi-period cluster randomized trials with application to stepped wedge designs",
+      "authors": [
+        "Y Zhang",
+        "J Preisser",
+        "F Li",
+        "E Turner",
+        "P Rathouz"
+      ],
+      "year": 2022,
+      "raw": "Y Zhang \n\t\t \n\t\t \n\t\t\t J S Preisser \n\t\t \n\t\t \n\t\t\t F Li \n\t\t \n\t\t \n\t\t\t E L Turner \n\t\t \n\t\t \n\t\t\t P J Rathouz \n\t\t \n\t\t arXiv:2205.14532 \n\t\t %CRTFASTGEEPWR: a SAS macro for power of the generalized estimating equations of multi-period cluster randomized trials with application to stepped wedge designs \n\t\t \n\t\t\t 28 May 2022 \n\t\t \n\t \n\t arXiv preprint \n\t preprint: not peer reviewed \n\t Zhang Y, Preisser JS, Li F, Turner EL, Rathouz PJ. %CRTFASTGEEPWR: a SAS macro for power of the general- ized estimating equations of multi-period cluster randomized trials with application to stepped wedge designs. arXiv preprint, arXiv:2205.14532, 28 May 2022, preprint: not peer reviewed."
+    },
+    {
+      "authors": [
+        "Packages-John Stata"
+      ],
+      "year": 2021,
+      "raw": "Packages-John Stata \n\t\t \n\t\t \n\t\t\t Gallis \n\t\t \n\t\t \n\t\t \n\t\t\t November 2021 \n\t\t \n\t \n\t date last accessed \n\t Stata Packages-John Gallis. https://sites.duke.edu/johngallis/ stata-packages/ (29 November 2021, date last accessed)."
+    },
+    {
+      "title": "Sample size considerations for stepped wedge designs with subclusters",
+      "authors": [
+        "K Davis-Plourde",
+        "M Taljaard",
+        "F Li"
+      ],
+      "year": 2021,
+      "doi": "10.1111/biom.13596",
+      "journal": "Biometrics",
+      "raw": "Sample size considerations for stepped wedge designs with subclusters \n\t\t \n\t\t\t K Davis-Plourde \n\t\t \n\t\t \n\t\t\t M Taljaard \n\t\t \n\t\t \n\t\t\t F Li \n\t\t \n\t\t 10.1111/biom.13596 \n\t \n\t \n\t\t Biometrics \n\t\t \n\t\t\t 2021 \n\t\t \n\t \n\t Davis-Plourde K, Taljaard M, Li F. Sample size considerations for stepped wedge designs with subclusters. Biometrics 2021; doi:10.1111/biom.13596."
+    },
+    {
+      "title": "CRTpowerdist: An R package to calculate attained power and construct the power distribution for cross-sectional stepped-wedge and parallel cluster randomized trials",
+      "authors": [
+        "Y Ouyang",
+        "L Xu",
+        "M Karim"
+      ],
+      "year": 2021,
+      "doi": "10.1016/j.cmpb.2021.106255",
+      "journal": "Comput Methods Programs Biomed",
+      "volume": "208",
+      "pages": "106255",
+      "raw": "CRTpowerdist: An R package to calculate attained power and construct the power distribution for cross-sectional stepped-wedge and parallel cluster randomized trials \n\t\t \n\t\t\t Y Ouyang \n\t\t \n\t\t \n\t\t\t L Xu \n\t\t \n\t\t \n\t\t\t M E Karim \n\t\t \n\t\t 10.1016/j.cmpb.2021.106255 \n\t \n\t \n\t\t Comput Methods Programs Biomed \n\t\t \n\t\t\t 208 \n\t\t\t 106255 \n\t\t\t 2021 \n\t\t \n\t \n\t Ouyang Y, Xu L, Karim ME et al. CRTpowerdist: An R package to calculate attained power and construct the power distribution for cross-sectional stepped-wedge and parallel cluster random- ized trials. Comput Methods Programs Biomed 2021;208: 106255."
+    },
+    {
+      "title": "Explaining the variation in the attained power of a stepped-wedge trial with unequal cluster sizes",
+      "authors": [
+        "Y Ouyang",
+        "M Karim",
+        "P Gustafson"
+      ],
+      "year": 2020,
+      "doi": "10.1186/s12874-020-01036-5",
+      "journal": "BMC Med Res Methodol",
+      "volume": "20",
+      "pages": "166",
+      "raw": "Explaining the variation in the attained power of a stepped-wedge trial with unequal cluster sizes \n\t\t \n\t\t\t Y Ouyang \n\t\t \n\t\t \n\t\t\t M E Karim \n\t\t \n\t\t \n\t\t\t P Gustafson \n\t\t \n\t\t 10.1186/s12874-020-01036-5 \n\t \n\t \n\t\t BMC Med Res Methodol \n\t\t \n\t\t\t 20 \n\t\t\t 166 \n\t\t\t 2020 \n\t\t \n\t \n\t Ouyang Y, Karim ME, Gustafson P et al. Explaining the varia- tion in the attained power of a stepped-wedge trial with unequal cluster sizes. BMC Med Res Methodol 2020;20:166."
+    },
+    {
+      "title": "SteppedPower: Power Calculation for Stepped Wedge Designs",
+      "authors": [
+        "P Mildenberger",
+        "F Marini"
+      ],
+      "year": 2021,
+      "doi": "10.32614/cran.package.steppedpower",
+      "raw": "SteppedPower: Power Calculation for Stepped Wedge Designs \n\t\t \n\t\t\t P Mildenberger \n\t\t \n\t\t \n\t\t\t F Marini \n\t\t \n\t\t 10.32614/cran.package.steppedpower \n\t\t \n\t\t \n\t\t\t 2021. 22 September 2021 \n\t\t \n\t \n\t date last accessed \n\t Mildenberger P, Marini F. SteppedPower: Power Calculation for Stepped Wedge Designs. 2021. https://CRAN.R-project.org/ package=SteppedPower (22 September 2021, date last accessed)."
+    },
+    {
+      "title": "Pragmatic, randomized controlled trials of the Girls on the Go! Program to improve self-esteem in girls",
+      "authors": [
+        "L Tirlea",
+        "H Truby",
+        "T Haines"
+      ],
+      "year": 2016,
+      "journal": "Am J Health Promot",
+      "volume": "30",
+      "raw": "Pragmatic, randomized controlled trials of the Girls on the Go! Program to improve self-esteem in girls \n\t\t \n\t\t\t L Tirlea \n\t\t \n\t\t \n\t\t\t H Truby \n\t\t \n\t\t \n\t\t\t T P Haines \n\t\t \n\t \n\t \n\t\t Am J Health Promot \n\t\t \n\t\t\t 30 \n\t\t\t \n\t\t\t 2016 \n\t\t \n\t \n\t Tirlea L, Truby H, Haines TP. Pragmatic, randomized controlled trials of the Girls on the Go! Program to improve self-esteem in girls. Am J Health Promot 2016;30:231-41."
+    },
+    {
+      "title": "Uptake and populationlevel impact of expedited partner therapy (EPT) on Chlamydia trachomatis and Neisseria gonorrhoeae: the Washington State Community-Level Randomized Trial of EPT",
+      "authors": [
+        "M Golden",
+        "R Kerani",
+        "M Stenger"
+      ],
+      "year": 2015,
+      "doi": "10.1371/journal.pmed.1001777",
+      "journal": "PLoS Med",
+      "volume": "12",
+      "pages": "1001777",
+      "raw": "Uptake and populationlevel impact of expedited partner therapy (EPT) on Chlamydia trachomatis and Neisseria gonorrhoeae: the Washington State Community-Level Randomized Trial of EPT \n\t\t \n\t\t\t M R Golden \n\t\t \n\t\t \n\t\t\t R P Kerani \n\t\t \n\t\t \n\t\t\t M Stenger \n\t\t \n\t\t 10.1371/journal.pmed.1001777 \n\t \n\t \n\t\t PLoS Med \n\t\t \n\t\t\t 12 \n\t\t\t 1001777 \n\t\t\t 2015 \n\t\t \n\t \n\t Golden MR, Kerani RP, Stenger M et al. Uptake and population- level impact of expedited partner therapy (EPT) on Chlamydia trachomatis and Neisseria gonorrhoeae: the Washington State Community-Level Randomized Trial of EPT. PLoS Med 2015; 12:e1001777."
+    },
+    {
+      "title": "Intra-cluster correlations from the CLustered OUtcome Dataset bank to inform the design of longitudinal cluster trials",
+      "authors": [
+        "E Korevaar",
+        "J Kasza",
+        "M Taljaard"
+      ],
+      "year": 2021,
+      "doi": "10.1177/17407745211020852",
+      "journal": "Clin Trials",
+      "volume": "18",
+      "raw": "Intra-cluster correlations from the CLustered OUtcome Dataset bank to inform the design of longitudinal cluster trials \n\t\t \n\t\t\t E Korevaar \n\t\t \n\t\t \n\t\t\t J Kasza \n\t\t \n\t\t \n\t\t\t M Taljaard \n\t\t \n\t\t 10.1177/17407745211020852 \n\t \n\t \n\t\t Clin Trials \n\t\t \n\t\t\t 18 \n\t\t\t \n\t\t\t 2021 \n\t\t \n\t \n\t Korevaar E, Kasza J, Taljaard M et al. Intra-cluster correlations from the CLustered OUtcome Dataset bank to inform the design of longitudinal cluster trials. Clin Trials 2021;18:529-40."
+    },
+    {
+      "title": "Impact of unequal cluster sizes for GEE analyses of stepped wedge cluster randomized trials with binary outcomes",
+      "authors": [
+        "Z Tian",
+        "J Preisser",
+        "D Esserman"
+      ],
+      "year": 2022,
+      "journal": "Biom J",
+      "volume": "64",
+      "raw": "Impact of unequal cluster sizes for GEE analyses of stepped wedge cluster randomized trials with binary outcomes \n\t\t \n\t\t\t Z Tian \n\t\t \n\t\t \n\t\t\t J S Preisser \n\t\t \n\t\t \n\t\t\t D Esserman \n\t\t \n\t \n\t \n\t\t Biom J \n\t\t \n\t\t\t 64 \n\t\t\t \n\t\t\t 2022 \n\t\t \n\t \n\t Tian Z, Preisser JS, Esserman D et al. Impact of unequal cluster sizes for GEE analyses of stepped wedge cluster randomized tri- als with binary outcomes. Biom J 2022;64:419-39."
+    },
+    {
+      "title": "Marginal modeling of clusterperiod means and intraclass correlations in stepped wedge designs with binary outcomes",
+      "authors": [
+        "F Li",
+        "H Yu",
+        "P Rathouz"
+      ],
+      "year": 2021,
+      "doi": "10.1093/biostatistics/kxaa056",
+      "journal": "Biostatistics",
+      "raw": "Marginal modeling of clusterperiod means and intraclass correlations in stepped wedge designs with binary outcomes \n\t\t \n\t\t\t F Li \n\t\t \n\t\t \n\t\t\t H Yu \n\t\t \n\t\t \n\t\t\t P J Rathouz \n\t\t \n\t\t 10.1093/biostatistics/kxaa056 \n\t \n\t \n\t\t Biostatistics \n\t\t \n\t\t\t 2021 \n\t\t \n\t \n\t Li F, Yu H, Rathouz PJ et al. Marginal modeling of cluster- period means and intraclass correlations in stepped wedge designs with binary outcomes. Biostatistics 2021; doi: 10.1093/biostatistics/kxaa056."
+    },
+    {
+      "title": "Inference for the treatment effect in multiple-period cluster randomised trials when random effect correlation structure is misspecified",
+      "authors": [
+        "J Kasza",
+        "A Forbes"
+      ],
+      "year": 2019,
+      "doi": "10.1177/0962280218797151",
+      "journal": "Stat Methods Med Res",
+      "volume": "28",
+      "raw": "Inference for the treatment effect in multiple-period cluster randomised trials when random effect correlation structure is misspecified \n\t\t \n\t\t\t J Kasza \n\t\t \n\t\t \n\t\t\t A B Forbes \n\t\t \n\t\t 10.1177/0962280218797151 \n\t \n\t \n\t\t Stat Methods Med Res \n\t\t \n\t\t\t 28 \n\t\t\t \n\t\t\t 2019 \n\t\t \n\t \n\t Kasza J, Forbes AB. Inference for the treatment effect in multiple-period cluster randomised trials when random effect correlation structure is misspecified. Stat Methods Med Res 2019;28:3112-22."
+    },
+    {
+      "title": "Use of information criteria for selecting a correlation structure for longitudinal cluster randomised trials",
+      "authors": [
+        "E Rezaei-Darzi",
+        "J Kasza",
+        "A Forbes"
+      ],
+      "doi": "10.1177/17407745221082227",
+      "journal": "Clin Trials",
+      "raw": "Use of information criteria for selecting a correlation structure for longitudinal cluster randomised trials \n\t\t \n\t\t\t E Rezaei-Darzi \n\t\t \n\t\t \n\t\t\t J Kasza \n\t\t \n\t\t \n\t\t\t A Forbes \n\t\t \n\t\t 10.1177/17407745221082227 \n\t \n\t \n\t\t Clin Trials \n\t\t \n\t \n\t In press \n\t Rezaei-Darzi E, Kasza J, Forbes A et al. Use of information crite- ria for selecting a correlation structure for longitudinal cluster randomised trials. Clin Trials (In press)."
+    }
+  ],
+  "num_references": 49,
+  "figures": [
+    {
+      "caption": "Figure 1",
+      "description": "Figure 1 (a) Stepped-wedge design with five sequences and six periods (steps). (b) Stepped-wedge design with transition periods. (c) 'Staircase' stepped-wedge design."
+    },
+    {
+      "caption": "Figure 2",
+      "description": "Figure 2 (a) Design matrix for a stepped-wedge design with time-averaged treatment effect. (b) Design matrix for a stepped-wedge design with delayed/gradual treatment effect and known fractions. (c) Design matrix for a stepped-wedge design with linear time-on-treatment effects (treatment increases linearly with duration of exposure)."
+    },
+    {
+      "type": "table",
+      "caption": "Table 1",
+      "description": "Common features that users need to consider or specify when designing a stepped-wedge cluster randomized trial"
+    },
+    {
+      "type": "table",
+      "caption": "Table 2",
+      "description": "Sample size calculation parameter values used for the 'Girls on the Go' trial (continuous outcome)"
+    },
+    {
+      "type": "table",
+      "caption": "Table 3",
+      "description": "Power calculated under the main software packages for the 'Girls on the Go' trial"
+    },
+    {
+      "type": "table",
+      "caption": "Table 4",
+      "description": "Sample size calculation parameter values used for the Expedited Partner Therapy trial (binary outcome)"
+    },
+    {
+      "type": "table",
+      "caption": "Table 5",
+      "description": "Power calculated under the main software packages for the Expedited Partner Therapy trial"
+    }
+  ],
+  "num_figures": 7,
+  "tables": [
+    {
+      "content": "Variable Definition or explanation Type of primary outcome Continuous, binary, count Details of the design Number of sequences Number of rows in design matrix Number of periods Determines number of columns in design matrix (when time is modelled as a categorical variable) Cluster size per period Average number of participants per cluster per period Type of design Cross-sectional Different individuals in each period Closed cohort The same individuals repeatedly measured over time Open cohort Mixture of different or same individuals Correlation structures Cross-sectional designs Exchangeable Assume a constant within-cluster correlation over time Nested exchangeable"
+    },
+    {
+      "content": "Sample size parameter Assumed value Number of sequences 3 Number of periods 4 Number of clusters (equal allocation)6 Cluster size per period 10 Standard deviation 1 Mean difference (treatment effect) 0.39 Type of design Closed cohort Exchangeable correlation Within-period ICC 0.005 IAC or within-individual ICC a 0.65 Block exchangeable correlation Within-period ICC 0.01 CAC 0.223 IAC or within-individual ICC a 0.65 Proportional decay Within-period ICC 0.025 CAC (per period) 0.689 IAC or within-individual ICC a 0.65 Varying cluster sizes No Transition periods No Type of model Linear mixed-effects model or GEE Type of treatment effect Step change (time-averaged effect) Cluster-treatment heterogeneity No Type of time effect Fixed categorical Magnitude of time effects Not applicable b Significance level Two-sided, 5% ICC, intra-cluster correlation coefficient; IAC, Individual Autocorrelation Coefficient; CAC, Cluster Autocorrelation Coefficient; GEE, generalized esti- mating equations."
+    },
+    {
+      "content": "SHINYCRT b SWDPWR c SWDPWR c CRTFASTGEEPWR d CRTFASTGEEPWR d No time effect e With time effect (0.1) No time effect With time effect (0.1) Power using z-test a Exchangeable correlation 0.796 0.997 0.794 0.794 0.794 Block exchangeable correlation 0.720 0.991 0.724 0.724 0.724 Proportional decay 0.713 N/A N/A 0.708 0.708 (exponential (the same (the same decay with exponential decay in exponential decay in fixed IAC) between-period and between-period and within-individual ICC) within-individual ICC) Power using t-test f DF \u00bc 19 g DF \u00bc 4 Exchangeable correlation 0.751 N/A N/A 0.501 0.501 Block exchangeable correlation 0.671 N/A N/A 0.418 0.418 Proportional decay N/A N/A N/A 0.401 0.401"
+    },
+    {
+      "content": "Sample size parameter Assumed value Number of sequences 4 Number of periods 5 Number of clusters 22 (6, 6, 6, 4 for each sequence) Cluster size per period 305 Baseline rate 0.076 Mean (absolute) difference \u00c00.014 (treatment effect) Type of design Cross-sectional Exchangeable correlation Within-period ICC 0.007 Nested exchangeable correlation Within-period ICC 0.007 CAC 0.50 Exponential decay Within-period ICC 0.007 CAC (per period) 0.70 Varying cluster sizes No Transition periods No Type of model Linear mixed-effects regression or GEE Type of treatment effect Step change (time-averaged effect) Cluster-treatment heterogeneityNo Type of time effect Fixed categorical Magnitude of time effect None, small (\u00c00.007) or large (\u00c00.014) A time effect of, say, \u00c00.007 means that the outcome is expected to decrease, even in the absence of any intervention, from 0.076 in the first period to 0.069 in the last period Significance level Two-sided, 5% ICC, intra-cluster correlation coefficient; CAC, Cluster Autocorrelation Coefficient; GEE, generalized estimating equations."
+    },
+    {
+      "content": "SHINYCRT a SWDPWR b SWCRTDESIGN a CRTFASTGEEPWR b No time Small time Large time No time Small time Large time effect c effect effect effect effect effect (\u00c00.007) (\u00c00.014) (\u00c00.007) (\u00c00.014) Exchangeable correlation 0.806 0.995 0.819 0.837 0.803 0.803 0.819 0.837 Nested exchangeable correlation 0.543 0.904 0.560 0.580 0.540 0.542 0.560 0.580 Exponential decay 0.570 N/A N/A N/A N/A 0.568 0.586 0.607"
+    }
+  ],
+  "num_tables": 5,
+  "license": "V C The Author(s) 2022; all rights reserved. Published by Oxford University Press on behalf of the International Epidemiological Association 2000",
+  "license_type": "unknown",
+  "num_citations": 77,
+  "cited_references": [
+    "b3",
+    "b13",
+    "b39",
+    "b41",
+    "b18",
+    "b44",
+    "b2",
+    "b14",
+    "b17",
+    "b36",
+    "b25",
+    "b9",
+    "b1",
+    "b35",
+    "b20",
+    "b43",
+    "b21",
+    "b47",
+    "b40",
+    "b12",
+    "b42",
+    "b30",
+    "b31",
+    "b29",
+    "b16",
+    "b37",
+    "b46",
+    "b15",
+    "b23",
+    "b32",
+    "b5",
+    "b19",
+    "b28",
+    "b45",
+    "b10",
+    "b38",
+    "b27",
+    "b24",
+    "b4",
+    "b33",
+    "b7",
+    "b48",
+    "b11",
+    "b8",
+    "b22",
+    "b34",
+    "b6",
+    "b0",
+    "b26"
+  ],
+  "notes": [
+    "[raw_affiliation] 1  Clinical Epidemiology Program , Ottawa Hospital Research Institute , Ottawa , ON , Canada ,",
+    "[raw_affiliation] 2  School of Epidemiology and Public Health , University of Ottawa , Ottawa , ON , Canada ,",
+    "[raw_affiliation] *  Corresponding author. Clinical Epidemiology Program , Ottawa Hospital Research Institute , 1053 Carling Ave , Ottawa , ON K1Y 4E9 , Canada.",
+    "[raw_affiliation] 3  Department of Biostatistics , Yale School of Public Health , New Haven , CT , USA ,",
+    "[raw_affiliation] 4  Center for Methods in Implementation and Prevention Science , Yale School of Public Health , New Haven , CT , USA and",
+    "[raw_affiliation] 5  Department of Biostatistics , University of North Carolina at Chapel Hill , Chapel Hill , NC , USA",
+    "[raw_affiliation] 1  Clinical Epidemiology Program , Ottawa Hospital Research Institute , Ottawa , ON , Canada ,",
+    "[raw_affiliation] 2  School of Epidemiology and Public Health , University of Ottawa , Ottawa , ON , Canada ,",
+    "[submission] Received 31 December 2021; Editorial decision 5 May 2022; Accepted 17 May 2022",
+    "IAC, Individual Autocorrelation Coefficient; ICC, intra-cluster correlation coefficient; DF, degrees of freedom. a SWCRTDESIGN does not support cohort designs. b Linear mixed-effects model used. c Generalized estimating equations (GEE) and mixed-effects model produced the same results. d GEE method for marginal model. e By default, coefficients for time are excluded from the underlying model when no time effect is specified. f SHINYCRT and CRTFASTGEEPWR used different DF in t-test.",
+    "a Normal approximation using mixed-effects model. Magnitude of time effects cannot be accommodated. b Generalized estimating equations (GEE) was used for calculation. With cluster-period size of >150, only GEE can be used in SWDPWR. c By default, coefficients for time are excluded from the underlying model when no time effect is specified.",
+    "Downloaded from https://academic.oup.com/ije/article/51/6/2000/6605012 by guest on 16 August 2025",
+    "International Journal of Epidemiology, 2022, Vol. 51, No. 6",
+    "[raw_reference] Brown CA, Lilford RJ. The stepped wedge trial design: a system- atic review. BMC Med Res Methodol 2006;6:54.",
+    "[raw_reference] Hussey MA, Hughes JP. Design and analysis of stepped wedge cluster randomized trials. Contemp Clin Trials 2007;28:182-91.",
+    "[raw_reference] Mdege ND, Man M-S, Taylor Nee Brown CA et al. Systematic review of stepped wedge cluster randomized trials shows that design is particularly used to evaluate interventions during rou- tine implementation. J Clin Epidemiol 2011;64:936-48.",
+    "[raw_reference] Hemming K, Haines TP, Chilton PJ et al. The stepped wedge cluster randomised trial: rationale, design, analysis, and report- ing. BMJ 2015;350:h391.",
+    "[raw_reference] Hargreaves JR, Copas AJ, Beard E et al. Five questions to consider before conducting a stepped wedge trial. Trials 2015;16:350.",
+    "[raw_reference] Prost A, Binik A, Abubakar I et al. Logistic, ethical, and political dimensions of stepped wedge trials: critical review and case stud- ies. Trials 2015;16:351.",
+    "[raw_reference] Hemming K, Taljaard M. Reflection on modern methods: when is a stepped-wedge cluster randomized trial a good study design choice? Int J Epidemiol 2020;49:1043-52.",
+    "[raw_reference] Hemming K, Taljaard M, Grimshaw J. Introducing the new CONSORT extension for stepped-wedge cluster randomised tri- als. Trials 2019;20:68.",
+    "[raw_reference] Copas AJ, Lewis JJ, Thompson JA et al. Designing a stepped wedge trial: three main designs, carry-over effects and random- isation approaches. Trials 2015;16:352.",
+    "[raw_reference] Kasza J, Hooper R, Copas A et al. Sample size and power calcu- lations for open cohort longitudinal cluster randomized trials. Stat Med 2020;36:1871-83.",
+    "[raw_reference] Hooper R, Copas A. Stepped wedge trials with continuous re- cruitment require new ways of thinking. J Clin Epidemiol 2019; 116:161-66.",
+    "[raw_reference] Grantham KL, Kasza J, Heritier S et al. Accounting for a decay- ing correlation structure in cluster randomized trials with contin- uous recruitment. Stat Med 2019;38:1918-34.",
+    "[raw_reference] Kasza J, Forbes AB. Information content of cluster-period cells in stepped wedge trials. Biometrics 2019;75:144-52.",
+    "[raw_reference] Hemming K, Lilford R, Girling AJ. Stepped-wedge cluster rando- mised controlled trials: a generic framework including parallel and multiple-level designs. Stat Med 2015;34:181-96.",
+    "[raw_reference] Hooper R, Kasza J, Forbes A. The hunt for efficient, incomplete designs for stepped wedge trials with continuous recruitment and continuous outcome measures. BMC Med Res Methodol 2020;20:279.",
+    "[raw_reference] Donner A, Koval JJ. Design considerations in the estimation of intraclass correlation. Ann Hum Genet 1982;46:271-77.",
+    "[raw_reference] Murray DM, Hannan PJ, Wolfinger RD et al. Analysis of data from group-randomized trials with repeat observations on the same groups. Statist Med 1998;17:1581-600.",
+    "[raw_reference] Hooper R, Teerenstra S, de Hoop E et al. Sample size calculation for stepped wedge and other longitudinal cluster randomised tri- als. Stat Med 2016;35:4718-28.",
+    "[raw_reference] Girling AJ, Hemming K. Statistical efficiency and optimal design for stepped cluster studies under linear mixed effects models. Stat Med 2016;35:2149-66.",
+    "[raw_reference] Martin J, Girling A, Nirantharakumar K et al. Intra-cluster and inter-period correlation coefficients for cross-sectional cluster randomised controlled trials for type-2 diabetes in UK primary care. Trials 2016;17:402.",
+    "[raw_reference] Li F. Design and analysis considerations for cohort stepped wedge cluster randomized trials with a decay correlation struc- ture. Stat Med 2020;39:438-55.",
+    "[raw_reference] Kasza J, Hemming K, Hooper R et al. Impact of non-uniform corre- lation structure on sample size and power in multiple-period cluster randomised trials. Stat Methods Med Res 2019;28:703-16.",
+    "[raw_reference] Li F, Turner EL, Preisser JS. Sample size determination for GEE analyses of stepped wedge cluster randomized trials. Biometrics 2018;74:1450-58.",
+    "[raw_reference] Li F, Hughes JP, Hemming K et al. Mixed-effects models for the design and analysis of stepped wedge cluster randomized trials: an overview. Stat Methods Med Res 2021;30:612-39.",
+    "[raw_reference] Hughes JP, Granston TS, Heagerty PJ. Current issues in the de- sign and analysis of stepped wedge trials. Contemp Clin Trials 2015;45:55-60.",
+    "[raw_reference] Hemming K, Taljaard M, Forbes A. Modeling clustering and treatment effect heterogeneity in parallel and stepped-wedge cluster randomized trials. Stat Med 2018;37:883-98.",
+    "[raw_reference] Hemming K, Kasza J, Hooper R et al. A tutorial on sample size calculation for multiple-period cluster randomized parallel, cross-over and stepped-wedge trials using the Shiny CRT Calculator. Int J Epidemiol 2020;49:979-95.",
+    "[raw_reference] Zhou X, Liao X, Kunz LM et al. A maximum likelihood ap- proach to power calculations for stepped wedge designs of bi- nary outcomes. Biostatistics 2020;21:102-21.",
+    "[raw_reference] Preisser JS, Young ML, Zaccaro DJ et al. An integrated population-averaged approach to the design, analysis and sam- ple size determination of cluster-unit trials. Stat Med 2003;22: 1235-54.",
+    "[raw_reference] Grantham KL, Forbes AB, Heritier S et al. Time parameteriza- tions in cluster randomized trial planning. The American Statistician 2020;74:184-89.",
+    "date last accessed",
+    "[raw_reference] NCSS LLC. PASS 2021 Power Analysis and Sample Size Software. Kaysville, UT, USA. https://www.ncss.com/software/ pass/ (20 December 2021, date last accessed).",
+    "date last accessed",
+    "[raw_reference] Statsols. nQuery Sample Size and Power Calculation. Cork: Statistical Solutions Ltd. https://www.statsols.com (20 December 2021, date last accessed).",
+    "[raw_reference] Chen J, Zhou X, Li F et al. swdpwr: A SAS macro and an R package for power calculations in stepped wedge cluster random- ized trials. Comput Methods Programs Biomed 2022;213:106522.",
+    "[raw_reference] Voldal EC, Hakhu NR, Xia F et al. swCRTdesign: an RPackage for stepped wedge trial design and analysis. Comput Methods Programs Biomed 2020;196:105514.",
+    "[raw_reference] Xia F, Hughes JP, Voldal EC et al. Power and sample size calcu- lation for stepped-wedge designs with discrete outcomes. Trials 2021;22:598.",
+    "CRTFASTGEEPWR date last accessed",
+    "[raw_reference] Preisser JS, John S. Preisser-Software. CRTFASTGEEPWR. http:// www.bios.unc.edu/~preisser/personal/crtfastgeepwr/ (18 December 2021, date last accessed).",
+    "[report_type] arXiv preprint",
+    "preprint: not peer reviewed",
+    "[raw_reference] Zhang Y, Preisser JS, Li F, Turner EL, Rathouz PJ. %CRTFASTGEEPWR: a SAS macro for power of the general- ized estimating equations of multi-period cluster randomized trials with application to stepped wedge designs. arXiv preprint, arXiv:2205.14532, 28 May 2022, preprint: not peer reviewed.",
+    "date last accessed",
+    "[raw_reference] Stata Packages-John Gallis. https://sites.duke.edu/johngallis/ stata-packages/ (29 November 2021, date last accessed).",
+    "[raw_reference] Davis-Plourde K, Taljaard M, Li F. Sample size considerations for stepped wedge designs with subclusters. Biometrics 2021; doi:10.1111/biom.13596.",
+    "[raw_reference] Ouyang Y, Xu L, Karim ME et al. CRTpowerdist: An R package to calculate attained power and construct the power distribution for cross-sectional stepped-wedge and parallel cluster random- ized trials. Comput Methods Programs Biomed 2021;208: 106255.",
+    "[raw_reference] Ouyang Y, Karim ME, Gustafson P et al. Explaining the varia- tion in the attained power of a stepped-wedge trial with unequal cluster sizes. BMC Med Res Methodol 2020;20:166.",
+    "date last accessed",
+    "[raw_reference] Mildenberger P, Marini F. SteppedPower: Power Calculation for Stepped Wedge Designs. 2021. https://CRAN.R-project.org/ package=SteppedPower (22 September 2021, date last accessed).",
+    "[raw_reference] Tirlea L, Truby H, Haines TP. Pragmatic, randomized controlled trials of the Girls on the Go! Program to improve self-esteem in girls. Am J Health Promot 2016;30:231-41.",
+    "[raw_reference] Golden MR, Kerani RP, Stenger M et al. Uptake and population- level impact of expedited partner therapy (EPT) on Chlamydia trachomatis and Neisseria gonorrhoeae: the Washington State Community-Level Randomized Trial of EPT. PLoS Med 2015; 12:e1001777.",
+    "[raw_reference] Korevaar E, Kasza J, Taljaard M et al. Intra-cluster correlations from the CLustered OUtcome Dataset bank to inform the design of longitudinal cluster trials. Clin Trials 2021;18:529-40.",
+    "[raw_reference] Tian Z, Preisser JS, Esserman D et al. Impact of unequal cluster sizes for GEE analyses of stepped wedge cluster randomized tri- als with binary outcomes. Biom J 2022;64:419-39.",
+    "[raw_reference] Li F, Yu H, Rathouz PJ et al. Marginal modeling of cluster- period means and intraclass correlations in stepped wedge designs with binary outcomes. Biostatistics 2021; doi: 10.1093/biostatistics/kxaa056.",
+    "[raw_reference] Kasza J, Forbes AB. Inference for the treatment effect in multiple-period cluster randomised trials when random effect correlation structure is misspecified. Stat Methods Med Res 2019;28:3112-22.",
+    "In press",
+    "[raw_reference] Rezaei-Darzi E, Kasza J, Forbes A et al. Use of information crite- ria for selecting a correlation structure for longitudinal cluster randomised trials. Clin Trials (In press)."
+  ],
+  "processing_software": {
+    "GROBID": "0.8.2"
+  }
+}

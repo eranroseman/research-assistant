@@ -1,0 +1,875 @@
+{
+  "paper_id": "4VQHJG27",
+  "title": "Fixed-effects inference and tests of correlation for longitudinal functional data",
+  "abstract": "We propose an inferential framework for fixed effects in longitudinal functional models and introduce tests for the correlation structures induced by the longitudinal sampling procedure. The framework provides a natural extension of standard longitudinal correlation models for scalar observations to functional observations. Using simulation studies, we compare fixed effects estimation under correctly and incorrectly specified correlation structures and also test the longitudinal correlation structure. Finally, we apply the proposed methods to a longitudinal functional dataset on physical activity. The computer code for the proposed method is available at  https://github.com/rli20ST758/FILF .",
+  "year": 2005,
+  "date": "2005",
+  "authors": [
+    {
+      "name": "Ruonan Li",
+      "orcid": "0000-0001-7293-9779",
+      "affiliation": {
+        "organization": "Department of Statistics",
+        "department": "Department of Statistics",
+        "institution": "North Carolina State University",
+        "address": "Raleigh, North Carolina, USA"
+      }
+    },
+    {
+      "name": "Luo Xiao",
+      "email": "lxiao5@ncsu.edu",
+      "orcid": "0000-0001-8707-0914",
+      "affiliation": {
+        "organization": "Department of Statistics",
+        "department": "Department of Statistics",
+        "institution": "North Carolina State University",
+        "address": "Raleigh, North Carolina, USA"
+      }
+    },
+    {
+      "name": "Ekaterina Smirnova",
+      "affiliation": {
+        "organization": "Department of Biostatistics",
+        "department": "Department of Biostatistics",
+        "institution": "Virginia Commonwealth University",
+        "address": "Richmond, Virginia, USA"
+      }
+    },
+    {
+      "name": "Erjia Cui",
+      "affiliation": {
+        "organization": "Department of Biostatistics",
+        "department": "Department of Biostatistics",
+        "institution": "Johns Hopkins Bloomberg School of Public Health",
+        "address": "Baltimore, Maryland, USA"
+      }
+    },
+    {
+      "name": "Andrew Leroux",
+      "affiliation": {
+        "organization": "Department of Biostatistics and Informatics",
+        "department": "Department of Biostatistics and Informatics",
+        "institution": "Colorado School of Public Health",
+        "address": "Aurora, Colorado, USA"
+      }
+    },
+    {
+      "name": "Ciprian Crainiceanu",
+      "affiliation": {
+        "organization": "Department of Biostatistics",
+        "department": "Department of Biostatistics",
+        "institution": "Johns Hopkins Bloomberg School of Public Health",
+        "address": "Baltimore, Maryland, USA"
+      }
+    },
+    {
+      "affiliation": {
+        "organization": "Department of Statistics",
+        "department": "Department of Statistics",
+        "institution": "North Carolina State University",
+        "address": "2311 Stinson Drive, 27695, Raleigh, NC, USA"
+      }
+    }
+  ],
+  "doi": "10.1002/sim.9421",
+  "orcid": "0000-0001-8707-0914",
+  "md5": "2F4AA790B9AD462BCAEE6690FF141EBD",
+  "publication": {
+    "journal": "J Am Stat Assoc",
+    "journal_inferred": true
+  },
+  "keywords": [
+    "accelerometry data",
+    "covariance function",
+    "hypothesis test",
+    "mixed effects model"
+  ],
+  "funding": [
+    "",
+    "ACKNOWLEDGEMENTS The authors thank the reviewers for their constructive and helpful comments, which greatly improved the article. This work was partially supported by the  NIH  grants  R56 AG064803  (LX),  R01 AG064803  (RL and LX), and  R01 NS112303  (RL and LX). This work represents the opinions of the researchers and not necessarily that of the granting organizations."
+  ],
+  "sections": [
+    {
+      "title": "INTRODUCTION",
+      "text": "Due to technological advancement, longitudinal functional data have become common in scientific studies.  1  For example, objective physical activity measurements  [2] [3] [4] [5]  obtained from wearable accelerometers usually consists of multiple daily profiles measured at every minute of the day for hundreds of study participants at a number of visits. This type of data structure gives rise to longitudinal functional data, which resembles traditional longitudinal data, but has a function instead of a scalar as the basic unit of observation. The average activity measured at multiple visits gives rise to standard longitudinal data, whereas minute-by-minute activity profiles observed at multiple visits give rise to longitudinal functional data. Another example is diffusion tensor imaging (DTI),  [6] [7] [8] [9] [10]  where imaging data along brain tracts were collected for patients of multiple sclerosis and healthy controls at a number of visits. The physical activity measurements and the DTI data are usually collected at sparse longitudinal visits with densely observed functions, the data structure the article focuses on. This new and practical data structure requires specialized methodological tools to address scientific problems using the original structure of the data.\n\nLongitudinal functional data often exhibit complex within-and between-visit correlations. To accommodate such correlations, various functional mixed effects models  6, 8, 9, [11] [12] [13] [14] [15] [16]  have been proposed. These approaches, after data transformation or projections, allow inference on the fixed effects parameters using the linear mixed effects (LMEs) inferential machinery. Alternatively, bootstrap of study participants  9, 17, 18  can be used to construct confidence bands and conduct hypothesis tests for fixed effect functions. In spite of the growing interest in this area of research, modeling longitudinal functional data continues to be daunting. On the one hand, it is often difficult to specify within-visit correlation structures which account for the continuity of the functional domain with dense observations. On the other hand, the between-visit correlations may be modeled flexibly using structured specifications that represent the known and usually relatively sparse longitudinal sampling structure (eg, nesting of functions within individuals).\n\nWith the above considerations, we consider a unified inferential model framework that builds on the marginal decomposition model proposed by Park and Staicu,  13  which focused on modeling the covariance of longitudinal functional data, but did not consider fixed effects inference or tests of correlations. The marginal decomposition model used longitudinal time-invariant and data-adaptive eigenfunctions to model within-visit correlations and a sequence of bivariate covariance functions (either parametric or nonparametric) to model the longitudinal correlations, and is computationally simpler than the approach in Chen and M\u00fcller,  12  which modeled longitudinal functional data with a four-dimensional nonparametric covariance function. For longitudinal functional data with sparse longitudinal visits and densely observed functions, it might be sufficient and preferred to model the longitudinal correlation with a simple parametric specification. More importantly, the separation of within-subject correlation and longitudinal correlation in the marginal decomposition model not only allows us to compare fixed-effects inference under different longitudinal correlation structures but also enables us to compare different longitudinal correlation structures via hypothesis testing, the major contributions of this article. For the latter, we shall conduct multiple tests on the correlation structure of the sequence of bivariate covariance functions for modeling the longitudinal correlations in the above marginal decomposition model. For each test, we use the bootstrap-based approach for covariance testing proposed by Chen et al,  19  which compared parametric covariance functions vs nonparametric covariance function for modeling traditional longitudinal data. To our best knowledge, we have not been aware of any existing test of the longitudinal correlations developed for longitudinal functional data. Moreover, the test in Chen et al  19  is the only available test with an unspecified nonparametric alternative and can be applied to longitudinal data that are observed at irregular time points; see our discussion in Section 3 on alternative tests that are applicable only to limited scenarios.\n\nIn terms of fixed-effects inference, the proposed framework may compare favorably against the functional additive model proposed by Scheipl et al,  8  which only considered multilevel functional models with multiple covariance functions. It is worth noting that the aforementioned model can be computationally challenging to fit when using its spline-based formulation of functional random effects. Bootstrapped approaches such as in Park et al  18  are usually computationally demanding, even for small datasets. In addition, as shall be shown in our simulations, simple bootstrapping of subjects may give inefficient inference when the subjects have multiple visits exhibiting within-visit correlations.\n\nIn summary, the contributions of this article are to, for longitudinal functional data: (a) generalize standard longitudinal correlation models; (b) introduce testing for longitudinal correlation structures; and (c) study the effect of correctly and incorrectly specified correlation structures on the fixed-effects inference.\n\nThe article is organized as follows. In Section 2, we introduce the general functional mixed effects model and the specific longitudinal correlation structures for modeling longitudinal functional data. In Section 3, we address the problem of testing longitudinal correlation structure. Section 4 assesses the properties of the statistical methods proposed using simulations. Section 5 applies our methods to real data. We conclude the article with a discussion in Section 6. The computer code for the proposed method and an associated RMD file with demonstration details are available at  https://github.  com/rli20ST758/FILF ."
+    },
+    {
+      "title": "2. FUNCTIONAL MIXED EFFECTS MODELS",
+      "text": "Let \ue240 \u2282 R be a compact interval and the index s \u2208 \ue240 be called the functional index. Let y ij (s) denote the observed response variable at s for subject i, 1 \u2264 i \u2264 n, at the jth, 1 \u2264 j \u2264 n i , visit that occurred at time T ij . Denote by x ij = [x ij1 , \u2026 , x ijp ] T the vector of covariates for subject i at visit j, and x i = [x i1 , \u2026 , x in i ] T the n i \u00d7 p matrix of covariates for subject i. Some of the covariates may depend on the visit number and some may not, but we use the index j for all variables to simplify notation. For one data application on physical activity, the covariates are age, body mass index (BMI), sex, and weekend, and thus p = 4. Let\n\n] T be the mn i -dimensional column vector obtained by vectorizing all observations for subject i.\n\nWe denote by  ij (\u22c5) the conditional mean of the functional process y ij (\u22c5) given the covariates x ij and assume that\n\nwhere  r (\u22c5) are smooth, unknown functions of s. Using the approach in Park and Staicu,  13  we decompose the functional residuals,\n\nwhere\n\nand  ij (s) is white noise with zero mean and variance  2  . The functions { 1 (\u22c5),  2 (\u22c5), \u2026 } form an orthonormal basis and  ijk are associated random coefficients. We assume that  ijk are normally distributed with zero mean and covariance\n\nand are uncorrelated over i and k. Then the covariance of the process is a four-dimensional operator with the following structure\n\nWe also assume that the sampling visits T ij are independent over i and j and have a smooth probability density function, g(\u22c5). Then the basis functions  k (\u22c5) are eigenfunctions of the marginal covariance operator\n\nwhere  k = \u222b G k (T, T)g(T)dT are eigenvalues and are assumed to be ordered decreasingly, that is,  1 \u2265  2 \u2265 \u2022 \u2022 \u2022 \u2265 0, and the random coefficients  ijk satisfy  ijk = \u222b W ij (s) k (s)ds.\n\nStandard longitudinal models using working covariance often assume either independence, exchangeability, or leave them unspecified. A natural generalization of these assumptions to longitudinal functional data is via the specification of the working covariance, G k (\u22c5, \u22c5), for every eigenfunction,  k (\u22c5), indexed by k. The continuity of the functional domain is accounted by within-visit correlation structures and the longitudinal sampling structure is represented by between-visit correlations. We propose to model the within-visit covariance nonparametrically and the between-visit covariance using approaches inspired by standard and functional longitudinal data analysis. The rationale is that the functions are often densely observed and exhibit complex correlation structure, for which a nonparametric approach would provide the needed flexibility, while the longitudinal sampling visits are often sparse, for which a simpler correlation structure might be sufficient and also easy to interpret."
+    },
+    {
+      "title": "2.1. Longitudinal working covariances",
+      "text": "We consider three common correlation models including two parametric correlation structures, but the proposed method can easily be extended to other parametric correlation structures. The first is the working independence model, where W ij (s) in Equation (  2 ) are assumed to be independent and identically distributed for all i and j. Under this framework the random scores  ijk =  ijk , where  ijk are uncorrelated across i and j for each k and Var( ijk ) =  2 e,k . Then, we have\n\nThe second is the exchangeable correlation model, that is  ijk =  ik +  ijk , where  ik are uncorrelated with all  ijk and  ijk are mutually uncorrelated for all i, k, and j. Denote  2 0,k = Var( ik ) and  2 e,k = Var( ijk ), and then\n\nThe exchangeable model for longitudinal functional data is a particular case of the multilevel functional principal component model.  11 Indeed, we may write\n\nThe third is the unspecified smooth correlation model, where G k (\u22c5, \u22c5) is modeled nonparametrically. In this case\n\n, and  ijk are zero mean random errors with Var( ijk ) =  2 e,k . In particular,  ijk are mutually uncorrelated for all i, j, and k. The induced covariance function is\n\nwhere  ik are uncorrelated random scores with zero mean and variance  k .\n\nThe unspecified smooth covariance model contains the independent and exchangeable models as special cases. Indeed, the working independence model corresponds to G k0 (T ij 1 , T ij 2 ) = 0 while the exchangeable correlation model corresponds to G k0 (T ij 1 , T ij 2 ) =  2 0,k . Thus, for model estimation below, we will focus on the unspecified covariance model as the other cases can be treated as simpler cases."
+    },
+    {
+      "title": "2.2. Model estimation",
+      "text": "We first consider estimation of  ij (\u22c5) using B-spline expansion of the coefficient functions  r (\u22c5). Specifically, let B(s) = [B 1 (s), \u2026 , B c (s)] T \u2208 R c be a collection of B-spline basis functions in the unit interval with c being the number of basis functions. Then  r (s) = \u2211 c d=1  rd B d (s), where  r = [ r1 , \u2026 ,  rc ] T is the unknown coefficient vector. We use cubic B-splines and a relatively large number of equally spaced knots, that is, a large c, so that the approximation bias is negligible.\n\nAs both terms involve infinite sums, we propose to use a number of eigenfunctions  k (\u22c5) that explains at least a given percentage of the variance explained (PVE) in the marginal covariance function, \ue22f m . Denote the selected number of  k (\u22c5) by K. Next we determine the approximation of  ijk for all 1 \u2264 k \u2264 K simultaneously by ranking  k , the variances of scores  ik . We retain the  k that are larger than  * , where  * is the largest value that satisfies\n\nThis will discard  ik with small variances. According to our simulation studies, discarding small variances leads to improved estimation. Let L k be the number of eigenfunctions selected for  ijk . Then approximately,\n\nLet\n\nIt is easy to show that  ij has a diagonal covariance matrix  = diag( 2 e,1 , \u2026 ,  2 e,K ) and that  i has a diagonal covariance matrix\n\n] T \u2208 R mn i . Finally, we obtain the mixed model representation\n\nwhere\n\nT are independent across subjects. Therefore, given the eigenfunctions  i and , the fixed effects  and variance components  k ,  2 e,k , and  2  can be estimated using standard mixed effects software. To avoid overfitting, we impose a quadratic penalty on each  r . Let P be a second order difference penalty matrix.  20 To be specific we use the penalty \u2211 p r=0  r  T r P r , where  r is the smoothing parameter for the rth function  r (\u22c5). The model can be fitted using the gam function  21  or bam function  22  in the R package mgcv  23  and we use generalized cross validation to select the smoothing parameters."
+    },
+    {
+      "title": "2.3. Longitudinal covariance estimation and model estimation algorithm",
+      "text": "We first obtain an initial estimate of  for the fixed effects, by fitting model (  4 ) without including the term\n\n. This is equivalent to assume that all observations y ij (s) are mutually independent. A small simulation study shows that the proposed method is not sensitive to the initial estimate. Indeed, see Section S.1 of the supplementary material for alternative methods of the initial estimate for .\n\nWith an initial estimate of , the residuals r ij (s) = y ij (s) - ij (s) can be calculated and used for estimating the marginal eigenfunctions  k (\u22c5) and the longitudinal covariances. First, the eigenfunctions  k (\u22c5) can be estimated by using the fast face algorithm  24  of the sandwich smoother  25  on the set of residuals. Specifically, let\n\nThen we apply the face algorithm to N -1 RR T . Then, given  k (\u22c5), we calculate \u222b r ij (s) k (s)ds as the prediction for  ijk . For the working independence model,  k can be estimated along with  k (\u22c5) directly from the face algorithm. For the exchangeable model, we have  ijk =  ik +  ijk and a one-way nested ANOVA model can be used to estimate  2 0,k and  2 e,k . Finally, when G k (\u22c5, \u22c5) is unspecified, we approximate it using tensor-product B-splines and apply the fast covariance estimation method for sparse functional data  26\n\ne,k . We use 10 marginal cubic B-splines with equally spaced knots. Then, an eigendecomposition of G k0 (\u22c5, \u22c5) leads to estimates of eigenfunctions  k (\u22c5) and associated eigenvalues  k . We retain all eigenfunctions with associated positive eigenvalues and then use Equation (3) to discard small eigenvalues.\n\nOnce we have got estimates of the marginal eigenfunctions and the longitudinal covariances, we refine the estimates of fixed effects by fitting the mixed model (  4 ) to obtain estimates of , denoted by \u03b1. Given the estimated variance parameters and treating the smoothness penalty on the fixed effects function as prior distributions, \u03b1 has a posterior multivariate normal distribution, which can be used to construct either point-wise or simultaneous confidence bands for the fixed effects functions. We omit the details and refer to the textbook by Wood.  27 e summarize the steps of the proposed method with unspecified smooth covariance in Algorithm 1. The estimation algorithm with independent and exchangeable covariance is available in Section S.2 in the supplementary material. Notice that the fixed effect is actually estimated twice (initial estimate and refined estimate) but not iterative since we have found that more iterations do not contribute to a better estimation. The reason for this is that as long as a good initial estimate of fixed effects is obtained, subsequent estimation of covariances via residuals is already sufficiently accurate and does not have substantial improvement using residuals with refined estimates. As shall be shown in our simulation study, our proposed initial estimates are often comparable with the proposed refined estimates. Notice that we still use Algorithm 1. Estimate fixed effects assuming unspecified smooth covariance 1. Estimate the initial fixed effects as  0 ij (s) by existed methods assuming that all observations y ij (s) are mutually independent, and subtract the initial mean functions from observed data to get residuals as r ij (s) = y ij (s) - 0 ij (s). 2. Apply the face algorithm to r ij (s) to extract eigenfunctions  k (s) and principal scores  ijk . 3. For each layer k, apply the sparse face algorithm  25  to  ijk to extract eigenfunctions  k (s). 4. With covariates x ijp and estimated eigenfunctions  k (s) and  k (s), fit the mixed model (4) using the gam or bam function to obtain the final and refined fixed effects as  ij (s).\n\nthe refined estimates as our final estimates because inference would not be valid with the initial estimates. Finally, a small simulation for the iterative procedure between estimating the mean and covariance structure is shown in Section S.1 in the supplementary material."
+    },
+    {
+      "title": "3. TESTS OF LONGITUDINAL COVARIANCES",
+      "text": "We use the goodness of fit test in Chen et al  19  to test the structure of the covariance G k0 (\u22c5, \u22c5) in the following scenarios: (1) test the independent model against the unspecified covariance model; and (2) test the exchangeable model against the unspecified covariance model. The only other available method for carrying out the above tests is the multivariate test in Zhong et al,  28  which can only be applied to data with a common longitudinal design and assumes an unstructured covariance that does not account for smoothness in the alternative covariance. Thus when applicable, the multivariate test tends to be less powerful than the above goodness of fit test. It is also worth mentioning that if the alternative is also parametric, then likelihood-based tests such as the one in Crainiceanu and Ruppert  29  may instead be used.\n\nWe will consider two types of tests: test of an individual covariance or joint test of multiple covariances. To illustrate the idea, consider the case when the null hypothesis assumes independence. For the individual test, we may test H 0k \u2236 G k0 (\u22c5, \u22c5) = 0 against H 1k \u2236 G k0 (\u22c5, \u22c5) is unspecified for each k. For the joint test, we may test H 0 \u2236 G k0 (\u22c5, \u22c5) = 0 for all k \u2265 1 against H 1 \u2236 G k0 (\u22c5, \u22c5) is unspecified for at least one k \u2265 1. The null model for the joint test corresponds to the assumption that the longitudinal functions W ij (\u22c5) are uncorrelated across visits, j, within study participants.\n\nThe individual longitudinal covariance test can be written as\n\nwhere Gk0 (T, T \u2032 ) is a parametric covariance function with a finite number of unknown parameters. For example, to test the null hypothesis of an exchangeable covariance model, we have\n\nFor testing the null hypothesis of working independence, everything stays the same, except that\n\nWe now briefly describe the test proposed in Chen et al  19  Suppose that the null covariance is G 0 and the alternative is G A . First, we estimate the unknown parameters under the null hypothesis and denote the resulting estimate by \u011c0 . Under the alternative hypothesis, we estimate G A nonparametrically using, for example, smoothing based on tensor product of B-splines. If the estimator under the alternative hypothesis is \u011cA then the test statistic is the Hilbert-Schmidt norm distance\n\nwhere \u2016f \u2016 HS = \u221a \u222b \u222b f (T, T \u2032 ) 2 dTdT \u2032 and \ue237 \u011c0 is the smoothed null covariance estimate using again tensor-product of B-splines. The rationale for smoothing \u011c0 is to remove the potential bias induced by smoothing procedure used for obtaining \u011cA . Larger values of the test statistic, T n , will provide evidence against the null hypothesis. The null distribution of T n is obtained via wild bootstrap,  30  that is, the estimated error variance under the alternative hypothesis is used to generate bootstrap samples.\n\nTo explore the overall structure of longitudinal covariances for modeling longitudinal functional data, we propose a joint test of G k0 (\u22c5, \u22c5) for all 1 \u2264 k \u2264 K. As we do not expect a large K (only a small number of multiple comparisons), the approach we propose is straightforward: conduct individual covariance tests and use a Bonferroni correction to control the family wise error rate. While not explored, one may also use more refined multiple testing methods such as the Benjamini-Hochberg method.  31"
+    },
+    {
+      "title": "4. SIMULATION STUDIES",
+      "text": "We use simulations to compare the performance of inferential approaches for the longitudinal functional models using independent, exchangeable, and unspecified covariance assumptions. We will focus on estimation and inference for fixed effects as well as size and power of the covariance tests introduced in Section 3. The longitudinal functional models are compared with the standard functional data method implemented in the pffr function  8, 32, 33  of the R package refund.  34 This approach was designed for functional data without residual correlation and will be referred to as the ind_obs method, in the sense that the method assumes independence in longitudinal observations. The methods implemented in the pffr function work very well in practice when residuals are not correlated. We also compare methods with the bootstrap method  18  to obtain the confidence bands for the coefficient functions. The point estimators for the bootstrap approach are obtained using the pffr function."
+    },
+    {
+      "title": "4.1. Simulation settings",
+      "text": "Data are generated from the model\n\n, where the number of covariates is p = 2, x i1 iid \u223c N(0, 1), and\n\n, where e ij \u223c N(e i(j-1) , 1) with e i0 = 0. We let a = 1 and  = 0.7. The coefficient functions are  0 (s) = 1 + \u221a 3 cos(3s),  1 (s) = 2 + cos(2s) and  2 (s) = 2 + sin(s). The number of visits per subject, n i , will be specified later while the visit times, T ij , are generated uniformly from the unit interval and then ordered. Using the orthonormal functions  1 (s) = 1 and  2 (s) = \u221a 2 sin(2s), W ij (\u22c5) is generated from one of the three models below: \u223c N(0, 0.5). The functional arguments {s 1 , \u2026 , s m } form a grid of 101 equidistant points in the unit interval. The mutually independent random errors  ij (s) are generated from N(0,  2  ). The value of  2  is 1.5, which is determined by a signal-to-noise ratio (SNR) with a value of 5. For the independent and exchangeable covariances, we define SNR in the functional data as \u2211 k\u22651 ( 2 0,k +  2 e,k )\u2215 2  ; for the unspecified covariance, we define SNR as \u2211 k\u22651 (\n\nFor simulations, we use a factorial design with three factors: (a) the number of subjects is either 100 or 200; (b) the number of visits n i are generated from either Unif [3, \u2026 , 6] or Unif [8, \u2026 , 12]; and (c) the covariance model is either independent, exchangeable or unspecified. There are 12 model conditions. For each condition, 500 replications are conducted on an Intel Core i7-8700 with 32GB RAM using one core per simulation.\n\nFor tests of longitudinal covariances, data are generated similarly. However, under the alternative we add terms to ensure that the null model is misspecified. Specifically, we consider 1. Deviation from independent covariance:  ijk \u2192  ijk + \u0394z ik (T ij )."
+    },
+    {
+      "title": "2.. Deviation from exchangeable covariance: \ud835\udf09",
+      "text": "The scalar \u0394 controls the magnitude of the deviation from the null model. The scores  ik and  ijk are independent from the nonlinear random function z ik (\u22c5), where z ik (T) = \u2211 2 =1  ik  k (T). The terms  ik and  k (T) are specified as before. In addition to the above simulation settings, we have also conducted simulations when the number of covariates is four and the number of marginal eigenfunctions is also four. The details of the simulation settings and results can be found in Section S.6 of the supplementary material."
+    },
+    {
+      "title": "4.2. Model estimation and evaluation criteria",
+      "text": "The initial mean estimation is conducted using the pffr function using 10 cubic B-splines bases and the second order difference penalty. The marginal eigenfunctions  k (s) are estimated by fitting the functional residuals via the fpca.face function  24  in the R package refund with 20 knots. The unspecified covariance model components  k (T) and  ik are estimated using the face.sparse function in the R package face with 15 knots. The truncation parameters K and L k (for the unspecified covariance model) are all determined using the prespecified level PVE with a value of 0.95. The final mixed model is fitted using bam function  22  in the R package mgcv.  23 he estimation accuracy for functional parameters is assessed using the mean integrated squared errors (MISE) and the properties of the pointwise confidence intervals. Specifically, for a function  with estimate \u03b2,\n\nFor the pointwise confidence intervals, we report the integrated actual pointwise coverage (IAC) and integrated actual width (IAW), where IAC is defined as 1\n\n\u222b I{ \u03b2i sim (s) \u2208 CI p (s)}ds and CI p (s) is the pointwise approximate confidence interval for the functional parameter (s). For example, an approximate 95% pointwise confidence interval CI p (s 0 ) for  1 (s 0 ) can be constructed as  1 (s 0 ) \u00b1 1.96 \u00d7 \u015c D{ \u03b21 (s 0 )}. The length of the confidence interval at s 0 is 3.92 \u00d7 \u015c D{ \u03b21 (s 0 )} and IAW = 1"
+    },
+    {
+      "title": "4.3. Simulation results for estimation",
+      "text": "Tables 1 to 3 display the results for estimating the coefficient functions when the data generating mechanism uses independent, exchangeable, or unspecified covariances, respectively. For each table, we compare results using five methods. The ind_obs method refers to the method implemented in the pffr function; we use the bootstrap method  18  to obtain the confidence bands for the coefficient functions; and the independent, exchangeable and unspecified methods refer to the proposed methods with independent, exchangeable and unspecified covariances, respectively. We first focus on the point estimation, which is partially captured by the MISE in the three tables. Results indicate that as the number of subjects and visits increase, MISEs decrease for all methods; see the columns labeled \u221a MISE in Tables  1 to 3 . Moreover, the MISE obtains the smallest value when the correlation is correctly specified. In particular, the reduction in MISE is substantial for data with exchangeable and unspecified covariance structures when the correct model is used compared to one that does not account for correlation. For example, in Table  2  which corresponds to data simulated from an exchangeable correlation structure, for n = 200 and n i \u223c Unif [8, 12], the \u221a MISE is 0.028 for  2 (s) for the method which accounts for exchangeable correlation, while it is 0.066 for the bootstrap method which does not. Finally, the unspecified correlation model consistently provides good estimators, with the corresponding MISE comparable to that obtains from the correctly specified model. See Section S.3 in the supplementary material for additional simulation results.\n\nFor confidence bands, all methods outperform the ind_obs method in terms of coverage. The confidence bands from the ind_obs method are on average too narrow and are far below the nominal coverage level. The correctly specified and the unspecified covariance models provide confidence bands that are close to the nominal, though, slightly conservative sometimes. The bootstrap method provides confidence bands that close to the nominal, though they require more computational times and have higher average width for estimating slope functions and lower average width for estimating intercept functions. When models are misspecified (eg, exchangeable model for unspecified covariance data), the average coverage of the confidence bands tends to be close to the nominal, but at the expense of much wider confidence bands.\n\nIn terms of run times per simulation averaged by 500 replications, the bootstrap method is the slowest and the ind_obs method is the fastest. Computational time increases with more complex longitudinal correlation structures. However, when the dataset has a large number of subjects and a large number of visits per subject (n = 200 and n i \u223c Unif [8, 12]),\n\nTA B L E 1 \u221a MISE, IAC for 95% pointwise confidence interval and IAW for estimating  0 (s),  1 (s), and  2 (s) based on independent covariance data using five methods across 500 simulations  0 (s)  1 (s)  2 (s) Method Time \u221a MISE IAW IAC \u221a MISE IAW IAC \u221a MISE IAW IAC n = 100 and n i \u223c Unif[3, 6] ind_obs 0 (0.0) 0.127 0.23 0.58 0.119 0.15 0.46 0.082 0.09 0.40 Bootstrap 72 (0.1) 0.127 0.54 0.93 0.119 0.51 0.93 0.082 0.35 0.93 Independent 3 (0.0) 0.125 0.80 0.98 0.115 0.51 0.95 0.073 0.33 0.95 Exchangeable 7 (0.1) 0.125 0.82 0.98 0.115 0.52 0.96 0.073 0.34 0.95 Unspecified 8 (0.0) 0.125 0.80 0.98 0.115 0.51 0.95 0.073 0.34 0.95 n = 100 and n i \u223c Unif[8, 12] ind_obs 1 (0.0) 0.086 0.16 0.58 0.079 0.10 0.46 0.052 0.07 0.45 Bootstrap 150 (0.1) 0.086 0.36 0.94 0.079 0.34 0.94 0.052 0.23 0.95 Independent 32 (0.1) 0.085 0.53 0.96 0.078 0.34 0.94 0.048 0.23 0.96 Exchangeable 49 (0.4) 0.085 0.54 0.97 0.078 0.35 0.95 0.048 0.23 0.96 Unspecified 37 (0.1) 0.085 0.53 0.96 0.078 0.34 0.94 0.048 0.23 0.96 n = 200 and n i \u223c Unif[3, 6] ind_obs 1 (0.0) 0.086 0.16 0.61 0.084 0.11 0.44 0.056 0.07 0.42 Bootstrap 138 (0.1) 0.086 0.38 0.95 0.084 0.36 0.94 0.056 0.25 0.96 Independent 24 (0.1) 0.085 0.57 0.97 0.082 0.36 0.95 0.051 0.24 0.97 Exchangeable 49 (0.4) 0.085 0.57 0.97 0.082 0.36 0.96 0.051 0.24 0.97 Unspecified 33 (0.1) 0.085 0.57 0.97 0.082 0.36 0.95 0.051 0.24 0.97 n = 200 and n i \u223c Unif[8, 12] ind_obs 1 (0.0) 0.059 0.11 0.61 0.057 0.07 0.46 0.038 0.05 0.44 Bootstrap 288 (0.4) 0.059 0.25 0.95 0.057 0.24 0.93 0.038 0.17 0.94 Independent 264 (0.9) 0.058 0.38 0.97 0.056 0.24 0.94 0.036 0.16 0.95 Exchangeable 381 (3.0) 0.058 0.39 0.98 0.056 0.24 0.94 0.036 0.17 0.96 Unspecified 275 (0.9) 0.058 0.38 0.97 0.056 0.24 0.94 0.036 0.16 0.95 Note: Time (standard error) with second as a unit is the run time per simulation averaged by 500 replications.\n\nthe computation time for fitting the proposed methods can be comparable to or longer than that of the bootstrap method.\n\nThe proposed method may be sped up via parallel computing in the bam function, but in our simulation we only use one core.\n\nIn summary, the unspecified covariance models perform well in terms of inference for the fixed effects in a variety of scenarios. However, in practice one may still want to know whether a simpler correlation structure is reasonable for the data, as the correct model slightly outperforms the unspecified covariance model. In the next section, we provide results for testing the longitudinal covariance."
+    },
+    {
+      "title": "4.4. Simulation results for longitudinal covariance tests",
+      "text": "For the covariance tests introduced in Section 3, we report the empirical type I error rate (estimated size) for nominal levels  = 0.05 and 0.10 based on 5000 simulated datasets, and the power at the  = 0.05 level with 1000 simulated datasets.\n\nFor the joint test, we use the Bonferroni correction to account for the multiplicity of hypotheses tests. For the individual covariance tests, the power curves are presented as functions of the deviation from the null, defined as\n\nTA B L E 2 \u221a MISE, IAC for 95% pointwise confidence interval and IAW for estimating  0 (s),  1 (s), and  2 (s) based on exchangeable covariance data using five methods across 500 simulations  0 (s)  1 (s)  2 (s) Method Time \u221a MISE IAW IAC \u221a MISE IAW IAC \u221a MISE IAW IAC n = 100 and n i \u223c Unif[3, 6] ind_obs 0 (0.0) 0.225 0.22 0.34 0.226 0.15 0.24 0.119 0.09 0.28 Bootstrap 74 (0.1) 0.225 0.97 0.94 0.226 0.94 0.94 0.119 0.51 0.94 Independent 3 (0.0) 0.223 0.80 0.86 0.220 0.50 0.69 0.107 0.33 0.82 Exchangeable 6 (0.0) 0.215 1.44 0.97 0.202 0.90 0.95 0.063 0.29 0.95 Unspecified 11 (0.0) 0.215 1.42 0.99 0.208 0.87 0.93 0.064 0.29 0.94 n = 100 and n i \u223c Unif[8, 12] ind_obs 1 (0.0) 0.206 0.15 0.27 0.205 0.10 0.17 0.092 0.07 0.26 Bootstrap 152 (0.1) 0.206 0.91 0.95 0.205 0.90 0.95 0.092 0.39 0.94 Independent 32 (0.2) 0.205 0.54 0.74 0.202 0.34 0.54 0.086 0.23 0.75 Exchangeable 46 (0.2) 0.203 1.39 0.97 0.187 0.87 0.97 0.037 0.17 0.96 Unspecified 51 (0.2) 0.205 1.36 0.98 0.190 0.84 0.96 0.037 0.17 0.95 n = 200 and n i \u223c Unif[3, 6] ind_obs 1 (0.0) 0.162 0.16 0.34 0.149 0.11 0.26 0.085 0.07 0.29 Bootstrap 137 (0.2) 0.162 0.69 0.94 0.149 0.66 0.95 0.085 0.36 0.95 Independent 23 (0.1) 0.160 0.57 0.85 0.147 0.35 0.72 0.079 0.24 0.82 Exchangeable 44 (0.2) 0.151 1.02 0.97 0.141 0.64 0.95 0.047 0.21 0.95 Unspecified 54 (0.2) 0.152 1.01 0.99 0.142 0.63 0.95 0.047 0.21 0.95 n = 200 and n i \u223c Unif[8, 12] ind_obs 1 (0.0) 0.147 0.11 0.28 0.140 0.07 0.20 0.066 0.05 0.25 Bootstrap 288 (0.3) 0.147 0.65 0.95 0.140 0.63 0.95 0.066 0.28 0.95 Independent 261 (0.9) 0.147 0.38 0.73 0.139 0.24 0.58 0.063 0.16 0.76 Exchangeable 373 (1.5) 0.144 0.97 0.97 0.131 0.62 0.96 0.028 0.12 0.95 Unspecified 383 (1.5) 0.147 0.98 0.98 0.134 0.61 0.95 0.029 0.12 0.95 Note: Time (standard error) with second as a unit is the run time per simulation averaged by 500 replications.\n\nfor each k. For the joint test, the deviation from the null is defined as\n\nThe deviation from the null hypothesis is a number between 0 and 1. Table  4  reports the empirical type I errors of the individual and joint tests, indicating that all tests have empirical levels close to their nominal levels. Tests can be conservative for exchangeable covariance with a larger number of visits per subject. We have also evaluated the dependency of the testing statistics from different layers for a few simulation settings; see Section S.4 of the supplementary material for details. While we have found significant positive correlations among the testing statistics for most scenarios, the correlations seem small. Nevertheless, for the joint test where the Bonferroni correction is used, multiple testing methods that account for positive dependencies such as the Simes method  35  might instead be employed.\n\nTA B L E 3 \u221a MISE, IAC for 95% pointwise confidence interval and IAW for estimating  0 (s),  1 (s), and  2 (s) based on unspecified covariance data using five methods across 500 simulations  0 (s)  1 (s)  2 (s) Method Time \u221a MISE IAW IAC \u221a MISE IAW IAC \u221a MISE IAW IAC n = 100 and n i \u223c Unif[3, 6] ind_obs 0 (0.0) 0.127 0.23 0.58 0.122 0.15 0.42 0.086 0.10 0.37 Bootstrap 74 (0.1) 0.127 0.53 0.93 0.122 0.50 0.93 0.086 0.37 0.94 Independent 3 (0.0) 0.125 0.81 0.97 0.118 0.51 0.95 0.076 0.34 0.95 Exchangeable 7 (0.1) 0.125 0.82 0.97 0.118 0.52 0.96 0.076 0.34 0.95 Unspecified 19 (0.1) 0.081 0.62 1.00 0.077 0.31 0.93 0.052 0.22 0.94 n = 100 and n i \u223c Unif[8, 12] ind_obs 1 (0.0) 0.081 0.16 0.61 0.070 0.10 0.49 0.063 0.07 0.36 Bootstrap 152 (0.1) 0.081 0.34 0.94 0.070 0.31 0.94 0.063 0.28 0.95 Independent 32 (0.1) 0.079 0.55 0.97 0.069 0.34 0.97 0.059 0.23 0.91 Exchangeable 43 (0.3) 0.079 0.55 0.97 0.069 0.34 0.97 0.059 0.23 0.91 Unspecified 77 (0.4) 0.045 0.37 1.00 0.041 0.18 0.95 0.032 0.13 0.94 n = 200 and n i \u223c Unif[3, 6] ind_obs 1 (0.0) 0.085 0.16 0.60 0.079 0.11 0.47 0.059 0.07 0.40 Bootstrap 138 (0.1) 0.085 0.37 0.95 0.079 0.35 0.95 0.059 0.26 0.94 Independent 24 (0.1) 0.084 0.56 0.97 0.077 0.36 0.96 0.055 0.24 0.94 Exchangeable 45 (0.3) 0.084 0.57 0.97 0.077 0.36 0.96 0.055 0.24 0.94 Unspecified 116 (0.6) 0.054 0.43 1.00 0.050 0.21 0.94 0.036 0.15 0.95 n = 200 and n i \u223c Unif[8, 12] ind_obs 1 (0.0) 0.056 0.11 0.64 0.052 0.07 0.49 0.044 0.05 0.37 Bootstrap 288 (0.4) 0.056 0.24 0.94 0.052 0.22 0.94 0.044 0.20 0.95 Independent 262 (0.8) 0.055 0.38 0.97 0.051 0.24 0.96 0.043 0.16 0.91 Exchangeable 339 (1.5) 0.055 0.38 0.97 0.051 0.24 0.97 0.043 0.16 0.90 Unspecified 585 (3.6) 0.031 0.25 1.00 0.029 0.12 0.94 0.022 0.09 0.95 Note: Time (standard error) with second as a unit is the run time per simulation averaged by 500 replications.\n\nFigure  1  presents the power curves for the proposed tests, indicating similar patterns for the two individual and the joint tests. The test for independent covariance has higher power than the one for exchangeable covariance data. For both types of the null hypothesis, power increases with the number of subjects and observation per subject. Power seems to be particularly sensitive to the number of visits, n i , per curve. Indeed, with 100 study participants and exchangeable covariance, for all three tests, the power for n i \u223c Unif [8, 12] is close to one under a deviation around 0.25. In contrast, for n i \u223c Unif [3, 6], the deviation needs to be closer to 0.7 to reach the same power. As expected, power depends on how closely the true model matches the specified alternative assumed by the test.\n\nIn summary, in all settings, the proposed tests maintain proper size and have the power to detect alternative longitudinal covariance both when the null hypothesis assumes independent covariance and exchangeable covariance."
+    },
+    {
+      "title": "5. DATA APPLICATION",
+      "text": "Wearable devices such as accelerometers provide objective and detailed measurements of physical activity and enable researchers to study how physical activity changes with age, personal characteristics, and health status. In earlier studies based on cross-sectional data, the systematic and random circadian rhythms of physical activity was analyzed as functions of time of day and age.  2, 3 n this analysis, our objective is to quantify the circadian rhythm of physical activity over multiple days and how they relate to age, sex, and BMI and provide associated inference. Data were collected from the National Health and Nutrition Examination Survey (NHANES), a large cohort study conducted in 2-year waves by the US Centers for Disease Control and Prevention (CDC) to assess the health and nutritional status of US population. We focus on the NHANES 2011-2012 and 2013-2014 data, where each study participant was asked to wear the wrist-worn device all the time for seven consecutive days. The physical activity data were collected and summarized in minute-level Monitor-Independent Movement Summary (MIMS) units, a physical activity intensity unit optimized to capture normal human motion.  36 For each day of the study participant, our initial data are MIMS measured at 1440 minutes from midnight to midnight. The final dataset consists of 513 study participants (208 men and 305 women) with an average age of 57 years and an average BMI value of 28. Figure  2  displays the physical activity profiles of two randomly selected NHANES study participants. For each study participant, we further subset the days with at least 95% estimated wear time, leading to a total of 3187 days of wear with an average of 6.21 days of wear per study participant. For subject i at day j, the average MIMS at hour s of a day is our longitudinal functional outcome, denoted by y ij (s).\n\nActivity profiles often vary for weekends (Saturday/Sunday) and weekdays (Monday-Friday). Thus, we create a binary variable which is 1 for weekends and 0 for weekdays. Then, we include sex (denoted by sex i ), age (age i ), BMI (BMI i ), and weekend (weekend i ) as the covariates in this analysis. The mean function is  ij (s) =  0 (s) + sex i  sex (s) + age i  age (s) + BMI i  BMI (s) + weekend i  weekend (s). The variable sex i is 0 for males and 1 for females. Both age and BMI are centered so that  0 (s) is the population mean MIMS corresponding to males of age 57 and with BMI of 28. The longitudinal covariate T ij is the day of wear. Because physical activity profiles are periodic, that is, physical activity counts are the same at the start of the day and at the end of the day, the coefficient function should also be cyclic and we use cyclic P-splines. To investigate the longitudinal correlation structure of the data, we first estimate the marginal covariance function via the fpca.face R function using cubic B-spline basis functions with 10 knots. Using the procedure described in Section 2.2, we identify that eight eigenfunctions explain 90% of the marginal variance. Using these eight eigenfunctions, we conduct a joint test for the null hypothesis that all longitudinal covariances G k0 (\u22c5, \u22c5) can be induced by an exchangeable covariance between daily profiles within each subject. The P-values are 0.04, 0.25, 0.06, 0.49, 0.62, 0.49, 0.09 and 0.19, respectively. Thus, with the Bonferroni correction, we do not reject the null hypothesis at the 0.05 level. The final model fit is obtained by using exchangeable covariances for all longitudinal covariances.\n\nThe estimated coefficient functions are displayed in Figure  3 , along with the 95% pointwise confidence bands. The top left panel in Figure  3  displays the estimated mean activity profile  0 (s) for males with age 57 and BMI 28. The shape is consistent with that of published average activity plots over the course of the day. On average, individuals are less active during night. Then, their activities increase sharply between 5 AM and 11 AM, sustain between 11 AM and 7 PM, and There is no substantial age effect in activity in the morning while the most considerable age effect happens in the early night. These findings are consistent with previous findings that older individuals sleep early at night and wake up early in the morning, while younger individuals are more energetic at night. The bottom left panel indicates that activity patterns tend to decrease with increasing BMI, especially in the daytime. Compared to weekdays, weekends correspond to lower levels of activity in the whole day, significantly in the morning from 5 AM to 11 AM. These results are consistent with common sense that individuals are less active on weekends morning. Figure  4  displays the estimated mean activity profiles for females and males, with different age and BMI combinations. From the left two panels, we see that for a given BMI value, there is a pronounced decrease in activity as a function of age, both for females and males. Moreover, younger individuals have on average two activity peaks, while older individuals tend to lose the second activity peak. It indicates that the change of physical activity patterns with age is due to less activity 10970258, 2022, 17, Downloaded from  https://onlinelibrary.wiley.com/doi/10.1002/sim.9421 , Wiley Online Library on [04/08/2025]. See the Terms and Conditions ( https://onlinelibrary.wiley.com/terms-and-conditions ) on Wiley Online Library for rules of use; OA articles are governed by the applicable Creative Commons License in the afternoon and at night. The right two panels indicate that the average activity profile decreases with increasing BMI. The negative effect of age only works after noon while individuals with larger BMI have less activity during all daytime. Moreover, the effect of two units on the BMI scale is roughly equivalent to two years of age in terms of overall activity loss. Finally, the estimated covariances of physical activity profiles within each day and across days, respectively, and the top three estimated eigenfunctions  k (s) are shown in Section S.5 in supplementary material."
+    },
+    {
+      "title": "6. DISCUSSION",
+      "text": "We introduced an inferential framework for estimating fixed effects functions for longitudinal functional data with complex correlation structures. Methods are natural extensions of standard longitudinal data methods with scalar observations and use the flexible marginal decomposition model framework in Park and Staicu.  13 imulation studies indicate that the estimation procedure works remarkably well even when the longitudinal correlations are misspecified. However, the confidence bands obtained under misspecified correlation models may have smaller than nominal coverage or are wider than necessary. Our results indicate that using unspecified correlation matrices is the safer approach when it is computationally feasible. More work will be necessary to improve the computational feasibility of these methods for larger sample sizes in terms of the number of study participants, visits, and observations per curve.\n\nWe also introduced a testing framework for longitudinal correlations for longitudinal functional data, which extended the testing method in Chen et al.  19  The proposed tests provide insight into what correlation structures are appropriate and may help reduce the computational cost when a simpler longitudinal correlation is chosen.\n\nThis article only considered scalar covariates and it would be of interest to extend the proposed framework to include functional covariates."
+    },
+    {
+      "text": "the independent covariance,  ij1 iid \u223c N(0, 4.5) and  ij2 iid \u223c N(0, 3). For the exchangeable covariance,  i1 iid \u223c N(0, 3), i2 iid \u223c N(0, 2),  ij1 iid \u223c N(0, 1.5), and  ij2 iid \u223c N(0, 1). For the unspecified covariance,  11 (T) = \u221a 2 cos(2T),  12 (T) = \u221a 2 sin(2T),  21 (T) = \u221a 2 cos(4T), and  22 (T) = \u221a 2 sin(4T). We generate the random terms as  i11 iid \u223c N(0, 2),  i12 iid \u223c N(0, 1.5),  i21 iid \u223c N(0, 1.5),  i22 iid \u223c N(0, 1),  ij1 iid \u223c N(0, 1), and  ij2 iid"
+    },
+    {
+      "text": "Physical activity profiles of two NHANES study participants over available days. Panels in the top row are from a male with age 54 and BMI 20.5. Panels in the bottom row are from a female with age 57 and BMI 31.54. Each panel displays MIMS of 1 day from midnight to midnight, titled by day of the week"
+    },
+    {
+      "text": "Estimated coefficient functions for the NHANES dataset along with pointwise 95% confidence bands under exchangeable longitudinal covariance structure Left two panels: Estimated mean activity profiles of females and males with BMI 28 at four different ages. Right two panels: Estimated mean activity profiles of females and males with age 57 and with four different BMI values decrease rapidly after 7 PM. The top middle panel indicates that females in this age group (50-70) have significantly more activities than males throughout most of the day except for midnight. The top right panel displays the estimated coefficient function for age, indicating a loss of activity for older individuals from afternoon to 1 AM."
+    },
+    {
+      "title": "ACKNOWLEDGEMENTS",
+      "text": "The authors thank the reviewers for their constructive and helpful comments, which greatly improved the article. This work was partially supported by the  NIH  grants  R56 AG064803  (LX),  R01 AG064803  (RL and LX), and  R01 NS112303  (RL and LX). This work represents the opinions of the researchers and not necessarily that of the granting organizations."
+    },
+    {
+      "text": "NIH , Grant/Award Numbers:  R01 AG064803 ,  R01 NS112303 ,  R56 AG064803"
+    },
+    {
+      "title": "DATA AVAILABILITY STATEMENT",
+      "text": "The relevant R code to implement the proposed method and an RMD file with details of this article are freely available at  https://github.com/rli20ST758/FILF ."
+    }
+  ],
+  "references": [
+    {
+      "title": "Functional Data Analysis",
+      "authors": [
+        "J Ramsay",
+        "B Silverman"
+      ],
+      "year": 2005,
+      "doi": "10.1007/b98888",
+      "raw": "Functional Data Analysis \n\t\t \n\t\t\t J O Ramsay \n\t\t \n\t\t \n\t\t\t B W Silverman \n\t\t \n\t\t 10.1007/b98888 \n\t\t \n\t\t\t 2005 \n\t\t\t Springer \n\t\t\t New York, NY \n\t\t \n\t \n\t Ramsay JO, Silverman BW. Functional Data Analysis. New York, NY: Springer; 2005."
+    },
+    {
+      "title": "Quantifying the lifetime circadian rhythm of physical activity: a covariate-dependent functional approach",
+      "authors": [
+        "L Xiao",
+        "L Huang",
+        "J Schrack",
+        "L Ferrucci",
+        "V Zipunnikov",
+        "C Crainiceanu"
+      ],
+      "year": 2015,
+      "doi": "10.1093/biostatistics/kxu045",
+      "journal": "Biostatistics",
+      "volume": "16",
+      "issue": "2",
+      "raw": "Quantifying the lifetime circadian rhythm of physical activity: a covariate-dependent functional approach \n\t\t \n\t\t\t L Xiao \n\t\t \n\t\t \n\t\t\t L Huang \n\t\t \n\t\t \n\t\t\t J Schrack \n\t\t \n\t\t \n\t\t\t L Ferrucci \n\t\t \n\t\t \n\t\t\t V Zipunnikov \n\t\t \n\t\t \n\t\t\t C M Crainiceanu \n\t\t \n\t\t 10.1093/biostatistics/kxu045 \n\t \n\t \n\t\t Biostatistics \n\t\t \n\t\t\t 16 \n\t\t\t 2 \n\t\t\t \n\t\t\t 2015 \n\t\t \n\t \n\t Xiao L, Huang L, Schrack J, Ferrucci L, Zipunnikov V, Crainiceanu CM. Quantifying the lifetime circadian rhythm of physical activity: a covariate-dependent functional approach. Biostatistics. 2015;16(2):352-367."
+    },
+    {
+      "title": "Generalized multilevel function-on-scalar regression and principal component analysis",
+      "authors": [
+        "J Goldsmith",
+        "V Zipunnikov",
+        "J Schrack"
+      ],
+      "year": 2015,
+      "doi": "10.1111/biom.12278",
+      "journal": "Biometrics",
+      "volume": "71",
+      "issue": "2",
+      "raw": "Generalized multilevel function-on-scalar regression and principal component analysis \n\t\t \n\t\t\t J Goldsmith \n\t\t \n\t\t \n\t\t\t V Zipunnikov \n\t\t \n\t\t \n\t\t\t J Schrack \n\t\t \n\t\t 10.1111/biom.12278 \n\t \n\t \n\t\t Biometrics \n\t\t \n\t\t\t 71 \n\t\t\t 2 \n\t\t\t \n\t\t\t 2015 \n\t\t \n\t \n\t Goldsmith J, Zipunnikov V, Schrack J. Generalized multilevel function-on-scalar regression and principal component analysis. Biometrics. 2015;71(2):344-353."
+    },
+    {
+      "title": "Organizing and analyzing the activity data in NHANES",
+      "authors": [
+        "A Leroux",
+        "J Di",
+        "E Smirnova"
+      ],
+      "year": 2019,
+      "doi": "10.1007/s12561-018-09229-9",
+      "journal": "Stat Biosci",
+      "volume": "11",
+      "issue": "2",
+      "raw": "Organizing and analyzing the activity data in NHANES \n\t\t \n\t\t\t A Leroux \n\t\t \n\t\t \n\t\t\t J Di \n\t\t \n\t\t \n\t\t\t E Smirnova \n\t\t \n\t\t 10.1007/s12561-018-09229-9 \n\t \n\t \n\t\t Stat Biosci \n\t\t \n\t\t\t 11 \n\t\t\t 2 \n\t\t\t \n\t\t\t 2019 \n\t\t \n\t \n\t Leroux A, Di J, Smirnova E, et al. Organizing and analyzing the activity data in NHANES. Stat Biosci. 2019;11(2):262-287."
+    },
+    {
+      "title": "The predictive performance of objective measures of physical activity derived from accelerometry data for 5-year all-cause mortality in older adults: national health",
+      "authors": [
+        "E Smirnova",
+        "A Leroux",
+        "Q Cao"
+      ],
+      "year": 2020,
+      "doi": "10.1093/gerona/glz193",
+      "journal": "J Gerontol A",
+      "volume": "75",
+      "issue": "9",
+      "raw": "The predictive performance of objective measures of physical activity derived from accelerometry data for 5-year all-cause mortality in older adults: national health \n\t\t \n\t\t\t E Smirnova \n\t\t \n\t\t \n\t\t\t A Leroux \n\t\t \n\t\t \n\t\t\t Q Cao \n\t\t \n\t\t 10.1093/gerona/glz193 \n\t \n\t \n\t\t J Gerontol A \n\t\t \n\t\t\t 75 \n\t\t\t 9 \n\t\t\t \n\t\t\t 2020 \n\t\t \n\t \n\t Smirnova E, Leroux A, Cao Q, et al. The predictive performance of objective measures of physical activity derived from accelerometry data for 5-year all-cause mortality in older adults: national health. J Gerontol A. 2020;75(9):1779-1785."
+    },
+    {
+      "title": "Longitudinal functional principal component analysis",
+      "authors": [
+        "S Greven",
+        "C Crainiceanu",
+        "B Caffo",
+        "D Reich"
+      ],
+      "year": 2010,
+      "doi": "10.1214/10-ejs575",
+      "journal": "Electron J Stat",
+      "volume": "4",
+      "raw": "Longitudinal functional principal component analysis \n\t\t \n\t\t\t S Greven \n\t\t \n\t\t \n\t\t\t C M Crainiceanu \n\t\t \n\t\t \n\t\t\t B Caffo \n\t\t \n\t\t \n\t\t\t D Reich \n\t\t \n\t\t 10.1214/10-ejs575 \n\t \n\t \n\t\t Electron J Stat \n\t\t \n\t\t\t 4 \n\t\t\t \n\t\t\t 2010 \n\t\t \n\t \n\t Greven S, Crainiceanu CM, Caffo B, Reich D. Longitudinal functional principal component analysis. Electron J Stat. 2010;4:1022-1054."
+    },
+    {
+      "title": "Penalized functional regression",
+      "authors": [
+        "J Goldsmith",
+        "J Bobb",
+        "C Crainiceanu",
+        "B Caffo",
+        "D Reich"
+      ],
+      "year": 2011,
+      "doi": "10.1198/jcgs.2010.10007",
+      "journal": "J Comput Graph Stat",
+      "volume": "20",
+      "issue": "4",
+      "raw": "Penalized functional regression \n\t\t \n\t\t\t J Goldsmith \n\t\t \n\t\t \n\t\t\t J Bobb \n\t\t \n\t\t \n\t\t\t C M Crainiceanu \n\t\t \n\t\t \n\t\t\t B Caffo \n\t\t \n\t\t \n\t\t\t D Reich \n\t\t \n\t\t 10.1198/jcgs.2010.10007 \n\t \n\t \n\t\t J Comput Graph Stat \n\t\t \n\t\t\t 20 \n\t\t\t 4 \n\t\t\t \n\t\t\t 2011 \n\t\t \n\t \n\t Goldsmith J, Bobb J, Crainiceanu CM, Caffo B, Reich D. Penalized functional regression. J Comput Graph Stat. 2011;20(4):830-851."
+    },
+    {
+      "title": "Functional additive mixed models",
+      "authors": [
+        "F Scheipl",
+        "A Staicu",
+        "S Greven"
+      ],
+      "year": 2015,
+      "doi": "10.1080/10618600.2014.901914",
+      "journal": "J Comput Graph Stat",
+      "volume": "24",
+      "issue": "2",
+      "raw": "Functional additive mixed models \n\t\t \n\t\t\t F Scheipl \n\t\t \n\t\t \n\t\t\t A M Staicu \n\t\t \n\t\t \n\t\t\t S Greven \n\t\t \n\t\t 10.1080/10618600.2014.901914 \n\t \n\t \n\t\t J Comput Graph Stat \n\t\t \n\t\t\t 24 \n\t\t\t 2 \n\t\t\t \n\t\t\t 2015 \n\t\t \n\t \n\t Scheipl F, Staicu AM, Greven S. Functional additive mixed models. J Comput Graph Stat. 2015;24(2):477-501."
+    },
+    {
+      "title": "FMEM: functional mixed effects models for longitudinal functional responses",
+      "authors": [
+        "H Zhu",
+        "K Chen",
+        "X Luo",
+        "Y Yuan",
+        "J Wang"
+      ],
+      "year": 2019,
+      "journal": "Stat Sin",
+      "volume": "29",
+      "issue": "4",
+      "raw": "FMEM: functional mixed effects models for longitudinal functional responses \n\t\t \n\t\t\t H Zhu \n\t\t \n\t\t \n\t\t\t K Chen \n\t\t \n\t\t \n\t\t\t X Luo \n\t\t \n\t\t \n\t\t\t Y Yuan \n\t\t \n\t\t \n\t\t\t J L Wang \n\t\t \n\t \n\t \n\t\t Stat Sin \n\t\t \n\t\t\t 29 \n\t\t\t 4 \n\t\t\t \n\t\t\t 2019 \n\t\t \n\t \n\t Zhu H, Chen K, Luo X, Yuan Y, Wang JL. FMEM: functional mixed effects models for longitudinal functional responses. Stat Sin. 2019;29(4):2007-2033."
+    },
+    {
+      "title": "Additive functional Cox model",
+      "authors": [
+        "E Cui",
+        "C Crainiceanu",
+        "A Leroux"
+      ],
+      "year": 2021,
+      "doi": "10.1080/10618600.2020.1853550",
+      "journal": "J Comput Graph Stat",
+      "volume": "30",
+      "issue": "3",
+      "raw": "Additive functional Cox model \n\t\t \n\t\t\t E Cui \n\t\t \n\t\t \n\t\t\t C M Crainiceanu \n\t\t \n\t\t \n\t\t\t A Leroux \n\t\t \n\t\t 10.1080/10618600.2020.1853550 \n\t \n\t \n\t\t J Comput Graph Stat \n\t\t \n\t\t\t 30 \n\t\t\t 3 \n\t\t\t \n\t\t\t 2021 \n\t\t \n\t \n\t Cui E, Crainiceanu CM, Leroux A. Additive functional Cox model. J Comput Graph Stat. 2021;30(3):780-793."
+    },
+    {
+      "title": "Multilevel functional principal component analysis",
+      "authors": [
+        "C Di",
+        "C Crainiceanu",
+        "B Caffo",
+        "N Punjabi"
+      ],
+      "year": 2009,
+      "doi": "10.1214/08-aoas206",
+      "journal": "Ann Appl Stat",
+      "volume": "3",
+      "issue": "1",
+      "raw": "Multilevel functional principal component analysis \n\t\t \n\t\t\t C Z Di \n\t\t \n\t\t \n\t\t\t C M Crainiceanu \n\t\t \n\t\t \n\t\t\t B S Caffo \n\t\t \n\t\t \n\t\t\t N M Punjabi \n\t\t \n\t\t 10.1214/08-aoas206 \n\t \n\t \n\t\t Ann Appl Stat \n\t\t \n\t\t\t 3 \n\t\t\t 1 \n\t\t\t \n\t\t\t 2009 \n\t\t \n\t \n\t Di CZ, Crainiceanu CM, Caffo BS, Punjabi NM. Multilevel functional principal component analysis. Ann Appl Stat. 2009;3(1):458-488."
+    },
+    {
+      "title": "Modeling repeated functional observations",
+      "authors": [
+        "K Chen",
+        "H M\u00fcller"
+      ],
+      "year": 2012,
+      "doi": "10.1080/01621459.2012.734196",
+      "journal": "J Am Stat Assoc",
+      "volume": "107",
+      "issue": "500",
+      "raw": "Modeling repeated functional observations \n\t\t \n\t\t\t K Chen \n\t\t \n\t\t \n\t\t\t H G M\u00fcller \n\t\t \n\t\t 10.1080/01621459.2012.734196 \n\t \n\t \n\t\t J Am Stat Assoc \n\t\t \n\t\t\t 107 \n\t\t\t 500 \n\t\t\t \n\t\t\t 2012 \n\t\t \n\t \n\t Chen K, M\u00fcller HG. Modeling repeated functional observations. J Am Stat Assoc. 2012;107(500):1599-1609."
+    },
+    {
+      "title": "Longitudinal functional data analysis",
+      "authors": [
+        "S Park",
+        "A Staicu"
+      ],
+      "year": 2015,
+      "doi": "10.1002/sta4.89",
+      "journal": "Stat",
+      "volume": "4",
+      "issue": "1",
+      "raw": "Longitudinal functional data analysis \n\t\t \n\t\t\t S Y Park \n\t\t \n\t\t \n\t\t\t A M Staicu \n\t\t \n\t\t 10.1002/sta4.89 \n\t \n\t \n\t\t Stat \n\t\t \n\t\t\t 4 \n\t\t\t 1 \n\t\t\t \n\t\t\t 2015 \n\t\t \n\t \n\t Park SY, Staicu AM. Longitudinal functional data analysis. Stat. 2015;4(1):212-226."
+    },
+    {
+      "title": "Functional CAR models for large spatially correlated functional datasets",
+      "authors": [
+        "L Zhang",
+        "V Baladandayuthapani",
+        "H Zhu"
+      ],
+      "year": 2016,
+      "journal": "J Am Stat Assoc",
+      "volume": "111",
+      "issue": "514",
+      "raw": "Functional CAR models for large spatially correlated functional datasets \n\t\t \n\t\t\t L Zhang \n\t\t \n\t\t \n\t\t\t V Baladandayuthapani \n\t\t \n\t\t \n\t\t\t H Zhu \n\t\t \n\t \n\t \n\t\t J Am Stat Assoc \n\t\t \n\t\t\t 111 \n\t\t\t 514 \n\t\t\t \n\t\t\t 2016 \n\t\t \n\t \n\t Zhang L, Baladandayuthapani V, Zhu H, et al. Functional CAR models for large spatially correlated functional datasets. J Am Stat Assoc. 2016;111(514):772-786."
+    },
+    {
+      "title": "Modelling function-valued stochastic processes, with applications to fertility dynamics",
+      "authors": [
+        "K Chen",
+        "P Delicado",
+        "H M\u00fcller"
+      ],
+      "year": 2017,
+      "doi": "10.1111/rssb.12160",
+      "journal": "J Royal Stat Soc B",
+      "volume": "79",
+      "issue": "1",
+      "raw": "Modelling function-valued stochastic processes, with applications to fertility dynamics \n\t\t \n\t\t\t K Chen \n\t\t \n\t\t \n\t\t\t P Delicado \n\t\t \n\t\t \n\t\t\t H G M\u00fcller \n\t\t \n\t\t 10.1111/rssb.12160 \n\t \n\t \n\t\t J Royal Stat Soc B \n\t\t \n\t\t\t 79 \n\t\t\t 1 \n\t\t\t \n\t\t\t 2017 \n\t\t \n\t \n\t Chen K, Delicado P, M\u00fcller HG. Modelling function-valued stochastic processes, with applications to fertility dynamics. J Royal Stat Soc B. 2017;79(1):177-196."
+    },
+    {
+      "title": "Bayesian semiparametric functional mixed models for serially correlated functional data, with application to glaucoma data",
+      "authors": [
+        "W Lee",
+        "M Miranda",
+        "P Rausch"
+      ],
+      "year": 2019,
+      "doi": "10.1080/01621459.2018.1476242",
+      "journal": "J Am Stat Assoc",
+      "volume": "114",
+      "issue": "526",
+      "raw": "Bayesian semiparametric functional mixed models for serially correlated functional data, with application to glaucoma data \n\t\t \n\t\t\t W Lee \n\t\t \n\t\t \n\t\t\t M F Miranda \n\t\t \n\t\t \n\t\t\t P Rausch \n\t\t \n\t\t 10.1080/01621459.2018.1476242 \n\t \n\t \n\t\t J Am Stat Assoc \n\t\t \n\t\t\t 114 \n\t\t\t 526 \n\t\t\t \n\t\t\t 2019 \n\t\t \n\t \n\t Lee W, Miranda MF, Rausch P, et al. Bayesian semiparametric functional mixed models for serially correlated functional data, with application to glaucoma data. J Am Stat Assoc. 2019;114(526):495-513."
+    },
+    {
+      "title": "Bootstrap-based inference on the difference in the means of two correlated functional processes",
+      "authors": [
+        "C Crainiceanu",
+        "A Staicu",
+        "S Ray",
+        "N Punjabi"
+      ],
+      "year": 2012,
+      "doi": "10.1002/sim.5439",
+      "journal": "Stat Med",
+      "volume": "31",
+      "issue": "26",
+      "raw": "Bootstrap-based inference on the difference in the means of two correlated functional processes \n\t\t \n\t\t\t C M Crainiceanu \n\t\t \n\t\t \n\t\t\t A M Staicu \n\t\t \n\t\t \n\t\t\t S Ray \n\t\t \n\t\t \n\t\t\t N Punjabi \n\t\t \n\t\t 10.1002/sim.5439 \n\t \n\t \n\t\t Stat Med \n\t\t \n\t\t\t 31 \n\t\t\t 26 \n\t\t\t \n\t\t\t 2012 \n\t\t \n\t \n\t Crainiceanu CM, Staicu AM, Ray S, Punjabi N. Bootstrap-based inference on the difference in the means of two correlated functional processes. Stat Med. 2012;31(26):3223-3240."
+    },
+    {
+      "title": "Simple fixed-effects inference for complex functional models",
+      "authors": [
+        "S Park",
+        "A Staicu",
+        "L Xiao",
+        "C Crainiceanu"
+      ],
+      "year": 2018,
+      "doi": "10.1093/biostatistics/kxx026",
+      "journal": "Biostatistics",
+      "volume": "19",
+      "issue": "2",
+      "raw": "Simple fixed-effects inference for complex functional models \n\t\t \n\t\t\t S Y Park \n\t\t \n\t\t \n\t\t\t A M Staicu \n\t\t \n\t\t \n\t\t\t L Xiao \n\t\t \n\t\t \n\t\t\t C M Crainiceanu \n\t\t \n\t\t 10.1093/biostatistics/kxx026 \n\t \n\t \n\t\t Biostatistics \n\t\t \n\t\t\t 19 \n\t\t\t 2 \n\t\t\t \n\t\t\t 2018 \n\t\t \n\t \n\t Park SY, Staicu AM, Xiao L, Crainiceanu CM. Simple fixed-effects inference for complex functional models. Biostatistics. 2018;19(2):137-152."
+    },
+    {
+      "title": "A smoothing-based goodness-of-fit test of covariance for functional data",
+      "authors": [
+        "S Chen",
+        "L Xiao",
+        "A Staicu"
+      ],
+      "year": 2019,
+      "journal": "Biometrics",
+      "volume": "75",
+      "issue": "2",
+      "raw": "A smoothing-based goodness-of-fit test of covariance for functional data \n\t\t \n\t\t\t S Chen \n\t\t \n\t\t \n\t\t\t L Xiao \n\t\t \n\t\t \n\t\t\t A M Staicu \n\t\t \n\t \n\t \n\t\t Biometrics \n\t\t \n\t\t\t 75 \n\t\t\t 2 \n\t\t\t \n\t\t\t 2019 \n\t\t \n\t \n\t Chen S, Xiao L, Staicu AM. A smoothing-based goodness-of-fit test of covariance for functional data. Biometrics. 2019;75(2):562-571."
+    },
+    {
+      "title": "Flexible smoothing with B-splines and penalties",
+      "authors": [
+        "Phc Eilers",
+        "B Marx"
+      ],
+      "year": 1996,
+      "journal": "Stat Sci",
+      "volume": "11",
+      "issue": "2",
+      "raw": "Flexible smoothing with B-splines and penalties \n\t\t \n\t\t\t Phc Eilers \n\t\t \n\t\t \n\t\t\t B D Marx \n\t\t \n\t \n\t \n\t\t Stat Sci \n\t\t \n\t\t\t 11 \n\t\t\t 2 \n\t\t\t \n\t\t\t 1996 \n\t\t \n\t \n\t Eilers PHC, Marx BD. Flexible smoothing with B-splines and penalties. Stat Sci. 1996;11(2):89-121."
+    },
+    {
+      "title": "Smoothing parameter and model selection for general smooth models",
+      "authors": [
+        "S Wood",
+        "N Pya",
+        "B Safken"
+      ],
+      "year": 2016,
+      "doi": "10.1080/01621459.2016.1180986",
+      "journal": "J Am Stat Assoc",
+      "volume": "111",
+      "issue": "516",
+      "raw": "Smoothing parameter and model selection for general smooth models \n\t\t \n\t\t\t S N Wood \n\t\t \n\t\t \n\t\t\t N Pya \n\t\t \n\t\t \n\t\t\t B Safken \n\t\t \n\t\t 10.1080/01621459.2016.1180986 \n\t \n\t \n\t\t J Am Stat Assoc \n\t\t \n\t\t\t 111 \n\t\t\t 516 \n\t\t\t \n\t\t\t 2016 \n\t\t \n\t \n\t Wood SN, Pya N, Safken B. Smoothing parameter and model selection for general smooth models. J Am Stat Assoc. 2016;111(516):1548-1575."
+    },
+    {
+      "title": "Generalized additive models for large data sets",
+      "authors": [
+        "S Wood",
+        "Y Goude",
+        "S Shaw"
+      ],
+      "year": 2015,
+      "doi": "10.1111/rssc.12068",
+      "journal": "J Royal Stat Soc C",
+      "volume": "64",
+      "issue": "1",
+      "raw": "Generalized additive models for large data sets \n\t\t \n\t\t\t S N Wood \n\t\t \n\t\t \n\t\t\t Y Goude \n\t\t \n\t\t \n\t\t\t S Shaw \n\t\t \n\t\t 10.1111/rssc.12068 \n\t \n\t \n\t\t J Royal Stat Soc C \n\t\t \n\t\t\t 64 \n\t\t\t 1 \n\t\t\t \n\t\t\t 2015 \n\t\t \n\t \n\t Wood SN, Goude Y, Shaw S. Generalized additive models for large data sets. J Royal Stat Soc C. 2015;64(1):139-155."
+    },
+    {
+      "title": "mgcv: mixed GAM computation vehicle with automatic smoothness estimation",
+      "authors": [
+        "S Wood"
+      ],
+      "year": 2019,
+      "doi": "10.32614/cran.package.mgcv",
+      "raw": "mgcv: mixed GAM computation vehicle with automatic smoothness estimation \n\t\t \n\t\t\t S N Wood \n\t\t \n\t\t 10.32614/cran.package.mgcv \n\t\t \n\t\t\t 2019 \n\t\t \n\t \n\t Wood SN. mgcv: mixed GAM computation vehicle with automatic smoothness estimation; 2019."
+    },
+    {
+      "title": "Fast covariance estimation for high-dimensional functional data",
+      "authors": [
+        "L Xiao",
+        "V Zipunnikov",
+        "D Ruppert",
+        "C Crainiceanu"
+      ],
+      "year": 2016,
+      "doi": "10.1007/s11222-014-9485-x",
+      "journal": "Stat Comput",
+      "volume": "26",
+      "issue": "1",
+      "raw": "Fast covariance estimation for high-dimensional functional data \n\t\t \n\t\t\t L Xiao \n\t\t \n\t\t \n\t\t\t V Zipunnikov \n\t\t \n\t\t \n\t\t\t D Ruppert \n\t\t \n\t\t \n\t\t\t C M Crainiceanu \n\t\t \n\t\t 10.1007/s11222-014-9485-x \n\t \n\t \n\t\t Stat Comput \n\t\t \n\t\t\t 26 \n\t\t\t 1 \n\t\t\t \n\t\t\t 2016 \n\t\t \n\t \n\t Xiao L, Zipunnikov V, Ruppert D, Crainiceanu CM. Fast covariance estimation for high-dimensional functional data. Stat Comput. 2016;26(1):409-421."
+    },
+    {
+      "title": "Fast bivariate P-splines: the sandwich smoother",
+      "authors": [
+        "L Xiao",
+        "Y Li",
+        "D Ruppert"
+      ],
+      "year": 2013,
+      "doi": "10.1111/rssb.12007",
+      "journal": "J Royal Stat Soc B",
+      "volume": "75",
+      "issue": "3",
+      "raw": "Fast bivariate P-splines: the sandwich smoother \n\t\t \n\t\t\t L Xiao \n\t\t \n\t\t \n\t\t\t Y Li \n\t\t \n\t\t \n\t\t\t D Ruppert \n\t\t \n\t\t 10.1111/rssb.12007 \n\t \n\t \n\t\t J Royal Stat Soc B \n\t\t \n\t\t\t 75 \n\t\t\t 3 \n\t\t\t \n\t\t\t 2013 \n\t\t \n\t \n\t Xiao L, Li Y, Ruppert D. Fast bivariate P-splines: the sandwich smoother. J Royal Stat Soc B. 2013;75(3):577-599."
+    },
+    {
+      "title": "Fast covariance estimation for sparse functional data",
+      "authors": [
+        "L Xiao",
+        "C Li",
+        "W Checkley",
+        "C Crainiceanu"
+      ],
+      "year": 2018,
+      "doi": "10.1007/s11222-017-9744-8",
+      "journal": "Stat Comput",
+      "volume": "28",
+      "issue": "3",
+      "raw": "Fast covariance estimation for sparse functional data \n\t\t \n\t\t\t L Xiao \n\t\t \n\t\t \n\t\t\t C Li \n\t\t \n\t\t \n\t\t\t W Checkley \n\t\t \n\t\t \n\t\t\t C M Crainiceanu \n\t\t \n\t\t 10.1007/s11222-017-9744-8 \n\t \n\t \n\t\t Stat Comput \n\t\t \n\t\t\t 28 \n\t\t\t 3 \n\t\t\t \n\t\t\t 2018 \n\t\t \n\t \n\t Xiao L, Li C, Checkley W, Crainiceanu CM. Fast covariance estimation for sparse functional data. Stat Comput. 2018;28(3):511-522."
+    },
+    {
+      "title": "Generalized Additive Models: An Introduction with R",
+      "authors": [
+        "S Wood"
+      ],
+      "year": 2006,
+      "raw": "Generalized Additive Models: An Introduction with R \n\t\t \n\t\t\t S N Wood \n\t\t \n\t\t \n\t\t\t 2006 \n\t\t\t Chapman & Hall/CRC Press \n\t\t\t Boca Raton, FL \n\t\t \n\t \n\t Wood SN. Generalized Additive Models: An Introduction with R. Boca Raton, FL: Chapman & Hall/CRC Press; 2006."
+    },
+    {
+      "title": "Whole-brain resting-state functional connectivity identified major depressive disorder: a multivariate pattern analysis in two independent samples",
+      "authors": [
+        "X Zhong",
+        "H Shi",
+        "Q Ming"
+      ],
+      "year": 2017,
+      "doi": "10.1016/j.jad.2017.04.040",
+      "journal": "J Affect Disord",
+      "volume": "218",
+      "raw": "Whole-brain resting-state functional connectivity identified major depressive disorder: a multivariate pattern analysis in two independent samples \n\t\t \n\t\t\t X Zhong \n\t\t \n\t\t \n\t\t\t H Shi \n\t\t \n\t\t \n\t\t\t Q Ming \n\t\t \n\t\t 10.1016/j.jad.2017.04.040 \n\t \n\t \n\t\t J Affect Disord \n\t\t \n\t\t\t 218 \n\t\t\t \n\t\t\t 2017 \n\t\t \n\t \n\t Zhong X, Shi H, Ming Q, et al. Whole-brain resting-state functional connectivity identified major depressive disorder: a multivariate pattern analysis in two independent samples. J Affect Disord. 2017;218:346-352."
+    },
+    {
+      "title": "Likelihood ratio tests in linear mixed models with one variance component",
+      "authors": [
+        "C Crainiceanu",
+        "D Ruppert"
+      ],
+      "year": 2004,
+      "doi": "10.1111/j.1467-9868.2004.00438.x",
+      "journal": "J Royal Stat Soc B",
+      "volume": "66",
+      "issue": "1",
+      "raw": "Likelihood ratio tests in linear mixed models with one variance component \n\t\t \n\t\t\t C M Crainiceanu \n\t\t \n\t\t \n\t\t\t D Ruppert \n\t\t \n\t\t 10.1111/j.1467-9868.2004.00438.x \n\t \n\t \n\t\t J Royal Stat Soc B \n\t\t \n\t\t\t 66 \n\t\t\t 1 \n\t\t\t \n\t\t\t 2004 \n\t\t \n\t \n\t Crainiceanu CM, Ruppert D. Likelihood ratio tests in linear mixed models with one variance component. J Royal Stat Soc B. 2004;66(1):165-185."
+    },
+    {
+      "title": "Jackknife, bootstrap and other resampling methods in regression analysis",
+      "authors": [
+        "Cfj Wu"
+      ],
+      "year": 1986,
+      "doi": "10.1214/aos/1176350142",
+      "journal": "Ann Stat",
+      "volume": "14",
+      "issue": "4",
+      "raw": "Jackknife, bootstrap and other resampling methods in regression analysis \n\t\t \n\t\t\t Cfj Wu \n\t\t \n\t\t 10.1214/aos/1176350142 \n\t \n\t \n\t\t Ann Stat \n\t\t \n\t\t\t 14 \n\t\t\t 4 \n\t\t\t \n\t\t\t 1986 \n\t\t \n\t \n\t Wu CFJ. Jackknife, bootstrap and other resampling methods in regression analysis. Ann Stat. 1986;14(4):1261-1295."
+    },
+    {
+      "title": "Controlling the false discovery rate: a practical and powerful approach to multiple testing",
+      "authors": [
+        "Y Benjamini",
+        "Y Hochberg"
+      ],
+      "year": 1995,
+      "doi": "10.1111/j.2517-6161.1995.tb02031.x",
+      "journal": "J Royal Stat Soc B",
+      "volume": "57",
+      "issue": "1",
+      "raw": "Controlling the false discovery rate: a practical and powerful approach to multiple testing \n\t\t \n\t\t\t Y Benjamini \n\t\t \n\t\t \n\t\t\t Y Hochberg \n\t\t \n\t\t 10.1111/j.2517-6161.1995.tb02031.x \n\t \n\t \n\t\t J Royal Stat Soc B \n\t\t \n\t\t\t 57 \n\t\t\t 1 \n\t\t\t \n\t\t\t 1995 \n\t\t \n\t \n\t Benjamini Y, Hochberg Y. Controlling the false discovery rate: a practical and powerful approach to multiple testing. J Royal Stat Soc B. 1995;57(1):289-300."
+    },
+    {
+      "title": "Penalized function-on-function regression",
+      "authors": [
+        "A Ivanescu",
+        "A Staicu",
+        "F Scheipl",
+        "S Greven"
+      ],
+      "year": 2015,
+      "journal": "Comput Stat",
+      "volume": "30",
+      "issue": "2",
+      "raw": "Penalized function-on-function regression \n\t\t \n\t\t\t A E Ivanescu \n\t\t \n\t\t \n\t\t\t A M Staicu \n\t\t \n\t\t \n\t\t\t F Scheipl \n\t\t \n\t\t \n\t\t\t S Greven \n\t\t \n\t \n\t \n\t\t Comput Stat \n\t\t \n\t\t\t 30 \n\t\t\t 2 \n\t\t\t \n\t\t\t 2015 \n\t\t \n\t \n\t Ivanescu AE, Staicu AM, Scheipl F, Greven S. Penalized function-on-function regression. Comput Stat. 2015;30(2):539-568."
+    },
+    {
+      "title": "Generalized functional additive mixed models",
+      "authors": [
+        "F Scheipl",
+        "J Gertheiss",
+        "S Greven"
+      ],
+      "year": 2016,
+      "journal": "Electron J Stat",
+      "volume": "10",
+      "issue": "1",
+      "raw": "Generalized functional additive mixed models \n\t\t \n\t\t\t F Scheipl \n\t\t \n\t\t \n\t\t\t J Gertheiss \n\t\t \n\t\t \n\t\t\t S Greven \n\t\t \n\t \n\t \n\t\t Electron J Stat \n\t\t \n\t\t\t 10 \n\t\t\t 1 \n\t\t\t \n\t\t\t 2016 \n\t\t \n\t \n\t Scheipl F, Gertheiss J, Greven S. Generalized functional additive mixed models. Electron J Stat. 2016;10(1):1455-1492."
+    },
+    {
+      "title": "Refund: regression with functional data",
+      "authors": [
+        "J Goldsmith",
+        "F Scheipl",
+        "L Huang"
+      ],
+      "year": 2018,
+      "doi": "10.32614/cran.package.refund",
+      "raw": "Refund: regression with functional data \n\t\t \n\t\t\t J Goldsmith \n\t\t \n\t\t \n\t\t\t F Scheipl \n\t\t \n\t\t \n\t\t\t L Huang \n\t\t \n\t\t 10.32614/cran.package.refund \n\t\t \n\t\t\t 2018 \n\t\t \n\t \n\t Goldsmith J, Scheipl F, Huang L, et al. Refund: regression with functional data; 2018."
+    },
+    {
+      "title": "The Simes method for multiple hypothesis testing with positively dependent test statistics",
+      "authors": [
+        "S Sarkar",
+        "C Chang"
+      ],
+      "year": 1997,
+      "doi": "10.1080/01621459.1997.10473682",
+      "journal": "J Am Stat Assoc",
+      "volume": "92",
+      "issue": "440",
+      "raw": "The Simes method for multiple hypothesis testing with positively dependent test statistics \n\t\t \n\t\t\t S K Sarkar \n\t\t \n\t\t \n\t\t\t C K Chang \n\t\t \n\t\t 10.1080/01621459.1997.10473682 \n\t \n\t \n\t\t J Am Stat Assoc \n\t\t \n\t\t\t 92 \n\t\t\t 440 \n\t\t\t \n\t\t\t 1997 \n\t\t \n\t \n\t Sarkar SK, Chang CK. The Simes method for multiple hypothesis testing with positively dependent test statistics. J Am Stat Assoc. 1997;92(440):1601-1608."
+    },
+    {
+      "title": "An open-source monitor-independent movement summary for accelerometer data processing",
+      "authors": [
+        "D John",
+        "Q Tang",
+        "F Albinali",
+        "S Intille"
+      ],
+      "year": 2019,
+      "doi": "10.1123/jmpb.2018-0068",
+      "journal": "J Meas Phys Behav",
+      "volume": "2",
+      "issue": "4",
+      "raw": "An open-source monitor-independent movement summary for accelerometer data processing \n\t\t \n\t\t\t D John \n\t\t \n\t\t \n\t\t\t Q Tang \n\t\t \n\t\t \n\t\t\t F Albinali \n\t\t \n\t\t \n\t\t\t S Intille \n\t\t \n\t\t 10.1123/jmpb.2018-0068 \n\t \n\t \n\t\t J Meas Phys Behav \n\t\t \n\t\t\t 2 \n\t\t\t 4 \n\t\t\t \n\t\t\t 2019 \n\t\t \n\t \n\t John D, Tang Q, Albinali F, Intille S. An open-source monitor-independent movement summary for accelerometer data processing. J Meas Phys Behav. 2019;2(4):268-281."
+    }
+  ],
+  "num_references": 36,
+  "figures": [
+    {
+      "caption": "For",
+      "description": "the independent covariance,  ij1 iid \u223c N(0, 4.5) and  ij2 iid \u223c N(0, 3). For the exchangeable covariance,  i1 iid \u223c N(0, 3), i2 iid \u223c N(0, 2),  ij1 iid \u223c N(0, 1.5), and  ij2 iid \u223c N(0, 1). For the unspecified covariance,  11 (T) = \u221a 2 cos(2T),  12 (T) = \u221a 2 sin(2T),  21 (T) = \u221a 2 cos(4T), and  22 (T) = \u221a 2 sin(4T). We generate the random terms as  i11 iid \u223c N(0, 2),  i12 iid \u223c N(0, 1.5),  i21 iid \u223c N(0, 1.5),  i22 iid \u223c N(0, 1),  ij1 iid \u223c N(0, 1), and  ij2 iid"
+    },
+    {
+      "caption": "2",
+      "description": "Physical activity profiles of two NHANES study participants over available days. Panels in the top row are from a male with age 54 and BMI 20.5. Panels in the bottom row are from a female with age 57 and BMI 31.54. Each panel displays MIMS of 1 day from midnight to midnight, titled by day of the week"
+    },
+    {
+      "caption": "I G U R E 3 F I G U R E 4",
+      "description": "Estimated coefficient functions for the NHANES dataset along with pointwise 95% confidence bands under exchangeable longitudinal covariance structure Left two panels: Estimated mean activity profiles of females and males with BMI 28 at four different ages. Right two panels: Estimated mean activity profiles of females and males with age 57 and with four different BMI values decrease rapidly after 7 PM. The top middle panel indicates that females in this age group (50-70) have significantly more activities than males throughout most of the day except for midnight. The top right panel displays the estimated coefficient function for age, indicating a loss of activity for older individuals from afternoon to 1 AM."
+    }
+  ],
+  "num_figures": 3,
+  "formulas": [
+    {
+      "text": "y ij = [y ij (s 1 ), \u2026 , y ij (s m )] T , where {s 1 , \u2026 , s m } is a fixed grid in \ue240 . Let y i = [y T i1 , \u2026 , y T in i"
+    },
+    {
+      "text": "\ud835\udf07 ij (s) = \ud835\udefd 0 (s) + p \u2211 r=1 x ijr \ud835\udefd r (s), (1)"
+    },
+    {
+      "text": "y ij (s) -\ud835\udf07 ij (s) = W ij (s) + \ud835\udf16 ij (s),"
+    },
+    {
+      "text": "W ij (s) = \u2211 k\u22651 \ud835\udf09 ijk \ud835\udf19 k (s), (2)"
+    },
+    {
+      "text": "G k (T ij 1 , T ij 2 ) = Cov{\ud835\udf09 ij 1 k , \ud835\udf09 ij 2 k |T ij 1 , T ij 2 }"
+    },
+    {
+      "text": "\ue22f(s 1 , T ij 1 , s 2 , T ij 2 ) = Cov { W ij 1 (s 1 ), W ij 2 (s 2 )|T ij 1 , T ij 2 } = \u2211 k\u22651 G k (T ij 1 , T ij 2 )\ud835\udf19 k (s 1 )\ud835\udf19 k (s 2 )."
+    },
+    {
+      "text": "\ue22f m (s 1 , s 2 ) = \u222b \ue22f(s 1 , T, s 2 , T)g(T)dT = \u2211 k\u22651 \ud835\udf06 k \ud835\udf19 k (s 1 )\ud835\udf19 k (s 2 ),"
+    },
+    {
+      "text": "G k (T ij 1 , T ij 2 ) = \ud835\udf0e 2 e,k 1 {j 1 =j 2 } ."
+    },
+    {
+      "text": "G k (T ij 1 , T ij 2 ) = \ud835\udf0e 2 0,k + \ud835\udf0e 2 e,k 1 {j 1 =j 2 } ."
+    },
+    {
+      "text": "W ij (s) = U i (s) + V ij (s) with U i (s) = \u2211 k\u22651 \ud835\udf09 ik \ud835\udf19 k (s) and V ij (s) = \u2211 k\u22651 \ud835\udf01 ijk \ud835\udf19 k (s)."
+    },
+    {
+      "text": "\ud835\udf09 ijk = \ud835\udf09 ik (T ij ) + \ud835\udf01 ijk , where \ud835\udf09 ik (T ij ) is a zero-mean smooth process with covariance function Cov { \ud835\udf09 ik (T ij 1 ), \ud835\udf09 ik (T ij 2 ) } = G k0 (T ij 1 , T ij 2 )"
+    },
+    {
+      "text": "G k (T ij 1 , T ij 2 ) = G k0 (T ij 1 , T ij 2 ) + \ud835\udf0e 2 e,k 1 {j 1 =j 2 } . We further decompose the covariance function G k0 (T ij 1 , T ij 2 ) as G k0 (T ij 1 , T ij 2 ) = \u2211 \u221e \ud835\udcc1=1 \ud835\udf06 k\ud835\udcc1 \ud835\udf13 k\ud835\udcc1 (T ij 1 )\ud835\udf13 k\ud835\udcc1 (T ij 2 ), where \ud835\udf06 k1 \u2265 \ud835\udf06 k2 \u2265 \u2022 \u2022 \u2022 \u2265 0 and \ud835\udf13 k\ud835\udcc1 (\u22c5) are orthonormal eigenfunctions that satisfy \u222b T \ud835\udf13 k\ud835\udcc1 1 (T)\ud835\udf13 k\ud835\udcc1 2 (T)dT = 1 {\ud835\udcc1 1 =\ud835\udcc1 2 } . It follows that \ud835\udf09 ijk = \u2211 \u221e \ud835\udcc1=1 \ud835\udf02 ik\ud835\udcc1 \ud835\udf13 k\ud835\udcc1 (T ij ) + \ud835\udf01 ijk ,"
+    },
+    {
+      "text": "Let B = [B(s 1 ), \u2026 , B(s m )] T \u2208 R m\u00d7c , then \ud835\udf41 ij = [\ud835\udf07 ij (s 1 ), \u2026 , \ud835\udf07 ij (s m )] T = B\ud835\udf36 0 + \u2211 p r=1 x ijr B\ud835\udf36 r . Denote X ij = [B, x ij1 B, \u2026 , x ijp B] \u2208 R m\u00d7((p+1)c) , \ud835\udf36 = [\ud835\udf36 T 0 , \u2026 , \ud835\udf36 T p ] T \u2208 R (p+1)c . Then, we have \ud835\udf41 ij = X ij \ud835\udf36. Let X i = [X T i1 , \u2026 , X T in i ] T \u2208 R (mn i )\u00d7((p+1)c) and \ud835\udf41 i = [\ud835\udf41 T i1 , \u2026 , \ud835\udf41 T in i ] T \u2208 R mn i . Then, we have \ud835\udf41 i = X i \ud835\udf36. Now we consider W ij (s) = \u2211 k\u22651 \ud835\udf09 ijk \ud835\udf19 k (s) in Equation (2), where for each k \u2265 1, \ud835\udf09 ijk = \u2211 \ud835\udcc1\u22651 \ud835\udf02 ik\ud835\udcc1 \ud835\udf13 k\ud835\udcc1 (T ij ) + \ud835\udf01 ijk ."
+    },
+    {
+      "text": "\u2211 K k=1 { \ud835\udf0e 2 e,k + \u2211 \ud835\udcc1\u22651 \ud835\udf06 k\ud835\udcc1 1 {\ud835\udf06 k\ud835\udcc1 \u2265\ud835\udf06 * } } \u2211 K k=1 { \ud835\udf0e 2 e,k + \u2211 \ud835\udcc1\u22651 \ud835\udf06 k\ud835\udcc1 } > PVE. (3)"
+    },
+    {
+      "text": "W ij (s) = \u2211 1\u2264k\u2264K { \u2211 1\u2264\ud835\udcc1\u2264L k \ud835\udf02 ik\ud835\udcc1 \ud835\udf13 k\ud835\udcc1 (T ij ) + \ud835\udf01 ijk } \ud835\udf19 k (s). Let W ij = [W ij (s 1 ), \u2026 , W ij (s m )] T \u2208 R m , \ud835\udf53 k = [\ud835\udf19 k (s 1 ), \u2026 , \ud835\udf19 k (s m )] T \u2208 R m , \ud835\udebf ijk = [\ud835\udf13 k1 (T ij ), \u2026 , \ud835\udf13 kL k (T ij )] T \u2208 R L k , and \ud835\udf3c ik = [\ud835\udf02 ik1 , \u2026 , \ud835\udf02 ikL k ] T \u2208 R L k . Then W ij = \u2211 1\u2264k\u2264K ( \ud835\udebf T ijk \ud835\udf3c ik + \ud835\udf01 ijk ) \ud835\udf53 k . Let \ud835\udebf ij = blockdiag(\ud835\udebf T ij1 , \u2026 , \ud835\udebf T ijK ) \u2208 R K\u00d7L , where L = \u2211 1\u2264k\u2264K L k , and \ud835\udf3c i = [\ud835\udf3c T i1 , \u2026 , \ud835\udf3c T iK ] T \u2208 R L . Note that \ud835\udf3c ik has a diag- onal covariance matrix \ud835\udeb2 k = diag(\ud835\udf06 k1 , \u2026 , \ud835\udf06 kL k ) and \ud835\udf3c i has a diagonal covariance matrix \ud835\udeb2 = blockdiag(\ud835\udeb2 1 , \u2026 , \ud835\udeb2 K ). Let \ud835\udebd = [\ud835\udf53 1 , \u2026 , \ud835\udf53 K ] \u2208 R m\u00d7K and \ud835\udf3b ij = [\ud835\udf01 ij1 , \u2026 , \ud835\udf01 ijK ] T \u2208 R K . Then W ij = \ud835\udebd ( \ud835\udebf ij \ud835\udf3c i + \ud835\udf3b ij ) ."
+    },
+    {
+      "text": "W i = [W T i1 , \u2026 , W T in i ] T \u2208 R mn i , \ud835\udebf i = [\ud835\udebf T i1 , \u2026 , \ud835\udebf T in i ] T \u2208 R (Kn i )\u00d7L , and \ud835\udf3b i = [\ud835\udf3b T i1 , \u2026 , \ud835\udf3b T n i i ] T \u2208 R Kn i . Then W i = (I n i \u2297 \ud835\udebd) ( \ud835\udebf i \ud835\udf3c i + \ud835\udf3b i ) ."
+    },
+    {
+      "text": "I n i \u2297 \ud835\udeba. For the random error term \ud835\udf16 ij (s), let \ud835\udf50 ij = [\ud835\udf16 ij (s 1 ), \u2026 , \ud835\udf16 ij (s m )] T \u2208 R m and \ud835\udf50 i = [\ud835\udf50 T i1 , \u2026 , \ud835\udf50 T in i"
+    },
+    {
+      "text": "y i = X i \ud835\udf36 + (I n i \u2297 \ud835\udebd) ( \ud835\udebf i \ud835\udf3c i + \ud835\udf3b i ) + \ud835\udf50 i , \u239b \u239c \u239c \u239c \u239d \ud835\udf3c i \ud835\udf3b i \ud835\udf50 i \u239e \u239f \u239f \u239f \u23a0 \u223c \ue23a \u23a1 \u23a2 \u23a2 \u23a2 \u23a3 \u239b \u239c \u239c \u239c \u239d 0 L 0 Kn i 0 mn i \u239e \u239f \u239f \u239f \u23a0 , \u239b \u239c \u239c \u239c \u239d \ud835\udeb2 0 0 0 I n i \u2297 \ud835\udeba 0 0 0 \ud835\udf0e 2 \ud835\udf16 I mn i \u239e \u239f \u239f \u239f \u23a0 \u23a4 \u23a5 \u23a5 \u23a5 \u23a6 , ( 4"
+    },
+    {
+      "text": ")"
+    },
+    {
+      "text": "[\ud835\udf3c T i , \ud835\udf3b T i , \ud835\udf50 T i ]"
+    },
+    {
+      "text": "(I n i \u2297 \ud835\udebd) ( \ud835\udebf i \ud835\udf3c i + \ud835\udf3b i )"
+    },
+    {
+      "text": "R ij = [r ij (s 1 ), \u2026 , r ij (s m )] T \u2208 R m , R i = [R i1 , \u2026 , R in i ] \u2208 R m\u00d7n i , and R = [R 1 , \u2026 , R n ] \u2208 R m\u00d7N , where N = \u2211 n i=1 n i ."
+    },
+    {
+      "text": "to the dataset {\ud835\udf09 ijk , T ijk , 1 \u2264 j \u2264 n i , 1 \u2264 i \u2264 n} to obtain estimates of G k0 (\u22c5, \u22c5) and \ud835\udf0e 2"
+    },
+    {
+      "text": "H 0k \u2236 G k0 (T, T \u2032 ) = Gk0 (T, T \u2032 ) vs H 1k \u2236 G k0 (T, T \u2032 ) \u2260 Gk0 (T, T \u2032 ), (5)"
+    },
+    {
+      "text": "G k (T ij 1 , T ij 2 ) = Gk0 (T ij 1 , T ij 2 ) + 1 {j 1 =j 2 } \ud835\udf0e 2 e,k , where Gk0 (T ij 1 , T ij 2 ) = \ud835\udf0e 2 0,k ."
+    },
+    {
+      "text": "Gk0 (T ij 1 , T ij 2 ) = 0."
+    },
+    {
+      "text": "T n = \u2016 \u2016 \u2016 \u011cA -\ue237 \u011c0 \u2016 \u2016 \u2016HS ,"
+    },
+    {
+      "text": "y ij (s) = \ud835\udf07 ij (s) + W ij (s) + \ud835\udf16 ij (s), s \u2208 [0, 1]. The functional mean is \ud835\udf07 ij (s) = \ud835\udefd 0 (s) + x i1 \ud835\udefd 1 (s) + x ij2 \ud835\udefd 2 (s)"
+    },
+    {
+      "text": "x ij2 = aT ij + e ij"
+    },
+    {
+      "text": "1. Independent covariance: W ij (s) = \u2211 2 k=1 \ud835\udf01 ijk \ud835\udf19 k (s). 2. Exchangeable covariance: W ij (s) = \u2211 2 k=1 (\ud835\udf09 ik + \ud835\udf01 ijk )\ud835\udf19 k (s). 3. Unspecified covariance: W ij (s) = \u2211 2 k=1 { \u2211 2 \ud835\udcc1=1 \ud835\udf02 ik\ud835\udcc1 \ud835\udf13 k\ud835\udcc1 (T ij ) + \ud835\udf01 ijk } \ud835\udf19 k (s)."
+    },
+    {
+      "text": "\u2211 \ud835\udcc1\u22651 \ud835\udf06 k\ud835\udcc1 + \ud835\udf0e 2 e,k )\u2215\ud835\udf0e 2 \ud835\udf16 ."
+    },
+    {
+      "text": "ik + \ud835\udf01 ijk \u2192 \ud835\udf09 ik + \ud835\udf01 ijk + \u0394z ik (T ij )."
+    },
+    {
+      "text": "MISE( \u03b2) = 1 N sim \u2211 N sim i sim =1 \u222b { \u03b2i sim (s) -\ud835\udefd(s)} 2 ds."
+    },
+    {
+      "text": "N sim \u2211 N sim i sim =1"
+    },
+    {
+      "text": "N sim \u2211 N sim i sim =1 \u222b 3.92 \u00d7 \u015c D{ \u03b2i sim (s)}ds."
+    },
+    {
+      "text": "\u0394 2 \u222b Var{z ik (T)}dT \u222b Var{\ud835\udf09 ik (T)}dT + \u0394 2 \u222b Var{z ik (T)}dT"
+    },
+    {
+      "text": "\u0394 2 \u2211 k \u222b Var{z ik (T)}dT \u2211 k \u222b Var{\ud835\udf09 ik (T)}dT + \u0394 2 \u2211 k \u222b Var{z ik (T)}dT ."
+    }
+  ],
+  "num_formulas": 37,
+  "num_citations": 60,
+  "cited_references": [
+    "b3",
+    "b13",
+    "b18",
+    "b2",
+    "b14",
+    "b17",
+    "b25",
+    "b9",
+    "b1",
+    "b35",
+    "b20",
+    "b21",
+    "b12",
+    "b30",
+    "b31",
+    "b29",
+    "b16",
+    "b15",
+    "b23",
+    "b32",
+    "b5",
+    "b19",
+    "b28",
+    "b10",
+    "b27",
+    "b24",
+    "b4",
+    "b33",
+    "b7",
+    "b11",
+    "b8",
+    "b22",
+    "b34",
+    "b6",
+    "b0",
+    "b26"
+  ],
+  "notes": [
+    "[raw_affiliation] 1  Department of Statistics , North Carolina State University , Raleigh , North Carolina , USA",
+    "[raw_affiliation] 1  Department of Statistics , North Carolina State University , Raleigh , North Carolina , USA",
+    "[raw_affiliation] 2  Department of Biostatistics , Virginia Commonwealth University , Richmond , Virginia , USA",
+    "[raw_affiliation] 3  Department of Biostatistics , Johns Hopkins Bloomberg School of Public Health , Baltimore , Maryland , USA",
+    "[raw_affiliation] 4  Department of Biostatistics and Informatics , Colorado School of Public Health , Aurora , Colorado , USA",
+    "[raw_affiliation] 3  Department of Biostatistics , Johns Hopkins Bloomberg School of Public Health , Baltimore , Maryland , USA",
+    "[raw_affiliation] Department of Statistics , North Carolina State University , 2311 Stinson Drive , Raleigh , NC 27695 , USA.",
+    "[submission] Received: 4 April 2021 Revised: 30 January 2022 Accepted: 5 March 2022",
+    "10970258, 2022, 17, Downloaded from https://onlinelibrary.wiley.com/doi/10.1002/sim.9421, Wiley Online Library on [04/08/2025]. See the Terms and Conditions (https://onlinelibrary.wiley.com/terms-and-conditions) on Wiley Online Library for rules of use; OA articles are governed by the applicable Creative Commons License",
+    "[raw_reference] Ramsay JO, Silverman BW. Functional Data Analysis. New York, NY: Springer; 2005.",
+    "[raw_reference] Xiao L, Huang L, Schrack J, Ferrucci L, Zipunnikov V, Crainiceanu CM. Quantifying the lifetime circadian rhythm of physical activity: a covariate-dependent functional approach. Biostatistics. 2015;16(2):352-367.",
+    "[raw_reference] Goldsmith J, Zipunnikov V, Schrack J. Generalized multilevel function-on-scalar regression and principal component analysis. Biometrics. 2015;71(2):344-353.",
+    "[raw_reference] Leroux A, Di J, Smirnova E, et al. Organizing and analyzing the activity data in NHANES. Stat Biosci. 2019;11(2):262-287.",
+    "[raw_reference] Smirnova E, Leroux A, Cao Q, et al. The predictive performance of objective measures of physical activity derived from accelerometry data for 5-year all-cause mortality in older adults: national health. J Gerontol A. 2020;75(9):1779-1785.",
+    "[raw_reference] Greven S, Crainiceanu CM, Caffo B, Reich D. Longitudinal functional principal component analysis. Electron J Stat. 2010;4:1022-1054.",
+    "[raw_reference] Goldsmith J, Bobb J, Crainiceanu CM, Caffo B, Reich D. Penalized functional regression. J Comput Graph Stat. 2011;20(4):830-851.",
+    "[raw_reference] Scheipl F, Staicu AM, Greven S. Functional additive mixed models. J Comput Graph Stat. 2015;24(2):477-501.",
+    "[raw_reference] Zhu H, Chen K, Luo X, Yuan Y, Wang JL. FMEM: functional mixed effects models for longitudinal functional responses. Stat Sin. 2019;29(4):2007-2033.",
+    "[raw_reference] Cui E, Crainiceanu CM, Leroux A. Additive functional Cox model. J Comput Graph Stat. 2021;30(3):780-793.",
+    "[raw_reference] Di CZ, Crainiceanu CM, Caffo BS, Punjabi NM. Multilevel functional principal component analysis. Ann Appl Stat. 2009;3(1):458-488.",
+    "[raw_reference] Chen K, M\u00fcller HG. Modeling repeated functional observations. J Am Stat Assoc. 2012;107(500):1599-1609.",
+    "[raw_reference] Park SY, Staicu AM. Longitudinal functional data analysis. Stat. 2015;4(1):212-226.",
+    "[raw_reference] Zhang L, Baladandayuthapani V, Zhu H, et al. Functional CAR models for large spatially correlated functional datasets. J Am Stat Assoc. 2016;111(514):772-786.",
+    "[raw_reference] Chen K, Delicado P, M\u00fcller HG. Modelling function-valued stochastic processes, with applications to fertility dynamics. J Royal Stat Soc B. 2017;79(1):177-196.",
+    "[raw_reference] Lee W, Miranda MF, Rausch P, et al. Bayesian semiparametric functional mixed models for serially correlated functional data, with application to glaucoma data. J Am Stat Assoc. 2019;114(526):495-513.",
+    "[raw_reference] Crainiceanu CM, Staicu AM, Ray S, Punjabi N. Bootstrap-based inference on the difference in the means of two correlated functional processes. Stat Med. 2012;31(26):3223-3240.",
+    "[raw_reference] Park SY, Staicu AM, Xiao L, Crainiceanu CM. Simple fixed-effects inference for complex functional models. Biostatistics. 2018;19(2):137-152.",
+    "[raw_reference] Chen S, Xiao L, Staicu AM. A smoothing-based goodness-of-fit test of covariance for functional data. Biometrics. 2019;75(2):562-571.",
+    "[raw_reference] Eilers PHC, Marx BD. Flexible smoothing with B-splines and penalties. Stat Sci. 1996;11(2):89-121.",
+    "[raw_reference] Wood SN, Pya N, Safken B. Smoothing parameter and model selection for general smooth models. J Am Stat Assoc. 2016;111(516):1548-1575.",
+    "[raw_reference] Wood SN, Goude Y, Shaw S. Generalized additive models for large data sets. J Royal Stat Soc C. 2015;64(1):139-155.",
+    "[raw_reference] Wood SN. mgcv: mixed GAM computation vehicle with automatic smoothness estimation; 2019.",
+    "[raw_reference] Xiao L, Zipunnikov V, Ruppert D, Crainiceanu CM. Fast covariance estimation for high-dimensional functional data. Stat Comput. 2016;26(1):409-421.",
+    "[raw_reference] Xiao L, Li Y, Ruppert D. Fast bivariate P-splines: the sandwich smoother. J Royal Stat Soc B. 2013;75(3):577-599.",
+    "[raw_reference] Xiao L, Li C, Checkley W, Crainiceanu CM. Fast covariance estimation for sparse functional data. Stat Comput. 2018;28(3):511-522.",
+    "[raw_reference] Wood SN. Generalized Additive Models: An Introduction with R. Boca Raton, FL: Chapman & Hall/CRC Press; 2006.",
+    "[raw_reference] Zhong X, Shi H, Ming Q, et al. Whole-brain resting-state functional connectivity identified major depressive disorder: a multivariate pattern analysis in two independent samples. J Affect Disord. 2017;218:346-352.",
+    "[raw_reference] Crainiceanu CM, Ruppert D. Likelihood ratio tests in linear mixed models with one variance component. J Royal Stat Soc B. 2004;66(1):165-185.",
+    "[raw_reference] Wu CFJ. Jackknife, bootstrap and other resampling methods in regression analysis. Ann Stat. 1986;14(4):1261-1295.",
+    "[raw_reference] Benjamini Y, Hochberg Y. Controlling the false discovery rate: a practical and powerful approach to multiple testing. J Royal Stat Soc B. 1995;57(1):289-300.",
+    "[raw_reference] Ivanescu AE, Staicu AM, Scheipl F, Greven S. Penalized function-on-function regression. Comput Stat. 2015;30(2):539-568.",
+    "[raw_reference] Scheipl F, Gertheiss J, Greven S. Generalized functional additive mixed models. Electron J Stat. 2016;10(1):1455-1492.",
+    "[raw_reference] Goldsmith J, Scheipl F, Huang L, et al. Refund: regression with functional data; 2018.",
+    "[raw_reference] Sarkar SK, Chang CK. The Simes method for multiple hypothesis testing with positively dependent test statistics. J Am Stat Assoc. 1997;92(440):1601-1608.",
+    "[raw_reference] John D, Tang Q, Albinali F, Intille S. An open-source monitor-independent movement summary for accelerometer data processing. J Meas Phys Behav. 2019;2(4):268-281."
+  ],
+  "processing_software": {
+    "GROBID": "0.8.2"
+  }
+}

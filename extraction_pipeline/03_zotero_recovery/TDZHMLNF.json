@@ -1,0 +1,789 @@
+{
+  "paper_id": "TDZHMLNF",
+  "title": "CAREForMe: Contextual Multi-Armed Bandit Recommendation Framework for Mental Health",
+  "abstract": "The COVID-19 pandemic has intensified the urgency for effective and accessible mental health interventions in people's daily lives. Mobile Health (mHealth) solutions, such as AI Chatbots and Mindfulness Apps, have gained traction as they expand beyond traditional clinical settings to support daily life. However, the effectiveness of current mHealth solutions is impeded by the lack of context-awareness, personalization, and modularity to foster their reusability. This paper introduces CAREForMe, a contextual multi-armed bandit (CMAB) recommendation framework for mental health. Designed with context-awareness, personalization, and modularity at its core, CAREForMe harnesses mobile sensing and integrates online learning algorithms with user clustering capability to deliver timely, personalized recommendations. With its modular design, CAREForMe serves as both a customizable recommendation framework to guide future research, and a collaborative platform to facilitate interdisciplinary contributions in mHealth research. We showcase CAREForMe's versatility through its implementation across various platforms (e.g., Discord, Telegram) and its customization to diverse recommendation features.",
+  "year": 2024,
+  "date": "2024-01-26",
+  "authors": [
+    {
+      "name": "Sheng Yu"
+    },
+    {
+      "name": "Randye Semple",
+      "email": "semple@med.usc.edu"
+    },
+    {
+      "name": "Yixue Zhao",
+      "email": "yzhao@isi.edu"
+    },
+    {
+      "name": "Emily Zhou",
+      "email": "emilyzho@usc.edu"
+    },
+    {
+      "name": "Bhaskar Krishnamachari"
+    },
+    {
+      "affiliation": {
+        "organization": "University of Southern California Los Angeles",
+        "institution": "University of Southern California Los Angeles",
+        "address": "CA, USA"
+      }
+    },
+    {
+      "affiliation": {
+        "organization": "University of Southern California Los Angeles",
+        "institution": "University of Southern California Los Angeles",
+        "address": "CA, USA"
+      }
+    },
+    {
+      "affiliation": {
+        "organization": "University of Southern California Los Angeles",
+        "institution": "University of Southern California Los Angeles",
+        "address": "CA, USA"
+      }
+    },
+    {
+      "affiliation": {
+        "organization": "USC Information Sciences Institute",
+        "institution": "USC Information Sciences Institute",
+        "address": "Arlington, VA, USA"
+      }
+    },
+    {
+      "affiliation": {
+        "organization": "University of Southern California Los Angeles",
+        "institution": "University of Southern California Los Angeles",
+        "address": "CA, USA"
+      }
+    },
+    {
+      "affiliation": {
+        "organization": "University of Southern California Los Angeles",
+        "institution": "University of Southern California Los Angeles",
+        "address": "CA, USA"
+      }
+    }
+  ],
+  "doi": "10.2139/ssrn.4595283",
+  "md5": "A73C1B33A02CFD2395CD5F86443DA4D1",
+  "arxiv": "arXiv:2401.15188v1[cs.AI]",
+  "publication": {
+    "journal": "Sensors",
+    "journal_inferred": true
+  },
+  "sections": [
+    {
+      "title": "1. INTRODUCTION",
+      "text": "Mental health issues significantly increased during the COVID-19 pandemic and remain a global public health concern  [19] . Mobile Health (mHealth) solutions, such as AI Chatbots and Mindfulness Apps, have gained traction due to the widespread use of mobile devices  [3, 40] . By reducing the traditional reliance on human experts such as therapists, mHealth interventions can greatly enhance the accessibility, availability, and affordability of mental health care. They bridge the gap between clinics and homes, enabling continuous mental health monitoring and treatment in users' daily lives.\n\nWhile mHealth solutions offer promising benefits, they currently face three major challenges. First, they often lack context-awareness to recognize when the user is in need of help. This poses a burden on the user to initiate the intervention when help is needed, which is often when users are least motivated to do so. Second, these solutions fall short in personalization. Many mHealth apps have a slow start to understand a user's history and preferences and rely heavily on user input. Users are either provided with the same intervention (e.g., mindfulness modules) or are tasked to describe their situation and navigate to the desired module by themselves each time they seek assistance. Lastly, despite many mHealth solutions sharing common features, such as sensor data collection and recommendation algorithms, they are often developed in an ad-hoc manner, causing duplicated efforts in this research area.\n\nTo address these challenges, we propose CAREForMe, a Contextual multi-Armed bandit REcommendation Framework for Mental health. CAREForMe is a customizable framework designed with context-awareness, personalization, and modularization in mind, aiming to understand the user's context and provide the right recommendations at the right time. First, CAREForMe employs mobile sensing to monitor the user's change of states, aiming to identify when the recommendations should be delivered. Second, CARE-ForMe integrates user clustering and contextual multi-armed bandit (CMAB) algorithms  [30]  that continuously learn from user feedback to improve what to recommend based on user preferences. We choose CMAB algorithms because they are more adaptive when learning from new data without the need to retrain from scratch compared to matrix factorization  [23, 44] . CMABs are also better at handling new users, i.e., the so-called \"cold-start\" problem, compared to traditional methods such as collaborative filtering  [23] . Most importantly, CMABs are context-sensitive, using real-time user feedback to dynamically adjust the recommendations based on user's situation. Finally, CAREForMe is a customizable framework with a modular design that decouples the underlying components, allowing different approaches to \"plug and play\" in the framework, without requiring the domain knowledge of the entire framework pipeline. For example, a mental health expert can focus on tailoring the recommendation content, and reuse existing recommendation algorithms (e.g., CAREForMe's built-in CMAB algorithm) to deliver her interventions. Similarly, a mobile app developer can focus on implementing the front-end user interface (e.g., a mobile app) to interact with the user and deliver the recommendations obtained from CAREForMe's CMAB back-end. Thus, CAREForMe stands not only as a customizable recommendation framework, but also as a collaborative living repository, fostering interdisciplinary contributions and facilitating research in the area of mHealth.\n\nTo demonstrate CAREForMe's potential, we implement its core components with customizable features as a Chatbot recommendation system where the recommendations are mindfulness-based exercises and gratitude practices. The recommendation content can\n\nSensor Feature Selection Wearable Device Mobile Device Eye Tracker Neurophysiological Device (Portable) What sensor data to use? What models to use? Mental Health Experts CMAB User Interface (front-end) What intervention to recommend? Environmental Monitor e.g., Location, Heart Rate e.g., App Usage, Physical Activity e.g., Eye Movement and Focus e.g., Brain Waves e.g., Temperature, Noise Level In-the-Wild Sensor Collection What sensors to use? ...... User State Detection e.g., Context, Mood Mental Health Intervention Inventory CMAB Recommendation Engine (back-end) User Cluster Modeling Recommendation Algorithms User App Developer Legend New component introduced by us Components implemented by us Components implemented by others User Input e.g., Profile, EMA, Feedback When to recommend? be easily customized, reused, or extended, without requiring any technical knowledge. Specifically, our recommendation system is implemented based on Upper Confidence Bound (UCB)  [15] , providing suggestions according to the user's context by continuously learning from the user's feedback. Moreover, user clustering is implemented and can be optionally enabled in our system to provide suggestions based on the preferences of similar users instead of a particular user. This largely improves the recommendations for relatively new users with limited history to learn from, and also addresses the \"missing reward\" problem when the user forgets to provide the feedback  [14] . To show CAREForMe's flexibility and reusability, we implement 3 Chatbot systems that reuse the same back-end recommendation engine on Discord  [6] , Telegram  [5] , and Flet  [2]  that functions on both Android and iOS systems. A user simulation module is implemented to test out our Chatbot systems' functionalities including the user clustering capabilities. We make the following contributions. (1)  We design the first customizable CMAB-based framework of recommendation systems for mental health that is context-aware, personalized, and modular;  (2)  We develop a flexible recommendation engine with user clustering mechanisms that allow different levels of customization; (3) We implement an end-to-end recommendation system on 3 different Chatbot platforms, demonstrating the framework's flexibility and reusability; (4) We make our artifacts publicly available  [1] , directly improving the reproducibility and reusability of our research, and fostering future research in this area.\n\nThe rest of the paper is organized as follows. Section 2 introduces the design of CAREForMe framework and its modular components. Section 3 describes our implementation of CAREForMe's core components and details its customizable capabilities. Section 4 discusses related work in this area, and Section 5 elaborates our vision for adopting CAREForMe in practice and future work ahead."
+    },
+    {
+      "title": "2. FRAMEWORK DESIGN",
+      "text": "This section describes CAREForMe's design that incorporates context-awareness, personalization, and modularization as discussed earlier. Our design aims to provide a comprehensive, yet flexible framework that serves as a standard to guide the research in this area and improve the reusability of each other's work. Figure  1  shows the overview of CAREForMe framework with 7 components. These components are extracted from our extensive literature review in this area, and the core components in the CMAB recommendation pipeline are implemented by us (see Section 3). We now describe the high-level functionalities of each component.\n\nIn-the-Wild Sensor Collection guides the researchers to first answer what sensors to use given their specific problem domain and resource constraints  [42] . We highlight \"in-the-wild\" as this paper focuses on providing recommendations during the user's daily life, as opposed to a lab setting. This is recently reported as an important but overlooked area  [22] . We identify 5 main categories of in-the-wild sensors: (1) Wearable Devices can be worn in daily life, such as smartwatches and smart bands. They often monitor the user's location, heart rate, Heart Rate Variability (HRV), stress level, and activities such as walking; (2) Mobile Devices refer to smartphones or tablets that can provide rich information about the user's states, including app usage and physical activities. For example, mobile sensors  [4]  can determine a user's activity, such as lying down, walking, or sitting. App usage data can offer insights into various aspects of a user's well-being, including sleep quality and nutritional content of meals; (3) Eye Tracker devices are used to monitor and measure the position and movement of the eyes. They have a large potential to detect the user's mental state, such as emotion and fatigue  [25, 29] ; (4) Neurophysiological Devices can measure the user's neural activities in the brain to uncover insights into the user's mental states (e.g., cognitive abilities, stress level) via signals such as EEG  [36]  and fNIR  [33] . As CAREForMe focuses on in-the-wild sensors, we specifically target portable devices that can be used outside of lab settings  [10, 28, 31] ; (5) Environmental Monitors measure the user's surrounding environment (e.g., work, home) to provide the environmental context of the user, such as the surrounding temperature, noise level, and lighting.\n\nSensor Feature Selection aims to answer what sensor data to use as the input to the models that detect the user's state (e.g., mood) given the available sensors and the context. To the best of our knowledge, this is a novel component we introduce that is not considered by prior work. Existing work in this area relies on a fixed set of sensors' data as features to perform affect detection and has not explored context-informed sensor feature selection  [13] . CAREForMe incorporates context-awareness in its Sensor Feature Selection to use suitable sensor data based on the user's context, aiming to increase the accuracy of the user state detection. For instance, when a user is sitting and working at a computer, the Eye Tracker's data about their focus and attention is likely to be more insightful than the data collected from their Mobile Device.\n\nUser State Detection takes the selected sensor features as input and answers what models to use to detect the user's state, such as their mood. This information is used by the Recommendation Engine to determine when certain intervention should be recommended to the user. For example, prior work focuses on detecting loneliness via supervised learning algorithms (e.g., logistic regression, gradient boosting classifier) using daily features such as communication, phone usage, and sleep behaviors collected from smartphones and smart bands  [21] . If integrated into CAREForMe's User State Detection, other researchers can reuse such component to develop a Recommendation Engine that suggests social activities based on the user's loneliness level. Note that CAREForMe is a conceptual framework that does not assume any particular implementation of its components. Thus, the models used in the User State Detection can be either supervised or unsupervised with any architecture or algorithm of the researcher's choice.\n\nCMAB Recommendation Engine is the core component in CAREForMe, integrating the recommendation algorithms and user clustering modeling to offer personalized suggestions. It takes 3 types of input: (1) the output from the User State Detection to determine when to recommend; (2) the User Input such as user profile (e.g., user personality, age), ecological momentary assessment (EMA) of the user's behaviors and mental states, and user feedback of CAREForMe's suggestions which is used by the recommendation algorithms to dynamically improve its results; and\n\n(3) the Mental Health Intervention Inventory, often tailored by mental health experts in a specific domain, such as psychiatrists focusing on stress, anxiety, or loneliness. The output of CMAB Recommendation Engine is used by the CMAB User Interface to deliver intervention suggestions to the user and obtain their feedback. This component is often implemented by app developers specialized in user interface design and development, without requiring the technical knowledge of the recommendation systems. For example, we have implemented 3 Chatbot CMAB User Interfaces on different platforms (e.g., Discord, Telegram) using the same CMAB Recommendation Engine to show CAREForMe's flexibility and reusability (see Section 3). Our modular design adopts the \"separation of concerns\" principle  [27] , enabling collaborative contributions from experts across various disciplines."
+    },
+    {
+      "title": "3. FRAMEWORK INSTANTIATION",
+      "text": "This section details our recommendation system that implements CAREForMe's core components, focusing on what intervention to recommend. As discussed earlier, the remaining components focus on when to recommend by leveraging sensor data to detect the user state. We did not implement such components as they fall into a crowded research area and can be implemented by reusing existing work in various problem domains such as stress detection  [16, 17] . We now detail the implementation of our recommendation system.\n\nMental Health Intervention Inventory is implemented in YAML format  [7] , specifically designed for mental health experts such as psychiatrists, psychologists, or social workers without requiring any technical knowledge about recommendation systems. Mental health experts can configure the YAML file to specify the\n\nAlgorithm 1: CMAB Recommendation Process Input: User  , Context  , Set  , Vector _, Vector  , Bool  1 if  .session_num == 0 then 2 _ \u2190 SuggestAll( , _,  ) 3 else if  .session_num < \u210e\u210e then 4 _ \u2190 Suggest( , _,  ) 5 else 6  . \u2190 GetCluster(,  ) 7 _ \u2190 Suggest( , _, ,  ) 8 \u210e \u2190 PromptUserForSelection(_ ) 9   \u2190 PrompUserForFeedback(\u210e ) 10 if  == TRUE then 11 UpdateCMAB( ,  , \u210e,  , _ ) 12 else 13 UpdateCMAB( ,  , \u210e,  ) 14 UpdatePrefVector( ,  , \u210e,  ) 15 UpdateCluster( ,  , \u210e,  ,  )\n\nnumber of interventions to recommend each time, and the interventions with their corresponding context. Each intervention is defined as (title, description, image, context), such as (\"STOP\", \"Stop, Take a deep breath, Observe, and Proceed.\", \"image.png\", \"home\"). Our implementation uses mindfulness-based interventions and gratitude practices that are shown to be effective for people's daily lives  [39] . Note that the inventory can grow to include interventions across various areas (e.g., anxiety, depression, anger management), and the system can be configured to use a subset of the interventions for targeted mental health issues. The current interventions can be found in our public repository  [1] , which are highly reusable and extensible.\n\nCMAB Recommendation Engine is designed to continuously learn and refine its suggestions based on real-time user feedback from User Input. Its recommendation algorithm is implemented based on Upper Confidence Bound (UCB)  [15] , designed to provide context-sensitive recommendations, ensuring that the suggestions are tailored to individual user's context (e.g., home, work). The user clustering modeling is implemented using K-means  [8] , which can further refine the suggestions by learning from similar users' data. Note that there is a trade-off between the amount of data to learn from and the level of personalization achieved. Using data from all users maximizes the amount of training data but may reduce recommendation specificity, while using only individual user data ensures tailored recommendations but may require extended learning time. Our system can be customized to achieve either of the scenarios above, or the middle ground by enabling the user clustering modeling to learn from a subset of the users that belong to the same cluster. Furthermore, our modular design allows other clustering techniques to be easily \"plugged in\" by only replacing user clustering modeling without the need to change the rest of the system, such as replacing K-means with ADCB clustering  [43] .\n\nOur system's recommendation process is implemented as a Chatbot to interact with the user, providing suggestions and obtaining corresponding user feedback. Algorithm 1 details one session of the recommendation process with user clustering enabled. The input includes the information of the  maintained by our system (e.g., how many sessions the user has interacted with the system), the  the user is in (e.g., work), a set of  to recommend from, the vector of the _ that stores the information of all of the user's past preferences that will be used to rank the recommendations  [15] , the vector  that stores the information of similar users' past preferences in each cluster, and whether user's  preferences on the unchosen suggestions should be considered when calculating the _. After the session starts, the number of how many sessions the user has interacted with the system ( ._) is checked. If the user is new, the suggestions (_) are learned from the preferences of all the users in the system, and the  with the highest _ in the user's provided context will be suggested (Line 2). This addresses the \"cold-start\" problem and ensures that new users are presented with popular suggestions across all the users. If  ._ is smaller than a customizable threshold, the user gets the suggestions (_) from the  based on their own past preferences, i.e., the _ calculated based on their past sessions using UCB method  [15]  (Line 4). When  ._ goes beyond the threshold, the  is assigned to the closest cluster based on the Euclidean distance between the  vector and the vector representing their past preferences (Lines 6-7). In this case, the _ are calculated by using the _ of similar users who belong to the same cluster.\n\nNext, the recommendations are presented to the user to get the user input on which suggestion to choose (\u210e) and the   for such suggestion using a score between 0 to 5 (Lines 8-9). The obtained user input is used to update the _ for this particular user (Lines 10-13). If  is set to true, not only the _ for the \u210e will be updated, but the _ for the remaining suggestions in the _ will also be updated based on a customizable value. For instance, one may consider the unselected suggestions unfavored by the user and set a negative value to update the _ for those suggestions. Finally, the user's preference vector that maintains the history of the user's preferences is updated accordingly, including their choices and feedback (Line 14). The  vector is updated as well to include the current session's data in the user's cluster (Line 15).\n\nCMAB User Interface uses the output from CMAB Recommendation Engine to deliver the recommendations to the users and obtain their feedback. It is designed to be decoupled from the underlying logic of the recommendation engine to enable the flexibility for app developers to customize their desired user interface. As a demonstration of such flexibility, we implement 3 variations of CMAB User Interface using the same CMAB Recommendation Engine. Specifically, 3 Chatbot systems are implemented on Discord  [6] , Telegram  [5] , and mobile platforms using Flet framework  [2]  which can function on both Android and iOS platforms."
+    },
+    {
+      "title": "4. RELATED WORK",
+      "text": "To the best of our knowledge, CAREForMe is the first framework that provides a comprehensive view throughout the recommendation pipeline based on CMAB that is context-aware, personalized, and modular. The closest work  [24]  proposed a template-based digital intervention design mechanism that supports the configuration of just-in-time adaptive interventions (JITAIs) for chronic health issues. It allows developers to instantiate its main components of decision points, intervention options, tailoring variables, and decision rules. However, this framework does not adapt to real-time user feedback and does not consider various types of sensors.\n\nMobile and Wearable Sensing for affect detection has become increasingly popular due to their ubiquity and unobtrusive nature that allow for a greater volume of data collection across multiple modalities  [34, 38] , such as detecting loneliness using data from smartphones and smart bands  [21] . However, these efforts were achieved separately, each requiring the development of its own software pipelines. This directly motivates us to design a customizable and modular framework to facilitate future work in this domain.\n\nHealth Recommender Systems (HRS) utilizes machine learning (ML) techniques and mobile platforms to support human health and wellness in many areas, such as providing recommendations for individuals with mental illness  [37] . In recent years, multi-armed bandits (MAB) algorithms have found success in applications such as weight loss interventions  [45] , emotion regulation for mental illness  [9] , and personalized physical activity recommendations  [35] . However, HRSs often rely on an individual's health history, demographic information, and self-reports, and do not focus on delivering in-the-wild, real-time adaptive interventions  [20] .\n\nJITAI Systems as mentioned above have been used to provide real-time personalized support to promote positive behavior change for the improvement of health in many areas  [32] , such as mental health  [11, 18]  and alcohol usage  [26] . JITAIs aim to provide the right intervention based on the user's change of state and context in real-time through mobile sensing technologies  [32] , and have significantly outperformed non-JITAI treatments  [41] . CARE-ForMe falls into the JITAI category for mental health, providing a comprehensive yet flexible framework to allow different levels of customization that goes beyond prior work."
+    },
+    {
+      "title": "5. CAREFORME'S VISION",
+      "text": "Our long-term vision for CAREForMe is three-fold. First, CARE-ForMe's design serves as a reference architecture, providing a comprehensive view of the state-of-the-art recommendation pipeline to guide newcomers in this field. Specifically, our framework guides new researchers to answer a set of research questions and decide which component(s) are of interest. For instance, those interested in when to recommend can delve into the User State Detection component, while others may contribute to the novel Sensor Feature Selection component we identified, an area previously unexplored. Second, our implementation of CAREForMe's core components showcases the framework's utility across various disciplines. It demonstrates how mental health professionals, app developers, and algorithm experts can leverage the modular design of CARE-ForMe to concentrate on their strengths and build upon each other's work, directly fostering an environment of interdisciplinary collaboration. Finally, as others in the community adopt our framework, we envision CAREForMe growing into a living repository for just-in-time adaptive interventions (JITAIs), potentially extending its reach beyond mental health. For instance, a fitness expert can tailor the suggestions using physical exercises, and the User State Detection can focus on the user's physical activity levels. Similarly, other potential applications of CAREForMe include providing context-sensitive medication reminders or nutritional advice.\n\nIn the future, we plan to incorporate continuous learning throughout the framework, enabling CMAB techniques to answer not only what, but also when to recommend. As users have different levels of acceptance on the frequency of recommendations, CMAB can be applied to improve the intervention's timing by learning from user feedback. Furthermore, we aim to evolve CAREForMe into a collaborative repository, similar to DBDP project  [12] , but extend to the whole recommendation system pipeline. We plan to migrate existing work into CAREForMe, thereby enhancing their reusability and facilitating new discoveries. As the repository populates, the scope will grow to include capabilities such as fine-grained privacy control on the user's data collection, an access control model for data sharing, and a platform to connect researchers from various disciplines within the CAREForMe ecosystem. We believe the connection across disciplines is essential to advance research in human well-being given the intrinsic link between physical and mental health. CAREForMe has the potential to bridge the gap by providing a holistic view of user health with cross-disciplinary insights and adaptive recommendations that span different areas to improve the user's overall well-being, including mindfulness exercises, physical activities, nutritional advice, and so on."
+    },
+    {
+      "text": "Figure 1: The overview of CAREForMe's framework design that is context-aware, personalized, and modular."
+    }
+  ],
+  "references": [
+    {
+      "title": "CAREForMe's public repository",
+      "year": 2023,
+      "doi": "10.2139/ssrn.4595283",
+      "raw": "10.2139/ssrn.4595283 \n\t\t \n\t\t CAREForMe's public repository \n\t\t \n\t\t\t 2023 \n\t\t \n\t \n\t 2023. CAREForMe's public repository. https://github.com/ANRGUSC/mab-reco"
+    },
+    {
+      "title": "The fastest way to build Flutter apps in Python",
+      "year": 2023,
+      "doi": "10.25080/jfyn3740",
+      "raw": "10.25080/jfyn3740 \n\t\t \n\t\t The fastest way to build Flutter apps in Python \n\t\t \n\t\t\t 2023 \n\t\t \n\t \n\t 2023. The fastest way to build Flutter apps in Python. https://flet.dev/"
+    },
+    {
+      "title": "Mobile App Download Statistics & Usage Statistics",
+      "year": 2023,
+      "doi": "10.1515/9780228015260-015",
+      "raw": "10.1515/9780228015260-015 \n\t\t \n\t\t Mobile App Download Statistics & Usage Statistics \n\t\t \n\t\t\t 2023. 2023 \n\t\t \n\t \n\t 2023. Mobile App Download Statistics & Usage Statistics (2023). https://buildfire. com/app-statistics/"
+    },
+    {
+      "title": "Sensors Overview | Android Developers",
+      "year": 2023,
+      "doi": "10.3390/s24196469",
+      "raw": "10.3390/s24196469 \n\t\t \n\t\t Sensors Overview | Android Developers \n\t\t \n\t\t\t 2023 \n\t\t \n\t \n\t 2023. Sensors Overview | Android Developers. https://developer.android.com/ guide/topics/sensors/sensors_overview"
+    },
+    {
+      "title": "Telegram Bot Features",
+      "year": 2023,
+      "raw": "Telegram Bot Features \n\t\t \n\t\t\t 2023 \n\t\t \n\t \n\t 2023. Telegram Bot Features. https://core.telegram.org/bots/features"
+    },
+    {
+      "title": "Welcome to the Discord Developer Platform",
+      "year": 2023,
+      "doi": "10.22215/etd/2024-15909",
+      "raw": "10.22215/etd/2024-15909 \n\t\t \n\t\t Welcome to the Discord Developer Platform \n\t\t \n\t\t\t 2023 \n\t\t \n\t \n\t 2023. Welcome to the Discord Developer Platform. https://discord.com/ developers/docs/intro"
+    },
+    {
+      "title": "YAML Tutorial: Everything You Need to Get Started in Minutes",
+      "year": 2023,
+      "raw": "YAML Tutorial: Everything You Need to Get Started in Minutes \n\t\t \n\t\t\t 2023 \n\t\t \n\t \n\t 2023. YAML Tutorial: Everything You Need to Get Started in Minutes. https: //www.cloudbees.com/blog/yaml-tutorial-everything-you-need-get-started"
+    },
+    {
+      "title": "The k-means algorithm: A comprehensive survey and performance evaluation",
+      "authors": [
+        "Mohiuddin Ahmed",
+        "Raihan Seraj",
+        "Syed Mohammed",
+        "Shamsul Islam"
+      ],
+      "journal": "Electronics",
+      "volume": "9",
+      "pages": "8",
+      "raw": "The k-means algorithm: A comprehensive survey and performance evaluation \n\t\t \n\t\t\t Mohiuddin Ahmed \n\t\t \n\t\t \n\t\t\t Raihan Seraj \n\t\t \n\t\t \n\t\t\t Syed Mohammed \n\t\t \n\t\t \n\t\t\t Shamsul Islam \n\t\t \n\t \n\t \n\t\t Electronics \n\t\t \n\t\t\t 9 \n\t\t\t 8 \n\t\t\t 2020. 2020. 1295 \n\t\t \n\t \n\t Mohiuddin Ahmed, Raihan Seraj, and Syed Mohammed Shamsul Islam. 2020. The k-means algorithm: A comprehensive survey and performance evaluation. Electronics 9, 8 (2020), 1295."
+    },
+    {
+      "title": "Offline Contextual Multi-Armed Bandits for Mobile Health Interventions: A Case Study on Emotion Regulation",
+      "authors": [
+        "K Mawulolo",
+        "Miranda Ameko",
+        "Lihua Beltzer",
+        "Mehdi Cai",
+        "Bethany Boukhechba",
+        "Laura Teachman"
+      ],
+      "year": 2020,
+      "doi": "10.1145/3383313.3412244",
+      "raw": "Offline Contextual Multi-Armed Bandits for Mobile Health Interventions: A Case Study on Emotion Regulation \n\t\t \n\t\t\t K Mawulolo \n\t\t \n\t\t \n\t\t\t Miranda L Ameko \n\t\t \n\t\t \n\t\t\t Lihua Beltzer \n\t\t \n\t\t \n\t\t\t Mehdi Cai \n\t\t \n\t\t \n\t\t\t Bethany A Boukhechba \n\t\t \n\t\t \n\t\t\t Laura E Teachman \n\t\t \n\t\t \n\t\t\t Barnes \n\t\t \n\t\t 10.1145/3383313.3412244 \n\t\t \n\t\t \n\t\t\t 2020 \n\t\t\t Association for Computing Machinery \n\t\t\t New York, NY, USA \n\t\t \n\t \n\t Mawulolo K. Ameko, Miranda L. Beltzer, Lihua Cai, Mehdi Boukhechba, Bethany A. Teachman, and Laura E. Barnes. 2020. Offline Contextual Multi- Armed Bandits for Mobile Health Interventions: A Case Study on Emotion Reg- ulation. Association for Computing Machinery, New York, NY, USA. https: //doi.org/10.1145/3383313.3412244"
+    },
+    {
+      "title": "Wearable fNIRS EEG combinations",
+      "year": 2023,
+      "raw": "Artinis \n\t\t \n\t\t \n\t\t Wearable fNIRS EEG combinations \n\t\t \n\t\t\t 2023 \n\t\t \n\t \n\t artinis. 2023. Wearable fNIRS EEG combinations. https://www.artinis.com/nirs- eeg-package"
+    },
+    {
+      "title": "Development and usability testing of FO-CUS: a smartphone system for self-management of schizophrenia",
+      "authors": [
+        "Dror Ben-Zeev",
+        "Susan Kaiser",
+        "Christopher Brenner",
+        "Mark Begale",
+        "Jennifer Duffecy",
+        "David Mohr"
+      ],
+      "year": 2013,
+      "doi": "10.1037/prj0000019",
+      "journal": "Psychiatric rehabilitation journal",
+      "volume": "36",
+      "issue": "4",
+      "pages": "289",
+      "raw": "Development and usability testing of FO-CUS: a smartphone system for self-management of schizophrenia \n\t\t \n\t\t\t Dror Ben-Zeev \n\t\t \n\t\t \n\t\t\t Susan M Kaiser \n\t\t \n\t\t \n\t\t\t Christopher J Brenner \n\t\t \n\t\t \n\t\t\t Mark Begale \n\t\t \n\t\t \n\t\t\t Jennifer Duffecy \n\t\t \n\t\t \n\t\t\t David C Mohr \n\t\t \n\t\t 10.1037/prj0000019 \n\t \n\t \n\t\t Psychiatric rehabilitation journal \n\t\t \n\t\t\t 36 \n\t\t\t 4 \n\t\t\t 289 \n\t\t\t 2013. 2013 \n\t\t \n\t \n\t Dror Ben-Zeev, Susan M Kaiser, Christopher J Brenner, Mark Begale, Jennifer Duffecy, and David C Mohr. 2013. Development and usability testing of FO- CUS: a smartphone system for self-management of schizophrenia. Psychiatric rehabilitation journal 36, 4 (2013), 289."
+    },
+    {
+      "title": "The digital biomarker discovery pipeline: An open-source software platform for the development of digital biomarkers using mHealth and wearables data",
+      "authors": [
+        "Brinnae Bent",
+        "Ke Wang",
+        "Emilia Grzesiak",
+        "Chentian Jiang",
+        "Yuankai Qi",
+        "Yihang Jiang",
+        "Peter Cho",
+        "Kyle Zingler",
+        "Felix Ikponmwosa Ogbeide",
+        "Arthur Zhao"
+      ],
+      "year": 2021,
+      "doi": "10.1017/cts.2020.511",
+      "journal": "Journal of clinical and translational science",
+      "volume": "5",
+      "issue": "1",
+      "pages": "19",
+      "raw": "The digital biomarker discovery pipeline: An open-source software platform for the development of digital biomarkers using mHealth and wearables data \n\t\t \n\t\t\t Brinnae Bent \n\t\t \n\t\t \n\t\t\t Ke Wang \n\t\t \n\t\t \n\t\t\t Emilia Grzesiak \n\t\t \n\t\t \n\t\t\t Chentian Jiang \n\t\t \n\t\t \n\t\t\t Yuankai Qi \n\t\t \n\t\t \n\t\t\t Yihang Jiang \n\t\t \n\t\t \n\t\t\t Peter Cho \n\t\t \n\t\t \n\t\t\t Kyle Zingler \n\t\t \n\t\t \n\t\t\t Felix Ikponmwosa Ogbeide \n\t\t \n\t\t \n\t\t\t Arthur Zhao \n\t\t \n\t\t 10.1017/cts.2020.511 \n\t \n\t \n\t\t Journal of clinical and translational science \n\t\t \n\t\t\t 5 \n\t\t\t 1 \n\t\t\t 19 \n\t\t\t 2021. 2021 \n\t\t \n\t \n\t Brinnae Bent, Ke Wang, Emilia Grzesiak, Chentian Jiang, Yuankai Qi, Yihang Jiang, Peter Cho, Kyle Zingler, Felix Ikponmwosa Ogbeide, Arthur Zhao, et al. 2021. The digital biomarker discovery pipeline: An open-source software platform for the development of digital biomarkers using mHealth and wearables data. Journal of clinical and translational science 5, 1 (2021), e19."
+    },
+    {
+      "title": "A Review, Current Challenges, and Future Possibilities on Emotion Recognition Using Machine Learning and Physiological Signals",
+      "authors": [
+        "J Patr\u00edcia",
+        "Chen Bota",
+        "Ana Wang",
+        "Hugo Fred",
+        "Da Pl\u00e1cido"
+      ],
+      "year": 2019,
+      "doi": "10.1109/ACCESS.2019.2944001",
+      "journal": "IEEE Access",
+      "volume": "7",
+      "raw": "A Review, Current Challenges, and Future Possibilities on Emotion Recognition Using Machine Learning and Physiological Signals \n\t\t \n\t\t\t J Patr\u00edcia \n\t\t \n\t\t \n\t\t\t Chen Bota \n\t\t \n\t\t \n\t\t\t Ana L N Wang \n\t\t \n\t\t \n\t\t\t Hugo Fred \n\t\t \n\t\t \n\t\t\t Da Pl\u00e1cido \n\t\t \n\t\t \n\t\t\t Silva \n\t\t \n\t\t 10.1109/ACCESS.2019.2944001 \n\t\t \n\t \n\t \n\t\t IEEE Access \n\t\t \n\t\t\t 7 \n\t\t\t \n\t\t\t 2019. 2019 \n\t\t \n\t \n\t Patr\u00edcia J. Bota, Chen Wang, Ana L. N. Fred, and Hugo Pl\u00e1cido Da Silva. 2019. A Review, Current Challenges, and Future Possibilities on Emotion Recognition Using Machine Learning and Physiological Signals. IEEE Access 7 (2019), 140990- 141020. https://doi.org/10.1109/ACCESS.2019.2944001"
+    },
+    {
+      "title": "Contextual Bandit with Missing Rewards",
+      "authors": [
+        "Djallel Bouneffouf",
+        "Sohini Upadhyay",
+        "Yasaman Khazaeni"
+      ],
+      "year": 2020,
+      "raw": "Contextual Bandit with Missing Rewards \n\t\t \n\t\t\t Djallel Bouneffouf \n\t\t \n\t\t \n\t\t\t Sohini Upadhyay \n\t\t \n\t\t \n\t\t\t Yasaman Khazaeni \n\t\t \n\t\t ArXiv abs/2007.06368 \n\t\t \n\t\t \n\t\t\t 2020. 2020 \n\t\t \n\t \n\t Djallel Bouneffouf, Sohini Upadhyay, and Yasaman Khazaeni. 2020. Contex- tual Bandit with Missing Rewards. ArXiv abs/2007.06368 (2020). https: //api.semanticscholar.org/CorpusID:220496532"
+    },
+    {
+      "title": "Upper-confidence-bound algorithms for active learning in multi-armed bandits",
+      "authors": [
+        "Alexandra Carpentier",
+        "Alessandro Lazaric",
+        "Mohammad Ghavamzadeh",
+        "R\u00e9mi Munos",
+        "Peter Auer"
+      ],
+      "year": 2011,
+      "raw": "Upper-confidence-bound algorithms for active learning in multi-armed bandits \n\t\t \n\t\t\t Alexandra Carpentier \n\t\t \n\t\t \n\t\t\t Alessandro Lazaric \n\t\t \n\t\t \n\t\t\t Mohammad Ghavamzadeh \n\t\t \n\t\t \n\t\t\t R\u00e9mi Munos \n\t\t \n\t\t \n\t\t\t Peter Auer \n\t\t \n\t \n\t \n\t\t International Conference on Algorithmic Learning Theory \n\t\t \n\t\t\t Springer \n\t\t\t 2011 \n\t\t\t \n\t\t \n\t \n\t Alexandra Carpentier, Alessandro Lazaric, Mohammad Ghavamzadeh, R\u00e9mi Munos, and Peter Auer. 2011. Upper-confidence-bound algorithms for active learning in multi-armed bandits. In International Conference on Algorithmic Learn- ing Theory. Springer, 189-203."
+    },
+    {
+      "title": "Detecting depression and predicting its onset using longitudinal symptoms captured by passive sensing: a machine learning approach with robust feature selection",
+      "authors": [
+        "Prerna Chikersal",
+        "Afsaneh Doryab",
+        "Michael Tumminia",
+        "Daniella Villalba",
+        "Janine Dutcher",
+        "Xinwen Liu",
+        "Sheldon Cohen",
+        "Kasey Creswell",
+        "Jennifer Mankoff",
+        "J David Creswell"
+      ],
+      "year": 2021,
+      "doi": "10.1145/3422821",
+      "journal": "ACM Transactions on Computer-Human Interaction (TOCHI)",
+      "volume": "28",
+      "issue": "1",
+      "raw": "Detecting depression and predicting its onset using longitudinal symptoms captured by passive sensing: a machine learning approach with robust feature selection \n\t\t \n\t\t\t Prerna Chikersal \n\t\t \n\t\t \n\t\t\t Afsaneh Doryab \n\t\t \n\t\t \n\t\t\t Michael Tumminia \n\t\t \n\t\t \n\t\t\t Daniella K Villalba \n\t\t \n\t\t \n\t\t\t Janine M Dutcher \n\t\t \n\t\t \n\t\t\t Xinwen Liu \n\t\t \n\t\t \n\t\t\t Sheldon Cohen \n\t\t \n\t\t \n\t\t\t Kasey G Creswell \n\t\t \n\t\t \n\t\t\t Jennifer Mankoff \n\t\t \n\t\t \n\t\t\t J David Creswell \n\t\t \n\t\t 10.1145/3422821 \n\t \n\t \n\t\t ACM Transactions on Computer-Human Interaction (TOCHI) \n\t\t \n\t\t\t 28 \n\t\t\t 1 \n\t\t\t \n\t\t\t 2021. 2021 \n\t\t \n\t \n\t Prerna Chikersal, Afsaneh Doryab, Michael Tumminia, Daniella K Villalba, Ja- nine M Dutcher, Xinwen Liu, Sheldon Cohen, Kasey G Creswell, Jennifer Mankoff, J David Creswell, et al. 2021. Detecting depression and predicting its onset using longitudinal symptoms captured by passive sensing: a machine learning approach with robust feature selection. ACM Transactions on Computer-Human Interaction (TOCHI) 28, 1 (2021), 1-41."
+    },
+    {
+      "title": "Instant stress: detection of perceived mental stress through smartphone photoplethysmography and thermal imaging",
+      "authors": [
+        "Youngjun Cho",
+        "Simon Julier",
+        "Nadia Bianchi-Berthouze"
+      ],
+      "year": 2019,
+      "doi": "10.2196/10140",
+      "journal": "JMIR mental health",
+      "volume": "6",
+      "issue": "4",
+      "pages": "10140",
+      "raw": "Instant stress: detection of perceived mental stress through smartphone photoplethysmography and thermal imaging \n\t\t \n\t\t\t Youngjun Cho \n\t\t \n\t\t \n\t\t\t Simon J Julier \n\t\t \n\t\t \n\t\t\t Nadia Bianchi-Berthouze \n\t\t \n\t\t 10.2196/10140 \n\t \n\t \n\t\t JMIR mental health \n\t\t \n\t\t\t 6 \n\t\t\t 4 \n\t\t\t 10140 \n\t\t\t 2019. 2019 \n\t\t \n\t \n\t Youngjun Cho, Simon J Julier, and Nadia Bianchi-Berthouze. 2019. Instant stress: detection of perceived mental stress through smartphone photoplethysmography and thermal imaging. JMIR mental health 6, 4 (2019), e10140."
+    },
+    {
+      "title": "Just-in-time adaptive interventions for suicide prevention: Promise, challenges, and future directions",
+      "authors": [
+        "Walter Daniel Dl Coppersmith",
+        "Evan Dempsey",
+        "Kate Kleiman",
+        "Susan Bentley",
+        "Matthew Murphy"
+      ],
+      "year": 2022,
+      "journal": "Psychiatry",
+      "volume": "85",
+      "issue": "4",
+      "raw": "Just-in-time adaptive interventions for suicide prevention: Promise, challenges, and future directions \n\t\t \n\t\t\t Walter Daniel Dl Coppersmith \n\t\t \n\t\t \n\t\t\t Evan M Dempsey \n\t\t \n\t\t \n\t\t\t Kate H Kleiman \n\t\t \n\t\t \n\t\t\t Susan A Bentley \n\t\t \n\t\t \n\t\t\t Matthew K Murphy \n\t\t \n\t\t \n\t\t\t Nock \n\t\t \n\t \n\t \n\t\t Psychiatry \n\t\t \n\t\t\t 85 \n\t\t\t 4 \n\t\t\t \n\t\t\t 2022. 2022 \n\t\t \n\t \n\t Daniel DL Coppersmith, Walter Dempsey, Evan M Kleiman, Kate H Bentley, Susan A Murphy, and Matthew K Nock. 2022. Just-in-time adaptive interventions for suicide prevention: Promise, challenges, and future directions. Psychiatry 85, 4 (2022), 317-333."
+    },
+    {
+      "title": "Mental health in the COVID-19 pandemic",
+      "authors": [
+        "Walter Cullen",
+        "Gaurav Gulati",
+        "Brendan Kelly"
+      ],
+      "year": 2020,
+      "doi": "10.1093/qjmed/hcaa110",
+      "journal": "QJM: An International Journal of Medicine",
+      "volume": "113",
+      "issue": "5",
+      "raw": "Mental health in the COVID-19 pandemic \n\t\t \n\t\t\t Walter Cullen \n\t\t \n\t\t \n\t\t\t Gaurav Gulati \n\t\t \n\t\t \n\t\t\t Brendan D Kelly \n\t\t \n\t\t 10.1093/qjmed/hcaa110 \n\t \n\t \n\t\t QJM: An International Journal of Medicine \n\t\t \n\t\t\t 113 \n\t\t\t 5 \n\t\t\t \n\t\t\t 2020. 2020 \n\t\t \n\t \n\t Walter Cullen, Gaurav Gulati, and Brendan D Kelly. 2020. Mental health in the COVID-19 pandemic. QJM: An International Journal of Medicine 113, 5 (2020), 311-312."
+    },
+    {
+      "title": "Health Recommender Systems: Systematic Review",
+      "authors": [
+        "Robin De Croon",
+        "Leen Van Houdt",
+        "Nyi Nyi Htun",
+        "Gregor \u0160tiglic",
+        "Vero Vanden Abeele",
+        "Katrien Verbert"
+      ],
+      "year": 2021,
+      "doi": "10.2196/18035",
+      "journal": "Journal of Medical Internet Research",
+      "volume": "23",
+      "pages": "6",
+      "raw": "Health Recommender Systems: Systematic Review \n\t\t \n\t\t\t Robin De Croon \n\t\t \n\t\t \n\t\t\t Leen Van Houdt \n\t\t \n\t\t \n\t\t\t Nyi Nyi Htun \n\t\t \n\t\t \n\t\t\t Gregor \u0160tiglic \n\t\t \n\t\t \n\t\t\t Vero Vanden Abeele \n\t\t \n\t\t \n\t\t\t Katrien Verbert \n\t\t \n\t\t 10.2196/18035 \n\t\t \n\t \n\t \n\t\t Journal of Medical Internet Research \n\t\t \n\t\t\t 23 \n\t\t\t 6 \n\t\t\t 2021. 2021 \n\t\t \n\t \n\t Robin De Croon, Leen Van Houdt, Nyi Nyi Htun, Gregor \u0160tiglic, Vero Van- den Abeele, and Katrien Verbert. 2021. Health Recommender Systems: Sys- tematic Review. Journal of Medical Internet Research 23, 6 (2021). https: //doi.org/10.2196/18035"
+    },
+    {
+      "title": "Identifying behavioral phenotypes of loneliness and social isolation with passive sensing: statistical analysis, data mining and machine learning of smartphone and fitbit data",
+      "authors": [
+        "Afsaneh Doryab",
+        "Daniella Villalba",
+        "Prerna Chikersal",
+        "Janine Dutcher",
+        "Michael Tumminia",
+        "Xinwen Liu",
+        "Sheldon Cohen",
+        "Kasey Creswell",
+        "Jennifer Mankoff",
+        "John Creswell"
+      ],
+      "year": 2019,
+      "doi": "10.2196/13209",
+      "journal": "JMIR mHealth and uHealth",
+      "volume": "7",
+      "issue": "7",
+      "pages": "13209",
+      "raw": "Identifying behavioral phenotypes of loneliness and social isolation with passive sensing: statistical analysis, data mining and machine learning of smartphone and fitbit data \n\t\t \n\t\t\t Afsaneh Doryab \n\t\t \n\t\t \n\t\t\t Daniella K Villalba \n\t\t \n\t\t \n\t\t\t Prerna Chikersal \n\t\t \n\t\t \n\t\t\t Janine M Dutcher \n\t\t \n\t\t \n\t\t\t Michael Tumminia \n\t\t \n\t\t \n\t\t\t Xinwen Liu \n\t\t \n\t\t \n\t\t\t Sheldon Cohen \n\t\t \n\t\t \n\t\t\t Kasey Creswell \n\t\t \n\t\t \n\t\t\t Jennifer Mankoff \n\t\t \n\t\t \n\t\t\t John D Creswell \n\t\t \n\t\t 10.2196/13209 \n\t \n\t \n\t\t JMIR mHealth and uHealth \n\t\t \n\t\t\t 7 \n\t\t\t 7 \n\t\t\t 13209 \n\t\t\t 2019. 2019 \n\t\t \n\t \n\t Afsaneh Doryab, Daniella K Villalba, Prerna Chikersal, Janine M Dutcher, Michael Tumminia, Xinwen Liu, Sheldon Cohen, Kasey Creswell, Jennifer Mankoff, John D Creswell, et al. 2019. Identifying behavioral phenotypes of loneliness and social isolation with passive sensing: statistical analysis, data mining and machine learning of smartphone and fitbit data. JMIR mHealth and uHealth 7, 7 (2019), e13209."
+    },
+    {
+      "title": "Affect Detection From Wearables in the \"Real\" Wild: Fact, Fantasy, or Somewhere In between",
+      "authors": [
+        "K D' Sidney",
+        "Brandon Mello"
+      ],
+      "year": 2023,
+      "journal": "IEEE Intelligent Systems",
+      "volume": "38",
+      "issue": "1",
+      "raw": "Affect Detection From Wearables in the \"Real\" Wild: Fact, Fantasy, or Somewhere In between \n\t\t \n\t\t\t K D' Sidney \n\t\t \n\t\t \n\t\t\t Brandon M Mello \n\t\t \n\t\t \n\t\t\t Booth \n\t\t \n\t \n\t \n\t\t IEEE Intelligent Systems \n\t\t \n\t\t\t 38 \n\t\t\t 1 \n\t\t\t \n\t\t\t 2023. 2023 \n\t\t \n\t \n\t Sidney K D'Mello and Brandon M Booth. 2023. Affect Detection From Wearables in the \"Real\" Wild: Fact, Fantasy, or Somewhere In between? IEEE Intelligent Systems 38, 1 (2023), 76-84."
+    },
+    {
+      "title": "Survey of multiarmed bandit algorithms applied to recommendation systems",
+      "authors": [
+        "Gangan Elena",
+        "Kudus Milos",
+        "Ilyushin Eugene"
+      ],
+      "year": 2021,
+      "journal": "International Journal of Open Information Technologies",
+      "volume": "9",
+      "issue": "4",
+      "raw": "Survey of multiarmed bandit algorithms applied to recommendation systems \n\t\t \n\t\t\t Gangan Elena \n\t\t \n\t\t \n\t\t\t Kudus Milos \n\t\t \n\t\t \n\t\t\t Ilyushin Eugene \n\t\t \n\t \n\t \n\t\t International Journal of Open Information Technologies \n\t\t \n\t\t\t 9 \n\t\t\t 4 \n\t\t\t \n\t\t\t 2021. 2021 \n\t\t \n\t \n\t Gangan Elena, Kudus Milos, and Ilyushin Eugene. 2021. Survey of multiarmed bandit algorithms applied to recommendation systems. International Journal of Open Information Technologies 9, 4 (2021), 12-27."
+    },
+    {
+      "title": "An expandable approach for design and personalization of digital, just-in-time adaptive interventions",
+      "authors": [
+        "Suat Gonul",
+        "Tuncay Namli",
+        "Sasja Huisman",
+        "Gokce Banu Laleci Erturkmen",
+        "Ismail Hakki Toroslu",
+        "Ahmet Cosar"
+      ],
+      "year": 2018,
+      "doi": "10.1093/jamia/ocy160",
+      "journal": "Journal of the American Medical Informatics Association",
+      "volume": "26",
+      "issue": "3",
+      "raw": "An expandable approach for design and personalization of digital, just-in-time adaptive interventions \n\t\t \n\t\t\t Suat Gonul \n\t\t \n\t\t \n\t\t\t Tuncay Namli \n\t\t \n\t\t \n\t\t\t Sasja Huisman \n\t\t \n\t\t \n\t\t\t Gokce Banu Laleci Erturkmen \n\t\t \n\t\t \n\t\t\t Ismail Hakki Toroslu \n\t\t \n\t\t \n\t\t\t Ahmet Cosar \n\t\t \n\t\t 10.1093/jamia/ocy160 \n\t\t \n\t \n\t \n\t\t Journal of the American Medical Informatics Association \n\t\t \n\t\t\t 26 \n\t\t\t 3 \n\t\t\t \n\t\t\t 2018. 2018 \n\t\t \n\t \n\t Suat Gonul, Tuncay Namli, Sasja Huisman, Gokce Banu Laleci Erturkmen, Is- mail Hakki Toroslu, and Ahmet Cosar. 2018. An expandable approach for de- sign and personalization of digital, just-in-time adaptive interventions. Journal of the American Medical Informatics Association 26, 3 (2018), 198-210. https: //doi.org/10.1093/jamia/ocy160"
+    },
+    {
+      "title": "Eyetracking technologies in mobile devices Using edge computing: a systematic review",
+      "authors": [
+        "Nishan Gunawardena",
+        "Jeewani Anupama Ginige",
+        "Bahman Javadi"
+      ],
+      "year": 2022,
+      "doi": "10.1145/3546938",
+      "journal": "Comput. Surveys",
+      "volume": "55",
+      "issue": "8",
+      "raw": "Eyetracking technologies in mobile devices Using edge computing: a systematic review \n\t\t \n\t\t\t Nishan Gunawardena \n\t\t \n\t\t \n\t\t\t Jeewani Anupama Ginige \n\t\t \n\t\t \n\t\t\t Bahman Javadi \n\t\t \n\t\t 10.1145/3546938 \n\t \n\t \n\t\t Comput. Surveys \n\t\t \n\t\t\t 55 \n\t\t\t 8 \n\t\t\t \n\t\t\t 2022. 2022 \n\t\t \n\t \n\t Nishan Gunawardena, Jeewani Anupama Ginige, and Bahman Javadi. 2022. Eye- tracking technologies in mobile devices Using edge computing: a systematic review. Comput. Surveys 55, 8 (2022), 1-33."
+    },
+    {
+      "title": "A Smartphone Application to Support Recovery From Alcoholism: A Randomized Clinical Trial",
+      "authors": [
+        "H David",
+        "Fiona Gustafson",
+        "Ming-Yuan Mctavish",
+        "Amy Chih",
+        "Roberta Atwood",
+        "Michael Johnson",
+        "Michael Boyle",
+        "Hilary Levy",
+        "Steven Driscoll",
+        "Lisa Chisholm",
+        "Andrew Dillenburg",
+        "Dhavan Isham"
+      ],
+      "year": 2014,
+      "doi": "10.1001/jamapsychiatry.2013.4642",
+      "journal": "JAMA Psychiatry",
+      "volume": "71",
+      "issue": "5",
+      "raw": "A Smartphone Application to Support Recovery From Alcoholism: A Randomized Clinical Trial \n\t\t \n\t\t\t H David \n\t\t \n\t\t \n\t\t\t Fiona M Gustafson \n\t\t \n\t\t \n\t\t\t Ming-Yuan Mctavish \n\t\t \n\t\t \n\t\t\t Amy K Chih \n\t\t \n\t\t \n\t\t\t Roberta A Atwood \n\t\t \n\t\t \n\t\t\t Michael G Johnson \n\t\t \n\t\t \n\t\t\t Michael S Boyle \n\t\t \n\t\t \n\t\t\t Hilary Levy \n\t\t \n\t\t \n\t\t\t Steven M Driscoll \n\t\t \n\t\t \n\t\t\t Lisa Chisholm \n\t\t \n\t\t \n\t\t\t Andrew Dillenburg \n\t\t \n\t\t \n\t\t\t Dhavan Isham \n\t\t \n\t\t \n\t\t\t Shah \n\t\t \n\t\t 10.1001/jamapsychiatry.2013.4642 \n\t\t \n\t \n\t \n\t\t JAMA Psychiatry \n\t\t \n\t\t\t 71 \n\t\t\t 5 \n\t\t\t \n\t\t\t 2014. 2014 \n\t\t \n\t \n\t David H. Gustafson, Fiona M. McTavish, Ming-Yuan Chih, Amy K. Atwood, Roberta A. Johnson, Michael G. Boyle, Michael S. Levy, Hilary Driscoll, Steven M. Chisholm, Lisa Dillenburg, Andrew Isham, and Dhavan Shah. 2014. A Smart- phone Application to Support Recovery From Alcoholism: A Randomized Clin- ical Trial. JAMA Psychiatry 71, 5 (05 2014), 566-572. https://doi.org/10.1001/ jamapsychiatry.2013.4642"
+    },
+    {
+      "title": "Separation of concerns in modeldriven development",
+      "authors": [
+        "Vinay Kulkarni",
+        "Sreedhar Reddy"
+      ],
+      "year": 2003,
+      "doi": "10.1109/ms.2003.1231154",
+      "journal": "IEEE software",
+      "volume": "20",
+      "issue": "5",
+      "raw": "Separation of concerns in modeldriven development \n\t\t \n\t\t\t Vinay Kulkarni \n\t\t \n\t\t \n\t\t\t Sreedhar Reddy \n\t\t \n\t\t 10.1109/ms.2003.1231154 \n\t \n\t \n\t\t IEEE software \n\t\t \n\t\t\t 20 \n\t\t\t 5 \n\t\t\t \n\t\t\t 2003. 2003 \n\t\t \n\t \n\t Vinay Kulkarni and Sreedhar Reddy. 2003. Separation of concerns in model- driven development. IEEE software 20, 5 (2003), 64-69."
+    },
+    {
+      "title": "A systemic review of available low-cost EEG headsets used for drowsiness detection",
+      "authors": [
+        "John Larocco",
+        "Minh Le",
+        "Dong-Guk Paeng"
+      ],
+      "year": 2020,
+      "doi": "10.3389/fninf.2020.553352",
+      "journal": "Frontiers in neuroinformatics",
+      "pages": "42",
+      "raw": "A systemic review of available low-cost EEG headsets used for drowsiness detection \n\t\t \n\t\t\t John Larocco \n\t\t \n\t\t \n\t\t\t Minh Dong Le \n\t\t \n\t\t \n\t\t\t Dong-Guk Paeng \n\t\t \n\t\t 10.3389/fninf.2020.553352 \n\t \n\t \n\t\t Frontiers in neuroinformatics \n\t\t \n\t\t\t 42 \n\t\t\t 2020. 2020 \n\t\t \n\t \n\t John LaRocco, Minh Dong Le, and Dong-Guk Paeng. 2020. A systemic review of available low-cost EEG headsets used for drowsiness detection. Frontiers in neuroinformatics (2020), 42."
+    },
+    {
+      "title": "Emotion recognition using eye-tracking: taxonomy, review and current challenges",
+      "authors": [
+        "Zheng Jia",
+        "James Lim",
+        "Jason Mountstephens"
+      ],
+      "year": 2020,
+      "journal": "Sensors",
+      "volume": "20",
+      "issue": "8",
+      "pages": "2384",
+      "raw": "Emotion recognition using eye-tracking: taxonomy, review and current challenges \n\t\t \n\t\t\t Zheng Jia \n\t\t \n\t\t \n\t\t\t James Lim \n\t\t \n\t\t \n\t\t\t Jason Mountstephens \n\t\t \n\t\t \n\t\t\t Teo \n\t\t \n\t \n\t \n\t\t Sensors \n\t\t \n\t\t\t 20 \n\t\t\t 8 \n\t\t\t 2384 \n\t\t\t 2020. 2020 \n\t\t \n\t \n\t Jia Zheng Lim, James Mountstephens, and Jason Teo. 2020. Emotion recognition using eye-tracking: taxonomy, review and current challenges. Sensors 20, 8 (2020), 2384."
+    },
+    {
+      "title": "Contextual Multi-Armed Bandits",
+      "authors": [
+        "Tyler Lu",
+        "David Pal",
+        "Martin Pal"
+      ],
+      "year": 2010,
+      "volume": "9",
+      "raw": "Contextual Multi-Armed Bandits \n\t\t \n\t\t\t Tyler Lu \n\t\t \n\t\t \n\t\t\t David Pal \n\t\t \n\t\t \n\t\t\t Martin Pal \n\t\t \n\t\t \n\t \n\t \n\t\t Proceedings of the Thirteenth International Conference on Artificial Intelligence and Statistics (Proceedings of Machine Learning Research \n\t\t \n\t\t\t Whye Teh \n\t\t \n\t\t \n\t\t\t Mike Titterington \n\t\t \n\t\t the Thirteenth International Conference on Artificial Intelligence and Statistics ( Machine Learning Research Chia Laguna Resort, Sardinia, Italy \n\t\t \n\t\t\t PMLR \n\t\t\t 2010 \n\t\t\t 9 \n\t\t\t \n\t\t \n\t \n\t Tyler Lu, David Pal, and Martin Pal. 2010. Contextual Multi-Armed Bandits. In Proceedings of the Thirteenth International Conference on Artificial Intelligence and Statistics (Proceedings of Machine Learning Research, Vol. 9), Yee Whye Teh and Mike Titterington (Eds.). PMLR, Chia Laguna Resort, Sardinia, Italy, 485-492. https://proceedings.mlr.press/v9/lu10a.html"
+    },
+    {
+      "title": "Featured research with Muse",
+      "year": 2023,
+      "raw": "Muse \n\t\t \n\t\t \n\t\t Featured research with Muse \n\t\t \n\t\t\t 2023 \n\t\t \n\t \n\t Muse. 2023. Featured research with Muse. https://choosemuse.com/pages/muse- research"
+    },
+    {
+      "title": "Just-in-Time Adaptive Interventions (JITAIs) in Mobile Health: Key Components and Design Principles for Ongoing Health Behavior Support",
+      "authors": [
+        "Inbal Nahum-Shani",
+        "Shawna Smith",
+        "Bonnie Spring",
+        "Linda Collins",
+        "Katie Witkiewitz",
+        "Ambuj Tewari",
+        "Susan Murphy"
+      ],
+      "year": 2017,
+      "doi": "10.1007/s12160-016-9830-8",
+      "journal": "Annals of Behavioral Medicine",
+      "volume": "52",
+      "issue": "6",
+      "raw": "Just-in-Time Adaptive Interventions (JITAIs) in Mobile Health: Key Components and Design Principles for Ongoing Health Behavior Support \n\t\t \n\t\t\t Inbal Nahum-Shani \n\t\t \n\t\t \n\t\t\t Shawna N Smith \n\t\t \n\t\t \n\t\t\t Bonnie J Spring \n\t\t \n\t\t \n\t\t\t Linda M Collins \n\t\t \n\t\t \n\t\t\t Katie Witkiewitz \n\t\t \n\t\t \n\t\t\t Ambuj Tewari \n\t\t \n\t\t \n\t\t\t Susan A Murphy \n\t\t \n\t\t 10.1007/s12160-016-9830-8 \n\t\t \n\t \n\t \n\t\t Annals of Behavioral Medicine \n\t\t \n\t\t\t 52 \n\t\t\t 6 \n\t\t\t \n\t\t\t 2017. 2017 \n\t\t \n\t \n\t Inbal Nahum-Shani, Shawna N Smith, Bonnie J Spring, Linda M Collins, Katie Witkiewitz, Ambuj Tewari, and Susan A Murphy. 2017. Just-in-Time Adaptive Interventions (JITAIs) in Mobile Health: Key Components and Design Principles for Ongoing Health Behavior Support. Annals of Behavioral Medicine 52, 6 (2017), 446-462. https://doi.org/10.1007/s12160-016-9830-8"
+    },
+    {
+      "title": "The present and future use of functional near-infrared spectroscopy (fNIRS) for cognitive neuroscience",
+      "authors": [
+        "Paola Pinti",
+        "Ilias Tachtsidis",
+        "Antonia Hamilton",
+        "Joy Hirsch",
+        "Clarisse Aichelburg",
+        "Sam Gilbert",
+        "Paul Burgess"
+      ],
+      "year": 2020,
+      "doi": "10.1111/nyas.13948",
+      "journal": "Annals of the New York Academy of Sciences",
+      "volume": "1464",
+      "issue": "1",
+      "raw": "The present and future use of functional near-infrared spectroscopy (fNIRS) for cognitive neuroscience \n\t\t \n\t\t\t Paola Pinti \n\t\t \n\t\t \n\t\t\t Ilias Tachtsidis \n\t\t \n\t\t \n\t\t\t Antonia Hamilton \n\t\t \n\t\t \n\t\t\t Joy Hirsch \n\t\t \n\t\t \n\t\t\t Clarisse Aichelburg \n\t\t \n\t\t \n\t\t\t Sam Gilbert \n\t\t \n\t\t \n\t\t\t Paul W Burgess \n\t\t \n\t\t 10.1111/nyas.13948 \n\t \n\t \n\t\t Annals of the New York Academy of Sciences \n\t\t \n\t\t\t 1464 \n\t\t\t 1 \n\t\t\t \n\t\t\t 2020. 2020 \n\t\t \n\t \n\t Paola Pinti, Ilias Tachtsidis, Antonia Hamilton, Joy Hirsch, Clarisse Aichelburg, Sam Gilbert, and Paul W Burgess. 2020. The present and future use of functional near-infrared spectroscopy (fNIRS) for cognitive neuroscience. Annals of the New York Academy of Sciences 1464, 1 (2020), 5-29."
+    },
+    {
+      "title": "A survey on mobile affective computing",
+      "authors": [
+        "Eugenia Politou",
+        "Efthimios Alepis",
+        "Constantinos Patsakis"
+      ],
+      "year": 2017,
+      "doi": "10.1016/j.cosrev.2017.07.002",
+      "journal": "Computer Science Review",
+      "volume": "25",
+      "raw": "A survey on mobile affective computing \n\t\t \n\t\t\t Eugenia Politou \n\t\t \n\t\t \n\t\t\t Efthimios Alepis \n\t\t \n\t\t \n\t\t\t Constantinos Patsakis \n\t\t \n\t\t 10.1016/j.cosrev.2017.07.002 \n\t\t \n\t \n\t \n\t\t Computer Science Review \n\t\t \n\t\t\t 25 \n\t\t\t \n\t\t\t 2017. 2017 \n\t\t \n\t \n\t Eugenia Politou, Efthimios Alepis, and Constantinos Patsakis. 2017. A survey on mobile affective computing. Computer Science Review 25 (2017), 79-100. https://doi.org/10.1016/j.cosrev.2017.07.002"
+    },
+    {
+      "title": "Towards Health Recommendation Systems: An Approach for Providing Automated Personalized Health Feedback from Mobile Data",
+      "authors": [
+        "Mashfiqui Rabbi",
+        "Min Hane Aung",
+        "Tanzeem Choudhury"
+      ],
+      "year": 2017,
+      "doi": "10.1007/978-3-319-51394-2_26",
+      "raw": "Towards Health Recommendation Systems: An Approach for Providing Automated Personalized Health Feedback from Mobile Data \n\t\t \n\t\t\t Mashfiqui Rabbi \n\t\t \n\t\t \n\t\t\t Min Hane Aung \n\t\t \n\t\t \n\t\t\t Tanzeem Choudhury \n\t\t \n\t\t 10.1007/978-3-319-51394-2_26 \n\t\t \n\t\t \n\t\t\t 2017 \n\t\t\t Springer International Publishing \n\t\t\t \n\t\t \n\t \n\t Mashfiqui Rabbi, Min Hane Aung, and Tanzeem Choudhury. 2017. Towards Health Recommendation Systems: An Approach for Providing Automated Personalized Health Feedback from Mobile Data. Springer International Publishing, 519-542. https://doi.org/10.1007/978-3-319-51394-2_26"
+    },
+    {
+      "title": "Electroencephalogram",
+      "authors": [
+        "Appaji Rayi",
+        "Najib Murr"
+      ],
+      "year": 2020,
+      "raw": "Appaji Rayi \n\t\t \n\t\t \n\t\t\t Najib Murr \n\t\t \n\t\t \n\t\t Electroencephalogram \n\t\t \n\t\t\t 2020 \n\t\t \n\t \n\t Appaji Rayi and Najib Murr. 2020. Electroencephalogram. https://www.ncbi. nlm.nih.gov/books/NBK563295/"
+    },
+    {
+      "title": "MUBS: A Personalized Recommender System for Behavioral Activation in Mental Health",
+      "authors": [
+        "Darius Rohani",
+        "Andrea Lopategui",
+        "Nanna Tuxen",
+        "Maria Faurholt-Jepsen",
+        "Lars Kessing",
+        "Jakob Bardram"
+      ],
+      "year": 2020,
+      "doi": "10.1145/3313831.3376879",
+      "raw": "MUBS: A Personalized Recommender System for Behavioral Activation in Mental Health \n\t\t \n\t\t\t Darius A Rohani \n\t\t \n\t\t \n\t\t\t Andrea Quemada Lopategui \n\t\t \n\t\t \n\t\t\t Nanna Tuxen \n\t\t \n\t\t \n\t\t\t Maria Faurholt-Jepsen \n\t\t \n\t\t \n\t\t\t Lars V Kessing \n\t\t \n\t\t \n\t\t\t Jakob E Bardram \n\t\t \n\t\t 10.1145/3313831.3376879 \n\t\t \n\t \n\t \n\t\t Proceedings of the 2020 CHI Conference on Human Factors in Computing Systems (CHI '20) \n\t\t the 2020 CHI Conference on Human Factors in Computing Systems (CHI '20) New York, NY, USA \n\t\t \n\t\t\t Association for Computing Machinery \n\t\t\t 2020 \n\t\t\t \n\t\t \n\t \n\t Darius A. Rohani, Andrea Quemada Lopategui, Nanna Tuxen, Maria Faurholt- Jepsen, Lars V. Kessing, and Jakob E. Bardram. 2020. MUBS: A Personalized Recommender System for Behavioral Activation in Mental Health. In Proceedings of the 2020 CHI Conference on Human Factors in Computing Systems (CHI '20). Association for Computing Machinery, New York, NY, USA, 1-13. https://doi. org/10.1145/3313831.3376879"
+    },
+    {
+      "title": "Wearable-Based Affect Recognition-A Review",
+      "authors": [
+        "Philip Schmidt",
+        "Attila Reiss",
+        "Robert D\u00fcrichen",
+        "Kristof Van Laerhoven"
+      ],
+      "year": 2019,
+      "doi": "10.3390/s19194079",
+      "journal": "Sensors",
+      "volume": "19",
+      "pages": "19",
+      "raw": "Wearable-Based Affect Recognition-A Review \n\t\t \n\t\t\t Philip Schmidt \n\t\t \n\t\t \n\t\t\t Attila Reiss \n\t\t \n\t\t \n\t\t\t Robert D\u00fcrichen \n\t\t \n\t\t \n\t\t\t Kristof Van Laerhoven \n\t\t \n\t\t 10.3390/s19194079 \n\t\t \n\t \n\t \n\t\t Sensors \n\t\t \n\t\t\t 19 \n\t\t\t 19 \n\t\t\t 2019. 2019 \n\t\t \n\t \n\t Philip Schmidt, Attila Reiss, Robert D\u00fcrichen, and Kristof Van Laerhoven. 2019. Wearable-Based Affect Recognition-A Review. Sensors 19, 19 (2019). https: //doi.org/10.3390/s19194079"
+    },
+    {
+      "title": "The Mindfulness Matters program for children and adolescents: Strategies, activities, and techniques for therapists and teachers",
+      "authors": [
+        "J Randye",
+        "Christopher Semple"
+      ],
+      "year": 2019,
+      "raw": "J Randye \n\t\t \n\t\t \n\t\t\t Christopher Semple \n\t\t \n\t\t \n\t\t\t Willard \n\t\t \n\t\t The Mindfulness Matters program for children and adolescents: Strategies, activities, and techniques for therapists and teachers \n\t\t \n\t\t\t Guilford Publications \n\t\t\t 2019 \n\t\t \n\t \n\t Randye J Semple and Christopher Willard. 2019. The Mindfulness Matters program for children and adolescents: Strategies, activities, and techniques for therapists and teachers. Guilford Publications."
+    },
+    {
+      "title": "Use of Smartphone Apps, Social Media, and Web-Based Resources to Support Mental Health and Well-Being: Online Survey",
+      "authors": [
+        "Katarzyna Stawarz",
+        "Chris Preist",
+        "David Coyle"
+      ],
+      "year": 2019,
+      "doi": "10.2196/preprints.12546",
+      "journal": "JMIR Mental Health",
+      "volume": "6",
+      "raw": "Use of Smartphone Apps, Social Media, and Web-Based Resources to Support Mental Health and Well-Being: Online Survey \n\t\t \n\t\t\t Katarzyna Stawarz \n\t\t \n\t\t \n\t\t\t Chris Preist \n\t\t \n\t\t \n\t\t\t David Coyle \n\t\t \n\t\t 10.2196/preprints.12546 \n\t\t \n\t \n\t \n\t\t JMIR Mental Health \n\t\t \n\t\t\t 6 \n\t\t\t 2019. 2019 \n\t\t \n\t \n\t Katarzyna Stawarz, Chris Preist, and David Coyle. 2019. Use of Smartphone Apps, Social Media, and Web-Based Resources to Support Mental Health and Well- Being: Online Survey. JMIR Mental Health 6 (2019). https://api.semanticscholar. org/CorpusID:189995653"
+    },
+    {
+      "title": "Just-in-the-Moment Adaptive Interventions (JITAI): A Meta-Analytical Review",
+      "authors": [
+        "Liyuan Wang",
+        "Lynn Miller"
+      ],
+      "year": 2020,
+      "doi": "10.1080/10410236.2019.1652388",
+      "journal": "Health Communication",
+      "volume": "35",
+      "raw": "Just-in-the-Moment Adaptive Interventions (JITAI): A Meta-Analytical Review \n\t\t \n\t\t\t Liyuan Wang \n\t\t \n\t\t \n\t\t\t Lynn Carol Miller \n\t\t \n\t\t 10.1080/10410236.2019.1652388 \n\t\t \n\t \n\t \n\t\t Health Communication \n\t\t \n\t\t\t 35 \n\t\t\t \n\t\t\t 2020. 2020 \n\t\t \n\t \n\t Liyuan Wang and Lynn Carol Miller. 2020. Just-in-the-Moment Adaptive Inter- ventions (JITAI): A Meta-Analytical Review. Health Communication 35, 12 (2020), 1531-1544. https://doi.org/10.1080/10410236.2019.1652388"
+    },
+    {
+      "title": "A framework of energy efficient mobile sensing for automatic user state recognition",
+      "authors": [
+        "Yi Wang",
+        "Jialiu Lin",
+        "Murali Annavaram",
+        "Quinn Jacobson",
+        "Jason Hong",
+        "Bhaskar Krishnamachari",
+        "Norman Sadeh"
+      ],
+      "year": 2009,
+      "doi": "10.1145/1555816.1555835",
+      "raw": "A framework of energy efficient mobile sensing for automatic user state recognition \n\t\t \n\t\t\t Yi Wang \n\t\t \n\t\t \n\t\t\t Jialiu Lin \n\t\t \n\t\t \n\t\t\t Murali Annavaram \n\t\t \n\t\t \n\t\t\t Quinn A Jacobson \n\t\t \n\t\t \n\t\t\t Jason Hong \n\t\t \n\t\t \n\t\t\t Bhaskar Krishnamachari \n\t\t \n\t\t \n\t\t\t Norman Sadeh \n\t\t \n\t\t 10.1145/1555816.1555835 \n\t \n\t \n\t\t Proceedings of the 7th international conference on Mobile systems, applications \n\t\t the 7th international conference on Mobile systems, applications \n\t\t \n\t\t\t 2009 \n\t\t\t \n\t\t \n\t \n\t Yi Wang, Jialiu Lin, Murali Annavaram, Quinn A Jacobson, Jason Hong, Bhaskar Krishnamachari, and Norman Sadeh. 2009. A framework of energy efficient mobile sensing for automatic user state recognition. In Proceedings of the 7th international conference on Mobile systems, applications, and services. 179-192."
+    },
+    {
+      "title": "ADCB: Adaptive Dynamic Clustering of Bandits for Online Recommendation System",
+      "authors": [
+        "Yufeng Wang",
+        "Weidong Zhang",
+        "Jianhua Ma",
+        "Qun Jin"
+      ],
+      "year": 2023,
+      "doi": "10.1007/s11063-022-10931-5",
+      "journal": "Neural Processing Letters",
+      "volume": "55",
+      "issue": "2",
+      "raw": "ADCB: Adaptive Dynamic Clustering of Bandits for Online Recommendation System \n\t\t \n\t\t\t Yufeng Wang \n\t\t \n\t\t \n\t\t\t Weidong Zhang \n\t\t \n\t\t \n\t\t\t Jianhua Ma \n\t\t \n\t\t \n\t\t\t Qun Jin \n\t\t \n\t\t 10.1007/s11063-022-10931-5 \n\t \n\t \n\t\t Neural Processing Letters \n\t\t \n\t\t\t 55 \n\t\t\t 2 \n\t\t\t \n\t\t\t 2023. 2023 \n\t\t \n\t \n\t Yufeng Wang, Weidong Zhang, Jianhua Ma, and Qun Jin. 2023. ADCB: Adaptive Dynamic Clustering of Bandits for Online Recommendation System. Neural Processing Letters 55, 2 (2023), 1155-1172."
+    },
+    {
+      "title": "BanditMF: Multi-Armed Bandit Based Matrix Factorization Recommender System",
+      "authors": [
+        "Shenghao Xu"
+      ],
+      "year": 2021,
+      "raw": "BanditMF: Multi-Armed Bandit Based Matrix Factorization Recommender System \n\t\t \n\t\t\t Shenghao Xu \n\t\t \n\t\t ArXiv abs/2106.10898 \n\t\t \n\t\t \n\t\t\t 2021. 2021 \n\t\t \n\t \n\t Shenghao Xu. 2021. BanditMF: Multi-Armed Bandit Based Matrix Factorization Recommender System. ArXiv abs/2106.10898 (2021). https://api.semanticscholar. org/CorpusID:235490165"
+    },
+    {
+      "title": "Spoiled for choice? Personalized recommendation for healthcare decisions: A multiarmed bandit approach",
+      "authors": [
+        "Tongxin Zhou",
+        "Yingfei Wang",
+        "Yong Lu (lucy) Yan"
+      ],
+      "year": 2023,
+      "doi": "10.1287/isre.2022.1191",
+      "journal": "Information Systems Research",
+      "raw": "Spoiled for choice? Personalized recommendation for healthcare decisions: A multiarmed bandit approach \n\t\t \n\t\t\t Tongxin Zhou \n\t\t \n\t\t \n\t\t\t Yingfei Wang \n\t\t \n\t\t \n\t\t\t Yong Lu (lucy) Yan \n\t\t \n\t\t \n\t\t\t Tan \n\t\t \n\t\t 10.1287/isre.2022.1191 \n\t\t \n\t \n\t \n\t\t Information Systems Research \n\t\t \n\t\t\t 2023. 2023 \n\t\t \n\t \n\t Tongxin Zhou, Yingfei Wang, Lu (Lucy) Yan, and Yong Tan. 2023. Spoiled for choice? Personalized recommendation for healthcare decisions: A multiarmed bandit approach. Information Systems Research (2023). https://doi.org/10.1287/ isre.2022.1191"
+    }
+  ],
+  "num_references": 45,
+  "figures": [
+    {
+      "caption": "Figure 1 :",
+      "description": "Figure 1: The overview of CAREForMe's framework design that is context-aware, personalized, and modular."
+    }
+  ],
+  "num_figures": 1,
+  "num_citations": 57,
+  "cited_references": [
+    "b32",
+    "b43",
+    "b39",
+    "b38",
+    "b14",
+    "b4",
+    "b17",
+    "b20",
+    "b24",
+    "b40",
+    "b41",
+    "b26",
+    "b28",
+    "b13",
+    "b27",
+    "b33",
+    "b16",
+    "b7",
+    "b23",
+    "b29",
+    "b19",
+    "b6",
+    "b42",
+    "b18",
+    "b30",
+    "b1",
+    "b35",
+    "b9",
+    "b31",
+    "b10",
+    "b3",
+    "b5",
+    "b34",
+    "b8",
+    "b12",
+    "b15",
+    "b37",
+    "b36",
+    "b11",
+    "b25",
+    "b22",
+    "b0",
+    "b21",
+    "b2",
+    "b44"
+  ],
+  "notes": [
+    "[raw_affiliation] University of Southern California Los Angeles , CA , USA",
+    "[raw_affiliation] University of Southern California Los Angeles , CA , USA",
+    "[raw_affiliation] University of Southern California Los Angeles , CA , USA",
+    "[raw_affiliation] USC Information Sciences Institute Arlington , VA , USA",
+    "[raw_affiliation] University of Southern California Los Angeles , CA , USA",
+    "[raw_affiliation] University of Southern California Los Angeles , CA , USA",
+    "[raw_reference] 2023. CAREForMe's public repository. https://github.com/ANRGUSC/mab-reco",
+    "[raw_reference] 2023. The fastest way to build Flutter apps in Python. https://flet.dev/",
+    "[raw_reference] 2023. Mobile App Download Statistics & Usage Statistics (2023). https://buildfire. com/app-statistics/",
+    "[raw_reference] 2023. Sensors Overview | Android Developers. https://developer.android.com/ guide/topics/sensors/sensors_overview",
+    "[raw_reference] 2023. Telegram Bot Features. https://core.telegram.org/bots/features",
+    "[raw_reference] 2023. Welcome to the Discord Developer Platform. https://discord.com/ developers/docs/intro",
+    "[raw_reference] 2023. YAML Tutorial: Everything You Need to Get Started in Minutes. https: //www.cloudbees.com/blog/yaml-tutorial-everything-you-need-get-started",
+    "[raw_reference] Mohiuddin Ahmed, Raihan Seraj, and Syed Mohammed Shamsul Islam. 2020. The k-means algorithm: A comprehensive survey and performance evaluation. Electronics 9, 8 (2020), 1295.",
+    "[raw_reference] Mawulolo K. Ameko, Miranda L. Beltzer, Lihua Cai, Mehdi Boukhechba, Bethany A. Teachman, and Laura E. Barnes. 2020. Offline Contextual Multi- Armed Bandits for Mobile Health Interventions: A Case Study on Emotion Reg- ulation. Association for Computing Machinery, New York, NY, USA. https: //doi.org/10.1145/3383313.3412244",
+    "[raw_reference] artinis. 2023. Wearable fNIRS EEG combinations. https://www.artinis.com/nirs- eeg-package",
+    "[raw_reference] Dror Ben-Zeev, Susan M Kaiser, Christopher J Brenner, Mark Begale, Jennifer Duffecy, and David C Mohr. 2013. Development and usability testing of FO- CUS: a smartphone system for self-management of schizophrenia. Psychiatric rehabilitation journal 36, 4 (2013), 289.",
+    "[raw_reference] Brinnae Bent, Ke Wang, Emilia Grzesiak, Chentian Jiang, Yuankai Qi, Yihang Jiang, Peter Cho, Kyle Zingler, Felix Ikponmwosa Ogbeide, Arthur Zhao, et al. 2021. The digital biomarker discovery pipeline: An open-source software platform for the development of digital biomarkers using mHealth and wearables data. Journal of clinical and translational science 5, 1 (2021), e19.",
+    "[raw_reference] Patr\u00edcia J. Bota, Chen Wang, Ana L. N. Fred, and Hugo Pl\u00e1cido Da Silva. 2019. A Review, Current Challenges, and Future Possibilities on Emotion Recognition Using Machine Learning and Physiological Signals. IEEE Access 7 (2019), 140990- 141020. https://doi.org/10.1109/ACCESS.2019.2944001",
+    "[raw_reference] Djallel Bouneffouf, Sohini Upadhyay, and Yasaman Khazaeni. 2020. Contex- tual Bandit with Missing Rewards. ArXiv abs/2007.06368 (2020). https: //api.semanticscholar.org/CorpusID:220496532",
+    "[raw_reference] Alexandra Carpentier, Alessandro Lazaric, Mohammad Ghavamzadeh, R\u00e9mi Munos, and Peter Auer. 2011. Upper-confidence-bound algorithms for active learning in multi-armed bandits. In International Conference on Algorithmic Learn- ing Theory. Springer, 189-203.",
+    "[raw_reference] Prerna Chikersal, Afsaneh Doryab, Michael Tumminia, Daniella K Villalba, Ja- nine M Dutcher, Xinwen Liu, Sheldon Cohen, Kasey G Creswell, Jennifer Mankoff, J David Creswell, et al. 2021. Detecting depression and predicting its onset using longitudinal symptoms captured by passive sensing: a machine learning approach with robust feature selection. ACM Transactions on Computer-Human Interaction (TOCHI) 28, 1 (2021), 1-41.",
+    "[raw_reference] Youngjun Cho, Simon J Julier, and Nadia Bianchi-Berthouze. 2019. Instant stress: detection of perceived mental stress through smartphone photoplethysmography and thermal imaging. JMIR mental health 6, 4 (2019), e10140.",
+    "[raw_reference] Daniel DL Coppersmith, Walter Dempsey, Evan M Kleiman, Kate H Bentley, Susan A Murphy, and Matthew K Nock. 2022. Just-in-time adaptive interventions for suicide prevention: Promise, challenges, and future directions. Psychiatry 85, 4 (2022), 317-333.",
+    "[raw_reference] Walter Cullen, Gaurav Gulati, and Brendan D Kelly. 2020. Mental health in the COVID-19 pandemic. QJM: An International Journal of Medicine 113, 5 (2020), 311-312.",
+    "[raw_reference] Robin De Croon, Leen Van Houdt, Nyi Nyi Htun, Gregor \u0160tiglic, Vero Van- den Abeele, and Katrien Verbert. 2021. Health Recommender Systems: Sys- tematic Review. Journal of Medical Internet Research 23, 6 (2021). https: //doi.org/10.2196/18035",
+    "[raw_reference] Afsaneh Doryab, Daniella K Villalba, Prerna Chikersal, Janine M Dutcher, Michael Tumminia, Xinwen Liu, Sheldon Cohen, Kasey Creswell, Jennifer Mankoff, John D Creswell, et al. 2019. Identifying behavioral phenotypes of loneliness and social isolation with passive sensing: statistical analysis, data mining and machine learning of smartphone and fitbit data. JMIR mHealth and uHealth 7, 7 (2019), e13209.",
+    "[raw_reference] Sidney K D'Mello and Brandon M Booth. 2023. Affect Detection From Wearables in the \"Real\" Wild: Fact, Fantasy, or Somewhere In between? IEEE Intelligent Systems 38, 1 (2023), 76-84.",
+    "[raw_reference] Gangan Elena, Kudus Milos, and Ilyushin Eugene. 2021. Survey of multiarmed bandit algorithms applied to recommendation systems. International Journal of Open Information Technologies 9, 4 (2021), 12-27.",
+    "[raw_reference] Suat Gonul, Tuncay Namli, Sasja Huisman, Gokce Banu Laleci Erturkmen, Is- mail Hakki Toroslu, and Ahmet Cosar. 2018. An expandable approach for de- sign and personalization of digital, just-in-time adaptive interventions. Journal of the American Medical Informatics Association 26, 3 (2018), 198-210. https: //doi.org/10.1093/jamia/ocy160",
+    "[raw_reference] Nishan Gunawardena, Jeewani Anupama Ginige, and Bahman Javadi. 2022. Eye- tracking technologies in mobile devices Using edge computing: a systematic review. Comput. Surveys 55, 8 (2022), 1-33.",
+    "[raw_reference] David H. Gustafson, Fiona M. McTavish, Ming-Yuan Chih, Amy K. Atwood, Roberta A. Johnson, Michael G. Boyle, Michael S. Levy, Hilary Driscoll, Steven M. Chisholm, Lisa Dillenburg, Andrew Isham, and Dhavan Shah. 2014. A Smart- phone Application to Support Recovery From Alcoholism: A Randomized Clin- ical Trial. JAMA Psychiatry 71, 5 (05 2014), 566-572. https://doi.org/10.1001/ jamapsychiatry.2013.4642",
+    "[raw_reference] Vinay Kulkarni and Sreedhar Reddy. 2003. Separation of concerns in model- driven development. IEEE software 20, 5 (2003), 64-69.",
+    "[raw_reference] John LaRocco, Minh Dong Le, and Dong-Guk Paeng. 2020. A systemic review of available low-cost EEG headsets used for drowsiness detection. Frontiers in neuroinformatics (2020), 42.",
+    "[raw_reference] Jia Zheng Lim, James Mountstephens, and Jason Teo. 2020. Emotion recognition using eye-tracking: taxonomy, review and current challenges. Sensors 20, 8 (2020), 2384.",
+    "[raw_reference] Tyler Lu, David Pal, and Martin Pal. 2010. Contextual Multi-Armed Bandits. In Proceedings of the Thirteenth International Conference on Artificial Intelligence and Statistics (Proceedings of Machine Learning Research, Vol. 9), Yee Whye Teh and Mike Titterington (Eds.). PMLR, Chia Laguna Resort, Sardinia, Italy, 485-492. https://proceedings.mlr.press/v9/lu10a.html",
+    "[raw_reference] Muse. 2023. Featured research with Muse. https://choosemuse.com/pages/muse- research",
+    "[raw_reference] Inbal Nahum-Shani, Shawna N Smith, Bonnie J Spring, Linda M Collins, Katie Witkiewitz, Ambuj Tewari, and Susan A Murphy. 2017. Just-in-Time Adaptive Interventions (JITAIs) in Mobile Health: Key Components and Design Principles for Ongoing Health Behavior Support. Annals of Behavioral Medicine 52, 6 (2017), 446-462. https://doi.org/10.1007/s12160-016-9830-8",
+    "[raw_reference] Paola Pinti, Ilias Tachtsidis, Antonia Hamilton, Joy Hirsch, Clarisse Aichelburg, Sam Gilbert, and Paul W Burgess. 2020. The present and future use of functional near-infrared spectroscopy (fNIRS) for cognitive neuroscience. Annals of the New York Academy of Sciences 1464, 1 (2020), 5-29.",
+    "[raw_reference] Eugenia Politou, Efthimios Alepis, and Constantinos Patsakis. 2017. A survey on mobile affective computing. Computer Science Review 25 (2017), 79-100. https://doi.org/10.1016/j.cosrev.2017.07.002",
+    "[raw_reference] Mashfiqui Rabbi, Min Hane Aung, and Tanzeem Choudhury. 2017. Towards Health Recommendation Systems: An Approach for Providing Automated Personalized Health Feedback from Mobile Data. Springer International Publishing, 519-542. https://doi.org/10.1007/978-3-319-51394-2_26",
+    "[raw_reference] Appaji Rayi and Najib Murr. 2020. Electroencephalogram. https://www.ncbi. nlm.nih.gov/books/NBK563295/",
+    "[raw_reference] Darius A. Rohani, Andrea Quemada Lopategui, Nanna Tuxen, Maria Faurholt- Jepsen, Lars V. Kessing, and Jakob E. Bardram. 2020. MUBS: A Personalized Recommender System for Behavioral Activation in Mental Health. In Proceedings of the 2020 CHI Conference on Human Factors in Computing Systems (CHI '20). Association for Computing Machinery, New York, NY, USA, 1-13. https://doi. org/10.1145/3313831.3376879",
+    "[raw_reference] Philip Schmidt, Attila Reiss, Robert D\u00fcrichen, and Kristof Van Laerhoven. 2019. Wearable-Based Affect Recognition-A Review. Sensors 19, 19 (2019). https: //doi.org/10.3390/s19194079",
+    "[raw_reference] Randye J Semple and Christopher Willard. 2019. The Mindfulness Matters program for children and adolescents: Strategies, activities, and techniques for therapists and teachers. Guilford Publications.",
+    "[raw_reference] Katarzyna Stawarz, Chris Preist, and David Coyle. 2019. Use of Smartphone Apps, Social Media, and Web-Based Resources to Support Mental Health and Well- Being: Online Survey. JMIR Mental Health 6 (2019). https://api.semanticscholar. org/CorpusID:189995653",
+    "[raw_reference] Liyuan Wang and Lynn Carol Miller. 2020. Just-in-the-Moment Adaptive Inter- ventions (JITAI): A Meta-Analytical Review. Health Communication 35, 12 (2020), 1531-1544. https://doi.org/10.1080/10410236.2019.1652388",
+    "[raw_reference] Yi Wang, Jialiu Lin, Murali Annavaram, Quinn A Jacobson, Jason Hong, Bhaskar Krishnamachari, and Norman Sadeh. 2009. A framework of energy efficient mobile sensing for automatic user state recognition. In Proceedings of the 7th international conference on Mobile systems, applications, and services. 179-192.",
+    "[raw_reference] Yufeng Wang, Weidong Zhang, Jianhua Ma, and Qun Jin. 2023. ADCB: Adaptive Dynamic Clustering of Bandits for Online Recommendation System. Neural Processing Letters 55, 2 (2023), 1155-1172.",
+    "[raw_reference] Shenghao Xu. 2021. BanditMF: Multi-Armed Bandit Based Matrix Factorization Recommender System. ArXiv abs/2106.10898 (2021). https://api.semanticscholar. org/CorpusID:235490165",
+    "[raw_reference] Tongxin Zhou, Yingfei Wang, Lu (Lucy) Yan, and Yong Tan. 2023. Spoiled for choice? Personalized recommendation for healthcare decisions: A multiarmed bandit approach. Information Systems Research (2023). https://doi.org/10.1287/ isre.2022.1191"
+  ],
+  "editors": [
+    "Whye Teh",
+    "Mike Titterington"
+  ],
+  "processing_software": {
+    "GROBID": "0.8.2"
+  }
+}

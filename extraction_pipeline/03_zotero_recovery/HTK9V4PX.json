@@ -1,0 +1,884 @@
+{
+  "paper_id": "HTK9V4PX",
+  "title": "Using Bandit Algorithms to Maximize SARS-CoV-2 Case-Finding: Evaluation and Feasibility Study",
+  "abstract": "Background: The Flexible Adaptive Algorithmic Surveillance Testing (FAAST) program represents an innovative approach for improving the detection of new cases of infectious disease; it is deployed here to screen and diagnose SARS-CoV-2. With the advent of treatment for COVID-19, finding individuals infected with SARS-CoV-2 is an urgent clinical and public health priority. While these kinds of Bayesian search algorithms are used widely in other settings (eg, to find downed aircraft, in submarine recovery, and to aid in oil exploration), this is the first time that Bayesian adaptive approaches have been used for active disease surveillance in the field. Objective: This study's objective was to evaluate a Bayesian search algorithm to target hotspots of SARS-CoV-2 transmission in the community with the goal of detecting the most cases over time across multiple locations in Columbus, Ohio, from August to October 2021. \n Methods: The algorithm used to direct pop-up SARS-CoV-2 testing for this project is based on Thompson sampling, in which the aim is to maximize the average number of new cases of SARS-CoV-2 diagnosed among a set of testing locations based on sampling from prior probability distributions for each testing site. An academic-governmental partnership between",
+  "year": 2020,
+  "date": "2020-06",
+  "authors": [
+    {
+      "name": "Michael Rayo",
+      "affiliation": {
+        "organization": "Department of Integrated Systems Engineering",
+        "department": "Department of Integrated Systems Engineering",
+        "institution": "The Ohio State University",
+        "address": "Columbus, OH, United States"
+      }
+    },
+    {
+      "name": "Daria Faulkner",
+      "affiliation": {
+        "organization": "College of Public Health",
+        "department": "College of Public Health",
+        "institution": "The Ohio State University",
+        "address": "Columbus, OH, United States"
+      }
+    },
+    {
+      "name": "David Kline",
+      "affiliation": {
+        "organization": "Department of Biostatistics and Data Sciences",
+        "department": "Department of Biostatistics and Data Sciences",
+        "institution": "Wake Forest University School of Medicine",
+        "address": "Winston-Salem, NC, United States"
+      }
+    },
+    {
+      "name": "Thomas Thornhill Iv",
+      "affiliation": {
+        "organization": "Public Health Modeling Unit",
+        "department": "Public Health Modeling Unit",
+        "institution": "Yale School of Public Health",
+        "address": "New Haven, CT, United States"
+      }
+    },
+    {
+      "name": "Samuel Malloy",
+      "affiliation": {
+        "organization": "Battelle Center for Science",
+        "department": "Battelle Center for Science",
+        "institution": "The Ohio State University",
+        "address": "Columbus, OH, United States"
+      }
+    },
+    {
+      "name": "Dante Della Vella",
+      "affiliation": {
+        "organization": "Department of Integrated Systems Engineering",
+        "department": "Department of Integrated Systems Engineering",
+        "institution": "The Ohio State University",
+        "address": "Columbus, OH, United States"
+      }
+    },
+    {
+      "name": "Dane Morey",
+      "affiliation": {
+        "organization": "Department of Integrated Systems Engineering",
+        "department": "Department of Integrated Systems Engineering",
+        "institution": "The Ohio State University",
+        "address": "Columbus, OH, United States"
+      }
+    },
+    {
+      "name": "Net Zhang",
+      "affiliation": {
+        "organization": "Battelle Center for Science",
+        "department": "Battelle Center for Science",
+        "institution": "The Ohio State University",
+        "address": "Columbus, OH, United States"
+      }
+    },
+    {
+      "name": "Gregg Gonsalves",
+      "email": "gregg.gonsalves@yale.edu",
+      "affiliation": {
+        "organization": "Public Health Modeling Unit",
+        "department": "Public Health Modeling Unit",
+        "institution": "Yale School of Public Health",
+        "address": "New Haven, CT, United States"
+      }
+    },
+    {
+      "affiliation": {
+        "organization": "Department of the Epidemiology of Microbial Diseases Yale School of Public Health",
+        "department": "Department of the Epidemiology of Microbial Diseases Yale School of Public Health",
+        "institution": "Yale University",
+        "address": "350 George Street 3rd Floor New Haven, 06511, CT, United States"
+      }
+    },
+    {
+      "affiliation": {
+        "organization": "The Ohio State University",
+        "institution": "The Ohio State University"
+      }
+    }
+  ],
+  "doi": "10.2196/39754",
+  "md5": "01284B0DC6A6C6D5B8C121BBAAEB36DE",
+  "publication": {
+    "journal": "JMIR Public Health Surveill",
+    "journal_inferred": true
+  },
+  "keywords": [
+    "active surveillance",
+    "bandit algorithms",
+    "infectious disease",
+    "community health",
+    "reinforcement learning",
+    "COVID-19",
+    "SARS-CoV-2"
+  ],
+  "funding": [
+    "",
+    "",
+    "",
+    "Acknowledgments We thank  Mark Hamlin  and  Philip Ennen  ( Ohio Department of Health ) for providing rapid COVID-19 tests to support our operations;  Captain Rodshana Ulery  ( Ohio National Guard ) for providing clinical staff to administer COVID-19 testing; and  Shaunessy Everett  ( Columbus Metropolitan Library ) for support in organization of testing events at the library locations. We thank the  College of Public Health at Ohio State University  and the  Yale School of Public Health  for funding the pilot and  Ohio State University  students-volunteers  Amanda Bleichrodt ,  Sophia Padgett ,  Aaron Cochran ,  John Hansen ,  Mitali Dalwalla ,  Lauren Putz ,  Manar Taleb ,  Maria Krantz ,  Ryan Borne ,  Lily Liu ,  Samantha Malone , and  Jack Long- for their help with executing testing events."
+  ],
+  "sections": [
+    {
+      "title": "Introduction"
+    },
+    {
+      "title": "Background",
+      "text": "Columbus, Ohio-like much of the world during the first 3 years of the pandemic-experienced multiple waves of infections in which the number of SARS-CoV-2 infections overwhelmed and outstripped the capacity of efforts to detect new cases  [1, 2] . In fact, estimates suggest that even at the height of the Omicron surge, a significant number of infections went undetected by case-based surveillance systems and the rise of at-home testing  [3] . As the epidemic continues, particularly as public testing sites are scaled back and closed, the ability to quickly identify individuals with SARS-CoV-2 and link them to treatment has become difficult, risking patient and population health  [4, 5] . Given the integral role of active surveillance efforts in identifying cases, linking patients to care, and managing COVID-19, local public health departments require ways to maximize the resources they have at their disposal to continue to find new cases of disease in their jurisdictions even as resources for these efforts continue to shrink  [4, 6, 7] .\n\nHow to optimize resource allocation over time is a well-studied problem in sequential decision-making and reinforcement learning. The introduction of a spatial component to these kinds of dilemmas has been applied in a variety of settings, from military search and rescue to oil exploration  [8] . We have previously described the use of one set of tools, bandit algorithms, to address these kinds of problems for detection of HIV and SARS-CoV-2 in the community  [8] [9] [10] . Up until now, these methods have only been evaluated in computer simulations. The study described here represents the first-ever real-world implementation that investigates these tools for active infectious disease surveillance.\n\nAn academic-governmental partnership-the Flexible Adaptive Algorithmic Surveillance Testing (FAAST) program-between Yale University, Ohio State University (OSU), Wake Forest University (WFU), the Ohio Department of Health (ODH), the Ohio National Guard (ONG), and the Columbus Metropolitan Libraries (CML) conducted a study of bandit algorithms to maximize the detection of new cases in SARS-CoV-2 in Columbus in 2021. This initiative began as the Delta variant of SARS-CoV-2 established itself in Ohio in the summer of 2021, ending a period of decreasing case numbers in the state. From mid-August to mid-September, the daily case count rose from over 2000 to over 9000  [11] . Around the same time, the ODH started distributing home rapid antigen tests (RATs) for COVID-19 to allow people to monitor their own health status. These tests were provided to community-based organizations in Ohio, including over 246 library locations, which received more than 53,000 rapid tests in late summer 2021  [12] . While the high demand meant that these libraries quickly ran out of tests to distribute, the community's relationship and trust in libraries as a testing resource for COVID-19 enabled us to partner with the CML for this study  [13] . The strong uptake of RATs is consistent with evidence that voluntary use of these tests is high in settings where they have been widely distributed  [14] , but it is important to note that decisions to opt in to population-level voluntary testing programs appear to be influenced by factors such as socioeconomic status rather than infection risk alone  [15] . Thus, active surveillance has an important role in both prioritizing limited testing resources and in reaching individuals not seeking voluntary testing.\n\nWorking with our partners, we were able to offer an option to maximize the effectiveness of the scarce testing resources in Columbus by feeding our daily testing information into the bandit algorithm to target the next day's testing efforts. Our \"learn by doing\" method adaptively targeted locations in the CML system, with tests supplied by ODH and performed by ONG with student and faculty support from OSU, WFU, and Yale.\n\nAs the COVID-19 pandemic continues, we will further evaluate the tools in Columbus and the state of Ohio and elsewhere as opportunities arise. Given the flexibility of these methods, we can tailor them to identify new cases more efficiently in underserved communities, which may be at higher risk of transmission and serious clinical disease either due to undervaccination and the prevalence of underlying conditions or due to specific kinds of workplaces and high-risk settings (eg, skilled nursing facilities). Importantly, the potential utility of these tools is not limited to SARS-CoV-2. Evaluation of these tools for HIV, hepatitis C virus, and other sexually transmitted diseases is also being considered."
+    },
+    {
+      "title": "Goals of the Study",
+      "text": "The purpose of this study was to evaluate the use of bandit algorithms to maximize the yield of testing for SARS-CoV-2 across multiple community sites in Columbus, Ohio, over a 3-month period from August to October 2021.\n\nWe sought to understand (1) if an algorithm-guided site selection would be operationally feasible for the branches of the CML system and ONG, since locations could shift from day to day, requiring staff to be ready and prepared for quick deployment and setup of testing efforts; (2) if shifting locales would present difficulties for uptake of testing services by the community, given the fact that the announcement of testing locations would only occur a few days in advance; and (3) how algorithm-guided site selection impacted the recruitment of minority residents of underserved communities in terms of number of tests conducted at each event among key demographic groups, particularly African-Americans, in Columbus.\n\nIn general, we were interested in a better understanding of the operational performance of the algorithm-as a formal analysis of the effectiveness of this algorithm-guided site selection approach to active disease surveillance would require a large cluster-randomized trial. Specifically, we chose 2 a priori indicators that the algorithm was homing in on hotspots for detecting new cases. Our goal was to sustain a testing positivity rate that was greater than (1) the estimated prevalence of the surrounding community and (2) the positivity rates of other types of testing events in the same zip codes. It is important to clarify that we were not attempting to estimate local prevalence of disease or positivity rates in this study nor making inferences about the effectiveness of the algorithm in practice but using these 2 metrics as a guide as to its basic performance as we assessed its initial feasibility in this research. The algorithm is a sequential decision-making tool; in this case, it was designed to guide resource allocation decisions for SARS-CoV-2 testing efforts."
+    },
+    {
+      "title": "Methods"
+    },
+    {
+      "title": "Statistical Approach",
+      "text": "The algorithm used to direct pop-up SARS-CoV-2 testing for this project has been described in detail elsewhere  [8] [9] [10] . The algorithm is based on Thompson sampling, which uses a Bayesian updating process involving iteratively sampling from prior probability distributions of all potential testing sites-the set of all locations at which testing is being considered-to home in on those with the highest probability over the long run in finding new cases of SARS-CoV-2  [16, 17] . Multimedia Appendix 1 describes Thompson samplng in more detail. This approach is not being used to estimate the local prevalence or test positivity at each site in the community but to maximize success in finding new cases over time. This algorithm is not a sampling strategy in which we seek to learn about an underlying population parameter (eg, prevalence) but simply a process by which we can direct testing efforts most efficiently. In fact, the reason this algorithm is not designed to estimate local prevalence is because this metric, while related to testing yield, may be confounded by other factors at work in a given location. That is, while testing yield is indeed a function of prevalence in part, prevalence does not provide a one-to-one proxy for the number of tests obtainable at a given location. For instance, a given site may have a lower prevalence than another but be a place in which more new diagnoses are garnered for other reasons (eg, higher health-seeking behavior, fewer options for testing in other settings); thus, this algorithm is designed to maximize testing yields alone.\n\nTesting sites are determined a priori and serve as a fixed list of potential locations for deploying testing. Initial prior probability distributions for each site can be assigned to be noninformative (ie, uniform), reflecting a lack of information about where yield might be highest, or informative based on local knowledge of the pandemic, previous testing efforts, or social and economic characteristics of a given neighborhood. While informative priors can aid convergence on hotspots if the information is accurate, they can delay convergence if the information is incorrect, so one should use caution when specifying the initial prior distributions.\n\nFor this study, we chose to specify informative prior distributions for each site based primarily on results from previous feasibility testing events that we conducted at each site prior to use of the algorithm, with slight modifications to account for the current pandemic conditions. To estimate the baseline values for the parameters for our prior distributions for each potential testing site, we consulted with experts on the local epidemiological conditions and considered the prior testing event results, the reported rate of SARS-CoV-2 infections, and the vaccination rate in the neighborhoods surrounding each site. Taken together, this process yielded assumed \u03b2 distributions for the positivity rate at each site where the \u03b1 parameter represented the assumed number of positive tests and the \u03b2 parameter the assumed number of negative tests. The assumed positivity was \u03b1 / \u03b1 + \u03b2 and the total number of tests (ie, the sum of the \u03b1 and \u03b2 parameters). Details of the derived values for each site are shown in the Results section. While the true values of these parameters are unknown, we decided that given the short duration of our study period and the quality of the empirical and expert knowledge on these testing sites, estimating the values for these initial \u03b1 and \u03b2 parameters for each location was a reasonable choice.\n\nBefore assigning a location for a given day's testing efforts, the algorithm randomly samples from the probability distributions of all the potential testing sites. Then, the site which has the largest realized value from these random draws is selected for the day's testing deployment  [18] . The data on the number of tests at that day's site and the number of new diagnoses among them is then used to update the prior probability distribution for the site. The resulting posterior distribution after that day's testing then becomes the updated prior distribution for the next day's testing deployment. Before the next outing, a random draw from all the sites' updated probability distributions happens again. This process is then repeated so the algorithm updates with each subsequent testing deployment. The entire procedure is described in Figure  1 . The intuition here is that over time, using the knowledge accrued by each outing's successes or failures (positive and negative tests), the algorithm learns the expected yields at each site and refines the probability distributions used for the random draws. Though all sites will have a nonzero chance of being chosen, the Bayesian updating processes here will be drawn toward sites where successes are occurring in previous rounds of testing. What is important is that other sites can still be chosen by chance and offer the opportunity to keep gathering information on the entire landscape of testing sites, but through the algorithm, we will prioritize the ones with the current greatest yields. If a low-priority site gets picked by random draw and turns out to have a high yield of positive tests, that site's probability distribution now will shift its likelihood of being chosen in subsequent rounds. Based on this algorithm, a web app was created for this project  [19] . The underlying code is also available  [20] . The app requires data input from each location where a testing event took place. Based on the information received, the tool then suggests testing locations likely to yield the most undetected positive cases per test for the next event. Views of the app's regional and location pages are presented in Figures  2  and  3 , respectively. Figure  2  shows a map of Columbus with pinned testing locations. After each testing event, data from the outing were entered into the algorithm in Figure  3  (eg, date and time, the total number of tests conducted, and number of positives). The app then integrates this data into the bandit algorithm, which delivers a new testing location for the next outing. Given conjugacy of the underlying Bayesian model, the computational cost of this process is minimal, as it only requires the ability to generate random draws from a beta distribution."
+    },
+    {
+      "title": "Program Design and Implementation Overview",
+      "text": "The logic model for program design and implementation is shown in Textbox 1. The logic model depicts the program events and expected outcomes through the integration of resources, the execution of activities, and the participation of communities and community organizations, resulting in measurable near-term and long-term outcomes. The inputs include program partners and the resources they provided to the project. The activities represent the main programmatic tasks accomplished with the participation of those tested in underserved communities in Columbus and with the assistance of local community-based organizations. The achievements of the program are denoted in short-term, measurable outcomes and benefits to participants and the larger community, as well as long-term, large-scale outcomes and benefits for the city and beyond.\n\nThe project team established partnerships with ODH, ONG, the CML system, and the Columbus Department of Neighborhoods (CDN). ODH supported the project by providing BinaxNOW RATs (Abbott), while ONG became a clinical partner who deployed their clinical staff to the sites to conduct testing. The neighborhood liaisons from CDN consulted the team regarding the initial location selection and promoted testing events in their designated areas of oversight. Finally, CML provided 7 of their branch locations as sites for pop-up testing and promoted the testing events through the CML network.\n\nThe study lasted 3 months, from August to October 2021. The duration of each testing event was about 4 hours each day. We conducted a total of 16 testing events at 13 zip codes. Figure  4  shows dates of testing events, tests conducted, number of positive SARS-CoV-2 diagnoses, and the site positivity rate. Multimedia Appendix 2, Table  S1  contains information about the sites and the zip codes where they were located."
+    },
+    {
+      "title": "XSL \u2022 FO",
+      "text": "RenderX Textbox 1. Logic model for the program and its implementation. Inputs \u2022 Resources \u2022 Research and statistical design \u2022 Funding \u2022 Staffing \u2022 Mobile van \u2022 Logistics \u2022 Testing sites \u2022 Rapid tests \u2022 Personal protective equipment \u2022 Clinical support \u2022 Partners \u2022 Ohio State University \u2022 Yale University \u2022 Wake Forest University \u2022 Columbus Metropolitan Libraries \u2022 Ohio Department of Health \u2022 Ohio National Guard Processes \u2022 Activities \u2022 Build the application \u2022 Conduct pop-up COVID-19 testing events \u2022 Distribute COVID-19 home test kits \u2022 Disseminate information about COVID-19 \u2022 Participants \u2022 Target population: underserved communities in Columbus \u2022 Community organizations (eg libraries, parks, and recreation centers) Outcomes \u2022 Near-term \u2022 Consistent detection of undiagnosed cases with the positivity rate being close to the state's rate \u2022 Increased community access to COVID-19 rapid home tests \u2022 Increased community awareness about COVID-19 testing opportunities \u2022 Long-term \u2022 Convenient and effective testing in low-opportunity areas in Columbus, Ohio \u2022 Prevention of transmission of COVID-19 in Columbus \u2022 Use of bandit approach in other infectious disease surveillance efforts The initial choice of testing sites was derived from a set of highly trafficked candidate locations based on raw cellphone data from the UberMedia COVID-19 recovery data set spatially joined with Loveland Landgrid parcel data to produce indices of contacts and unique contacts per parcel ranked by volume  [21, 22] . From this list, 30 of the most highly trafficked locations from the data set were selected for further analysis. A team of volunteers from OSU then visited each location to assess the viability of each site in terms of the availability of the venue (whether it was private or public, its accessibility, its hours of operation, and the availability of onsite parking). The final step of the selection process was a discussion of each site with the neighborhood liaisons from the CDN, who shared their insights about the proposed locations and the potential for attracting participants to come forward for testing at each site.\n\nEach testing event required the deployment of 2 volunteers from OSU and 2 ONG staff members. At the start of the study, events took place 2 to 3 times a week at community centers, movie theaters, parks, community events, shelters for the homeless, and libraries. These early weeks were dedicated to exploring the viability of the sites, constructing prior probability distributions for the algorithm for each site, and establishing an efficient operational workflow. In the last 2 weeks of the study, we deployed the bandit algorithm to choose sites for testing, restricting our sites to the branches of the CML, which turned out to be the most suitable sites for SARS-CoV-2 testing in the previous weeks. In these last weeks, the algorithm chose to send the team to sites 2, 4, 5, and 7, in that order, from September 16 to October 2, 2021 (site attributes can be found in Table  1 ). CML became an active partner in these efforts, promoting the testing events throughout their system with posters announcing the upcoming testing events distributed among the libraries in English, French, and Spanish. Figure  5  shows the location of the CML branches and underlying demographic information about these zip codes. Testing efforts were focused on reaching underserved communities through strategic selection of potential sites; however, testing was open to everyone. To invite undocumented immigrants to be tested as well, participants were not required to present identification documents. Results of the tests were entered in SimpleReport-a free tool built by the US Centers for Disease Control and Prevention that makes it easy for COVID-19 testing sites to record results for rapid point-of-care tests and quickly report required data to public health departments  [23] ."
+    },
+    {
+      "title": "Ethical Considerations",
+      "text": "The Office of Responsible Research Practices and the institutional review board at the Ohio State University deemed this project (2021E0496) exempt and not subject to regulations requiring institutional review board review and approval."
+    },
+    {
+      "title": "Results",
+      "text": "We set a baseline goal of testing approximately 20 people at each event through consultation with other institutions that have deployed mobile pop-up testing sites (eg, New York City Health and Hospitals Corporation, University of Cincinnati Medical Center). Of 16 testing events conducted, 10 testing events met the baseline goal of testing over 20 participants. The total number of people tested over the course of the study was 405 (the mean number of tests conducted at each event was 25.3), producing 20 positive tests. This gave us an average positivity rate of 4.9% across all sites, with the highest being 9.5%. The positivity rates observed at our testing sites were comparable to or greater than the officially documented positivity rates in those same areas in central Ohio on the days of our testing events  [24] [25] [26] . In particular, the proportion of symptomatic positive tests in our study exceeded those obtained from other providers in the state, which prioritized symptomatic individuals for diagnosis  [27] . The rolling 2-week average positivity rate for all tests conducted in our study ranged from 2.9% (3/105) to 6.5% (9/138); for asymptomatic individuals, positivity ranged from 0% to 5% (3/57); and for symptomatic individuals, the range was from 0% to 21.4% (3/14). In each week of testing, and in each rolling 2-week period, the positivity of symptomatic testing was greater than the daily rate range of the surrounding county. In the final 2 weeks, when the bandit algorithm was used to select testing event sites, the average positivity rate for symptomatic testing was 17.4 (4/23)%, which nearly doubled the highest recorded daily positivity rate in Franklin county at that time (Table  1 )  [24] [25] [26] . Details are shown in Table  2 .\n\nUnderrepresented communities were reached at testing events at rates higher than or near their proportion of the population in the zip codes we tested in. The percentage of Black or African American people tested was larger than the corresponding percentage of African Americans in 3 of 5 zip codes in which our testing sites were located  [28] . Details are shown in Table  3 . Throughout the study, 55% (156/284) of the population tested identified themselves as African American, and 36% (103/284) self-identified as White. Almost half of the population tested (105/227, 46%) stated their level of education was high school or below, and 47% (106/225) stated they worked full-time. Data about vaccination status against COVID-19 was collected as well: 56% (126/224) were vaccinated, compared to the vaccination rate in Franklin County of 54%  [29] .\n\nOur survey results indicate that 27% (41/153) of those who attended our testing events found out about the testing event from others, 22% (34/153) by communicating with the library, and 29% (45/153) by walking or driving by."
+    },
+    {
+      "title": "Discussion"
+    },
+    {
+      "title": "Principal Findings",
+      "text": "This study demonstrated that a pop-up testing strategy using a bandit algorithm can be feasibly deployed in an urban setting during a pandemic. Although this was a limited roll-out of the strategy, positivity rates in this feasibility study were comparable or greater to those obtained by other testing initiatives primarily targeted at symptomatic individuals at the same time in these same areas of central Ohio on the days of our testing events, even though the bulk of those tested at our sites were asymptomatic, providing encouraging, though only preliminary, evidence that this bandit algorithm may be useful in improving case detection efforts  [24] [25] [26] . It is the first real-world use of these kinds of algorithms for disease surveillance and represents the first step in evaluating the effectiveness of their use in maximizing the detection of undiagnosed cases of SARS-CoV-2 and other infections, such as HIV. In addition, the study showed that a simple, scaled-down testing approach with a total budget of under US $10,000 could carry out a program that could test up to 60 people in a single 4-hour event during its 3-month run. This shows that a flexible, adaptive approach to SARS-CoV-2 surveillance can be run efficiently with support for basic supplies (eg, tents, chairs, tables), and partnerships with organizations who could supply the tests (ODH) and carry them out (ONG)  [30] . The program's ability to reach underserved communities is especially notable for several reasons. The quick-pivot nature of the program required that we give communities very little notice of upcoming events, potentially taxing their ability to hear about and be able to travel to locations to participate. Accessibility and transportation are barriers to health services in some of these communities  [31, 32] . In addition, there have been nationwide and state-wide trends of COVID-19 resources being allocated inequitably toward wealthier, predominantly White communities  [33] . This is particularly troubling as both general determinants of health as well as the specific impact of COVID-19 make communities of color and other underserved communities more vulnerable to COVID-19 infection and the morbidity and mortality associated with the disease  [34, 35] .\n\nLibraries are important resources for communities in the context of population health  [36, 37] . A novel discovery during the study was the importance of the CML system in our active disease surveillance efforts. We learned that the CML is known and trusted by the communities of the city as a source of information and a site for social services. Subsequent studies in Columbus will now be done in partnership with the CML, as it excels at community outreach, has a network of facilities strategically placed in targeted neighborhoods, communicates well within its network, and is eager to work with public health partners. Our testing partner, ONG, was suitable for this study, but because of other commitments, we could not deploy the algorithm on less than 3 days' notice with them, and we are seeking out partners (a local federally-qualified health center) for the next phase of this work that have greater flexibility and can be available on short notice. While a major strength of our approach is its ability to deploy testing teams to locations based on emerging data in real time, it requires an operational nimbleness from partners, which may not be possible for some.\n\nThis study uses a novel approach to implementation science in that it addresses feasibility and acceptability of a new strategy for active surveillance of infectious diseases as a precursor to additional evaluation of the effectiveness of these algorithms in the field. Randomized controlled trials (RCTs) are expensive to mount and time consuming for both researchers and participants-this kind of preliminary research on implementation challenges is critical to understand the contextual factors that might present difficulties for the conduct of RCTs or real-world use of the intervention under study  [38] ."
+    },
+    {
+      "title": "Limitations",
+      "text": "This study has a number of limitations. First, it was conducted over a comparatively short period of time at a specific point of increasing concern in the pandemic. As such, the engagement of the community and the effectiveness of the algorithm must be set within that context. In addition, this study was only conducted in one midsized Midwestern city and may not be generalizable to other settings."
+    },
+    {
+      "title": "Conclusions",
+      "text": "Through the implementation of a bandit algorithm in this study, we demonstrated the feasibility of such approaches to guide community testing for SARS-CoV-2. In addition, we established an efficient workflow and operational plan that can be extended to other organizations conducting mobile testing. In particular, we were pleased that the program appears to be well-suited to reach historically underserved communities in Columbus. As the COVID-19 pandemic persists in the United States, using our approach not only for active surveillance but as a core component of \"test-to-treat\" or \"test-to-vaccinate\" efforts targeted at the communities most at risk of the disease should be considered as well  [39, 40] . Finally, this algorithmic approach is pathogen-agnostic-it can be used for other infectious disease efforts. It was initially developed for maximizing the yield of undiagnosed HIV infections but could be used similarly for other infections to maximize case detection in the community (eg, for sexually transmitted diseases) or as an adjunct to other efforts, beginning with case identification (eg, test-to-treat for SARS-COV-2, HIV, hepatitis C virus, and sexually transmitted infections). The important next step is to evaluate the effectiveness of this algorithm in its ability to maximize the number of cases of disease detected in comparison to standard operating procedures for such deployment by public health practitioners. As an interim step, we have established a new partnership with a public health department in one of the largest US cities and will be evaluating the performance of Thompson sampling using historical data provided by it to compare how yields of testing using this algorithm would have differed from the actual number of positive tests collected for SARS-CoV-2 over the past 3 years with their fleet of mobile health vans. Depending on the outcome of this analysis, we will pursue funding for a prospective study of our approach in the context of a cluster randomized trial."
+    },
+    {
+      "text": "Figure 1. Steps in the implementation of the Thompson sampling algorithm."
+    },
+    {
+      "text": "Figure 2. Regional map page of the web app for targeting SARS-CoV-2 testing with mobile units."
+    },
+    {
+      "text": "Figure 3. Locations page of the web app for targeting SARS-CoV-2 testing with mobile units."
+    },
+    {
+      "text": "Figure 4. Positivity rate (black bars) and tests conducted (grey lines) for each testing session. The letter A is used to indicate testing at a library location. Starting on September 14, 2021, all testing locations were chosen by the algorithm."
+    },
+    {
+      "text": "Figure 5. Location and zip codes of final testing sites with percentage of Black or African American residents."
+    },
+    {
+      "text": "Time period when bandit algorithm was used to select testing event sites.b Absolute numbers were not available for county daily rate."
+    },
+    {
+      "text": "Parameters for the assumed prior probability distributions for each testing site."
+    },
+    {
+      "text": "Study positivity rates compared to tests conducted by other providers in Franklin County, Ohio."
+    },
+    {
+      "text": "Study representation of Black or African American people by zip code."
+    },
+    {
+      "title": "Acknowledgments",
+      "text": "We thank  Mark Hamlin  and  Philip Ennen  ( Ohio Department of Health ) for providing rapid COVID-19 tests to support our operations;  Captain Rodshana Ulery  ( Ohio National Guard ) for providing clinical staff to administer COVID-19 testing; and  Shaunessy Everett  ( Columbus Metropolitan Library ) for support in organization of testing events at the library locations. We thank the  College of Public Health at Ohio State University  and the  Yale School of Public Health  for funding the pilot and  Ohio State University  students-volunteers  Amanda Bleichrodt ,  Sophia Padgett ,  Aaron Cochran ,  John Hansen ,  Mitali Dalwalla ,  Lauren Putz ,  Manar Taleb ,  Maria Krantz ,  Ryan Borne ,  Lily Liu ,  Samantha Malone , and  Jack Long- for their help with executing testing events."
+    },
+    {
+      "title": "Data Availability",
+      "text": "All data generated or analyzed during this study are included in this published article and its supplementary information files."
+    },
+    {
+      "title": "Conflicts of Interest",
+      "text": "None declared."
+    },
+    {
+      "title": "Multimedia Appendix 1"
+    }
+  ],
+  "references": [
+    {
+      "title": "The COVID-19 testing debacle",
+      "year": 2020,
+      "doi": "10.1038/s41587-020-0575-3",
+      "journal": "Nat Biotechnol",
+      "volume": "38",
+      "issue": "6",
+      "pages": "653",
+      "raw": "The COVID-19 testing debacle \n\t\t 10.1038/s41587-020-0575-3 \n\t\t Medline: 32493981 \n\t \n\t \n\t\t Nat Biotechnol \n\t\t \n\t\t\t 38 \n\t\t\t 6 \n\t\t\t 653 \n\t\t\t 2020 Jun \n\t\t \n\t \n\t The COVID-19 testing debacle. Nat Biotechnol 2020 Jun;38(6):653 [doi: 10.1038/s41587-020-0575-3] [Medline: 32493981]"
+    },
+    {
+      "title": "Next testing debacle: The fall virus surge",
+      "authors": [
+        "D Lim",
+        "A Ollstein"
+      ],
+      "year": 2020,
+      "doi": "10.2514/6.2020-3800.vid",
+      "journal": "Politico",
+      "raw": "Next testing debacle: The fall virus surge \n\t\t \n\t\t\t D Lim \n\t\t \n\t\t \n\t\t\t A Ollstein \n\t\t \n\t\t 10.2514/6.2020-3800.vid \n\t\t \n\t \n\t \n\t\t Politico \n\t\t \n\t\t\t 2020 Jun 17. 2022-06-20 \n\t\t \n\t \n\t Lim D, Ollstein A. Next testing debacle: The fall virus surge. Politico. 2020 Jun 17. URL: https://www.politico.com/news/ 2020/06/17/coronavirus-testing-fall-surge-327017 [accessed 2022-06-20]"
+    },
+    {
+      "title": "The importance of incorporating at-home testing into SARS-CoV-2 point prevalence estimates: findings from aa US national cohort, February 2022",
+      "authors": [
+        "S Qasmieh",
+        "M Robertson",
+        "M Rane",
+        "Y Shen",
+        "R Zimba",
+        "C Picchio"
+      ],
+      "year": 2022,
+      "doi": "10.2196/38196",
+      "journal": "JMIR Public Health Surveill",
+      "volume": "8",
+      "issue": "12",
+      "pages": "38196",
+      "raw": "The importance of incorporating at-home testing into SARS-CoV-2 point prevalence estimates: findings from aa US national cohort, February 2022 \n\t\t \n\t\t\t S A Qasmieh \n\t\t \n\t\t \n\t\t\t M M Robertson \n\t\t \n\t\t \n\t\t\t M S Rane \n\t\t \n\t\t \n\t\t\t Y Shen \n\t\t \n\t\t \n\t\t\t R Zimba \n\t\t \n\t\t \n\t\t\t C A Picchio \n\t\t \n\t\t 10.2196/38196 \n\t\t Medline: 36240020 \n\t \n\t \n\t\t JMIR Public Health Surveill \n\t\t \n\t\t\t 8 \n\t\t\t 12 \n\t\t\t 38196 \n\t\t\t 2022 Dec 27 \n\t\t \n\t \n\t FREE Full text \n\t Qasmieh SA, Robertson MM, Rane MS, Shen Y, Zimba R, Picchio CA, et al. The importance of incorporating at-home testing into SARS-CoV-2 point prevalence estimates: findings from aa US national cohort, February 2022. JMIR Public Health Surveill 2022 Dec 27;8(12):e38196 [FREE Full text] [doi: 10.2196/38196] [Medline: 36240020]"
+    },
+    {
+      "title": "States close mass test and vaccine sites, but virus may swell anew",
+      "authors": [
+        "J Bosman",
+        "S Kasakove"
+      ],
+      "year": 2022,
+      "journal": "New York Times",
+      "raw": "States close mass test and vaccine sites, but virus may swell anew \n\t\t \n\t\t\t J Bosman \n\t\t \n\t\t \n\t\t\t S Kasakove \n\t\t \n\t\t \n\t \n\t \n\t\t New York Times \n\t\t \n\t\t\t 2022 Mar 30. 2023-07-05 \n\t\t \n\t \n\t Bosman J, Kasakove S. States close mass test and vaccine sites, but virus may swell anew. New York Times. 2022 Mar 30. URL: https://www.nytimes.com/2022/03/30/us/covid-vaccine-testing-states.html [accessed 2023-07-05]"
+    },
+    {
+      "title": "COVID-19 therapeutics for nonhospitalized patients",
+      "authors": [
+        "R Gandhi",
+        "P Malani",
+        "Del Rio"
+      ],
+      "year": 2022,
+      "doi": "10.1001/jama.2022.0335",
+      "journal": "JAMA",
+      "volume": "327",
+      "issue": "7",
+      "raw": "COVID-19 therapeutics for nonhospitalized patients \n\t\t \n\t\t\t R T Gandhi \n\t\t \n\t\t \n\t\t\t P N Malani \n\t\t \n\t\t \n\t\t\t Del Rio \n\t\t \n\t\t \n\t\t\t C \n\t\t \n\t\t 10.1001/jama.2022.0335 \n\t\t Medline: 35029659 \n\t \n\t \n\t\t JAMA \n\t\t \n\t\t\t 327 \n\t\t\t 7 \n\t\t\t \n\t\t\t 2022 Feb 15 \n\t\t \n\t \n\t Gandhi RT, Malani PN, Del Rio C. COVID-19 therapeutics for nonhospitalized patients. JAMA 2022 Feb 15;327(7):617-618 [doi: 10.1001/jama.2022.0335] [Medline: 35029659]"
+    },
+    {
+      "title": "Implications of the lapse in federal Covid-19 funding on access to Covid-19 testing, treatment, and vaccines",
+      "authors": [
+        "J Tolbert",
+        "S Artiga"
+      ],
+      "year": 2022,
+      "journal": "KFF",
+      "raw": "Implications of the lapse in federal Covid-19 funding on access to Covid-19 testing, treatment, and vaccines \n\t\t \n\t\t\t J Tolbert \n\t\t \n\t\t \n\t\t\t S Artiga \n\t\t \n\t\t \n\t \n\t \n\t\t KFF \n\t\t \n\t\t\t 2022 Mar 28. 2023-07-05 \n\t\t \n\t \n\t Tolbert J, Artiga S. Implications of the lapse in federal Covid-19 funding on access to Covid-19 testing, treatment, and vaccines. KFF. 2022 Mar 28. URL: https://www.kff.org/coronavirus-covid-19/issue-brief/ implications-of-the-lapse-in-federal-covid-19-funding-on-access-to-covid-19-testing-treatment-and-vaccines/ [accessed 2023-07-05]"
+    },
+    {
+      "title": "Epidemiologic surveillance for controlling Covid-19 pandemic: types, challenges and implications",
+      "authors": [
+        "N Ibrahim"
+      ],
+      "year": 2020,
+      "doi": "10.1016/j.jiph.2020.07.019",
+      "journal": "J Infect Public Health",
+      "volume": "13",
+      "issue": "11",
+      "raw": "Epidemiologic surveillance for controlling Covid-19 pandemic: types, challenges and implications \n\t\t \n\t\t\t N K Ibrahim \n\t\t \n\t\t 10.1016/j.jiph.2020.07.019 \n\t\t Medline: 32855090 \n\t \n\t \n\t\t J Infect Public Health \n\t\t \n\t\t\t 13 \n\t\t\t 11 \n\t\t\t \n\t\t\t 2020 Nov \n\t\t \n\t \n\t FREE Full text \n\t Ibrahim NK. Epidemiologic surveillance for controlling Covid-19 pandemic: types, challenges and implications. J Infect Public Health 2020 Nov;13(11):1630-1638 [FREE Full text] [doi: 10.1016/j.jiph.2020.07.019] [Medline: 32855090]"
+    },
+    {
+      "title": "Maximizing the efficiency of active case finding for SARS-CoV-2 using bandit algorithms",
+      "authors": [
+        "G Gonsalves",
+        "J Copple",
+        "A Paltiel",
+        "E Fenichel",
+        "J Bayham",
+        "M Abraham"
+      ],
+      "year": 2021,
+      "doi": "10.1177/0272989x211021603",
+      "journal": "Med Decis Making",
+      "volume": "41",
+      "issue": "8",
+      "raw": "Maximizing the efficiency of active case finding for SARS-CoV-2 using bandit algorithms \n\t\t \n\t\t\t G S Gonsalves \n\t\t \n\t\t \n\t\t\t J T Copple \n\t\t \n\t\t \n\t\t\t A D Paltiel \n\t\t \n\t\t \n\t\t\t E P Fenichel \n\t\t \n\t\t \n\t\t\t J Bayham \n\t\t \n\t\t \n\t\t\t M Abraham \n\t\t \n\t\t 10.1177/0272989x211021603 \n\t\t Medline: 34120510 \n\t \n\t \n\t\t Med Decis Making \n\t\t \n\t\t\t 41 \n\t\t\t 8 \n\t\t\t \n\t\t\t 2021 Nov \n\t\t \n\t \n\t FREE Full text \n\t Gonsalves GS, Copple JT, Paltiel AD, Fenichel EP, Bayham J, Abraham M, et al. Maximizing the efficiency of active case finding for SARS-CoV-2 using bandit algorithms. Med Decis Making 2021 Nov;41(8):970-977 [FREE Full text] [doi: 10.1177/0272989X211021603] [Medline: 34120510]"
+    },
+    {
+      "title": "Bayesian adaptive algorithms for locating HIV mobile testing services",
+      "authors": [
+        "G Gonsalves",
+        "J Copple",
+        "T Johnson",
+        "A Paltiel",
+        "J Warren"
+      ],
+      "year": 2018,
+      "doi": "10.1186/s12916-018-1129-0",
+      "journal": "BMC Med",
+      "volume": "16",
+      "issue": "1",
+      "pages": "155",
+      "raw": "Bayesian adaptive algorithms for locating HIV mobile testing services \n\t\t \n\t\t\t G Gonsalves \n\t\t \n\t\t \n\t\t\t J Copple \n\t\t \n\t\t \n\t\t\t T Johnson \n\t\t \n\t\t \n\t\t\t A Paltiel \n\t\t \n\t\t \n\t\t\t J Warren \n\t\t \n\t\t 10.1186/s12916-018-1129-0 \n\t\t Medline: 30173667 \n\t \n\t \n\t\t BMC Med \n\t\t \n\t\t\t 16 \n\t\t\t 1 \n\t\t\t 155 \n\t\t\t 2018 Sep 03 \n\t\t \n\t \n\t FREE Full text \n\t Gonsalves G, Copple J, Johnson T, Paltiel A, Warren J. Bayesian adaptive algorithms for locating HIV mobile testing services. BMC Med 2018 Sep 03;16(1):155 [FREE Full text] [doi: 10.1186/s12916-018-1129-0] [Medline: 30173667]"
+    },
+    {
+      "title": "An adaptive approach to locating mobile HIV testing services",
+      "authors": [
+        "G Gonsalves",
+        "F Crawford",
+        "P Cleary",
+        "E Kaplan",
+        "A Paltiel"
+      ],
+      "year": 2018,
+      "doi": "10.1177/0272989x17716431",
+      "journal": "Med Decis Making",
+      "volume": "38",
+      "issue": "2",
+      "raw": "An adaptive approach to locating mobile HIV testing services \n\t\t \n\t\t\t G S Gonsalves \n\t\t \n\t\t \n\t\t\t F W Crawford \n\t\t \n\t\t \n\t\t\t P D Cleary \n\t\t \n\t\t \n\t\t\t E H Kaplan \n\t\t \n\t\t \n\t\t\t A D Paltiel \n\t\t \n\t\t 10.1177/0272989x17716431 \n\t\t Medline: 28699382 \n\t \n\t \n\t\t Med Decis Making \n\t\t \n\t\t\t 38 \n\t\t\t 2 \n\t\t\t \n\t\t\t 2018 Feb \n\t\t \n\t \n\t FREE Full text \n\t Gonsalves GS, Crawford FW, Cleary PD, Kaplan EH, Paltiel AD. An adaptive approach to locating mobile HIV testing services. Med Decis Making 2018 Feb;38(2):262-272 [FREE Full text] [doi: 10.1177/0272989X17716431] [Medline: 28699382]"
+    },
+    {
+      "title": "COVID-19 summer surge may have hit highest point, but will numbers continue to drop in the fall? Advance Local",
+      "authors": [
+        "J Washington",
+        "H Drown"
+      ],
+      "year": 2021,
+      "raw": "COVID-19 summer surge may have hit highest point, but will numbers continue to drop in the fall? Advance Local \n\t\t \n\t\t\t J Washington \n\t\t \n\t\t \n\t\t\t H Drown \n\t\t \n\t\t \n\t\t \n\t\t\t 2021 Jun 21. 2022-06-20 \n\t\t \n\t \n\t Washington J, Drown H. COVID-19 summer surge may have hit highest point, but will numbers continue to drop in the fall? Advance Local. 2021 Jun 21. URL: https://www.cleveland.com/coronavirus/2021/09/ covid-19-summer-surge-may-have-hit-highest-point-but-will-numbers-continue-to-drop-in-the-fall.html [accessed 2022-06-20]"
+    },
+    {
+      "title": "Free rapid at-home COVID-19 tests available for Ohioans",
+      "year": 2021,
+      "doi": "10.13107/jocr.2024.v14.i05.4418",
+      "raw": "Free rapid at-home COVID-19 tests available for Ohioans \n\t\t 10.13107/jocr.2024.v14.i05.4418 \n\t\t \n\t\t \n\t\t\t 2021 Sep 7. 2022-06-20 \n\t\t\t Ohio Department of Health \n\t\t \n\t \n\t Free rapid at-home COVID-19 tests available for Ohioans. Ohio Department of Health. 2021 Sep 7. URL: https://odh. ohio.gov/media-center/odh-news-releases/odh-news-release-09-07-21 [accessed 2022-06-20]"
+    },
+    {
+      "title": "Greater Columbus libraries run out of COVID-19 test kits as demand increases",
+      "authors": [
+        "M Walker",
+        "K Gordon",
+        "M Henry"
+      ],
+      "year": 2021,
+      "journal": "Columbus Dispatch",
+      "raw": "Greater Columbus libraries run out of COVID-19 test kits as demand increases \n\t\t \n\t\t\t M Walker \n\t\t \n\t\t \n\t\t\t K Gordon \n\t\t \n\t\t \n\t\t\t M Henry \n\t\t \n\t\t \n\t \n\t \n\t\t Columbus Dispatch \n\t\t \n\t\t\t 2021 Sep 11. 2022-06-20 \n\t\t \n\t \n\t Walker M, Gordon K, Henry M. Greater Columbus libraries run out of COVID-19 test kits as demand increases. Columbus Dispatch. 2021 Sep 11. URL: https://www.dispatch.com/story/news/2021/09/11/ covid-19-test-kits-columbus-libraries-demand-increases/8273918002/ [accessed 2022-06-20]"
+    },
+    {
+      "title": "Mass screening of SARS-CoV-2 with rapid antigen tests in a receding Omicron wave: population-based survey for epidemiologic evaluation",
+      "authors": [
+        "T Kwan",
+        "N Wong",
+        "C Chan",
+        "E Yeoh",
+        "S Wong",
+        "S Lee"
+      ],
+      "year": 2022,
+      "doi": "10.2196/40175",
+      "journal": "JMIR Public Health Surveill",
+      "volume": "8",
+      "issue": "11",
+      "pages": "40175",
+      "raw": "Mass screening of SARS-CoV-2 with rapid antigen tests in a receding Omicron wave: population-based survey for epidemiologic evaluation \n\t\t \n\t\t\t T H Kwan \n\t\t \n\t\t \n\t\t\t N S Wong \n\t\t \n\t\t \n\t\t\t C P Chan \n\t\t \n\t\t \n\t\t\t E K Yeoh \n\t\t \n\t\t \n\t\t\t S Y Wong \n\t\t \n\t\t \n\t\t\t S S Lee \n\t\t \n\t\t 10.2196/40175 \n\t\t Medline: 36240027 \n\t \n\t \n\t\t JMIR Public Health Surveill \n\t\t \n\t\t\t 8 \n\t\t\t 11 \n\t\t\t 40175 \n\t\t\t 2022 Nov 09 \n\t\t \n\t \n\t FREE Full text \n\t Kwan TH, Wong NS, Chan CP, Yeoh EK, Wong SY, Lee SS. Mass screening of SARS-CoV-2 with rapid antigen tests in a receding Omicron wave: population-based survey for epidemiologic evaluation. JMIR Public Health Surveill 2022 Nov 09;8(11):e40175 [FREE Full text] [doi: 10.2196/40175] [Medline: 36240027]"
+    },
+    {
+      "title": "Communities and testing for COVID-19",
+      "authors": [
+        "S Stillman",
+        "M Tonin"
+      ],
+      "year": 2022,
+      "doi": "10.1007/s10198-021-01385-y",
+      "journal": "Eur J Health Econ",
+      "volume": "23",
+      "issue": "4",
+      "raw": "Communities and testing for COVID-19 \n\t\t \n\t\t\t S Stillman \n\t\t \n\t\t \n\t\t\t M Tonin \n\t\t \n\t\t 10.1007/s10198-021-01385-y \n\t\t Medline: 35169950 \n\t \n\t \n\t\t Eur J Health Econ \n\t\t \n\t\t\t 23 \n\t\t\t 4 \n\t\t\t \n\t\t\t 2022 Jun \n\t\t \n\t \n\t FREE Full text \n\t Stillman S, Tonin M. Communities and testing for COVID-19. Eur J Health Econ 2022 Jun;23(4):617-625 [FREE Full text] [doi: 10.1007/s10198-021-01385-y] [Medline: 35169950]"
+    },
+    {
+      "title": "Multi-armed bandit experiments in the online service economy",
+      "authors": [
+        "S Scott"
+      ],
+      "year": 2015,
+      "doi": "10.1002/asmb.2104",
+      "journal": "Appl Stochastic Models Bus Ind",
+      "volume": "31",
+      "issue": "1",
+      "raw": "Multi-armed bandit experiments in the online service economy \n\t\t \n\t\t\t S L Scott \n\t\t \n\t\t 10.1002/asmb.2104 \n\t \n\t \n\t\t Appl Stochastic Models Bus Ind \n\t\t \n\t\t\t 31 \n\t\t\t 1 \n\t\t\t \n\t\t\t 2015 Jan 16 \n\t\t \n\t \n\t Scott SL. Multi-armed bandit experiments in the online service economy. Appl Stochastic Models Bus Ind 2015 Jan 16;31(1):37-45 [doi: 10.1002/asmb.2104]"
+    },
+    {
+      "title": "On the likelihood that one unknown probability exceeds another in view of the evidence of two samples",
+      "authors": [
+        "W Thompson"
+      ],
+      "year": 1933,
+      "doi": "10.1093/biomet/25.3-4.285",
+      "journal": "Biometrika",
+      "volume": "25",
+      "issue": "3-4",
+      "raw": "On the likelihood that one unknown probability exceeds another in view of the evidence of two samples \n\t\t \n\t\t\t W R Thompson \n\t\t \n\t\t 10.1093/biomet/25.3-4.285 \n\t \n\t \n\t\t Biometrika \n\t\t \n\t\t\t 25 \n\t\t\t 3-4 \n\t\t\t \n\t\t\t 1933 Dec 01 \n\t\t \n\t \n\t Thompson WR. On the likelihood that one unknown probability exceeds another in view of the evidence of two samples. Biometrika 1933 Dec 01;25(3-4):285-294 [doi: 10.1093/biomet/25.3-4.285]"
+    },
+    {
+      "title": "Prior distribution",
+      "authors": [
+        "A Gelman"
+      ],
+      "year": 2002,
+      "doi": "10.1002/9780470057339",
+      "volume": "3",
+      "raw": "Prior distribution \n\t\t \n\t\t\t A Gelman \n\t\t \n\t\t 10.1002/9780470057339 \n\t \n\t \n\t\t Encyclopedia of Environmetrics \n\t\t \n\t\t\t A H El-Shaarawi \n\t\t \n\t\t \n\t\t\t W W Piegorsch \n\t\t \n\t\t Chichester, UK \n\t\t \n\t\t\t John Wiley & Sons \n\t\t\t 2002 \n\t\t\t 3 \n\t\t\t \n\t\t \n\t \n\t Gelman A. Prior distribution. In: El-Shaarawi AH, Piegorsch WW, editors. Encyclopedia of Environmetrics, Vol 3. Chichester, UK: John Wiley & Sons; 2002:1634-1637"
+    },
+    {
+      "authors": [
+        "Bandit Demo"
+      ],
+      "year": 2023,
+      "raw": "Bandit Demo \n\t\t \n\t\t \n\t\t\t Shinyapps \n\t\t \n\t\t \n\t\t \n\t\t\t 2023-07-05 \n\t\t \n\t \n\t Bandit Demo. ShinyApps. URL: https://netzissou.shinyapps.io/BanditDemo/ [accessed 2023-07-05]"
+    },
+    {
+      "authors": [
+        "/ Netzissou"
+      ],
+      "year": 2023,
+      "raw": "/ Netzissou \n\t\t \n\t\t \n\t\t\t Bandit \n\t\t \n\t\t \n\t\t \n\t\t\t 2023-07-11 \n\t\t \n\t \n\t GitHub \n\t NetZissou/Bandit. GitHub. URL: https://github.com/NetZissou/Bandit [accessed 2023-07-11]"
+    },
+    {
+      "title": "COVID-19 recovery insights",
+      "year": 2021,
+      "doi": "10.4337/9781802208214",
+      "raw": "10.4337/9781802208214 \n\t\t \n\t\t COVID-19 recovery insights \n\t\t \n\t\t\t UberMedia \n\t\t\t 2021-10-02 \n\t\t \n\t \n\t COVID-19 recovery insights. UberMedia. URL: https://COVID19.ubermedia.com/COVID-19-recovery-insights/ [accessed 2021-10-02]"
+    },
+    {
+      "title": "Loveland Technologies",
+      "year": 2021,
+      "raw": "Loveland Technologies \n\t\t \n\t\t\t Landgrid \n\t\t \n\t\t \n\t\t \n\t\t\t 2021-10-02 \n\t\t \n\t \n\t Landgrid. Loveland Technologies. URL: https://landgrid.com/ [accessed 2021-10-02]"
+    },
+    {
+      "title": "SimpleReport: A better way to report COVID-19 tests",
+      "year": 2021,
+      "doi": "10.1037/e308222004-001",
+      "raw": "10.1037/e308222004-001 \n\t\t \n\t\t SimpleReport: A better way to report COVID-19 tests \n\t\t \n\t\t\t US Centers for Disease Control and Prevention \n\t\t\t 2021-10-02 \n\t\t \n\t \n\t SimpleReport: A better way to report COVID-19 tests. US Centers for Disease Control and Prevention. URL: https://www. simplereport.gov/ [accessed 2021-10-02]"
+    },
+    {
+      "title": "Act Now Coalition",
+      "authors": [
+        "Franklin County"
+      ],
+      "year": 2023,
+      "doi": "10.3133/wri844238",
+      "raw": "Franklin County \n\t\t \n\t\t \n\t\t\t Oh \n\t\t \n\t\t 10.3133/wri844238 \n\t\t \n\t\t Act Now Coalition \n\t\t \n\t\t\t 2023-07-05 \n\t\t \n\t \n\t Franklin County, OH. Act Now Coalition. URL: https://covidactnow.org/us/ohio-oh/county/franklin_county/?s=45423293 [accessed 2023-07-05]"
+    },
+    {
+      "title": "Tracking coronavirus in Franklin County, Ohio: latest map and count",
+      "year": 2023,
+      "doi": "10.3133/wri844238",
+      "raw": "10.3133/wri844238 \n\t\t \n\t\t Tracking coronavirus in Franklin County, Ohio: latest map and count \n\t\t New York Times \n\t\t \n\t\t\t 2023-07-05 \n\t\t \n\t \n\t Tracking coronavirus in Franklin County, Ohio: latest map and count. New York Times. URL: https://www.nytimes.com/ interactive/2021/us/franklin-ohio-covid-cases.html [accessed 2023-07-05]"
+    },
+    {
+      "title": "Archived Statewide and County Case Rates per 100,000 Residents | COVID-19",
+      "year": 2021,
+      "raw": "Archived Statewide and County Case Rates per 100,000 Residents | COVID-19 \n\t\t \n\t\t\t 2021-06-20 \n\t\t \n\t\t \n\t\t\t Ohio Department of Health \n\t\t \n\t \n\t Archived Statewide and County Case Rates per 100,000 Residents | COVID-19. Ohio Department of Health. URL: https:/ /coronavirus.ohio.gov/dashboards/overview/statewide-and-county-case-rates [accessed 2021-06-20]"
+    },
+    {
+      "title": "Prevalence of current and past COVID-19 in Ohio adults",
+      "authors": [
+        "A Turner",
+        "D Kline",
+        "A Norris",
+        "W Phillips",
+        "E Root",
+        "J Wakefield"
+      ],
+      "year": 2022,
+      "doi": "10.1016/j.annepidem.2021.11.009",
+      "journal": "Ann Epidemiol",
+      "volume": "67",
+      "raw": "Prevalence of current and past COVID-19 in Ohio adults \n\t\t \n\t\t\t A N Turner \n\t\t \n\t\t \n\t\t\t D Kline \n\t\t \n\t\t \n\t\t\t A Norris \n\t\t \n\t\t \n\t\t\t W G Phillips \n\t\t \n\t\t \n\t\t\t E Root \n\t\t \n\t\t \n\t\t\t J Wakefield \n\t\t \n\t\t 10.1016/j.annepidem.2021.11.009 \n\t\t Medline: 34921991 \n\t \n\t \n\t\t Ann Epidemiol \n\t\t \n\t\t\t 67 \n\t\t\t \n\t\t\t 2022 Mar \n\t\t \n\t \n\t FREE Full text \n\t Turner AN, Kline D, Norris A, Phillips WG, Root E, Wakefield J, et al. Prevalence of current and past COVID-19 in Ohio adults. Ann Epidemiol 2022 Mar;67:50-60 [FREE Full text] [doi: 10.1016/j.annepidem.2021.11.009] [Medline: 34921991]"
+    },
+    {
+      "title": "American Community Survey 5-Year Data",
+      "year": 2017,
+      "raw": "American Community Survey 5-Year Data \n\t\t \n\t\t\t 2017-2021 \n\t\t \n\t \n\t American Community Survey 5-Year Data (2017-2021)."
+    },
+    {
+      "title": "COVID-19 vaccine dashboard",
+      "year": 2023,
+      "doi": "10.46945/bpj.10.1.03.01",
+      "raw": "10.46945/bpj.10.1.03.01 \n\t\t \n\t\t COVID-19 vaccine dashboard \n\t\t \n\t\t\t 2023-07-05 \n\t\t \n\t\t \n\t\t\t Ohio Department of Health \n\t\t \n\t \n\t COVID-19 vaccine dashboard. Ohio Department of Health. URL: https://coronavirus.ohio.gov/dashboards/covid-19-vaccine/ covid-19-vaccination-dashboard [accessed 2023-07-05]"
+    },
+    {
+      "title": "The final inch: What pop-up COVID testing tells us about community engagement",
+      "authors": [
+        "Della Vella",
+        "D Rayo"
+      ],
+      "year": 2022,
+      "doi": "10.1177/2327857922111015",
+      "journal": "Proceedings of the International Symposium on Human Factors and Ergonomics in Health Care",
+      "volume": "11",
+      "issue": "1",
+      "raw": "The final inch: What pop-up COVID testing tells us about community engagement \n\t\t \n\t\t\t Della Vella \n\t\t \n\t\t \n\t\t\t D Rayo \n\t\t \n\t\t \n\t\t\t M F \n\t\t \n\t\t 10.1177/2327857922111015 \n\t \n\t \n\t\t Proceedings of the International Symposium on Human Factors and Ergonomics in Health Care \n\t\t \n\t\t\t 11 \n\t\t\t 1 \n\t\t\t \n\t\t\t 2022 Oct 06 \n\t\t \n\t \n\t FREE Full text \n\t Della Vella D, Rayo MF. The final inch: What pop-up COVID testing tells us about community engagement. Proceedings of the International Symposium on Human Factors and Ergonomics in Health Care 2022 Oct 06;11(1):76-81 [FREE Full text] [doi: 10.1177/2327857922111015]"
+    },
+    {
+      "title": "An urban population health observatory system to support COVID-19 pandemic preparedness, response, and management: Design and development study",
+      "authors": [
+        "W Brakefield",
+        "N Ammar",
+        "O Olusanya",
+        "A Shaban-Nejad"
+      ],
+      "year": 2021,
+      "doi": "10.2196/28269",
+      "journal": "JMIR Public Health Surveill",
+      "volume": "7",
+      "issue": "6",
+      "pages": "28269",
+      "raw": "An urban population health observatory system to support COVID-19 pandemic preparedness, response, and management: Design and development study \n\t\t \n\t\t\t W S Brakefield \n\t\t \n\t\t \n\t\t\t N Ammar \n\t\t \n\t\t \n\t\t\t O A Olusanya \n\t\t \n\t\t \n\t\t\t A Shaban-Nejad \n\t\t \n\t\t 10.2196/28269 \n\t\t Medline: 34081605 \n\t \n\t \n\t\t JMIR Public Health Surveill \n\t\t \n\t\t\t 7 \n\t\t\t 6 \n\t\t\t 28269 \n\t\t\t 2021 Jun 16 \n\t\t \n\t \n\t FREE Full text \n\t Brakefield WS, Ammar N, Olusanya OA, Shaban-Nejad A. An urban population health observatory system to support COVID-19 pandemic preparedness, response, and management: Design and development study. JMIR Public Health Surveill 2021 Jun 16;7(6):e28269 [FREE Full text] [doi: 10.2196/28269] [Medline: 34081605]"
+    },
+    {
+      "title": "How is the COVID-19 pandemic shaping transportation access to health care?",
+      "authors": [
+        "K Chen",
+        "M Brozen",
+        "J Rollman",
+        "T Ward",
+        "K Norris",
+        "K Gregory"
+      ],
+      "year": 2021,
+      "doi": "10.1016/j.trip.2021.100338",
+      "journal": "Transp Res Interdiscip Perspect",
+      "raw": "How is the COVID-19 pandemic shaping transportation access to health care? \n\t\t \n\t\t\t K L Chen \n\t\t \n\t\t \n\t\t\t M Brozen \n\t\t \n\t\t \n\t\t\t J E Rollman \n\t\t \n\t\t \n\t\t\t T Ward \n\t\t \n\t\t \n\t\t\t K C Norris \n\t\t \n\t\t \n\t\t\t K D Gregory \n\t\t \n\t\t 10.1016/j.trip.2021.100338 \n\t\t Medline: 34514368 \n\t \n\t \n\t\t Transp Res Interdiscip Perspect \n\t\t \n\t\t\t 2021 \n\t\t \n\t \n\t FREE Full text \n\t Chen KL, Brozen M, Rollman JE, Ward T, Norris KC, Gregory KD, et al. How is the COVID-19 pandemic shaping transportation access to health care? Transp Res Interdiscip Perspect 2021 [FREE Full text] [doi: 10.1016/j.trip.2021.100338] [Medline: 34514368]"
+    },
+    {
+      "title": "COVID-19 and health equity-a new kind of \"herd immunity",
+      "authors": [
+        "D Williams",
+        "L Cooper"
+      ],
+      "year": 2020,
+      "doi": "10.1001/jama.2020.8051",
+      "journal": "JAMA",
+      "volume": "323",
+      "issue": "24",
+      "raw": "COVID-19 and health equity-a new kind of \"herd immunity \n\t\t \n\t\t\t D R Williams \n\t\t \n\t\t \n\t\t\t L A Cooper \n\t\t \n\t\t 10.1001/jama.2020.8051 \n\t\t Medline: 32391852 \n\t \n\t \n\t\t JAMA \n\t\t \n\t\t\t 323 \n\t\t\t 24 \n\t\t\t \n\t\t\t 2020 Jun 23 \n\t\t \n\t \n\t Williams DR, Cooper LA. COVID-19 and health equity-a new kind of \"herd immunity\". JAMA 2020 Jun 23;323(24):2478-2480 [doi: 10.1001/jama.2020.8051] [Medline: 32391852]"
+    },
+    {
+      "title": "Disparities in COVID-19 outcomes by race, ethnicity, and socioeconomic status: A systematic-review and meta-analysis",
+      "authors": [
+        "S Magesh",
+        "D John",
+        "W Li",
+        "Y Li",
+        "A Mattingly-App",
+        "S Jain"
+      ],
+      "year": 2021,
+      "doi": "10.1001/jamanetworkopen.2021.34147",
+      "journal": "JAMA Netw Open",
+      "volume": "4",
+      "issue": "11",
+      "pages": "2134147",
+      "raw": "Disparities in COVID-19 outcomes by race, ethnicity, and socioeconomic status: A systematic-review and meta-analysis \n\t\t \n\t\t\t S Magesh \n\t\t \n\t\t \n\t\t\t D John \n\t\t \n\t\t \n\t\t\t W T Li \n\t\t \n\t\t \n\t\t\t Y Li \n\t\t \n\t\t \n\t\t\t A Mattingly-App \n\t\t \n\t\t \n\t\t\t S Jain \n\t\t \n\t\t 10.1001/jamanetworkopen.2021.34147 \n\t\t Medline: 34762110 \n\t \n\t \n\t\t JAMA Netw Open \n\t\t \n\t\t\t 4 \n\t\t\t 11 \n\t\t\t 2134147 \n\t\t\t 2021 Nov 01 \n\t\t \n\t \n\t FREE Full text \n\t Magesh S, John D, Li WT, Li Y, Mattingly-App A, Jain S, et al. Disparities in COVID-19 outcomes by race, ethnicity, and socioeconomic status: A systematic-review and meta-analysis. JAMA Netw Open 2021 Nov 01;4(11):e2134147 [FREE Full text] [doi: 10.1001/jamanetworkopen.2021.34147] [Medline: 34762110]"
+    },
+    {
+      "title": "Assessing COVID-19 pandemic policies and behaviours and their economic and educational trade-offs across US states from Jan 1, 2020, to July 31, 2022: an observational analysis",
+      "authors": [
+        "T Bollyky",
+        "E Castro",
+        "A Aravkin",
+        "K Bhangdia",
+        "J Dalos",
+        "E Hulland"
+      ],
+      "year": 2023,
+      "doi": "10.1016/s0140-6736(23)00461-0",
+      "journal": "Lancet",
+      "volume": "401",
+      "issue": "10385",
+      "raw": "Assessing COVID-19 pandemic policies and behaviours and their economic and educational trade-offs across US states from Jan 1, 2020, to July 31, 2022: an observational analysis \n\t\t \n\t\t\t T Bollyky \n\t\t \n\t\t \n\t\t\t E Castro \n\t\t \n\t\t \n\t\t\t A Aravkin \n\t\t \n\t\t \n\t\t\t K Bhangdia \n\t\t \n\t\t \n\t\t\t J Dalos \n\t\t \n\t\t \n\t\t\t E N Hulland \n\t\t \n\t\t 10.1016/s0140-6736(23)00461-0 \n\t\t Medline: 36966780 \n\t \n\t \n\t\t Lancet \n\t\t \n\t\t\t 401 \n\t\t\t 10385 \n\t\t\t \n\t\t\t 2023 Apr 22 \n\t\t \n\t \n\t FREE Full text \n\t Bollyky T, Castro E, Aravkin A, Bhangdia K, Dalos J, Hulland EN, et al. Assessing COVID-19 pandemic policies and behaviours and their economic and educational trade-offs across US states from Jan 1, 2020, to July 31, 2022: an observational analysis. Lancet 2023 Apr 22;401(10385):1341-1360 [FREE Full text] [doi: 10.1016/S0140-6736(23)00461-0] [Medline: 36966780]"
+    },
+    {
+      "title": "Public libraries: a community-level resource to advance population health",
+      "authors": [
+        "M Philbin",
+        "C Parker",
+        "M Flaherty",
+        "J Hirsch"
+      ],
+      "year": 2019,
+      "doi": "10.1007/s10900-018-0547-4",
+      "journal": "J Community Health",
+      "volume": "44",
+      "issue": "1",
+      "raw": "Public libraries: a community-level resource to advance population health \n\t\t \n\t\t\t M M Philbin \n\t\t \n\t\t \n\t\t\t C M Parker \n\t\t \n\t\t \n\t\t\t M G Flaherty \n\t\t \n\t\t \n\t\t\t J S Hirsch \n\t\t \n\t\t 10.1007/s10900-018-0547-4 \n\t\t Medline: 29995303 \n\t \n\t \n\t\t J Community Health \n\t\t \n\t\t\t 44 \n\t\t\t 1 \n\t\t\t \n\t\t\t 2019 Feb \n\t\t \n\t \n\t FREE Full text \n\t Philbin MM, Parker CM, Flaherty MG, Hirsch JS. Public libraries: a community-level resource to advance population health. J Community Health 2019 Feb;44(1):192-199 [FREE Full text] [doi: 10.1007/s10900-018-0547-4] [Medline: 29995303]"
+    },
+    {
+      "title": "The evolving role and value of libraries and librarians in health care",
+      "authors": [
+        "J Sollenberger",
+        "R Holloway"
+      ],
+      "year": 2013,
+      "doi": "10.1001/jama.2013.277050",
+      "journal": "JAMA",
+      "volume": "310",
+      "issue": "12",
+      "raw": "The evolving role and value of libraries and librarians in health care \n\t\t \n\t\t\t J F Sollenberger \n\t\t \n\t\t \n\t\t\t R G Holloway \n\t\t \n\t\t 10.1001/jama.2013.277050 \n\t\t Medline: 24065006 \n\t \n\t \n\t\t JAMA \n\t\t \n\t\t\t 310 \n\t\t\t 12 \n\t\t\t \n\t\t\t 2013 Sep 25 \n\t\t \n\t \n\t Sollenberger JF, Holloway RG. The evolving role and value of libraries and librarians in health care. JAMA 2013 Sep 25;310(12):1231-1232 [doi: 10.1001/jama.2013.277050] [Medline: 24065006]"
+    },
+    {
+      "title": "Using implementation science-guided pilot studies to assess and improve the informativeness of clinical trials",
+      "authors": [
+        "S Taylor",
+        "M Kowalkowski"
+      ],
+      "year": 2021,
+      "doi": "10.1007/s11606-020-06220-3",
+      "journal": "J Gen Intern Med",
+      "volume": "36",
+      "issue": "2",
+      "raw": "Using implementation science-guided pilot studies to assess and improve the informativeness of clinical trials \n\t\t \n\t\t\t S P Taylor \n\t\t \n\t\t \n\t\t\t M A Kowalkowski \n\t\t \n\t\t 10.1007/s11606-020-06220-3 \n\t\t Medline: 32918201 \n\t \n\t \n\t\t J Gen Intern Med \n\t\t \n\t\t\t 36 \n\t\t\t 2 \n\t\t\t \n\t\t\t 2021 Feb \n\t\t \n\t \n\t FREE Full text \n\t Taylor SP, Kowalkowski MA. Using implementation science-guided pilot studies to assess and improve the informativeness of clinical trials. J Gen Intern Med 2021 Feb;36(2):533-536 [FREE Full text] [doi: 10.1007/s11606-020-06220-3] [Medline: 32918201]"
+    },
+    {
+      "title": "Slowed progression: the utility of Test to Treat initiatives in improving the neglected inequities of COVID-19 among racially/ethnically minoritized groups",
+      "authors": [
+        "J Abdul-Mutakabbir",
+        "F Tillman",
+        "J Marcelin",
+        "I Saunders",
+        "V Arya"
+      ],
+      "year": 2003,
+      "doi": "10.1016/j.japh.2022.10.025",
+      "journal": "J Am Pharm Assoc",
+      "volume": "63",
+      "issue": "1",
+      "raw": "Slowed progression: the utility of Test to Treat initiatives in improving the neglected inequities of COVID-19 among racially/ethnically minoritized groups \n\t\t \n\t\t\t J C Abdul-Mutakabbir \n\t\t \n\t\t \n\t\t\t F Tillman \n\t\t \n\t\t \n\t\t\t J R Marcelin \n\t\t \n\t\t \n\t\t\t I M Saunders \n\t\t \n\t\t \n\t\t\t V Arya \n\t\t \n\t\t 10.1016/j.japh.2022.10.025 \n\t\t Medline: 36470731 \n\t \n\t \n\t\t J Am Pharm Assoc \n\t\t \n\t\t\t 63 \n\t\t\t 1 \n\t\t\t \n\t\t\t 2003. 2023 \n\t\t \n\t \n\t FREE Full text \n\t Abdul-Mutakabbir JC, Tillman F, Marcelin JR, Saunders IM, Arya V. Slowed progression: the utility of Test to Treat initiatives in improving the neglected inequities of COVID-19 among racially/ethnically minoritized groups. J Am Pharm Assoc (2003) 2023;63(1):424-429 [FREE Full text] [doi: 10.1016/j.japh.2022.10.025] [Medline: 36470731]"
+    },
+    {
+      "title": "Test and treat: a missing link in the global fight against COVID-19",
+      "authors": [
+        "E Wroe",
+        "K Seung",
+        "B Baker",
+        "P Farmer"
+      ],
+      "year": 2022,
+      "doi": "10.1016/s2214-109x(21)00568-4",
+      "journal": "Lancet Glob Health",
+      "volume": "10",
+      "issue": "2",
+      "raw": "Test and treat: a missing link in the global fight against COVID-19 \n\t\t \n\t\t\t E B Wroe \n\t\t \n\t\t \n\t\t\t K J Seung \n\t\t \n\t\t \n\t\t\t B K Baker \n\t\t \n\t\t \n\t\t\t P E Farmer \n\t\t \n\t\t 10.1016/s2214-109x(21)00568-4 \n\t\t Medline: 34953515 \n\t \n\t \n\t\t Lancet Glob Health \n\t\t \n\t\t\t 10 \n\t\t\t 2 \n\t\t\t \n\t\t\t 2022 Feb \n\t\t \n\t \n\t FREE Full text \n\t Wroe EB, Seung KJ, Baker BK, Farmer PE. Test and treat: a missing link in the global fight against COVID-19. Lancet Glob Health 2022 Feb;10(2):e181-e182 [FREE Full text] [doi: 10.1016/S2214-109X(21)00568-4] [Medline: 34953515]"
+    }
+  ],
+  "num_references": 40,
+  "figures": [
+    {
+      "caption": "Figure 1 .",
+      "description": "Figure 1. Steps in the implementation of the Thompson sampling algorithm."
+    },
+    {
+      "caption": "Figure 2 .",
+      "description": "Figure 2. Regional map page of the web app for targeting SARS-CoV-2 testing with mobile units."
+    },
+    {
+      "caption": "Figure 3 .",
+      "description": "Figure 3. Locations page of the web app for targeting SARS-CoV-2 testing with mobile units."
+    },
+    {
+      "caption": "Figure 4 .",
+      "description": "Figure 4. Positivity rate (black bars) and tests conducted (grey lines) for each testing session. The letter A is used to indicate testing at a library location. Starting on September 14, 2021, all testing locations were chosen by the algorithm."
+    },
+    {
+      "caption": "Figure 5 .",
+      "description": "Figure 5. Location and zip codes of final testing sites with percentage of Black or African American residents."
+    },
+    {
+      "caption": "a",
+      "description": "Time period when bandit algorithm was used to select testing event sites.b Absolute numbers were not available for county daily rate."
+    },
+    {
+      "type": "table",
+      "caption": "Table 1 .",
+      "description": "Parameters for the assumed prior probability distributions for each testing site."
+    },
+    {
+      "type": "table",
+      "caption": "Table 2 .",
+      "description": "Study positivity rates compared to tests conducted by other providers in Franklin County, Ohio."
+    },
+    {
+      "type": "table",
+      "caption": "Table 3 .",
+      "description": "Study representation of Black or African American people by zip code."
+    }
+  ],
+  "num_figures": 9,
+  "tables": [
+    {
+      "content": "Site Positivity Tests, n \u03b1 \u03b2 1 0.100 60 6 54 2 0.055 55 3.025 51.975 3 0.080 20 1.6 18.4 4 0.095 40 3.8 36.2 5 0.100 60 6 54 6 0.090 40 3.6 36.4 7 0.090 30 2.7 27.3"
+    },
+    {
+      "content": "Positivity for rolling 2-week periods in 2021 Aug 12-25 Aug 19-Sept 1 Aug 26-Sept 8 Sept 2-15 Sept 9-22 Sept 16-29 Sept 23-Oct a Total Flexible Adaptive Algorithmic Surveillance Testing clinic , n/N (%) All tests 3/65 (5) 5/96 (5.2) 4/99 (4) 8/146 (5.5) 9/138 (6.5) 3/105 (2.9) 6/106 (5.7) 22/408 (5.4) Asymptomatic individu- 3/57 (5) 4/82 (4.9) 1/85 (1.2) 3/116 (2.6) 3/105 (2.7) 0/78 (0) 2/83 (2.4) 9/330 (2.7) als 3/14 (21. 5/30 (16.7) 6/33 (18.2) 3/27 (11.1) 4/23 (17.4) 13/78 (16.7)"
+    },
+    {
+      "content": "Zip code, n/N (%) 43227 43125 43207 43068 43213 Black or African American participants in Flexible 18/24 (75) 17/31 (55) 8/31 (26) 13/29 (45) 13/28 (46) Adaptive Algorithmic Surveillance Testing clinics Black or African American population of Franklin 16,740/24,779 (67.6) 3429/13,756 (24.9) 13,936/46,308 20,658/58,426 18,205/35,954 county (US Census; 2021 American Community Sur- (30.3) (35.4) (50.6) vey 5-year data)"
+    }
+  ],
+  "num_tables": 3,
+  "num_citations": 51,
+  "cited_references": [
+    "b32",
+    "b39",
+    "b38",
+    "b4",
+    "b14",
+    "b17",
+    "b20",
+    "b24",
+    "b26",
+    "b28",
+    "b13",
+    "b27",
+    "b33",
+    "b16",
+    "b7",
+    "b23",
+    "b29",
+    "b19",
+    "b6",
+    "b18",
+    "b30",
+    "b1",
+    "b35",
+    "b9",
+    "b31",
+    "b10",
+    "b3",
+    "b5",
+    "b34",
+    "b8",
+    "b12",
+    "b15",
+    "b11",
+    "b36",
+    "b37",
+    "b25",
+    "b22",
+    "b0",
+    "b21",
+    "b2"
+  ],
+  "notes": [
+    "[raw_affiliation] 1  Department of Integrated Systems Engineering , College of Engineering , The Ohio State University , Columbus , OH , United States",
+    "[raw_affiliation] 2  College of Public Health , The Ohio State University , Columbus , OH , United States",
+    "[raw_affiliation] 3  Department of Biostatistics and Data Sciences , Wake Forest University School of Medicine , Winston-Salem , NC , United States",
+    "[raw_affiliation] 4  Public Health Modeling Unit , Department of the Epidemiology of Microbial Diseases , Yale School of Public Health , New Haven , CT , United States",
+    "[raw_affiliation] 5  Battelle Center for Science , Engineering, and Public Policy , John Glenn College of Public Affairs , The Ohio State University , Columbus , OH , United States Public Health Modeling Unit",
+    "[raw_affiliation] 1  Department of Integrated Systems Engineering , College of Engineering , The Ohio State University , Columbus , OH , United States",
+    "[raw_affiliation] 1  Department of Integrated Systems Engineering , College of Engineering , The Ohio State University , Columbus , OH , United States",
+    "[raw_affiliation] 5  Battelle Center for Science , Engineering, and Public Policy , John Glenn College of Public Affairs , The Ohio State University , Columbus , OH , United States Public Health Modeling Unit",
+    "[raw_affiliation] 4  Public Health Modeling Unit , Department of the Epidemiology of Microbial Diseases , Yale School of Public Health , New Haven , CT , United States",
+    "[raw_affiliation] Department of the Epidemiology of Microbial Diseases Yale School of Public Health 350 George Street , 3rd Floor New Haven , CT , 06511 United States Yale University ,",
+    "[raw_affiliation] The Ohio State University",
+    "JMIR Public Health Surveill 2023 | vol. 9 | e39754 | p. 2 https://publichealth.jmir.org/2023/1/e39754 (page number not for citation purposes)",
+    "JMIR Public Health Surveill 2023 | vol. 9 | e39754 | p. 3 https://publichealth.jmir.org/2023/1/e39754 (page number not for citation purposes)",
+    "JMIR Public Health Surveill 2023 | vol. 9 | e39754 | p. 4 https://publichealth.jmir.org/2023/1/e39754 (page number not for citation purposes)",
+    "JMIR Public Health Surveill 2023 | vol. 9 | e39754 | p. 5 https://publichealth.jmir.org/2023/1/e39754 (page number not for citation purposes)",
+    "(page number not for citation purposes)",
+    "JMIR Public Health Surveill 2023 | vol. 9 | e39754 | p. 7 https://publichealth.jmir.org/2023/1/e39754 (page number not for citation purposes)",
+    "JMIR Public Health Surveill 2023 | vol. 9 | e39754 | p. 8 https://publichealth.jmir.org/2023/1/e39754 (page number not for citation purposes)",
+    "JMIR Public Health Surveill 2023 | vol. 9 | e39754 | p. 9 https://publichealth.jmir.org/2023/1/e39754 (page number not for citation purposes)",
+    "JMIR Public Health Surveill 2023 | vol. 9 | e39754 | p. 13 https://publichealth.jmir.org/2023/1/e39754 (page number not for citation purposes)",
+    "[raw_reference] The COVID-19 testing debacle. Nat Biotechnol 2020 Jun;38(6):653 [doi: 10.1038/s41587-020-0575-3] [Medline: 32493981]",
+    "[raw_reference] Lim D, Ollstein A. Next testing debacle: The fall virus surge. Politico. 2020 Jun 17. URL: https://www.politico.com/news/ 2020/06/17/coronavirus-testing-fall-surge-327017 [accessed 2022-06-20]",
+    "FREE Full text",
+    "[raw_reference] Qasmieh SA, Robertson MM, Rane MS, Shen Y, Zimba R, Picchio CA, et al. The importance of incorporating at-home testing into SARS-CoV-2 point prevalence estimates: findings from aa US national cohort, February 2022. JMIR Public Health Surveill 2022 Dec 27;8(12):e38196 [FREE Full text] [doi: 10.2196/38196] [Medline: 36240020]",
+    "[raw_reference] Bosman J, Kasakove S. States close mass test and vaccine sites, but virus may swell anew. New York Times. 2022 Mar 30. URL: https://www.nytimes.com/2022/03/30/us/covid-vaccine-testing-states.html [accessed 2023-07-05]",
+    "[raw_reference] Gandhi RT, Malani PN, Del Rio C. COVID-19 therapeutics for nonhospitalized patients. JAMA 2022 Feb 15;327(7):617-618 [doi: 10.1001/jama.2022.0335] [Medline: 35029659]",
+    "[raw_reference] Tolbert J, Artiga S. Implications of the lapse in federal Covid-19 funding on access to Covid-19 testing, treatment, and vaccines. KFF. 2022 Mar 28. URL: https://www.kff.org/coronavirus-covid-19/issue-brief/ implications-of-the-lapse-in-federal-covid-19-funding-on-access-to-covid-19-testing-treatment-and-vaccines/ [accessed 2023-07-05]",
+    "FREE Full text",
+    "[raw_reference] Ibrahim NK. Epidemiologic surveillance for controlling Covid-19 pandemic: types, challenges and implications. J Infect Public Health 2020 Nov;13(11):1630-1638 [FREE Full text] [doi: 10.1016/j.jiph.2020.07.019] [Medline: 32855090]",
+    "FREE Full text",
+    "[raw_reference] Gonsalves GS, Copple JT, Paltiel AD, Fenichel EP, Bayham J, Abraham M, et al. Maximizing the efficiency of active case finding for SARS-CoV-2 using bandit algorithms. Med Decis Making 2021 Nov;41(8):970-977 [FREE Full text] [doi: 10.1177/0272989X211021603] [Medline: 34120510]",
+    "FREE Full text",
+    "[raw_reference] Gonsalves G, Copple J, Johnson T, Paltiel A, Warren J. Bayesian adaptive algorithms for locating HIV mobile testing services. BMC Med 2018 Sep 03;16(1):155 [FREE Full text] [doi: 10.1186/s12916-018-1129-0] [Medline: 30173667]",
+    "FREE Full text",
+    "[raw_reference] Gonsalves GS, Crawford FW, Cleary PD, Kaplan EH, Paltiel AD. An adaptive approach to locating mobile HIV testing services. Med Decis Making 2018 Feb;38(2):262-272 [FREE Full text] [doi: 10.1177/0272989X17716431] [Medline: 28699382]",
+    "[raw_reference] Washington J, Drown H. COVID-19 summer surge may have hit highest point, but will numbers continue to drop in the fall? Advance Local. 2021 Jun 21. URL: https://www.cleveland.com/coronavirus/2021/09/ covid-19-summer-surge-may-have-hit-highest-point-but-will-numbers-continue-to-drop-in-the-fall.html [accessed 2022-06-20]",
+    "[raw_reference] Free rapid at-home COVID-19 tests available for Ohioans. Ohio Department of Health. 2021 Sep 7. URL: https://odh. ohio.gov/media-center/odh-news-releases/odh-news-release-09-07-21 [accessed 2022-06-20]",
+    "[raw_reference] Walker M, Gordon K, Henry M. Greater Columbus libraries run out of COVID-19 test kits as demand increases. Columbus Dispatch. 2021 Sep 11. URL: https://www.dispatch.com/story/news/2021/09/11/ covid-19-test-kits-columbus-libraries-demand-increases/8273918002/ [accessed 2022-06-20]",
+    "FREE Full text",
+    "[raw_reference] Kwan TH, Wong NS, Chan CP, Yeoh EK, Wong SY, Lee SS. Mass screening of SARS-CoV-2 with rapid antigen tests in a receding Omicron wave: population-based survey for epidemiologic evaluation. JMIR Public Health Surveill 2022 Nov 09;8(11):e40175 [FREE Full text] [doi: 10.2196/40175] [Medline: 36240027]",
+    "FREE Full text",
+    "[raw_reference] Stillman S, Tonin M. Communities and testing for COVID-19. Eur J Health Econ 2022 Jun;23(4):617-625 [FREE Full text] [doi: 10.1007/s10198-021-01385-y] [Medline: 35169950]",
+    "[raw_reference] Scott SL. Multi-armed bandit experiments in the online service economy. Appl Stochastic Models Bus Ind 2015 Jan 16;31(1):37-45 [doi: 10.1002/asmb.2104]",
+    "[raw_reference] Thompson WR. On the likelihood that one unknown probability exceeds another in view of the evidence of two samples. Biometrika 1933 Dec 01;25(3-4):285-294 [doi: 10.1093/biomet/25.3-4.285]",
+    "[raw_reference] Gelman A. Prior distribution. In: El-Shaarawi AH, Piegorsch WW, editors. Encyclopedia of Environmetrics, Vol 3. Chichester, UK: John Wiley & Sons; 2002:1634-1637",
+    "[raw_reference] Bandit Demo. ShinyApps. URL: https://netzissou.shinyapps.io/BanditDemo/ [accessed 2023-07-05]",
+    "[report_type] GitHub",
+    "[raw_reference] NetZissou/Bandit. GitHub. URL: https://github.com/NetZissou/Bandit [accessed 2023-07-11]",
+    "[raw_reference] COVID-19 recovery insights. UberMedia. URL: https://COVID19.ubermedia.com/COVID-19-recovery-insights/ [accessed 2021-10-02]",
+    "[raw_reference] Landgrid. Loveland Technologies. URL: https://landgrid.com/ [accessed 2021-10-02]",
+    "[raw_reference] SimpleReport: A better way to report COVID-19 tests. US Centers for Disease Control and Prevention. URL: https://www. simplereport.gov/ [accessed 2021-10-02]",
+    "[raw_reference] Franklin County, OH. Act Now Coalition. URL: https://covidactnow.org/us/ohio-oh/county/franklin_county/?s=45423293 [accessed 2023-07-05]",
+    "[raw_reference] Tracking coronavirus in Franklin County, Ohio: latest map and count. New York Times. URL: https://www.nytimes.com/ interactive/2021/us/franklin-ohio-covid-cases.html [accessed 2023-07-05]",
+    "[raw_reference] Archived Statewide and County Case Rates per 100,000 Residents | COVID-19. Ohio Department of Health. URL: https:/ /coronavirus.ohio.gov/dashboards/overview/statewide-and-county-case-rates [accessed 2021-06-20]",
+    "FREE Full text",
+    "[raw_reference] Turner AN, Kline D, Norris A, Phillips WG, Root E, Wakefield J, et al. Prevalence of current and past COVID-19 in Ohio adults. Ann Epidemiol 2022 Mar;67:50-60 [FREE Full text] [doi: 10.1016/j.annepidem.2021.11.009] [Medline: 34921991]",
+    "[raw_reference] American Community Survey 5-Year Data (2017-2021).",
+    "[raw_reference] COVID-19 vaccine dashboard. Ohio Department of Health. URL: https://coronavirus.ohio.gov/dashboards/covid-19-vaccine/ covid-19-vaccination-dashboard [accessed 2023-07-05]",
+    "FREE Full text",
+    "[raw_reference] Della Vella D, Rayo MF. The final inch: What pop-up COVID testing tells us about community engagement. Proceedings of the International Symposium on Human Factors and Ergonomics in Health Care 2022 Oct 06;11(1):76-81 [FREE Full text] [doi: 10.1177/2327857922111015]",
+    "FREE Full text",
+    "[raw_reference] Brakefield WS, Ammar N, Olusanya OA, Shaban-Nejad A. An urban population health observatory system to support COVID-19 pandemic preparedness, response, and management: Design and development study. JMIR Public Health Surveill 2021 Jun 16;7(6):e28269 [FREE Full text] [doi: 10.2196/28269] [Medline: 34081605]",
+    "FREE Full text",
+    "[raw_reference] Chen KL, Brozen M, Rollman JE, Ward T, Norris KC, Gregory KD, et al. How is the COVID-19 pandemic shaping transportation access to health care? Transp Res Interdiscip Perspect 2021 [FREE Full text] [doi: 10.1016/j.trip.2021.100338] [Medline: 34514368]",
+    "[raw_reference] Williams DR, Cooper LA. COVID-19 and health equity-a new kind of \"herd immunity\". JAMA 2020 Jun 23;323(24):2478-2480 [doi: 10.1001/jama.2020.8051] [Medline: 32391852]",
+    "FREE Full text",
+    "[raw_reference] Magesh S, John D, Li WT, Li Y, Mattingly-App A, Jain S, et al. Disparities in COVID-19 outcomes by race, ethnicity, and socioeconomic status: A systematic-review and meta-analysis. JAMA Netw Open 2021 Nov 01;4(11):e2134147 [FREE Full text] [doi: 10.1001/jamanetworkopen.2021.34147] [Medline: 34762110]",
+    "FREE Full text",
+    "[raw_reference] Bollyky T, Castro E, Aravkin A, Bhangdia K, Dalos J, Hulland EN, et al. Assessing COVID-19 pandemic policies and behaviours and their economic and educational trade-offs across US states from Jan 1, 2020, to July 31, 2022: an observational analysis. Lancet 2023 Apr 22;401(10385):1341-1360 [FREE Full text] [doi: 10.1016/S0140-6736(23)00461-0] [Medline: 36966780]",
+    "FREE Full text",
+    "[raw_reference] Philbin MM, Parker CM, Flaherty MG, Hirsch JS. Public libraries: a community-level resource to advance population health. J Community Health 2019 Feb;44(1):192-199 [FREE Full text] [doi: 10.1007/s10900-018-0547-4] [Medline: 29995303]",
+    "[raw_reference] Sollenberger JF, Holloway RG. The evolving role and value of libraries and librarians in health care. JAMA 2013 Sep 25;310(12):1231-1232 [doi: 10.1001/jama.2013.277050] [Medline: 24065006]",
+    "FREE Full text",
+    "[raw_reference] Taylor SP, Kowalkowski MA. Using implementation science-guided pilot studies to assess and improve the informativeness of clinical trials. J Gen Intern Med 2021 Feb;36(2):533-536 [FREE Full text] [doi: 10.1007/s11606-020-06220-3] [Medline: 32918201]",
+    "FREE Full text",
+    "[raw_reference] Abdul-Mutakabbir JC, Tillman F, Marcelin JR, Saunders IM, Arya V. Slowed progression: the utility of Test to Treat initiatives in improving the neglected inequities of COVID-19 among racially/ethnically minoritized groups. J Am Pharm Assoc (2003) 2023;63(1):424-429 [FREE Full text] [doi: 10.1016/j.japh.2022.10.025] [Medline: 36470731]",
+    "FREE Full text",
+    "[raw_reference] Wroe EB, Seung KJ, Baker BK, Farmer PE. Test and treat: a missing link in the global fight against COVID-19. Lancet Glob Health 2022 Feb;10(2):e181-e182 [FREE Full text] [doi: 10.1016/S2214-109X(21)00568-4] [Medline: 34953515]"
+  ],
+  "editors": [
+    "A H El-Shaarawi",
+    "W W Piegorsch"
+  ],
+  "processing_software": {
+    "GROBID": "0.8.2"
+  },
+  "journal": "JMIR public health and surveillance",
+  "volume": "9",
+  "pages": "e39754",
+  "zotero_recovery": {
+    "fields_recovered": [
+      "journal"
+    ],
+    "timestamp": "2025-09-01T11:08:22.736968",
+    "zotero_item_type": "journalArticle"
+  }
+}

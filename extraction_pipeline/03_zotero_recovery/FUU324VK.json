@@ -1,0 +1,727 @@
+{
+  "paper_id": "FUU324VK",
+  "title": "An ancillary genomics system to support the return of pharmacogenomic results",
+  "abstract": "Existing approaches to managing genetic and genomic test results from external laboratories typically include filing of text reports within the electronic health record, making them unavailable in many cases for clinical decision support. Even when structured computable results are available, the lack of adopted standards requires considerations for processing the results into actionable knowledge, in addition to storage and management of the data. Here, we describe the design and implementation of an ancillary genomics system used to receive and process heterogeneous results from external laboratories, which returns a descriptive phenotype to the electronic health record in support of pharmacogenetic clinical decision support.",
+  "year": 2019,
+  "date": "2019-02-19",
+  "authors": [
+    {
+      "name": "Luke Rasmussen",
+      "email": "luke.rasmussen@northwestern.edu",
+      "affiliation": {
+        "organization": "Department of Preventive Medicine",
+        "department": "Department of Preventive Medicine",
+        "institution": "Northwestern University Feinberg School of Medicine",
+        "address": "Chicago, IL"
+      }
+    },
+    {
+      "name": "Maureen Smith",
+      "affiliation": {
+        "organization": "Center for Genetic Medicine",
+        "department": "Center for Genetic Medicine",
+        "institution": "Northwestern University Feinberg School of Medicine",
+        "address": "Chicago, IL"
+      }
+    },
+    {
+      "name": "Federico Almaraz",
+      "affiliation": {
+        "organization": "Department of Information Technology",
+        "department": "Department of Information Technology",
+        "institution": "Northwestern Memorial HealthCare",
+        "address": "Chicago, IL and"
+      }
+    },
+    {
+      "name": "Stephen Persell",
+      "affiliation": {
+        "organization": "Department of Medicine",
+        "department": "Department of Medicine",
+        "institution": "Northwestern University Feinberg School of Medicine",
+        "address": "Chicago, IL"
+      }
+    },
+    {
+      "name": "Laura Rasmussen-Torvik",
+      "affiliation": {
+        "organization": "Department of Preventive Medicine",
+        "department": "Department of Preventive Medicine",
+        "institution": "Northwestern University Feinberg School of Medicine",
+        "address": "Chicago, IL"
+      }
+    },
+    {
+      "name": "Jennifer Pacheco",
+      "affiliation": {
+        "organization": "Center for Genetic Medicine",
+        "department": "Center for Genetic Medicine",
+        "institution": "Northwestern University Feinberg School of Medicine",
+        "address": "Chicago, IL"
+      }
+    },
+    {
+      "name": "Rex Chisholm",
+      "affiliation": {
+        "organization": "Center for Genetic Medicine",
+        "department": "Center for Genetic Medicine",
+        "institution": "Northwestern University Feinberg School of Medicine",
+        "address": "Chicago, IL"
+      }
+    },
+    {
+      "name": "Carl Christensen",
+      "affiliation": {
+        "organization": "Department of Information Technology",
+        "department": "Department of Information Technology",
+        "institution": "Northwestern Memorial HealthCare",
+        "address": "Chicago, IL and"
+      }
+    },
+    {
+      "name": "Timothy Herr",
+      "affiliation": {
+        "organization": "Department of Preventive Medicine",
+        "department": "Department of Preventive Medicine",
+        "institution": "Northwestern University Feinberg School of Medicine",
+        "address": "Chicago, IL"
+      }
+    },
+    {
+      "name": "Firas Wehbe",
+      "affiliation": {
+        "organization": "Department of Preventive Medicine",
+        "department": "Department of Preventive Medicine",
+        "institution": "Northwestern University Feinberg School of Medicine",
+        "address": "Chicago, IL"
+      }
+    },
+    {
+      "name": "Justin Starren",
+      "affiliation": {
+        "organization": "Department of Preventive Medicine",
+        "department": "Department of Preventive Medicine",
+        "institution": "Northwestern University Feinberg School of Medicine",
+        "address": "Chicago, IL"
+      }
+    },
+    {
+      "name": "Mr Luke"
+    },
+    {
+      "name": "V Rasmussen"
+    },
+    {
+      "affiliation": {
+        "organization": "School of Medicine",
+        "department": "School of Medicine",
+        "institution": "Northwestern University Feinberg",
+        "address": "11th Floor Rubloff 750 North Lake Shore Drive, 60611, Chicago, IL, USA"
+      }
+    }
+  ],
+  "doi": "10.1093/jamia/ocy187",
+  "md5": "C74741B3836F53505CE0155FFB07AB73",
+  "publication": {
+    "journal": "Clin Pharmacol Ther",
+    "journal_inferred": true
+  },
+  "keywords": [
+    "electronic health record",
+    "genetic testing",
+    "pharmacogenomics"
+  ],
+  "funding": [
+    "",
+    "ACKNOWLEDGMENTS The authors wish to acknowledge  Chris Bethman ,  Darren Kaiser ,  Deb Knoner ,  Steve Lee ,  Robert Milfajt , and  Sameem Samad  for their assistance in the implementation of the ancillary genomics system at  Northwestern Medicine ."
+  ],
+  "sections": [
+    {
+      "title": "BACKGROUND AND SIGNIFICANCE",
+      "text": "Many institutions have adopted genetic testing as part of clinical care, with some exploring how computable representations of genetic and genomic results in the electronic health record (EHR) can facilitate clinical decision support (CDS).  [1] [2] 2] [3] [4] [5] [6] [7] [8]  However, despite established standards for the computable representation of these results,  9  this level of integration has not seen wide adoption outside of the research setting.  10, 11 Genetic test results are generally returned as a plain-text representation of the interpretation report and transmitted using the Health Level 7 (HL7) v2 standard, or more commonly as PDFs that must be scanned from a fax or downloaded from an external laboratory portal.\n\nSeveral national initiatives, including the electronic Medical Records and Genomics (eMERGE) network,  12, 13  the Clinical Sequencing Exploratory Research consortium,  14  the Implementing Ge-nomics in Practice network,  15  and the Displaying and Integrating Genetic Information Through the EHR Action Collaborative  16  have proposed models, as well as demonstrated successful strategies, for better integration of results. The eMERGE network proposed the concept of an omics ancillary system, which receives structured, computable results from a laboratory, stores the results in an optimized manner for specialized processing (similar to a picture archiving and communications system for imaging), and returns actionable information to the EHR.  17 dditionally, individual institutions have developed tools to manage genetic data  5, 18  ; however these are typically tied a single laboratory source, and do not facilitate transmission of structured genetic results to the EHR itself. As many healthcare institutions work with several different third-party laboratories to provide genetic testing services, the ability to manage structured results from different external sources is important, yet not well addressed.\n\nIn this article, we present the design and implementation of an ancillary genomics system (AGS) to manage genetic test results from 2 external laboratories and return them to the EHR in a computable manner to facilitate CDS."
+    },
+    {
+      "title": "MATERIALS AND METHODS",
+      "text": "This work was done as part of the eMERGE Pharmacogenomics (eMERGE-PGx) project,  12  and was approved by the Northwestern University Institutional Review Board. We consented patients from Northwestern Medicine's internal medicine practice who provided blood samples that were genotyped at 1 of 2 CLIA (Clinical Laboratory Improvement Amendments)-certified laboratories (Mount Sinai Genetic Testing Laboratory and the Johns Hopkins DNA Diagnostic Laboratory). Both patients and their primary care providers received genotype results for 4 genes (CYP2C19, SLCO1B1, CYP2C9, and VKORC1) and genotypeguided prescribing information for 3 drugs (clopidogrel, simvastatin, and warfarin).\n\nThe development of the AGS to manage the processing and return of results was conducted by a multidisciplinary team and included physicians, genetic counselors, informaticians, health information technology leadership, EHR analysts, and software developers. During biweekly meetings, the team discussed design objectives and provided feedback to the software development team during the development process."
+    },
+    {
+      "title": "RESULTS"
+    },
+    {
+      "title": "Design criteria",
+      "text": "When approaching the design of the AGS, we sought to meet several objectives identified in the literature  19  : (1) anticipate receipt and processing of heterogeneous data (eg, pharmacogenetic star alleles, single nucleotide polymorphisms [SNPs]), (2) support the reinterpre-tation of results given new data or knowledge, (3) convert genetic and genomic test results into a more clinically relevant and intuitive form, and (4) design the system in a modular fashion to support future expansion. The overall system architecture is shown in Figure  1 ."
+    },
+    {
+      "title": "Computed observations",
+      "text": "To address design objective 3, we introduced the concept of the \"computed observation.\" The computed observation is a synthesis of the genetic test results and describes the predicted phenotype as opposed to requiring a provider to mentally translate this from the genotype. For example, instead of reporting the specific diplotypes for a gene (eg, CYP2C19 *2/*2), the computed observation describes the predicted metabolizer category for a medication (eg, \"Clopidogrel Poor Metabolizer\"). This not only makes CDS easier to implement, but also is intended to be more intuitively understandable by practicing clinicians."
+    },
+    {
+      "title": "Laboratory data format",
+      "text": "As part of the eMERGE-PGx study, each laboratory agreed to provide results as Microsoft Excel documents containing structured results and interpretive text. Each laboratory used unique formats for returning results: one provided results as pharmacogenetic star alleles for each of the 4 genes of interest (CYP2C19, CYP2C9, SLCO1B1, VKORC1), while the other provided 19 SNPs across 6 genes (CYP2C19, CYP2C9, SLCO1B1, VKORC1, TPMT, CYP3A5). A list of fields provided by each laboratory is provided in Supplementary Appendix A."
+    },
+    {
+      "title": "Laboratory data import",
+      "text": "Given the heterogeneity of results, we developed a separate importer for each laboratory that extracted participants' results from the Excel document. Results were stored in a relational database using the The Northwestern Medicine ancillary genomics system. Overall flow of data from external laboratories, which are imported into the ancillary genomics system, analyzed by the system to create computed observations (results), manually reviewed by a genetic counselor, and then released to the electronic health record (EHR). Steps denoted with an asterisk involve human interaction or decision making; all other steps are automated. HL7: Health Level 7.\n\nentity-attribute-value format. Attributes were represented as a hierarchy with parent-child relationships. An example of this is the top of the tree representing a generic attribute for results in the CYP2C19 gene, and more specific representations (eg, CYP2C19 SNP) are represented as descendant attributes (additional details in the Supplementary Material). The hierarchical nature simplified querying related concepts (eg, \"return all CYP2C19 results\"). The attribute hierarchy used was developed manually for the project in response to the types of results provided by each laboratory and is not derived from any standard ontology."
+    },
+    {
+      "title": "Result analysis",
+      "text": "Data analysis modules converted laboratory results into computed observations. A separate analysis module was developed for each of the 3 genotype-guided drugs, using the C# language. The processing flow is illustrated in Figure  2  and generally follows the sequence outlined in Table  1 . During these processing steps, the AGS tracked all data transformation and lookup steps applied to the data. Processing included several steps to normalize the results (described further in Supplymentary Appendix C). A lookup table mapped the normalized results to an actionable interpretation, based on guidelines developed by the Clinical Pharmacogenetics Implementation Consortium.  20 If no entry was found, the record was noted as having an \"Unknown\" interpretation, which flagged it for further review."
+    },
+    {
+      "title": "Results review",
+      "text": "The AGS portal provided a web-based interface through which genetic counselors involved with the study could review and release results. The AGS portal contained a worklist for managing the review process and was designed to provide a 2-step review where a genetic counselor would first review the generated result and interpretive text. Users had the ability to modify the generated report if additional supporting text was needed, and the system would confirm that the patient demographics in the AGS matched those in the EHR.\n\nOnce reviewed, the result was marked as \"Approved.\" Because of the large number of results returned in a single batch from the laboratories, and based on feedback from the physicians enrolled in the study, a second step was added to manage releasing approved results to the EHR in smaller quantities (10-25) at more consistent intervals (typically once or twice per week)."
+    },
+    {
+      "title": "Release of results",
+      "text": "When a result was released, the AGS generated an HL7 v2 observation result, which contained the laboratory test, result and descriptive interpretation report. These messages were sent to our EHR via an HL7 interface and displayed in the laboratory results section of the patient's chart."
+    },
+    {
+      "title": "Real-world application",
+      "text": "For this project, 746 participants had results processed by the AGS. Each participant had 3 observations generated (1 each for clopidogrel, simvastatin, and warfarin), for 2238 observations total. Observations were reviewed and returned to the EHR between June 6, 2014, and September 14, 2015. As of October 2018, there have been no changes in how results were interpreted that required results to be reprocessed.\n\nThe AGS received results for 448 participants from Mount Sinai, and 304 from Johns Hopkins DDL. There were 3 participants with results from both laboratories, with 100% concordance in the AGS interpretation of both sets."
+    },
+    {
+      "title": "DISCUSSION",
+      "text": "In this study, we demonstrated an ancillary genomics system capable of processing heterogeneous genomic results from external laboratories and representing them as computed observations, in accordance with our design objectives. Although not demonstrated in the course of this study, our AGS was designed to reinterpret results as new data or changes in interpretation are made available. The use of a portal to review and release results to the EHR allowed us to manage the number of results a provider received at one time. The format of the computed observations allowed us to also simplify the implementation of CDS rules in the EHR. A full description of our CDS implementation is outside of the scope of this article, but briefly a CDS rule for a particular drug metabolism status could be written as a single condition (eg, \"If observation \u00bc 'Clopidogrel Poor Metabolizer'\") as opposed to all possible permutations of laboratory values (eg, \"If observation \u00bc *2/*2 OR observation \u00bc *2/*3. . .\").\n\nOrganizations have different needs for managing genetic and genomic results, as is evident when reviewing existing implementations.  [1] [2] [3] [4] [5] 5] [6] 18, 21, 22  With respect to the granularity of results, St. Jude's Children Hospital successfully integrated diplotypes from an external laboratory in their EHR,  1, 6  and demonstrated that this level of granularity is acceptable to providers. The NEXT program at the University of Washington represented results at the gene levelflagging if the gene had any known variants-which was found to be too coarse of a level of granularity for CDS.  7 The Mayo Clinic has successfully implemented PGx CDS at their institution,  3, 4  working with their internal laboratory to return data to their EHR, including populating problem and alert lists with phenotype results per gene, as opposed to a specific medication (eg, \"Metabolizer CYP2C19 Poor\"). Given the myriad approaches, additional research is needed to better understand physicians' perspectives on the opti- mal level of granularity. The architecture of our AGS allows us to modify the granularity of results for future studies.\n\nMount Sinai developed and implemented a system as part of their CLIPMERGE PGx program,  5  which receives results from their internal laboratory and acts as their CDS rules engine. The GeneInsight platform developed at Partner's HealthCare 18 supports a laboratory workflow to annotate results, generate interpretive reports that are transmitted to the EHR, and manages re-interpretation of results when the underlying knowledge base is updated.  23 GeneInsight offers a clinical portal for the review of results,  [24] [25] [26]  and is capable of returning structured results in addition to PDF reports. Each of these implementations follows an ancillary omics model,  17  with variations based on institutional preference (eg, the CLIP-MERGE decision to use the system to fire CDS rules), and workflow (eg, GeneInsight's management of laboratory processes). Institutions integrating genomic results into their EHR will have similar considerations to make when implementing a solution.\n\nWe note that the lack of an adopted standardized format for results increased the overall programmatic work, requiring us to import and translate results from each laboratory. Ongoing work within HL7  27, 28  and the Global Alliance for Genomics and Health 29 are evaluating the use of standards for sequencing results, but broad implementation within laboratory systems will be critical to scale this approach. For the computed observations created by the AGS, while the work presented here used HL7 v2, the computed observations could be represented using the Fast Healthcare Interoperability Resources standard.  30 This is a planned area of development, as more EHRs provide inbound Fast Healthcare Interoperability Resources interfaces. Likewise, no computable knowledge bases exist to translate laboratory results into phenotypic representations. A shareable source of knowledge to perform this translation would aid future adoption by other institutions and system developers, and could be based upon translation tables provided by the Clinical Pharmacogenetics Implementation Consortium (eg, simvastatin/ SLCO1B1  31  ).\n\nWithin our study, we note some limitations. The AGS was optimized for genetic counselors to review and release computed observations, as opposed to aiding in the interpretation of rare variants, and may not meet the needs of all institutions. In addition, although the AGS is capable of reprocessing results given new knowledge, the absence of changes during our PGx study precluded us from demonstrating this. This capability was tested during development. Furthermore, while it has been architected to be modular and transportable, to date it has only been implemented at our institution.\n\nFuture work currently underway includes better integration with sites such as ClinGen,  32  which offer supporting, context-aware information resources to aid in decision making; the inclusion of sequencing results, which include more than PGx findings; and the use of a structured XML format to represent individual sequencing results."
+    },
+    {
+      "title": "CONCLUSIONS",
+      "text": "Given the number of workflows by which genomic and genetic data may enter the healthcare system, we have developed and implemented an AGS to manage results from external laboratories in support of PGx. The AGS furthers the idea that complex and heterogeneous genetic and genomic results may be kept outside of the core EHR but still linked in a way that provides sufficient information to clinicians caring for patients.\n\nTable  1 . Typical processing steps performed when analyzing laboratory results\n\nStep Description"
+    },
+    {
+      "title": "1.. Retrieve all relevant results",
+      "text": "Given the relevant high-level attribute identifiers in the system (eg, CYP2C19 Results), retrieve all descendant attribute identifiers, and then pull all result values of those attribute types.\n\n2. Normalize SNP genotypes Ensure 2 SNP genotypes are present with no additional characters separating them (eg, A/A -> AA or T -> TT). 3. Convert SNP genotypes to pharmacogenetic star alleles Using a lookup table, translate the SNP genotype(s) to the appropriate star alleles as necessary. 4. Normalize star alleles Ensure 2 star alleles are present with no additional characters separating them (eg, *1/*1 -> *1*1). 5. Convert genotype to observation Using a lookup table, translate the star variant or alleles into the appropriate computed observation representation. 6. Generate report from template\n\nGiven the computed observation and original genotype results, generate an interpretive report.\n\nDepending on the type of data present, certain steps did not apply. SNP: single nucleotide polymorphism."
+    },
+    {
+      "text": "Figure1. The Northwestern Medicine ancillary genomics system. Overall flow of data from external laboratories, which are imported into the ancillary genomics system, analyzed by the system to create computed observations (results), manually reviewed by a genetic counselor, and then released to the electronic health record (EHR). Steps denoted with an asterisk involve human interaction or decision making; all other steps are automated. HL7: Health Level 7."
+    },
+    {
+      "text": "Figure 2. Translation and normalization steps from heterogeneous laboratory results to computed observations in the ancillary genomics system. For Lab A, the star variant results are converted to a normalized string representation and then translated to a computed observation. For Lab B, the single nucleotide polymorphism (SNP) results are normalized, translated to a star variant representation, and then translated to a computed observation."
+    },
+    {
+      "title": "ACKNOWLEDGMENTS",
+      "text": "The authors wish to acknowledge  Chris Bethman ,  Darren Kaiser ,  Deb Knoner ,  Steve Lee ,  Robert Milfajt , and  Sameem Samad  for their assistance in the implementation of the ancillary genomics system at  Northwestern Medicine ."
+    },
+    {
+      "title": "FUNDING",
+      "text": "This work was funded by the  National Human Genome Research Institute  through grant  U01HG006388 ."
+    },
+    {
+      "title": "AUTHOR CONTRIBUTORS",
+      "text": "JBS and CC conceptualized the project. LVR and FA led the system architecture and system design, and developed core components of the AGS. All authors were involved in the process of developing, reviewing, and/or refining requirements for the AGS. LVR created the first draft of the manuscript. MES, SDP, LJRT, JAP, TMH, and JBS provided substantial feedback in the refinement of the manuscript. All authors reviewed and approved of the submitted manuscript and have agreed to be accountable for its contents."
+    },
+    {
+      "title": "SUPPLEMENTARY MATERIAL",
+      "text": "Supplementary material is available at Journal of the American Medical Informatics Association online.\n\nConflict of interest statement: TMH and JBS founded Ancillary Genomic Systems, LLC, to explore the commercial potential of omic ancillary systems. They have not received any payments for this work and are not currently marketing any products. All other authors have no competing interests to declare."
+    }
+  ],
+  "references": [
+    {
+      "title": "PG4KDS: a model for the clinical implementation of preemptive pharmacogenetics",
+      "authors": [
+        "J Hoffman",
+        "C Haidar",
+        "M Wilkinson",
+        "K Crews",
+        "D Baker",
+        "N Kornegay"
+      ],
+      "year": 2014,
+      "doi": "10.1002/ajmg.c.31391",
+      "journal": "Am J Med Genet C Semin Med Genet",
+      "volume": "166",
+      "issue": "1",
+      "raw": "PG4KDS: a model for the clinical implementation of preemptive pharmacogenetics \n\t\t \n\t\t\t J M Hoffman \n\t\t \n\t\t \n\t\t\t C E Haidar \n\t\t \n\t\t \n\t\t\t M R Wilkinson \n\t\t \n\t\t \n\t\t\t K R Crews \n\t\t \n\t\t \n\t\t\t D K Baker \n\t\t \n\t\t \n\t\t\t N M Kornegay \n\t\t \n\t\t 10.1002/ajmg.c.31391 \n\t \n\t \n\t\t Am J Med Genet C Semin Med Genet \n\t\t \n\t\t\t 166 \n\t\t\t 1 \n\t\t\t \n\t\t\t 2014 \n\t\t \n\t \n\t Hoffman JM, Haidar CE, Wilkinson MR, Crews KR, Baker DK, Korne- gay NM. PG4KDS: a model for the clinical implementation of pre- emptive pharmacogenetics. Am J Med Genet C Semin Med Genet 2014; 166c (1): 45-55."
+    },
+    {
+      "title": "Incorporation of personal single nucleotide polymorphism (SNP) data into a national level electronic health record for disease risk assessment, part 2: the incorporation of SNP into the national health information system of Turkey",
+      "authors": [
+        "T Beyan",
+        "Aydin Son"
+      ],
+      "year": 2014,
+      "doi": "10.2196/medinform.3555",
+      "journal": "JMIR Med Inform",
+      "volume": "2",
+      "issue": "2",
+      "pages": "e17",
+      "raw": "Incorporation of personal single nucleotide polymorphism (SNP) data into a national level electronic health record for disease risk assessment, part 2: the incorporation of SNP into the national health information system of Turkey \n\t\t \n\t\t\t T Beyan \n\t\t \n\t\t \n\t\t\t Aydin Son \n\t\t \n\t\t \n\t\t\t Y \n\t\t \n\t\t 10.2196/medinform.3555 \n\t \n\t \n\t\t JMIR Med Inform \n\t\t \n\t\t\t 2 \n\t\t\t 2 \n\t\t\t e17 \n\t\t\t 2014 \n\t\t \n\t \n\t Beyan T, Aydin Son Y. Incorporation of personal single nucleotide poly- morphism (SNP) data into a national level electronic health record for dis- ease risk assessment, part 2: the incorporation of SNP into the national health information system of Turkey. JMIR Med Inform 2014; 2 (2): e17."
+    },
+    {
+      "title": "Preemptive genotyping for personalized medicine: design of the right drug, right dose, right time-using genomic data to individualize treatment protocol",
+      "authors": [
+        "S Bielinski",
+        "J Olson",
+        "J Pathak"
+      ],
+      "year": 2014,
+      "doi": "10.1016/j.mayocp.2013.10.021",
+      "journal": "Mayo Clin Proc",
+      "volume": "89",
+      "issue": "1",
+      "raw": "Preemptive genotyping for personalized medicine: design of the right drug, right dose, right time-using genomic data to individualize treatment protocol \n\t\t \n\t\t\t S J Bielinski \n\t\t \n\t\t \n\t\t\t J E Olson \n\t\t \n\t\t \n\t\t\t J Pathak \n\t\t \n\t\t 10.1016/j.mayocp.2013.10.021 \n\t \n\t \n\t\t Mayo Clin Proc \n\t\t \n\t\t\t 89 \n\t\t\t 1 \n\t\t\t \n\t\t\t 2014 \n\t\t \n\t \n\t Bielinski SJ, Olson JE, Pathak J, et al. Preemptive genotyping for personal- ized medicine: design of the right drug, right dose, right time-using geno- mic data to individualize treatment protocol. Mayo Clin Proc 2014; 89 (1): 25-33."
+    },
+    {
+      "title": "Electronic medical record-integrated pharmacogenomics and related clinical decision support concepts",
+      "authors": [
+        "P Caraballo",
+        "S Bielinski",
+        "St Sauver",
+        "J Weinshilboum"
+      ],
+      "year": 2017,
+      "doi": "10.1002/cpt.707",
+      "journal": "Clin Pharmacol Ther",
+      "volume": "102",
+      "issue": "2",
+      "raw": "Electronic medical record-integrated pharmacogenomics and related clinical decision support concepts \n\t\t \n\t\t\t P J Caraballo \n\t\t \n\t\t \n\t\t\t S J Bielinski \n\t\t \n\t\t \n\t\t\t St Sauver \n\t\t \n\t\t \n\t\t\t J L Weinshilboum \n\t\t \n\t\t \n\t\t\t R M \n\t\t \n\t\t 10.1002/cpt.707 \n\t \n\t \n\t\t Clin Pharmacol Ther \n\t\t \n\t\t\t 102 \n\t\t\t 2 \n\t\t\t \n\t\t\t 2017 \n\t\t \n\t \n\t Caraballo PJ, Bielinski SJ, St Sauver JL, Weinshilboum RM. Electronic medical record-integrated pharmacogenomics and related clinical decision support concepts. Clin Pharmacol Ther 2017; 102 (2): 254-64."
+    },
+    {
+      "title": "The CLIPMERGE PGx Program: clinical implementation of personalized medicine through electronic health records and genomics-pharmacogenomics",
+      "authors": [
+        "O Gottesman",
+        "S Scott",
+        "S Ellis"
+      ],
+      "year": 2013,
+      "doi": "10.1038/clpt.2013.72",
+      "journal": "Clin Pharmacol Ther",
+      "volume": "94",
+      "issue": "2",
+      "raw": "The CLIPMERGE PGx Program: clinical implementation of personalized medicine through electronic health records and genomics-pharmacogenomics \n\t\t \n\t\t\t O Gottesman \n\t\t \n\t\t \n\t\t\t S A Scott \n\t\t \n\t\t \n\t\t\t S B Ellis \n\t\t \n\t\t 10.1038/clpt.2013.72 \n\t \n\t \n\t\t Clin Pharmacol Ther \n\t\t \n\t\t\t 94 \n\t\t\t 2 \n\t\t\t \n\t\t\t 2013 \n\t\t \n\t \n\t Gottesman O, Scott SA, Ellis SB, et al. The CLIPMERGE PGx Program: clinical implementation of personalized medicine through electronic health records and genomics-pharmacogenomics. Clin Pharmacol Ther 2013; 94 (2): 214-7."
+    },
+    {
+      "title": "A clinician-driven automated system for integration of pharmacogenetic interpretations into an electronic medical record",
+      "authors": [
+        "J Hicks",
+        "K Crews",
+        "J Hoffman"
+      ],
+      "year": 2012,
+      "doi": "10.1038/clpt.2012.140",
+      "journal": "Clin Pharmacol Ther",
+      "volume": "92",
+      "issue": "5",
+      "raw": "A clinician-driven automated system for integration of pharmacogenetic interpretations into an electronic medical record \n\t\t \n\t\t\t J K Hicks \n\t\t \n\t\t \n\t\t\t K R Crews \n\t\t \n\t\t \n\t\t\t J M Hoffman \n\t\t \n\t\t 10.1038/clpt.2012.140 \n\t \n\t \n\t\t Clin Pharmacol Ther \n\t\t \n\t\t\t 92 \n\t\t\t 5 \n\t\t\t \n\t\t\t 2012 \n\t\t \n\t \n\t Hicks JK, Crews KR, Hoffman JM, et al. A clinician-driven automated system for integration of pharmacogenetic interpretations into an elec- tronic medical record. Clin Pharmacol Ther 2012; 92 (5): 563-6."
+    },
+    {
+      "title": "Development of clinical decision support alerts for pharmacogenomic incidental findings from exome sequencing",
+      "authors": [
+        "A Nishimura",
+        "B Shirts",
+        "M Dorschner"
+      ],
+      "year": 2015,
+      "doi": "10.1038/gim.2015.5",
+      "journal": "Genet Med",
+      "volume": "17",
+      "issue": "11",
+      "raw": "Development of clinical decision support alerts for pharmacogenomic incidental findings from exome sequencing \n\t\t \n\t\t\t A A Nishimura \n\t\t \n\t\t \n\t\t\t B H Shirts \n\t\t \n\t\t \n\t\t\t M O Dorschner \n\t\t \n\t\t 10.1038/gim.2015.5 \n\t \n\t \n\t\t Genet Med \n\t\t \n\t\t\t 17 \n\t\t\t 11 \n\t\t\t \n\t\t\t 2015 \n\t\t \n\t \n\t Nishimura AA, Shirts BH, Dorschner MO, et al. Development of clinical decision support alerts for pharmacogenomic incidental findings from exome sequencing. Genet Med 2015; 17 (11): 939-42."
+    },
+    {
+      "title": "Clinical pharmacogenetics implementation: approaches, successes, and challenges",
+      "authors": [
+        "K Weitzel",
+        "A Elsey",
+        "T Langaee"
+      ],
+      "year": 2014,
+      "doi": "10.1002/ajmg.c.31390",
+      "journal": "Am J Med Genet C Semin Med Genet",
+      "volume": "166",
+      "issue": "1",
+      "raw": "Clinical pharmacogenetics implementation: approaches, successes, and challenges \n\t\t \n\t\t\t K W Weitzel \n\t\t \n\t\t \n\t\t\t A R Elsey \n\t\t \n\t\t \n\t\t\t T Y Langaee \n\t\t \n\t\t 10.1002/ajmg.c.31390 \n\t \n\t \n\t\t Am J Med Genet C Semin Med Genet \n\t\t \n\t\t\t 166 \n\t\t\t 1 \n\t\t\t \n\t\t\t 2014 \n\t\t \n\t \n\t Weitzel KW, Elsey AR, Langaee TY, et al. Clinical pharmacogenetics im- plementation: approaches, successes, and challenges. Am J Med Genet C Semin Med Genet 2014; 166C (1): 56-67."
+    },
+    {
+      "title": "Genetic testing information standardization in HL7 CDA and ISO13606",
+      "authors": [
+        "D Bosca",
+        "L Marco",
+        "V Burriel"
+      ],
+      "year": 2013,
+      "journal": "Stud Health Technol Inform",
+      "volume": "192",
+      "raw": "Genetic testing information standardization in HL7 CDA and ISO13606 \n\t\t \n\t\t\t D Bosca \n\t\t \n\t\t \n\t\t\t L Marco \n\t\t \n\t\t \n\t\t\t V Burriel \n\t\t \n\t \n\t \n\t\t Stud Health Technol Inform \n\t\t \n\t\t\t 192 \n\t\t\t \n\t\t\t 2013 \n\t\t \n\t \n\t Bosca D, Marco L, Burriel V, et al. Genetic testing information standardi- zation in HL7 CDA and ISO13606. Stud Health Technol Inform 2013; 192: 338-42."
+    },
+    {
+      "title": "The genome-enabled electronic medical record",
+      "authors": [
+        "M Hoffman"
+      ],
+      "year": 2007,
+      "journal": "J Biomed Inform",
+      "volume": "40",
+      "issue": "1",
+      "raw": "The genome-enabled electronic medical record \n\t\t \n\t\t\t M A Hoffman \n\t\t \n\t \n\t \n\t\t J Biomed Inform \n\t\t \n\t\t\t 40 \n\t\t\t 1 \n\t\t\t \n\t\t\t 2007 \n\t\t \n\t \n\t Hoffman MA. The genome-enabled electronic medical record. J Biomed Inform 2007; 40 (1): 44-6."
+    },
+    {
+      "title": "Practical challenges in integrating genomic data into the electronic health record",
+      "authors": [
+        "A Kho",
+        "L Rasmussen",
+        "J Connolly"
+      ],
+      "year": 2013,
+      "doi": "10.1038/gim.2013.131",
+      "journal": "Genet Med",
+      "volume": "15",
+      "issue": "10",
+      "raw": "Practical challenges in integrating genomic data into the electronic health record \n\t\t \n\t\t\t A N Kho \n\t\t \n\t\t \n\t\t\t L V Rasmussen \n\t\t \n\t\t \n\t\t\t J J Connolly \n\t\t \n\t\t 10.1038/gim.2013.131 \n\t \n\t \n\t\t Genet Med \n\t\t \n\t\t\t 15 \n\t\t\t 10 \n\t\t\t \n\t\t\t 2013 \n\t\t \n\t \n\t Kho AN, Rasmussen LV, Connolly JJ, et al. Practical challenges in inte- grating genomic data into the electronic health record. Genet Med 2013; 15 (10): 772-8."
+    },
+    {
+      "title": "Design and anticipated outcomes of the eMERGE-PGx project: a multicenter pilot for preemptive pharmacogenomics in electronic health record systems",
+      "authors": [
+        "L Rasmussen-Torvik",
+        "S Stallings",
+        "A Gordon"
+      ],
+      "year": 2014,
+      "doi": "10.1038/clpt.2014.137",
+      "journal": "Clin Pharmacol Ther",
+      "volume": "96",
+      "issue": "4",
+      "raw": "Design and anticipated outcomes of the eMERGE-PGx project: a multicenter pilot for preemptive pharmacogenomics in electronic health record systems \n\t\t \n\t\t\t L J Rasmussen-Torvik \n\t\t \n\t\t \n\t\t\t S C Stallings \n\t\t \n\t\t \n\t\t\t A S Gordon \n\t\t \n\t\t 10.1038/clpt.2014.137 \n\t \n\t \n\t\t Clin Pharmacol Ther \n\t\t \n\t\t\t 96 \n\t\t\t 4 \n\t\t\t \n\t\t\t 2014 \n\t\t \n\t \n\t Rasmussen-Torvik LJ, Stallings SC, Gordon AS, et al. Design and antici- pated outcomes of the eMERGE-PGx project: a multicenter pilot for pre- emptive pharmacogenomics in electronic health record systems. Clin Pharmacol Ther 2014; 96 (4): 482-9."
+    },
+    {
+      "title": "The Electronic Medical Records and Genomics (eMERGE) Network: past, present, and future",
+      "authors": [
+        "O Gottesman",
+        "H Kuivaniemi",
+        "G Tromp"
+      ],
+      "year": 2013,
+      "doi": "10.1038/gim.2013.72",
+      "journal": "Genet Med",
+      "volume": "15",
+      "issue": "10",
+      "raw": "The Electronic Medical Records and Genomics (eMERGE) Network: past, present, and future \n\t\t \n\t\t\t O Gottesman \n\t\t \n\t\t \n\t\t\t H Kuivaniemi \n\t\t \n\t\t \n\t\t\t G Tromp \n\t\t \n\t\t 10.1038/gim.2013.72 \n\t \n\t \n\t\t Genet Med \n\t\t \n\t\t\t 15 \n\t\t\t 10 \n\t\t\t \n\t\t\t 2013 \n\t\t \n\t \n\t Gottesman O, Kuivaniemi H, Tromp G, et al. The Electronic Medical Records and Genomics (eMERGE) Network: past, present, and future. Genet Med 2013; 15 (10): 761-71."
+    },
+    {
+      "title": "Clinical Sequencing Exploratory Research Consortium: accelerating evidence-based practice of genomic medicine",
+      "authors": [
+        "R Green",
+        "K Goddard",
+        "G Jarvik"
+      ],
+      "year": 2016,
+      "doi": "10.17504/protocols.io.q26g7ye68gwz/v1",
+      "journal": "Am J Hum Genet",
+      "volume": "98",
+      "issue": "6",
+      "raw": "Clinical Sequencing Exploratory Research Consortium: accelerating evidence-based practice of genomic medicine \n\t\t \n\t\t\t R C Green \n\t\t \n\t\t \n\t\t\t K A Goddard \n\t\t \n\t\t \n\t\t\t G P Jarvik \n\t\t \n\t\t 10.17504/protocols.io.q26g7ye68gwz/v1 \n\t \n\t \n\t\t Am J Hum Genet \n\t\t \n\t\t\t 98 \n\t\t\t 6 \n\t\t\t \n\t\t\t 2016 \n\t\t \n\t \n\t Green RC, Goddard KA, Jarvik GP, et al. Clinical Sequencing Exploratory Research Consortium: accelerating evidence-based practice of genomic medicine. Am J Hum Genet 2016; 98 (6): 1051-66."
+    },
+    {
+      "title": "The IGNITE network: a model for genomic medicine implementation and research",
+      "authors": [
+        "K Weitzel",
+        "M Alexander",
+        "B Bernhardt"
+      ],
+      "year": 2016,
+      "doi": "10.1186/s12920-015-0162-5",
+      "journal": "BMC Med Genomics",
+      "volume": "9",
+      "pages": "1",
+      "raw": "The IGNITE network: a model for genomic medicine implementation and research \n\t\t \n\t\t\t K W Weitzel \n\t\t \n\t\t \n\t\t\t M Alexander \n\t\t \n\t\t \n\t\t\t B A Bernhardt \n\t\t \n\t\t 10.1186/s12920-015-0162-5 \n\t \n\t \n\t\t BMC Med Genomics \n\t\t \n\t\t\t 9 \n\t\t\t 1 \n\t\t\t 2016 \n\t\t \n\t \n\t Weitzel KW, Alexander M, Bernhardt BA, et al. The IGNITE network: a model for genomic medicine implementation and research. BMC Med Ge- nomics 2016; 9: 1."
+    },
+    {
+      "title": "DIGITizE: Displaying and Integrating Genetic Information Through the EHR",
+      "year": 2018,
+      "doi": "10.1007/978-3-7908-2799-6_5",
+      "raw": "DIGITizE: Displaying and Integrating Genetic Information Through the EHR \n\t\t 10.1007/978-3-7908-2799-6_5 \n\t\t \n\t\t \n\t\t\t 2018. February 6, 2019 \n\t\t \n\t\t \n\t\t\t National Academy of Sciences \n\t\t \n\t \n\t National Academy of Sciences. DIGITizE: Displaying and Integrating Genetic Information Through the EHR. 2018. http://www.nationalacade- mies.org/hmd/Activities/Research/GenomicBasedResearch/Innovation- Collaboratives/DIGITizE.aspx. Accessed February 6, 2019."
+    },
+    {
+      "title": "Crossing the omic chasm: a time for omic ancillary systems",
+      "authors": [
+        "J Starren",
+        "M Williams",
+        "E Bottinger"
+      ],
+      "year": 2013,
+      "doi": "10.1001/jama.2013.1579",
+      "journal": "JAMA",
+      "volume": "309",
+      "issue": "12",
+      "raw": "Crossing the omic chasm: a time for omic ancillary systems \n\t\t \n\t\t\t J Starren \n\t\t \n\t\t \n\t\t\t M S Williams \n\t\t \n\t\t \n\t\t\t E P Bottinger \n\t\t \n\t\t 10.1001/jama.2013.1579 \n\t \n\t \n\t\t JAMA \n\t\t \n\t\t\t 309 \n\t\t\t 12 \n\t\t\t \n\t\t\t 2013 \n\t\t \n\t \n\t Starren J, Williams MS, Bottinger EP. Crossing the omic chasm: a time for omic ancillary systems. JAMA 2013; 309 (12): 1237-8."
+    },
+    {
+      "title": "The GeneInsight Suite: a platform to support laboratory and provider use of DNA-based genetic testing",
+      "authors": [
+        "S Aronson",
+        "E Clark",
+        "L Babb"
+      ],
+      "year": 2011,
+      "doi": "10.1002/humu.21470",
+      "journal": "Hum Mutat",
+      "volume": "32",
+      "issue": "5",
+      "raw": "The GeneInsight Suite: a platform to support laboratory and provider use of DNA-based genetic testing \n\t\t \n\t\t\t S J Aronson \n\t\t \n\t\t \n\t\t\t E H Clark \n\t\t \n\t\t \n\t\t\t L J Babb \n\t\t \n\t\t 10.1002/humu.21470 \n\t \n\t \n\t\t Hum Mutat \n\t\t \n\t\t\t 32 \n\t\t\t 5 \n\t\t\t \n\t\t\t 2011 \n\t\t \n\t \n\t Aronson SJ, Clark EH, Babb LJ, et al. The GeneInsight Suite: a platform to support laboratory and provider use of DNA-based genetic testing. Hum Mutat 2011; 32 (5): 532-6."
+    },
+    {
+      "title": "Technical desiderata for the integration of genomic data into Electronic Health Records",
+      "authors": [
+        "D Masys",
+        "G Jarvik",
+        "N Abernethy"
+      ],
+      "year": 2012,
+      "doi": "10.1016/j.jbi.2011.12.005",
+      "journal": "J Biomed Inform",
+      "volume": "45",
+      "issue": "3",
+      "raw": "Technical desiderata for the integration of genomic data into Electronic Health Records \n\t\t \n\t\t\t D R Masys \n\t\t \n\t\t \n\t\t\t G P Jarvik \n\t\t \n\t\t \n\t\t\t N F Abernethy \n\t\t \n\t\t 10.1016/j.jbi.2011.12.005 \n\t \n\t \n\t\t J Biomed Inform \n\t\t \n\t\t\t 45 \n\t\t\t 3 \n\t\t\t \n\t\t\t 2012 \n\t\t \n\t \n\t Masys DR, Jarvik GP, Abernethy NF, et al. Technical desiderata for the integration of genomic data into Electronic Health Records. J Biomed Inform 2012; 45 (3): 419-22."
+    },
+    {
+      "title": "CPIC: Clinical pharmacogenetics implementation consortium of the pharmacogenomics research network",
+      "authors": [
+        "M Relling",
+        "T Klein"
+      ],
+      "year": 2011,
+      "doi": "10.1038/clpt.2010.279",
+      "journal": "Clin Pharmacol Ther",
+      "volume": "89",
+      "issue": "3",
+      "raw": "CPIC: Clinical pharmacogenetics implementation consortium of the pharmacogenomics research network \n\t\t \n\t\t\t M V Relling \n\t\t \n\t\t \n\t\t\t T E Klein \n\t\t \n\t\t 10.1038/clpt.2010.279 \n\t \n\t \n\t\t Clin Pharmacol Ther \n\t\t \n\t\t\t 89 \n\t\t\t 3 \n\t\t\t \n\t\t\t 2011 \n\t\t \n\t \n\t Relling MV, Klein TE. CPIC: Clinical pharmacogenetics implementation consortium of the pharmacogenomics research network. Clin Pharmacol Ther 2011; 89 (3): 464-7."
+    },
+    {
+      "title": "The cancer precision medicine knowledge base for structured clinical-grade mutations and interpretations",
+      "authors": [
+        "L Huang",
+        "H Fernandes",
+        "H Zia"
+      ],
+      "year": 2017,
+      "doi": "10.1093/jamia/ocw148",
+      "journal": "J Am Med Informat Assoc",
+      "volume": "24",
+      "issue": "3",
+      "raw": "The cancer precision medicine knowledge base for structured clinical-grade mutations and interpretations \n\t\t \n\t\t\t L Huang \n\t\t \n\t\t \n\t\t\t H Fernandes \n\t\t \n\t\t \n\t\t\t H Zia \n\t\t \n\t\t 10.1093/jamia/ocw148 \n\t \n\t \n\t\t J Am Med Informat Assoc \n\t\t \n\t\t\t 24 \n\t\t\t 3 \n\t\t\t \n\t\t\t 2017 \n\t\t \n\t \n\t Huang L, Fernandes H, Zia H, et al. The cancer precision medicine knowl- edge base for structured clinical-grade mutations and interpretations. J Am Med Informat Assoc 2017; 24 (3): 513-9."
+    },
+    {
+      "title": "A taste of individualized medicine: physicians' reactions to automated genetic interpretations",
+      "authors": [
+        "H Laerum",
+        "S Bremer",
+        "S Bergan"
+      ],
+      "year": 2014,
+      "journal": "J Am Med Inform Assoc",
+      "volume": "21",
+      "issue": "1",
+      "raw": "A taste of individualized medicine: physicians' reactions to automated genetic interpretations \n\t\t \n\t\t\t H Laerum \n\t\t \n\t\t \n\t\t\t S Bremer \n\t\t \n\t\t \n\t\t\t S Bergan \n\t\t \n\t\t \n\t\t\t Gru \u00a8nfeld T \n\t\t \n\t \n\t \n\t\t J Am Med Inform Assoc \n\t\t \n\t\t\t 21 \n\t\t\t 1 \n\t\t\t \n\t\t\t 2014 \n\t\t \n\t \n\t Laerum H, Bremer S, Bergan S, Gru \u00a8nfeld T. A taste of individualized medi- cine: physicians' reactions to automated genetic interpretations. J Am Med Inform Assoc 2014; 21 (e1): e143-6."
+    },
+    {
+      "title": "Communicating new knowledge on previously reported genetic variants",
+      "authors": [
+        "S Aronson",
+        "E Clark",
+        "M Varugheese",
+        "S Baxter",
+        "L Babb",
+        "H Rehm"
+      ],
+      "year": 2012,
+      "doi": "10.1038/gim.2012.19",
+      "journal": "Genet Med",
+      "volume": "14",
+      "issue": "8",
+      "raw": "Communicating new knowledge on previously reported genetic variants \n\t\t \n\t\t\t S J Aronson \n\t\t \n\t\t \n\t\t\t E H Clark \n\t\t \n\t\t \n\t\t\t M Varugheese \n\t\t \n\t\t \n\t\t\t S Baxter \n\t\t \n\t\t \n\t\t\t L J Babb \n\t\t \n\t\t \n\t\t\t H L Rehm \n\t\t \n\t\t 10.1038/gim.2012.19 \n\t \n\t \n\t\t Genet Med \n\t\t \n\t\t\t 14 \n\t\t\t 8 \n\t\t\t \n\t\t\t 2012 \n\t\t \n\t \n\t Aronson SJ, Clark EH, Varugheese M, Baxter S, Babb LJ, Rehm HL. Communicating new knowledge on previously reported genetic variants. Genet Med 2012; 14 (8): 713-9."
+    },
+    {
+      "title": "A novel clinician interface to improve clinician access to up-to-date genetic results",
+      "authors": [
+        "A Wilcox",
+        "P Neri",
+        "L Volk"
+      ],
+      "year": 2014,
+      "doi": "10.1136/amiajnl-2013-001965",
+      "journal": "J Am Med Inform Assoc",
+      "volume": "21",
+      "issue": "1",
+      "raw": "A novel clinician interface to improve clinician access to up-to-date genetic results \n\t\t \n\t\t\t A R Wilcox \n\t\t \n\t\t \n\t\t\t P M Neri \n\t\t \n\t\t \n\t\t\t L A Volk \n\t\t \n\t\t 10.1136/amiajnl-2013-001965 \n\t \n\t \n\t\t J Am Med Inform Assoc \n\t\t \n\t\t\t 21 \n\t\t\t 1 \n\t\t\t \n\t\t\t 2014 \n\t\t \n\t \n\t Wilcox AR, Neri PM, Volk LA, et al. A novel clinician interface to im- prove clinician access to up-to-date genetic results. J Am Med Inform Assoc 2014; 21 (e1): e117-21."
+    },
+    {
+      "title": "Usability of a novel clinician interface for genetic results",
+      "authors": [
+        "P Neri",
+        "S Pollard",
+        "L Volk"
+      ],
+      "year": 2012,
+      "doi": "10.1016/j.jbi.2012.03.007",
+      "journal": "J Biomed Inform",
+      "volume": "45",
+      "issue": "5",
+      "raw": "Usability of a novel clinician interface for genetic results \n\t\t \n\t\t\t P M Neri \n\t\t \n\t\t \n\t\t\t S E Pollard \n\t\t \n\t\t \n\t\t\t L A Volk \n\t\t \n\t\t 10.1016/j.jbi.2012.03.007 \n\t \n\t \n\t\t J Biomed Inform \n\t\t \n\t\t\t 45 \n\t\t\t 5 \n\t\t\t \n\t\t\t 2012 \n\t\t \n\t \n\t Neri PM, Pollard SE, Volk LA, et al. Usability of a novel clinician interface for genetic results. J Biomed Inform 2012; 45 (5): 950-7."
+    },
+    {
+      "title": "Evaluation: a qualitative pilot study of novel information technology infrastructure to communicate genetic variant updates",
+      "authors": [
+        "S Klinkenberg-Ramirez",
+        "P Neri",
+        "L Volk"
+      ],
+      "year": 2016,
+      "doi": "10.4338/aci-2015-11-ra-0162",
+      "journal": "Appl Clin Inform",
+      "volume": "7",
+      "issue": "2",
+      "raw": "Evaluation: a qualitative pilot study of novel information technology infrastructure to communicate genetic variant updates \n\t\t \n\t\t\t S Klinkenberg-Ramirez \n\t\t \n\t\t \n\t\t\t P M Neri \n\t\t \n\t\t \n\t\t\t L A Volk \n\t\t \n\t\t 10.4338/aci-2015-11-ra-0162 \n\t \n\t \n\t\t Appl Clin Inform \n\t\t \n\t\t\t 7 \n\t\t\t 2 \n\t\t\t \n\t\t\t 2016 \n\t\t \n\t \n\t Klinkenberg-Ramirez S, Neri PM, Volk LA, et al. Evaluation: a qualitative pilot study of novel information technology infrastructure to communi- cate genetic variant updates. Appl Clin Inform 2016; 7 (2): 461-76."
+    },
+    {
+      "year": 2018,
+      "doi": "10.1007/978-3-319-93414-3_10",
+      "journal": "Health Level",
+      "volume": "7",
+      "raw": "10.1007/978-3-319-93414-3_10 \n\t\t -FHIR v3.0.1 \n\t\t \n\t \n\t \n\t\t Health Level \n\t\t \n\t\t\t 7 \n\t\t\t 2018 \n\t\t \n\t \n\t Genomics \n\t Health Level 7. Genomics -FHIR v3.0.1. 2018. https://www.hl7.org/fhir/ genomics.html."
+    },
+    {
+      "year": 2018,
+      "doi": "10.1016/s1388-2457(08)60619-7",
+      "journal": "Clinical Genomics",
+      "volume": "7",
+      "raw": "10.1016/s1388-2457(08)60619-7 \n\t\t \n\t \n\t \n\t\t Clinical Genomics \n\t\t \n\t\t\t 7 \n\t\t\t 2018 \n\t\t \n\t \n\t Health Level \n\t Health Level 7. Clinical Genomics. 2018. http://www.hl7.org/Special/ committees/clingenomics/."
+    },
+    {
+      "year": 2017,
+      "doi": "10.1007/978-3-030-56883-2_23",
+      "journal": "Health Level",
+      "volume": "7",
+      "raw": "10.1007/978-3-030-56883-2_23 \n\t\t FHIR v3.0.1 \n\t\t \n\t \n\t \n\t\t Health Level \n\t\t \n\t\t\t 7 \n\t\t\t 2017 \n\t\t \n\t \n\t Health Level 7. Index -FHIR v3.0.1. 2017. https://www.hl7.org/fhir/in- dex.html."
+    },
+    {
+      "title": "SLCO1B1 translation table",
+      "year": 2014,
+      "doi": "10.1038/clpt.2014.125",
+      "raw": "SLCO1B1 translation table \n\t\t \n\t\t\t Clinical Pharmacogenetics Implementation Consortium \n\t\t \n\t\t 10.1038/clpt.2014.125 \n\t\t \n\t\t \n\t\t\t 2014. 2014 \n\t\t \n\t \n\t Clinical Pharmacogenetics Implementation Consortium. 2014 SLCO1B1 translation table. 2014. https://cpicpgx.org/content/guideline/publication/ simvastatin/2014/24918167.xlsx."
+    },
+    {
+      "title": "Providing access to genomic variant knowledge in a healthcare setting: a vision for the ClinGen Electronic Health Records Workgroup",
+      "authors": [
+        "C Overby",
+        "B Heale",
+        "S Aronson"
+      ],
+      "year": 2016,
+      "journal": "Clin Pharmacol Ther",
+      "volume": "99",
+      "issue": "2",
+      "raw": "Providing access to genomic variant knowledge in a healthcare setting: a vision for the ClinGen Electronic Health Records Workgroup \n\t\t \n\t\t\t C L Overby \n\t\t \n\t\t \n\t\t\t B Heale \n\t\t \n\t\t \n\t\t\t S Aronson \n\t\t \n\t \n\t \n\t\t Clin Pharmacol Ther \n\t\t \n\t\t\t 99 \n\t\t\t 2 \n\t\t\t \n\t\t\t 2016 \n\t\t \n\t \n\t Overby CL, Heale B, Aronson S, et al. Providing access to genomic variant knowledge in a healthcare setting: a vision for the ClinGen Electronic Health Records Workgroup. Clin Pharmacol Ther 2016; 99 (2): 157-60."
+    }
+  ],
+  "num_references": 31,
+  "figures": [
+    {
+      "caption": "Figure 1 .",
+      "description": "Figure1. The Northwestern Medicine ancillary genomics system. Overall flow of data from external laboratories, which are imported into the ancillary genomics system, analyzed by the system to create computed observations (results), manually reviewed by a genetic counselor, and then released to the electronic health record (EHR). Steps denoted with an asterisk involve human interaction or decision making; all other steps are automated. HL7: Health Level 7."
+    },
+    {
+      "caption": "Figure 2 .",
+      "description": "Figure 2. Translation and normalization steps from heterogeneous laboratory results to computed observations in the ancillary genomics system. For Lab A, the star variant results are converted to a normalized string representation and then translated to a computed observation. For Lab B, the single nucleotide polymorphism (SNP) results are normalized, translated to a star variant representation, and then translated to a computed observation."
+    }
+  ],
+  "num_figures": 2,
+  "license": "V C The Author(s) 2019. Published by Oxford University Press on behalf of the American Medical Informatics Association. All rights reserved. For permissions, please email: journals.permissions@oup.com 306",
+  "license_type": "unknown",
+  "num_citations": 47,
+  "cited_references": [
+    "b4",
+    "b14",
+    "b17",
+    "b20",
+    "b24",
+    "b26",
+    "b28",
+    "b13",
+    "b27",
+    "b16",
+    "b7",
+    "b23",
+    "b29",
+    "b19",
+    "b6",
+    "b18",
+    "b30",
+    "b1",
+    "b9",
+    "b10",
+    "b3",
+    "b5",
+    "b8",
+    "b12",
+    "b15",
+    "b11",
+    "b25",
+    "b22",
+    "b0",
+    "b21",
+    "b2"
+  ],
+  "notes": [
+    "[raw_affiliation] 1  Department of Preventive Medicine , Northwestern University Feinberg School of Medicine , Chicago , IL ,",
+    "[raw_affiliation] 2  Center for Genetic Medicine , Northwestern University Feinberg School of Medicine , Chicago , IL ,",
+    "[raw_affiliation] 3  Department of Medicine , Northwestern University Feinberg School of Medicine , Chicago , IL ,",
+    "[raw_affiliation] 4  Department of Information Technology , Northwestern Memorial HealthCare , Chicago , IL , and",
+    "[raw_affiliation] 3  Department of Medicine , Northwestern University Feinberg School of Medicine , Chicago , IL ,",
+    "[raw_affiliation] 1  Department of Preventive Medicine , Northwestern University Feinberg School of Medicine , Chicago , IL ,",
+    "[raw_affiliation] 2  Center for Genetic Medicine , Northwestern University Feinberg School of Medicine , Chicago , IL ,",
+    "[raw_affiliation] 2  Center for Genetic Medicine , Northwestern University Feinberg School of Medicine , Chicago , IL ,",
+    "[raw_affiliation] 4  Department of Information Technology , Northwestern Memorial HealthCare , Chicago , IL , and",
+    "[raw_affiliation] 5  Department of Information Technology , Northwestern University Feinberg School of Medicine , Chicago , IL",
+    "[raw_affiliation] 1  Department of Preventive Medicine , Northwestern University Feinberg School of Medicine , Chicago , IL ,",
+    "[raw_affiliation] 1  Department of Preventive Medicine , Northwestern University Feinberg School of Medicine , Chicago , IL ,",
+    "[raw_affiliation] 1  Department of Preventive Medicine , Northwestern University Feinberg School of Medicine , Chicago , IL ,",
+    "[raw_affiliation] Northwestern University Feinberg School of Medicine , 11th Floor Rubloff , 750 North Lake Shore Drive , Chicago , IL 60611 , USA",
+    "[submission] Received 13 June 2017; Revised 15 October 2018; Editorial Decision 18 December 2018; Accepted 20 December 2018",
+    "[raw_reference] Hoffman JM, Haidar CE, Wilkinson MR, Crews KR, Baker DK, Korne- gay NM. PG4KDS: a model for the clinical implementation of pre- emptive pharmacogenetics. Am J Med Genet C Semin Med Genet 2014; 166c (1): 45-55.",
+    "[raw_reference] Beyan T, Aydin Son Y. Incorporation of personal single nucleotide poly- morphism (SNP) data into a national level electronic health record for dis- ease risk assessment, part 2: the incorporation of SNP into the national health information system of Turkey. JMIR Med Inform 2014; 2 (2): e17.",
+    "[raw_reference] Bielinski SJ, Olson JE, Pathak J, et al. Preemptive genotyping for personal- ized medicine: design of the right drug, right dose, right time-using geno- mic data to individualize treatment protocol. Mayo Clin Proc 2014; 89 (1): 25-33.",
+    "[raw_reference] Caraballo PJ, Bielinski SJ, St Sauver JL, Weinshilboum RM. Electronic medical record-integrated pharmacogenomics and related clinical decision support concepts. Clin Pharmacol Ther 2017; 102 (2): 254-64.",
+    "[raw_reference] Gottesman O, Scott SA, Ellis SB, et al. The CLIPMERGE PGx Program: clinical implementation of personalized medicine through electronic health records and genomics-pharmacogenomics. Clin Pharmacol Ther 2013; 94 (2): 214-7.",
+    "[raw_reference] Hicks JK, Crews KR, Hoffman JM, et al. A clinician-driven automated system for integration of pharmacogenetic interpretations into an elec- tronic medical record. Clin Pharmacol Ther 2012; 92 (5): 563-6.",
+    "[raw_reference] Nishimura AA, Shirts BH, Dorschner MO, et al. Development of clinical decision support alerts for pharmacogenomic incidental findings from exome sequencing. Genet Med 2015; 17 (11): 939-42.",
+    "[raw_reference] Weitzel KW, Elsey AR, Langaee TY, et al. Clinical pharmacogenetics im- plementation: approaches, successes, and challenges. Am J Med Genet C Semin Med Genet 2014; 166C (1): 56-67.",
+    "[raw_reference] Bosca D, Marco L, Burriel V, et al. Genetic testing information standardi- zation in HL7 CDA and ISO13606. Stud Health Technol Inform 2013; 192: 338-42.",
+    "[raw_reference] Hoffman MA. The genome-enabled electronic medical record. J Biomed Inform 2007; 40 (1): 44-6.",
+    "[raw_reference] Kho AN, Rasmussen LV, Connolly JJ, et al. Practical challenges in inte- grating genomic data into the electronic health record. Genet Med 2013; 15 (10): 772-8.",
+    "[raw_reference] Rasmussen-Torvik LJ, Stallings SC, Gordon AS, et al. Design and antici- pated outcomes of the eMERGE-PGx project: a multicenter pilot for pre- emptive pharmacogenomics in electronic health record systems. Clin Pharmacol Ther 2014; 96 (4): 482-9.",
+    "[raw_reference] Gottesman O, Kuivaniemi H, Tromp G, et al. The Electronic Medical Records and Genomics (eMERGE) Network: past, present, and future. Genet Med 2013; 15 (10): 761-71.",
+    "[raw_reference] Green RC, Goddard KA, Jarvik GP, et al. Clinical Sequencing Exploratory Research Consortium: accelerating evidence-based practice of genomic medicine. Am J Hum Genet 2016; 98 (6): 1051-66.",
+    "[raw_reference] Weitzel KW, Alexander M, Bernhardt BA, et al. The IGNITE network: a model for genomic medicine implementation and research. BMC Med Ge- nomics 2016; 9: 1.",
+    "[raw_reference] National Academy of Sciences. DIGITizE: Displaying and Integrating Genetic Information Through the EHR. 2018. http://www.nationalacade- mies.org/hmd/Activities/Research/GenomicBasedResearch/Innovation- Collaboratives/DIGITizE.aspx. Accessed February 6, 2019.",
+    "[raw_reference] Starren J, Williams MS, Bottinger EP. Crossing the omic chasm: a time for omic ancillary systems. JAMA 2013; 309 (12): 1237-8.",
+    "[raw_reference] Aronson SJ, Clark EH, Babb LJ, et al. The GeneInsight Suite: a platform to support laboratory and provider use of DNA-based genetic testing. Hum Mutat 2011; 32 (5): 532-6.",
+    "[raw_reference] Masys DR, Jarvik GP, Abernethy NF, et al. Technical desiderata for the integration of genomic data into Electronic Health Records. J Biomed Inform 2012; 45 (3): 419-22.",
+    "[raw_reference] Relling MV, Klein TE. CPIC: Clinical pharmacogenetics implementation consortium of the pharmacogenomics research network. Clin Pharmacol Ther 2011; 89 (3): 464-7.",
+    "[raw_reference] Huang L, Fernandes H, Zia H, et al. The cancer precision medicine knowl- edge base for structured clinical-grade mutations and interpretations. J Am Med Informat Assoc 2017; 24 (3): 513-9.",
+    "[raw_reference] Laerum H, Bremer S, Bergan S, Gru \u00a8nfeld T. A taste of individualized medi- cine: physicians' reactions to automated genetic interpretations. J Am Med Inform Assoc 2014; 21 (e1): e143-6.",
+    "[raw_reference] Aronson SJ, Clark EH, Varugheese M, Baxter S, Babb LJ, Rehm HL. Communicating new knowledge on previously reported genetic variants. Genet Med 2012; 14 (8): 713-9.",
+    "[raw_reference] Wilcox AR, Neri PM, Volk LA, et al. A novel clinician interface to im- prove clinician access to up-to-date genetic results. J Am Med Inform Assoc 2014; 21 (e1): e117-21.",
+    "[raw_reference] Neri PM, Pollard SE, Volk LA, et al. Usability of a novel clinician interface for genetic results. J Biomed Inform 2012; 45 (5): 950-7.",
+    "[raw_reference] Klinkenberg-Ramirez S, Neri PM, Volk LA, et al. Evaluation: a qualitative pilot study of novel information technology infrastructure to communi- cate genetic variant updates. Appl Clin Inform 2016; 7 (2): 461-76.",
+    "Genomics",
+    "[raw_reference] Health Level 7. Genomics -FHIR v3.0.1. 2018. https://www.hl7.org/fhir/ genomics.html.",
+    "Health Level",
+    "[raw_reference] Health Level 7. Clinical Genomics. 2018. http://www.hl7.org/Special/ committees/clingenomics/.",
+    "[raw_reference] Health Level 7. Index -FHIR v3.0.1. 2017. https://www.hl7.org/fhir/in- dex.html.",
+    "[raw_reference] Clinical Pharmacogenetics Implementation Consortium. 2014 SLCO1B1 translation table. 2014. https://cpicpgx.org/content/guideline/publication/ simvastatin/2014/24918167.xlsx.",
+    "[raw_reference] Overby CL, Heale B, Aronson S, et al. Providing access to genomic variant knowledge in a healthcare setting: a vision for the ClinGen Electronic Health Records Workgroup. Clin Pharmacol Ther 2016; 99 (2): 157-60."
+  ],
+  "processing_software": {
+    "GROBID": "0.8.2"
+  },
+  "journal": "Journal of the American Medical Informatics Association",
+  "volume": "26",
+  "issue": "4",
+  "pages": "306-310",
+  "zotero_recovery": {
+    "fields_recovered": [
+      "journal"
+    ],
+    "timestamp": "2025-09-01T11:08:21.941223",
+    "zotero_item_type": "journalArticle"
+  }
+}

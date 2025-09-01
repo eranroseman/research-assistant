@@ -1,0 +1,945 @@
+{
+  "paper_id": "RYYFU8FU",
+  "title": "The Potential Impact of Intelligent Systems for Mobile Health Self-Management Support: Monte Carlo Simulations of Text Message Support for Medication Adherence",
+  "abstract": "Background Mobile health (mHealth) services cannot easily adapt to users' unique needs. Purpose We used simulations of text messaging (SMS) for improving medication adherence to demonstrate benefits of interventions using reinforcement learning (RL). Methods We used Monte Carlo simulations to estimate the relative impact of an intervention using RL to adapt SMS adherence support messages in order to more effectively address each non-adherent patient's adherence barriers, e.g., forgetfulness versus side effect concerns. SMS messages were assumed to improve adherence only when they matched the barriers for that patient. Baseline adherence and the impact of matching messages were estimated from literature review. RL-SMS was compared in common scenarios to simple reminders, random messages, and standard tailoring. Results RL could produce a 5-14 % absolute improvement in adherence compared to current approaches. When adherence barriers are not accurately reported, RL can recognize which barriers are relevant for which patients. When barriers change, RL can adjust message targeting. RL can detect when messages are sent too frequently causing burnout. Conclusions RL systems could make mHealth services more effective.",
+  "year": 2014,
+  "date": "2014-08-01",
+  "authors": [
+    {
+      "name": "John Piette",
+      "email": "jpiette@umich.edu"
+    },
+    {
+      "name": "Karen Farris"
+    },
+    {
+      "name": "Sean Newman"
+    },
+    {
+      "name": "Larry An"
+    },
+    {
+      "name": "Jeremy Sussman"
+    },
+    {
+      "name": "Satinder Singh"
+    },
+    {
+      "affiliation": {
+        "organization": "Center for Clinical Management Research",
+        "department": "Center for Clinical Management Research",
+        "institution": "VA Ann Arbor Healthcare System",
+        "address": "Ann Arbor, MI, USA"
+      }
+    },
+    {
+      "affiliation": {
+        "organization": "Department of Health Behavior and Health Education",
+        "department": "Department of Health Behavior and Health Education",
+        "institution": "University of Michigan",
+        "address": "Ann Arbor, MI, USA"
+      }
+    },
+    {
+      "affiliation": {
+        "organization": "Department of Internal Medicine",
+        "department": "Department of Internal Medicine",
+        "institution": "University of Michigan Medical School",
+        "address": "Ann Arbor, MI, USA"
+      }
+    },
+    {
+      "affiliation": {
+        "organization": "Department of Social and Administrative Services",
+        "department": "Department of Social and Administrative Services",
+        "institution": "University of Michigan",
+        "address": "Ann Arbor, MI, USA"
+      }
+    },
+    {
+      "affiliation": {
+        "organization": "Division of Computer Science and Engineering",
+        "department": "Division of Computer Science and Engineering",
+        "institution": "University of Michigan",
+        "address": "Ann Arbor, MI, USA"
+      }
+    }
+  ],
+  "doi": "10.1007/s12160-014-9634-7",
+  "md5": "5FE7C03431A9C675C402DA22F804710D",
+  "publication": {
+    "journal": "Patient Educ Couns",
+    "journal_inferred": true
+  },
+  "keywords": [
+    "Medication adherence",
+    "Mobile health",
+    "Text messaging",
+    "Simulation models",
+    "Chronic disease management"
+  ],
+  "sections": [
+    {
+      "title": "Introduction",
+      "text": "Patient non-adherence to medications for chronic disease management is a major cause of preventable morbidity, mortality, and excess healthcare spending. As many as half of all chronically ill patients fail to take their medications as prescribed, contributing to nearly 100,000 premature deaths annually, as well as $290 billion in annual healthcare costs  [1] [2] [3]  and more than a 10 % increase in hospital admissions for older adults  [4] .\n\nWhile forgetfulness is one major challenge to medication use, non-adherence often is intentional, due to patients' skepticism about the medication's potential benefits, or concerns regarding side effects or other negative consequences of longterm pharmacotherapy  [5] [6] [7] . Patients often report multiple reasons for not taking their medication as prescribed  [5] . Those reasons differ among patients and can change over time as patients' health beliefs are influenced by factors such as their receipt of health information or changes in their health status  [8, 9] .\n\nMobile health (mHealth) interventions such as patient text messaging (short message service or SMS) can deliver frequent prompts and health information to improve adherence  [10] [11] [12] [13] [14] [15] [16] . Two large trials in Kenya have shown that SMS messages can improve antiretroviral adherence among patients with HIV/AIDS, with one of those trials demonstrating significant improvements in viral suppression  [17, 18] . Studies from other countries also demonstrate that SMS messaging may improve medication adherence  [13] [14] [15] [16] . Some of the most successful text messaging adherence interventions have focused on medication reminders  [19] .\n\nOne well-established, evidence-based technique to ensure that patients using mHealth support services receive the information they need is to tailor messages according to the characteristics of the user  [20] . Most studies of tailored health communication use comprehensive baseline assessments to determine what information will be most impactful for which p a t i e n t s [ 2 0 ] , t y p i c a l l y f o c u s i n g o n p a t i e n t s ' sociodemographic characteristics, clinical history, health beliefs, and other determinants of self-care behavior. Message tailoring can significantly improve the effectiveness of health behavior change messages, including messages addressing medication underuse  [21] [22] [23] .\n\nDespite its demonstrated benefits, the effectiveness of tailored communication may be limited if the assessments used to tailor information fail to address key determinants of users' behavior, or if valid patient information cannot be collected due to psychometric limitations in the measures or biases in patient reports. For some behaviors, such as medication adherence, accurate data are often lacking about what causes patients to fall short of self-care goals  [24] . Patients' need for health information may change over time as they master skills or develop new concerns, and repeated tailoring to accommodate those changes is challenging. Finally, studies have shown repeatedly that patients can become desensitized to health communication  [25] [26] [27] [28] , and current approaches to tailored adherence support typically cannot detect patient burnout or adapt message content and frequency so that services remain engaging and effective. The next generation of chronic disease behavior change services will need new strategies for building on the successes of tailored messaging based on up-to-date evidence regarding the content and mode of communication that are most effective for each individual.\n\nReinforcement learning (RL) is a field of artificial intelligence that presents new opportunities to automatically adapt mobile health communication based on feedback from patients about the impact of different types of messages with respect to attaining a given health or behavioral goal. RL algorithms applied to mobile health communication for adherence support can use information about the effectiveness of prior messages addressing each patient's reasons for nonadherence while continuing to strategically explore patients' responses to messages addressing other potential adherence challenges that have yet to be identified. RL has been applied extensively in robotics, control systems, and resource allocation tasks  [29, 30] , and RL algorithms are common in digital commerce, including web advertisement; online news article selection; or product recommendation by companies such as Google  [31] , Yahoo  [32] , Amazon, and Netflix. Applications of RL to human-centered tasks related to behavior change are rare  [33] [34] [35] , and to our knowledge, only a few published papers have described the use of RL in mobile health disease management support  [36] .\n\nThe purpose of this study was to demonstrate the ways in which RL could be used to adapt the content and frequency of SMS messages to promote adherence among individuals taking a medication regularly for a chronic medical problem. To that end, we conducted Monte Carlo simulations estimating the impact of an RL-driven SMS adherence support tool relative to other common approaches to designing mobile health messaging systems, such as focusing specifically on patient reminders or tailoring communication using a baseline survey. Monte Carlo simulations allow potential impacts of a healthcare intervention or policy to be evaluated without the costs of service development and deployment, patient enrollment, and outcome measurement in a real-world trial  [37] [38] [39] . A strength of simulations is that intervention effects can be estimated in the context of differing scenarios (e.g., whether or not patients misreport their adherence barriers, making standard tailoring more difficult) as well as in the context of random variability in key parameters, such as patients' daily adherence behavior. Through the simulations presented here, we estimated the relative performance of RL compared to three common approaches to mobile health messaging and in the context of real-world challenges to the effectiveness of SMS behavior change services, including a change in patients' adherence barriers over time and decreased intervention effectiveness when some patients become desensitized to messages that are sent too frequently."
+    },
+    {
+      "title": "Methods"
+    },
+    {
+      "title": "Components of a Reinforcement Learning System for SMS Adherence Support",
+      "text": "An RL system is composed of four functional units: (1) a set of action choices (in this case, the types of SMS messages addressing various potential reasons for non-adherence); (2) a means of obtaining feedback or \"reinforcement\" about the outcome of interest following each action choice, i.e., the \"reward\" in RL terminology; in the case of medication use, the reward can be defined as an ongoing measure of medication adherence during successive intervals; (3) Additional information about the \"state\" or context within which action choices are made, such as patients' characteristics affecting adherence as well as information about patients' prior history of interaction with the system; and (4) an RL computational agent (the RL \"engine\") that adapts probabilistic action choices based on the state, action, and reward data that are accumulated over time. Each of these components is described below. Additional technical details about RL are included in the Electronic Supplementary Material (ESM).\n\nAction Choices Action choices represent the set of potential interventions available to the RL system at each time point. For the simulations described here, we defined action choices as the choice to send an SMS message addressing one of three possible reasons for medication non-adherence. Specifically, we reviewed the literature  [6, 40, 41]  and identified three common barriers to appropriate medication use: (1) patients' beliefs about their disease and its implications for their health and well-being, e.g., beliefs that their illness is not serious or that their risk for complications is minimal; (2) patients' beliefs about their medication, e.g., that the medication cannot change their long-term course of illness or that it will cause side effects; (3) patients' need for strategies to address forgetfulness in taking their medication. In the simulations, the RL system was designed to \"learn\" for each patient which message type or action was most effective in promoting adherence; and (4) in the third simulation below, examining the impact of message fatigue, a null message (i.e., not sending any message), was considered a fourth action choice so that the system could learn the frequency of messaging that was most effective for each patient.\n\nAdaption Based on Feedback RL systems adapt by seeking to optimize a numerical outcome or \"reward.\" Operationally, an SMS medication adherence support system using RL would need a \"sensor\" for collecting data about patients' medication taking following each message sent to the patient as well as a mathematical model for translating those adherence data into a score that the system uses as its reward to evaluate the impact of those action choices. A sensor could be something simple, such as an SMS system with which patients could repeatedly self-report their adherence using a numerical rating scale. For the simulations presented here, we assumed that the RL system would be informed about patients' adherence using daily pill bottle openings provided automatically via a medication electronic monitoring system (MEMS)  [42] [43] [44] [45] .\n\nState Information When making action choices, some RL algorithms can take into account baseline information about each patient as well as information gathered during the history of interaction between the patient and the system. Such \"state\" information summarizes what is important to action selection. State parameters can be thought of as \"effect modifiers\" that influence the expected impact of a given action on patients' adherence. In SMS intervention design, state information could include information such as changes in adherence after sending previous messages, adherence barriers or health beliefs reported at baseline, or the patient's demographic characteristics. RL systems learn the best mathematical function relating state variables with probabilistic action choices. By learning an action-selection policy from prior interactions with users and applying that policy to future interactions with patients who share similar characteristics as recorded in their vector of state information, RL systems can learn more quickly how best to target messages so as to maximize the impact on the \"reward.\"\n\nThe RL Engine There are several types of RL algorithms that could be used to process reward data and drive SMS adherence support message-selection choices  [29, [46] [47] [48] . Regardless of this choice, all RL systems must address two fundamental problems: (1) balancing exploration of relatively untested action choices versus exploitation of information about choices that have already been shown to be impactful and (  2 ) accounting for delayed effects of a given action choice on patients' future adherence behavior. This latter problem is particularly relevant in mobile health services supporting behaviors such as medication adherence, since information from SMS adherence messages hopefully affects patients' adherence not only the day the message was received but also the patient's long-term ability to self-manage their chronic disease. One subset of RL approaches (known as \"bandit\" algorithms) assumes that an SMS message sent today influences only the patient's likelihood of adherence that same day, i.e., the message will have no residual impact on their adherence in the future. Other algorithms (e.g., algorithms based on partially observable Markov decision processes or POMDP's) estimate a parametric model for patients' underlying pattern of behavior and use that knowledge to account for long-term effects. These differences between algorithms can contribute to the speed with which an RL system can effectively adapt to each patient's unique needs (i.e., the number of patients and patient interactions needed to optimize message choices) as well as the maximum impact that the system may have across patients and over time. Parametric models can be slow to learn, while algorithms that learn quickly may not have the greatest long-term effect. In the simulations that follow, we used a contextual bandit algorithm, LinUCB (see ESM for more information), to illustrate the way in which an RLsupported SMS adherence program can adapt quickly to each patient's needs and have a relatively important impact even in the absence of a parametric model of patients' adherence behavior  [49] ."
+    },
+    {
+      "title": "Monte Carlo Simulations",
+      "text": "To evaluate the performance of RL-based adherence messaging relative to other approaches, we conducted three Monte Carlo simulations. For each simulation, we assumed that patients' adherence behavior was determined by the extent to which they experienced three adherence barriers, represented by the three \"\u03b1 (barrier) \" terms in the following formula:\n\nwhere P(adherence) is the probability that a patient takes his or her medication correctly each day, \u03b1 (disease) represents the extent to which the patient believes that his or her illness is important to treat (ranging from values of 0 for not at all important to 1 for extremely important), \u03b1 (medicine) represents the extent to which the patient is concerned about the negative consequences of his or her medication use (ranging from 0 for extremely concerned to 1 for not at all concerned), and \u03b1-(remember) represents the likelihood that the patient remembers to take his or her medication on a given day (ranging from 0 for will not remember to 1 for will definitely remember). For example, if a patient is only 80 % convinced about the importance of treating his or her illness (i.e., \u03b1 (disease) =0.80), the patient is only 70 % concerned about taking the medication (i.e., \u03b1 (medicine) =0.70), and if the patient has only a 90 % probability of remembering to take the medication assuming he or she intends to do so (i.e., \u03b1 (remember) =0.90), then that patient's probability of taking medication on a given day would be as follows:\n\nIn the simulations presented here, we assumed that the patient sample included 20 patients whose only adherence barrier was a doubt about the disease's severity, 20 patients whose only barrier was a concern about the safety and efficacy of the medication, and 20 patients who both had doubts about disease severity as well as problems with forgetfulness. Based on a literature review  [4, 5, 8, 9, 50, 51] , we assumed that the value of each \u03b1 (barrier) in our simulations was 0.65. Studies for medications treating hypercholesterolemia, osteoarthritis, cardiovascular disease, and type 2 diabetes report adherence rates ranging from 50 to 72 %  [3, 51] . Other studies including conditions such as bladder disorders and glaucoma have found adherence rates below 40 %  [2] . Given that all three \u03b1 (barrier) terms=0.65, the baseline adherence rate for the overall sample of simulated patients was in this range, i.e., 57 % or the average of 65 % for the 20 patients with only doubts about their disease's severity, 65 % for the 20 patients with only medication belief concerns, and 42.25 % for the 20 patients with both disease belief as well as forgetfulness problems. Patients' actual adherence on a given day was assumed to vary around their own average adherence level, according to random variation in the relevant \u03b1 (barrier) terms, with each day's value for each patient drawn from a Gaussian distribution with a mean of 0.65 and a standard deviation of 0.30. SMS messages were assumed to impact adherence only if they addressed the patient's underlying reasons for nonadherence as expressed by that person's three \u03b1 (barrier) values. For example, we assumed that a reminder message would have no impact if the patient in fact was not forgetful but rather was non-adherent because of unaddressed concerns about the medication's safety. When a given SMS message did address one of the patient's reasons for non-adherence, the magnitude of the SMS message effect or \"\u03b2 (match) \" was calculated as a multiplicative improvement in the relevant \u03b1-(barrier) . For example, if \u03b2 (match) =0.6 and a patient only had medication concerns with \u03b1 (medicine) =.65, then their \u03b1 (medicine) would change to the following:\n\nIn the absence of an empirical evidence for differences in the effect size of SMS messages addressing each of the three adherence barriers, we assumed that the effect of a matching SMS message was the same for all three. The magnitude of \u03b2 (match) used in the simulations presented below was based on the improvement in adherence reported in SMS adherence trials, i.e., 12 to 16 %  [17, 21, 50, 51] . For example, Pop-Eleches et al.  [17]  found that weekly short reminders could improve adherence by up to 13 % over the control group after 48 weeks, and Petrie et al.  [21]  showed that text messages tailored to patient's underlying adherence barriers could improve adherence up to 15 % over a control group. To ensure that our simulations generated results that were comparable to these outcomes, we assumed that each day, the actual value of \u03b2 (match) for each patient was selected at random from a normal distribution with a center of 0.7 and a standard deviation of 0.3.\n\nGiven these assumptions, the goal of the RL-supported messaging system was to increase the intervention's effectiveness over time via an increased likelihood of a match between the type of message sent to each patient on each day and the patient's adherence barriers. RL sought to increase the match success rate by modifying the probability of sending a message addressing each of the three barriers, based on feedback about that patient's adherence following prior choices by the RL engine as to which message type would be most effective. More details about the characteristics of each simulation are presented in Table  1  and ESM. The results of the simulations are presented graphically in Figs.  1 ,  2 , and 3 as changes in the proportion of patients who took their medication each day over the course of a 180-day intervention period. Estimates for each day of adherence support were averaged over 100 independent runs, with key parameters being drawn from Gaussian distributions, as noted above. For each experiment, we assumed that the population consisted of 60 patients including the following: 20 patients whose only barrier to medication adherence was concerns about the safety and efficacy of their medications, 20 patients with doubts about their disease severity, and 20 patients who had both concerns about their medications as well as problems remembering to take them RL reinforcement learning a\n\nThe baseline adherence rate for the overall sample was assumed to be 57 %, based on a literature review. Numbers in parentheses are standard deviations\n\nWe compared the behavior of the RL-SMS adherence support service to three common alternatives to delivering SMS messaging interventions: (1) SMS messages serving only as medication adherence reminders, (2) SMS messages addressing each of the three potential barriers to adherence but sent randomly so that each patient received all message types on random days, and (3) SMS messages tailored to patients' adherence barriers as reported in a baseline survey. The RL algorithm initially weighted its choice of messages according to the baseline information about the patient's barriers-similar to the tailored approach. However, unlike tailoring, message choices for RL were selected from a probability distribution in which messages addressing other potential adherence barriers were selected with a small probability, so that RL could \"explore\" these choices, learn from subsequent adherence feedback, and adjust message targeting accordingly.\n\nThe relative efficacy of the RL-based messaging system was evaluated in three scenarios, representing possible situations that could limit the efficacy of current approaches: (1) a Fig.  1  Adherence rates achieved using four different messageselection strategies when a third of the population does not accurately self-report their nonadherence barrier Fig.  2  Adherence rates achieved using four different messageselection strategies when a third of the population change their non-adherence barrier on day 90 scenario in which some patients' actual barriers to medication adherence are not accurately measured at baseline, (2) a scenario in which some patients' reasons for non-adherence change during the course of intervention, and (3) a scenario in which patients experiences SMS message fatigue and begin to tune-out messages that come too frequently. In the first scenario, we assumed that patients who were actually concerned about their medication's safety instead reported at baseline that their problem was forgetfulness. In the second scenario, we examined what would happen when patients who originally had doubts about their medication's safety instead developed doubts about their disease severity roughly halfway through the intervention period. In each of these two scenarios, we assumed that patients received SMS messages daily.\n\nIn the third scenario, we assumed that patients experienced message burnout when they received messages too frequently and that \"too frequently\" meant that they received a message after having received a message on each of the two previous days. For patients experiencing message burnout, we used a multiplicative fatigue factor that diminished the daily effect of a well-targeted message (recall that mismatched messages were assumed to have no effect). Specifically, we assumed that the effect of a given SMS message matching the patient's adherence barrier decreased 5 % each day that the patient was fatigued. For patients in the three non-RL comparison groups, we assumed that the SMS system continued to send messages daily despite message fatigue. In contrast, in the RL-supported program, the system was designed to \"learn\" automatically to adapt to message burnout by evaluating the impact of sending one of the three message types versus sending no message on a given day to prevent message fatigue. Each day that the patient was not fatigued, the impact of a well-matched message increased 10 % until it reached its maximum level. See the ESM for more details."
+    },
+    {
+      "title": "Results"
+    },
+    {
+      "title": "Simulation #1: Adaptation to Misreported Reasons for Non-Adherence",
+      "text": "As shown in Fig.  1 , in the initial 10 days of messaging, a tailored system resulted in higher rates of improvement in medication adherence than the alternative messaging approaches. During that initial period, the RL system (lacking experience from which to learn) began by randomly sending some messages to patients and therefore matched their adherence support needs less frequently than the tailored approach. However, with greater experience, the RL system was able to target messages effectively according to their impact on each patient's actual adherence, i.e., regardless of the patient's reported reasons for non-adherence at baseline. In contrast, the tailored approach continued to send mismatched messages to simulated patients who reported forgetfulness at baseline but who actually had concerns about their medication's safety. As a consequence, the overall improvement in adherence for the tailored system was less than for the RL system at 180 days.\n\nThe simple reminders performed worse than all other messaging strategies because only one third of the simulated sample had forgetfulness as an adherence problem, and those patients also had concerns about their disease severity. Random messaging performed slightly better than simple reminders, since each message had at least a one third chance of being relevant for a particular patient. For simulated patients with both disease belief and memory barriers, each random message had a two thirds chance of being relevant. At the end of 180 days, the estimated daily adherence rate was 78 % for the RL messaging system, 73 % for the tailored system, 67 % for random messaging, and 66 % for simple reminders.\n\nSimulation #2: Changes Over Time in Patients' Reasons for Non-Adherence When assuming that simulated patients did in fact accurately report their reasons for non-adherence at baseline, the tailored approach, because it was immediately able to match adherence support messages to patients' needs, exceeded all other approaches in the initial period of intervention and continued to do so for the first 90 days (Fig.  2 ). During that period, the RL approach progressively improved relative to random messaging and simple reminders but still performed worse than tailored messages. However, when simulated patients who originally had concerns about their medication's safety developed doubts about their disease severity halfway through the intervention period, the tailored approach experienced a significant drop in effectiveness for users who thereafter had a mismatch between their message tailoring and their actual need for adherence support. The RL approach also experienced a drop in effectiveness at 90 days, since \"lessons learned\" in the first 90 days led the system to send messages incorrectly to patients whose adherence barriers changed. However, as shown in Fig.  2 , the RL system was able to adapt to the change in patients' adherence barriers and began to outperform the tailored approach as well as the other two approaches around day 100. At the end of 180 days, expected daily adherence rates were 78 % for the RL system, 73 % for tailored messaging, 68 % for random messages, and 66 % for simple reminders."
+    },
+    {
+      "title": "Simulation #3: The Impact of Message Fatigue",
+      "text": "As shown in Fig.  3 , message fatigue led to diminishing intervention impact among patients receiving tailored messages, random messages, or simple reminders. This is because these messaging strategies were unable to adapt to the fact that when fatigued, the impact of well-targeted messages was progressively less. This resulted in a steady drop in the adherence rate for the three comparison groups, until the adherence rate in each group reached the baseline rate. In contrast, the RL messaging strategy was able to learn that the highest adherence rate for these simulated patients was achieved by repeating the pattern of sending two consecutive well-targeted messages followed by not sending a message on the third day.\n\nInitially, the adherence rate in the RL messaging group declined as the RL system learned how patients responded (and in the process, elicited fatigue in some patients). However, by 20 interactions per patient, the adherence rate in the RL group started rising. At the end of 180 days, the expected daily adherence rate was 70 % for the RL system while the comparison groups returned to their baseline adherence rate of 57 %."
+    },
+    {
+      "title": "Discussion",
+      "text": "We used Monte Carlo simulations and information about the effectiveness of adherence support services from prior trials to estimate the impact of an RL-based SMS adherence support tool compared to other common approaches to SMS adherence messaging. Our results indicate that RL is able to learn to personalize messages to individuals based on their true underlying causes for non-adherence, adapt to changes in the underlying causes for non-adherence over time, and adapt the frequency of messaging so as to avoid message fatigue. The RL system was able to outperform current approaches to designing SMS adherence interventions given reasonable assumptions regarding each approach's effectiveness when SMS messages matched patients' adherence barriers and assuming a relatively small sample of patients. These results affirm our underlying hypothesis that RL-based systems can overcome some of the limitations of current approaches to mHealth service design including approaches that tailor health communication via fixed information collected about patients' health beliefs at baseline. RL systems learn from increasing experience. As a consequence, systems will become increasingly effective as the number of patients and patient interactions grows. Because mHealth interventions can be expensive to create but less expensive to maintain, they become more efficient in the context of larger sample sizes, and therefore, RL may be ideally suited to situations in which mHealth programs are likely to be deployed.\n\nIt is important to emphasize that the scenarios explored in the current simulation trials are common in chronic disease management. For example, it is well known that patients often misreport their adherence barriers  [19] , and time-pressed clinicians may not be able to administer extensive tailoring surveys at program entry. For both of these reasons, RL services that require little tailoring information at baseline are an attractive alternative. Moreover, changes in patients' health status and adherence barriers are the hallmark of chronic illness, and researchers have had difficulty identifying services that can continue to be engaging and relevant in order to maintain health benefits over the long-term. Because RLbased behavior change services continually adapt according to what is working for each patient, they represent a more patient-centered and potentially more effective alternative to current approaches.\n\n\"Message fatigue\" is a major problem in chronic disease management  [25] [26] [27] [28] . Fatigue has not been addressed adequately because tolerance for frequent messages likely varies across patients, and addressing fatigue means balancing that problem with the need to make interventions as intensive as possible. Unlike less flexible approaches to messaging, RL can use feedback from patients to develop schedules that meet each individual's unique needs and preferences for information.\n\nOur simulations leave open a number of challenging questions. Consistent with the underlying motivation for an adaptive approach, generalizations about the impact of RL behavioral interventions relative to standard messaging strategies are likely to be of limited relevance for a given application, due to the diversity of: the clinical problems for which an adaptive intervention might be useful, the characteristics of patients with whom these interventions could be applied, and the action choices that could be available to the RL system. Multiple empirical studies will be needed addressing a wide range of health behavior challenges to fully understand where and to what degree RL systems can improve behaviors overand-above current, deterministic interventions.\n\nNevertheless, some general conclusions can be drawn about the characteristics of RL-based interventions that are likely to lead to a more successful adaptation to patients' needs and therefore greater effectiveness. Action choices need to be defined so that they represent distinct and meaningful alternatives that behavioral theory suggests may have varying, measurable impacts on outcomes across patients and over time. To the extent possible, the \"reward\" signal should be reliable, tightly linked to the action choices made by the RL system, and reported frequently enough to allow for rapid and successful intervention adaptation. Here, we presented a hypothetical example in which reward data consisted of daily adherence information available from a MEMS cap. Of course, MEMS cap information is rarely available in realworld settings and advances in passive sensor technologies may expand the number of situations in which RL-based interventions are successful in promoting behavior change. Even without those advances, researchers should continue to identify instances in which patients' self-reports can be used to guide adaptation by RL systems, since reliable behavioral reports that are correlated in predictable ways with the outcome of interest may be adequate, even if those self-reports are biased relative to the actual behavior, e.g., over-reporting of medication taking.\n\nThe mathematics needed to know how to \"power\" clinical trials for RL-based systems is underdeveloped relative to what is known for more standard fixed arms trials. The use of simulations, as in this paper, is one approach to determining how many patients are needed to learn a good RL policy. The benefit of these simulations depends on the availability of good mathematical models of patient behavior in response to RL system actions as well as good models of noise in the reward signal. If such models are available, then simulations can be used to fine tune the parameters of the RL algorithm (and more generally select from among competing RL algorithms) as well as determine how many interactions with patients are needed for the system to effectively learn what actions are most effective for each user. Further simulationbased and theoretical work is needed to articulate these important relationships as they apply to real-world applications, such as SMS adherence support.\n\nSome of the parameters we used were based on real data (e.g., the baseline adherence rates and the expected impact of a message addressing a patient's adherence barriers), while other parameters such as the distribution of adherence barriers in the population were more arbitrary. To some extent, the results of our simulations reflect these choices. For example, a third of the sample in the current simulations had both concerns about their medication as well as problems remembering to take it; if those patients only had problems with forgetfulness, then random messages (with a third of those messages being reminders) would have had roughly the same impact on adherence in the overall sample as messaging exclusively targeting forgetfulness. If baseline adherence rates were significantly higher than the 57 % estimate we used, RL would have less opportunity to improve over standard tailoring. In contrast, if baseline adherence rates were much lower, then the differences between RL and simple tailoring would be larger than that shown in Figs. 1, 2, and 3. Auxiliary analyses that we conducted varying these assumptions as well as others such as the proportion of patients who misreport their adherence barriers demonstrate that the relative performance of RL compared to current mHealth messaging strategies would be largely unaffected by these differences. Nevertheless, the true benefits of an adaptive, patient-centered approach will be situation-specific, and more research should be pursued to understand where and how to best apply this new approach to enhancing health behavior change.\n\nStudies have shown repeatedly that improved adherence is linked with improved health. For example, investigators have reported that hypertensive patients who are \"non-adherent\" have a 3.8-fold risk of stroke-related death in 2 years  [52] , 43 % of \"high adherence\" patients with hypertension achieve blood pressure control compared to 33 % of those with \"medium adherence\"  [53] , and \"lower adherers\" to statins have a 25 % increased risk of death compared to \"high adherers\"  [54] . The precise functional form of the relationship between adherence and health is not well described, and it is difficult to generalize based on these simulations and available literature about specific health benefits that could be achieved through a more adaptive approach to behavioral intervention design. Nevertheless, it is fair to say that the absolute improvements in adherence shown here relative to tailored messaging are modest, suggesting that the details of intervention design as well as the population in which that intervention is evaluated will be crucial determinants of effectiveness in real-world studies of RL-based adherence support systems. For example, auxiliary analyses indicate that if the baseline adherence rate were only 32 %, a third of the population did not accurately report their adherence barrier, and if a third developed a new adherence barrier, the difference in adherence with RL versus standard tailoring would be more than twice that presented here.\n\nIn summary, this simulation study demonstrated the possible benefits of RL in mHealth communication for the improvement of medication adherence. We found that under many real-world circumstances, RL could be more effective than tailored messages, because RL systems can learn the needs of each individual patient and how those needs change with time. RL systems also may provide a solution to patient burnout, by adapting the frequency of messages to each user so that they meet the person's needs and preferences. RL-based mHealth interventions are a promising example of how artificial intelligence can make healthcare more patient-centered."
+    },
+    {
+      "text": "Fig.3Adherence rates achieved using four different messageselection strategies when there is message fatigue"
+    },
+    {
+      "text": "Summary of simulation experiments"
+    },
+    {
+      "text": "Conflict of Interest John Piette is a VA Career Scientist and received support from grant number P30DK092926 from the NIH. Sean Newman and Satinder Singh were supported in part by the NSF grant IIS 1111324, and Sean Newman also was supported by a grant from the Michigan Institute for Clinical and Health Research (UL1TR000433). Funding agreements ensured the authors' independence in designing the study, interpreting the data, writing, and publishing the report. John Piette, Karen Farris, Sean Newman, Larry An, Jeremy Sussman, and Satinder Singh have no conflicts of interest. All procedures, including the informed consent process, were conducted in accordance with the ethical standards of the responsible committee on human experimentation (institutional and national) and with the Helsinki Declaration of 1975, as revised in 2000.\n\nOpen Access This article is distributed under the terms of the Creative Commons Attribution License which permits any use, distribution, and reproduction in any medium, provided the original author(s) and the source are credited."
+    }
+  ],
+  "references": [
+    {
+      "title": "Thinking outside the pillbox: A system-wide approach to improving patient medication adherence for chronic disease",
+      "year": 2009,
+      "raw": "Thinking outside the pillbox: A system-wide approach to improving patient medication adherence for chronic disease \n\t\t \n\t\t\t Nehi \n\t\t \n\t\t \n\t\t\t 2009 \n\t\t \n\t \n\t Nehi. Thinking outside the pillbox: A system-wide approach to improving patient medication adherence for chronic disease, 2009."
+    },
+    {
+      "title": "Adherence to medication",
+      "authors": [
+        "L Osterberg",
+        "T Blaschke"
+      ],
+      "year": 2005,
+      "doi": "10.1056/nejmra050100",
+      "journal": "N Eng J Med",
+      "volume": "353",
+      "raw": "Adherence to medication \n\t\t \n\t\t\t L Osterberg \n\t\t \n\t\t \n\t\t\t T Blaschke \n\t\t \n\t\t 10.1056/nejmra050100 \n\t \n\t \n\t\t N Eng J Med \n\t\t \n\t\t\t 353 \n\t\t\t \n\t\t\t 2005 \n\t\t \n\t \n\t Osterberg L, Blaschke T. Adherence to medication. N Eng J Med. 2005; 353: 487-497."
+    },
+    {
+      "title": "Understanding medication compliance and persistence from an economics perspective",
+      "authors": [
+        "R Elliott",
+        "J Shinogle",
+        "P Peele"
+      ],
+      "year": 2008,
+      "doi": "10.1111/j.1524-4733.2007.00304.x",
+      "journal": "Value Health",
+      "volume": "11",
+      "pages": "600",
+      "raw": "Understanding medication compliance and persistence from an economics perspective \n\t\t \n\t\t\t R A Elliott \n\t\t \n\t\t \n\t\t\t J A Shinogle \n\t\t \n\t\t \n\t\t\t P Peele \n\t\t \n\t\t 10.1111/j.1524-4733.2007.00304.x \n\t \n\t \n\t\t Value Health \n\t\t \n\t\t\t 11 \n\t\t\t 600 \n\t\t\t 2008 \n\t\t \n\t \n\t Elliott RA, Shinogle JA, Peele P, et al. Understanding medication compliance and persistence from an economics perspective. Value Health. 2008; 11: 600."
+    },
+    {
+      "title": "Patient adherence to treatment: Three decades of research. A comprehensive review",
+      "authors": [
+        "E Vermeire",
+        "H Hearnshaw",
+        "P Van Royen"
+      ],
+      "year": 2001,
+      "doi": "10.1046/j.1365-2710.2001.00363.x",
+      "journal": "J Clin Pharm Ther",
+      "volume": "26",
+      "raw": "Patient adherence to treatment: Three decades of research. A comprehensive review \n\t\t \n\t\t\t E Vermeire \n\t\t \n\t\t \n\t\t\t H Hearnshaw \n\t\t \n\t\t \n\t\t\t P Van Royen \n\t\t \n\t\t 10.1046/j.1365-2710.2001.00363.x \n\t \n\t \n\t\t J Clin Pharm Ther \n\t\t \n\t\t\t 26 \n\t\t\t \n\t\t\t 2001 \n\t\t \n\t \n\t Vermeire E, Hearnshaw H, Van Royen P, et al. Patient adherence to treatment: Three decades of research. A comprehensive review. J Clin Pharm Ther. 2001; 26: 331-342."
+    },
+    {
+      "title": "Frequency of and reasons for medication non-fulfillment and non-persistence among American adults with chronic disease in 2008",
+      "authors": [
+        "C Mchorney",
+        "C Spain"
+      ],
+      "year": 2011,
+      "doi": "10.1111/j.1369-7625.2010.00619.x",
+      "journal": "Health Expect",
+      "volume": "14",
+      "raw": "Frequency of and reasons for medication non-fulfillment and non-persistence among American adults with chronic disease in 2008 \n\t\t \n\t\t\t C A Mchorney \n\t\t \n\t\t \n\t\t\t C V Spain \n\t\t \n\t\t 10.1111/j.1369-7625.2010.00619.x \n\t \n\t \n\t\t Health Expect \n\t\t \n\t\t\t 14 \n\t\t\t \n\t\t\t 2011 \n\t\t \n\t \n\t McHorney CA, Spain CV. Frequency of and reasons for medication non-fulfillment and non-persistence among American adults with chronic disease in 2008. Health Expect. 2011; 14: 307-320."
+    },
+    {
+      "title": "Individual patients hold different beliefs to prescription medications to which they persist vs nonpersist and persist vs nonfulfill",
+      "authors": [
+        "C Mchorney",
+        "A Gadkari"
+      ],
+      "year": 2010,
+      "doi": "10.2147/ppa.s10603",
+      "journal": "Patient Prefer Adherence",
+      "volume": "4",
+      "raw": "Individual patients hold different beliefs to prescription medications to which they persist vs nonpersist and persist vs nonfulfill \n\t\t \n\t\t\t C A Mchorney \n\t\t \n\t\t \n\t\t\t A S Gadkari \n\t\t \n\t\t 10.2147/ppa.s10603 \n\t \n\t \n\t\t Patient Prefer Adherence \n\t\t \n\t\t\t 4 \n\t\t\t \n\t\t\t 2010 \n\t\t \n\t \n\t McHorney CA, Gadkari AS. Individual patients hold different beliefs to prescription medications to which they persist vs nonpersist and persist vs nonfulfill. Patient Prefer Adherence. 2010; 4: 187-195."
+    },
+    {
+      "title": "Patients' beliefs about prescribed medicines and their role in adherence to treatment in chronic physical illness",
+      "authors": [
+        "R Horne",
+        "J Weinman"
+      ],
+      "year": 1999,
+      "journal": "J Psychosom Res",
+      "volume": "47",
+      "raw": "Patients' beliefs about prescribed medicines and their role in adherence to treatment in chronic physical illness \n\t\t \n\t\t\t R Horne \n\t\t \n\t\t \n\t\t\t J Weinman \n\t\t \n\t \n\t \n\t\t J Psychosom Res \n\t\t \n\t\t\t 47 \n\t\t\t \n\t\t\t 1999 \n\t\t \n\t \n\t Horne R, Weinman J. Patients' beliefs about prescribed medicines and their role in adherence to treatment in chronic physical illness. J Psychosom Res. 1999; 47: 555-567."
+    },
+    {
+      "title": "Determinants of different types of medication non-adherence in cholesterol lowering and asthma maintenance medications: A theoretical approach",
+      "authors": [
+        "E Unni",
+        "K Farris"
+      ],
+      "year": 2011,
+      "doi": "10.1016/j.pec.2011.02.017",
+      "journal": "Patient Educ Couns",
+      "volume": "83",
+      "pages": "382",
+      "raw": "Determinants of different types of medication non-adherence in cholesterol lowering and asthma maintenance medications: A theoretical approach \n\t\t \n\t\t\t E Unni \n\t\t \n\t\t \n\t\t\t K B Farris \n\t\t \n\t\t 10.1016/j.pec.2011.02.017 \n\t \n\t \n\t\t Patient Educ Couns \n\t\t \n\t\t\t 83 \n\t\t\t 382 \n\t\t\t 2011 \n\t\t \n\t \n\t Unni E, Farris KB. Determinants of different types of medication non-adherence in cholesterol lowering and asthma maintenance med- ications: A theoretical approach. Patient Educ Couns. 2011; 83: 382."
+    },
+    {
+      "title": "Unintentional non-adherence and beliefs in medicines in older adults",
+      "authors": [
+        "E Unni",
+        "K Farris"
+      ],
+      "year": 2010,
+      "doi": "10.1016/j.pec.2010.05.006",
+      "journal": "Patient Educ Couns",
+      "volume": "83",
+      "raw": "Unintentional non-adherence and beliefs in medicines in older adults \n\t\t \n\t\t\t E J Unni \n\t\t \n\t\t \n\t\t\t K B Farris \n\t\t \n\t\t 10.1016/j.pec.2010.05.006 \n\t \n\t \n\t\t Patient Educ Couns \n\t\t \n\t\t\t 83 \n\t\t\t \n\t\t\t 2010 \n\t\t \n\t \n\t Unni EJ, Farris KB. Unintentional non-adherence and beliefs in medicines in older adults. Patient Educ Couns. 2010; 83: 265-268."
+    },
+    {
+      "title": "Behavior change interventions delivered by mobile telephone short-messaging service",
+      "authors": [
+        "B Fjeldsoe",
+        "A Marshall",
+        "Y Miller"
+      ],
+      "year": 2009,
+      "doi": "10.1016/j.amepre.2008.09.040",
+      "journal": "Am J Prev Med",
+      "volume": "36",
+      "raw": "Behavior change interventions delivered by mobile telephone short-messaging service \n\t\t \n\t\t\t B Fjeldsoe \n\t\t \n\t\t \n\t\t\t A L Marshall \n\t\t \n\t\t \n\t\t\t Y D Miller \n\t\t \n\t\t 10.1016/j.amepre.2008.09.040 \n\t \n\t \n\t\t Am J Prev Med \n\t\t \n\t\t\t 36 \n\t\t\t \n\t\t\t 2009 \n\t\t \n\t \n\t Fjeldsoe B, Marshall AL, Miller YD. Behavior change interventions delivered by mobile telephone short-messaging service. Am J Prev Med. 2009; 36: 165-173."
+    },
+    {
+      "title": "Healthcare via cell phones: A systematic review",
+      "authors": [
+        "S Krishna",
+        "S Boren",
+        "E Balas"
+      ],
+      "year": 2009,
+      "journal": "Telemed J E Health",
+      "volume": "15",
+      "raw": "Healthcare via cell phones: A systematic review \n\t\t \n\t\t\t S Krishna \n\t\t \n\t\t \n\t\t\t S A Boren \n\t\t \n\t\t \n\t\t\t E A Balas \n\t\t \n\t \n\t \n\t\t Telemed J E Health \n\t\t \n\t\t\t 15 \n\t\t\t \n\t\t\t 2009 \n\t\t \n\t \n\t Krishna S, Boren SA, Balas EA. Healthcare via cell phones: A systematic review. Telemed J E Health. 2009; 15: 231-240."
+    },
+    {
+      "title": "The effectiveness of mobile-health technology-based health behaviour change or disease management interventions for health care consumers: A systematic review",
+      "authors": [
+        "C Free",
+        "G Phillips",
+        "L Galli"
+      ],
+      "year": 2013,
+      "journal": "PLoS Med",
+      "volume": "10",
+      "pages": "1001362",
+      "raw": "The effectiveness of mobile-health technology-based health behaviour change or disease management interventions for health care consumers: A systematic review \n\t\t \n\t\t\t C Free \n\t\t \n\t\t \n\t\t\t G Phillips \n\t\t \n\t\t \n\t\t\t L Galli \n\t\t \n\t \n\t \n\t\t PLoS Med \n\t\t \n\t\t\t 10 \n\t\t\t 1001362 \n\t\t\t 2013 \n\t\t \n\t \n\t Free C, Phillips G, Galli L, et al. The effectiveness of mobile-health technology-based health behaviour change or disease management interventions for health care consumers: A systematic review. PLoS Med. 2013; 10: e1001362+."
+    },
+    {
+      "title": "Textmessage reminders to improve sunscreen use: A randomized, controlled trial using electronic monitoring",
+      "authors": [
+        "A Armstrong",
+        "A Watson",
+        "M Makredes"
+      ],
+      "year": 2009,
+      "doi": "10.1001/archdermatol.2009.269",
+      "journal": "Arch Dermatol",
+      "volume": "145",
+      "pages": "1230",
+      "raw": "Textmessage reminders to improve sunscreen use: A randomized, controlled trial using electronic monitoring \n\t\t \n\t\t\t A W Armstrong \n\t\t \n\t\t \n\t\t\t A J Watson \n\t\t \n\t\t \n\t\t\t M Makredes \n\t\t \n\t\t 10.1001/archdermatol.2009.269 \n\t \n\t \n\t\t Arch Dermatol \n\t\t \n\t\t\t 145 \n\t\t\t 1230 \n\t\t\t 2009 \n\t\t \n\t \n\t Armstrong AW, Watson AJ, Makredes M, et al. Text- message reminders to improve sunscreen use: A randomized, controlled trial using electronic monitoring. Arch Dermatol. 2009; 145: 1230."
+    },
+    {
+      "title": "Reinforcement of adherence to prescription recommendations in Asian Indian diabetes patients using short message service (SMS)-a pilot study",
+      "authors": [
+        "A Shetty",
+        "S Chamukuttan",
+        "A Nanditha"
+      ],
+      "year": 2011,
+      "journal": "J Assoc Physicians India",
+      "volume": "59",
+      "pages": "711",
+      "raw": "Reinforcement of adherence to prescription recommendations in Asian Indian diabetes patients using short message service (SMS)-a pilot study \n\t\t \n\t\t\t A S Shetty \n\t\t \n\t\t \n\t\t\t S Chamukuttan \n\t\t \n\t\t \n\t\t\t A Nanditha \n\t\t \n\t \n\t \n\t\t J Assoc Physicians India \n\t\t \n\t\t\t 59 \n\t\t\t 711 \n\t\t\t 2011 \n\t\t \n\t \n\t Shetty AS, Chamukuttan S, Nanditha A, et al. Reinforcement of adherence to prescription recommendations in Asian Indian diabetes patients using short message service (SMS)-a pilot study. J Assoc Physicians India. 2011; 59: 711."
+    },
+    {
+      "title": "SMS reminders improve adherence to oral medication in type 2 diabetes patients who are real time electronically monitored",
+      "authors": [
+        "M Vervloet",
+        "L Van Dijk",
+        "J Santen-Reestman"
+      ],
+      "year": 2012,
+      "journal": "Int J Med Inform",
+      "volume": "81",
+      "raw": "SMS reminders improve adherence to oral medication in type 2 diabetes patients who are real time electronically monitored \n\t\t \n\t\t\t M Vervloet \n\t\t \n\t\t \n\t\t\t L Van Dijk \n\t\t \n\t\t \n\t\t\t J Santen-Reestman \n\t\t \n\t \n\t \n\t\t Int J Med Inform \n\t\t \n\t\t\t 81 \n\t\t\t \n\t\t\t 2012 \n\t\t \n\t \n\t Vervloet M, van Dijk L, Santen-Reestman J, et al. SMS reminders improve adherence to oral medication in type 2 diabetes patients who are real time electronically monitored. Int J Med Inform. 2012; 81: 594-604."
+    },
+    {
+      "title": "A review of the use of mobile phone text messaging in clinical and healthy behavior interventions",
+      "authors": [
+        "J Wei",
+        "I Hollin",
+        "S Kachnowski"
+      ],
+      "year": 2011,
+      "journal": "J Telemed Telecare",
+      "volume": "17",
+      "raw": "A review of the use of mobile phone text messaging in clinical and healthy behavior interventions \n\t\t \n\t\t\t J Wei \n\t\t \n\t\t \n\t\t\t I Hollin \n\t\t \n\t\t \n\t\t\t S Kachnowski \n\t\t \n\t \n\t \n\t\t J Telemed Telecare \n\t\t \n\t\t\t 17 \n\t\t\t \n\t\t\t 2011 \n\t\t \n\t \n\t Wei J, Hollin I, Kachnowski S. A review of the use of mobile phone text messaging in clinical and healthy behavior interventions. J Telemed Telecare. 2011; 17: 41-48."
+    },
+    {
+      "title": "Mobile phone technologies improve adherence to antiretroviral treatment in a resource-limited setting: A randomized controlled trial of text message reminders",
+      "authors": [
+        "C Pop-Eleches",
+        "H Thirumurthy",
+        "J Habyarimana"
+      ],
+      "year": 2011,
+      "journal": "AIDS",
+      "volume": "25",
+      "raw": "Mobile phone technologies improve adherence to antiretroviral treatment in a resource-limited setting: A randomized controlled trial of text message reminders \n\t\t \n\t\t\t C Pop-Eleches \n\t\t \n\t\t \n\t\t\t H Thirumurthy \n\t\t \n\t\t \n\t\t\t J P Habyarimana \n\t\t \n\t \n\t \n\t\t AIDS \n\t\t \n\t\t\t 25 \n\t\t\t \n\t\t\t 2011 \n\t\t \n\t \n\t Pop-Eleches C, Thirumurthy H, Habyarimana JP, et al. Mobile phone technologies improve adherence to antiretroviral treatment in a resource-limited setting: A randomized controlled trial of text mes- sage reminders. AIDS. 2011; 25: 825-834."
+    },
+    {
+      "title": "Mobile phone text messaging for promoting adherence to antiretroviral therapy in patients with HIV infection (review)",
+      "authors": [
+        "T Horvath",
+        "H Azman",
+        "G Kennedy",
+        "G Rutherford"
+      ],
+      "year": 2012,
+      "raw": "T Horvath \n\t\t \n\t\t \n\t\t\t H Azman \n\t\t \n\t\t \n\t\t\t G E Kennedy \n\t\t \n\t\t \n\t\t\t G W Rutherford \n\t\t \n\t\t Mobile phone text messaging for promoting adherence to antiretroviral therapy in patients with HIV infection (review) \n\t\t \n\t\t\t 2012 \n\t\t \n\t \n\t The Cohcrane Collaboration Library: www thecochranelibrary.com \n\t Horvath T, Azman H, Kennedy GE, Rutherford GW. Mobile phone text messaging for promoting adherence to antiretroviral therapy in patients with HIV infection (review). The Cohcrane Collaboration Library: www.thecochranelibrary.com 2012."
+    },
+    {
+      "title": "Healthcare information technology interventions to improve cardiovascular and diabetes medication adherence",
+      "authors": [
+        "A Misono",
+        "S Cutrona",
+        "N Choudhry"
+      ],
+      "year": 2010,
+      "journal": "Am J Manag Care",
+      "volume": "16",
+      "raw": "Healthcare information technology interventions to improve cardiovascular and diabetes medication adherence \n\t\t \n\t\t\t A S Misono \n\t\t \n\t\t \n\t\t\t S L Cutrona \n\t\t \n\t\t \n\t\t\t N K Choudhry \n\t\t \n\t \n\t \n\t\t Am J Manag Care \n\t\t \n\t\t\t 16 \n\t\t\t \n\t\t\t 2010 \n\t\t \n\t \n\t Misono AS, Cutrona SL, Choudhry NK, et al. Healthcare information technology interventions to improve cardiovascular and diabetes medication adherence. Am J Manag Care. 2010; 16: SP82-SP92."
+    },
+    {
+      "title": "Understanding tailoring in communicating about health",
+      "authors": [
+        "R Hawkins",
+        "M Kreuter",
+        "K Resnicow"
+      ],
+      "year": 2008,
+      "doi": "10.1093/her/cyn004",
+      "journal": "Health Educ Res",
+      "volume": "23",
+      "raw": "Understanding tailoring in communicating about health \n\t\t \n\t\t\t R P Hawkins \n\t\t \n\t\t \n\t\t\t M Kreuter \n\t\t \n\t\t \n\t\t\t K Resnicow \n\t\t \n\t\t 10.1093/her/cyn004 \n\t \n\t \n\t\t Health Educ Res \n\t\t \n\t\t\t 23 \n\t\t\t \n\t\t\t 2008 \n\t\t \n\t \n\t Hawkins RP, Kreuter M, Resnicow K, et al. Understanding tailoring in communicating about health. Health Educ Res. 2008; 23: 454-466."
+    },
+    {
+      "title": "A text message programme designed to modify patients' illness and treatment beliefs improves self-reported adherence to asthma preventer medication",
+      "authors": [
+        "K Petrie",
+        "K Perry",
+        "E Broadbent"
+      ],
+      "year": 2012,
+      "doi": "10.1111/j.2044-8287.2011.02033.x",
+      "journal": "Br J Health Psychol",
+      "volume": "17",
+      "raw": "A text message programme designed to modify patients' illness and treatment beliefs improves self-reported adherence to asthma preventer medication \n\t\t \n\t\t\t K J Petrie \n\t\t \n\t\t \n\t\t\t K Perry \n\t\t \n\t\t \n\t\t\t E Broadbent \n\t\t \n\t\t 10.1111/j.2044-8287.2011.02033.x \n\t \n\t \n\t\t Br J Health Psychol \n\t\t \n\t\t\t 17 \n\t\t\t \n\t\t\t 2012 \n\t\t \n\t \n\t Petrie KJ, Perry K, Broadbent E, et al. A text message programme designed to modify patients' illness and treatment beliefs improves self-reported adherence to asthma preventer medication. Br J Health Psychol. 2012; 17: 74-84."
+    },
+    {
+      "title": "Tailored mobile phone text messages as an adjunct to obesity treatment for adolescents",
+      "authors": [
+        "S Woolford",
+        "S Clark",
+        "V Strecher"
+      ],
+      "year": 2010,
+      "doi": "10.1258/jtt.2010.100207",
+      "journal": "J Telemed Telecare",
+      "volume": "16",
+      "raw": "Tailored mobile phone text messages as an adjunct to obesity treatment for adolescents \n\t\t \n\t\t\t S J Woolford \n\t\t \n\t\t \n\t\t\t S J Clark \n\t\t \n\t\t \n\t\t\t V J Strecher \n\t\t \n\t\t 10.1258/jtt.2010.100207 \n\t \n\t \n\t\t J Telemed Telecare \n\t\t \n\t\t\t 16 \n\t\t\t \n\t\t\t 2010 \n\t\t \n\t \n\t Woolford SJ, Clark SJ, Strecher VJ, et al. Tailored mobile phone text messages as an adjunct to obesity treatment for adolescents. J Telemed Telecare. 2010; 16: 458-461."
+    },
+    {
+      "title": "Tailoring a fruit and vegetable intervention on ethnic identity: Results of a randomized study",
+      "authors": [
+        "K Resnicow",
+        "R Davis",
+        "N Zhang"
+      ],
+      "year": 2009,
+      "doi": "10.1037/a0015217",
+      "journal": "Health Psychol",
+      "volume": "28",
+      "raw": "Tailoring a fruit and vegetable intervention on ethnic identity: Results of a randomized study \n\t\t \n\t\t\t K Resnicow \n\t\t \n\t\t \n\t\t\t R Davis \n\t\t \n\t\t \n\t\t\t N Zhang \n\t\t \n\t\t 10.1037/a0015217 \n\t \n\t \n\t\t Health Psychol \n\t\t \n\t\t\t 28 \n\t\t\t \n\t\t\t 2009 \n\t\t \n\t \n\t Resnicow K, Davis R, Zhang N, et al. Tailoring a fruit and vegetable intervention on ethnic identity: Results of a randomized study. Health Psychol. 2009; 28: 394-403."
+    },
+    {
+      "title": "The concordance of selfreport with other measures of medication adherence: A summary of the literature",
+      "authors": [
+        "M Garber",
+        "D Nau",
+        "S Erickson"
+      ],
+      "year": 2004,
+      "journal": "Med Care",
+      "volume": "42",
+      "raw": "The concordance of selfreport with other measures of medication adherence: A summary of the literature \n\t\t \n\t\t\t M C Garber \n\t\t \n\t\t \n\t\t\t D P Nau \n\t\t \n\t\t \n\t\t\t S R Erickson \n\t\t \n\t \n\t \n\t\t Med Care \n\t\t \n\t\t\t 42 \n\t\t\t \n\t\t\t 2004 \n\t\t \n\t \n\t Garber MC, Nau DP, Erickson SR, et al. The concordance of self- report with other measures of medication adherence: A summary of the literature. Med Care. 2004; 42: 649-652."
+    },
+    {
+      "title": "Do automated text messages increase adherence to acne therapy? Results of a randomized, controlled trial",
+      "authors": [
+        "A Boker",
+        "H Feetham",
+        "A Armstron"
+      ],
+      "year": 2012,
+      "doi": "10.1016/j.jaad.2012.02.031",
+      "journal": "J Am Acad Dermatol",
+      "volume": "67",
+      "raw": "Do automated text messages increase adherence to acne therapy? Results of a randomized, controlled trial \n\t\t \n\t\t\t A Boker \n\t\t \n\t\t \n\t\t\t H J Feetham \n\t\t \n\t\t \n\t\t\t A Armstron \n\t\t \n\t\t 10.1016/j.jaad.2012.02.031 \n\t \n\t \n\t\t J Am Acad Dermatol \n\t\t \n\t\t\t 67 \n\t\t\t \n\t\t\t 2012 \n\t\t \n\t \n\t Boker A, Feetham HJ, Armstron A, et al. Do automated text mes- sages increase adherence to acne therapy? Results of a randomized, controlled trial. J Am Acad Dermatol. 2012; 67: 1136-1142."
+    },
+    {
+      "title": "Randomized controlled trial of a personalized cellular phone reminder system to enhance adherence to antiretroviral therapy",
+      "authors": [
+        "H Hardy",
+        "V Kumar",
+        "G Doros"
+      ],
+      "year": 2011,
+      "journal": "AIDS Patient Care STDS",
+      "volume": "25",
+      "raw": "Randomized controlled trial of a personalized cellular phone reminder system to enhance adherence to antiretroviral therapy \n\t\t \n\t\t\t H Hardy \n\t\t \n\t\t \n\t\t\t V Kumar \n\t\t \n\t\t \n\t\t\t G Doros \n\t\t \n\t \n\t \n\t\t AIDS Patient Care STDS \n\t\t \n\t\t\t 25 \n\t\t\t \n\t\t\t 2011 \n\t\t \n\t \n\t Hardy H, Kumar V, Doros G, et al. Randomized controlled trial of a personalized cellular phone reminder system to enhance adherence to antiretroviral therapy. AIDS Patient Care STDS. 2011; 25: 153-161."
+    },
+    {
+      "title": "Technical implementation of a multi-component, text messaging-based intervention for persons living with HIV",
+      "authors": [
+        "R Furberg",
+        "J Uhrig",
+        "C Bann"
+      ],
+      "year": 2012,
+      "journal": "J Med Internet Res",
+      "volume": "1",
+      "pages": "e17",
+      "raw": "Technical implementation of a multi-component, text messaging-based intervention for persons living with HIV \n\t\t \n\t\t\t R D Furberg \n\t\t \n\t\t \n\t\t\t J D Uhrig \n\t\t \n\t\t \n\t\t\t C M Bann \n\t\t \n\t \n\t \n\t\t J Med Internet Res \n\t\t \n\t\t\t 1 \n\t\t\t e17 \n\t\t\t 2012 \n\t\t \n\t \n\t Furberg RD, Uhrig JD, Bann CM, et al. Technical implementation of a multi-component, text messaging-based intervention for persons living with HIV. J Med Internet Res. 2012; 1: e17+."
+    },
+    {
+      "title": "Computerized automated reminder diabetes system (cards): E-mail and SMS cell phone text messaging reminders to support diabetes management",
+      "authors": [
+        "D Hanauer",
+        "K Wentzell",
+        "N Laffel"
+      ],
+      "year": 2009,
+      "journal": "Diabetes Technol Ther",
+      "volume": "11",
+      "raw": "Computerized automated reminder diabetes system (cards): E-mail and SMS cell phone text messaging reminders to support diabetes management \n\t\t \n\t\t\t D A Hanauer \n\t\t \n\t\t \n\t\t\t K Wentzell \n\t\t \n\t\t \n\t\t\t N Laffel \n\t\t \n\t \n\t \n\t\t Diabetes Technol Ther \n\t\t \n\t\t\t 11 \n\t\t\t \n\t\t\t 2009 \n\t\t \n\t \n\t Hanauer DA, Wentzell K, Laffel N, et al. Computerized automated reminder diabetes system (cards): E-mail and SMS cell phone text messaging reminders to support diabetes management. Diabetes Technol Ther. 2009; 11: 99-106."
+    },
+    {
+      "title": "Reinforcement learning for dynamic channel allocation in cellular telephone systems",
+      "authors": [
+        "S Singh",
+        "D Bertsekas"
+      ],
+      "year": 1997,
+      "journal": "Adv Neural Inf Process Syst",
+      "volume": "9",
+      "raw": "Reinforcement learning for dynamic channel allocation in cellular telephone systems \n\t\t \n\t\t\t S Singh \n\t\t \n\t\t \n\t\t\t D Bertsekas \n\t\t \n\t \n\t \n\t\t Adv Neural Inf Process Syst \n\t\t \n\t\t\t 9 \n\t\t\t \n\t\t\t 1997 \n\t\t \n\t \n\t Singh S, Bertsekas D. Reinforcement learning for dynamic channel allocation in cellular telephone systems. Adv Neural Inf Process Syst. 1997; 9: 974-980."
+    },
+    {
+      "title": "An application of reinforcement learning to aerobatic helicopter flight",
+      "authors": [
+        "P Abbeel",
+        "A Coates",
+        "M Quigley"
+      ],
+      "year": 2007,
+      "journal": "Adv Neural Inf Process Syst",
+      "volume": "19",
+      "pages": "87",
+      "raw": "An application of reinforcement learning to aerobatic helicopter flight \n\t\t \n\t\t\t P Abbeel \n\t\t \n\t\t \n\t\t\t A Coates \n\t\t \n\t\t \n\t\t\t M Quigley \n\t\t \n\t \n\t \n\t\t Adv Neural Inf Process Syst \n\t\t \n\t\t\t 19 \n\t\t\t 87 \n\t\t\t 2007 \n\t\t \n\t \n\t Abbeel P, Coates A, Quigley M. An application of reinforcement learning to aerobatic helicopter flight. In: Adv Neural Inf Process Syst 19 2007:87+."
+    },
+    {
+      "title": "Theoretical advantages of lenient q-learners: An evolutionary game theoretic perspective",
+      "authors": [
+        "L Panait",
+        "K Tuyls"
+      ],
+      "raw": "Theoretical advantages of lenient q-learners: An evolutionary game theoretic perspective \n\t\t \n\t\t\t L Panait \n\t\t \n\t\t \n\t\t\t K Tuyls \n\t\t \n\t \n\t \n\t\t AAMAS 2007 \n\t\t \n\t \n\t Panait L, Tuyls K. Theoretical advantages of lenient q-learners: An evolutionary game theoretic perspective. In: AAMAS 2007."
+    },
+    {
+      "title": "A contextual bandit approach to personalized news article recommendation",
+      "authors": [
+        "L Lihong",
+        "W Chu",
+        "J Langford",
+        "R Schapire"
+      ],
+      "journal": "WWW",
+      "volume": "2010",
+      "raw": "A contextual bandit approach to personalized news article recommendation \n\t\t \n\t\t\t L Lihong \n\t\t \n\t\t \n\t\t\t W Chu \n\t\t \n\t\t \n\t\t\t J Langford \n\t\t \n\t\t \n\t\t\t R E Schapire \n\t\t \n\t \n\t \n\t\t WWW \n\t\t \n\t\t\t 2010 \n\t\t\t \n\t\t \n\t \n\t Lihong L, Chu W, Langford J, Schapire RE. A contextual bandit approach to personalized news article recommendation. WWW 2010:661-670."
+    },
+    {
+      "title": "Optimizing dialogue management with reinforcement learning: Experiments with the NJFun system",
+      "authors": [
+        "S Singh",
+        "D Litman",
+        "M Kearns"
+      ],
+      "year": 2002,
+      "doi": "10.1613/jair.859",
+      "journal": "J Artif Intell Res",
+      "volume": "16",
+      "raw": "Optimizing dialogue management with reinforcement learning: Experiments with the NJFun system \n\t\t \n\t\t\t S Singh \n\t\t \n\t\t \n\t\t\t D Litman \n\t\t \n\t\t \n\t\t\t M Kearns \n\t\t \n\t\t 10.1613/jair.859 \n\t \n\t \n\t\t J Artif Intell Res \n\t\t \n\t\t\t 16 \n\t\t\t \n\t\t\t 2002 \n\t\t \n\t \n\t Singh S, Litman D, Kearns M, et al. Optimizing dialogue manage- ment with reinforcement learning: Experiments with the NJFun system. J Artif Intell Res. 2002; 16: 105-133."
+    },
+    {
+      "title": "Adaptive cognitive orthotics: Combining reinforcement learning and constraint-based temporal reasoning",
+      "authors": [
+        "M Rudary",
+        "S Singh",
+        "M Pollack"
+      ],
+      "year": 2004,
+      "doi": "10.1145/1015330.1015411",
+      "raw": "Adaptive cognitive orthotics: Combining reinforcement learning and constraint-based temporal reasoning \n\t\t \n\t\t\t M Rudary \n\t\t \n\t\t \n\t\t\t S Singh \n\t\t \n\t\t \n\t\t\t M Pollack \n\t\t \n\t\t 10.1145/1015330.1015411 \n\t \n\t \n\t\t Proc 21 Int Conf Mach Learn \n\t\t 21 Int Conf Mach Learn \n\t\t \n\t\t\t 2004 \n\t\t\t \n\t\t \n\t \n\t Rudary M, Singh S, Pollack M. Adaptive cognitive orthotics: Combining reinforcement learning and constraint-based temporal reasoning. Proc 21 Int Conf Mach Learn 2004:719-726."
+    },
+    {
+      "title": "A planning system based on Markov decision processes to guide people with dementia through activities of daily living",
+      "authors": [
+        "J Boger",
+        "J Hoey",
+        "P Poupart"
+      ],
+      "year": 2006,
+      "journal": "IEEE Trans Inf Technol Biomed",
+      "volume": "10",
+      "raw": "A planning system based on Markov decision processes to guide people with dementia through activities of daily living \n\t\t \n\t\t\t J Boger \n\t\t \n\t\t \n\t\t\t J Hoey \n\t\t \n\t\t \n\t\t\t P Poupart \n\t\t \n\t \n\t \n\t\t IEEE Trans Inf Technol Biomed \n\t\t \n\t\t\t 10 \n\t\t\t \n\t\t\t 2006 \n\t\t \n\t \n\t Boger J, Hoey J, Poupart P, et al. A planning system based on Markov decision processes to guide people with dementia through activities of daily living. IEEE Trans Inf Technol Biomed. 2006; 10: 323-333."
+    },
+    {
+      "title": "Customizing treatment to the patient: Adaptive treatment strategies",
+      "authors": [
+        "S Murphy"
+      ],
+      "year": 2007,
+      "doi": "10.1016/j.drugalcdep.2007.02.001",
+      "journal": "Drug Alcohol Depend",
+      "volume": "88",
+      "raw": "Customizing treatment to the patient: Adaptive treatment strategies \n\t\t \n\t\t\t S Murphy \n\t\t \n\t\t 10.1016/j.drugalcdep.2007.02.001 \n\t \n\t \n\t\t Drug Alcohol Depend \n\t\t \n\t\t\t 88 \n\t\t\t \n\t\t\t 2007 \n\t\t \n\t \n\t Murphy S. Customizing treatment to the patient: Adaptive treatment strategies. Drug Alcohol Depend. 2007; 88: S1-S3."
+    },
+    {
+      "title": "Effect of patterns of transferring patients among healthcare institutions on rates of nosocomial methicillin-resistant Staphylococcus aureus transmission: A Monte Carlo simulation",
+      "authors": [
+        "M Lesosky",
+        "A Mcgeer",
+        "A Simor"
+      ],
+      "year": 2011,
+      "doi": "10.1086/657945",
+      "journal": "Inf Control Hosp Epidemiol",
+      "volume": "32",
+      "raw": "Effect of patterns of transferring patients among healthcare institutions on rates of nosocomial methicillin-resistant Staphylococcus aureus transmission: A Monte Carlo simulation \n\t\t \n\t\t\t M Lesosky \n\t\t \n\t\t \n\t\t\t A Mcgeer \n\t\t \n\t\t \n\t\t\t A Simor \n\t\t \n\t\t 10.1086/657945 \n\t \n\t \n\t\t Inf Control Hosp Epidemiol \n\t\t \n\t\t\t 32 \n\t\t\t \n\t\t\t 2011 \n\t\t \n\t \n\t Lesosky M, McGeer A, Simor A, et al. Effect of patterns of transfer- ring patients among healthcare institutions on rates of nosocomial methicillin-resistant Staphylococcus aureus transmission: A Monte Carlo simulation. Inf Control Hosp Epidemiol. 2011; 32: 136-147."
+    },
+    {
+      "title": "How does healthcare worker hand hygiene behaviour impact upon the transmission of MRSA between patients? An analysis using a Monte Carlo model",
+      "authors": [
+        "C Beggs",
+        "S Shepherd",
+        "K Kerr"
+      ],
+      "year": 2009,
+      "doi": "10.1186/1471-2334-9-64",
+      "journal": "BMC Infect Dis",
+      "volume": "9",
+      "raw": "How does healthcare worker hand hygiene behaviour impact upon the transmission of MRSA between patients? An analysis using a Monte Carlo model \n\t\t \n\t\t\t C B Beggs \n\t\t \n\t\t \n\t\t\t S J Shepherd \n\t\t \n\t\t \n\t\t\t K G Kerr \n\t\t \n\t\t 10.1186/1471-2334-9-64 \n\t \n\t \n\t\t BMC Infect Dis \n\t\t \n\t\t\t 9 \n\t\t\t \n\t\t\t 2009 \n\t\t \n\t \n\t Beggs CB, Shepherd SJ, Kerr KG. How does healthcare worker hand hygiene behaviour impact upon the transmission of MRSA between patients? An analysis using a Monte Carlo model. BMC Infect Dis. 2009; 9: 1-9."
+    },
+    {
+      "title": "An introduction to computer simulation in healthcare: Patient wait case study",
+      "authors": [
+        "J Benneyan"
+      ],
+      "year": 1997,
+      "journal": "J Soc Health Syst",
+      "volume": "5",
+      "raw": "An introduction to computer simulation in healthcare: Patient wait case study \n\t\t \n\t\t\t J C Benneyan \n\t\t \n\t \n\t \n\t\t J Soc Health Syst \n\t\t \n\t\t\t 5 \n\t\t\t \n\t\t\t 1997 \n\t\t \n\t \n\t Benneyan JC. An introduction to computer simulation in healthcare: Patient wait case study. J Soc Health Syst. 1997; 5: 1-15."
+    },
+    {
+      "title": "The adherence estimator: A brief, proximal screener for patient propensity to adhere to prescription medications for chronic disease",
+      "authors": [
+        "C Mchorney"
+      ],
+      "year": 2009,
+      "journal": "Curr Med Res Opin",
+      "volume": "25",
+      "raw": "The adherence estimator: A brief, proximal screener for patient propensity to adhere to prescription medications for chronic disease \n\t\t \n\t\t\t C A Mchorney \n\t\t \n\t \n\t \n\t\t Curr Med Res Opin \n\t\t \n\t\t\t 25 \n\t\t\t \n\t\t\t 2009 \n\t\t \n\t \n\t McHorney CA. The adherence estimator: A brief, proximal screener for patient propensity to adhere to prescription medications for chronic disease. Curr Med Res Opin. 2009; 25: 215-238."
+    },
+    {
+      "title": "Gain versus loss framing in adherence-promoting communication targeting patients with chronic diseases: The moderating effect of individual time perspective",
+      "authors": [
+        "X Zhao",
+        "M Villagran",
+        "G Kreps",
+        "C Mchorney"
+      ],
+      "year": 2011,
+      "journal": "Health Commun",
+      "raw": "Gain versus loss framing in adherence-promoting communication targeting patients with chronic diseases: The moderating effect of individual time perspective \n\t\t \n\t\t\t X Zhao \n\t\t \n\t\t \n\t\t\t M M Villagran \n\t\t \n\t\t \n\t\t\t G L Kreps \n\t\t \n\t\t \n\t\t\t C Mchorney \n\t\t \n\t \n\t \n\t\t Health Commun \n\t\t \n\t\t\t \n\t\t\t 2011 \n\t\t \n\t \n\t Zhao X, Villagran MM, Kreps GL, McHorney C. Gain versus loss framing in adherence-promoting communication targeting patients with chronic diseases: The moderating effect of individual time perspective. Health Commun 2011:1-11."
+    },
+    {
+      "title": "Management of patients with uncontrolled arterial hypertensionthe role of electronic compliance monitoring, 24-h ambulatory blood pressure monitoring and Candesartan/HCT",
+      "authors": [
+        "T Mengden",
+        "H Vetter",
+        "E Tousset"
+      ],
+      "year": 2006,
+      "doi": "10.1186/1471-2261-6-36",
+      "journal": "BMC Cardiovasc Disord",
+      "volume": "6",
+      "pages": "36",
+      "raw": "Management of patients with uncontrolled arterial hypertensionthe role of electronic compliance monitoring, 24-h ambulatory blood pressure monitoring and Candesartan/HCT \n\t\t \n\t\t\t T Mengden \n\t\t \n\t\t \n\t\t\t H Vetter \n\t\t \n\t\t \n\t\t\t E Tousset \n\t\t \n\t\t 10.1186/1471-2261-6-36 \n\t \n\t \n\t\t BMC Cardiovasc Disord \n\t\t \n\t\t\t 6 \n\t\t\t 36 \n\t\t\t 2006 \n\t\t \n\t \n\t Mengden T, Vetter H, Tousset E, et al. Management of patients with uncontrolled arterial hypertension -the role of electronic compliance monitoring, 24-h ambulatory blood pressure monitoring and Candesartan/HCT. BMC Cardiovasc Disord. 2006; 6: 36."
+    },
+    {
+      "title": "Improved compliance measures: Applications in an ambulatory hypertensive drug trial",
+      "authors": [
+        "P Rudd",
+        "S Ahmed",
+        "V Zachary"
+      ],
+      "year": 1990,
+      "doi": "10.1038/clpt.1990.211",
+      "journal": "Clin Pharmacol Ther",
+      "volume": "48",
+      "raw": "Improved compliance measures: Applications in an ambulatory hypertensive drug trial \n\t\t \n\t\t\t P Rudd \n\t\t \n\t\t \n\t\t\t S Ahmed \n\t\t \n\t\t \n\t\t\t V Zachary \n\t\t \n\t\t 10.1038/clpt.1990.211 \n\t \n\t \n\t\t Clin Pharmacol Ther \n\t\t \n\t\t\t 48 \n\t\t\t \n\t\t\t 1990 \n\t\t \n\t \n\t Rudd P, Ahmed S, Zachary V, et al. Improved compliance measures: Applications in an ambulatory hypertensive drug trial. Clin Pharmacol Ther. 1990; 48: 676-685."
+    },
+    {
+      "title": "Adherence to antihypertensive medication assessed by self-report was associated with electronic monitoring compliance",
+      "authors": [
+        "K Schroeder",
+        "T Fahey",
+        "A Hay"
+      ],
+      "year": 2006,
+      "journal": "J Clin Epidemiol",
+      "volume": "59",
+      "raw": "Adherence to antihypertensive medication assessed by self-report was associated with electronic monitoring compliance \n\t\t \n\t\t\t K Schroeder \n\t\t \n\t\t \n\t\t\t T Fahey \n\t\t \n\t\t \n\t\t\t A D Hay \n\t\t \n\t \n\t \n\t\t J Clin Epidemiol \n\t\t \n\t\t\t 59 \n\t\t\t \n\t\t\t 2006 \n\t\t \n\t \n\t Schroeder K, Fahey T, Hay AD, et al. Adherence to antihypertensive medication assessed by self-report was associated with electronic monitoring compliance. J Clin Epidemiol. 2006; 59: 650-651."
+    },
+    {
+      "title": "Adherence to prescribed antihypertensive drug treatments: Longitudinal study of electronically compiled dosing histories",
+      "authors": [
+        "B Vrijens",
+        "G Vincze",
+        "P Kristanto"
+      ],
+      "year": 2008,
+      "doi": "10.1136/bmj.39553.670231.25",
+      "journal": "BMJ (Clin Res ed)",
+      "volume": "336",
+      "raw": "Adherence to prescribed antihypertensive drug treatments: Longitudinal study of electronically compiled dosing histories \n\t\t \n\t\t\t B Vrijens \n\t\t \n\t\t \n\t\t\t G Vincze \n\t\t \n\t\t \n\t\t\t P Kristanto \n\t\t \n\t\t 10.1136/bmj.39553.670231.25 \n\t \n\t \n\t\t BMJ (Clin Res ed) \n\t\t \n\t\t\t 336 \n\t\t\t \n\t\t\t 2008 \n\t\t \n\t \n\t Vrijens B, Vincze G, Kristanto P, et al. Adherence to prescribed antihypertensive drug treatments: Longitudinal study of electronical- ly compiled dosing histories. BMJ (Clin Res ed). 2008; 336: 1114- 1117."
+    },
+    {
+      "title": "Optimizing dialogue management with reinforcement learning: Experiments with the NJFun system",
+      "authors": [
+        "S Singh",
+        "D Litman",
+        "M Kearns",
+        "M Walker"
+      ],
+      "year": 2000,
+      "doi": "10.1613/jair.859",
+      "journal": "J Artif Intell Res",
+      "raw": "Optimizing dialogue management with reinforcement learning: Experiments with the NJFun system \n\t\t \n\t\t\t S Singh \n\t\t \n\t\t \n\t\t\t D J Litman \n\t\t \n\t\t \n\t\t\t M Kearns \n\t\t \n\t\t \n\t\t\t M Walker \n\t\t \n\t\t 10.1613/jair.859 \n\t \n\t \n\t\t J Artif Intell Res \n\t\t \n\t\t\t \n\t\t\t 2000 \n\t\t \n\t \n\t Singh S, Litman DJ, Kearns M, Walker M. Optimizing dialogue management with reinforcement learning: Experiments with the NJFun system. J Artif Intell Res 2000:1-28."
+    },
+    {
+      "title": "Reinforcement learning: An introduction",
+      "authors": [
+        "A Bartow",
+        "R Sutton"
+      ],
+      "year": 1998,
+      "raw": "Reinforcement learning: An introduction \n\t\t \n\t\t\t A G Bartow \n\t\t \n\t\t \n\t\t\t R S Sutton \n\t\t \n\t\t \n\t\t\t 1998 \n\t\t\t A Bradford Book \n\t\t\t New York \n\t\t \n\t \n\t Bartow AG, Sutton RS. Reinforcement learning: An introduction. New York: A Bradford Book; 1998."
+    },
+    {
+      "title": "R-max -a general polynomial time algorithm for near-optimal reinforcement learning",
+      "authors": [
+        "R Brafman",
+        "M Tennenholtz"
+      ],
+      "year": 2002,
+      "journal": "J Mach Learn Res",
+      "volume": "3",
+      "raw": "R-max -a general polynomial time algorithm for near-optimal reinforcement learning \n\t\t \n\t\t\t R I Brafman \n\t\t \n\t\t \n\t\t\t M Tennenholtz \n\t\t \n\t \n\t \n\t\t J Mach Learn Res \n\t\t \n\t\t\t 3 \n\t\t\t \n\t\t\t 2002 \n\t\t \n\t \n\t Brafman RI, Tennenholtz M. R-max -a general polynomial time algorithm for near-optimal reinforcement learning. J Mach Learn Res. 2002; 3: 213-231."
+    },
+    {
+      "title": "A contextual-bandit approach to personalized news article recommendation",
+      "authors": [
+        "L Li",
+        "W Chu",
+        "J Langford",
+        "R Schapire"
+      ],
+      "year": 2010,
+      "journal": "WWW",
+      "raw": "A contextual-bandit approach to personalized news article recommendation \n\t\t \n\t\t\t L Li \n\t\t \n\t\t \n\t\t\t W Chu \n\t\t \n\t\t \n\t\t\t J Langford \n\t\t \n\t\t \n\t\t\t R E Schapire \n\t\t \n\t \n\t \n\t\t WWW \n\t\t \n\t\t\t \n\t\t\t 2010. Apr 26-30 \n\t\t \n\t \n\t Li L, Chu W, Langford J, Schapire RE. A contextual-bandit approach to personalized news article recommendation. WWW 2010; Apr 26- 30:661-670."
+    },
+    {
+      "title": "Interventions for enhancing medication adherence",
+      "authors": [
+        "R Haynes",
+        "E Ackloo",
+        "N Sahota",
+        "H Mcdonald",
+        "X Yao"
+      ],
+      "year": 2008,
+      "journal": "Cochrane Database Syst Rev",
+      "pages": "11",
+      "raw": "Interventions for enhancing medication adherence \n\t\t \n\t\t\t R B Haynes \n\t\t \n\t\t \n\t\t\t E Ackloo \n\t\t \n\t\t \n\t\t\t N Sahota \n\t\t \n\t\t \n\t\t\t H P Mcdonald \n\t\t \n\t\t \n\t\t\t X Yao \n\t\t \n\t \n\t \n\t\t Cochrane Database Syst Rev \n\t\t \n\t\t\t 11 \n\t\t\t 2008 \n\t\t\t Online \n\t\t \n\t \n\t Haynes RB, Ackloo E, Sahota N, McDonald HP, Yao X. Interventions for enhancing medication adherence. Cochrane Database Syst Rev (Online) 2008:CD000011"
+    },
+    {
+      "title": "Comparing adherence and persistence across 6 chronic medication classes",
+      "authors": [
+        "J Yeaw",
+        "J Benner",
+        "J Walt"
+      ],
+      "year": 2009,
+      "doi": "10.18553/jmcp.2009.15.9.728",
+      "journal": "J Manag Care Pharm",
+      "volume": "15",
+      "raw": "Comparing adherence and persistence across 6 chronic medication classes \n\t\t \n\t\t\t J Yeaw \n\t\t \n\t\t \n\t\t\t J S Benner \n\t\t \n\t\t \n\t\t\t J G Walt \n\t\t \n\t\t 10.18553/jmcp.2009.15.9.728 \n\t \n\t \n\t\t J Manag Care Pharm \n\t\t \n\t\t\t 15 \n\t\t\t \n\t\t\t 2009 \n\t\t \n\t \n\t Yeaw J, Benner JS, Walt JG, et al. Comparing adherence and persis- tence across 6 chronic medication classes. J Manag Care Pharm. 2009; 15: 728-740."
+    },
+    {
+      "title": "Adherence to antihypertensive therapy prior to the first presentation of stroke in hypertensive adults: Population-based study",
+      "authors": [
+        "K Herttua",
+        "A Taba",
+        "P Martikainen"
+      ],
+      "year": 2013,
+      "doi": "10.1093/eurheartj/eht219",
+      "journal": "Eur Heart J",
+      "volume": "34",
+      "raw": "Adherence to antihypertensive therapy prior to the first presentation of stroke in hypertensive adults: Population-based study \n\t\t \n\t\t\t K Herttua \n\t\t \n\t\t \n\t\t\t A G Taba \n\t\t \n\t\t \n\t\t\t P Martikainen \n\t\t \n\t\t 10.1093/eurheartj/eht219 \n\t \n\t \n\t\t Eur Heart J \n\t\t \n\t\t\t 34 \n\t\t\t \n\t\t\t 2013 \n\t\t \n\t \n\t Herttua K, Taba AG, Martikainen P, et al. Adherence to antihyper- tensive therapy prior to the first presentation of stroke in hypertensive adults: Population-based study. Eur Heart J. 2013; 34: 2933-2939."
+    },
+    {
+      "title": "Relationship of blood pressure control to adherence with antihypertensive monotherapy in 13 managed care organizations",
+      "authors": [
+        "T Bramley",
+        "P Gerbino",
+        "B Nightengale"
+      ],
+      "year": 2006,
+      "journal": "J Manag Care Pharm",
+      "volume": "12",
+      "raw": "Relationship of blood pressure control to adherence with antihypertensive monotherapy in 13 managed care organizations \n\t\t \n\t\t\t T J Bramley \n\t\t \n\t\t \n\t\t\t P P Gerbino \n\t\t \n\t\t \n\t\t\t B S Nightengale \n\t\t \n\t \n\t \n\t\t J Manag Care Pharm \n\t\t \n\t\t\t 12 \n\t\t\t \n\t\t\t 2006 \n\t\t \n\t \n\t Bramley TJ, Gerbino PP, Nightengale BS, et al. Relationship of blood pressure control to adherence with antihypertensive monotherapy in 13 managed care organizations. J Manag Care Pharm. 2006; 12: 239-245."
+    },
+    {
+      "title": "Relationship between adherence to evidence-based pharmacotherapy and long-term mortality after acute myocardial infarction",
+      "authors": [
+        "J Rasmussen",
+        "A Chong",
+        "D Alter"
+      ],
+      "year": 2007,
+      "journal": "JAMA",
+      "volume": "297",
+      "raw": "Relationship between adherence to evidence-based pharmacotherapy and long-term mortality after acute myocardial infarction \n\t\t \n\t\t\t J N Rasmussen \n\t\t \n\t\t \n\t\t\t A Chong \n\t\t \n\t\t \n\t\t\t D A Alter \n\t\t \n\t \n\t \n\t\t JAMA \n\t\t \n\t\t\t 297 \n\t\t\t \n\t\t\t 2007 \n\t\t \n\t \n\t Rasmussen JN, Chong A, Alter DA. Relationship between adherence to evidence-based pharmacotherapy and long-term mortality after acute myocardial infarction. JAMA. 2007; 297: 177-186."
+    }
+  ],
+  "num_references": 54,
+  "figures": [
+    {
+      "caption": "Fig. 3",
+      "description": "Fig.3Adherence rates achieved using four different messageselection strategies when there is message fatigue"
+    },
+    {
+      "type": "table",
+      "caption": "Table 1",
+      "description": "Summary of simulation experiments"
+    }
+  ],
+  "num_figures": 2,
+  "tables": [
+    {
+      "content": "Simulation 3 Estimate the relative performance of an RL agent assuming that patients \"tune out\" messages that come too frequently 1. Send a disease belief message 2. Send a medication belief message 3. Send a remembering strategy message 4. Send no message to learn about the impact of message frequency 1. How many times the patient took his/her medication following the last 5 times a message of each type was sent 2. A binary indicator for whether a message had been sent on each of the previous 2 days RL: 70 % (0.6 %) Tailored: 57 % (0.6 %) Random: 57 % (0.6 %) Reminders: 56 % (0.7 %) Simulation 1 Simulation 2 Estimate the relative performance of an RL Estimate the relative performance of an RL agent assuming agent assuming that a third of the sample does that a third of patients' underlying barrier to adherence not accurately report their non-adherence changes during the course of intervention barrier at baseline 1. Send a disease belief message 1. Send a disease belief message 2. Send a medication belief message 2. Send a medication belief message 3. Send a remembering strategy message 3. Send a remembering strategy message How many times the patient took his/her medication following the last 5 times a message of each type was sent RL: 78 % (0.5 %) RL: 78 % (0.6 %) Tailored: 73 % (0.6 %) Tailored: 73 % (0.6 %) Random: 67 % (0.5 %) Random: 68 % (0.6 %) Reminders: 66 % (0.6 %) Reminders: 66 % (0.5) Aim Action choices State variables Adherence after 180 days a"
+    }
+  ],
+  "num_tables": 1,
+  "license": "# The Author(s) 2014. This article is published with open access at Springerlink.com ) contains supplementary material, which is available to authorized users.",
+  "license_type": "unknown",
+  "formulas": [
+    {
+      "text": "P adherence \u00f0 \u00de\u00bc\u03b1 disease \u00f0 \u00de \u00c2 \u03b1 medicine \u00f0 \u00de \u00c2 \u03b1 remember \u00f0 \u00de"
+    },
+    {
+      "text": "1 \u00f0 \u00de : P adherence \u00f0 \u00de\u00bc0:80 \u00c2 0:70 \u00c2 0:90 \u00bc 0:504"
+    },
+    {
+      "text": "2 \u00f0 \u00de : \u03b1 medicine \u00f0 \u00de \u00bc 0:65 \u00fe 0:6 \u00c2 1:0-0:65 \u00f0 \u00de\u00bc0:86"
+    }
+  ],
+  "num_formulas": 3,
+  "num_citations": 79,
+  "cited_references": [
+    "b32",
+    "b43",
+    "b39",
+    "b38",
+    "b4",
+    "b14",
+    "b17",
+    "b48",
+    "b20",
+    "b53",
+    "b24",
+    "b40",
+    "b41",
+    "b26",
+    "b28",
+    "b51",
+    "b13",
+    "b27",
+    "b33",
+    "b49",
+    "b16",
+    "b7",
+    "b23",
+    "b46",
+    "b29",
+    "b52",
+    "b19",
+    "b6",
+    "b42",
+    "b18",
+    "b30",
+    "b1",
+    "b35",
+    "b9",
+    "b31",
+    "b10",
+    "b3",
+    "b5",
+    "b34",
+    "b47",
+    "b8",
+    "b12",
+    "b15",
+    "b45",
+    "b11",
+    "b36",
+    "b37",
+    "b25",
+    "b22",
+    "b0",
+    "b21",
+    "b2",
+    "b44",
+    "b50"
+  ],
+  "notes": [
+    "[raw_affiliation] Center for Clinical Management Research , VA Ann Arbor Healthcare System , Ann Arbor , MI , USA",
+    "[raw_affiliation] Department of Health Behavior and Health Education , University of Michigan School of Public Health , Ann Arbor , MI , USA",
+    "[raw_affiliation] Department of Internal Medicine , University of Michigan Medical School , Ann Arbor , MI , USA",
+    "[raw_affiliation] Department of Social and Administrative Services , College of Pharmacy , University of Michigan , Ann Arbor , MI , USA",
+    "[raw_affiliation] Division of Computer Science and Engineering , Department of Electrical Engineering and Computer Science , College of Engineering , University of Michigan , Ann Arbor , MI , USA",
+    "ann. behav. med. (2015) 49:84-94",
+    "ann. behav. med. (2015) 49:84-94",
+    "Downloaded from https://academic.oup.com/abm/article/49/1/84/4564129 by guest on 05 August 2025",
+    "[raw_reference] Nehi. Thinking outside the pillbox: A system-wide approach to improving patient medication adherence for chronic disease, 2009.",
+    "[raw_reference] Osterberg L, Blaschke T. Adherence to medication. N Eng J Med. 2005; 353: 487-497.",
+    "[raw_reference] Elliott RA, Shinogle JA, Peele P, et al. Understanding medication compliance and persistence from an economics perspective. Value Health. 2008; 11: 600.",
+    "[raw_reference] Vermeire E, Hearnshaw H, Van Royen P, et al. Patient adherence to treatment: Three decades of research. A comprehensive review. J Clin Pharm Ther. 2001; 26: 331-342.",
+    "[raw_reference] McHorney CA, Spain CV. Frequency of and reasons for medication non-fulfillment and non-persistence among American adults with chronic disease in 2008. Health Expect. 2011; 14: 307-320.",
+    "[raw_reference] McHorney CA, Gadkari AS. Individual patients hold different beliefs to prescription medications to which they persist vs nonpersist and persist vs nonfulfill. Patient Prefer Adherence. 2010; 4: 187-195.",
+    "[raw_reference] Horne R, Weinman J. Patients' beliefs about prescribed medicines and their role in adherence to treatment in chronic physical illness. J Psychosom Res. 1999; 47: 555-567.",
+    "[raw_reference] Unni E, Farris KB. Determinants of different types of medication non-adherence in cholesterol lowering and asthma maintenance med- ications: A theoretical approach. Patient Educ Couns. 2011; 83: 382.",
+    "[raw_reference] Unni EJ, Farris KB. Unintentional non-adherence and beliefs in medicines in older adults. Patient Educ Couns. 2010; 83: 265-268.",
+    "[raw_reference] Fjeldsoe B, Marshall AL, Miller YD. Behavior change interventions delivered by mobile telephone short-messaging service. Am J Prev Med. 2009; 36: 165-173.",
+    "[raw_reference] Krishna S, Boren SA, Balas EA. Healthcare via cell phones: A systematic review. Telemed J E Health. 2009; 15: 231-240.",
+    "[raw_reference] Free C, Phillips G, Galli L, et al. The effectiveness of mobile-health technology-based health behaviour change or disease management interventions for health care consumers: A systematic review. PLoS Med. 2013; 10: e1001362+.",
+    "[raw_reference] Armstrong AW, Watson AJ, Makredes M, et al. Text- message reminders to improve sunscreen use: A randomized, controlled trial using electronic monitoring. Arch Dermatol. 2009; 145: 1230.",
+    "[raw_reference] Shetty AS, Chamukuttan S, Nanditha A, et al. Reinforcement of adherence to prescription recommendations in Asian Indian diabetes patients using short message service (SMS)-a pilot study. J Assoc Physicians India. 2011; 59: 711.",
+    "[raw_reference] Vervloet M, van Dijk L, Santen-Reestman J, et al. SMS reminders improve adherence to oral medication in type 2 diabetes patients who are real time electronically monitored. Int J Med Inform. 2012; 81: 594-604.",
+    "[raw_reference] Wei J, Hollin I, Kachnowski S. A review of the use of mobile phone text messaging in clinical and healthy behavior interventions. J Telemed Telecare. 2011; 17: 41-48.",
+    "[raw_reference] Pop-Eleches C, Thirumurthy H, Habyarimana JP, et al. Mobile phone technologies improve adherence to antiretroviral treatment in a resource-limited setting: A randomized controlled trial of text mes- sage reminders. AIDS. 2011; 25: 825-834.",
+    "The Cohcrane Collaboration Library: www thecochranelibrary.com",
+    "[raw_reference] Horvath T, Azman H, Kennedy GE, Rutherford GW. Mobile phone text messaging for promoting adherence to antiretroviral therapy in patients with HIV infection (review). The Cohcrane Collaboration Library: www.thecochranelibrary.com 2012.",
+    "[raw_reference] Misono AS, Cutrona SL, Choudhry NK, et al. Healthcare information technology interventions to improve cardiovascular and diabetes medication adherence. Am J Manag Care. 2010; 16: SP82-SP92.",
+    "[raw_reference] Hawkins RP, Kreuter M, Resnicow K, et al. Understanding tailoring in communicating about health. Health Educ Res. 2008; 23: 454-466.",
+    "[raw_reference] Petrie KJ, Perry K, Broadbent E, et al. A text message programme designed to modify patients' illness and treatment beliefs improves self-reported adherence to asthma preventer medication. Br J Health Psychol. 2012; 17: 74-84.",
+    "[raw_reference] Woolford SJ, Clark SJ, Strecher VJ, et al. Tailored mobile phone text messages as an adjunct to obesity treatment for adolescents. J Telemed Telecare. 2010; 16: 458-461.",
+    "[raw_reference] Resnicow K, Davis R, Zhang N, et al. Tailoring a fruit and vegetable intervention on ethnic identity: Results of a randomized study. Health Psychol. 2009; 28: 394-403.",
+    "[raw_reference] Garber MC, Nau DP, Erickson SR, et al. The concordance of self- report with other measures of medication adherence: A summary of the literature. Med Care. 2004; 42: 649-652.",
+    "[raw_reference] Boker A, Feetham HJ, Armstron A, et al. Do automated text mes- sages increase adherence to acne therapy? Results of a randomized, controlled trial. J Am Acad Dermatol. 2012; 67: 1136-1142.",
+    "[raw_reference] Hardy H, Kumar V, Doros G, et al. Randomized controlled trial of a personalized cellular phone reminder system to enhance adherence to antiretroviral therapy. AIDS Patient Care STDS. 2011; 25: 153-161.",
+    "[raw_reference] Furberg RD, Uhrig JD, Bann CM, et al. Technical implementation of a multi-component, text messaging-based intervention for persons living with HIV. J Med Internet Res. 2012; 1: e17+.",
+    "[raw_reference] Hanauer DA, Wentzell K, Laffel N, et al. Computerized automated reminder diabetes system (cards): E-mail and SMS cell phone text messaging reminders to support diabetes management. Diabetes Technol Ther. 2009; 11: 99-106.",
+    "[raw_reference] Singh S, Bertsekas D. Reinforcement learning for dynamic channel allocation in cellular telephone systems. Adv Neural Inf Process Syst. 1997; 9: 974-980.",
+    "[raw_reference] Abbeel P, Coates A, Quigley M. An application of reinforcement learning to aerobatic helicopter flight. In: Adv Neural Inf Process Syst 19 2007:87+.",
+    "[raw_reference] Panait L, Tuyls K. Theoretical advantages of lenient q-learners: An evolutionary game theoretic perspective. In: AAMAS 2007.",
+    "[raw_reference] Lihong L, Chu W, Langford J, Schapire RE. A contextual bandit approach to personalized news article recommendation. WWW 2010:661-670.",
+    "[raw_reference] Singh S, Litman D, Kearns M, et al. Optimizing dialogue manage- ment with reinforcement learning: Experiments with the NJFun system. J Artif Intell Res. 2002; 16: 105-133.",
+    "[raw_reference] Rudary M, Singh S, Pollack M. Adaptive cognitive orthotics: Combining reinforcement learning and constraint-based temporal reasoning. Proc 21 Int Conf Mach Learn 2004:719-726.",
+    "[raw_reference] Boger J, Hoey J, Poupart P, et al. A planning system based on Markov decision processes to guide people with dementia through activities of daily living. IEEE Trans Inf Technol Biomed. 2006; 10: 323-333.",
+    "[raw_reference] Murphy S. Customizing treatment to the patient: Adaptive treatment strategies. Drug Alcohol Depend. 2007; 88: S1-S3.",
+    "[raw_reference] Lesosky M, McGeer A, Simor A, et al. Effect of patterns of transfer- ring patients among healthcare institutions on rates of nosocomial methicillin-resistant Staphylococcus aureus transmission: A Monte Carlo simulation. Inf Control Hosp Epidemiol. 2011; 32: 136-147.",
+    "[raw_reference] Beggs CB, Shepherd SJ, Kerr KG. How does healthcare worker hand hygiene behaviour impact upon the transmission of MRSA between patients? An analysis using a Monte Carlo model. BMC Infect Dis. 2009; 9: 1-9.",
+    "[raw_reference] Benneyan JC. An introduction to computer simulation in healthcare: Patient wait case study. J Soc Health Syst. 1997; 5: 1-15.",
+    "[raw_reference] McHorney CA. The adherence estimator: A brief, proximal screener for patient propensity to adhere to prescription medications for chronic disease. Curr Med Res Opin. 2009; 25: 215-238.",
+    "[raw_reference] Zhao X, Villagran MM, Kreps GL, McHorney C. Gain versus loss framing in adherence-promoting communication targeting patients with chronic diseases: The moderating effect of individual time perspective. Health Commun 2011:1-11.",
+    "[raw_reference] Mengden T, Vetter H, Tousset E, et al. Management of patients with uncontrolled arterial hypertension -the role of electronic compliance monitoring, 24-h ambulatory blood pressure monitoring and Candesartan/HCT. BMC Cardiovasc Disord. 2006; 6: 36.",
+    "[raw_reference] Rudd P, Ahmed S, Zachary V, et al. Improved compliance measures: Applications in an ambulatory hypertensive drug trial. Clin Pharmacol Ther. 1990; 48: 676-685.",
+    "[raw_reference] Schroeder K, Fahey T, Hay AD, et al. Adherence to antihypertensive medication assessed by self-report was associated with electronic monitoring compliance. J Clin Epidemiol. 2006; 59: 650-651.",
+    "[raw_reference] Vrijens B, Vincze G, Kristanto P, et al. Adherence to prescribed antihypertensive drug treatments: Longitudinal study of electronical- ly compiled dosing histories. BMJ (Clin Res ed). 2008; 336: 1114- 1117.",
+    "[raw_reference] Singh S, Litman DJ, Kearns M, Walker M. Optimizing dialogue management with reinforcement learning: Experiments with the NJFun system. J Artif Intell Res 2000:1-28.",
+    "[raw_reference] Bartow AG, Sutton RS. Reinforcement learning: An introduction. New York: A Bradford Book; 1998.",
+    "[raw_reference] Brafman RI, Tennenholtz M. R-max -a general polynomial time algorithm for near-optimal reinforcement learning. J Mach Learn Res. 2002; 3: 213-231.",
+    "[raw_reference] Li L, Chu W, Langford J, Schapire RE. A contextual-bandit approach to personalized news article recommendation. WWW 2010; Apr 26- 30:661-670.",
+    "[raw_reference] Haynes RB, Ackloo E, Sahota N, McDonald HP, Yao X. Interventions for enhancing medication adherence. Cochrane Database Syst Rev (Online) 2008:CD000011",
+    "[raw_reference] Yeaw J, Benner JS, Walt JG, et al. Comparing adherence and persis- tence across 6 chronic medication classes. J Manag Care Pharm. 2009; 15: 728-740.",
+    "[raw_reference] Herttua K, Taba AG, Martikainen P, et al. Adherence to antihyper- tensive therapy prior to the first presentation of stroke in hypertensive adults: Population-based study. Eur Heart J. 2013; 34: 2933-2939.",
+    "[raw_reference] Bramley TJ, Gerbino PP, Nightengale BS, et al. Relationship of blood pressure control to adherence with antihypertensive monotherapy in 13 managed care organizations. J Manag Care Pharm. 2006; 12: 239-245.",
+    "[raw_reference] Rasmussen JN, Chong A, Alter DA. Relationship between adherence to evidence-based pharmacotherapy and long-term mortality after acute myocardial infarction. JAMA. 2007; 297: 177-186."
+  ],
+  "processing_software": {
+    "GROBID": "0.8.2"
+  },
+  "journal": "Annals of Behavioral Medicine",
+  "volume": "49",
+  "issue": "1",
+  "pages": "84-94",
+  "zotero_recovery": {
+    "fields_recovered": [
+      "journal"
+    ],
+    "timestamp": "2025-09-01T11:08:21.376254",
+    "zotero_item_type": "journalArticle"
+  }
+}
