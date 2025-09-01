@@ -1,6 +1,6 @@
 # Commands Reference
 
-## Updated Extraction Pipeline (Aug 31, 2025)
+## Updated Extraction Pipeline (Aug 31, 2025 - Final)
 
 ### Complete Workflow
 
@@ -14,14 +14,27 @@ python reprocess_tei_xml.py
 # Step 3: Filter low-quality papers
 python pdf_quality_filter.py
 
-# Step 4: Enrich metadata
-python crossref_doi_finder.py        # Find missing DOIs
-python s2_retry_cleaned_dois.py      # Clean and retry DOIs
-# python fetch_missing_titles.py     # TODO: Get titles via DOI
+# Step 4: Enrich metadata with CrossRef
+python crossref_enrichment.py        # Recovers titles, finds DOIs (90% success)
 
-# Step 5: Build KB from filtered data
-python src/build_kb.py --input kb_filtered_*/
+# Step 5: Filter non-article content
+python filter_non_articles.py        # Remove supplements, datasets, editorials
+
+# Step 6: Fix remaining malformed DOIs
+python fix_malformed_dois.py        # Clean DOIs and retry (80% success)
+
+# Step 7: Final cleanup - remove article without title
+python final_cleanup_no_title.py     # Creates kb_final_cleaned_*/ with 100% title coverage
+
+# Step 8: Build KB from final cleaned data
+python src/build_kb.py --input kb_final_cleaned_*/
 ```
+
+### Pipeline Results (Final)
+- **2,150 research articles** (from 2,221 original PDFs)
+- **100% title coverage** (all articles have titles)
+- **98.4% DOI coverage**
+- **100% full text extracted** (83.8M characters total)
 
 ## Script Name Changes (v4.6 → v5.0)
 

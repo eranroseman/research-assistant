@@ -120,7 +120,7 @@ def is_book_by_pages(pdf_path: Path) -> bool:
     return check_page_count(pdf_path) > 75
 ```
 
-## Quality Filtering Workflow (Updated Aug 31, 2025)
+## Quality Filtering Workflow (Updated Aug 31, 2025 - Final)
 
 ### Stage 1: Grobid Extraction
 - Extract all PDFs with TEI XML output
@@ -132,18 +132,37 @@ def is_book_by_pages(pdf_path: Path) -> bool:
 
 ### Stage 3: Quality Filtering
 Papers are EXCLUDED only if they:
-- Have abstract-only (no full text)
-- Have no content at all (failed extraction)
-- Have insufficient text (<1000 chars)
-- Missing BOTH title AND DOI (unidentifiable)
+- Have abstract-only (no full text) - 3 papers
+- Have no content at all (failed extraction) - 6 papers
+- Have insufficient text (<1000 chars) - 3 papers
+- Missing BOTH title AND DOI (unidentifiable) - 30 papers
 
 **IMPORTANT**: Papers missing ONLY title are INCLUDED if they have DOI + content.
 Titles can be recovered in post-processing via CrossRef/S2 lookup.
 
-### Stage 4: Post-Processing
-- Fetch missing titles using DOIs
-- Clean malformed DOIs
-- S2 enrichment for citations
+### Stage 4: CrossRef Enrichment
+- Recovered 74/82 missing titles (90.2% success)
+- Found 144/179 missing DOIs (80.4% success)
+- Cleaned 4 malformed DOIs
+- Total: 222 papers enriched
+
+### Stage 5: Non-Article Filtering
+Papers EXCLUDED as non-articles:
+- Supplemental materials (2 items) - PNAS supplements
+- Datasets (7 items) - FigShare, OSF, Zenodo
+- Editorials/Comments (10 items) - Not primary research
+- **NOT excluded**: Papers with malformed DOIs (they have valid content)
+
+### Stage 6: Final DOI Cleaning
+- Fixed malformed DOIs (removed appended text, trailing periods)
+- Recovered 4/5 remaining titles (80% success)
+- Result: 99.95% title coverage (1 paper still missing)
+
+### Stage 7: Final Cleanup
+- Removed 1 article without title (paper ID: 6IP6AXAI)
+- Paper had 21K chars of content but title unrecoverable
+- Added to PDF quality report for transparency
+- Final: 100% title coverage (2,150 articles)
 
 ## PDF Quality Report Integration
 
