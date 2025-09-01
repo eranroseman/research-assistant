@@ -1,4 +1,4 @@
-"""Quality Scoring System for Research Papers
+"""Quality Scoring System for Research Papers.
 
 This module implements a comprehensive quality scoring system that evaluates papers
 based on multiple factors including study design, sample size, statistical rigor,
@@ -7,7 +7,7 @@ and publication venue.
 
 from typing import Any
 import re
-from datetime import datetime
+from datetime import datetime, UTC
 
 
 class QualityScorer:
@@ -238,7 +238,7 @@ class QualityScorer:
 
         try:
             year = int(year)
-            current_year = datetime.now().year
+            current_year = datetime.now(UTC).year
             age = current_year - year
 
             if age <= 2:
@@ -253,7 +253,7 @@ class QualityScorer:
                 score = 0.1
 
             return score * self.weights["recency"]
-        except:
+        except (ValueError, TypeError):
             return 0
 
     def _score_citations(self, paper: dict[str, Any]) -> float:
@@ -264,9 +264,9 @@ class QualityScorer:
         year = paper.get("year")
         if year:
             try:
-                age = datetime.now().year - int(year) + 1
+                age = datetime.now(UTC).year - int(year) + 1
                 citations_per_year = citations / age
-            except:
+            except (ValueError, TypeError, ZeroDivisionError):
                 citations_per_year = citations
         else:
             citations_per_year = citations

@@ -4,7 +4,7 @@
 import json
 import shutil
 from pathlib import Path
-from datetime import datetime
+from datetime import datetime, UTC
 
 
 def main():
@@ -59,7 +59,7 @@ def main():
         return
 
     # Create final cleaned directory
-    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    timestamp = datetime.now(UTC).strftime("%Y%m%d_%H%M%S")
     final_dir = Path(f"kb_final_cleaned_{timestamp}")
 
     print(f"\n📁 Creating final cleaned directory: {final_dir}")

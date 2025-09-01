@@ -10,7 +10,7 @@ This script:
 import json
 import shutil
 from pathlib import Path
-from datetime import datetime
+from datetime import datetime, UTC
 
 
 class NonArticleFilter:
@@ -25,7 +25,7 @@ class NonArticleFilter:
         self.input_dir = Path(input_dir)
 
         # Create output directory
-        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        timestamp = datetime.now(UTC).strftime("%Y%m%d_%H%M%S")
         self.output_dir = Path(f"kb_articles_only_{timestamp}")
         self.output_dir.mkdir(exist_ok=True)
 
@@ -135,9 +135,6 @@ class NonArticleFilter:
 
         # Don't exclude papers just for malformed DOI - they might be real articles
         # Only track malformed DOI if we need to report it
-        # if self.has_malformed_doi(doi):
-        #     # Still malformed after CrossRef cleaning
-        #     return 'malformed_doi', paper_info
 
         # Additional checks for non-articles
         if title:
@@ -194,7 +191,7 @@ class NonArticleFilter:
     def generate_quality_report(self):
         """Generate comprehensive quality report."""
         report = {
-            "timestamp": datetime.now().isoformat(),
+            "timestamp": datetime.now(UTC).isoformat(),
             "stats": self.stats,
             "exclusion_breakdown": {category: len(papers) for category, papers in self.excluded.items()},
             "excluded_papers": self.excluded,
@@ -296,7 +293,7 @@ class NonArticleFilter:
 
         with open(exclusion_file, "w") as f:
             f.write("# Non-Article Content Excluded from Knowledge Base\n")
-            f.write(f"# Generated: {datetime.now().isoformat()}\n\n")
+            f.write(f"# Generated: {datetime.now(UTC).isoformat()}\n\n")
 
             for category, papers in self.excluded.items():
                 if papers:

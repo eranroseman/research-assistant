@@ -18,7 +18,7 @@ import json
 import subprocess
 import sys
 from pathlib import Path
-from datetime import datetime
+from datetime import datetime, UTC
 import time
 import shutil
 
@@ -27,7 +27,7 @@ class V5Pipeline:
     """Complete v5 extraction pipeline."""
 
     def __init__(self, output_dir: str = None, skip_extraction: bool = False):
-        self.timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        self.timestamp = datetime.now(UTC).strftime("%Y%m%d_%H%M%S")
         self.output_dir = Path(output_dir) if output_dir else Path(f"kb_v5_{self.timestamp}")
         self.skip_extraction = skip_extraction
         self.stats = {"start_time": time.time(), "stages_completed": [], "errors": []}
