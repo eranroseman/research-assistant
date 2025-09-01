@@ -69,12 +69,14 @@ Key features:
 - Adds metadata about recovery source and timestamp
 
 ### Stage 4: CrossRef Validation & Enhancement
-**Script**: `crossref_enrichment_comprehensive.py`
-**Input**: JSON files from Stage 2
+**Script**: `crossref_batch_enrichment.py` (batch processing, 50x faster)
+**Alternative**: `crossref_enrichment_comprehensive.py` (individual queries, more thorough)
+**Input**: JSON files from Stage 3 (Zotero recovered)
 **Output**: Enriched JSON with 35+ fields
-**API**: CrossRef REST API via habanero
+**API**: CrossRef REST API (batch filter or habanero)
 
 Capabilities:
+- **Batch Processing**: Up to 50 DOIs per API call (60x speedup)
 - **Validation**: Compares existing metadata against CrossRef
 - **Recovery**: Finds missing DOIs, years, authors, journals
 - **Enrichment**: Adds citation counts, ISSN, volume/issue, funding, etc.
@@ -144,18 +146,21 @@ Additional fields extracted:
 
 ```
 research-assistant/
-├── zotero_extraction_*/
-│   ├── tei_xml/          # GROBID output
-│   └── pdf/              # Original PDFs
-├── comprehensive_extraction_*/
-│   └── *.json            # Stage 2 output
-├── crossref_comprehensive/
-│   ├── *.json            # Enriched papers
-│   └── crossref_comprehensive_report.json
-└── v5_design/
-    ├── comprehensive_tei_extractor.py
-    ├── crossref_enrichment_comprehensive.py
-    └── pipeline documentation
+├── extraction_pipeline_YYYYMMDD/     # Organized pipeline directory
+│   ├── 01_tei_xml/                  # GROBID TEI XML output
+│   ├── 02_json_extraction/          # Comprehensive TEI → JSON
+│   ├── 03_zotero_recovery/          # Zotero metadata recovery
+│   ├── 04_crossref_enrichment/      # CrossRef batch enrichment
+│   ├── 05_s2_enrichment/            # Semantic Scholar enrichment
+│   ├── 06_openalex_enrichment/      # OpenAlex topic classification
+│   ├── 07_unpaywall_enrichment/     # Open access discovery
+│   ├── 08_pubmed_enrichment/        # Biomedical metadata
+│   ├── 09_arxiv_enrichment/         # Preprint tracking
+│   ├── 10_final_output/             # Final merged output
+│   └── README.md                    # Pipeline documentation
+├── extraction_pipeline_runner.py     # Master pipeline script
+└── v5_design/                       # Design documentation
+    └── *.md                         # Architecture docs
 ```
 
 ## Quality Control Measures
@@ -180,8 +185,10 @@ research-assistant/
 
 - **GROBID Processing**: ~2-3 seconds per PDF
 - **JSON Extraction**: <0.1 seconds per XML
-- **CrossRef Enrichment**: ~1 second per paper (with rate limiting)
-- **Total Pipeline**: ~3-4 seconds per paper
+- **Zotero Recovery**: <5 seconds for entire library (local API)
+- **CrossRef Batch Enrichment**: ~0.02 seconds per paper (50 papers per API call)
+- **CrossRef Individual**: ~1 second per paper (with rate limiting)
+- **Total Pipeline**: ~2-3 seconds per paper (with batch processing)
 
 ## Known Limitations
 
@@ -212,46 +219,90 @@ research-assistant/
 
 ## Commands Reference
 
+### Option 1: Using the Master Pipeline Runner (Recommended)
+
 ```bash
+# Run complete pipeline with organized structure
+python extraction_pipeline_runner.py
+
+# Continue from specific stage
+python extraction_pipeline_runner.py \
+  --pipeline-dir extraction_pipeline_20250901 \
+  --start-from crossref
+
+# Run specific stages only
+python extraction_pipeline_runner.py \
+  --pipeline-dir extraction_pipeline_20250901 \
+  --start-from s2 \
+  --stop-after openalex
+```
+
+### Option 2: Running Individual Stages
+
+```bash
+# Create pipeline directory structure
+mkdir -p extraction_pipeline_$(date +%Y%m%d)/{01_tei_xml,02_json_extraction,03_zotero_recovery,04_crossref_enrichment,05_s2_enrichment,06_openalex_enrichment,07_unpaywall_enrichment,08_pubmed_enrichment,09_arxiv_enrichment,10_final_output}
+
 # Stage 1: GROBID Extraction (if needed)
-python grobid_client.py --input pdf_dir --output tei_xml_dir
+python grobid_client.py \
+  --input pdf_dir \
+  --output extraction_pipeline_20250901/01_tei_xml
 
 # Stage 2: Comprehensive Extraction
-python comprehensive_tei_extractor.py
+python comprehensive_tei_extractor.py \
+  --output extraction_pipeline_20250901/02_json_extraction
 
-# Stage 3: Zotero Recovery (NEW)
-python zotero_metadata_recovery.py \
-  --input comprehensive_extraction_* \
-  --output zotero_recovered_* \
-  --library-id YOUR_LIBRARY_ID
+# Stage 3: Zotero Recovery
+python run_full_zotero_recovery.py \
+  --input extraction_pipeline_20250901/02_json_extraction \
+  --output extraction_pipeline_20250901/03_zotero_recovery
 
-# Stage 4: CrossRef Enhancement
-python crossref_enrichment_comprehensive.py \
-  --input zotero_recovered_* \
-  --output crossref_comprehensive \
-  --max-papers 100  # for testing
+# Stage 4: CrossRef Batch Enhancement (Recommended)
+python crossref_batch_enrichment.py \
+  --input extraction_pipeline_20250901/03_zotero_recovery \
+  --output extraction_pipeline_20250901/04_crossref_enrichment \
+  --batch-size 50
+
+# Stage 5: Semantic Scholar Enrichment
+python s2_batch_enrichment.py \
+  --input extraction_pipeline_20250901/04_crossref_enrichment \
+  --output extraction_pipeline_20250901/05_s2_enrichment
 
 # Analysis
-python analyze_extraction_coverage.py
-python identify_problem_papers.py
+python analyze_extraction_coverage.py \
+  --input extraction_pipeline_20250901/*/
 ```
 
 ## Validation Queries
 
 ```python
-# Check coverage
+# Check coverage at any stage
 python -c "
 import json, os
 from pathlib import Path
 
+pipeline_dir = Path('extraction_pipeline_20250901')
+for stage in sorted(pipeline_dir.glob('*/')):
+    json_files = list(stage.glob('*.json'))
+    if json_files:
+        sample = json.load(open(json_files[0]))
+        print(f'{stage.name}: {len(json_files)} files, {len(sample)} fields')
+"
+
+# Check specific stage completeness
+python -c "
+import json
+from pathlib import Path
+
+stage_dir = Path('extraction_pipeline_20250901/04_crossref_enrichment')
 stats = {'total': 0, 'complete': 0}
-for f in Path('crossref_comprehensive').glob('*.json'):
+for f in stage_dir.glob('*.json'):
     data = json.load(open(f))
     stats['total'] += 1
     if all([data.get(k) for k in ['title','year','doi','authors','journal']]):
         stats['complete'] += 1
 
-print(f'Complete metadata: {stats['complete']}/{stats['total']} ({stats['complete']/stats['total']*100:.1f}%)')
+print(f'Complete metadata: {stats[\"complete\"]}/{stats[\"total\"]} ({stats[\"complete\"]/stats[\"total\"]*100:.1f}%)')
 "
 ```
 

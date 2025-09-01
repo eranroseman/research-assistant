@@ -155,7 +155,7 @@ def recover_all_metadata():
         return
 
     # Paths
-    input_dir = Path("comprehensive_extraction_20250831_225926")
+    input_dir = Path("comprehensive_extraction_20250901_102227")
     output_dir = Path("zotero_recovered_20250901")
 
     if not input_dir.exists():

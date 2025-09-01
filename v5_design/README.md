@@ -146,7 +146,7 @@ This directory contains the complete design documentation for Research Assistant
   - See [implementations/README.md](implementations/README.md) for details
 
 ### Production Scripts (Root Directory)
-  - `v5_extraction_pipeline.py` - Consolidated pipeline runner (all stages)
+  - `extraction_pipeline_runner.py` - Master pipeline script with organized directory structure
   - `comprehensive_tei_extractor.py` - Complete TEI XML extraction (97.4% year coverage)
   - `run_full_zotero_recovery.py` - Zotero metadata recovery (90.9% recovery rate)
   - `crossref_enrichment_comprehensive.py` - Full CrossRef enrichment (35+ fields)
@@ -171,11 +171,16 @@ This directory contains the complete design documentation for Research Assistant
 ### Quick Start
 
 ```bash
-# Option 1: Run complete pipeline (recommended)
+# Option 1: Run complete pipeline with organized structure (recommended)
 docker run -t --rm -p 8070:8070 lfoppiano/grobid:0.8.2-full
-python v5_extraction_pipeline.py
+python extraction_pipeline_runner.py
 
-# Option 2: Step-by-step guide
+# Option 2: Continue from existing pipeline
+python extraction_pipeline_runner.py \
+  --pipeline-dir extraction_pipeline_20250901 \
+  --start-from crossref
+
+# Option 3: Step-by-step guide
 cat 10_complete_workflow.md
 
 # Understanding the system:
@@ -183,6 +188,31 @@ cat 01_overview.md           # System architecture
 cat 09_final_pipeline_results.md  # What to expect
 cat 07_troubleshooting.md    # If things go wrong
 ```
+
+### Pipeline Directory Structure (NEW - Sep 1, 2025)
+
+All pipeline outputs are now organized in a single directory with numbered stages:
+
+```
+extraction_pipeline_YYYYMMDD/
+├── 01_tei_xml/              # GROBID TEI XML output
+├── 02_json_extraction/      # Comprehensive TEI → JSON
+├── 03_zotero_recovery/      # Zotero metadata recovery
+├── 04_crossref_enrichment/  # CrossRef batch enrichment
+├── 05_s2_enrichment/        # Semantic Scholar enrichment
+├── 06_openalex_enrichment/  # OpenAlex topics & SDGs
+├── 07_unpaywall_enrichment/ # Open access discovery
+├── 08_pubmed_enrichment/    # Biomedical metadata
+├── 09_arxiv_enrichment/     # Preprint tracking
+├── 10_final_output/         # Final merged output
+└── README.md               # Pipeline documentation
+```
+
+Benefits:
+- Clean organization with clear data flow
+- Easy to backup and version control
+- Simple to resume from any stage
+- No scattered directories at root level
 
 ### Key Insights
 
@@ -210,9 +240,10 @@ cat 07_troubleshooting.md    # If things go wrong
    - Journal recovery: 2,006 papers (addresses GROBID's main weakness)
    - Zero API cost, instant processing
 
-3. **`crossref_enrichment_comprehensive.py`**: Validates and enriches metadata
+3. **`crossref_batch_enrichment.py`**: Batch processing for fast enrichment (RECOMMENDED)
+   - Processes up to 50 DOIs per API call (60x speedup)
    - Adds 35+ fields including citations, ISSN, volume/issue, funding
-   - Validates existing metadata against authoritative source
+   - Alternative: `crossref_enrichment_comprehensive.py` for individual queries
 
 **Final Results**:
 - >99% coverage for all critical fields after full pipeline

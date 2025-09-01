@@ -1,8 +1,8 @@
-# Complete V5 Workflow Guide
+# Complete Extraction Pipeline Workflow Guide
 
 ## Overview
 
-This document provides a complete, step-by-step workflow for the v5 extraction pipeline, from initial setup to final knowledge base building.
+This document provides a complete, step-by-step workflow for the extraction pipeline, from initial setup to final knowledge base building. The pipeline now uses an organized directory structure with all outputs in a single `extraction_pipeline_YYYYMMDD/` directory.
 
 ## Visual Pipeline Flow
 
@@ -73,40 +73,55 @@ This document provides a complete, step-by-step workflow for the v5 extraction p
 
 ## Quick Start Commands
 
-### Option 1: Automated Pipeline (Recommended)
+### Option 1: Master Pipeline Runner (Recommended)
 ```bash
 # Prerequisites
 docker run -t --rm -p 8070:8070 lfoppiano/grobid:0.8.2-full
 
-# Run complete pipeline
-python v5_extraction_pipeline.py
+# Run complete pipeline with organized structure
+python extraction_pipeline_runner.py
 
-# Or skip extraction if already done
-python v5_extraction_pipeline.py --skip-extraction
+# Or continue from a specific stage
+python extraction_pipeline_runner.py \
+  --pipeline-dir extraction_pipeline_20250901 \
+  --start-from crossref
+
+# Run specific stages only
+python extraction_pipeline_runner.py \
+  --pipeline-dir extraction_pipeline_20250901 \
+  --start-from s2 \
+  --stop-after openalex
 ```
 
-### Option 2: Manual Step-by-Step
+### Option 2: Manual Step-by-Step with Organized Structure
 ```bash
-# Stage 1: Grobid extraction
-python v5_design/implementations/extract_zotero_library.py
+# Create pipeline directory
+mkdir -p extraction_pipeline_$(date +%Y%m%d)/{01_tei_xml,02_json_extraction,03_zotero_recovery,04_crossref_enrichment,05_s2_enrichment,06_openalex_enrichment,07_unpaywall_enrichment,08_pubmed_enrichment,09_arxiv_enrichment,10_final_output}
 
-# Stage 2: Fix text extraction
-python reprocess_tei_xml.py
+# Stage 1: TEI to JSON extraction
+python comprehensive_tei_extractor.py \
+  --output extraction_pipeline_20250901/02_json_extraction
 
-# Stage 3: Quality filtering
-python pdf_quality_filter.py
+# Stage 2: Zotero recovery
+python run_full_zotero_recovery.py \
+  --input extraction_pipeline_20250901/02_json_extraction \
+  --output extraction_pipeline_20250901/03_zotero_recovery
 
-# Stage 4: CrossRef enrichment
-python crossref_enrichment.py
+# Stage 3: CrossRef batch enrichment
+python crossref_batch_enrichment.py \
+  --input extraction_pipeline_20250901/03_zotero_recovery \
+  --output extraction_pipeline_20250901/04_crossref_enrichment \
+  --batch-size 50
 
-# Stage 5: Filter non-articles
-python filter_non_articles.py
+# Stage 4: S2 enrichment
+python s2_batch_enrichment.py \
+  --input extraction_pipeline_20250901/04_crossref_enrichment \
+  --output extraction_pipeline_20250901/05_s2_enrichment
 
-# Stage 6: Fix malformed DOIs
-python fix_malformed_dois.py
-
-# Stage 7: Final cleanup
-python final_cleanup_no_title.py
+# Stage 5: Extended API enrichments
+python v5_openalex_pipeline.py \
+  --input extraction_pipeline_20250901/05_s2_enrichment \
+  --output extraction_pipeline_20250901/06_openalex_enrichment
 
 # Build KB
 python src/build_kb.py --input kb_final_cleaned_*/

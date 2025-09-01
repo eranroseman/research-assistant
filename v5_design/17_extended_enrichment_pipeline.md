@@ -11,7 +11,7 @@ This document outlines the extended enrichment pipeline for v5, adding 5 new API
 ### Existing Stages (Completed)
 1. **GROBID Extraction**: 2,210 papers → TEI XML → JSON
 2. **Zotero Recovery**: 90.9% metadata recovery (2,008/2,210 improved)
-3. **CrossRef Batch**: 95.5% enrichment with 60x speedup
+3. **CrossRef Batch**: 95.5% enrichment with 60x speedup (using `crossref_batch_enrichment.py`)
 4. **S2 Enrichment**: 93.7% success (2,000/2,134 papers)
 
 ### Current Coverage
