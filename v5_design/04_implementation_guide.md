@@ -1,6 +1,10 @@
 # Implementation Guide
 
-## Bug Fixes and Updates (Aug 31, 2025)
+## Bug Fixes and Updates (Sep 1, 2025)
+
+### Critical Metadata Extraction Fix
+
+**ROOT CAUSE IDENTIFIED**: The original TEI XML extraction was incomplete, missing critical metadata fields including **year (affecting 100% of papers)**, journal information, keywords, and other essential fields.
 
 ### Fixed Issues
 
@@ -15,6 +19,17 @@
    - **Issue**: Papers missing titles were excluded despite having content
    - **Fix**: Include papers with DOI + content (titles recoverable via API)
    - **Impact**: Preserved ~82 valuable papers for title recovery
+
+3. **Comprehensive Metadata Extraction** (NEW)
+   - **File**: `comprehensive_tei_extractor.py`
+   - **Issue**: Original extraction missing year (100% of papers), journal info, keywords, etc.
+   - **Fix**: Complete TEI XML extraction capturing ALL available fields
+   - **Impact**:
+     - Year extraction: 0% → 97.4% coverage
+     - Journal extraction: 0% → 92.8% (with intelligent inference)
+     - Keywords: 61.7% of papers
+     - License/funding: 30-74% coverage
+     - Formulas, citations, figures, tables: All captured
 
 ### Current Workflow
 

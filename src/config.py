@@ -352,6 +352,12 @@ VALID_SECTION_NAMES = {
 DEFAULT_ZOTERO_PATH = Path.home() / "Zotero"
 DEFAULT_API_URL = f"http://127.0.0.1:{ZOTERO_PORT}/api"
 
+# ============================================================================
+# CROSSREF CONFIGURATION
+# ============================================================================
+# Email for CrossRef polite pool access (better performance and reliability)
+CROSSREF_POLITE_EMAIL = "eran-roseman@uiowa.edu"
+
 # Valid paper item types in Zotero
 VALID_PAPER_TYPES = [
     "journalArticle",

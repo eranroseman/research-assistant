@@ -86,6 +86,19 @@ The v5.0 extraction pipeline successfully processed 2,221 PDFs from Zotero, resu
 - **Fix**: Modified to extract full text using `p.itertext()`
 - **Impact**: 85.9M characters recovered
 
+### 4. Comprehensive Metadata Extraction (Sep 1, 2025)
+- **File**: `comprehensive_tei_extractor.py`
+- **Issue**: Missing critical metadata - ALL papers had no year, no journal info
+- **Root Cause**: Incomplete TEI XML to JSON extraction
+- **Fix**: Complete extraction of ALL TEI XML fields including:
+  - Year/date from `date[@when]` attributes
+  - Journal inference from references when not in sourceDesc
+  - Keywords, funding, license, formulas, citations
+- **Impact**:
+  - Fixed missing DOIs root cause (no year = no CrossRef lookup)
+  - 97.4% year coverage (was 0%)
+  - 92.8% journal coverage (was 0%)
+
 ### 2. Quality Filter Logic
 - **File**: `pdf_quality_filter.py`
 - **Issue**: Papers with DOI but no title were excluded
@@ -107,6 +120,7 @@ The v5.0 extraction pipeline successfully processed 2,221 PDFs from Zotero, resu
 5. `fix_malformed_dois.py` - Clean and retry malformed DOIs
 6. `final_cleanup_no_title.py` - Remove last paper without title
 7. `v5_extraction_pipeline.py` - Consolidated pipeline runner
+8. `comprehensive_tei_extractor.py` - Complete TEI XML extraction (fixes missing metadata)
 
 ## Final Output
 

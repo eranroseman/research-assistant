@@ -66,12 +66,68 @@ This directory contains the complete design documentation for Research Assistant
    - 7-stage pipeline with all scripts
    - Final statistics: 83.8M chars extracted
 
-10. **[10_complete_workflow.md](10_complete_workflow.md)** - Step-by-step workflow guide (NEW)
+10. **[10_complete_workflow.md](10_complete_workflow.md)** - Step-by-step workflow guide
     - Visual pipeline flow diagram
     - Quick start commands
     - Stage-by-stage details
     - Time estimates and validation
     - Best practices
+
+11. **[11_comprehensive_extraction_fix.md](11_comprehensive_extraction_fix.md)** - Critical metadata extraction fix (NEW Sep 1)
+    - Root cause: 100% of papers missing year
+    - Solution: Complete TEI XML extraction
+    - Results: 97.4% year coverage, 92.8% journal coverage
+    - Technical details and implementation
+
+12. **[12_pipeline_architecture.md](12_pipeline_architecture.md)** - Complete pipeline architecture (NEW Sep 1)
+    - Full pipeline: PDF → GROBID → XML → JSON → CrossRef → KB
+    - Stage-by-stage statistics and coverage metrics
+    - CrossRef enrichment: 35+ additional fields
+    - Final coverage: >99% possible for all critical fields
+    - Quality control and validation measures
+
+13. **[13_quality_filtering_stage.md](13_quality_filtering_stage.md)** - Quality filtering and paper classification (NEW Sep 1)
+    - Stage 4 of the pipeline: Removing problematic/non-research papers
+    - 7-stage filtering process removing 71 papers (3.2%)
+    - Document type classification (articles vs books/supplements/datasets)
+    - Content sufficiency and metadata completeness checks
+    - Final output: 2,150 clean research articles (96.8% success rate)
+
+14. **[14_filtering_rationale.md](14_filtering_rationale.md)** - Detailed rationale for 7-stage filtering (NEW Sep 1)
+    - Explains reasoning behind each filtering stage
+    - Efficiency cascade: cheap filters first, expensive last
+    - Real examples of filtered papers
+    - Stage 4.5: Zotero recovery before metadata completeness check
+
+15. **[15_zotero_integration.md](15_zotero_integration.md)** - Zotero metadata recovery implementation (NEW Sep 1)
+    - Stage 3 of pipeline: Zero-cost metadata recovery
+    - 90.9% recovery rate (2,008/2,210 papers improved)
+    - Addresses GROBID's journal extraction weakness
+    - Match strategies: DOI, title fuzzy matching
+    - Performance: <5 seconds for entire library
+
+16. **[16_s2_optimization_complete.md](16_s2_optimization_complete.md)** - S2 batch enrichment optimization (NEW Sep 1)
+    - Achieved 93.7% enrichment rate (2,000/2,134 papers)
+    - 426.8 papers per API call efficiency
+    - Removed preemptive rate limiting
+    - Added checkpoint recovery
+    - 15.3 new fields per paper on average
+
+17. **[17_extended_enrichment_pipeline.md](17_extended_enrichment_pipeline.md)** - Extended API enrichment plan (UPDATED Sep 1)
+    - Adds 5 new APIs: OpenAlex, Unpaywall, PubMed, CORE, arXiv
+    - Universal identifier resolver for multi-API compatibility
+    - 100% topic classification via OpenAlex
+    - 52% OA discovery via Unpaywall
+    - Implementation timeline and priority matrix
+    - Additional API evaluations: DBLP and ORCID analysis
+
+18. **[18_api_evaluation_summary.md](18_api_evaluation_summary.md)** - Comprehensive API evaluation (NEW Sep 1)
+    - Evaluation of 7 potential enrichment APIs
+    - Decision matrix with coverage, performance, and value metrics
+    - Final recommendations: 4 production APIs optimal
+    - ORCID valuable for gap analysis, not enrichment
+    - DBLP redundant with existing APIs
+    - Performance comparison and implementation structure
 
 ### Reference Implementations
 
@@ -91,12 +147,26 @@ This directory contains the complete design documentation for Research Assistant
 
 ### Production Scripts (Root Directory)
   - `v5_extraction_pipeline.py` - Consolidated pipeline runner (all stages)
+  - `comprehensive_tei_extractor.py` - Complete TEI XML extraction (97.4% year coverage)
+  - `run_full_zotero_recovery.py` - Zotero metadata recovery (90.9% recovery rate)
+  - `crossref_enrichment_comprehensive.py` - Full CrossRef enrichment (35+ fields)
+  - `openalex_enricher.py` - OpenAlex API enrichment class (98% success rate)
+  - `v5_openalex_pipeline.py` - OpenAlex pipeline integration
+  - `unpaywall_enricher.py` - Unpaywall OA discovery class (98% success rate)
+  - `v5_unpaywall_pipeline.py` - Unpaywall pipeline integration
+  - `pubmed_enricher.py` - PubMed biomedical enrichment class (87% for medical papers)
+  - `v5_pubmed_pipeline.py` - PubMed pipeline integration
+  - `arxiv_enricher.py` - arXiv preprint enrichment class (10-15% for STEM papers)
+  - `v5_arxiv_pipeline.py` - arXiv pipeline integration
   - `reprocess_tei_xml.py` - Bug fix for full text extraction
   - `pdf_quality_filter.py` - Quality filtering
-  - `crossref_enrichment.py` - Title/DOI recovery
   - `filter_non_articles.py` - Non-article removal
   - `fix_malformed_dois.py` - DOI cleaning
   - `final_cleanup_no_title.py` - Final cleanup for 100% coverage
+
+### Experimental/Optional Scripts
+  - `core_enricher.py` - CORE repository enrichment (NOT RECOMMENDED: 6s/request rate limit)
+  - `v5_core_pipeline.py` - CORE pipeline integration (use only for specific grey literature needs)
 
 ### Quick Start
 
@@ -126,6 +196,30 @@ cat 07_troubleshooting.md    # If things go wrong
 - **Empirical**: All recommendations based on 2,221 paper analysis
 - **Final Quality**: 2,150 articles, 83.8M chars, all with titles
 
+### Critical Update (Sep 1, 2025)
+
+**Root Cause Analysis - Missing Metadata**: Investigation revealed widespread missing metadata, particularly journals (GROBID's weakness).
+
+**Solution**: Complete v5 pipeline with four stages:
+1. **`comprehensive_tei_extractor.py`**: Extracts ALL information from TEI XML
+   - Year extraction: 0% → 97.4% coverage
+   - Complete metadata extraction from all XML paths
+
+2. **`run_full_zotero_recovery.py`**: NEW - Recovers metadata from Zotero library
+   - 90.9% recovery rate (2,008/2,210 papers improved)
+   - Journal recovery: 2,006 papers (addresses GROBID's main weakness)
+   - Zero API cost, instant processing
+
+3. **`crossref_enrichment_comprehensive.py`**: Validates and enriches metadata
+   - Adds 35+ fields including citations, ISSN, volume/issue, funding
+   - Validates existing metadata against authoritative source
+
+**Final Results**:
+- >99% coverage for all critical fields after full pipeline
+- Journal coverage: 99.6% (Zotero recovery + CrossRef)
+- Only 17 papers (0.8%) unrecoverable (complete GROBID failures)
+- See [12_pipeline_architecture.md](12_pipeline_architecture.md) for complete details
+
 ### Important Update (Aug 31, 2025)
 
 **Final Pipeline Results**: Based on complete processing of 2,221 documents:
@@ -135,8 +229,51 @@ cat 07_troubleshooting.md    # If things go wrong
 - Bug fixes recovered 83.8M characters of previously lost text
 - See [09_final_pipeline_results.md](09_final_pipeline_results.md) for complete results
 
+### Latest Updates
+
+#### Sep 1, 2025 - Extended API Enrichment (4 Production APIs)
+
+**OpenAlex** - Topic classification and SDG mapping
+- 98% enrichment rate, 98.9% topic coverage
+- Implementation: `openalex_enricher.py`, `v5_openalex_pipeline.py`
+
+**Unpaywall** - Open access discovery
+- 98% enrichment rate, 69.4% OA discovery
+- Implementation: `unpaywall_enricher.py`, `v5_unpaywall_pipeline.py`
+
+**PubMed** - Biomedical metadata
+- 87% enrichment for medical papers, MeSH terms
+- Implementation: `pubmed_enricher.py`, `v5_pubmed_pipeline.py`
+
+**arXiv** - Preprint tracking for STEM papers
+- ~10-15% enrichment expected, version tracking
+- Implementation: `arxiv_enricher.py`, `v5_arxiv_pipeline.py`
+
+See [17_extended_enrichment_pipeline.md](17_extended_enrichment_pipeline.md) for details
+
+#### Sep 1, 2025 - Extended Enrichment Pipeline
+
+**[17_extended_enrichment_pipeline.md](17_extended_enrichment_pipeline.md)** - Complete plan for v5 pipeline extension
+- Adds 5 new API integrations (OpenAlex ✅, Unpaywall, PubMed, CORE, arXiv)
+- Universal identifier resolver for multi-API compatibility
+- Expected outcomes: 100% topic classification, 52% OA discovery, 30% MeSH coverage
+- Implementation timeline and priority matrix
+- Processing time: ~30 minutes additional for all enrichments
+
+#### Sep 1, 2025 - S2 Optimization Complete
+
+**[16_s2_optimization_complete.md](16_s2_optimization_complete.md)** - Semantic Scholar batch enrichment optimization
+- Achieved 93.7% enrichment rate (2,000/2,134 papers)
+- 426.8 papers per API call efficiency
+- Removed preemptive rate limiting based on build_kb.py patterns
+- Added checkpoint recovery and comprehensive field import
+- 15.3 new fields per paper on average
+- Total processing: 1.5 minutes (vs hours with individual queries)
+
 ### Version History
 
 - **v5.0** (Current) - Three-system integration with maximum extraction
+  - Sep 1: S2 optimization complete, full pipeline operational
+  - Aug 31: Zotero recovery + CrossRef batch processing added
 - **v4.6** - Previous version with reliability issues
 - **v4.0** - Introduction of enhanced quality scoring
