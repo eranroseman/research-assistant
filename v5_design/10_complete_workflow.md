@@ -73,33 +73,42 @@ This document provides a complete, step-by-step workflow for the extraction pipe
 
 ## Quick Start Commands
 
-### Option 1: Master Pipeline Runner (Recommended)
+### Option 1: Master Pipeline Runner with Checkpoint Support (STRONGLY RECOMMENDED)
 ```bash
 # Prerequisites
 docker run -t --rm -p 8070:8070 lfoppiano/grobid:0.8.2-full
 
-# Run complete pipeline with organized structure
-python extraction_pipeline_runner.py
+# Run complete pipeline with checkpoint recovery
+python extraction_pipeline_runner_checkpoint.py
+
+# Resume after interruption (automatic checkpoint recovery)
+python extraction_pipeline_runner_checkpoint.py \
+  --pipeline-dir extraction_pipeline_20250901
 
 # Or continue from a specific stage
-python extraction_pipeline_runner.py \
+python extraction_pipeline_runner_checkpoint.py \
   --pipeline-dir extraction_pipeline_20250901 \
   --start-from crossref
 
 # Run specific stages only
-python extraction_pipeline_runner.py \
+python extraction_pipeline_runner_checkpoint.py \
   --pipeline-dir extraction_pipeline_20250901 \
   --start-from s2 \
   --stop-after openalex
+
+# Fresh start (ignore checkpoints)
+python extraction_pipeline_runner_checkpoint.py \
+  --pipeline-dir extraction_pipeline_20250901 \
+  --reset-checkpoints
 ```
 
-### Option 2: Manual Step-by-Step with Organized Structure
+### Option 2: Manual Step-by-Step with Checkpoint Support
 ```bash
 # Create pipeline directory
 mkdir -p extraction_pipeline_$(date +%Y%m%d)/{01_tei_xml,02_json_extraction,03_zotero_recovery,04_crossref_enrichment,05_s2_enrichment,06_openalex_enrichment,07_unpaywall_enrichment,08_pubmed_enrichment,09_arxiv_enrichment,10_final_output}
 
-# Stage 1: TEI to JSON extraction
-python comprehensive_tei_extractor.py \
+# Stage 1: TEI to JSON extraction (with checkpoint)
+python comprehensive_tei_extractor_checkpoint.py \
   --output extraction_pipeline_20250901/02_json_extraction
 
 # Stage 2: Zotero recovery
@@ -107,8 +116,8 @@ python run_full_zotero_recovery.py \
   --input extraction_pipeline_20250901/02_json_extraction \
   --output extraction_pipeline_20250901/03_zotero_recovery
 
-# Stage 3: CrossRef batch enrichment
-python crossref_batch_enrichment.py \
+# Stage 3: CrossRef batch enrichment (with checkpoint)
+python crossref_batch_enrichment_checkpoint.py \
   --input extraction_pipeline_20250901/03_zotero_recovery \
   --output extraction_pipeline_20250901/04_crossref_enrichment \
   --batch-size 50
@@ -337,19 +346,24 @@ print(f"Title coverage: {100 - (missing_titles/len(files)*100):.1f}%")
 # Check Grobid
 curl http://localhost:8070/api/isalive
 
-# Check last checkpoint
-cat zotero_extraction_*/checkpoint.json
+# Check for checkpoint files
+ls extraction_pipeline_*/*/.*.checkpoint.json
 
-# Resume from checkpoint
-python v5_design/implementations/extract_zotero_library.py
+# Resume with checkpoint recovery (automatic)
+python extraction_pipeline_runner_checkpoint.py \
+  --pipeline-dir extraction_pipeline_20250901
 ```
 
 ### If Pipeline Stops
 ```bash
-# Resume with consolidated script
-python v5_extraction_pipeline.py --skip-extraction
+# Resume with checkpoint recovery (automatic)
+python extraction_pipeline_runner_checkpoint.py \
+  --pipeline-dir extraction_pipeline_20250901
 
-# Or continue manually from last completed stage
+# The pipeline will automatically:
+# 1. Load checkpoints from each stage
+# 2. Skip already processed files
+# 3. Continue from where it left off
 ```
 
 ### If Quality is Poor
@@ -375,11 +389,13 @@ for f in random.sample(list(Path('kb_final_cleaned_*').glob('*.json')), 5):
 
 ## Best Practices
 
-1. **Run overnight**: Use `caffeinate` (Mac) or `systemd-inhibit` (Linux)
-2. **Monitor progress**: Check `checkpoint.json` periodically
-3. **Keep logs**: Save terminal output for debugging
-4. **Validate results**: Always run `analyze_grobid_extraction.py`
-5. **Backup final KB**: Copy `kb_final_cleaned_*` before building
+1. **Always use checkpoint version**: `extraction_pipeline_runner_checkpoint.py`
+2. **Run overnight**: Use `caffeinate` (Mac) or `systemd-inhibit` (Linux)
+3. **Monitor checkpoints**: Check `.*.checkpoint.json` files for progress
+4. **Keep logs**: Save terminal output for debugging
+5. **Don't delete checkpoints**: Keep them for easy resume
+6. **Validate results**: Always run `analyze_grobid_extraction.py`
+7. **Backup final KB**: Copy `kb_final_cleaned_*` before building
 
 ## Next Steps
 
@@ -398,6 +414,7 @@ python src/analyze_gaps.py
 
 ## Support Resources
 
+- **Checkpoint recovery**: See [19_checkpoint_recovery_system.md](19_checkpoint_recovery_system.md)
 - **Troubleshooting**: See [07_troubleshooting.md](07_troubleshooting.md)
 - **Technical details**: See [02_grobid_extraction.md](02_grobid_extraction.md)
 - **Post-processing**: See [03_post_processing.md](03_post_processing.md)

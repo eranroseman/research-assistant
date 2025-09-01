@@ -79,7 +79,7 @@ def main():
     pipeline_stages = {
         "tei_extraction": {
             "description": "TEI to JSON extraction",
-            "command": f"python comprehensive_tei_extractor.py --output {pipeline_dir}/02_json_extraction",
+            "command": f"python comprehensive_tei_extractor.py --input-dir {pipeline_dir}/01_tei_xml --output-dir {pipeline_dir}/02_json_extraction",
             "check": lambda: len(list((pipeline_dir / "02_json_extraction").glob("*.json"))) > 0,
         },
         "zotero": {

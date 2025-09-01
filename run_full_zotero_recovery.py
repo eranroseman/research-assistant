@@ -9,6 +9,7 @@ from pathlib import Path
 from datetime import datetime
 import re
 from collections import defaultdict
+import argparse
 
 
 def test_zotero_api():
@@ -148,15 +149,22 @@ def find_zotero_match(paper_data, by_key, by_doi, by_title):
     return None
 
 
-def recover_all_metadata():
-    """Main recovery function for all papers."""
+def recover_all_metadata(input_dir=None, output_dir=None, reset_checkpoint=False):
+    """Main recovery function for all papers with checkpoint support."""
     # Check Zotero connection
     if not test_zotero_api():
         return
 
-    # Paths
-    input_dir = Path("comprehensive_extraction_20250901_102227")
-    output_dir = Path("zotero_recovered_20250901")
+    # Paths with defaults
+    if input_dir is None:
+        input_dir = Path("comprehensive_extraction_20250901_102227")
+    else:
+        input_dir = Path(input_dir)
+
+    if output_dir is None:
+        output_dir = Path("zotero_recovered_20250901")
+    else:
+        output_dir = Path(output_dir)
 
     if not input_dir.exists():
         print(f"Error: Input directory not found: {input_dir}")
@@ -165,10 +173,44 @@ def recover_all_metadata():
     # Create output directory
     output_dir.mkdir(exist_ok=True)
 
+    # Checkpoint management
+    checkpoint_file = output_dir / ".zotero_recovery_checkpoint.json"
+    processed_files = set()
+
+    # Load checkpoint if exists and not resetting
+    if checkpoint_file.exists() and not reset_checkpoint:
+        try:
+            with open(checkpoint_file, encoding="utf-8") as f:
+                checkpoint_data = json.load(f)
+                processed_files = set(checkpoint_data.get("processed_files", []))
+                print(f"Resuming from checkpoint: {len(processed_files)} files already processed")
+        except Exception as e:
+            print(f"Warning: Could not load checkpoint: {e}")
+    elif reset_checkpoint and checkpoint_file.exists():
+        checkpoint_file.unlink()
+        print("Checkpoint reset")
+
     # Load all extracted papers
     print(f"\nLoading extracted papers from {input_dir}...")
-    json_files = list(input_dir.glob("*.json"))
-    print(f"Found {len(json_files)} extracted papers")
+    all_json_files = list(input_dir.glob("*.json"))
+
+    # Filter out already processed files
+    json_files = []
+    for f in all_json_files:
+        output_file = output_dir / f.name
+        if f.stem in processed_files or output_file.exists():
+            if f.stem not in processed_files:
+                processed_files.add(f.stem)
+        else:
+            json_files.append(f)
+
+    print(f"Found {len(all_json_files)} total papers")
+    print(f"Already processed: {len(processed_files)}")
+    print(f"To process: {len(json_files)}")
+
+    if not json_files:
+        print("All files already processed!")
+        return
 
     # Get all Zotero items and build indices
     zotero_items = get_all_zotero_items()
@@ -183,6 +225,7 @@ def recover_all_metadata():
     # Statistics
     stats = defaultdict(int)
     recovery_details = []
+    checkpoint_counter = 0
 
     # Process each paper
     print(f"\nProcessing {len(json_files)} papers...")
@@ -294,6 +337,30 @@ def recover_all_metadata():
         with open(output_file, "w", encoding="utf-8") as f:
             json.dump(paper_data, f, indent=2)
 
+        # Track processed file
+        processed_files.add(json_file.stem)
+        checkpoint_counter += 1
+
+        # Save checkpoint every 50 files
+        if checkpoint_counter >= 50:
+            checkpoint_data = {
+                "processed_files": list(processed_files),
+                "stats": dict(stats),
+                "timestamp": datetime.now().isoformat(),
+            }
+            with open(checkpoint_file, "w", encoding="utf-8") as f:
+                json.dump(checkpoint_data, f)
+            checkpoint_counter = 0
+
+    # Final checkpoint save
+    checkpoint_data = {
+        "processed_files": list(processed_files),
+        "stats": dict(stats),
+        "timestamp": datetime.now().isoformat(),
+    }
+    with open(checkpoint_file, "w", encoding="utf-8") as f:
+        json.dump(checkpoint_data, f)
+
     # Print final statistics
     print("\n" + "=" * 80)
     print("ZOTERO RECOVERY COMPLETE")
@@ -338,4 +405,11 @@ def recover_all_metadata():
 
 
 if __name__ == "__main__":
-    recover_all_metadata()
+    parser = argparse.ArgumentParser(description="Zotero metadata recovery for extraction pipeline")
+    parser.add_argument("--input", dest="input_dir", help="Input directory with JSON files")
+    parser.add_argument("--output", dest="output_dir", help="Output directory for enriched JSON files")
+    parser.add_argument("--reset", action="store_true", help="Reset checkpoint and start fresh")
+
+    args = parser.parse_args()
+
+    recover_all_metadata(input_dir=args.input_dir, output_dir=args.output_dir, reset_checkpoint=args.reset)
