@@ -10,9 +10,18 @@ import logging
 import sys
 import time
 from pathlib import Path
-from datetime import datetime
+from datetime import datetime, UTC
 from typing import Any
 from dataclasses import dataclass
+
+from src.config import (
+    LOGGER_MAX_RECENT_EVENTS,
+    LOGGER_DEFAULT_DISPLAY_LINES,
+    LOGGER_FULL_DISPLAY_LINES,
+    LOGGER_DISPLAY_WIDTH,
+    LOGGER_TIME_MINUTE,
+    LOGGER_TIME_HOUR,
+)
 
 
 @dataclass
@@ -45,7 +54,7 @@ class PipelineLogger:
         self.log_dir.mkdir(exist_ok=True)
 
         # Create timestamp for this run
-        self.timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        self.timestamp = datetime.now(UTC).strftime("%Y%m%d_%H%M%S")
 
         # Setup file logging (detailed)
         self.file_logger = self._setup_file_logger()
@@ -84,41 +93,41 @@ class PipelineLogger:
 
         return logger
 
-    def debug(self, message: str, **kwargs):
+    def debug(self, message: str, **kwargs: Any) -> None:
         """Log debug message (file only)."""
         self.file_logger.debug(message, **kwargs)
 
-    def info(self, message: str, to_master: bool = False):
+    def info(self, message: str, to_master: bool = False) -> None:
         """Log info message."""
         self.file_logger.info(message)
         if to_master:
-            self.master_logger.info(f"[{self.stage_name}] {message}")
+            self.master_logger.info("[%s] %s", self.stage_name, message)
 
-    def warning(self, message: str, to_master: bool = True):
+    def warning(self, message: str, to_master: bool = True) -> None:
         """Log warning message."""
         self.file_logger.warning(message)
         if to_master:
-            self.master_logger.warning(f"[{self.stage_name}] {message}")
+            self.master_logger.warning("[%s] %s", self.stage_name, message)
 
-    def error(self, message: str, exc_info: bool = False, to_master: bool = True):
+    def error(self, message: str, exc_info: bool = False, to_master: bool = True) -> None:
         """Log error message."""
         self.file_logger.error(message, exc_info=exc_info)
         if to_master:
             # Don't include full traceback in master log
-            self.master_logger.error(f"[{self.stage_name}] {message}")
+            self.master_logger.error("[%s] %s", self.stage_name, message)
 
-    def success(self, paper_id: str, details: str | None = None):
+    def success(self, paper_id: str, details: str | None = None) -> None:
         """Log successful processing."""
         if details:
-            self.file_logger.info(f"✓ {paper_id}: {details}")
+            self.file_logger.info("✓ %s: %s", paper_id, details)
         else:
-            self.file_logger.info(f"✓ {paper_id}")
-        self.master_logger.info(f"[{self.stage_name}] ✓ {paper_id}")
+            self.file_logger.info("✓ %s", paper_id)
+        self.master_logger.info("[%s] ✓ %s", self.stage_name, paper_id)
 
-    def failure(self, paper_id: str, reason: str):
+    def failure(self, paper_id: str, reason: str) -> None:
         """Log failed processing."""
-        self.file_logger.error(f"✗ {paper_id}: {reason}")
-        self.master_logger.error(f"[{self.stage_name}] ✗ {paper_id}: {reason[:50]}")
+        self.file_logger.error("✗ %s: %s", paper_id, reason)
+        self.master_logger.error("[%s] ✗ %s: %s", self.stage_name, paper_id, reason[:50])
 
 
 class PipelineDashboard:
@@ -132,19 +141,19 @@ class PipelineDashboard:
         """
         self.stages: dict[str, StageStats] = {}
         self.total_stages = total_stages
-        self.recent_events = []
+        self.recent_events: list[str] = []
         self.start_time = time.time()
-        self.last_draw_time = 0
+        self.last_draw_time: float = 0
         self.min_redraw_interval = 0.1  # Don't redraw more than 10x per second
 
         # Terminal control
         self.lines_drawn = 0
 
-    def add_stage(self, name: str, total: int):
+    def add_stage(self, name: str, total: int) -> None:
         """Add a stage to track."""
         self.stages[name] = StageStats(name=name, total=total)
 
-    def update_stage(self, name: str, **kwargs):
+    def update_stage(self, name: str, **kwargs: Any) -> None:
         """Update stage statistics."""
         if name not in self.stages:
             return
@@ -160,18 +169,18 @@ class PipelineDashboard:
 
         self._redraw()
 
-    def add_event(self, event: str):
+    def add_event(self, event: str) -> None:
         """Add a recent event to display."""
-        timestamp = datetime.now().strftime("%H:%M:%S")
+        timestamp = datetime.now(UTC).strftime("%H:%M:%S")
         self.recent_events.append(f"[{timestamp}] {event}")
 
         # Keep only last 5 events
-        if len(self.recent_events) > 5:
+        if len(self.recent_events) > LOGGER_MAX_RECENT_EVENTS:
             self.recent_events.pop(0)
 
         self._redraw()
 
-    def _redraw(self):
+    def _redraw(self) -> None:
         """Redraw the dashboard (rate-limited)."""
         current_time = time.time()
         if current_time - self.last_draw_time < self.min_redraw_interval:
@@ -204,7 +213,7 @@ class PipelineDashboard:
         lines.append("V5 PIPELINE | 2000 papers")
         lines.append("=" * 70)
         lines.append(
-            f"Elapsed: {elapsed_str} | Started: {datetime.fromtimestamp(self.start_time).strftime('%H:%M:%S')}"
+            f"Elapsed: {elapsed_str} | Started: {datetime.fromtimestamp(self.start_time, tz=UTC).strftime('%H:%M:%S')}"
         )
         lines.append("")
 
@@ -256,7 +265,7 @@ class PipelineDashboard:
             lines.append(f"  {event}")
 
         # Pad if needed
-        while len(lines) < 30:
+        while len(lines) < LOGGER_DEFAULT_DISPLAY_LINES:
             lines.append("")
 
         # Statistics (5 lines)
@@ -279,7 +288,7 @@ class PipelineDashboard:
         lines.append("=" * 70)
 
         # Ensure exactly 40 lines
-        while len(lines) < 40:
+        while len(lines) < LOGGER_FULL_DISPLAY_LINES:
             lines.append("")
 
         return lines[:40]
@@ -304,9 +313,9 @@ class PipelineDashboard:
 
     def _format_time(self, seconds: float) -> str:
         """Format seconds as compact time string."""
-        if seconds < 60:
+        if seconds < LOGGER_TIME_MINUTE:
             return f"{int(seconds)}s"
-        if seconds < 3600:
+        if seconds < LOGGER_TIME_HOUR:
             mins = int(seconds / 60)
             secs = int(seconds % 60)
             return f"{mins}m{secs}s"
@@ -314,7 +323,7 @@ class PipelineDashboard:
         mins = int((seconds % 3600) / 60)
         return f"{hours}h{mins}m"
 
-    def finish(self):
+    def finish(self) -> None:
         """Clean finish of dashboard."""
         # Leave the final display on screen
 
@@ -336,7 +345,7 @@ class MinimalProgressBar:
         self.failed = 0
         self.start_time = time.time()
 
-    def update(self, current: int, succeeded: int, failed: int):
+    def update(self, current: int, succeeded: int, failed: int) -> None:
         """Update progress."""
         self.current = current
         self.succeeded = succeeded
@@ -345,7 +354,7 @@ class MinimalProgressBar:
         # Single line update
         percent = (current / self.total * 100) if self.total else 0
         elapsed = time.time() - self.start_time
-        rate = current / elapsed if elapsed > 0 else 0
+        current / elapsed if elapsed > 0 else 0
 
         # Progress bar
         bar_width = 20
@@ -357,21 +366,21 @@ class MinimalProgressBar:
         output += f"✓{succeeded:4} ✗{failed:4} "
         output += f"[{self._format_time(elapsed)}] "
 
-        if percent >= 100:
+        if percent >= LOGGER_DISPLAY_WIDTH:
             output += "✓"
 
         sys.stdout.write(output)
         sys.stdout.flush()
 
-    def finish(self):
+    def finish(self) -> None:
         """Finish the progress bar."""
         print()  # New line after progress bar
 
     def _format_time(self, seconds: float) -> str:
         """Format time compactly."""
-        if seconds < 60:
+        if seconds < LOGGER_TIME_MINUTE:
             return f"{int(seconds)}s"
-        if seconds < 3600:
+        if seconds < LOGGER_TIME_HOUR:
             return f"{int(seconds / 60)}m{int(seconds % 60)}s"
         return f"{int(seconds / 3600)}h{int((seconds % 3600) / 60)}m"
 

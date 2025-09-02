@@ -15,6 +15,13 @@ import requests
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
 
+from src.config import (
+    UTILS_MIN_DOI_LENGTH,
+    UTILS_MAX_DOI_LENGTH,
+    LOGGER_TIME_MINUTE,
+    LOGGER_TIME_HOUR,
+)
+
 
 def create_session_with_retry(
     max_retries: int = 5,
@@ -108,13 +115,13 @@ def clean_doi(doi: str | None) -> str | None:
         return None
 
     # Check reasonable length
-    if len(doi) < 7 or len(doi) > 200:
+    if len(doi) < UTILS_MIN_DOI_LENGTH or len(doi) > UTILS_MAX_DOI_LENGTH:
         return None
 
     return doi
 
 
-def batch_iterator(items: list, batch_size: int) -> Iterator[list]:
+def batch_iterator(items: list[Any], batch_size: int) -> Iterator[list[Any]]:
     """Yield batches from a list of items.
 
     Args:
@@ -154,7 +161,8 @@ def load_checkpoint(checkpoint_file: Path) -> dict[str, Any]:
     if checkpoint_file.exists():
         try:
             with open(checkpoint_file) as f:
-                return json.load(f)
+                data: dict[str, Any] = json.load(f)
+                return data
         except (OSError, json.JSONDecodeError) as e:
             print(f"Warning: Could not load checkpoint {checkpoint_file}: {e}")
 
@@ -246,10 +254,7 @@ def get_shard_path(base_dir: Path, identifier: str, shard_length: int = 2) -> Pa
         - Post-processing cache management
         - Embedding storage
     """
-    if len(identifier) >= shard_length:
-        shard = identifier[:shard_length].upper()
-    else:
-        shard = "XX"  # Fallback for short identifiers
+    shard = identifier[:shard_length].upper() if len(identifier) >= shard_length else "XX"
 
     return base_dir / shard
 
@@ -266,9 +271,9 @@ def format_time_estimate(seconds: float) -> str:
     Used by:
         - Progress reporting in multiple stages
     """
-    if seconds < 60:
+    if seconds < LOGGER_TIME_MINUTE:
         return f"{seconds:.0f} seconds"
-    if seconds < 3600:
+    if seconds < LOGGER_TIME_HOUR:
         return f"{seconds / 60:.1f} minutes"
     return f"{seconds / 3600:.1f} hours"
 

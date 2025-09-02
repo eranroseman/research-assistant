@@ -21,14 +21,17 @@ import argparse
 from typing import Any
 from collections import defaultdict
 from src import config
+from src.config import CROSSREF_MIN_TITLE_LENGTH
 from src.pipeline_utils import clean_doi
+import sys
+
 
 try:
     from habanero import Crossref
 except ImportError:
     print("ERROR: habanero package not installed!")
     print("Install with: pip install habanero")
-    exit(1)
+    sys.exit(1)
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
@@ -45,8 +48,8 @@ class CrossRefV5Enricher:
         self.batch_size = config.FAST_API_CHECKPOINT_INTERVAL  # 500 papers
         self.checkpoint_file: Path | None = None
         self.processed_papers: set[str] = set()
-        self.stats = defaultdict(int)
-        self.comprehensive_fields_extracted = defaultdict(int)
+        self.stats: dict[str, int] = defaultdict(int)
+        self.comprehensive_fields_extracted: dict[str, int] = defaultdict(int)
         self.force = force  # Force re-enrichment even if already has data
 
     def load_checkpoint(self, output_dir: Path) -> int:
@@ -60,11 +63,11 @@ class CrossRefV5Enricher:
                     self.processed_papers = set(checkpoint_data.get("processed_papers", []))
                     self.stats = defaultdict(int, checkpoint_data.get("stats", {}))
                     logger.info(
-                        f"Resuming from checkpoint: {len(self.processed_papers)} papers already processed"
+                        "Resuming from checkpoint: %d papers already processed", len(self.processed_papers)
                     )
                     return len(self.processed_papers)
             except Exception as e:
-                logger.warning(f"Could not load checkpoint: {e}")
+                logger.warning("Could not load checkpoint: %s", e)
         return 0
 
     def save_checkpoint(self) -> None:
@@ -79,9 +82,9 @@ class CrossRefV5Enricher:
             try:
                 with open(self.checkpoint_file, "w") as f:
                     json.dump(checkpoint_data, f, indent=2)
-                logger.debug(f"Checkpoint saved: {len(self.processed_papers)} papers processed")
+                logger.debug("Checkpoint saved: %d papers processed", len(self.processed_papers))
             except Exception as e:
-                logger.error(f"Failed to save checkpoint: {e}")
+                logger.error("Failed to save checkpoint: %s", e)
 
     def clean_doi_with_stats(self, doi: str) -> str | None:
         """Clean DOI using shared utility and track statistics."""
@@ -240,12 +243,12 @@ class CrossRefV5Enricher:
             extracted["licenses"] = licenses
             self.comprehensive_fields_extracted["licenses"] += 1
 
-        # Relations (updates, versions)
         if "relation" in crossref_data:
-            relations = {}
-            for rel_type, rel_data in crossref_data["relation"].items():
-                if isinstance(rel_data, list) and rel_data:
-                    relations[rel_type] = rel_data
+            relations = {
+                rel_type: rel_data
+                for rel_type, rel_data in crossref_data["relation"].items()
+                if isinstance(rel_data, list) and rel_data
+            }
             if relations:
                 extracted["relations"] = relations
                 self.comprehensive_fields_extracted["relations"] += 1
@@ -289,42 +292,44 @@ class CrossRefV5Enricher:
 
                     item_title = item_titles[0]
                     # Simple similarity check - could use difflib for better matching
-                    if len(title) > 20:  # Only for reasonable length titles
+                    if len(title) > CROSSREF_MIN_TITLE_LENGTH:  # Only for reasonable length titles
                         title_lower = title.lower()[:50]
                         item_title_lower = item_title.lower()[:50]
                         if title_lower in item_title_lower or item_title_lower in title_lower:
                             self.stats["found_by_title"] += 1
-                            return item
+                            result: dict[str, Any] = item
+                            return result
 
         except Exception as e:
-            logger.debug(f"Title search failed: {e}")
+            logger.debug("Title search failed: %s", e)
 
         return None
 
     def enrich_paper(self, paper_data: dict[str, Any]) -> dict[str, Any]:
         """Enrich a single paper with CrossRef data."""
-        paper_id = paper_data.get("paper_id", "unknown")
+        # Note: paper_id was unused, removed per ruff F841
 
         # Clean and validate DOI
         original_doi = paper_data.get("doi")
-        clean_doi_value_value = self.clean_doi_value_with_stats(original_doi) if original_doi else None
+        clean_doi_value = self.clean_doi_with_stats(original_doi) if original_doi else None
 
         crossref_data = None
 
         # Try DOI lookup first
-        if clean_doi_value_value:
+        if clean_doi_value:
             try:
                 response = self.cr.works(ids=clean_doi_value)
                 if response and "message" in response:
                     crossref_data = response["message"]
                     self.stats["found_by_doi"] += 1
             except Exception as e:
-                logger.debug(f"DOI lookup failed for {clean_doi_value}: {e}")
+                logger.debug("DOI lookup failed for %s: %s", clean_doi_value, e)
                 self.stats["doi_lookup_failed"] += 1
 
         # Try title search if no DOI or DOI lookup failed
-        if not crossref_data and paper_data.get("title"):
-            crossref_data = self.search_by_title(paper_data.get("title"), paper_data.get("year"))
+        title = paper_data.get("title")
+        if not crossref_data and title and isinstance(title, str):
+            crossref_data = self.search_by_title(title, paper_data.get("year"))
 
         # Extract comprehensive fields if we found data
         if crossref_data:
@@ -368,7 +373,7 @@ class CrossRefV5Enricher:
 
         return paper_data
 
-    def has_crossref_data(self, paper: dict) -> bool:
+    def has_crossref_data(self, paper: dict[str, Any]) -> bool:
         """Check if paper already has CrossRef enrichment."""
         # Check for crossref_enriched marker
         if paper.get("crossref_enriched"):
@@ -414,11 +419,11 @@ class CrossRefV5Enricher:
 
             remaining_files.append(json_file)
 
-        logger.info(f"Found {len(json_files)} total papers")
-        logger.info(f"Already processed: {len(self.processed_papers)}")
+        logger.info("Found %d total papers", len(json_files))
+        logger.info("Already processed: %d", len(self.processed_papers))
         if skipped_already_enriched > 0:
-            logger.info(f"Skipped (already enriched): {skipped_already_enriched}")
-        logger.info(f"To process: {len(remaining_files)}")
+            logger.info("Skipped (already enriched): %d", skipped_already_enriched)
+        logger.info("To process: %d", len(remaining_files))
 
         if self.force:
             logger.info("Force mode: Re-enriching all papers")
@@ -432,7 +437,7 @@ class CrossRefV5Enricher:
 
         for i, json_file in enumerate(remaining_files, 1):
             if i % 100 == 0:
-                logger.info(f"Progress: {i}/{len(remaining_files)} papers...")
+                logger.info("Progress: %d/%d papers...", i, len(remaining_files))
 
             try:
                 # Load paper
@@ -469,7 +474,7 @@ class CrossRefV5Enricher:
                 time.sleep(0.1)  # 10 requests per second
 
             except Exception as e:
-                logger.error(f"Error processing {json_file}: {e}")
+                logger.error("Error processing %s: %s", json_file, e)
                 self.stats["errors"] += 1
 
         # Final checkpoint save
@@ -529,7 +534,7 @@ class CrossRefV5Enricher:
         print(f"\nReport saved to: {report_file}")
 
 
-def main():
+def main() -> None:
     """Main entry point."""
     parser = argparse.ArgumentParser(
         description="V5 Unified CrossRef enrichment with comprehensive fields, batch processing, and checkpoints"

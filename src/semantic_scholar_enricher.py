@@ -275,7 +275,7 @@ class S2BatchEnricher:
 
         return metadata
 
-    def has_s2_data(self, paper: dict) -> bool:
+    def has_s2_data(self, paper: dict[str, Any]) -> bool:
         """Check if paper already has S2 enrichment."""
         # Check for s2_enriched marker
         if paper.get("s2_enriched"):

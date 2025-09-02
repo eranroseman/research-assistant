@@ -16,6 +16,7 @@ from pathlib import Path
 from datetime import datetime, UTC
 import argparse
 import os
+from typing import Any
 from pubmed_enricher import PubMedEnricher
 
 
@@ -132,7 +133,7 @@ def analyze_enrichment_results(output_dir: Path) -> None:
     print("\n" + "=" * 80)
 
 
-def has_pubmed_data(paper: dict) -> bool:
+def has_pubmed_data(paper: dict[str, Any]) -> bool:
     """Check if paper already has PubMed enrichment."""
     # Check for pubmed_enriched marker
     if paper.get("pubmed_enriched"):
@@ -216,7 +217,7 @@ def main() -> None:
 
     # Collect identifiers
     identifiers = []
-    papers_by_id = {}
+    papers_by_id: dict[str, tuple[str, Any]] = {}
     papers_without_id = []
     skipped_already_enriched = 0
 
@@ -241,8 +242,9 @@ def main() -> None:
 
             if id_dict:
                 key = id_dict.get("doi") or id_dict.get("pmid")
-                identifiers.append(id_dict)
-                papers_by_id[key] = (paper_file.stem, paper)
+                if key:
+                    identifiers.append(id_dict)
+                    papers_by_id[key] = (paper_file.stem, paper)
             else:
                 papers_without_id.append((paper_file.stem, paper))
 

@@ -29,6 +29,12 @@ from urllib3.util.retry import Retry
 from collections import defaultdict, Counter
 from defusedxml import ElementTree
 from xml.etree import ElementTree as ET
+from src.config import (
+    ARXIV_MAX_TITLE_LENGTH,
+    ARXIV_MIN_TITLE_LENGTH,
+    ARXIV_TITLE_MATCH_THRESHOLD,
+    HTTP_NOT_FOUND,
+)
 
 
 def create_session() -> requests.Session:
@@ -60,10 +66,10 @@ def clean_title(title: str) -> str | None:
     clean = re.sub(r"\s+", " ", clean)
 
     # Truncate very long titles (arXiv has limits)
-    if len(clean) > 250:
-        clean = clean[:250]
+    if len(clean) > ARXIV_MAX_TITLE_LENGTH:
+        clean = clean[:ARXIV_MAX_TITLE_LENGTH]
 
-    return clean if len(clean) > 5 else None
+    return clean if len(clean) > ARXIV_MIN_TITLE_LENGTH else None
 
 
 def clean_arxiv_id(arxiv_id: str) -> str | None:
@@ -151,7 +157,7 @@ def find_best_match(entries: list[ET.Element], title: str, authors: list[str] | 
         total_score = title_score + author_boost
 
         # Require at least 70% title match
-        if total_score > best_score and title_score >= 0.7:
+        if total_score > best_score and title_score >= ARXIV_TITLE_MATCH_THRESHOLD:
             best_score = total_score
             best_entry = entry
 
@@ -162,7 +168,7 @@ def parse_arxiv_entry(entry: ET.Element) -> dict[str, Any]:
     """Parse arXiv entry XML into metadata."""
     ns = {"atom": "http://www.w3.org/2005/Atom", "arxiv": "http://arxiv.org/schemas/atom"}
 
-    enriched = {}
+    enriched: dict[str, Any] = {}
 
     # Basic metadata
     enriched["title"] = entry.findtext("atom:title", "", ns).strip()
@@ -179,7 +185,7 @@ def parse_arxiv_entry(entry: ET.Element) -> dict[str, Any]:
             # Extract version if present
             version_match = re.search(r"v(\d+)$", enriched["arxiv_id"])
             if version_match:
-                enriched["version"] = int(version_match.group(1))
+                enriched["version"] = int(version_match.group(1))  # This is correct, version should be int
                 enriched["arxiv_id"] = enriched["arxiv_id"][: -len(version_match.group(0))]
 
             # URLs
@@ -201,7 +207,7 @@ def parse_arxiv_entry(entry: ET.Element) -> dict[str, Any]:
             authors.append(author_data)
 
     if authors:
-        enriched["authors"] = authors
+        enriched["authors"] = authors  # This is correct, authors is a list
 
     # Publication dates
     published = entry.findtext("atom:published", "", ns)
@@ -230,7 +236,7 @@ def parse_arxiv_entry(entry: ET.Element) -> dict[str, Any]:
             categories.append(cat)
 
     if categories:
-        enriched["categories"] = categories
+        enriched["categories"] = categories  # This is correct, categories is a list
 
     # DOI if available (when paper is published)
     doi_elem = entry.find("arxiv:doi", ns)
@@ -242,12 +248,12 @@ def parse_arxiv_entry(entry: ET.Element) -> dict[str, Any]:
     # Journal reference if published
     journal_ref = entry.findtext("arxiv:journal_ref", ns)
     if journal_ref:
-        enriched["journal_ref"] = journal_ref
+        enriched["journal_ref"] = journal_ref  # This is correct, journal_ref is a string
 
     # Comments (author notes)
     comment = entry.findtext("arxiv:comment", ns)
     if comment:
-        enriched["comment"] = comment
+        enriched["comment"] = comment  # This is correct, comment is a string
 
     return enriched
 
@@ -287,7 +293,7 @@ def search_by_title_author(
         last_request_time[0] = time.time()
 
         # Search arXiv
-        params = {
+        params: dict[str, Any] = {
             "search_query": query,
             "max_results": 5,
             "sortBy": "relevance",
@@ -295,7 +301,7 @@ def search_by_title_author(
 
         response = session.get(base_url, params=params, timeout=30)
 
-        if response.status_code == 404:
+        if response.status_code == HTTP_NOT_FOUND:
             stats["not_found"] += 1
             return None
 
@@ -345,7 +351,7 @@ def search_by_arxiv_ids_batch(
     """Get multiple papers by arXiv IDs in a single request (up to 100 at a time)."""
     base_url = "http://export.arxiv.org/api/query"
     delay = 3.0
-    results = {}
+    results: dict[str, dict[str, Any]] = {}
 
     if not arxiv_ids:
         return results
@@ -371,7 +377,7 @@ def search_by_arxiv_ids_batch(
         last_request_time[0] = time.time()
 
         # Search by ID list (comma-separated)
-        params = {"id_list": ",".join(clean_ids), "max_results": len(clean_ids)}
+        params: dict[str, Any] = {"id_list": ",".join(clean_ids), "max_results": len(clean_ids)}
 
         response = session.get(base_url, params=params, timeout=30)
         response.raise_for_status()
@@ -433,7 +439,7 @@ def search_by_arxiv_id(
         last_request_time[0] = time.time()
 
         # Search by ID
-        params = {"id_list": clean_id, "max_results": 1}
+        params: dict[str, Any] = {"id_list": clean_id, "max_results": 1}
 
         response = session.get(base_url, params=params, timeout=30)
         response.raise_for_status()
@@ -468,7 +474,8 @@ def load_checkpoint(checkpoint_file: Path) -> dict[str, Any]:
     """Load checkpoint data if it exists."""
     if checkpoint_file.exists():
         with open(checkpoint_file) as f:
-            return json.load(f)
+            data: dict[str, Any] = json.load(f)
+            return data
     return {"processed_papers": [], "last_chunk": 0, "stats": {}, "all_results": {}}
 
 
@@ -597,7 +604,7 @@ def analyze_enrichment_results(output_dir: Path) -> None:
         print(f"\n  Papers with published DOIs: {published_dois} (published after preprint)")
 
 
-def main():
+def main() -> None:
     """Main entry point for arXiv enrichment with checkpoint support."""
     parser = argparse.ArgumentParser(description="arXiv V5 Unified Enrichment with Checkpoint Support")
     parser.add_argument("--input", required=True, help="Input directory with papers to enrich")
@@ -637,7 +644,7 @@ def main():
     # Load checkpoint
     checkpoint_data = load_checkpoint(checkpoint_file)
     processed_papers = set(checkpoint_data.get("processed_papers", []))
-    last_chunk = checkpoint_data.get("last_chunk", 0)
+    # Note: last_chunk was unused, removed per ruff F841
     all_results = checkpoint_data.get("all_results", {})
 
     # Initialize statistics
@@ -666,7 +673,7 @@ def main():
     print(f"\nFound {len(paper_files)} total papers")
 
     # Prepare papers for enrichment
-    papers_to_process = []
+    papers_to_process: list[dict[str, Any]] = []
     papers_by_id = {}
 
     for paper_file in paper_files:

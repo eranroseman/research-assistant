@@ -663,3 +663,37 @@ GAP_ANALYSIS_API_BATCH_SIZE = 500  # Papers per API batch request (use bulk endp
 GAP_ANALYSIS_CACHE_EXPIRY_DAYS = 7  # Cache API responses for 7 days
 GAP_ANALYSIS_PROACTIVE_DELAY = 1.0  # Pre-emptive delay between API requests (seconds)
 GAP_ANALYSIS_ADAPTIVE_DELAY = 2.0  # Increased delay when rate limiting detected
+
+# ============================================================================
+# ARXIV ENRICHER CONFIGURATION
+# ============================================================================
+ARXIV_MAX_TITLE_LENGTH = 250  # Maximum title length for arXiv search
+ARXIV_MIN_TITLE_LENGTH = 5  # Minimum title length for valid match
+ARXIV_TITLE_MATCH_THRESHOLD = 0.7  # Minimum title match score for acceptance
+
+# ============================================================================
+# CROSSREF ENRICHER CONFIGURATION
+# ============================================================================
+CROSSREF_MIN_TITLE_LENGTH = 20  # Minimum title length for similarity check
+
+# ============================================================================
+# OPENALEX ENRICHER CONFIGURATION
+# ============================================================================
+OPENALEX_MIN_DOI_LENGTH = 7  # Minimum DOI length
+OPENALEX_MAX_DOI_LENGTH = 100  # Maximum DOI length
+
+# ============================================================================
+# PIPELINE LOGGER CONFIGURATION
+# ============================================================================
+LOGGER_MAX_RECENT_EVENTS = 5  # Maximum recent events to track
+LOGGER_DEFAULT_DISPLAY_LINES = 30  # Default lines for compact display
+LOGGER_FULL_DISPLAY_LINES = 40  # Lines for full display
+LOGGER_DISPLAY_WIDTH = 100  # Display width for progress bars
+LOGGER_TIME_MINUTE = 60  # Seconds in a minute
+LOGGER_TIME_HOUR = 3600  # Seconds in an hour
+
+# ============================================================================
+# PIPELINE UTILS CONFIGURATION
+# ============================================================================
+UTILS_MIN_DOI_LENGTH = 7  # Minimum DOI length for validation
+UTILS_MAX_DOI_LENGTH = 200  # Maximum DOI length for validation

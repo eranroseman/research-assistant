@@ -23,6 +23,11 @@ import requests
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
 from collections import Counter
+
+from src.config import (
+    OPENALEX_MIN_DOI_LENGTH,
+    OPENALEX_MAX_DOI_LENGTH,
+)
 import statistics
 from src import config
 
@@ -73,7 +78,9 @@ def clean_doi(doi: str) -> str | None:
     # Validate basic DOI format
     if not clean.startswith("10."):
         return None
-    if len(clean) < 7 or len(clean) > 100:  # Reasonable DOI length limits
+    if (
+        len(clean) < OPENALEX_MIN_DOI_LENGTH or len(clean) > OPENALEX_MAX_DOI_LENGTH
+    ):  # Reasonable DOI length limits
         return None
 
     return clean
@@ -239,7 +246,7 @@ def enrich_batch(
     session: requests.Session, dois: list[str], batch_size: int = 50
 ) -> dict[str, dict[str, Any]]:
     """Enrich multiple papers in a single API call."""
-    results = {}
+    results: dict[str, dict[str, Any]] = {}
     base_url = "https://api.openalex.org"
 
     # Clean DOIs
@@ -259,7 +266,7 @@ def enrich_batch(
         # Build OR filter for OpenAlex
         doi_filter = f"doi:{'|'.join(clean_dois)}"
 
-        params = {
+        params: dict[str, Any] = {
             "filter": doi_filter,
             "per_page": batch_size,
             "select": get_select_fields(),
@@ -289,7 +296,8 @@ def load_checkpoint(checkpoint_file: Path) -> dict[str, Any]:
     """Load checkpoint data if it exists."""
     if checkpoint_file.exists():
         with open(checkpoint_file) as f:
-            return json.load(f)
+            data: dict[str, Any] = json.load(f)
+            return data
     return {"processed_papers": [], "last_batch": 0, "stats": {}}
 
 
@@ -383,7 +391,7 @@ def analyze_enrichment_results(output_dir: Path) -> None:
     print("\n" + "=" * 80)
 
 
-def has_openalex_data(paper: dict) -> bool:
+def has_openalex_data(paper: dict[str, Any]) -> bool:
     """Check if paper already has OpenAlex enrichment."""
     # Check for openalex_enriched marker
     if paper.get("openalex_enriched"):
@@ -392,7 +400,7 @@ def has_openalex_data(paper: dict) -> bool:
     return any(key.startswith("openalex_") for key in paper)
 
 
-def main():
+def main() -> None:
     """Main entry point for OpenAlex enrichment."""
     parser = argparse.ArgumentParser(description="OpenAlex V5 Unified Enrichment with Checkpoint Support")
     parser.add_argument("--input", required=True, help="Input directory with papers to enrich")
@@ -469,7 +477,7 @@ def main():
     print(f"\nFound {len(paper_files)} total papers")
 
     # Filter out already processed papers
-    papers_to_process = []
+    papers_to_process: list[Path] = []
     papers_with_dois = []
     papers_by_doi = {}
     papers_without_doi = []
