@@ -4,109 +4,86 @@
   "abstract": "Mobile health (mHealth) interventions can improve health outcomes by intervening in the moment of need or in the right life circumstance. mHealth interventions are now technologically feasible because current off-the-shelf mobile phones can acquire and process data in real time to deliver relevant interventions in the moment. Learning which intervention to provide in the moment, however, is an optimization problem. This book chapter describes one algorithmic approach, a \"bandit algorithm,\" to optimize mHealth interventions. Bandit algorithms are well-studied and are commonly used in online recommendations (e.g., Google's ad placement, or news recommendations). Below, we walk through simulated and real-world examples to demonstrate how bandit algorithms can be used to personalize and contextualize mHealth interventions. We conclude by discussing challenges in developing bandit-based mhealth interventions. \n Introduction Before mHealth, the standard of care was periodic visits to a clinician's office, interspersed with little to no patient support in between visits. At the clinician's office,",
   "year": 2002,
   "date": "2002-11",
+  "journal": "J Mach Learn Res",
+  "publication": "J Mach Learn Res",
   "authors": [
     {
+      "forename": "Mashfiqui",
+      "surname": "Rabbi",
       "name": "Mashfiqui Rabbi",
       "email": "mrabbi@fas.harvard.edu"
     },
     {
+      "forename": "Predrag",
+      "surname": "Klasnja",
       "name": "Predrag Klasnja"
     },
     {
+      "forename": "Tanzeem",
+      "surname": "Choudhury",
       "name": "Tanzeem Choudhury"
     },
     {
+      "forename": "Ambuj",
+      "surname": "Tewari",
       "name": "Ambuj Tewari"
     },
     {
+      "forename": "Susan",
+      "surname": "Murphy",
       "name": "Susan Murphy"
     },
     {
-      "affiliation": {
-        "organization": "Department of Statistics",
-        "department": "Department of Statistics",
-        "institution": "Harvard University",
-        "address": "1 Oxford St. #316, 02138, Cambridge, MA, USA"
-      }
+      "affiliation": "B  ( ) Department of Statistics , Harvard University , 1 Oxford St. #316 , Cambridge , MA 02138 , USA \n\t\t\t\t\t\t\t\t Department of Statistics \n\t\t\t\t\t\t\t\t Harvard University \n\t\t\t\t\t\t\t\t \n\t\t\t\t\t\t\t\t\t 1 Oxford St. #316 \n\t\t\t\t\t\t\t\t\t 02138 \n\t\t\t\t\t\t\t\t\t Cambridge \n\t\t\t\t\t\t\t\t\t MA \n\t\t\t\t\t\t\t\t\t USA"
     },
     {
-      "affiliation": {
-        "organization": "School of Information",
-        "department": "School of Information",
-        "institution": "University of Michigan",
-        "address": "Ann Arbor, USA"
-      }
+      "affiliation": "School of Information , University of Michigan , Ann Arbor , USA \n\t\t\t\t\t\t\t\t School of Information \n\t\t\t\t\t\t\t\t University of Michigan \n\t\t\t\t\t\t\t\t \n\t\t\t\t\t\t\t\t\t Ann Arbor \n\t\t\t\t\t\t\t\t\t USA"
     },
     {
-      "affiliation": {
-        "organization": "Department of Information Science",
-        "department": "Department of Information Science",
-        "institution": "Cornell University",
-        "address": "Ithaca, USA"
-      }
+      "affiliation": "Department of Information Science , Cornell University , Ithaca , USA \n\t\t\t\t\t\t\t\t Department of Information Science \n\t\t\t\t\t\t\t\t Cornell University \n\t\t\t\t\t\t\t\t \n\t\t\t\t\t\t\t\t\t Ithaca \n\t\t\t\t\t\t\t\t\t USA"
     },
     {
-      "affiliation": {
-        "organization": "Department of Statistics",
-        "department": "Department of Statistics",
-        "institution": "University of Michigan",
-        "address": "Ann Arbor, USA"
-      }
+      "affiliation": "Department of Statistics , University of Michigan , Ann Arbor , USA \n\t\t\t\t\t\t\t\t Department of Statistics \n\t\t\t\t\t\t\t\t University of Michigan \n\t\t\t\t\t\t\t\t \n\t\t\t\t\t\t\t\t\t Ann Arbor \n\t\t\t\t\t\t\t\t\t USA"
     },
     {
-      "affiliation": {
-        "organization": "Department of Statistics",
-        "department": "Department of Statistics",
-        "institution": "Harvard University",
-        "address": "Cambridge, USA"
-      }
+      "affiliation": "Department of Statistics and Department of Computer Science , Harvard University , Cambridge , USA \n\t\t\t\t\t\t\t\t Department of Statistics \n\t\t\t\t\t\t\t\t Department of Computer Science \n\t\t\t\t\t\t\t\t Harvard University \n\t\t\t\t\t\t\t\t \n\t\t\t\t\t\t\t\t\t Cambridge \n\t\t\t\t\t\t\t\t\t USA"
     }
   ],
   "doi": "10.1007/978-3-030-98546-2_21",
-  "md5": "A0FB5B8E5D6E75194727290B30EA4EB3",
-  "funding": [
-    "",
-    "",
-    "",
-    "",
-    "",
-    "",
-    "Acknowledgements This work has been supported by  NIDA   P50 DA039838  ( PI Linda Collins ),  NIAAA   R01 AA023187  (PI S. Murphy),  NHLBI/ NIA R01 HL125440  (PI: PK),  NIBIB U54EB020404  (PI: SK).  A. Tewari  acknowledges the support of a  Sloan Research Fellowship  and an  NSF   CAREER grant   IIS-1452099 ."
-  ],
   "sections": [
     {
       "text": "data is collected to describe the patient's state at that visit time and self-report data about the patient's state prior to the current visit time is collected through an errorprone mechanism of recalling past events. The mHealth model has enabled significant progress in situ data collection between clinic visits; phone sensors can now capture personal data at a millisecond level, and improvement in user interfaces has reduced the burden of self-report information  (Kubiak and Smyth 2019) . mHealth interventions using persuasive design features are promising approaches for improving patients health  (Baumeister et al. 2019; Messner et al. 2019) . However providing effective interventions personalized to the patient between patient visits remains challenging.\n\nTwo key components of intervening at the right time are personalization and contextualization. Personalization is the process of matching an individual's preferences and lifestyle. e.g., a physical activity intervention can say, \"You walked 10 times in the last week near your office. Don't forget to take small walks near your office today.\" Such personalization can lower barriers to acting on the suggestion  (Hochbaum et al. 1952) . Contextualization takes personalization one step further by delivering interventions at moments of need or at an opportune moment when the intervention is easy to follow  (Fogg 2009 ). e.g., when a participant reaches the office, a push notification with the earlier walking suggestion can be sent, or, just after a high risk teen reports high stress, a SMS can be sent with ideas to reduce stress.\n\nContextualization and personalization are complex problems because different people may prefer different interventions and these preferences may vary by context. Fortunately, similar problems have been solved before. When Google places ads or Netflix suggests movies, they adapt their recommendation based on user preferences and characteristics, utilizing bandit algorithms. Here we describe how to repurpose bandit algorithms to personalize and contextualize mHealth interventions. We will start with a simple example, where we personalize a daily list of physical activity suggestions to an individual. We will then extend this simple example to account for contextual factors (e.g., weather). We conclude with a real-world example and discuss future challenges in developing personalized/contextualized interventions with bandit algorithms."
     },
     {
-      "title": "21.2. Background",
+      "title": "Background",
       "text": "Bandit algorithms: \"Bandit algorithms\" are so called because they were first devised for the situation of a gambler playing one-armed bandits (slot machines with a long arm on the side instead of a push button). Each time the gambler picks a slot machine, he/she receives a reward. The bandit problem is to learn how to best sequentially select slot machines so as to maximize total rewards. The fundamental issue of bandit problems is the exploitation-exploration tradeoff; here exploitation means re-using highly rewarding slot machines from the past and exploration means trying new or less-used slot machines to gather more information. While exploration may yield less short-term payoff, an exploitation-only approach may miss a highly rewarding slot machine. Researchers have proposed solutions to the bandit's exploit-explore tradeoff across many areas. In particular, once the relevance of bandit algorithms to internet advertising was understood, there was a flurry of work  (Bubeck and Cesa-Bianchi 2012) . Nowadays, bandit algorithms are theoretically well understood, and their benefits have been empirically demonstrated  (Bubeck and Cesa-Bianchi 2012; Chapelle et al. 2012 ).\n\nAn important class of bandit problems is the contextual bandit problem that considers additional contextual information in selecting the slot machine  (Woodroofe 1979) . Contextual bandit problems provide a natural model for developing mobile health interventions. In this model, the context is the information about the individual's current circumstances, the slot machines correspond to the different intervention options, and the rewards are near-time, proximal, outcomes  (Nahum-Shani et al. 2017) . In this setup, optimizing mHealth intervention delivery is the act of learning the intervention option that will result in the best proximal outcome in a given circumstance. This is same as solving the contextual bandit problem."
     },
     {
-      "title": "21.3. Optimizing Intervention with a Bandit Algorithm",
+      "title": "Optimizing Intervention with a Bandit Algorithm",
       "text": "We will use two simulated examples to explain how bandits can be used to optimize an mHealth intervention for an individual. In Sect. 21.4, we will discuss another realworld mobile application that builds on the ideas introduced in the first two simple examples.\n\nIn our first example, the bandit algorithm will be used to select an optimal set of five physical activity suggestions, for an individual, from a set of ten suggestions. A set of five suggestions is optimal if the set leads to the highest level of daily activity for that individual. The second example extends the first by finding a set of five suggestions for each of several contexts. Contextualizing suggestions can be helpful because the same suggestion may be more actionable in certain contexts (e.g., good weather or day of the week)."
     },
     {
-      "title": "21.3.1. Personalizing Suggestions for an Individual",
+      "title": "Personalizing Suggestions for an Individual",
       "text": "Consider a scenario in which Jane's health plan gives her a physical activity tracker and a smartphone app. Jane's health plan has found that the ten activity suggestions from Table  21 .1 often work for many less-active people to increase their activity. Note that the order of suggestions in Table  21 .1 does not imply any specific ranking. It is unlikely, however, that every individual will be able to follow or prefer to follow all the 10 suggestions equally and there will be inter-personal variability in which suggestions are followed and to what degree. Thus, we set the goal of learning the five suggestions with the highest chance of maximizing Jane's activity. We use the bandit algorithm, which is running as part of Jane's smartphone app, to achieve this\n\nTable 21.1 List of 10 suggestions 1. Walk 30 min 2. Add intervals: walk 5 min, walk very fast for 5 min, repeat 3 times 3. Take the stairs instead of the elevator whenever possible 4. Go for a walk with a friend or your dog 5. Swim a lap, rest 1 min, repeat 10 times 6. Attend a fitness class at your gym 7. Try some of the strength training and bodyweight exercises illustrated by the fitness app on your phone 8. Do yoga 9. Park at the far end of the parking lot to walk farther 10. Do yardwork for at least 10 min\n\ngoal. Each morning, the app issues a set of 5 suggestions. The app then monitors Jane's activities throughout the day and uses that information to choose 5 suggestions for the following day.\n\nFormally, we will refer to each set of five activity suggestions as an intervention option or action. This intervention option or action is the particular choice of the five suggestions. On the morning of day t, the app suggests to Jane the action A t , where A t = [S t1 , S t2 , S t3 , . . . , S t10 ] T is a 10 \u00d7 1 vector of binary variables. S ti has a value of 1 if the i-th suggestion from Table  21 .1 is shown to Jane on day t, and 0 otherwise. Thus A t will have 5 entries equal to 1 and 5 entries equal to 0. Further, let Y t denote the number of active minutes for Jane on day t, which might be called the proximal outcome or reward of action A t .\n\nConsider the following linear regression model for the mean of the daily active minutes Y t on day t in terms of the suggestions:\n\nwhere the second equality is written more compactly by using vector notation, \u03b2 = [\u03b2 1 , \u03b2 2 , . . . , \u03b2 10 ] T . Here \u03b2 1 , \u03b2 2 , \u03b2 3 , . . . , \u03b2 10 respectively represent suggestion 1, 2, 3, . . . , 10 s contribution to Jane's number of active minutes. Therefore, Eq. 21.1. has the following simple interpretation: Y t , the number of daily active minutes, is the sum of the effects of the 5 activity suggestions provided on day t (i.e., suggestions for which S ti = 1). Formally, our goal is to discover the best action A t = a * that is, the set of 5 suggestions that makes Jane most active (that results in the highest mean daily active minutes). We can formally write this goal as: given \u03b2, determine the action a * for which\n\nwhere a is a combination of 5 suggestions from Table  21 .1. \u03b2 is, however, unknown. We can estimate Jane's a * by running experiments in the following way: at the start of a day t, the app selects action A t (in other words, it delivers to Jane a combination of 5 suggestions from Table  21 .1). The tracker then counts the number of minutes Jane is active on the day (note that this number is the proximal outcome Y t ). If the 5 suggestions are useful, then Jane will be more active that day and Y t will be high compared to other days with a different set of 5 suggestions. Now, the question is: how to select the 5 suggestions each day? One simple approach is to select 5 suggestions out of 10 with equal probability. But such a uniform selection strategy will select more useful and less useful suggestions equally. A more sophisticated approach is to use the information already available from the past experiments to select future suggestions that will both yield additional information about a * and give as few less useful suggestions as possible. Note that here we face the same exploit-explore tradeoff faced by the classic bandit setting's gambler-i.e., how to balance exploiting suggestions that seemed useful in the past with exploring less frequently issued suggestions.\n\nAn effective approach to delivering less useful suggestions as little as possible is \"optimism in the face of uncertainty\" epitomized by the Upper Confidence Bound (UCB) technique  (Auer et al. 2002; Li et al. 2010) . Bandit algorithms based on the UCB have been well studied and possess guarantees of minimizing the number of less useful suggestions. The key intuition behind the UCB idea is the following: First, for each choice of action a t , a confidence interval is constructed for the linear combination \u03b2 T a t . Recall this linear combination represents E[Y t |A t = a t ], the expected proximal outcome after receiving action, a t . Then the UCB bandit algorithm selects the action with the highest upper confidence limit. Note that the upper confidence limit for \u03b2 T a t can be high for either of two reasons: (1) either \u03b2 T a t is large and thus a t is a good action to make Jane active, or (2) the confidence interval is very wide with a high upper limit, indicating that there is much uncertainty about the value of \u03b2 T a t . Using the upper confidence limit represents UCB's optimism; UCB is optimistic that actions with high upper confidence limits will be the best actions, even though a larger upper confidence limit can mean more uncertainty. However, if an action with high upper confidence is indeed not the optimal action, then selecting the action will reduce the uncertainty about the effect of this action. This will help UCB realize that the action is indeed not useful.\n\nHow does UCB choose an action using the upper confidence interval? By following these two steps. The first step involves using Eq. 21.1 to estimate \u03b2 assuming homogeneous error variance. We might use ridge regression to estimate \u03b2 because ridge regression regularizes to avoid overfitting, especially when Jane has just begun to use the app and we have less data  (Li et al. 2010; Bishop 2007) . In this case the estimator of \u03b2, denoted by \u03b2 t , after t days of using the bandit algorithm is:\n\nwhere -1 t = t u=1 A u A T u + I 10 and I 10 is an 10\u00d710 identity matrix. Equation  21 .3 is the standard solution for ridge regression. The second step is to construct an upper confidence limit for \u03b2 T a for each possible action a; the upper confidence limit on day t for action a is given by \u03b2 T t a + \u03b1 a T -1 t a, where \u03b1 is an appropriate critical value. Note, since we assumed homogeneous error variance, -1 t is proportional to the covariance for \u03b2 t , and a T -1 t a is the covariance of \u03b2 T a. Thus, a T -1 t a represents standard deviation of \u03b2 T a and the upper confidence limit of \u03b2 T a has an interpretable form, which is simply the current estimate, \u03b2 T t a, plus its standard deviation multiplied up to a constant factor \u03b1. Then, to choose the UCB action for day t + 1, we calculate the a t+1 for which\n\nfor all actions a. i.e., a t+1 is selected to maximize the upper confidence limit on the mean of Y t+1 . This approach possesses strong guarantees to minimize the number of less useful suggestions  (Li et al. 2010; Auer 2002 ).\n\nHere we summarize how the UCB bandit algorithm works on Jane's smartphone. First there is an \"exploration phase\" to allow the UCB algorithm to form preliminary estimates of \u03b2. This phase lasts for a number of days, say t 0 days, during which each morning the UCB bandit algorithm randomly selects an action, that is, uniformly selects five activity suggestions from the 10, and delivers these suggestions to Jane in the application. Then at the end of day t 0 , the UCB bandit uses an incremental calculation to form \u03b2 t 0 and t 0 based on the selected action, Jane's activity minutes, Y t 0 , for that day and the prior day's \u03b2 t 0 -1 and t 0 -1 . Next the UCB algorithm calculates the upper confidence limit for each action and selects the action a t 0 +1 with the highest upper confidence limit. On the next morning, Jane is provided the five suggestions as specified by a t 0 +1 . The UCB algorithm repeats the process by estimating new \u03b2 t 0 +1 t 0 +1 and an updated set of 5 suggestions are chosen for the next day and so on."
     },
     {
-      "title": "21.3.1.1. A Simulation Example",
+      "title": "A Simulation Example",
       "text": "In this section, we use a simulated example to demonstrate how a UCB bandit algorithm can personalize suggestions for Jane. We assume the following simple model of how Jane responds to the suggestions: When Jane sees a suggestion, she follows it with probability p or does not follow it with probability 1p. If Jane follows the suggestion, she spends D minutes following it on a particular day. We assume D is random and normally distributed, because Jane may not spend the same amount of time each time she follows the same suggestion. In Table  21 .2, we created an artificial example scenario with p and D values for different suggestions. The D values are written as mean \u00b1 standard deviation. We also show the expected number Table 21.2 A simulated scenario for Jane where p represents the probability of following a suggestion when Jane sees it, and if the suggestion is followed, \"Duration\" represents the number of daily minutes spent following the suggestion. Finally, p and \"Duration\" are used to compute the expected value pE  [D]  With the above setup, we run the simulation in two stages. In the first stage, suggestions are included with equal probability in the five suggestions on each of the first fourteen days. This initial \"exploration phase\" helps to form an initial estimate of \u03b2. In the second stage, we run the UCB bandit algorithm: on each day, we compute \u03b2 t , according to Eq. 21.3, and choose an action using Eq. 21.4. We run these simulation for 56 days, or 8 weeks. We run 200 instances of the simulation to account for randomness in the problem. One source of this randomness comes from the exploration phase, where the app generates non-identical sequences of random suggestions based on when Jane starts using the app. We deal with this randomness by resetting the randomization seed after each simulation run. Another source of randomness comes from the within-person variability of how Jane responds to the suggestions. We create a second stream of random numbers to simulate how Jane responds to the suggestions. The seed of this second stream remains unchanged after each simulation run; we do not reset this seed because, doing so will add the randomness of resetting the seeds to the within-person variability. Table  21 .3 shows the results, where we report the mean of the \u03b2 estimates. At the top, we list the actual \u03b2 values. We then list in each row how many times a suggestion is issued by UCB over a two week period. We use boldface for the top five suggestions (1st, 3rd, 4th, 8th, 9th in Table  21 .1). The simulation shows that after the two-week exploration phase, UCB chooses the top (boldfaced) suggestions more times than the less useful ones. Since a suggestion can be picked only once a day, the top suggestions 1, 2, and 8 from Table  21 .3 are picked nearly every day after the exploration phase (11-14 days between week 3-4, 5-6, and 7-8). However, suggestions 3, 9, and 10 all have similar \u03b2 values. As a result, UCB is often uncertain among them and chooses the 10th suggestion sometimes wrongly, since it is not in the top five suggestions."
     },
     {
-      "title": "21.3.2. Optimizing Interventions for Different Contexts",
+      "title": "Optimizing Interventions for Different Contexts",
       "text": "In the earlier section, we discussed an example of personalizing suggestions with the UCB algorithm. Our goal was to demonstrate the inner workings of a bandit algorithm in a simple setting. Here we discuss extending the prior example to a more realistic setting where we tailor suggestion based on users' context. Indeed, context can determine whether, and the degree to which, certain suggestions are actionable. For example, Jane may only be able to act on the yardwork suggestion on the weekend, or she may appreciate and act on the reminder to take her dog for a walk when the weather is good. By adapting suggestions to different contexts, we hope to enhance her activity level. Fortunately, we can contextualize suggestions by re-purposing the bandit technique described already. We briefly describe one way to do so below.\n\nFor clarity, we will first consider a very simple context involving only the weather and day of the week. For these two contexts, there are two states (i) weekend or weekday, (ii) good or bad weather, where we consider the whole day as bad weather if only part is. Thus, each day belongs to one of four different context combinations\n\nTable 21.4 Different types of contexts Context 1 Bad weather, weekend 2 Bad weather, weekday 3 Good weather, weekend 4 Good weather, weekday\n\n(see Table  21 .4). Note this simple characterization of only 4 contexts is to convey the idea of contextualization rather than actually to realistically handle a large number of contexts.\n\nFor these four context combinations, the task of contextualizing suggestions boils down to optimizing the suggestions for each of the four. An intuitive approach is to use 4 different bandit algorithms, one for each context combination. Depending on the context on day t, the corresponding bandit would be activated for optimizing suggestions for that context. Recall that an action is a set of five activity suggestions from the 10 in Table  21 .1. Each of the four different bandit algorithms uses a model such as Eq. 21.1. but with different \u03b2s due to the different contexts. We represent this difference by sub-scripting \u03b2 as \u03b2 k for the k-th (k = 1, 2, 3, 4) context. So, the goal is to learn the optimal action a * k that maximizes the average number of minutes active for Jane in context k. That is, for k = 1, 2, 3, 4 the goal is to learn the action a * k which satisfies\n\nAgain, one UCB bandit algorithm can be run per context to learn the optimal five suggestions for that context.\n\nNote that using a separate bandit algorithm for each context is not a feasible approach in a real-world setting; there are too many possible contexts. It would take the bandit algorithm many days to obtain good estimates of the \u03b2 k parameters. However, we can use a few tricks to handle large number of contexts. First, we may know a priori that some suggestions are equally actionable across different contexts and some suggestions are not at all actionable in certain contexts. If the suggestions are equally actionable across contexts, we can use the same \u03b2 k parameter values for these contexts. And if a suggestion is not actionable in a given context we can set its parameter in \u03b2 k to zero. Second, we can pool information across people. For example, some suggestions, such as yardwork, are more actionable on weekends for most people. Thus, we don't need to find \u03b2 k for each user individually. Pooling information, however, requires a Bayesian approach where for a new user, initially \u03b2 k is pooled from prior users and once some data from the user is available, \u03b2 k is then adapted to make more user-specific changes. Bayesian approaches to bandit algorithms are beyond the scope of this chapter; but the techniques are along the same lines as UCB  (Chapelle and Li 2011) ."
     },
     {
-      "title": "21.4. A Real-World Example",
+      "title": "A Real-World Example",
       "text": "Earlier, we gave two simple examples of how the UCB bandit algorithm can personalize and contextualize mobile health interventions. Real-world examples, however, are more complicated, with many potential suggestions and many contexts. Below we discuss an mHealth app called MyBehavior that has been deployed multiple times in real world studies  (Rabbi et al. 2018; Rabbi et al. 2015) . MyBehavior utilizes phone sensor data to design unique suggestions for an individual and subsequently uses a bandit algorithm to find the activity suggestions that maximize chances of daily calorie burns. Like the example in Sect. 21.3, MyBehavior issues the suggestions once each morning. The number of suggestions, however, is higher than in Table  21 .1 because the suggestions in MyBehavior closely match an individual's routine behaviors, and routine behaviors are dynamic. In the following, we briefly discuss how MyBehavior uses the bandit algorithm. More information on this can be found in  (Rabbi et al. 2017) ."
     },
     {
-      "title": "21.4.1. MyBehavior: Optimizing Individualized Suggestions to Promote More Physical Activity",
+      "title": "MyBehavior: Optimizing Individualized Suggestions to Promote More Physical Activity",
       "text": "The following discussion of MyBehavior first covers how unique suggestions are created for each individual. We then briefly discuss how a bandit algorithm is used to find optimal activity suggestions that have the highest chance of maximizing an individual's daily calorie burn.\n\nThe MyBehavior app tracks an individual's physical activity and location every minute. The detected physical activities include walking, running, driving, and being stationary. The app then analyzes the location-tagged activity data to find patterns that are representative of the user's behaviors. Figure  21 .1 shows several examples of behaviors found by MyBehavior. Figure  21 .1a and b respectively contain places where a user stayed stationary and a location where the user frequently walked. Figure  21 .1c shows similar walking behaviors from another user. MyBehavior uses these behavioral patterns to generate suggestions that are unique to each individual. For example, one intervention may suggest an activity goal at specific locations that the user regularly goes to. Such tailoring makes feedback more compelling, since a user's familiarity with the location enhances adherence  (Fogg 2009) .\n\nSpecifically, MyBehavior creates three kinds of uniquely individualized suggestions: (i) for stationary behaviors, MyBehavior pinpoints the locations where the user tends to be stationary and suggests taking small walking breaks every hour in these locations. (ii) for walking behaviors, MyBehavior locates the different places the user usually walks and suggests continuing to walk in those locations (iii) for other behaviors, e.g., participation in yoga class or gym exercises, MyBehavior simply reminds the user to keep up the good work. Fig. 21.2 MyBehavior app screenshots for three different users. Figures 21.1 and 21.2 have been reproduced from Rabbi et al. (2015) with appropriate permission from the authors\n\nSince MyBehavior suggestions are tailored to the user, the first suggestion at the top of each screen shot is to walk, but the locations are different. Also, the first and third users receive a gym weight training exercise suggestion that the second user does not. Now, how does MyBehavior decide which suggestions to give? MyBehavior uses a bandit algorithm like that in Sect. 21.3's first example, where suggestions are issued once a day. But MyBehavior can offer many more suggestions than Table  21 .1 contains, depending on the variety of locations in which a user might be sedentary or active, etc. Fortunately, the bandit algorithm can still efficiently adapt to these high numbers of tailored suggestions. Rabbi et al. (2017)  details how this optimization works, but the key intuitions are the following: (i) Most human behaviors are highly repetitive and routine and occur in the same locations. Routine behaviors and locations will be detected early and thus included soon in the individual's list of suggestions. (ii) The suggestions relating to routine behaviors and locations are more likely to be followed than suggestions of non-routine behaviors in non-routine locations. Thus, the bandit will learn about the effects of these suggestions more quickly and these suggestions will likely remain effective if the user's routine does not change."
     },
     {
-      "title": "21.5. Discussion",
+      "title": "Discussion",
       "text": "In the last two sections, we discussed several examples of how bandit algorithms can optimize mobile health interventions. The bandit algorithm balances experimenting with different activity suggestions and selecting activity suggestions that currently appear most useful. This balancing act ensures that the algorithm acquires necessary information while maintaining an engaging user experience by providing as few less-useful suggestions as possible. While we showed that bandit algorithms can be useful to personalize and contextualize suggestions, there are additional real-world complexities that pose new challenges for bandit algorithms to address:\n\nIgnoring delayed effects: In bandit algorithms, the optimal action is the action that maximizes the immediate reward (proximal outcome). In other words, bandit algorithms ignore the potential impact of the action on future context and future proximal outcomes. Some actions, however, can have long-term negative effects even if the short-term effect is positive. e.g., delivering an office walking suggestion may increase a user's current activity level, but the user might become bored after repeating the office walk several days, thus future suggestions may be less effective. In these cases, other algorithms that explicitly allow past actions to impact future outcomes  (Sutton and Barto 1998 ) might be used. Precisely, the outcome of these algorithms are Y t + V (X t+1 ), where V (X t+1 ) is the prediction of the impact of the actions on future proximal outcomes given the context X t+1 at the time t +1 (a bandit algorithm acts as if V (X t+1 ) = 0). These algorithms tend to learn more slowly than bandit algorithms, since we need additional data to form the prediction V (X t+1 ).\n\nWe conjecture that the noisier the data is, the harder it will be to form high quality predictions of V (X t+1 ) and thus as a result, bandit algorithms may still be preferable.\n\nNon-stationarity: Most bandit algorithms assume \"stationary\" settings; i.e., the responsivity of a user in a given context to an action does not change with time. This assumption can be violated in real-word settings; in MyBehavior, for example, we observed that many suggestions become ineffective when people switched job and moved from one location to another. Such changes over time are often referred to as \"non-stationarity.\" Other types of non-stationarity can be caused by life events such as a significant other's illness or aging. Bandit algorithms are typically slow to adapt to non-stationarity. Speeding up this process is a critical direction for future bandit research.\n\nDealing with less data: In real world applications, where the number of contexts and actions are many, bandit algorithms will need a lot of burdensome experimentation to find the optimal action for a given context. One way around this is to use a \"warm start.\" A warm start set of decision rules that link the context to the action can be constructed using data from micro-randomized trials  (Klasnja et al. 2015)  involving similar individuals. Recently  Lei et al. (2014)  developed a bandit algorithm that can employ a warm start. However, we still need to test whether, and in which settings, warm starts will sufficiently speed up learning.\n\nAdverse effects: Since mHealth interventions are generally behavioral, the risk of personal harm is often minimal. Nonetheless, there could be potential iatrogenic effect because phones cannot capture every piece of contextual information and bandit algorithms ignore the long-term effects of interventions. Since bandit algorithms don't take interventions' long-term effects into account, the algorithm may notify or otherwise deliver interventions too much and thus cause annoyance and reduce app engagement. Future work needs to investigate how to account for such long-term adverse effects. Furthermore, current phone sensors cannot automatically capture critical contextual information such as a user's health risks, preferences, barriers, emotional states, etc. Incomplete information may cause the algorithm to provide less appealing (e.g., not suggesting an activity that a user likes but didn't do often in the past) and inappropriate suggestions (e.g., asking someone who is injured to walk). Providing human control over the suggestion generation process can mitigate these problems; e.g., a user can delete inappropriate suggestions and prioritize the suggestions that are more appealing  (Rabbi et al. 2015) ."
     },
     {
@@ -120,10 +97,6 @@
     },
     {
       "text": "Number of times suggestions are picked by the app within each of the two-week intervals. N denotes the number of days the app selects a suggestion in the time frame mentioned within parenthesis. Note, the number of times a suggestion can be selected during a two-week period is at most 14 (i.e., N \u2264 14)"
-    },
-    {
-      "title": "Acknowledgements",
-      "text": "This work has been supported by  NIDA   P50 DA039838  ( PI Linda Collins ),  NIAAA   R01 AA023187  (PI S. Murphy),  NHLBI/ NIA R01 HL125440  (PI: PK),  NIBIB U54EB020404  (PI: SK).  A. Tewari  acknowledges the support of a  Sloan Research Fellowship  and an  NSF   CAREER grant   IIS-1452099 ."
     }
   ],
   "references": [
@@ -132,10 +105,7 @@
       "authors": [
         "P Auer"
       ],
-      "year": 2002,
-      "journal": "J Mach Learn Res",
-      "volume": "3",
-      "raw": "Using confidence bounds for exploitation-exploration trade-offs \n\t\t \n\t\t\t P Auer \n\t\t \n\t \n\t \n\t\t J Mach Learn Res \n\t\t \n\t\t\t 3 \n\t\t\t \n\t\t\t 2002. Nov \n\t\t \n\t \n\t Auer P (2002) Using confidence bounds for exploitation-exploration trade-offs. J Mach Learn Res 3(Nov):397-422"
+      "year": 2002
     },
     {
       "title": "Finite-time analysis of the multiarmed bandit problem",
@@ -145,11 +115,7 @@
         "P Fischer"
       ],
       "year": 2002,
-      "doi": "10.1023/a:1013689704352",
-      "journal": "Mach Learn",
-      "volume": "47",
-      "issue": "2-3",
-      "raw": "Finite-time analysis of the multiarmed bandit problem \n\t\t \n\t\t\t P Auer \n\t\t \n\t\t \n\t\t\t N Cesa-Bianchi \n\t\t \n\t\t \n\t\t\t P Fischer \n\t\t \n\t\t 10.1023/a:1013689704352 \n\t \n\t \n\t\t Mach Learn \n\t\t \n\t\t\t 47 \n\t\t\t 2-3 \n\t\t\t \n\t\t\t 2002 \n\t\t \n\t \n\t Auer P, Cesa-Bianchi N, Fischer P (2002) Finite-time analysis of the multiarmed bandit problem. Mach Learn 47(2-3):235-256"
+      "doi": "10.1023/a:1013689704352"
     },
     {
       "title": "Persuasive e-health design for behavior change",
@@ -161,8 +127,7 @@
         "E-M Messner"
       ],
       "year": 2019,
-      "doi": "10.1007/978-3-030-31620-4_17",
-      "raw": "Persuasive e-health design for behavior change \n\t\t \n\t\t\t H Baumeister \n\t\t \n\t\t \n\t\t\t R Kraft \n\t\t \n\t\t \n\t\t\t A Baumel \n\t\t \n\t\t \n\t\t\t R Pryss \n\t\t \n\t\t \n\t\t\t E-M Messner \n\t\t \n\t\t 10.1007/978-3-030-31620-4_17 \n\t \n\t \n\t\t Mobile sensing and digital phenotyping: new developments in psychoinformatics \n\t\t \n\t\t\t H Baumeister \n\t\t \n\t\t \n\t\t\t C Montag \n\t\t \n\t\t Berlin \n\t\t \n\t\t\t Springer \n\t\t\t 2019 \n\t\t\t \n\t\t \n\t \n\t Baumeister H, Kraft R, Baumel A, Pryss R, Messner E-M (2019) Persuasive e-health design for behavior change. In: Baumeister H, Montag C (eds) Mobile sensing and digital phenotyping: new developments in psychoinformatics. Springer, Berlin, pp x-x"
+      "doi": "10.1007/978-3-030-31620-4_17"
     },
     {
       "title": "Pattern recognition and machine learning",
@@ -170,8 +135,7 @@
         "C Bishop"
       ],
       "year": 2007,
-      "doi": "10.1108/03684920710743466",
-      "raw": "Pattern recognition and machine learning \n\t\t \n\t\t\t C M Bishop \n\t\t \n\t\t 10.1108/03684920710743466 \n\t\t \n\t\t\t 2007 \n\t\t\t Springer \n\t\t \n\t \n\t Bishop CM (2007) Pattern recognition and machine learning. Springer"
+      "doi": "10.1108/03684920710743466"
     },
     {
       "title": "Regret analysis of stochastic and nonstochastic multi-armed bandit problems",
@@ -180,11 +144,7 @@
         "Cesa- Bianchi"
       ],
       "year": 2012,
-      "doi": "10.1561/9781601986276",
-      "journal": "Found Trends\u00ae Mach Learn",
-      "volume": "5",
-      "issue": "1",
-      "raw": "Regret analysis of stochastic and nonstochastic multi-armed bandit problems \n\t\t \n\t\t\t S Bubeck \n\t\t \n\t\t \n\t\t\t Cesa- Bianchi \n\t\t \n\t\t \n\t\t\t N \n\t\t \n\t\t 10.1561/9781601986276 \n\t \n\t \n\t\t Found Trends\u00ae Mach Learn \n\t\t \n\t\t\t 5 \n\t\t\t 1 \n\t\t\t \n\t\t\t 2012 \n\t\t \n\t \n\t Bubeck S, Cesa-Bianchi N (2012) Regret analysis of stochastic and nonstochastic multi-armed bandit problems. Found Trends\u00ae Mach Learn 5(1):1-122"
+      "doi": "10.1561/9781601986276"
     },
     {
       "title": "An empirical evaluation of thompson sampling",
@@ -193,8 +153,7 @@
         "L Li"
       ],
       "year": 2011,
-      "doi": "10.7551/mitpress/1120.003.0083",
-      "raw": "An empirical evaluation of thompson sampling \n\t\t \n\t\t\t O Chapelle \n\t\t \n\t\t \n\t\t\t L Li \n\t\t \n\t\t 10.7551/mitpress/1120.003.0083 \n\t \n\t \n\t\t Advances in neural information processing systems \n\t\t \n\t\t\t 2011 \n\t\t\t \n\t\t \n\t \n\t Chapelle O, Li L (2011) An empirical evaluation of thompson sampling. In: Advances in neural information processing systems, pp 2249-2257"
+      "doi": "10.7551/mitpress/1120.003.0083"
     },
     {
       "title": "Large-scale validation and analysis of interleaved search evaluation",
@@ -205,12 +164,7 @@
         "Y Yue"
       ],
       "year": 2012,
-      "doi": "10.1145/2094072.2094078",
-      "journal": "ACM Trans Inf Syst (TOIS)",
-      "volume": "30",
-      "issue": "1",
-      "pages": "6",
-      "raw": "Large-scale validation and analysis of interleaved search evaluation \n\t\t \n\t\t\t O Chapelle \n\t\t \n\t\t \n\t\t\t T Joachims \n\t\t \n\t\t \n\t\t\t F Radlinski \n\t\t \n\t\t \n\t\t\t Y Yue \n\t\t \n\t\t 10.1145/2094072.2094078 \n\t \n\t \n\t\t ACM Trans Inf Syst (TOIS) \n\t\t \n\t\t\t 30 \n\t\t\t 1 \n\t\t\t 6 \n\t\t\t 2012 \n\t\t \n\t \n\t Chapelle O, Joachims T, Radlinski F, Yue Y (2012) Large-scale validation and analysis of interleaved search evaluation. ACM Trans Inf Syst (TOIS) 30(1):6"
+      "doi": "10.1145/2094072.2094078"
     },
     {
       "title": "A behavior model for persuasive design",
@@ -218,9 +172,7 @@
         "B Fogg"
       ],
       "year": 2009,
-      "doi": "10.1145/1541948.1541999",
-      "volume": "40",
-      "raw": "A behavior model for persuasive design \n\t\t \n\t\t\t B J Fogg \n\t\t \n\t\t 10.1145/1541948.1541999 \n\t \n\t \n\t\t Proceedings of the 4th international conference on persuasive technology \n\t\t the 4th international conference on persuasive technology \n\t\t \n\t\t\t ACM \n\t\t\t 2009 \n\t\t\t 40 \n\t\t \n\t \n\t Fogg BJ (2009) A behavior model for persuasive design. In: Proceedings of the 4th international conference on persuasive technology, ACM, vol 40"
+      "doi": "10.1145/1541948.1541999"
     },
     {
       "title": "Microrandomized trials: an experimental design for developing just-in-time adaptive interventions",
@@ -236,11 +188,7 @@
         "A Tewari",
         "S Murphy"
       ],
-      "year": 1952,
-      "journal": "Health Psychol",
-      "volume": "34",
-      "pages": "1220",
-      "raw": "Microrandomized trials: an experimental design for developing just-in-time adaptive interventions \n\t\t \n\t\t\t G Hochbaum \n\t\t \n\t\t \n\t\t\t I Rosenstock \n\t\t \n\t\t \n\t\t\t S ; Kegels \n\t\t \n\t\t \n\t\t\t P Klasnja \n\t\t \n\t\t \n\t\t\t E B Hekler \n\t\t \n\t\t \n\t\t\t S Shiffman \n\t\t \n\t\t \n\t\t\t A Boruvka \n\t\t \n\t\t \n\t\t\t D Almirall \n\t\t \n\t\t \n\t\t\t A Tewari \n\t\t \n\t\t \n\t\t\t S A Murphy \n\t\t \n\t \n\t \n\t\t Health Psychol \n\t\t \n\t\t\t 34 \n\t\t\t 1220 \n\t\t\t 1952. 2015 \n\t\t \n\t \n\t Health belief model. United States Public Health Service \n\t Hochbaum G, Rosenstock I, Kegels S (1952) Health belief model. United States Public Health Service Klasnja P, Hekler EB, Shiffman S, Boruvka A, Almirall D, Tewari A, Murphy SA (2015) Microran- domized trials: an experimental design for developing just-in-time adaptive interventions. Health Psychol 34(S):1220"
+      "year": 1952
     },
     {
       "title": "Connecting domains-ecological momentary assessment in a mobile sensing framework",
@@ -249,8 +197,7 @@
         "J Smyth"
       ],
       "year": 2019,
-      "doi": "10.1007/978-3-030-31620-4_12",
-      "raw": "Connecting domains-ecological momentary assessment in a mobile sensing framework \n\t\t \n\t\t\t T Kubiak \n\t\t \n\t\t \n\t\t\t J M Smyth \n\t\t \n\t\t 10.1007/978-3-030-31620-4_12 \n\t \n\t \n\t\t Mobile sensing and digital phenotyping: new developments in psychoinformatics \n\t\t \n\t\t\t H Baumeister \n\t\t \n\t\t \n\t\t\t C Montag \n\t\t \n\t\t Berlin \n\t\t \n\t\t\t Springer \n\t\t\t 2019 \n\t\t\t \n\t\t \n\t \n\t Kubiak T, Smyth JM (2019) Connecting domains-ecological momentary assessment in a mobile sensing framework. In: Baumeister H, Montag C (eds) Mobile sensing and digital phenotyping: new developments in psychoinformatics. Springer, Berlin, pp x-x"
+      "doi": "10.1007/978-3-030-31620-4_12"
     },
     {
       "title": "An actor-critic contextual bandit algorithm for personalized interventions using mobile devices",
@@ -259,10 +206,7 @@
         "A Tewari",
         "S Murphy"
       ],
-      "year": 2014,
-      "journal": "Advances in Neural Information Processing Systems",
-      "volume": "27",
-      "raw": "An actor-critic contextual bandit algorithm for personalized interventions using mobile devices \n\t\t \n\t\t\t H Lei \n\t\t \n\t\t \n\t\t\t A Tewari \n\t\t \n\t\t \n\t\t\t S Murphy \n\t\t \n\t \n\t \n\t\t Advances in Neural Information Processing Systems \n\t\t \n\t\t\t 27 \n\t\t\t 2014 \n\t\t \n\t \n\t Lei, H., Tewari, A., & Murphy, S. (2014) An actor-critic contextual bandit algorithm for personalized interventions using mobile devices. Advances in Neural Information Processing Systems, 27"
+      "year": 2014
     },
     {
       "title": "A contextual-bandit approach to personalized news article recommendation",
@@ -273,8 +217,7 @@
         "R Schapire"
       ],
       "year": 2010,
-      "doi": "10.1145/1772690.1772758",
-      "raw": "A contextual-bandit approach to personalized news article recommendation \n\t\t \n\t\t\t L Li \n\t\t \n\t\t \n\t\t\t W Chu \n\t\t \n\t\t \n\t\t\t J Langford \n\t\t \n\t\t \n\t\t\t R E Schapire \n\t\t \n\t\t 10.1145/1772690.1772758 \n\t \n\t \n\t\t Proceedings of the 19th international conference on World wide web \n\t\t the 19th international conference on World wide web \n\t\t \n\t\t\t ACM \n\t\t\t 2010 \n\t\t\t \n\t\t \n\t \n\t Li L, Chu W, Langford J, Schapire RE (2010) A contextual-bandit approach to personalized news article recommendation. In: Proceedings of the 19th international conference on World wide web, ACM, pp 661-670"
+      "doi": "10.1145/1772690.1772758"
     },
     {
       "title": "mHealth applications: potentials, limitations, current quality and future directions",
@@ -286,8 +229,7 @@
         "H Stoyanov"
       ],
       "year": 2019,
-      "doi": "10.1007/978-3-030-31620-4_15",
-      "raw": "mHealth applications: potentials, limitations, current quality and future directions \n\t\t \n\t\t\t E-M Messner \n\t\t \n\t\t \n\t\t\t T Probst \n\t\t \n\t\t \n\t\t\t O 'rourke \n\t\t \n\t\t \n\t\t\t T Baumeister \n\t\t \n\t\t \n\t\t\t H Stoyanov \n\t\t \n\t\t \n\t\t\t S \n\t\t \n\t\t 10.1007/978-3-030-31620-4_15 \n\t \n\t \n\t\t Mobile sensing and digital phenotyping: new developments in psychoinformatics \n\t\t \n\t\t\t H Baumeister \n\t\t \n\t\t \n\t\t\t C Montag \n\t\t \n\t\t Berlin \n\t\t \n\t\t\t Springer \n\t\t\t 2019 \n\t\t\t \n\t\t \n\t \n\t Messner E-M, Probst T, O'Rourke T, Baumeister H., Stoyanov S (2019) mHealth applications: potentials, limitations, current quality and future directions. In: Baumeister H, Montag C (eds) Mobile sensing and digital phenotyping: new developments in psychoinformatics. Springer, Berlin, pp x-x"
+      "doi": "10.1007/978-3-030-31620-4_15"
     },
     {
       "title": "Justin-time adaptive interventions (JITAIs) in mobile health: key components and design principles for ongoing health behavior support",
@@ -299,11 +241,7 @@
         "K Tewari",
         "A Murphy"
       ],
-      "year": 2017,
-      "journal": "Ann Behav Med",
-      "volume": "52",
-      "issue": "6",
-      "raw": "Justin-time adaptive interventions (JITAIs) in mobile health: key components and design principles for ongoing health behavior support \n\t\t \n\t\t\t Nahum-Shani I Smith \n\t\t \n\t\t \n\t\t\t S N Spring \n\t\t \n\t\t \n\t\t\t B J Collins \n\t\t \n\t\t \n\t\t\t L M Witkiewitz \n\t\t \n\t\t \n\t\t\t K Tewari \n\t\t \n\t\t \n\t\t\t A Murphy \n\t\t \n\t\t \n\t\t\t S A \n\t\t \n\t \n\t \n\t\t Ann Behav Med \n\t\t \n\t\t\t 52 \n\t\t\t 6 \n\t\t\t \n\t\t\t 2017 \n\t\t \n\t \n\t Nahum-Shani I, Smith SN, Spring BJ, Collins LM, Witkiewitz K, Tewari A, Murphy SA (2017) Just- in-time adaptive interventions (JITAIs) in mobile health: key components and design principles for ongoing health behavior support. Ann Behav Med 52(6):446-462"
+      "year": 2017
     },
     {
       "title": "MyBehavior: automatic personalized health feedback from user behaviors and preferences using smartphones",
@@ -314,8 +252,7 @@
         "T Choudhury"
       ],
       "year": 2015,
-      "doi": "10.1145/2750858.2805840",
-      "raw": "MyBehavior: automatic personalized health feedback from user behaviors and preferences using smartphones \n\t\t \n\t\t\t M Rabbi \n\t\t \n\t\t \n\t\t\t M H Aung \n\t\t \n\t\t \n\t\t\t M Zhang \n\t\t \n\t\t \n\t\t\t T Choudhury \n\t\t \n\t\t 10.1145/2750858.2805840 \n\t \n\t \n\t\t Proceedings of the 2015 ACM international joint conference on pervasive and ubiquitous computing \n\t\t the 2015 ACM international joint conference on pervasive and ubiquitous computing \n\t\t \n\t\t\t 2015 \n\t\t\t \n\t\t \n\t \n\t Rabbi M, Aung MH, Zhang M, Choudhury T (2015) MyBehavior: automatic personalized health feedback from user behaviors and preferences using smartphones. In: Proceedings of the 2015 ACM international joint conference on pervasive and ubiquitous computing, pp 707-718"
+      "doi": "10.1145/2750858.2805840"
     },
     {
       "title": "Towards health recommendation systems: an approach for providing automated personalized health feedback from mobile data",
@@ -325,9 +262,7 @@
         "T Choudhury"
       ],
       "year": 2017,
-      "doi": "10.1007/978-3-319-51394-2_26",
-      "journal": "Mobile health",
-      "raw": "Towards health recommendation systems: an approach for providing automated personalized health feedback from mobile data \n\t\t \n\t\t\t M Rabbi \n\t\t \n\t\t \n\t\t\t M H Aung \n\t\t \n\t\t \n\t\t\t T Choudhury \n\t\t \n\t\t 10.1007/978-3-319-51394-2_26 \n\t \n\t \n\t\t Mobile health \n\t\t \n\t\t\t \n\t\t\t 2017 \n\t\t\t Springer \n\t\t\t Cham \n\t\t \n\t \n\t Rabbi M, Aung MH, Choudhury T (2017) Towards health recommendation systems: an approach for providing automated personalized health feedback from mobile data. Mobile health. Springer, Cham, pp 519-542"
+      "doi": "10.1007/978-3-319-51394-2_26"
     },
     {
       "title": "Feasibility and acceptability of mobile phone-based auto-personalized physical activity recommendations for chronic pain self-management: pilot study on adults",
@@ -339,12 +274,7 @@
         "T Choudhury"
       ],
       "year": 2018,
-      "doi": "10.2196/10147",
-      "journal": "J Med Internet Res",
-      "volume": "20",
-      "issue": "10",
-      "pages": "10147",
-      "raw": "Feasibility and acceptability of mobile phone-based auto-personalized physical activity recommendations for chronic pain self-management: pilot study on adults \n\t\t \n\t\t\t M Rabbi \n\t\t \n\t\t \n\t\t\t M S Aung \n\t\t \n\t\t \n\t\t\t G Gay \n\t\t \n\t\t \n\t\t\t M C Reid \n\t\t \n\t\t \n\t\t\t T Choudhury \n\t\t \n\t\t 10.2196/10147 \n\t \n\t \n\t\t J Med Internet Res \n\t\t \n\t\t\t 20 \n\t\t\t 10 \n\t\t\t 10147 \n\t\t\t 2018 \n\t\t \n\t \n\t Rabbi M, Aung MS, Gay G, Reid MC, Choudhury T (2018) Feasibility and acceptability of mobile phone-based auto-personalized physical activity recommendations for chronic pain self-management: pilot study on adults. J Med Internet Res 20(10):e10147"
+      "doi": "10.2196/10147"
     },
     {
       "title": "Reinforcement learning: an introduction",
@@ -352,8 +282,7 @@
         "R Sutton",
         "A Barto"
       ],
-      "year": 1998,
-      "raw": "Reinforcement learning: an introduction \n\t\t \n\t\t\t R S Sutton \n\t\t \n\t\t \n\t\t\t A G Barto \n\t\t \n\t\t \n\t\t\t 1998 \n\t\t\t MIT Press \n\t\t \n\t \n\t Sutton RS, Barto AG (1998) Reinforcement learning: an introduction. MIT Press"
+      "year": 1998
     },
     {
       "title": "A one-armed bandit problem with a concomitant variable",
@@ -361,114 +290,8 @@
         "M Woodroofe"
       ],
       "year": 1979,
-      "doi": "10.1080/01621459.1979.10481033",
-      "journal": "J Am Stat Assoc",
-      "volume": "74",
-      "issue": "368",
-      "raw": "A one-armed bandit problem with a concomitant variable \n\t\t \n\t\t\t M Woodroofe \n\t\t \n\t\t 10.1080/01621459.1979.10481033 \n\t \n\t \n\t\t J Am Stat Assoc \n\t\t \n\t\t\t 74 \n\t\t\t 368 \n\t\t\t \n\t\t\t 1979 \n\t\t \n\t \n\t Woodroofe M (1979) A one-armed bandit problem with a concomitant variable. J Am Stat Assoc 74(368):799-806"
+      "doi": "10.1080/01621459.1979.10481033"
     }
   ],
-  "num_references": 19,
-  "figures": [
-    {
-      "description": ", which also represents \u03b2 values for the suggestionSuggestionsp Duration, D (min) Expected duration pE[D]  that Jane spends following a suggestion when she sees it. This expected number is p \u00d7 E[D] + (1p) \u00d7 0 = pE[D]. These expected minutes are also \u03b2 values in Eq. 21.1. Note that \u03b2 values are unknown in real world setting. We use known \u03b2 values in a simulated example to show how the UCB algorithm finds the suggestions with higher \u03b2 values."
-    },
-    {
-      "description": "Figure 21.2 shows several screen shots of the MyBehavior app, where Fig. 21.2a-c are suggestions for three separate users."
-    },
-    {
-      "caption": "Fig. 21 . 1",
-      "description": "Fig. 21.1 Visualization of a user's movements over a week a heatmap showing the locations where the user is stationary everyday b location traces of frequent walks for the user c location traces of frequent walks for another user"
-    },
-    {
-      "type": "table",
-      "caption": "Table 21 .3",
-      "description": "Number of times suggestions are picked by the app within each of the two-week intervals. N denotes the number of days the app selects a suggestion in the time frame mentioned within parenthesis. Note, the number of times a suggestion can be selected during a two-week period is at most 14 (i.e., N \u2264 14)"
-    }
-  ],
-  "num_figures": 4,
-  "tables": [
-    {
-      "content": "Suggestions 1 2 3 4 5 6 7 8 9 10 \u03b2 15.0 0.4 5.2 18.9 0.0 2.2 0.0 10.3 6.3 5.1 N (week 1-2) 7.1 7.2 7.0 7.0 6.8 6.9 6.9 6.8 7.1 7.1 N (week 3-4) 12.4 3.9 6.3 13.4 2.8 4.5 2.5 9.6 7.8 6.5 N (week 5-6) 12.8 3.5 6.3 13.7 2.6 4.3 1.7 10.1 8.1 6.7 N (week 7-8) 13.1 3.4 6.4 13.8 2.4 4.3 1.6 10.1 7.8 6.8"
-    }
-  ],
-  "num_tables": 1,
-  "formulas": [
-    {
-      "text": "E[Y t |A t ] = 10 i=1 \u03b2 i S ti = \u03b2 T A t (21.1)"
-    },
-    {
-      "text": "\u03b2 T a * \u2265 \u03b2 T a (21.2)"
-    },
-    {
-      "text": "\u03b2 t = -1 t t u=1 A u Y u (21.3)"
-    },
-    {
-      "text": "\u03b2 T t a t+1 + \u03b1 \u03b1 T t+1 -1 t \u03b1 t+1 \u2265 \u03b2 T t a + \u03b1 \u03b1 T -1 t a (21.4)"
-    },
-    {
-      "text": "\u03b2 T k a * k \u2265 \u03b2 T k a k"
-    }
-  ],
-  "num_formulas": 5,
-  "num_citations": 27,
-  "cited_references": [
-    "b3",
-    "b13",
-    "b18",
-    "b2",
-    "b14",
-    "b17",
-    "b9",
-    "b1",
-    "b12",
-    "b16",
-    "b15",
-    "b5",
-    "b10",
-    "b4",
-    "b7",
-    "b11",
-    "b8",
-    "b6",
-    "b0"
-  ],
-  "notes": [
-    "[raw_affiliation] B  ( ) Department of Statistics , Harvard University , 1 Oxford St. #316 , Cambridge , MA 02138 , USA",
-    "[raw_affiliation] School of Information , University of Michigan , Ann Arbor , USA",
-    "[raw_affiliation] Department of Information Science , Cornell University , Ithaca , USA",
-    "[raw_affiliation] Department of Statistics , University of Michigan , Ann Arbor , USA",
-    "[raw_affiliation] Department of Statistics and Department of Computer Science , Harvard University , Cambridge , USA",
-    "[raw_reference] Auer P (2002) Using confidence bounds for exploitation-exploration trade-offs. J Mach Learn Res 3(Nov):397-422",
-    "[raw_reference] Auer P, Cesa-Bianchi N, Fischer P (2002) Finite-time analysis of the multiarmed bandit problem. Mach Learn 47(2-3):235-256",
-    "[raw_reference] Baumeister H, Kraft R, Baumel A, Pryss R, Messner E-M (2019) Persuasive e-health design for behavior change. In: Baumeister H, Montag C (eds) Mobile sensing and digital phenotyping: new developments in psychoinformatics. Springer, Berlin, pp x-x",
-    "[raw_reference] Bishop CM (2007) Pattern recognition and machine learning. Springer",
-    "[raw_reference] Bubeck S, Cesa-Bianchi N (2012) Regret analysis of stochastic and nonstochastic multi-armed bandit problems. Found Trends\u00ae Mach Learn 5(1):1-122",
-    "[raw_reference] Chapelle O, Li L (2011) An empirical evaluation of thompson sampling. In: Advances in neural information processing systems, pp 2249-2257",
-    "[raw_reference] Chapelle O, Joachims T, Radlinski F, Yue Y (2012) Large-scale validation and analysis of interleaved search evaluation. ACM Trans Inf Syst (TOIS) 30(1):6",
-    "[raw_reference] Fogg BJ (2009) A behavior model for persuasive design. In: Proceedings of the 4th international conference on persuasive technology, ACM, vol 40",
-    "Health belief model. United States Public Health Service",
-    "[raw_reference] Hochbaum G, Rosenstock I, Kegels S (1952) Health belief model. United States Public Health Service Klasnja P, Hekler EB, Shiffman S, Boruvka A, Almirall D, Tewari A, Murphy SA (2015) Microran- domized trials: an experimental design for developing just-in-time adaptive interventions. Health Psychol 34(S):1220",
-    "[raw_reference] Kubiak T, Smyth JM (2019) Connecting domains-ecological momentary assessment in a mobile sensing framework. In: Baumeister H, Montag C (eds) Mobile sensing and digital phenotyping: new developments in psychoinformatics. Springer, Berlin, pp x-x",
-    "[raw_reference] Lei, H., Tewari, A., & Murphy, S. (2014) An actor-critic contextual bandit algorithm for personalized interventions using mobile devices. Advances in Neural Information Processing Systems, 27",
-    "[raw_reference] Li L, Chu W, Langford J, Schapire RE (2010) A contextual-bandit approach to personalized news article recommendation. In: Proceedings of the 19th international conference on World wide web, ACM, pp 661-670",
-    "[raw_reference] Messner E-M, Probst T, O'Rourke T, Baumeister H., Stoyanov S (2019) mHealth applications: potentials, limitations, current quality and future directions. In: Baumeister H, Montag C (eds) Mobile sensing and digital phenotyping: new developments in psychoinformatics. Springer, Berlin, pp x-x",
-    "[raw_reference] Nahum-Shani I, Smith SN, Spring BJ, Collins LM, Witkiewitz K, Tewari A, Murphy SA (2017) Just- in-time adaptive interventions (JITAIs) in mobile health: key components and design principles for ongoing health behavior support. Ann Behav Med 52(6):446-462",
-    "[raw_reference] Rabbi M, Aung MH, Zhang M, Choudhury T (2015) MyBehavior: automatic personalized health feedback from user behaviors and preferences using smartphones. In: Proceedings of the 2015 ACM international joint conference on pervasive and ubiquitous computing, pp 707-718",
-    "[raw_reference] Rabbi M, Aung MH, Choudhury T (2017) Towards health recommendation systems: an approach for providing automated personalized health feedback from mobile data. Mobile health. Springer, Cham, pp 519-542",
-    "[raw_reference] Rabbi M, Aung MS, Gay G, Reid MC, Choudhury T (2018) Feasibility and acceptability of mobile phone-based auto-personalized physical activity recommendations for chronic pain self-management: pilot study on adults. J Med Internet Res 20(10):e10147",
-    "[raw_reference] Sutton RS, Barto AG (1998) Reinforcement learning: an introduction. MIT Press",
-    "[raw_reference] Woodroofe M (1979) A one-armed bandit problem with a concomitant variable. J Am Stat Assoc 74(368):799-806"
-  ],
-  "editors": [
-    "H Baumeister",
-    "C Montag",
-    "H Baumeister",
-    "C Montag",
-    "H Baumeister",
-    "C Montag"
-  ],
-  "processing_software": {
-    "GROBID": "0.8.2"
-  }
+  "num_references": 19
 }

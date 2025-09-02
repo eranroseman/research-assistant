@@ -4,39 +4,39 @@
   "abstract": "Personalized web services strive to adapt their services (advertisements, news articles, etc.) to individual users by making use of both content and user information. Despite a few recent advances, this problem remains challenging for at least two reasons. First, web service is featured with dynamically changing pools of content, rendering traditional collaborative filtering methods inapplicable. Second, the scale of most web services of practical interest calls for solutions that are both fast in learning and computation. In this work, we model personalized recommendation of news articles as a contextual bandit problem, a principled approach in which a learning algorithm sequentially selects articles to serve users based on contextual information about the users and articles, while simultaneously adapting its article-selection strategy based on user-click feedback to maximize total user clicks. The contributions of this work are three-fold. First, we propose a new, general contextual bandit algorithm that is computationally efficient and well motivated from learning theory. Second, we argue that any bandit algorithm can be reliably evaluated offline using previously recorded random traffic. Finally, using this offline evaluation method, we successfully applied our new algorithm to a Yahoo! Front Page Today Module dataset containing over 33 million events. Results showed a 12.5% click lift compared to a standard context-free bandit algorithm, and the advantage becomes even greater when data gets more scarce.",
   "year": 2012,
   "date": "2012-03-01",
+  "journal": "Algorithmica",
+  "publication": "Algorithmica",
   "authors": [
     {
+      "forename": "Lihong",
+      "surname": "Li",
       "name": "Lihong Li",
       "email": "lihong@yahoo-inc.com"
     },
     {
+      "forename": "Wei",
+      "surname": "Chu",
       "name": "Wei Chu",
       "email": "chuwei@yahoo-inc.com"
     },
     {
+      "forename": "John",
+      "surname": "Langford",
       "name": "John Langford",
-      "affiliation": {
-        "organization": "Yahoo",
-        "institution": "Labs"
-      }
+      "affiliation": "\u2021  Yahoo ! Labs \n\t\t\t\t\t\t\t\t Yahoo \n\t\t\t\t\t\t\t\t Labs"
     },
     {
+      "forename": "Robert",
+      "surname": "Schapire",
       "name": "Robert Schapire",
-      "email": "schapire@cs.princeton.edu",
-      "affiliation": {
-        "organization": "Dept of Computer Science",
-        "department": "Dept of Computer Science",
-        "institution": "Princeton University"
-      }
+      "affiliation": "+  Dept of Computer Science Princeton University \n\t\t\t\t\t\t\t\t Dept of Computer Science \n\t\t\t\t\t\t\t\t Princeton University",
+      "email": "schapire@cs.princeton.edu"
     },
     {
-      "affiliation": {
-        "organization": "Yahoo! Labs"
-      }
+      "affiliation": "Yahoo! Labs \n\t\t\t\t\t\t\t\t Yahoo! Labs"
     }
   ],
   "doi": "10.1007/s00453-003-1038-1",
-  "md5": "2CC304348BA36B0422F214EE6124C88B",
   "arxiv": "arXiv:1003.0146v2[cs.LG]",
   "keywords": [
     "H.3.5 [Information Systems]: On-line Information Services; I.2.6 [Computing Methodologies]: Learning Algorithms",
@@ -46,12 +46,9 @@
     "recommender systems",
     "exploration/exploitation dilemma"
   ],
-  "funding": [
-    "ACKNOWLEDGMENTS We thank  Deepak Agarwal ,  Bee-Chung Chen ,  Daniel Hsu , and  Kishore Papineni  for many helpful discussions,  Istv\u00e1n Szita  and  Tom Walsh  for clarifying their algorithm, and  Taylor Xi  and the anonymous reviewers for suggestions that improved the presentation of the paper."
-  ],
   "sections": [
     {
-      "title": "1.. INTRODUCTION",
+      "title": "INTRODUCTION",
       "text": "This paper addresses the challenge of identifying the most appropriate web-based content at the best time for individual users. Most * This work was done while R. Schapire visited Yahoo! Labs. April 26-30, 2010 , Raleigh, North Carolina, USA. . service vendors acquire and maintain a large amount of content in their repository, for instance, for filtering news articles  [14]  or for the display of advertisements  [5] . Moreover, the content of such a web-service repository changes dynamically, undergoing frequent insertions and deletions. In such a setting, it is crucial to quickly identify interesting content for users. For instance, a news filter must promptly identify the popularity of breaking news, while also adapting to the fading value of existing, aging news stories."
     },
     {
@@ -59,70 +56,70 @@
       "text": "It is generally difficult to model popularity and temporal changes based solely on content information. In practice, we usually explore the unknown by collecting consumers' feedback in real time to evaluate the popularity of new content while monitoring changes in its value  [3] . For instance, a small amount of traffic can be designated for such exploration. Based on the users' response (such as clicks) to randomly selected content on this small slice of traffic, the most popular content can be identified and exploited on the remaining traffic. This strategy, with random exploration on an \u01eb fraction of the traffic and greedy exploitation on the rest, is known as \u01eb-greedy. Advanced exploration approaches such as EXP3  [8]  or UCB1  [7]  could be applied as well. Intuitively, we need to distribute more traffic to new content to learn its value more quickly, and fewer users to track temporal changes of existing content.\n\nRecently, personalized recommendation has become a desirable feature for websites to improve user satisfaction by tailoring content presentation to suit individual users' needs  [10] . Personalization involves a process of gathering and storing user attributes, managing content assets, and, based on an analysis of current and past users' behavior, delivering the individually best content to the present user being served.\n\nOften, both users and content are represented by sets of features. User features may include historical activities at an aggregated level as well as declared demographic information. Content features may contain descriptive information and categories. In this scenario, exploration and exploitation have to be deployed at an individual level since the views of different users on the same content can vary significantly. Since there may be a very large number of possible choices or actions available, it becomes critical to recognize commonalities between content items and to transfer that knowledge across the content pool.\n\nTraditional recommender systems, including collaborative filtering, content-based filtering and hybrid approaches, can provide meaningful recommendations at an individual level by leveraging users' interests as demonstrated by their past activity. Collaborative filtering  [25] , by recognizing similarities across users based on their consumption history, provides a good recommendation solution to the scenarios where overlap in historical consumption across users is relatively high and the content universe is almost static. Contentbased filtering helps to identify new items which well match an existing user's consumption profile, but the recommended items are always similar to the items previously taken by the user  [20] . Hybrid approaches  [11]  have been developed by combining two or more recommendation techniques; for example, the inability of collaborative filtering to recommend new items is commonly alleviated by combining it with content-based filtering.\n\nHowever, as noted above, in many web-based scenarios, the content universe undergoes frequent changes, with content popularity changing over time as well. Furthermore, a significant number of visitors are likely to be entirely new with no historical consumption record whatsoever; this is known as a cold-start situation  [21] . These issues make traditional recommender-system approaches difficult to apply, as shown by prior empirical studies  [12] . It thus becomes indispensable to learn the goodness of match between user interests and content when one or both of them are new. However, acquiring such information can be expensive and may reduce user satisfaction in the short term, raising the question of optimally balancing the two competing goals: maximizing user satisfaction in the long run, and gathering information about goodness of match between user interests and content.\n\nThe above problem is indeed known as a feature-based exploration/exploitation problem. In this paper, we formulate it as a contextual bandit problem, a principled approach in which a learning algorithm sequentially selects articles to serve users based on contextual information of the user and articles, while simultaneously adapting its article-selection strategy based on user-click feedback to maximize total user clicks in the long run. We define a bandit problem and then review some existing approaches in Section 2. Then, we propose a new algorithm, LinUCB, in Section 3 which has a similar regret analysis to the best known algorithms for competing with the best linear predictor, with a lower computational overhead. We also address the problem of offline evaluation in Section 4, showing this is possible for any explore/exploit strategy when interactions are independent and identically distributed (i.i.d.), as might be a reasonable assumption for different users. We then test our new algorithm and several existing algorithms using this offline evaluation strategy in Section 5."
     },
     {
-      "title": "2.. FORMULATION & RELATED WORK",
+      "title": "FORMULATION & RELATED WORK",
       "text": "In this section, we define the K-armed contextual bandit problem formally, and as an example, show how it can model the personalized news article recommendation problem. We then discuss existing methods and their limitations."
     },
     {
-      "title": "2.1. A Multi-armed Bandit Formulation",
+      "title": "A Multi-armed Bandit Formulation",
       "text": "The problem of personalized news article recommendation can be naturally modeled as a multi-armed bandit problem with context information. Following previous work  [18] , we call it a contextual bandit.  1  Formally, a contextual-bandit algorithm A proceeds in discrete trials t = 1, 2, 3, . . . In trial t:\n\n1. The algorithm observes the current user ut and a set At of arms or actions together with their feature vectors xt,a for a \u2208 At. The vector xt,a summarizes information of both the user ut and arm a, and will be referred to as the context. 2. Based on observed payoffs in previous trials, A chooses an arm at \u2208 At, and receives payoff rt,a t whose expectation depends on both the user ut and the arm at. 3. The algorithm then improves its arm-selection strategy with the new observation, (xt,a t , at, rt,a t ). It is important to em-phasize here that no feedback (namely, the payoff rt,a) is observed for unchosen arms a = at. The consequence of this fact is discussed in more details in the next subsection. In the process above, the total T -trial payoff of A is defined as T t=1 rt,a t . Similarly, we define the optimal expected T -trial payoff as E T t=1 r t,a * t , where a * t is the arm with maximum expected payoff at trial t. Our goal is to design A so that the expected total payoff above is maximized. Equivalently, we may find an algorithm so that its regret with respect to the optimal arm-selection strategy is minimized. Here, the T -trial regret R A (T ) of algorithm A is defined formally by\n\nAn important special case of the general contextual bandit problem is the well-known K-armed bandit in which (i) the arm set At remains unchanged and contains K arms for all t, and (ii) the user ut (or equivalently, the context\n\nis the same for all t. Since both the arm set and contexts are constant at every trial, they make no difference to a bandit algorithm, and so we will also refer to this type of bandit as a context-free bandit.\n\nIn the context of article recommendation, we may view articles in the pool as arms. When a presented article is clicked, a payoff of 1 is incurred; otherwise, the payoff is 0. With this definition of payoff, the expected payoff of an article is precisely its clickthrough rate (CTR), and choosing an article with maximum CTR is equivalent to maximizing the expected number of clicks from users, which in turn is the same as maximizing the total expected payoff in our bandit formulation.\n\nFurthermore, in web services we often have access to user information which can be used to infer a user's interest and to choose news articles that are probably most interesting to her. For example, it is much more likely for a male teenager to be interested in an article about iPod products rather than retirement plans. Therefore, we may \"summarize\" users and articles by a set of informative features that describe them compactly. By doing so, a bandit algorithm can generalize CTR information from one article/user to another, and learn to choose good articles more quickly, especially for new users and articles."
     },
     {
-      "title": "2.2. Existing Bandit Algorithms",
+      "title": "Existing Bandit Algorithms",
       "text": "The fundamental challenge in bandit problems is the need for balancing exploration and exploitation. To minimize the regret in Eq. (  1 ), an algorithm A exploits its past experience to select the arm that appears best. On the other hand, this seemingly optimal arm may in fact be suboptimal, due to imprecision in A's knowledge. In order to avoid this undesired situation, A has to explore by actually choosing seemingly suboptimal arms so as to gather more information about them (c.f., step 3 in the bandit process defined in the previous subsection). Exploration can increase short-term regret since some suboptimal arms may be chosen. However, obtaining information about the arms' average payoffs (i.e., exploration) can refine A's estimate of the arms' payoffs and in turn reduce long-term regret. Clearly, neither a purely exploring nor a purely exploiting algorithm works best in general, and a good tradeoff is needed.\n\nThe context-free K-armed bandit problem has been studied by statisticians for a long time  [9, 24, 26] . One of the simplest and most straightforward algorithms is \u01eb-greedy. In each trial t, this algorithm first estimates the average payoff \u03bct,a of each arm a. Then, with probability 1\u01eb, it chooses the greedy arm (i.e., the arm with highest payoff estimate); with probability \u01eb, it chooses a random arm. In the limit, each arm will be tried infinitely often, and so the payoff estimate \u03bct,a converges to the true value \u00b5a with probability 1. Furthermore, by decaying \u01eb appropriately (e.g.,  [24] ), the per-step regret, R A (T )/T , converges to 0 with probability 1.\n\nIn contrast to the unguided exploration strategy adopted by \u01ebgreedy, another class of algorithms generally known as upper confidence bound algorithms  [4, 7, 17]  use a smarter way to balance exploration and exploitation. Specifically, in trial t, these algorithms estimate both the mean payoff \u03bct,a of each arm a as well as a corresponding confidence interval ct,a, so that |\u03bct,a -\u00b5a| < ct,a holds with high probability. They then select the arm that achieves a highest upper confidence bound (UCB for short): at = arg maxa (\u03bct,a + ct,a). With appropriately defined confidence intervals, it can be shown that such algorithms have a small total Ttrial regret that is only logarithmic in the total number of trials T , which turns out to be optimal  [17] .\n\nWhile context-free K-armed bandits are extensively studied and well understood, the more general contextual bandit problem has remained challenging. The EXP4 algorithm  [8]  uses the exponential weighting technique to achieve an \u00d5( \u221a T ) regret, foot_1  but the computational complexity may be exponential in the number of features. Another general contextual bandit algorithm is the epochgreedy algorithm  [18]  that is similar to \u01eb-greedy with shrinking \u01eb. This algorithm is computationally efficient given an oracle optimizer but has the weaker regret guarantee of \u00d5(T 2/3 ).\n\nAlgorithms with stronger regret guarantees may be designed under various modeling assumptions about the bandit. Assuming the expected payoff of an arm is linear in its features, Auer  [6]  describes the LinRel algorithm that is essentially a UCB-type approach and shows that one of its variants has a regret of \u00d5( \u221a T ), a significant improvement over earlier algorithms  [1] .\n\nFinally, we note that there exist another class of bandit algorithms based on Bayes rule, such as Gittins index methods  [15] . With appropriately defined prior distributions, Bayesian approaches may have good performance. These methods require extensive offline engineering to obtain good prior models, and are often computationally prohibitive without coupling with approximation techniques  [2] ."
     },
     {
-      "title": "3.. ALGORITHM",
+      "title": "ALGORITHM",
       "text": "Given asymptotic optimality and the strong regret bound of UCB methods for context-free bandit algorithms, it is tempting to devise similar algorithms for contextual bandit problems. Given some parametric form of payoff function, a number of methods exist to estimate from data the confidence interval of the parameters with which we can compute a UCB of the estimated arm payoff. Such an approach, however, is expensive in general.\n\nIn this work, we show that a confidence interval can be computed efficiently in closed form when the payoff model is linear, and call this algorithm LinUCB. For convenience of exposition, we first describe the simpler form for disjoint linear models, and then consider the general case of hybrid models in Section 3.2. We note LinUCB is a generic contextual bandit algorithms which applies to applications other than personalized news article recommendation."
     },
     {
-      "title": "3.1. LinUCB with Disjoint Linear Models",
+      "title": "LinUCB with Disjoint Linear Models",
       "text": "Using the notation of Section 2.1, we assume the expected payoff of an arm a is linear in its d-dimensional feature xt,a with some unknown coefficient vector \u03b8 \u03b8 \u03b8 * a ; namely, for all t,\n\nThis model is called disjoint since the parameters are not shared among different arms. Let Da be a design matrix of dimension m \u00d7 d at trial t, whose rows correspond to m training inputs (e.g., m contexts that are observed previously for article a), and ba \u2208 R m be the corresponding response vector (e.g., the corresponding m click/no-click user feedback). Applying ridge regression to the training data (Da, ca) gives an estimate of the coefficients:\n\nwhere I d is the d \u00d7 d identity matrix. When components in ca are independent conditioned on corresponding rows in Da, it can be shown  [27]  that, with probability at least 1\u03b4,\n\nfor any \u03b4 > 0 and xt,a \u2208 R d , where \u03b1 = 1 + ln(2/\u03b4)/2 is a constant. In other words, the inequality above gives a reasonably tight UCB for the expected payoff of arm a, from which a UCBtype arm-selection strategy can be derived: at each trial t, choose\n\nwhere\n\nThe confidence interval in Eq. (  4 ) may be motivated and derived from other principles. For instance, ridge regression can also be interpreted as a Bayesian point estimate, where the posterior distribution of the coefficient vector, denoted as p(\u03b8 \u03b8 \u03b8a), is Gaussian with mean \u03b8 \u03b8 \u03b8a and covariance A -1 a . Given the current model, the predictive variance of the expected payoff x \u22a4 t,a \u03b8 \u03b8 \u03b8 * a is evaluated as x \u22a4 t,a A -1 a xt,a, and then x \u22a4 t,a A -1 a xt,a becomes the standard deviation. Furthermore, in information theory  [19] , the differential entropy of p(\u03b8 \u03b8 \u03b8a) is defined as - 1  2 ln((2\u03c0) d det Aa). The entropy of p(\u03b8 \u03b8 \u03b8a) when updated by the inclusion of the new point xt,a then becomes - 1  2 ln((2\u03c0) d det (Aa + xt,ax \u22a4 t,a )). The entropy reduction in the model posterior is 1  2 ln(1 + x \u22a4 t,a A -1 a xt,a). This quantity is often used to evaluate model improvement contributed from xt,a. Therefore, the criterion for arm selection in Eq. (  5 ) can also be regarded as an additive trade-off between the payoff estimate and model uncertainty reduction.\n\nAlgorithm 1 gives a detailed description of the entire LinUCB algorithm, whose only input parameter is \u03b1. Note the value of \u03b1 given in Eq. (  4 ) may be conservatively large in some applications, and so optimizing this parameter may result in higher total payoffs in practice. Like all UCB methods, LinUCB always chooses the arm with highest UCB (as in Eq. (  5 )).\n\nThis algorithm has a few nice properties. First, its computational complexity is linear in the number of arms and at most cubic in the number of features. To decrease computation further, we may update Aa t in every step (which takes O(d 2 ) time), but compute and cache Qa\n\n(for all a) periodically instead of in realtime. Second, the algorithm works well for a dynamic arm set, and remains efficient as long as the size of At is not too large. This case is true in many applications. In news article recommendation, for instance, editors add/remove articles to/from a pool and the pool size remains essentially constant. Third, although it is not the focus of the present paper, we can adapt the analysis from  [6]  to show the following: if the arm set At is fixed and contains K arms, then the confidence interval (i.e., the right-hand side of Eq. (  4 )) decreases fast enough with more and more data, and then prove the strong regret bound of \u00d5( \u221a KdT ), matching the state-of-the-art result  [6]  for bandits satisfying Eq. (  2 ). These theoretical results indicate fundamental soundness and efficiency of the algorithm.\n\nAlgorithm 1 LinUCB with disjoint linear models. 0: Inputs: \u03b1 \u2208 R+ 1: for t = 1, 2, 3, . . . , T do 2:\n\nObserve features of all arms a \u2208 At: xt,a \u2208 R d 3:\n\nfor all a \u2208 At do 4:\n\nif a is new then 5:\n\nAa \u2190 I d (d-dimensional identity matrix) 6:\n\nba \u2190 0 d\u00d71 (d-dimensional zero vector) 7:\n\nend for 11:\n\nChoose arm at = arg maxa\u2208A t pt,a with ties broken arbitrarily, and observe a real-valued payoff rt 12:\n\n13: ba t \u2190 ba t + rtxt,a t 14: end for Finally, we note that, under the assumption that input features xt,a were drawn i.i.d. from a normal distribution (in addition to the modeling assumption in Eq. (  2 )), Pavlidis et al.  [22]  came up with a similar algorithm that uses a least-squares solution \u03b8 \u03b8 \u03b8a instead of our ridge-regression solution ( \u03b8 \u03b8 \u03b8a in Eq. (  3 )) to compute the UCB. However, our approach (and theoretical analysis) is more general and remains valid even when input features are nonstationary. More importantly, we will discuss in the next section how to extend the basic Algorithm 1 to a much more interesting case not covered by Pavlidis et al."
     },
     {
-      "title": "3.2. LinUCB with Hybrid Linear Models",
+      "title": "LinUCB with Hybrid Linear Models",
       "text": "Algorithm 1 (or the similar algorithm in  [22] ) computes the inverse of the matrix, D \u22a4 a Da + I d (or D \u22a4 a Da), where Da is again the design matrix with rows corresponding to features in the training data. These matrices of all arms have fixed dimension d \u00d7 d, and can be updated efficiently and incrementally. Moreover, their inverses can be computed easily as the parameters in Algorithm 1 are disjoint: the solution \u03b8 \u03b8 \u03b8a in Eq. (  3 ) is not affected by training data of other arms, and so can be computed separately. We now consider the more interesting case with hybrid models.\n\nIn many applications including ours, it is helpful to use features that are shared by all arms, in addition to the arm-specific ones. For example, in news article recommendation, a user may prefer only articles about politics for which this provides a mechanism. Hence, it is helpful to have features that have both shared and non-shared components. Formally, we adopt the following hybrid model by adding another linear term to the right-hand side of Eq. (  2 ):\n\nwhere zt,a \u2208 R k is the feature of the current user/article combination, and \u03b2 \u03b2 \u03b2 * is an unknown coefficient vector common to all arms. This model is hybrid in the sense that some of the coefficients \u03b2 \u03b2 \u03b2 * are shared by all arms, while others \u03b8 \u03b8 \u03b8 * a are not. For hybrid models, we can no longer use Algorithm 1 as the confidence intervals of various arms are not independent due to the shared features. Fortunately, there is an efficient way to compute an UCB along the same line of reasoning as in the previous section. The derivation relies heavily on block matrix inversion techniques. Due to space limitation, we only give the pseudocode in Algorithm 2 (where lines 5 and 12 compute the ridge-regression solution of the coefficients, and line 13 computes the confidence interval), and leave detailed derivations to a full paper. Here, we Algorithm 2 LinUCB with hybrid linear models. 0: Inputs: \u03b1 \u2208 R+ 1: A0 \u2190 I k (k-dimensional identity matrix) 2: b0 \u2190 0 k (k-dimensional zero vector) 3: for t = 1, 2, 3, . . . , T do 4:\n\nObserve features of all arms a \u2208 At: (zt,a, xt,a) \u2208 R k+d 5:\n\nfor all a \u2208 At do 7:\n\nif a is new then 8:\n\nAa \u2190 I d (d-dimensional identity matrix) 9:\n\nBa \u2190 0 d\u00d7k (d-by-k zero matrix) 10:\n\nba \u2190 0 d\u00d71 (d-dimensional zero vector) 11:\n\na 15: end for 16: Choose arm at = arg maxa\u2208A t pt,a with ties broken arbitrarily, and observe a real-valued payoff rt 17: A0 \u2190 A0 + B \u22a4 at A -1 at Ba t 18: b0 \u2190 b0 + B \u22a4 at A -1 at ba t 19: Aa t \u2190 Aa t + xt,a t x \u22a4 t,at 20: Ba t \u2190 Ba t + xt,a t z \u22a4 t,at 21: ba t \u2190 ba t + rtxt,a t 22:\n\nat ba t 24: end for only point out the important fact that the algorithm is computationally efficient since the building blocks in the algorithm (A0, b0, Aa, Ba, and ba) all have fixed dimensions and can be updated incrementally. Furthermore, quantities associated with arms not existing in At no longer get involved in the computation. Finally, we can also compute and cache the inverses (A -1 0 and A -1 a ) periodically instead of at the end of each trial to reduce the per-trial computational complexity to O(d 2 + k 2 )."
     },
     {
-      "title": "4.. EVALUATION METHODOLOGY",
+      "title": "EVALUATION METHODOLOGY",
       "text": "Compared to machine learning in the more standard supervised setting, evaluation of methods in a contextual bandit setting is frustratingly difficult. Our goal here is to measure the performance of a bandit algorithm \u03c0, that is, a rule for selecting an arm at each time step based on the preceding interactions (such as the algorithms described above). Because of the interactive nature of the problem, it would seem that the only way to do this is to actually run the algorithm on \"live\" data. However, in practice, this approach is likely to be infeasible due to the serious logistical challenges that it presents. Rather, we may only have offline data available that was collected at a previous time using an entirely different logging policy. Because payoffs are only observed for the arms chosen by the logging policy, which are likely to often differ from those chosen by the algorithm \u03c0 being evaluated, it is not at all clear how to evaluate \u03c0 based only on such logged data. This evaluation problem may be viewed as a special case of the so-called \"off-policy evaluation problem\" in reinforcement learning (see, c.f.,  [23] ).\n\nOne solution is to build a simulator to model the bandit process from the logged data, and then evaluate \u03c0 with the simulator. However, the modeling step will introduce bias in the simulator and so make it hard to justify the reliability of this simulator-based evalu-ation approach. In contrast, we propose an approach that is simple to implement, grounded on logged data, and unbiased.\n\nIn this section, we describe a provably reliable technique for carrying out such an evaluation, assuming that the individual events are i.i.d., and that the logging policy that was used to gather the logged data chose each arm at each time step uniformly at random. Although we omit the details, this latter assumption can be weakened considerably so that any randomized logging policy is allowed and our solution can be modified accordingly using rejection sampling, but at the cost of decreased efficiency in using data.\n\nMore precisely, we suppose that there is some unknown distribution D from which tuples are drawn i.i.d. of the form (x1, ..., xK, r1, . . . , rK), each consisting of observed feature vectors and hidden payoffs for all arms. We also posit access to a large sequence of logged events resulting from the interaction of the logging policy with the world. Each such event consists of the context vectors x1, ..., xK , a selected arm a and the resulting observed payoff ra. Crucially, only the payoff ra is observed for the single arm a that was chosen uniformly at random. For simplicity of presentation, we take this sequence of logged events to be an infinitely long stream; however, we also give explicit bounds on the actual finite number of events required by our evaluation method.\n\nOur goal is to use this data to evaluate a bandit algorithm \u03c0. Formally, \u03c0 is a (possibly randomized) mapping for selecting the arm at at time t based on the history ht-1 of t-1 preceding events, together with the current context vectors xt1, ..., xtK.\n\nOur proposed policy evaluator is shown in Algorithm 3. The method takes as input a policy \u03c0 and a desired number of \"good\" events T on which to base the evaluation. We then step through the stream of logged events one by one. If, given the current history ht-1, it happens that the policy \u03c0 chooses the same arm a as the one that was selected by the logging policy, then the event is retained, that is, added to the history, and the total payoff Rt updated. Otherwise, if the policy \u03c0 selects a different arm from the one that was taken by the logging policy, then the event is entirely ignored, and the algorithm proceeds to the next event without any other change in its state.\n\nNote that, because the logging policy chooses each arm uniformly at random, each event is retained by this algorithm with probability exactly 1/K, independent of everything else. This means that the events which are retained have the same distribution as if they were selected by D. As a result, we can prove that two processes are equivalent: the first is evaluating the policy against T real-world events from D, and the second is evaluating the policy using the policy evaluator on a stream of logged events. THEOREM 1. For all distributions D of contexts, all policies \u03c0, all T , and all sequences of events hT ,\n\nwhere S is a stream of events drawn i.i.d. from a uniform random logging policy and D. Furthermore, the expected number of events obtained from the stream to gather a history hT of length T is KT .\n\nThis theorem says that every history hT has the identical probability in the real world as in the policy evaluator. Many statistics of these histories, such as the average payoff RT /T returned by Algorithm 3, are therefore unbiased estimates of the value of the algorithm \u03c0. Further, the theorem states that KT logged events are required, in expectation, to retain a sample of size T .\n\nPROOF. The proof is by induction on t = 1, . . . , T starting with a base case of the empty history which has probability 1 when t = 0 Algorithm 3 Policy_Evaluator. 0: Inputs: T > 0; policy \u03c0; stream of events 1: h0 \u2190 \u2205 {An initially empty history} 2: R0 \u2190 0 {An initially zero total payoff} 3: for t = 1, 2, 3, . . . , T do 4: repeat 5:\n\nGet next event (x1, ..., xK , a, ra) 6:\n\nuntil \u03c0(ht-1, (x1, ..., xK)) = a 7:\n\nht \u2190 CONCATENATE(ht-1, (x1, ..., xK , a, ra)) 8:\n\nRt \u2190 Rt-1 + ra 9: end for 10: Output: RT /T under both methods of evaluation. In the inductive case, assume that we have for all t -1:\n\nand want to prove the same statement for any history ht. Since the data is i.i.d. and any randomization in the policy is independent of randomization in the world, we need only prove that conditioned on the history ht-1 the distribution over the t-th event is the same for each process. In other words, we must show:\n\nSince the arm a is chosen uniformly at random in the logging policy, the probability that the policy evaluator exits the inner loop is identical for any policy, any history, any features, and any arm, implying this happens for the last event with the probability of the last event, PrD(xt,1, ..., xt,K, rt,a). Similarly, since the policy \u03c0's distribution over arms is independent conditioned on the history ht-1 and features (xt,1, ..., xt,K ), the probability of arm a is just Pr \u03c0(h t-1 ) (a|xt,1, ..., xt,K ). Finally, since each event from the stream is retained with probability exactly 1/K, the expected number required to retain T events is exactly KT ."
     },
     {
-      "title": "5.. EXPERIMENTS",
+      "title": "EXPERIMENTS",
       "text": "In this section, we verify the capacity of the proposed LinUCB algorithm on a real-world application using the offline evaluation method of Section 4. We start with an introduction of the problem setting in Yahoo! Today-Module, and then describe the user/item attributes we used in experiments. Finally, we define performance metrics and report experimental results with comparison to a few standard (contextual) bandit algorithms."
     },
     {
-      "title": "5.1. Yahoo! Today Module",
+      "title": "Yahoo! Today Module",
       "text": "The Today Module is the most prominent panel on the Yahoo! Front Page, which is also one of the most visited pages on the Internet; see a snapshot in Figure  1 . The default \"Featured\" tab in the Today Module highlights one of four high-quality articles, mainly news, while the four articles are selected from an hourly-refreshed article pool curated by human editors. As illustrated in Figure  1 , there are four articles at footer positions, indexed by F1-F4. Each article is represented by a small picture and a title. One of the four articles is highlighted at the story position, which is featured by a large picture, a title and a short summary along with related links. By default, the article at F1 is highlighted at the story position. A user can click on the highlighted article at the story position to read more details if she is interested in the article. The event is recorded as a story click. To draw visitors' attention, we would like to rank available articles according to individual interests, and highlight the most attractive article for each visitor at the story position."
     },
     {
-      "title": "5.2. Experiment Setup",
+      "title": "Experiment Setup",
       "text": "This subsection gives a detailed description of our experimental setup, including data collection, feature construction, performance evaluation, and competing algorithms."
     },
     {
-      "title": "5.2.1. Data Collection",
+      "title": "Data Collection",
       "text": "We collected events from a random bucket in May 2009. Users were randomly selected to the bucket with a certain probability per visiting view.  3 In this bucket, articles were randomly selected from the article pool to serve users. To avoid exposure bias at footer positions, we only focused on users' interactions with F1 articles at the story position. Each user interaction event consists of three components: (i) the random article chosen to serve the user, (ii) user/article information, and (iii) whether the user clicks on the article at the story position. Section 4 shows these random events can be used to reliably evaluate a bandit algorithm's expected payoff.\n\nThere were about 4.7 million events in the random bucket on May 01. We used this day's events (called \"tuning data\") for model validation to decide the optimal parameter for each competing bandit algorithm. Then we ran these algorithms with tuned parameters on a one-week event set (called \"evaluation data\") in the random bucket from May 03-09, which contained about 36 million events."
     },
     {
-      "title": "5.2.2. Feature Construction",
+      "title": "Feature Construction",
       "text": "We now describe the user/article features constructed for our experiments. Two sets of features for the disjoint and hybrid models, respectively, were used to test the two forms of LinUCB in Section 3 and to verify our conjecture that hybrid models can improve learning speed.\n\nWe start with raw user features that were selected by \"support\". The support of a feature is the fraction of users having that feature. To reduce noise in the data, we only selected features with high support. Specifically, we used a feature when its support is at least 0.1. Then, each user was originally represented by a raw feature vector of over 1000 categorical components, which include: (i) demographic information: gender (2 classes) and age discretized into 10 segments; (ii) geographic features: about 200 metropolitan locations worldwide and U.S. states; and (iii) behavioral categories: about 1000 binary categories that summarize the user's consumption history within Yahoo! properties. Other than these features, no other information was used to identify a user.\n\nSimilarly, each article was represented by a raw feature vector of about 100 categorical features constructed in the same way. These features include: (i) URL categories: tens of classes inferred from the URL of the article resource; and (ii) editor categories: tens of topics tagged by human editors to summarize the article content.\n\nWe followed a previous procedure  [12]  to encode categorical user/article features as binary vectors and then normalize each feature vector to unit length. We also augmented each feature vector with a constant feature of value 1. Now each article and user was represented by a feature vector of 83 and 1193 entries, respectively.\n\nTo further reduce dimensionality and capture nonlinearity in these raw features, we carried out conjoint analysis based on random exploration data collected in September 2008. Following a previous approach to dimensionality reduction  [13] , we projected user features onto article categories and then clustered users with similar preferences into groups. More specifically:\n\n\u2022 We first used logistic regression (LR) to fit a bilinear model for click probability given raw user/article features so that \u03c6 \u03c6 \u03c6 \u22a4 u W\u03c6 \u03c6 \u03c6a approximated the probability that the user u clicks on article a, where \u03c6 \u03c6 \u03c6u and \u03c6 \u03c6 \u03c6a were the corresponding feature vectors, and W was a weight matrix optimized by LR.\n\n\u2022 Raw user features were then projected onto an induced space by computing \u03c8 \u03c8 \u03c8u\n\nHere, the i th component in \u03c8 \u03c8 \u03c8u for user u may be interpreted as the degree to which the user likes the i th category of articles. K-means was applied to group users in the induced \u03c8 \u03c8 \u03c8u space into 5 clusters.\n\n\u2022 The final user feature was a six-vector: five entries corresponded to membership of that user in these 5 clusters (computed with a Gaussian kernel and then normalized so that they sum up to unity), and the sixth was a constant feature 1. At trial t, each article a has a separate six-dimensional feature xt,a that is exactly the six-dimensional feature constructed as above for user ut. Since these article features do not overlap, they are for disjoint linear models defined in Section 3.\n\nFor each article a, we performed the same dimensionality reduction to obtain a six-dimensional article feature (including a constant 1 feature). Its outer product with a user feature gave 6 \u00d7 6 = 36 features, denoted zt,a \u2208 R 36 , that corresponded to the shared features in Eq. (  6 ), and thus (zt,a, xt,a) could be used in the hybrid linear model. Note the features zt,a contains user-article interaction information, while xt,a contains user information only.\n\nHere, we intentionally used five users (and articles) groups, which has been shown to be representative in segmentation analysis  [13] . Another reason for using a relatively small feature space is that, in online services, storing and retrieving large amounts of user/article information will be too expensive to be practical."
     },
     {
-      "title": "5.3. Compared Algorithms",
+      "title": "Compared Algorithms",
       "text": "The algorithms empirically evaluated in our experiments can be categorized into three groups: I. Algorithms that make no use of features. These correspond to the context-free K-armed bandit algorithms that ignore all contexts (i.e., user/article information).\n\n\u2022 random: A random policy always chooses one of the candidate articles from the pool with equal probability. This algorithm requires no parameters and does not \"learn\" over time. \u2022 \u01eb-greedy: As described in Section 2.2, it estimates each article's CTR; then it chooses a random article with probability \u01eb, and chooses the article of the highest CTR estimate with probability 1\u01eb. The only parameter of this policy is \u01eb.\n\n1 1.2 1.4 1.6 1.8 2 0 0.2 0.4 0.6 0.8 1 ctr \u03b5 \u03b5-greedy \u03b5-greedy (warm) \u03b5-greedy (seg) \u03b5-greedy (disjoint) \u03b5-greedy (hybrid) omniscient (a) Deployment bucket. 1 1.2 1.4 1.6 1.8 2 0 0.2 0.4 0.6 0.8 1 1.2 1.4 ctr \u03b1 ucb ucb (warm) ucb (seg) linucb (disjoint) linucb (hybrid) omniscient (b) Deployment bucket. 1 1.2 1.4 1.6 1.8 2 0 0.2 0.4 0.6 0.8 1 ctr \u03b5 \u03b5-greedy \u03b5-greedy (warm) \u03b5-greedy (seg) \u03b5-greedy (disjoint) \u03b5-greedy (hybrid) omniscient (c) Learning bucket. 1 1.2 1.4 1.6 1.8 2 0 0.2 0.4 0.6 0.8 1 1.2 1.4 ctr \u03b1 ucb ucb (warm) ucb (seg) linucb (simple) linucb (hybrid) omniscient (d) Learning bucket. \u2022 ucb: As described in Section 2.2, this policy estimates each article's CTR as well as a confidence interval of the estimate, and always chooses the article with the highest UCB. Specifically, following UCB1  [7] , we computed an article a's confidence interval by ct,a = \u03b1 \u221a nt,a , where nt,a is the number of times a was chosen prior to trial t, and \u03b1 > 0 is a parameter.\n\n\u2022 omniscient: Such a policy achieves the best empirical context-free CTR from hindsight. It first computes each article's empirical CTR from logged events, and then always chooses the article with highest empircal CTR when it is evaluated using the same logged events. This algorithm requires no parameters and does not \"learn\" over time. II. Algorithms with \"warm start\"-an intermediate step towards personalized services. The idea is to provide an offline-estimated user-specific adjustment on articles' context-free CTRs over the whole traffic. The offset serves as an initialization on CTR estimate for new content, a.k.a.\"warm start\". We re-trained the bilinear logistic regression model studied in  [12]  on Sept 2008 random traffic data, using features zt,a constructed above. The selection criterion then becomes the sum of the context-free CTR estimate and a bilinear term for a user-specific CTR adjustment. In training, CTR was estimated using the context-free \u01eb-greedy with \u01eb = 1.\n\n\u2022 \u01eb-greedy (warm): This algorithm is the same as \u01eb-greedy except it adds the user-specific CTR correction to the article's context-free CTR estimate. \u2022 ucb (warm): This algorithm is the same as the previous one but replaces \u01eb-greedy with ucb. III. Algorithms that learn user-specific CTRs online.\n\n\u2022 \u01eb-greedy (seg): Each user is assigned to the closest user cluster among the five constructed in Section 5.2.2, and so all users are partitioned into five groups (a.k.a. user segments), in each of which a separate copy of \u01eb-greedy was run.\n\n\u2022 ucb (seg): This algorithm is similar to \u01eb-greedy (seg) except it ran a copy of ucb in each of the five user segments. \u2022 \u01eb-greedy (disjoint): This is \u01eb-greedy with disjoint models, and may be viewed as a close variant of epoch-greedy  [18] . \u2022 linucb (disjoint): This is Algorithm 1 with disjoint models.\n\n\u2022 \u01eb-greedy (hybrid): This is \u01eb-greedy with hybrid models, and may be viewed as a close variant of epoch-greedy. \u2022 linucb (hybrid): This is Algorithm 2 with hybrid models."
     },
     {
-      "title": "5.4. Performance Metric",
+      "title": "Performance Metric",
       "text": "An algorithm's CTR is defined as the ratio of the number of clicks it receives and the number of steps it is run. We used all algorithms' CTRs on the random logged events for performance comparison. To protect business-sensitive information, we report an algorithm's relative CTR, which is the algorithm's CTR divided by the random policy's. Therefore, we will not report a random policy's relative CTR as it is always 1 by definition. For convenience, we will use the term \"CTR\" from now on instead of \"relative CTR\".\n\nFor each algorithm, we are interested in two CTRs motivated by our application, which may be useful for other similar applications. When deploying the methods to Yahoo!'s front page, one reasonable way is to randomly split all traffic to this page into two buckets  [3] . The first, called \"learning bucket\", usually consists of a small fraction of traffic on which various bandit algorithms are run to learn/estimate article CTRs. The other, called \"deployment bucket\", is where Yahoo! Front Page greedily serves users using CTR estimates obained from the learning bucket. Note that \"learning\" and \"deployment\" are interleaved in this problem, and so in every view falling into the deployment bucket, the article with the highest current (user-specific) CTR estimate is chosen; this estimate may change later if the learning bucket gets more data. CTRs in both buckets were estimated with Algorithm 3. Since the deployment bucket is often larger than the learning bucket, CTR in the deployment bucket is more important. However, a higher CTR in the learning bucket suggests a faster learning rate (or equivalently, smaller regret) for a bandit algorithm. Therefore, we chose to report algorithm CTRs in both buckets."
     },
     {
-      "title": "5.5. Experimental Results"
+      "title": "Experimental Results"
     },
     {
-      "title": "5.5.1. Results for Tuning Data",
+      "title": "Results for Tuning Data",
       "text": "Each of the competing algorithms (except random and omniscient) in Section 5.3 requires a single parameter: \u01eb for \u01eb-greedy algorithms and \u03b1 for UCB ones. We used tuning data to optimize these parameters. Figure  2  shows how the CTR of each algorithm changes with respective parameters. All results were obtained by a single run, but given the size of our dataset and the unbiasedness result in Theorem 1, the reported numbers are statistically reliable.\n\nFirst, as seen from Figure  2 , the CTR curves in the learning buckets often possess the inverted U-shape. When the parameter (\u01eb or \u03b1) is too small, there was insufficient exploration, the algorithms failed to identify good articles, and had a smaller number of clicks. On the other hand, when the parameter is too large, the algorithms appeared to over-explore and thus wasted some of the opportunities to increase the number of clicks. Based on these plots on tuning data, we chose appropriate parameters for each algorithm and ran it once on the evaluation data in the next subsection.\n\nSecond, it can be concluded from the plots that warm-start information is indeed helpful for finding a better match between user interest and article content, compared to the no-feature versions of \u01eb-greedy and UCB. Specifically, both \u01eb-greedy (warm) and ucb (warm) were able to beat omniscient, the highest CTRs achievable by context-free policies in hindsight. However, performance of the two algorithms using warm-start information is not as stable as algorithms that learn the weights online. Since the offline model for \"warm start\" was trained with article CTRs estimated on all random traffic  [12] , \u01eb-greedy (warm) gets more stable performance in the deployment bucket when \u01eb is close to 1. The warm start part also helps ucb (warm) in the learning bucket by selecting more attractive articles to users from scratch, but did not help ucb (warm) in determining the best online for deployment. Since ucb relies on the a confidence interval for exploration, it is hard to correct the initialization bias introduced by \"warm start\". In contrast, all online-learning algorithms were able to consistently beat the omniscient policy. Therefore, we did not try the warm-start algorithms on the evaluation data.\n\nThird, \u01eb-greedy algorithms (on the left of Figure  2 ) achieved similar CTR as upper confidence bound ones (on the right of Figure  2 ) in the deployment bucket when appropriate parameters were used. Thus, both types of algorithms appeared to learn comparable policies. However, they seemed to have lower CTR in the learning bucket, which is consistent with the empirical findings of contextfree algorithms  [2]  in real bucket tests.\n\nFinally, to compare algorithms when data are sparse, we repeated the same parameter tuning process for each algorithm with fewer data, at the level of 30%, 20%, 10%, 5%, and 1%. Note that we still used all data to evaluate an algorithm's CTR as done in Algorithm 3, but then only a fraction of available data were randomly chosen to be used by the algorithm to improve its policy."
     },
     {
-      "title": "5.5.2. Results for Evaluation Data",
+      "title": "Results for Evaluation Data",
       "text": "With parameters optimized on the tuning data (c.f., Figure  2 ), we ran the algorithms on the evaluation data and summarized the CTRs in Table  1 . The table also reports the CTR lift compared to the baseline of \u01eb-greedy. The CTR of omniscient was 1.615, and so a significantly larger CTR of an algorithm indicates its effective use of user/article features for personalization. Recall that the reported CTRs were normalized by the random policy's CTR. We examine the results more closely in the following subsections."
     },
     {
@@ -134,7 +131,7 @@
       "text": "One of the challenges in personalized web services is the scale of the applications. In our problem, for example, a small pool of news articles were hand-picked by human editors. But if we wish to allow more choices or use automated article selection methods to determine the article pool, the number of articles can be too large even for the high volume of Yahoo! traffic. Therefore, it becomes critical for an algorithm to quickly identify a good match between user interests and article contents when data are sparse. In our experiments, we artificially reduced data size (to the levels of 30%, 20%, 10%, 5%, and 1%, respectively) to mimic the situation where we have a large article pool but a fixed volume of traffic.\n\nTo better visualize the comparison results, we use bar graphs in Figure  4  to plot all algorithms' CTRs with various data sparsity levels. A few observations are in order. First, at all data sparsity levels, features were still useful. At the level of 1%, for instance, we observed a 10.3% improvement of linucb (hybrid)'s CTR in the deployment bucket (1.493) over ucb's (1.354).\n\nSecond, UCB methods consistently outperformed \u01eb-greedy ones in the deployment bucket.  5 The advantage over \u01eb-greedy was even more apparent when data size was smaller.\n\nThird, compared to ucb (seg) and linucb (disjoint), linucb (hybrid) showed significant benefits when data size was small. Recall that in hybrid models, some features are shared by all articles, making it possible for CTR information of one article to be \"transferred\" to others. This advantage is particularly useful when the article pool is large. In contrast, in disjoint models, feedback of one article may not be utilized by other articles; the same is true for ucb (seg). Figure  4 (a) shows transfer learning is indeed helpful when data are sparse.\n\nComparing ucb (seg) and linucb (disjoint).\n\nFrom Figure  4 (a), it can be seen that ucb (seg) and linucb (disjoint) had similar performance. We believe it was no coincidence. Recall that features in our disjoint model are actually normalized membership measures of a user in the five clusters described in Section 5.2.2. Hence, these features may be viewed as a \"soft\" version of the user assignment process adopted by ucb (seg).\n\nFigure  5  plots the histogram of a user's relative membership measure to the closest cluster, namely, the largest component of the user's five, non-constant features. It is clear that most users were quite close to one of the five cluster centers: the maximum membership of about 85% users were higher than 0.5, and about 40% of them were higher than 0.8. Therefore, many of these features have a highly dominating component, making the feature vector similar to the \"hard\" version of user group assignment.\n\nWe believe that adding more features with diverse components, such as those found by principal component analysis, would be necessary to further distinguish linucb (disjoint) from ucb (seg)."
     },
     {
-      "title": "6.. CONCLUSIONS",
+      "title": "CONCLUSIONS",
       "text": "This paper takes a contextual-bandit approach to personalized web-based services such as news article recommendation. We proposed a simple and reliable method for evaluating bandit algorithms directly from logged events, so that the often problematic simulator-building step could be avoided. Based on real Yahoo! Front Page traffic, we found that upper confidence bound methods generally outperform the simpler yet unguided \u01eb-greedy methods. Furthermore, our new algorithm LinUCB shows advantages when data are sparse, suggesting its effectiveness to personalized web services when the number of contents in the pool is large.\n\nIn the future, we plan to investigate bandit approaches to other similar web-based serviced such as online advertising, and compare our algorithms to related methods such as Banditron  [16] . A second direction is to extend the bandit formulation and algorithms in which an \"arm\" may refer to a complex object rather than an item (like an article). An example is ranking, where an arm corresponds to a permutation of retrieved webpages. Finally, user interests change over time, and so it is interesting to consider temporal information in bandit algorithms. 0 0.05 0.1 0.15 0.2 0.25 0.3 0 0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 1 maximum user membership feature"
     },
     {
@@ -160,10 +157,6 @@
     },
     {
       "text": "\u01eb-greedy."
-    },
-    {
-      "title": "7.. ACKNOWLEDGMENTS",
-      "text": "We thank  Deepak Agarwal ,  Bee-Chung Chen ,  Daniel Hsu , and  Kishore Papineni  for many helpful discussions,  Istv\u00e1n Szita  and  Tom Walsh  for clarifying their algorithm, and  Taylor Xi  and the anonymous reviewers for suggestions that improved the presentation of the paper."
     }
   ],
   "references": [
@@ -175,11 +168,7 @@
         "P Long"
       ],
       "year": 2003,
-      "doi": "10.1007/s00453-003-1038-1",
-      "journal": "Algorithmica",
-      "volume": "37",
-      "issue": "4",
-      "raw": "Reinforcement learning with immediate rewards and linear hypotheses \n\t\t \n\t\t\t N Abe \n\t\t \n\t\t \n\t\t\t A W Biermann \n\t\t \n\t\t \n\t\t\t P M Long \n\t\t \n\t\t 10.1007/s00453-003-1038-1 \n\t \n\t \n\t\t Algorithmica \n\t\t \n\t\t\t 37 \n\t\t\t 4 \n\t\t\t \n\t\t\t 2003 \n\t\t \n\t \n\t N. Abe, A. W. Biermann, and P. M. Long. Reinforcement learning with immediate rewards and linear hypotheses. Algorithmica, 37(4):263-293, 2003."
+      "doi": "10.1007/s00453-003-1038-1"
     },
     {
       "title": "Explore/exploit schemes for web content optimization",
@@ -189,8 +178,7 @@
         "P Elango"
       ],
       "year": 2009,
-      "doi": "10.1109/icdm.2009.52",
-      "raw": "Explore/exploit schemes for web content optimization \n\t\t \n\t\t\t D Agarwal \n\t\t \n\t\t \n\t\t\t B.-C Chen \n\t\t \n\t\t \n\t\t\t P Elango \n\t\t \n\t\t 10.1109/icdm.2009.52 \n\t \n\t \n\t\t Proc. of the 9th International Conf. on Data Mining \n\t\t of the 9th International Conf. on Data Mining \n\t\t \n\t\t\t 2009 \n\t\t \n\t \n\t D. Agarwal, B.-C. Chen, and P. Elango. Explore/exploit schemes for web content optimization. In Proc. of the 9th International Conf. on Data Mining, 2009."
+      "doi": "10.1109/icdm.2009.52"
     },
     {
       "title": "Online models for content optimization",
@@ -205,17 +193,12 @@
         "J Zachariah"
       ],
       "year": 2009,
-      "doi": "10.1109/icdm.2009.52",
-      "raw": "Online models for content optimization \n\t\t \n\t\t\t D Agarwal \n\t\t \n\t\t \n\t\t\t B.-C Chen \n\t\t \n\t\t \n\t\t\t P Elango \n\t\t \n\t\t \n\t\t\t N Motgi \n\t\t \n\t\t \n\t\t\t S.-T Park \n\t\t \n\t\t \n\t\t\t R Ramakrishnan \n\t\t \n\t\t \n\t\t\t S Roy \n\t\t \n\t\t \n\t\t\t J Zachariah \n\t\t \n\t\t 10.1109/icdm.2009.52 \n\t \n\t \n\t\t Advances in Neural Information Processing Systems 21 \n\t\t \n\t\t\t 2009 \n\t\t\t \n\t\t \n\t \n\t D. Agarwal, B.-C. Chen, P. Elango, N. Motgi, S.-T. Park, R. Ramakrishnan, S. Roy, and J. Zachariah. Online models for content optimization. In Advances in Neural Information Processing Systems 21, pages 17-24, 2009."
+      "doi": "10.1109/icdm.2009.52"
     },
     {
       "title": "Sample mean based index policies with o(log n) regret for the multi-armed bandit problem",
       "year": 1995,
-      "doi": "10.2307/1427934",
-      "journal": "Advances in Applied Probability",
-      "volume": "27",
-      "issue": "4",
-      "raw": "Sample mean based index policies with o(log n) regret for the multi-armed bandit problem \n\t\t \n\t\t\t R \n\t\t \n\t\t 10.2307/1427934 \n\t \n\t \n\t\t Advances in Applied Probability \n\t\t \n\t\t\t 27 \n\t\t\t 4 \n\t\t\t \n\t\t\t 1995 \n\t\t \n\t \n\t R. Agrawal. Sample mean based index policies with o(log n) regret for the multi-armed bandit problem. Advances in Applied Probability, 27(4):1054-1078, 1995."
+      "doi": "10.2307/1427934"
     },
     {
       "title": "Just-in-time contextual advertising",
@@ -227,18 +210,14 @@
         "L Riedel"
       ],
       "year": 2007,
-      "doi": "10.1145/1321440.1321488",
-      "raw": "Just-in-time contextual advertising \n\t\t \n\t\t\t A Anagnostopoulos \n\t\t \n\t\t \n\t\t\t A Z Broder \n\t\t \n\t\t \n\t\t\t E Gabrilovich \n\t\t \n\t\t \n\t\t\t V Josifovski \n\t\t \n\t\t \n\t\t\t L Riedel \n\t\t \n\t\t 10.1145/1321440.1321488 \n\t \n\t \n\t\t Proc. of the 16th ACM Conf. on Information and Knowledge Management \n\t\t of the 16th ACM Conf. on Information and Knowledge Management \n\t\t \n\t\t\t 2007 \n\t\t\t \n\t\t \n\t \n\t A. Anagnostopoulos, A. Z. Broder, E. Gabrilovich, V. Josifovski, and L. Riedel. Just-in-time contextual advertising. In Proc. of the 16th ACM Conf. on Information and Knowledge Management, pages 331-340, 2007."
+      "doi": "10.1145/1321440.1321488"
     },
     {
       "title": "Using confidence bounds for exploitation-exploration trade-offs",
       "authors": [
         "P Auer"
       ],
-      "year": 2002,
-      "journal": "Journal of Machine Learning Research",
-      "volume": "3",
-      "raw": "Using confidence bounds for exploitation-exploration trade-offs \n\t\t \n\t\t\t P Auer \n\t\t \n\t \n\t \n\t\t Journal of Machine Learning Research \n\t\t \n\t\t\t 3 \n\t\t\t \n\t\t\t 2002 \n\t\t \n\t \n\t P. Auer. Using confidence bounds for exploitation-exploration trade-offs. Journal of Machine Learning Research, 3:397-422, 2002."
+      "year": 2002
     },
     {
       "title": "Finite-time analysis of the multiarmed bandit problem",
@@ -248,11 +227,7 @@
         "P Fischer"
       ],
       "year": 2002,
-      "doi": "10.1023/a:1013689704352",
-      "journal": "Machine Learning",
-      "volume": "47",
-      "issue": "2-3",
-      "raw": "Finite-time analysis of the multiarmed bandit problem \n\t\t \n\t\t\t P Auer \n\t\t \n\t\t \n\t\t\t N Cesa-Bianchi \n\t\t \n\t\t \n\t\t\t P Fischer \n\t\t \n\t\t 10.1023/a:1013689704352 \n\t \n\t \n\t\t Machine Learning \n\t\t \n\t\t\t 47 \n\t\t\t 2-3 \n\t\t\t \n\t\t\t 2002 \n\t\t \n\t \n\t P. Auer, N. Cesa-Bianchi, and P. Fischer. Finite-time analysis of the multiarmed bandit problem. Machine Learning, 47(2-3):235-256, 2002."
+      "doi": "10.1023/a:1013689704352"
     },
     {
       "title": "The nonstochastic multiarmed bandit problem",
@@ -263,11 +238,7 @@
         "R Schapire"
       ],
       "year": 2002,
-      "doi": "10.1137/s0097539701398375",
-      "journal": "SIAM Journal on Computing",
-      "volume": "32",
-      "issue": "1",
-      "raw": "The nonstochastic multiarmed bandit problem \n\t\t \n\t\t\t P Auer \n\t\t \n\t\t \n\t\t\t N Cesa-Bianchi \n\t\t \n\t\t \n\t\t\t Y Freund \n\t\t \n\t\t \n\t\t\t R E Schapire \n\t\t \n\t\t 10.1137/s0097539701398375 \n\t \n\t \n\t\t SIAM Journal on Computing \n\t\t \n\t\t\t 32 \n\t\t\t 1 \n\t\t\t \n\t\t\t 2002 \n\t\t \n\t \n\t P. Auer, N. Cesa-Bianchi, Y. Freund, and R. E. Schapire. The nonstochastic multiarmed bandit problem. SIAM Journal on Computing, 32(1):48-77, 2002."
+      "doi": "10.1137/s0097539701398375"
     },
     {
       "title": "Bandit Problems: Sequential Allocation of Experiments",
@@ -275,8 +246,7 @@
         "D Berry",
         "B Fristedt"
       ],
-      "year": 1985,
-      "raw": "Bandit Problems: Sequential Allocation of Experiments \n\t\t \n\t\t\t D A Berry \n\t\t \n\t\t \n\t\t\t B Fristedt \n\t\t \n\t \n\t \n\t\t Monographs on Statistics and Applied Probability \n\t\t \n\t\t\t Chapman and Hall \n\t\t\t 1985 \n\t\t \n\t \n\t D. A. Berry and B. Fristedt. Bandit Problems: Sequential Allocation of Experiments. Monographs on Statistics and Applied Probability. Chapman and Hall, 1985."
+      "year": 1985
     },
     {
       "title": "The Adaptive Web -Methods and Strategies of Web Personalization",
@@ -286,9 +256,7 @@
         "W Nejdl"
       ],
       "year": 2007,
-      "doi": "10.1007/978-3-540-72079-9",
-      "volume": "4321",
-      "raw": "The Adaptive Web -Methods and Strategies of Web Personalization \n\t\t \n\t\t\t P Brusilovsky \n\t\t \n\t\t \n\t\t\t A Kobsa \n\t\t \n\t\t \n\t\t\t W Nejdl \n\t\t \n\t\t 10.1007/978-3-540-72079-9 \n\t \n\t \n\t\t Lecture Notes in Computer Science \n\t\t \n\t\t\t 4321 \n\t\t\t 2007 \n\t\t\t Springer \n\t\t\t Berlin / Heidelberg \n\t\t \n\t \n\t P. Brusilovsky, A. Kobsa, and W. Nejdl, editors. The Adaptive Web - Methods and Strategies of Web Personalization, volume 4321 of Lecture Notes in Computer Science. Springer Berlin / Heidelberg, 2007."
+      "doi": "10.1007/978-3-540-72079-9"
     },
     {
       "title": "Hybrid systems for personalized recommendations",
@@ -296,8 +264,7 @@
         "R Burke"
       ],
       "year": 2005,
-      "doi": "10.1007/11577935_7",
-      "raw": "Hybrid systems for personalized recommendations \n\t\t \n\t\t\t R Burke \n\t\t \n\t\t 10.1007/11577935_7 \n\t \n\t \n\t\t Intelligent Techniques for Web Personalization \n\t\t \n\t\t\t B Mobasher \n\t\t \n\t\t \n\t\t\t S S Anand \n\t\t \n\t\t \n\t\t\t Springer-Verlag \n\t\t\t 2005 \n\t\t \n\t \n\t R. Burke. Hybrid systems for personalized recommendations. In B. Mobasher and S. S. Anand, editors, Intelligent Techniques for Web Personalization. Springer-Verlag, 2005."
+      "doi": "10.1007/11577935_7"
     },
     {
       "title": "Personalized recommendation on dynamic content using predictive bilinear models",
@@ -306,8 +273,7 @@
         "S.-T Park"
       ],
       "year": 2009,
-      "doi": "10.1145/1526709.1526802",
-      "raw": "Personalized recommendation on dynamic content using predictive bilinear models \n\t\t \n\t\t\t W Chu \n\t\t \n\t\t \n\t\t\t S.-T Park \n\t\t \n\t\t 10.1145/1526709.1526802 \n\t \n\t \n\t\t Proc. of the 18th International Conf. on World Wide Web \n\t\t of the 18th International Conf. on World Wide Web \n\t\t \n\t\t\t 2009 \n\t\t\t \n\t\t \n\t \n\t W. Chu and S.-T. Park. Personalized recommendation on dynamic content using predictive bilinear models. In Proc. of the 18th International Conf. on World Wide Web, pages 691-700, 2009."
+      "doi": "10.1145/1526709.1526802"
     },
     {
       "title": "A case study of behavior-driven conjoint analysis on Yahoo!: Front Page Today Module",
@@ -321,8 +287,7 @@
         "J Zachariah"
       ],
       "year": 2009,
-      "doi": "10.1145/1557019.1557138",
-      "raw": "A case study of behavior-driven conjoint analysis on Yahoo!: Front Page Today Module \n\t\t \n\t\t\t W Chu \n\t\t \n\t\t \n\t\t\t S.-T Park \n\t\t \n\t\t \n\t\t\t T Beaupre \n\t\t \n\t\t \n\t\t\t N Motgi \n\t\t \n\t\t \n\t\t\t A Phadke \n\t\t \n\t\t \n\t\t\t S Chakraborty \n\t\t \n\t\t \n\t\t\t J Zachariah \n\t\t \n\t\t 10.1145/1557019.1557138 \n\t \n\t \n\t\t Proc. of the 15th ACM SIGKDD International Conf. on Knowledge Discovery and Data Mining \n\t\t of the 15th ACM SIGKDD International Conf. on Knowledge Discovery and Data Mining \n\t\t \n\t\t\t 2009 \n\t\t\t \n\t\t \n\t \n\t W. Chu, S.-T. Park, T. Beaupre, N. Motgi, A. Phadke, S. Chakraborty, and J. Zachariah. A case study of behavior-driven conjoint analysis on Yahoo!: Front Page Today Module. In Proc. of the 15th ACM SIGKDD International Conf. on Knowledge Discovery and Data Mining, pages 1097-1104, 2009."
+      "doi": "10.1145/1557019.1557138"
     },
     {
       "title": "Google news personalization: scalable online collaborative filtering",
@@ -333,8 +298,7 @@
         "S Rajaram"
       ],
       "year": 2007,
-      "doi": "10.1145/1242572.1242610",
-      "raw": "Google news personalization: scalable online collaborative filtering \n\t\t \n\t\t\t A Das \n\t\t \n\t\t \n\t\t\t M Datar \n\t\t \n\t\t \n\t\t\t A Garg \n\t\t \n\t\t \n\t\t\t S Rajaram \n\t\t \n\t\t 10.1145/1242572.1242610 \n\t \n\t \n\t\t Proc. of the 16th International World Wide Web Conf \n\t\t of the 16th International World Wide Web Conf \n\t\t \n\t\t\t 2007 \n\t\t \n\t \n\t A. Das, M. Datar, A. Garg, and S. Rajaram. Google news personalization: scalable online collaborative filtering. In Proc. of the 16th International World Wide Web Conf., 2007."
+      "doi": "10.1145/1242572.1242610"
     },
     {
       "title": "Bandit processes and dynamic allocation indices",
@@ -342,10 +306,7 @@
         "J Gittins"
       ],
       "year": 1979,
-      "doi": "10.1111/j.2517-6161.1979.tb01068.x",
-      "journal": "Journal of the Royal Statistical Society. Series B (Methodological)",
-      "volume": "41",
-      "raw": "Bandit processes and dynamic allocation indices \n\t\t \n\t\t\t J Gittins \n\t\t \n\t\t 10.1111/j.2517-6161.1979.tb01068.x \n\t \n\t \n\t\t Journal of the Royal Statistical Society. Series B (Methodological) \n\t\t \n\t\t\t 41 \n\t\t\t \n\t\t\t 1979 \n\t\t \n\t \n\t J. Gittins. Bandit processes and dynamic allocation indices. Journal of the Royal Statistical Society. Series B (Methodological), 41:148-177, 1979."
+      "doi": "10.1111/j.2517-6161.1979.tb01068.x"
     },
     {
       "title": "Efficient bandit algorithms for online multiclass prediction",
@@ -355,8 +316,7 @@
         "A Tewari"
       ],
       "year": 2008,
-      "doi": "10.1145/1390156.1390212",
-      "raw": "Efficient bandit algorithms for online multiclass prediction \n\t\t \n\t\t\t S M Kakade \n\t\t \n\t\t \n\t\t\t S Shalev-Shwartz \n\t\t \n\t\t \n\t\t\t A Tewari \n\t\t \n\t\t 10.1145/1390156.1390212 \n\t \n\t \n\t\t Proc. of the 25th International Conf. on Machine Learning \n\t\t of the 25th International Conf. on Machine Learning \n\t\t \n\t\t\t 2008 \n\t\t\t \n\t\t \n\t \n\t S. M. Kakade, S. Shalev-Shwartz, and A. Tewari. Efficient bandit algorithms for online multiclass prediction. In Proc. of the 25th International Conf. on Machine Learning, pages 440-447, 2008."
+      "doi": "10.1145/1390156.1390212"
     },
     {
       "title": "Asymptotically efficient adaptive allocation rules",
@@ -365,11 +325,7 @@
         "H Robbins"
       ],
       "year": 1985,
-      "doi": "10.1016/0196-8858(85)90002-8",
-      "journal": "Advances in Applied Mathematics",
-      "volume": "6",
-      "issue": "1",
-      "raw": "Asymptotically efficient adaptive allocation rules \n\t\t \n\t\t\t T L Lai \n\t\t \n\t\t \n\t\t\t H Robbins \n\t\t \n\t\t 10.1016/0196-8858(85)90002-8 \n\t \n\t \n\t\t Advances in Applied Mathematics \n\t\t \n\t\t\t 6 \n\t\t\t 1 \n\t\t\t \n\t\t\t 1985 \n\t\t \n\t \n\t T. L. Lai and H. Robbins. Asymptotically efficient adaptive allocation rules. Advances in Applied Mathematics, 6(1):4-22, 1985."
+      "doi": "10.1016/0196-8858(85)90002-8"
     },
     {
       "title": "The epoch-greedy algorithm for contextual multi-armed bandits",
@@ -377,17 +333,14 @@
         "J Langford",
         "T Zhang"
       ],
-      "year": 2008,
-      "volume": "20",
-      "raw": "The epoch-greedy algorithm for contextual multi-armed bandits \n\t\t \n\t\t\t J Langford \n\t\t \n\t\t \n\t\t\t T Zhang \n\t\t \n\t \n\t \n\t\t Advances in Neural Information Processing Systems \n\t\t \n\t\t\t 2008 \n\t\t\t 20 \n\t\t \n\t \n\t J. Langford and T. Zhang. The epoch-greedy algorithm for contextual multi-armed bandits. In Advances in Neural Information Processing Systems 20, 2008."
+      "year": 2008
     },
     {
       "title": "Information Theory, Inference, and Learning Algorithms",
       "authors": [
         "D Mackay"
       ],
-      "year": 2003,
-      "raw": "Information Theory, Inference, and Learning Algorithms \n\t\t \n\t\t\t D J C Mackay \n\t\t \n\t\t \n\t\t\t 2003 \n\t\t\t Cambridge University Press \n\t\t \n\t \n\t D. J. C. MacKay. Information Theory, Inference, and Learning Algorithms. Cambridge University Press, 2003."
+      "year": 2003
     },
     {
       "title": "Text-learning and related intelligent agents: A survey",
@@ -395,9 +348,7 @@
         "D Mladenic"
       ],
       "year": 1999,
-      "doi": "10.1109/5254.784084",
-      "journal": "IEEE Intelligent Agents",
-      "raw": "Text-learning and related intelligent agents: A survey \n\t\t \n\t\t\t D Mladenic \n\t\t \n\t\t 10.1109/5254.784084 \n\t \n\t \n\t\t IEEE Intelligent Agents \n\t\t \n\t\t\t \n\t\t\t 1999 \n\t\t \n\t \n\t D. Mladenic. Text-learning and related intelligent agents: A survey. IEEE Intelligent Agents, pages 44-54, 1999."
+      "doi": "10.1109/5254.784084"
     },
     {
       "title": "Na\u00efve filterbots for robust cold-start recommendations",
@@ -409,8 +360,7 @@
         "D Decoste"
       ],
       "year": 2006,
-      "doi": "10.1145/1150402.1150490",
-      "raw": "Na\u00efve filterbots for robust cold-start recommendations \n\t\t \n\t\t\t S.-T Park \n\t\t \n\t\t \n\t\t\t D Pennock \n\t\t \n\t\t \n\t\t\t O Madani \n\t\t \n\t\t \n\t\t\t N Good \n\t\t \n\t\t \n\t\t\t D Decoste \n\t\t \n\t\t 10.1145/1150402.1150490 \n\t \n\t \n\t\t Proc. of the 12th ACM SIGKDD International Conf. on Knowledge Discovery and Data Mining \n\t\t of the 12th ACM SIGKDD International Conf. on Knowledge Discovery and Data Mining \n\t\t \n\t\t\t 2006 \n\t\t\t \n\t\t \n\t \n\t S.-T. Park, D. Pennock, O. Madani, N. Good, and D. DeCoste. Na\u00efve filterbots for robust cold-start recommendations. In Proc. of the 12th ACM SIGKDD International Conf. on Knowledge Discovery and Data Mining, pages 699-705, 2006."
+      "doi": "10.1145/1150402.1150490"
     },
     {
       "title": "Simulation studies of multi-armed bandits with covariates",
@@ -420,8 +370,7 @@
         "D Hand"
       ],
       "year": 2008,
-      "doi": "10.1109/uksim.2008.86",
-      "raw": "Simulation studies of multi-armed bandits with covariates \n\t\t \n\t\t\t N G Pavlidis \n\t\t \n\t\t \n\t\t\t D K Tasoulis \n\t\t \n\t\t \n\t\t\t D J Hand \n\t\t \n\t\t 10.1109/uksim.2008.86 \n\t \n\t \n\t\t Proceedings on the 10th International Conf. on Computer Modeling and Simulation \n\t\t on the 10th International Conf. on Computer Modeling and Simulation \n\t\t \n\t\t\t 2008 \n\t\t\t \n\t\t \n\t \n\t N. G. Pavlidis, D. K. Tasoulis, and D. J. Hand. Simulation studies of multi-armed bandits with covariates. In Proceedings on the 10th International Conf. on Computer Modeling and Simulation, pages 493-498, 2008."
+      "doi": "10.1109/uksim.2008.86"
     },
     {
       "title": "Eligibility traces for off-policy policy evaluation",
@@ -430,8 +379,7 @@
         "R Sutton",
         "S Singh"
       ],
-      "year": 2000,
-      "raw": "Eligibility traces for off-policy policy evaluation \n\t\t \n\t\t\t D Precup \n\t\t \n\t\t \n\t\t\t R S Sutton \n\t\t \n\t\t \n\t\t\t S P Singh \n\t\t \n\t \n\t \n\t\t Proc. of the 17th Interational Conf. on Machine Learning \n\t\t of the 17th Interational Conf. on Machine Learning \n\t\t \n\t\t\t 2000 \n\t\t\t \n\t\t \n\t \n\t D. Precup, R. S. Sutton, and S. P. Singh. Eligibility traces for off-policy policy evaluation. In Proc. of the 17th Interational Conf. on Machine Learning, pages 759-766, 2000."
+      "year": 2000
     },
     {
       "title": "Some aspects of the sequential design of experiments",
@@ -439,11 +387,7 @@
         "H Robbins"
       ],
       "year": 1952,
-      "doi": "10.1090/s0002-9904-1952-09620-8",
-      "journal": "Bulletin of the American Mathematical Society",
-      "volume": "58",
-      "issue": "5",
-      "raw": "Some aspects of the sequential design of experiments \n\t\t \n\t\t\t H Robbins \n\t\t \n\t\t 10.1090/s0002-9904-1952-09620-8 \n\t \n\t \n\t\t Bulletin of the American Mathematical Society \n\t\t \n\t\t\t 58 \n\t\t\t 5 \n\t\t\t \n\t\t\t 1952 \n\t\t \n\t \n\t H. Robbins. Some aspects of the sequential design of experiments. Bulletin of the American Mathematical Society, 58(5):527-535, 1952."
+      "doi": "10.1090/s0002-9904-1952-09620-8"
     },
     {
       "title": "Recommender systems in e-commerce",
@@ -453,8 +397,7 @@
         "J Riedi"
       ],
       "year": 1999,
-      "doi": "10.1145/336992.337035",
-      "raw": "Recommender systems in e-commerce \n\t\t \n\t\t\t J B Schafer \n\t\t \n\t\t \n\t\t\t J Konstan \n\t\t \n\t\t \n\t\t\t J Riedi \n\t\t \n\t\t 10.1145/336992.337035 \n\t \n\t \n\t\t Proc. of the 1st ACM Conf. on Electronic Commerce \n\t\t of the 1st ACM Conf. on Electronic Commerce \n\t\t \n\t\t\t 1999 \n\t\t \n\t \n\t J. B. Schafer, J. Konstan, and J. Riedi. Recommender systems in e-commerce. In Proc. of the 1st ACM Conf. on Electronic Commerce, 1999."
+      "doi": "10.1145/336992.337035"
     },
     {
       "title": "On the likelihood that one unknown probability exceeds another in view of the evidence of two samples",
@@ -462,11 +405,7 @@
         "W Thompson"
       ],
       "year": 1933,
-      "doi": "10.1093/biomet/25.3-4.285",
-      "journal": "Biometrika",
-      "volume": "25",
-      "issue": "3-4",
-      "raw": "On the likelihood that one unknown probability exceeds another in view of the evidence of two samples \n\t\t \n\t\t\t W R Thompson \n\t\t \n\t\t 10.1093/biomet/25.3-4.285 \n\t \n\t \n\t\t Biometrika \n\t\t \n\t\t\t 25 \n\t\t\t 3-4 \n\t\t\t \n\t\t\t 1933 \n\t\t \n\t \n\t W. R. Thompson. On the likelihood that one unknown probability exceeds another in view of the evidence of two samples. Biometrika, 25(3-4):285-294, 1933."
+      "doi": "10.1093/biomet/25.3-4.285"
     },
     {
       "title": "Exploring compact reinforcement-learning representations with linear regression",
@@ -476,185 +415,8 @@
         "C Diuk",
         "M Littman"
       ],
-      "year": 2009,
-      "raw": "Exploring compact reinforcement-learning representations with linear regression \n\t\t \n\t\t\t T J Walsh \n\t\t \n\t\t \n\t\t\t I Szita \n\t\t \n\t\t \n\t\t\t C Diuk \n\t\t \n\t\t \n\t\t\t M L Littman \n\t\t \n\t \n\t \n\t\t Proc. of the 25th Conf. on Uncertainty in Artificial Intelligence \n\t\t of the 25th Conf. on Uncertainty in Artificial Intelligence \n\t\t \n\t\t\t 2009 \n\t\t \n\t \n\t T. J. Walsh, I. Szita, C. Diuk, and M. L. Littman. Exploring compact reinforcement-learning representations with linear regression. In Proc. of the 25th Conf. on Uncertainty in Artificial Intelligence, 2009."
+      "year": 2009
     }
   ],
-  "num_references": 27,
-  "figures": [
-    {
-      "caption": "Figure 1 :",
-      "description": "Figure 1: A snapshot of the \"Featured\" tab in the Today Module on Yahoo! Front Page. By default, the article at F1 position is highlighted at the story position."
-    },
-    {
-      "caption": "Figure 2 :",
-      "description": "Figure 2: Parameter tuning: CTRs of various algorithms on the one-day tuning dataset."
-    },
-    {
-      "caption": "Figure 3 :",
-      "description": "Figure 3: Scatterplots of the base CTR vs. lifted CTR (in the learning bucket) of the 50 most frequently selected articles when 100% evaluation data were used. Red crosses are for \u01eb-greedy algorithms, and blue circles are for UCB algorithms. Note that the sets of most frequently chosen articles varied with algorithms; see the text for details."
-    },
-    {
-      "description": "ucb \u03b5-greedy (seg) ucb (seg) \u03b5-greedy (disjoint) linucb (disjoint) \u03b5-greedy (hybrid) linucb (hybrid) omniscient (a) CTRs in the deployment bucket."
-    },
-    {
-      "description": "CTRs in the learning bucket."
-    },
-    {
-      "caption": "Figure 4 :",
-      "description": "Figure 4: CTRs in evaluation data with varying data sizes."
-    },
-    {
-      "caption": "Figure 5 :",
-      "description": "Figure 5: User maximum membership histogram."
-    },
-    {
-      "type": "table",
-      "caption": "Table 1 : Performance evaluation: CTRs of all algorithms on the one-week evaluation dataset in the deployment and learning buckets (denoted by \"deploy\" and \"learn\" in the table, respectively). The numbers with a percentage is the CTR lift compared to",
-      "description": "\u01eb-greedy."
-    }
-  ],
-  "num_figures": 8,
-  "tables": [
-    {
-      "content": "algorithm size = 100% deploy learn size = 30% deploy learn size = 20% deploy learn size = 10% deploy learn size = 5% deploy learn size = 1% deploy learn \u01eb-greedy 1.596 0% 1.326 0% 1.541 0% 1.326 0% 1.549 0% 1.273 0% 1.465 0% 1.326 0% 1.409 0% 1.292 0% 1.234 0% 1.139 0% ucb 1.594 0% 1.569 18.3% 1.582 2.7% 1.535 15.8% 1.569 1.3% 1.488 16.9% 1.541 5.2% 1.446 9% 1.541 9.4% 1.465 13.4% 1.354 9.7% 1.22 7.1% \u01eb-greedy (seg) 1.742 9.1% 1.446 9% 1.652 7.2% 1.46 10.1% 1.585 2.3% 1.119 -12% 1.474 0.6% 1.284 -3.1% 1.407 0% 1.281 -0.8% 1.245 0.9% 1.072 -5.8% ucb (seg) 1.781 11.6% 1.677 26.5% 1.742 13% 1.555 17.3% 1.689 9% 1.446 13.6% 11.7% 1.636 1.529 15.3% 1.532 8.7% 1.32 2.2% 1.398 13.3% 1.25 9.7% \u01eb-greedy (disjoint) 1.769 10.8% -1.2% 1.309 1.686 9.4% 1.337 0.8% 1.624 4.8% 1.529 20.1% 1.529 4.4% 1.451 9.4% 1.432 1.6% 1.345 4.1% 1.262 2.3% 1.183 3.9% linucb (disjoint) 1.795 12.5% 1.647 24.2% 1.719 11.6% 13.7% 10.7% 1.507 1.714 1.384 8.7% 1.655 13% 1.387 4.6% 1.574 11.7% -3.5% 1.245 1.382 12% 1.197 5.1% \u01eb-greedy (hybrid) 1.739 9% 1.521 14.7% 1.68 9% 1.345 1.4% 1.636 5.6% 1.449 13.8% 1.58 7.8% 1.348 1.7% 1.465 4% 1.415 9.5% 1.342 8.8% 1.2 5.4% linucb (hybrid) 1.73 8.4% 1.663 25.4% 1.691 9.7% 1.591 20% 1.708 10.3% 27.2% 14.3% 1.619 1.675 1.535 15.8% 1.588 12.7% 1.507 16.6% 1.482 20.1% 1.446 27%"
-    }
-  ],
-  "num_tables": 1,
-  "formulas": [
-    {
-      "text": "R A (T ) def = E T t=1 r t,a * t -E T t=1 rt,a t . (1)"
-    },
-    {
-      "text": "(xt,1, \u2022 \u2022 \u2022 , xt,K))"
-    },
-    {
-      "text": "E[rt,a|xt,a] = x \u22a4 t,a \u03b8 \u03b8 \u03b8 * a . ( 2"
-    },
-    {
-      "text": ")"
-    },
-    {
-      "text": "\u03b8 \u03b8 \u03b8a = (D \u22a4 a Da + I d ) -1 D \u22a4 a ca, (3)"
-    },
-    {
-      "text": "x \u22a4 t,a \u03b8 \u03b8 \u03b8a -E[rt,a|xt,a] \u2264 \u03b1 x \u22a4 t,a (D \u22a4 a Da + I d ) -1 xt,a (4)"
-    },
-    {
-      "text": "at def = arg max a\u2208At x \u22a4 t,a \u03b8 \u03b8 \u03b8a + \u03b1 x \u22a4 t,a A -1 a xt,a , (5)"
-    },
-    {
-      "text": "Aa def = D \u22a4 a Da + I d ."
-    },
-    {
-      "text": "def = A -1 a"
-    },
-    {
-      "text": "end if 8: \u03b8 \u03b8 \u03b8a \u2190 A -1 a ba 9: pt,a \u2190 \u03b8 \u03b8 \u03b8 \u22a4 a xt,a + \u03b1 x \u22a4 t,a A -1 a xt,a 10:"
-    },
-    {
-      "text": "Aa t \u2190 Aa t + xt,a t x \u22a4 t,at"
-    },
-    {
-      "text": "E[rt,a|xt,a] = z \u22a4 t,a \u03b2 \u03b2 \u03b2 * + x \u22a4 t,a \u03b8 \u03b8 \u03b8 * a , (6)"
-    },
-    {
-      "text": "\u03b2 \u03b2 \u03b2 \u2190 A -1 0 b0 6:"
-    },
-    {
-      "text": "end if 12: \u03b8 \u03b8 \u03b8a \u2190 A -1 a ba -Ba \u03b2 \u03b2 \u03b2 13: st,a \u2190 z \u22a4 t,a A -1 0 zt,a -2z \u22a4 t,a A -1 0 B \u22a4 a A -1 a xt,a + x \u22a4 t,a A -1 a xt,a + x \u22a4 t,a A -1 a BaA -1 0 B \u22a4 a A -1 a xt,a 14: pt,a \u2190 z \u22a4 t,a \u03b2 \u03b2 \u03b2 + x \u22a4 t,a \u03b8 \u03b8 \u03b8a + \u03b1 \u221a st,"
-    },
-    {
-      "text": "A0 \u2190 A0 + zt,a t z \u22a4 t,at -B \u22a4 at A -1 at Ba t 23: b0 \u2190 b0 + rtzt,a t -B \u22a4 at A -1"
-    },
-    {
-      "text": "Pr Policy_Evaluator(\u03c0,S) (hT ) = Pr \u03c0,D (hT )"
-    },
-    {
-      "text": "Pr Policy_Evaluator(\u03c0,S) (ht-1) = Pr \u03c0,D (ht-1)"
-    },
-    {
-      "text": "Pr Policy_Evaluator(\u03c0,S) ((xt,1, ..., xt,K, a, rt,a) | ht-1) = Pr D (xt,1, ..., xt,K, rt,a) Pr \u03c0(h t-1 ) (a | xt,1, ..., xt,K)."
-    },
-    {
-      "text": "def = \u03c6 \u03c6 \u03c6 \u22a4 u W."
-    }
-  ],
-  "num_formulas": 19,
-  "num_citations": 44,
-  "cited_references": [
-    "b4",
-    "b17",
-    "b14",
-    "b20",
-    "b24",
-    "b26",
-    "b13",
-    "b16",
-    "b23",
-    "b7",
-    "b19",
-    "b6",
-    "b18",
-    "b1",
-    "b9",
-    "b10",
-    "b3",
-    "b5",
-    "b8",
-    "b12",
-    "b15",
-    "b11",
-    "b25",
-    "b22",
-    "b0",
-    "b21",
-    "b2"
-  ],
-  "notes": [
-    "[raw_affiliation] \u2021  Yahoo ! Labs",
-    "[raw_affiliation] +  Dept of Computer Science Princeton University",
-    "[raw_affiliation] Yahoo! Labs",
-    "In the literature, contextual bandits are sometimes called bandits with covariate, bandits with side information, associative bandits, and associative reinforcement learning.",
-    "Note \u00d5(\u2022) is the same as O(\u2022) but suppresses logarithmic factors.",
-    "We call it view-based randomization. After refreshing her browser, the user may not fall into the random bucket again.",
-    "To avoid inaccurate CTR estimates, only",
-    "articles that were chosen most often by an algorithm were included in its own plots. Hence, the plots for different algorithms are not comparable.",
-    "In the less important learning bucket, there were two exceptions for linucb (disjoint).",
-    "[raw_reference] N. Abe, A. W. Biermann, and P. M. Long. Reinforcement learning with immediate rewards and linear hypotheses. Algorithmica, 37(4):263-293, 2003.",
-    "[raw_reference] D. Agarwal, B.-C. Chen, and P. Elango. Explore/exploit schemes for web content optimization. In Proc. of the 9th International Conf. on Data Mining, 2009.",
-    "[raw_reference] D. Agarwal, B.-C. Chen, P. Elango, N. Motgi, S.-T. Park, R. Ramakrishnan, S. Roy, and J. Zachariah. Online models for content optimization. In Advances in Neural Information Processing Systems 21, pages 17-24, 2009.",
-    "[raw_reference] R. Agrawal. Sample mean based index policies with o(log n) regret for the multi-armed bandit problem. Advances in Applied Probability, 27(4):1054-1078, 1995.",
-    "[raw_reference] A. Anagnostopoulos, A. Z. Broder, E. Gabrilovich, V. Josifovski, and L. Riedel. Just-in-time contextual advertising. In Proc. of the 16th ACM Conf. on Information and Knowledge Management, pages 331-340, 2007.",
-    "[raw_reference] P. Auer. Using confidence bounds for exploitation-exploration trade-offs. Journal of Machine Learning Research, 3:397-422, 2002.",
-    "[raw_reference] P. Auer, N. Cesa-Bianchi, and P. Fischer. Finite-time analysis of the multiarmed bandit problem. Machine Learning, 47(2-3):235-256, 2002.",
-    "[raw_reference] P. Auer, N. Cesa-Bianchi, Y. Freund, and R. E. Schapire. The nonstochastic multiarmed bandit problem. SIAM Journal on Computing, 32(1):48-77, 2002.",
-    "[raw_reference] D. A. Berry and B. Fristedt. Bandit Problems: Sequential Allocation of Experiments. Monographs on Statistics and Applied Probability. Chapman and Hall, 1985.",
-    "[raw_reference] P. Brusilovsky, A. Kobsa, and W. Nejdl, editors. The Adaptive Web - Methods and Strategies of Web Personalization, volume 4321 of Lecture Notes in Computer Science. Springer Berlin / Heidelberg, 2007.",
-    "[raw_reference] R. Burke. Hybrid systems for personalized recommendations. In B. Mobasher and S. S. Anand, editors, Intelligent Techniques for Web Personalization. Springer-Verlag, 2005.",
-    "[raw_reference] W. Chu and S.-T. Park. Personalized recommendation on dynamic content using predictive bilinear models. In Proc. of the 18th International Conf. on World Wide Web, pages 691-700, 2009.",
-    "[raw_reference] W. Chu, S.-T. Park, T. Beaupre, N. Motgi, A. Phadke, S. Chakraborty, and J. Zachariah. A case study of behavior-driven conjoint analysis on Yahoo!: Front Page Today Module. In Proc. of the 15th ACM SIGKDD International Conf. on Knowledge Discovery and Data Mining, pages 1097-1104, 2009.",
-    "[raw_reference] A. Das, M. Datar, A. Garg, and S. Rajaram. Google news personalization: scalable online collaborative filtering. In Proc. of the 16th International World Wide Web Conf., 2007.",
-    "[raw_reference] J. Gittins. Bandit processes and dynamic allocation indices. Journal of the Royal Statistical Society. Series B (Methodological), 41:148-177, 1979.",
-    "[raw_reference] S. M. Kakade, S. Shalev-Shwartz, and A. Tewari. Efficient bandit algorithms for online multiclass prediction. In Proc. of the 25th International Conf. on Machine Learning, pages 440-447, 2008.",
-    "[raw_reference] T. L. Lai and H. Robbins. Asymptotically efficient adaptive allocation rules. Advances in Applied Mathematics, 6(1):4-22, 1985.",
-    "[raw_reference] J. Langford and T. Zhang. The epoch-greedy algorithm for contextual multi-armed bandits. In Advances in Neural Information Processing Systems 20, 2008.",
-    "[raw_reference] D. J. C. MacKay. Information Theory, Inference, and Learning Algorithms. Cambridge University Press, 2003.",
-    "[raw_reference] D. Mladenic. Text-learning and related intelligent agents: A survey. IEEE Intelligent Agents, pages 44-54, 1999.",
-    "[raw_reference] S.-T. Park, D. Pennock, O. Madani, N. Good, and D. DeCoste. Na\u00efve filterbots for robust cold-start recommendations. In Proc. of the 12th ACM SIGKDD International Conf. on Knowledge Discovery and Data Mining, pages 699-705, 2006.",
-    "[raw_reference] N. G. Pavlidis, D. K. Tasoulis, and D. J. Hand. Simulation studies of multi-armed bandits with covariates. In Proceedings on the 10th International Conf. on Computer Modeling and Simulation, pages 493-498, 2008.",
-    "[raw_reference] D. Precup, R. S. Sutton, and S. P. Singh. Eligibility traces for off-policy policy evaluation. In Proc. of the 17th Interational Conf. on Machine Learning, pages 759-766, 2000.",
-    "[raw_reference] H. Robbins. Some aspects of the sequential design of experiments. Bulletin of the American Mathematical Society, 58(5):527-535, 1952.",
-    "[raw_reference] J. B. Schafer, J. Konstan, and J. Riedi. Recommender systems in e-commerce. In Proc. of the 1st ACM Conf. on Electronic Commerce, 1999.",
-    "[raw_reference] W. R. Thompson. On the likelihood that one unknown probability exceeds another in view of the evidence of two samples. Biometrika, 25(3-4):285-294, 1933.",
-    "[raw_reference] T. J. Walsh, I. Szita, C. Diuk, and M. L. Littman. Exploring compact reinforcement-learning representations with linear regression. In Proc. of the 25th Conf. on Uncertainty in Artificial Intelligence, 2009."
-  ],
-  "editors": [
-    "B Mobasher",
-    "S S Anand"
-  ],
-  "processing_software": {
-    "GROBID": "0.8.2"
-  },
-  "pages": "661-670"
+  "num_references": 27
 }

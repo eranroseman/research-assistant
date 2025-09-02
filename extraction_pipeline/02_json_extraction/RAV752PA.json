@@ -4,49 +4,42 @@
   "abstract": "In the wake of the vast population of smart device users worldwide, mobile health (mHealth) technologies are hopeful to generate positive and wide influence on people's health. They are able to provide flexible, affordable and portable health guides to device users. Current online decision-making methods for mHealth assume that the users are completely heterogeneous. They share no information among users and learn a separate policy for each user. However, data for each user is very limited in size to support the separate online learning, leading to unstable policies that contain lots of variances. Besides, we find the truth that a user may be similar with some, but not all, users, and connected users tend to have similar behaviors. In this paper, we propose a network cohesion constrained (actor-critic) Reinforcement Learning (RL) method for mHealth. The goal is to explore how to share information among similar users to better convert the limited user information into sharper learned policies. To the best of our knowledge, this is the first online actor-critic RL for mHealth and first network cohesion constrained (actor-critic) RL method in all applications. The network cohesion is important to derive effective policies. We come up with a novel method to learn the network by using the warm start trajectory, which directly reflects the users' property. The optimization of our model is difficult and very different from the general supervised learning due to the indirect observation of values. As a contribution, we propose two algorithms for the proposed online RLs. Apart from mHealth, the proposed methods can be easily applied or adapted to other health-related tasks. Extensive experiment results on the HeartSteps dataset demonstrates that in a variety of parameter settings, the proposed two methods obtain obvious improvements over the state-of-the-art methods.",
   "year": 2017,
   "date": "2017-08-23",
+  "journal": "reward when",
+  "publication": "reward when",
   "authors": [
     {
+      "forename": "Feiyun",
+      "surname": "Zhu",
       "name": "Feiyun Zhu",
-      "affiliation": {
-        "organization": "Department of CSE",
-        "department": "Department of CSE",
-        "institution": "University of Texas at Arlington",
-        "address": "Feiyun"
-      }
+      "affiliation": "\u2021  Department of CSE in the University of Texas at Arlington . Feiyun \n\t\t\t\t\t\t\t\t Department of CSE \n\t\t\t\t\t\t\t\t University of Texas at Arlington \n\t\t\t\t\t\t\t\t \n\t\t\t\t\t\t\t\t\t Feiyun"
     },
     {
+      "forename": "Peng",
+      "surname": "Liao",
       "name": "Peng Liao",
-      "affiliation": {
-        "organization": "Department of CSE",
-        "department": "Department of CSE",
-        "institution": "University of Texas at Arlington",
-        "address": "Feiyun"
-      }
+      "affiliation": "\u2021  Department of CSE in the University of Texas at Arlington . Feiyun \n\t\t\t\t\t\t\t\t Department of CSE \n\t\t\t\t\t\t\t\t University of Texas at Arlington \n\t\t\t\t\t\t\t\t \n\t\t\t\t\t\t\t\t\t Feiyun"
     },
     {
+      "forename": "Xinliang",
+      "surname": "Zhu",
       "name": "Xinliang Zhu"
     },
     {
+      "forename": "Yaowen",
+      "surname": "Yao",
       "name": "Yaowen Yao"
     },
     {
+      "forename": "Junzhou",
+      "surname": "Huang",
       "name": "Junzhou Huang"
     },
     {
-      "affiliation": {
-        "organization": "Department of Statistics",
-        "department": "Department of Statistics",
-        "institution": "University of Michigan"
-      }
+      "affiliation": "Department of Statistics in the University of Michigan. \n\t\t\t\t\t\t\t\t Department of Statistics \n\t\t\t\t\t\t\t\t University of Michigan"
     }
   ],
   "doi": "10.33196/wbl201704022201",
-  "md5": "B61FC28A0D7789CC32B2C36BB193E12B",
   "arxiv": "arXiv:1703.10039v2[cs.LG]",
-  "publication": {
-    "journal": "CoRR",
-    "journal_inferred": true
-  },
   "keywords": [
     "Actor-Critic",
     "Reinforcement Learning",
@@ -55,45 +48,45 @@
   ],
   "sections": [
     {
-      "title": "1. INTRODUCTION",
+      "title": "INTRODUCTION",
       "text": "With billions of smart device 1 users globally, it is increasingly popular among the scientist community to make use of the state-of-the-art articial intelligence and mobile health technologies to leverage supercomputers and big data to facilicate the prediction of healthcare tasks  [1] [2] [3] [4] [5] [6] [7] . In this paper, the goal of mobile health (mHealth) is to make use of various smart devices as great platforms to collect and analyze raw data (weather, location, social activity, stress, etc.). Based on that, the aim is to provide effective intervention that helps users to change to or adapt to healthy behaviors, such as reducing the alcohol abuse  [8, 9]  and promoting physical activities  [10] . The traditional adaptive treatment has restrictions on the time, location and frequency-patients have to visit the doctor's office for treatments. Compared with them, mHealth is more affordable, portable and much more flexible in the sense that smart devices allow for the real-time collection and analysis of data as well as in-time delivery of interventions. Thus, mHealth technologies are widely used in lots of healthrelated tasks, such as physical activity  [10] , eating disorders  [11] , alcohol use  [8, 9] , mental illness  [12, 13] , obesity/weight management  [14] .\n\nFormally, the mHealth intervention is modeled as a sequential decision making (SDM) problem. It aims to learn the optimal policy to determine when, where and how to deliver the intervention  [1, 3, 4]  to best serve users. This is a new research topic that lacks of methodological guidance. In 2014, Lei  [1]  made a first attempt to formulate the mHealth intervention as an online actor-critic contextual bandit problem. Lei's method served a good starting point for the mHealth study. However, this method did not consider the important delayed effect in the SDMthe current action may influence not only the immediate reward but also the next states and, through that, all the subsequent rewards  [15, 16] . Dr. Murphy  [3]  proposed an average reward based RL to consider the delayed effect in the mHealth. However, those two methods rely on some ideal assumptions. They either assume that all the users are completely homogenous or completely heterogeneous. We find the truth lying between those extremes: a user might be similar with some, but not all, users. Their methods are easy to bring in too much bias or too much variance. Besides,  [3]  is in the batch learning setting, which is different from this paper's focuses.\n\nRecently, Dr. Cesa-Bianchi  [17]  proposed a contextual bandit algorithm that considers the network information. It is for the recommendation system, which is very different from the mHealth task. Besides, there are three drawbacks making the method in  [17]  impractical for the mHealth: (1) Cesa-Bianchi's method focues on the bandit algorithm. It doesn't consider the important delayed effect in mHealth.\n\n(2) They assume the network information is given beforehand from the social information. The given network may not be targeted for the mHealth study. There is lots of misleading network information for the mHealth study  [17] [18] [19] . (3)  In their work, however, it is unable to control the amount of information shared among linked users, which is not flexible for the mHealth study  [20, 21] .\n\nIn this paper, we propose a cohesion-based reinforcement learning for the mHealth and derive two algorithms. It is in an online, actor-critic setting. The aim is to explore how to share information across similar users in order to improve the performance. The main contributions of this paper are summarized as follows:  (1)  to the best of our knowledge, this is the first online (actor-critic) RL method for the mHealth. (2) Current evidence verifies the wide existence of networks among users  [20] [21] [22] . We improve the online RL by considering the network cohesion among users. Such improvement makes it the first network constrained (actorcritic) RL method to the best of our knowledge. It is able to relieve the tough problem of current online decision-making methods for the mHealth by reducing variance at the cost of inducing bias. Current online RL learns a separate policy for each user. However, there are too few of samples to support the separate online learning, which leads to unsatisfactory interventions (policies) for the users. (3) Our method doesn't require the given network cohesion. We propose a method to learn the network intentionally for the mHealth study. It makes use of the warm start trajectories in the online learning, which are expected to represent the users' properties. (4) Compared with  [17] , the proposed method has a tuning parameter, which allows us to control how much information we should share with similar users. It is worth mentioning that our method may not be limited to mHealth. It can be applied to other health-related tasks. Extensive experiment results on the HeartSteps dataset verifies that our method can achieve clear improvement over the Separate-RL."
     },
     {
-      "title": "2. PRELIMINARIES"
+      "title": "PRELIMINARIES"
     },
     {
-      "title": "2.1. Markov Decision Process (MDP)",
+      "title": "Markov Decision Process (MDP)",
       "text": "We assume the mHealth intervention is a Markov Decision Process (MDP)  [23] [24] [25] [26]  that consists of a 5-tuple {S, A, P, R, \u03b3}, where S is the state space and A is the action space. P : S \u00d7 A \u00d7 S \u2192 [0, 1] is the state transition model in which P (s, a, s ) indicates the probability of transiting from one state s to another s after taking action a; R (s, a, s ) is the corresponding immediate reward for such transition where R : S \u00d7 A \u00d7 S \u2192 R. For simplicity, the expected immediate reward R (s, a) = E s \u223cP [R (s, a, s )] is assumed to be bounded over the state and action spaces. \u03b3 \u2208 [0, 1) is the discount factor that reduces the influence of future rewards. To allow for the matrix operators, the state space S and action space A are assumed to be finite, though very large in mHealth.\n\nThe policy of an MDP is to choose actions for any state s \u2208 S in the system  [15, 24] . There are two types of policies: (1) the deterministic policy \u03c0 : S \u2192 A selects an action directly for the state, and (2) the stochastic policy \u03c0 : s \u2208 S \u2192 \u03c0 (\u2022 | s) \u2208 P (A) chooses the action for any state s by providing s with a probability distribution over all the possible actions  [23] . In mHealth, the stochastic policy is preferred due to two reasons: (a) current evidence shows that some randomness in the action is likely to draw users' interest, thus helpful to reduce the intervention burden/habituation  [1, 3, 27] ; (b) though some deterministic policy is theoretically optimal for the MDP, however, we do not know where it is for the large state space on the one hand and the MDP is a simplification for the complex behavioral process on the other; some variation may be helpful to explore the system and search for a desirable policy  [3] . We consider the parameterized stochastic policy, \u03c0 \u03b8 (a | s), where \u03b8 \u2208 R m is the unknown parameter. Such policy is interpretable in the sense that we could know the key features that contribute most to the policy by analyzing the estimated \u03b8, which is important to behavior scientists for the state (feature) design  [1, 3] .\n\nIn RL, value is a core concept that quantifies the quality of a policy \u03c0  [15] . There are two definitions of values: the state value and the state-action (Q-) value  [28] . In mHealth, the Q-value is considered because the model (i.e. state transition and immediate reward) is assumed to be unknown, and Q-value allows for action selection without knowing the model while the state value requires the model for the action selection  [26] . Formally, the Q-value Q \u03c0 (s, a) \u2208 R |S|\u00d7|A| measures the total amount of rewards an agent can obtain when starting from state s, first choosing action a and then following the policy \u03c0. Specially, the discounted reward is one of the most commonly used value measures\n\nThe goal of RL is to learn an optimal policy \u03c0 * that maximizes the Q-value for all the state-action pairs via interactions with the dynamic system  [23] . The objective is \u03b8 * = arg max \u03b8 J (\u03b8), where\n\nand d ref (s) is the reference distribution of states (e.g. the distribution of initial states); Q \u03c0 \u03b8 is the value for the policy \u03c0 \u03b8 . According to (2), we have to learn the Q \u03c0 \u03b8 for all the state-action pairs to determine the objective (2) and, after then, to improve the policy. Thus in this paper, we employ the actor-critic algorithm. It is an alternating updating algorithm between two steps untill convergence. At each iteration, the critic updating estimates the Q-value function (i.e. policy evaluation, cf. Section 2.2 and 2.3) for the lastest policy; the actor updating (i.e. policy improvement, cf. Section 2.4) learns a better policy based on the newly estimated Q-value. Moreover, the actor-critic algorithm has great properties of quick convergence with low variance and learning continuous policies  [24] ."
     },
     {
-      "title": "2.2. Bellman Equation and Q-value Estimation",
+      "title": "Bellman Equation and Q-value Estimation",
       "text": "It is well known that due to the Markovian property, the Q-value satisfies the linear Bellman equation  [29]  for any policy \u03c0:\n\nIt has the matrix form as\n\nwhere q \u03c0 and r are vectors both with |S| |A| elements; P \u2208 R |S||A|\u00d7|S| is the stochastic state transition matrix, in which P ((s, a) , s ) = P (s, a, s ); \u03a0 \u03c0 \u2208 R |S|\u00d7|S||A| is the stochastic policy matrix, where \u03a0 \u03c0 (s, (s, a)) = \u03c0 (a | s)  [26] . Once both the reward and the state transition models are given  [30] , it is easy to obtain the analytical solution as q \u03c0 = (I -\u03b3P\u03a0 \u03c0 ) -1 r.\n\nHowever, there are two factors making it impossible to have the analytical solution for the Q-value estimation: (a) in mHealth, both reward r and state transition P (i.e. P) models are unknown. (b) the state space in mHealth is usually very large or even infinite, which makes it impossible to directly learn the Q-value due to lack of observations for sharper learning and too high storage requirements, i.e. O (|S| |A|) to only store the Q-value table. We resolve these problems via the parameterized function approximation, which assumes that Q \u03c0 is in a low dimensional space:\n\n, where w \u2208 R u is the unknown variable and x (s, a) is a feature processing step that combines information in the state and action. We then learn the value Q w from observations via a supervised learning paramdigm, which, however, is much more challenging than the general supervised learning since the Q-value is not directly observed  [23] . As a direct solution, the Monte Carlo (MC) method draws very deep trajectories to obtain the observation of actual Q value. Although MC can provide an unbiased estimation of Q w , it is not suitable for mHealth since MC can't learn from the incomplete trajectory  [15] . Such case requires massive sampling from users, which, however, is very labor-intensive and expensive in time. As a central idea of RL  [15] , the temporal-difference (TD) learning is able to make use of the Bellman equation (  3 ) and to learn the value from the incomplete trajectories. The learned result of TD has the property of low variance."
     },
     {
-      "title": "2.3. The critic updating: Least-Squares TD for Q-value (LSTDQ) Estimation",
+      "title": "The critic updating: Least-Squares TD for Q-value (LSTDQ) Estimation",
       "text": "In mHealth, though the data for all users is abundant, the data for each user is limited in size. We employ the least-square TD for the Q-value (LSTDQ) estimation, due to its advantage of efficient use of samples over the pure temporal-difference algorithms  [26, 31] . The goal of LSTDQ is to learn a Q w to approximately satisfy the Bellman equation (  3 ), by minimizing the TD error  [30]  as\n\nwhere w = h is a fixed point problem and h is a function of w; X is a designed matrix consisting of all the state and action pairs in the MDP; D describes the distributions over the state and action pairs. Since the state transition P is unknown and X is too large to form in mHealth, we can not directly solve  (4) . Instead, we have to make use of the trajectories collected from N users, i.e.\n\nt} summarizes all the t + 1 tuples for the n-th user and U i is the i-th tuple in D n .\n\nCurrent online contextual bandit (i.e. a special RL with \u03b3 = 0) methods for mHealth assume that all users are completely heterogeneous. They share no information and run a separate algorithm for each user  [1] . Following this idea, we extend  [1]  to the separate RL setting. The objective for the n-th user is defined as\n\n(5)\n\nis the value feature at the next time point. For the sake of easy derivation, we define the following matrices to store the actual observations\n\nwhere u is the length of the sample feature for the Q-value approximation, t is the current time point in the online RL learning procedure (i.e. the current trajectory length),\n\nstore the reward of all N users at all the t time points. To prevent the overfitting when t is small at the beginning of online RL learning, the \u2113 2 norm based constraint is considered in the objective as follows\n\nThe LSTDQ provides a closed-form solution\n\nfor {n} N n=1 , where w \u03b8n is a function of the policy parameter \u03b8 n ."
     },
     {
-      "title": "2.4. The actor updating for policy improvement",
+      "title": "The actor updating for policy improvement",
       "text": "In mHealth, the reference distribution of states d ref (s) is unknown and hard to estimate due to the lack of samples. We set d ref (s) as the empirical distribution of states. Accordingly, the observations in the trajectory, i.e. D n , are used to form the objective for the actor updating \u03b8 n = arg max \u03b8n J (\u03b8 n ), where\n\nis the constraint to make (9) a well-posed problem and \u03b6 a is the tuning parameter that controls the strength of the smooth penalization  [1] . We use J (\u03b8 n ) rather than J (\u03b8 n ) in  (9)  to indicate that the objective function for the actor updating is defined based on the Qvalue estimation.\n\nSince the critic updating results in a closed-form solution  (8) , we could substitute the expression (8) into the objective for the actor updating  (9) . Such case, however, leads to a very complex optimization problem. In the case of large feature space, one can recursively update w \u03b8 and \u03b8 n to reduce the computational cost."
     },
     {
-      "title": "3. NETWORK COHESION BASED ONLINE ACTOR-CRITIC RL",
+      "title": "NETWORK COHESION BASED ONLINE ACTOR-CRITIC RL",
       "text": "It is a famous phenomenon observed in lots of social behavior studies  [32, 33]  that people are widely connected in a network and linked users tend to have similar behaviors. Advances in social media help a lot to record the relational information among users, which ensures the availability of network information for health-related studies. Besides, individuals are widely connected due to the similar features, such as age, gender, race, religion, education level, work, income, other socioeconomic status, medical records and genetics features etc  [22] . However, for simple study, current online methods for the mHealth simply assume that users are completely different; they share no information among users and learn a separate RL for each user by only using his or her data. Such assumption works well in the ideal condition where the sample drawn from each user is large in size to support the separate online learning. However, though the data for all users is abundant, the data for each user is limited in size. For example at the beginning of online learning, there are t = 5 tuples, which is hardly enough to support a separate learning and likely to result in unstable policies. From the perspective of optimization, the problem of lack of samples badly affects the actor-critic updating not only at the beginning of online learning but also along the whole learning process. This is because the actor-critic objective functions are non-convex and nonlinear; the bad solution at the beginning of online learning would bias the optimization to sub-optimal directions. Besides, the policy achieved at the early stage of online learning is of bad user experience, which is likely for the users to be inactive with or even to abandon the mHealth.\n\nDifferent from current methods, we consider the phenomenon that a user is similar to some (but not all) users, and similar users behave similar but not completely identical to each other. To this end, we propose a cohesionbased online RL method for the mHealth study. We aim to understand how to share information across similar users in order to improve the performance."
     },
     {
-      "title": "3.1. Construct the network cohesion by using the warm start trajectory (WST)",
+      "title": "Construct the network cohesion by using the warm start trajectory (WST)",
       "text": "We assume there is an undirected network cohesion connecting similar users, i.e. G = (V, E), where V = {1, 2, \u2022 \u2022 \u2022 , N } is the set of nodes (representing users) and E \u2282 V \u00d7 V is the edge set. Altough advanced social medias, like Facebook, Twitter and Linkedin, could provide us ith various network information, they are not designed for the mHealth. There is noisy and misleading relational information in the network for mHealth WS  [17] [18] [19] [34] [35] [36] [37] [38] [39] [40] [41] [42] [43] . Thus, we want to learn the network cohesion intentionally for the mHealth by measuring the similarities between the related behaviors of users.\n\nIn RL, the MDP provides a mathematical tool to describe the property of users in a specific mHealth study 2 . By measuring the similarities among the users' MDPs , we could 2. The MDPs of one user on two diverse mHealth studies should be very different; for example, the MDP in the HeartSteps study  [44]  for one user should be different from that in the alcohol control  [8, 9]  study.\n\nlearn the network cohesion targeted to that mHealth study. However, the MDP models are unknown to the RL problem. Instead, the warm start trajectories (WSTs) of all the N users are available, which provide the observation of users. Thus, we use the WSTs for the graph learning, i.e.\n\nis the WST for the n-th user. Since an MDP consists of the state transistion and immediate reward model, the feature for the cohesion network learning is constructed by stacking the states and rewards in the WST as follows\n\nfor n \u2208 {1, \u2022 \u2022 \u2022 , N }. Note that the action or policy is not part of an MDP. To reduce the influence of random actions in the WST, we get rid of the temporal order by sorting all the elements in v n  (10) . Then the benchmark method, i.e. Knearest neighbor (KNN), is used to learn the neighboring information among users\n\nwhere v i \u2208 N (v j ) indicates that i-th node is the KNN of the j-th node  [45] ;  (11)  is an undirected Graph. The value of K controls how widely the users are connected. A large K indicates a wide connection among users and vice versa."
     },
     {
-      "title": "3.2. Model of cohesion based Actor-Critic RL",
+      "title": "Model of cohesion based Actor-Critic RL",
       "text": "The underlying assumption throughout this paper is that if two users are connected, their values and policies are constrained to be similar, e.g. w i -w j and \u03b8 i -\u03b8 j are small if i \u2194 j  [43, 46] . With the network cohesion C = (c ij ) N \u00d7N , the objective function for the critic updating is formed as follows\n\nx i hn -(ri + \u03b3y i wn)\n\n2 2 (12) s.t. N i,j=1 cijd (hi, hj) \u2264 \u03b41 and N i,j=1 cijd (wi, wj) \u2264 \u03b42,\n\nwhere\n\ndesigned matrices that consist of all the N users' variables (each column summarizes the unknown varibile of one user); d (h i , h j ) is a distance measure between two vectors; usually we set d (\u2022, \u2022) as the Euler distance. With the matrix notations in Section 2.3, we turn (12) into the following two-level nested optimization problems\n\nwhere \u03a6 n is a designed matrix to facilitate the optimization of (  14 ). The 1st level  (13)  projects the Bellman image onto a linear space (we refer (13) as the projection step); the 2nd level (  14 ) deals with the fixed point problem (i.e. the fixedpoint step)  [47] .\n\nThe objective for the actor updating is defined as follows\n\nwhere\n\nT w \u03b8n is the estimated value for the n-th policy \u03c0 \u03b8n and\n\nAlthough we are able to obtain a closed-form solution for the critic updating  (12) , to reduce the computational costs, we substitute the solution in value for { w n } N n=1\n\nrather than the closed-form expression of { w \u03b8n } N n=1 into the actor updating. The actor updating algorithm performs the maximization of (  16 ) over \u0398, which is computed via the Sequential Quadratic Programming (SQP) algorithm. We use the implementation of SQP with finite-difference approximation to the gradient in the FMINCON function of Matlab.\n\nIn the objectives (  13 ), (  14 ) and (  16 ), \u00b5 1 , \u00b5 2 and \u00b5 3 are the tuning parmaters to control the strength of the network cohesion constraints. It is an advantage of our methods over the network based bandit  [17] . When \u00b5 1 , \u00b5 2 , \u00b5 3 \u2192 \u221e, the connected users are enforced to have identical values and policies. When \u00b5 1 , \u00b5 2 , \u00b5 3 = 0, there is no network cohesion constraint. In such case, our method is equivalent to the separate online RL method. Compared with the Separate-RL, the model complexity of our methods is reduced since their parameter domain is constrained via the network cohesion regularization. Such case ensures our methods to work well when the sample size is small. However, the optimization of our method is much more complex than that of the separate-RL. The updating rules of all the users are independent with each other in the separate-RL; while in our method, the optimization of all the users is all coupled together. In the following section, two actor-critic RL algorithms are proposed to deal the objectives (  13 ) and (  14 ). (13)  We first discuss how to minimize the objective for the projection step. The objective is"
     },
     {
-      "title": "4. ALGORITHM#1 FOR THE CRITIC UPDATE"
+      "title": "ALGORITHM#1 FOR THE CRITIC UPDATE"
     },
     {
-      "title": "4.1. Updating Rules for the Projection Step",
+      "title": "Updating Rules for the Projection Step",
       "text": "Algorithm 1 Two online actor-critic algorithms for the Cohesion-RL Input: T, T 0 , \u00b5 {1,2,3} , \u03b6 {1,2,3} , nAlg (i.e. the algorithm index).\n\n1: Initialize the states (s t,n ) p\u00d7N , where t = 0, and the policy parameters\n\nAt time point t, observe context s t,n for the n-th user."
     },
     {
@@ -109,35 +102,35 @@
       "text": "end for 8:\n\nConstruct the network cohesion via  (10) ,  (11)  Data preparation and feature construction (6) for the critic update and the actor update.\n\n12:\n\nCritic update to learn W t (value parameter) via  (24) . Critic update to learn W t (value parameter) via  (26) .\n\n16: end if 17:\n\nActor update to learn \u0398 t (policy paramter) via  (15) . and L = D -C \u2208 R N \u00d7N is a graph laplacian; D is a diagonal matrix whose elements are column (or row, as C is a symmetric matrix) sums of C, i.e. d ii = i c ij . The partial derivative of J 1 , i.e. the 1st term in  (17) , with respect to h n is\n\nSummarizing the partial derivatives with respect to all the variables in H\n\nwhere vec\n\nis a diagonal matrix with the n-th diagonal element equal to 1, all the other equal to zero; \u2297 indicates the Kronecker product between two matrices resulting in a block matrix.\n\nLet\n\nWe have a simpler formulation for the \u2202J 1 /\u2202vec (H) as follows\n\n(21) The partial derivatives of the 2nd term in  (17)\n\nAccording to the Encapsulating Sum  [48] , we have\n\nwhere I N \u2208 R N \u00d7N and I u \u2208 R u\u00d7u are identical matrices.\n\nSetting the gradient of J in  (17)  with respect to vec (H) to zero gives the closed-form solution for the projection step as follows  (14)  Considering the 1st term in the fixed point step  (14)  gives"
     },
     {
-      "title": "4.2. Updating Rules for the Fixed Point step",
+      "title": "Updating Rules for the Fixed Point step",
       "text": "and finally results in an easy solution for the critic updating (24) (cf. Theorem 1). Letting P = \u03a6 \u2297 -\u03b3F 3 , we have\n\nThe partial derivative of O 1 with respect to vec (W) is\n\nConsidering the partial derivative of the cohesion constraint and the Frobenius norm based smooth constraint with respect to vec (H), and setting the overll partial derivative to zero, i.e. \u2202O/\u2202vec (W) = 0, we can obtain the following closed-form solution\n\nwhere\n\n) is a symmetric and positive definite matrix, which leads to an easy critic updating rule in  (24) .\n\nThen the eigenvalues of A \u2297 B  [49] , where \u2297 is the Kronecker Product, are"
     },
     {
-      "title": "5. ALGORITHM#2 FOR THE CRITIC UPDATE",
+      "title": "ALGORITHM#2 FOR THE CRITIC UPDATE",
       "text": "In this section, we provide another updating rule for the critic update (i.e. policy improvement). Note that to prevent the overfitting when the sample size is very small, the conventional LSTDQ usually employs the \u2113 2 constraint on the variable H in the projection step. They do not put the \u2113 2 constraint on the fixed-point variable W  [30, 47] . Following this idea, we have a simpler objective function for the critic update as\n\nAccording to the derivation in Section 4.1 that considers the Frobenius norm based smooth constraint, the updating rule for the projection step is  (23) . In the fixed-point step, the objective is simply w n = h n (i.e. a fixed-point problem), which leads to vec (W) = vec H .\n\nThus, we have the closed-form solution for vec (W) as follows\n\nIt is simpler than the 1st updating rule for the critic update  (24) ."
     },
     {
-      "title": "6. EXPERIMENT RESULTS",
+      "title": "EXPERIMENT RESULTS",
       "text": "We verify the proposed methods on the HeartSteps dataset. It has two choices for an action, i.e. {0, 1} , where a = 1 means sending the positive intervention, while a = 0 indicates no intervention  [3] . Specifically, the stochastic policy is assumed to be in the form\n\n, where \u03b8 \u2208 R m is the unknown parameter and \u03c6 (\u2022, \u2022) is a feature process that combines the information in actions and states, i.e. \u03c6 (s, a) = [as , a] \u2208 R m ."
     },
     {
-      "title": "6.1. The HeartSteps Dataset",
+      "title": "The HeartSteps Dataset",
       "text": "To verify the performance of our method, we use a dataset from a mobile health study, called HeartSteps  [44] , to approximate the generative model. This is a 42-day mHealth intervention that aims to increase the users' steps they take each day by providing positive treatments (i.e. interventions), which are adapted to users' ongoing status, such as suggesting users to take a walk after long sitting  [44] , or to do some exercises after work.\n\nA trajectory of T tuples D = {(s i , a i, r i ) | i = 1, \u2022 \u2022 \u2022 , T } are generated for each user  [1, 3] . The initial state is drawn from the Gaussian distribution S 0 \u223c N p {0, \u03a3}, where \u03a3 is a p \u00d7 p covariance matrix with pre-defined elements. The action a t for 0 \u2264 t \u2264 T 0 is drawn from the random TABLE  1  The performance of 3 online RLs vs. the rising trajectory length T \u2208 {50, 150}, for the experiment setting (S1).\n\npolicy, with a probability of 0.5 to provide interventions, i.e. \u00b5 (1 | s) = 0.5 for all states s. Such process is called drawing warm start trajectory (WST) via the micro-randomized trials  [4, 44] , and T 0 is the length of the WST. When t \u2265 T 0 , we start the actor-critic updating, and the action is drawn from the learned policy, i.e. a t \u223c \u03c0 \u03b8t (\u2022 | s t ). When t \u2265 1, the state and immediate reward are generated as follows\n\nwhere \u03b2 = {\u03b2 i } 14 i=1 is the main parameter for the MDP and -\u03b2 13 S t,3 is the treatment fatigue; {\u03be t,i } p i=1 \u223c N 0, \u03c3 2 s is the noise in the state  (27)  and t \u223c N 0, \u03c3 2 r is the noise in the reward model  (28) .\n\nAs it is known to us, the individuals are generally more or less different from each other, and each individual is similar to a part, but not all, of the individuals. In the mHealth and RL study, an individual is abstracted as an MDP, which is determined by the value of \u03b2, cf. (  27 ) and  (28) . To achieve a more practical dataset compared with  [1, 3, 4] , we come up with a method to generate N users (i.e. \u03b2s) that satisfy the above requirements in two steps: (a) manually design V basic \u03b2s, i.e.\n\nwhere \u03b4 i \u223c N (0, \u03c3 b I 14 ) is the noise in the MDPs and I 14 \u2208 R 14\u00d714 is an identity matrix. After such processing, the individuals are all different from the others. The value of \u03c3 b specifies how different the individuals are. In the experiments, the number of groups is set as V = 3 (each group has N v = 15 people, leading to N = 45 users involved in the experiment). The \u03b2 basic 's for the V groups are set as follows\n\n40, 0.25, 0.35, 0.65, 0.10, 0.50, 0.22, 2.00, 0.15, 0.20, 0.32, 0.10, 0.45, 800] \u03b2 basic 2 =[0.35, 0.30, 0.30, 0.60, 0.05, 0.65, 0.28, 2.60, 0.35, 0.45, 0.45, 0.15, 0.50, 650] \u03b2 basic 3 =[0.20, 0.50, 0.20, 0.62, 0.06, 0.52, 0.27, 3.00, 0.15, 0.15, 0.50, 0.16, 0.70, 450]."
     },
     {
-      "title": "6.2. Compared Methods and Parameter Settings",
+      "title": "Compared Methods and Parameter Settings",
       "text": "There are three online actor-critic RL methods for the comparison: (a) Separate-RL, which is an extension of the online actor-critic contextual bandit in  [1]  to the online actor-critic reinforcement learning. It learns a separate RL policy for each user by only using his or her data. 1,238.4 1,239.3 1,238.6 1,239.5 1,332.3 1,341.1 1,343.3 1,342.1 1,394.4 1,395.6 1,396.8 1,397.4\n\n(a) Discount Factor when \u03b3 = 0 Average Reward Separate-RL Cohesion-RL#1 Cohesion-RL#2 T = 50 T = 80 T = 110 T = 150 1 3 0 0 1 3 5 0 1 4 0 0 1 4 5 0 1 5 0 0 1 5 5 0 1 6 0 0\n\n1,346.3 1,374.4 1,386 1,388.5 1,488.4 1,497.7 1,503.1 1,502.6 1,505.1 1,508.9 1,513.3 1,515.3\n\n(b) Discount Factor when \u03b3 = 0.6 Average Reward Separate-RL Cohesion-RL#1 Cohesion-RL#2 T = 50 T = 80 T = 110 T = 150 1 2 0 0 1 3 0 0 1 4 0 0 1 5 0 0 1 6 0 0\n\n1,265.2 1,305.5 1,312.4 1,315.2 1,542.7 1,556.3 1,565.8 1,570 1,556.5 1,564.7 1,574.6 1,577.8 (c) Discount Factor when \u03b3 = 0.95 Average Reward Separate-RL Cohesion-RL#1 Cohesion-RL#2 T0 = 5 T0 = 10 T0 = 15 T0 = 20 1 1 0 0 1 2 0 0 1 3 0 0 1 4 0 0 1 5 0 0\n\n1,194 1,239.3 1,256 1,380.8 1,324.7 1,343.2 1,354.8 1,358.9 1,396.7 1,397.2 1,398.4 1,399.1\n\n(a) Discount Factor when \u03b3 = 0 Average Reward Separate-RL Cohesion-RL#1 Cohesion-RL#2 T0 = 5 T0 = 10 T0 = 15 T0 = 20 1 2 0 0 1 3 0 0 1 4 0 0 1 5 0 0 1 6 0 0\n\n1,254.1 1,374.4 1,432.2 1,463.6 1,487.9 1,494.4 1,488.6 1,505.7 1,515.2 1,508.8 1,510.7 1,516.8 1,245.1 1,305.5 1,392.9 1,434.4 1,554.7 1,554.1 1,559.1 1,564.1 1,568.5 1,577 1,569.8 1,574.6 (c) Discount Factor when \u03b3 = 0.95 Average Reward Separate-RL Cohesion-RL#1 Cohesion-RL#2 (b) the length of warm start trajectory is set as T 0 = 10; (c) to reduce the number of parameters in the algorithm, the parameters for the cohesion constraint in our methods are set as \u00b5 1 = 0.1, \u00b5 3 = \u00b5 1 and \u00b5 2 = 0.01\u00b5 1 ."
     },
     {
-      "title": "6.3. Evaluation Metrics",
+      "title": "Evaluation Metrics",
       "text": "We use the expectation of long run average reward (ElrAR) E [\u03b7 \u03c0 \u0398 ] to quantify the quality of the estimated policy \u03c0 \u0398 on a set of N =45 individuals. Here \u03c0 \u0398 summarizes the policies for all the 45 users, in which \u03c0 \u03b8n is the n-th user's policy. Intuitively, ElrAR measures how much average reward in the long run we could totally get by using the learned policy \u03c0 \u0398 on the testing users (i.e. MDPs), for example measuring how much alcohol users have in a fixed time period in the alcohol use study  [8, 9] . Specifically in the HeartSteps, ElrAR measures the average steps that users take per day over a long time; a larger ElrAR corresponds to a better performance. The average reward for the n-th user, i.e. \u03b7 \u03c0 \u03b8n , is calculated by averaging the rewards over the last 4, 000 elements in a trajectory of 5, 000 tuples under the policy \u03c0 \u03b8n , i.e. \u03b7 \u03c0 \u03b8n = 1\n\nT -i T j=i R s j,n , a j,n \u223c \u03c0 \u03b8n , where T = 5000 and i = 1000. Then ElrAR E [\u03b7 \u03c0 \u0398 ] is approximated by averaging over the 45 \u03b7 \u03c0 \u03b8n 's, i.e. E [\u03b7 \u03c0 \u0398 ] \u2248 1 N N n=1 \u03b7 \u03c0 \u03b8n ."
     },
     {
-      "title": "6.4. Comparisons in three experiment settings",
+      "title": "Comparisons in three experiment settings",
       "text": "The following experiments are carried out to verify different aspects of the three online actor-critic RL algorithms:\n\n(S1) In this part, the trajectory length of all users ranges as T \u2208 {50, 80, 110, 150}. The experiment results are showed in Table  1  and Fig.  2 . There are two sub-tables in Table  1 ; each sub-table displays the ElrAR of three RL methods (i.e. Separate-RL, Cohesion-RL#1 and Cohesion-RL#2 respectively) under six \u03b3 settings; the last row shows the average ElrAR over the results of all the six \u03b3s. In Fig.  2 , there are three sub-figures; each sub-figure illustrates the results of three methods under one \u03b3 setting. As we shall see that the performance of three methods generally increases as T rises. The performance of our RL methods, i.e. Cohesion-RL#1 and Cohesion-RL#2, have an obvious advantage over the Separate-RL under all the parameters settings in (S1). Besides, the advantage of our methods over Separate-RL slowly decreases as T rises. Compared with Separate-RL, our methods averagely improve 156.0 steps and 188.3 steps when T = 50, and averagely improve 136.3 steps and 163.7 steps when T = 150.\n\n(S2) In this part, the length of warm start trajectory ranges as T 0 = {5, 10, 15, 20}, which indicates that the RL methods wait longer and longer before starting the online learning. The experiment results are summarized in Table  2  and Fig.  2 . As we shall see that as T 0 rises across this range, the performance of Separate-RL increases dramatically and Cohesion-RL#1 rises gradually, while Cohesion-RL#2 remains stable. Thus, the average advantage of our method over Separate-RL decreases dramatically as T 0 rises, i.e., from 224.07 steps and 261.67 steps when T 0 = 5 to 33.26 steps and 52.09 steps when T 0 = 20. Such case suggests that our methods work perfectly when the WST is very short. In this case, the mining of network cohesion is necessary for the online RL learning. In general, however, our methods still outperform Separate-RL significantly.\n\n(S3) The parameter of the Network-Cohesion constraint \u00b5 1 for the projection step ranges from 0.001 to 10. To reduce the number of parameters in our algorithm, we simply set \u00b5 2 = 0.01\u00b5 1 (i.e. the cohesion constraint for the fixed-point step) and \u00b5 3 = \u00b5 1 (i.e. the cohesion constraint for the actor updating). The experiment results are illustrated in Fig.  3 , where there are three sub-figures. Each sub-figure shows the results of three online RLs vs. five \u00b5 1 settings under one \u03b3. As we shall see that as \u00b5 1 rises across this range, our method always obtains superior performance compared with Separate-RL. Specially, Cohesion-RL#2 is very stable and always better than Cohesion-RL#1. Such case indicates that it is reliable to follow the idea on how to introduce the \u2113 2 constraint in LSTDQ. In Fig.  3 , since Separate-RL does not have the Network-Cohesion constraint, its result keeps unchanged.\n\nConsider (S1) and (S2) for the Separate-RL, we find: (a) the lack of samples at the beginning of the online learning may bias the optimization direction, which badly influence the performance even when the trajectory is very long; (b) Compared with T , the increase of T 0 has a more important influence on the performance. In (S1), where T 0 = 10 is fixed and T ranges from T = 50 to T = 150, the performance of Separate-RL increases 32.74 steps. In (S2), where T = 80 is fixed and T 0 rises from T 0 = 5 to T 0 = 20, Separate-RL achieve an improvement of 210.51 steps, which is much significant than the rise caused by the rising T ."
     },
     {
-      "title": "7. CONCLUSIONS AND DISCUSS",
+      "title": "CONCLUSIONS AND DISCUSS",
       "text": "This paper presents a first attempt to employ the online actor-critic reinforcement learning for the mHealth. Following the current methods that learn a separate policy for each user, the Separate-RL can not achieve satisfactory results. This is due to that data for each user is very limited in size to support the separate learning, leading to unstable policies that contain lots of variances. After considering the universal phenomenon that users are generally connected in a network and linked users tend to have similar behaviors, we propose a network cohesion constrained actorcritic reinforcement learning for mHealth. It is able to share the information among similar users to convert the limited user information into sharper learned policies. Extensive experiment results demonstrate that our methods outperform the Separate-RL significantly. We find it easy to apply the proposed methods to other health-related tasks."
     },
     {
@@ -173,27 +166,19 @@
   ],
   "references": [
     {
-      "journal": "reward when",
-      "raw": "T = 150 \n\t \n\t \n\t\t reward when \n\t\t \n\t \n\t reward when T = 150"
-    },
-    {
       "title": "Separate-RL Cohesion-RL#1 Cohesion-RL#2 Separate-RL Cohesion-RL#1 Cohesion-RL#2 0 1238",
-      "doi": "10.33196/wbl201704022201",
-      "raw": "Separate-RL Cohesion-RL#1 Cohesion-RL#2 Separate-RL Cohesion-RL#1 Cohesion-RL#2 0 1238 \n\t\t 10.33196/wbl201704022201 \n\t\t 4\u00b181.6 1332.3\u00b157.0 1394.4\u00b168.5 1239.5\u00b183.9 1342.1\u00b159.7 1397.4\u00b168.6 0.2 1272.9\u00b183.7 1376.1\u00b155.8 1428.1\u00b164.1 1279.5\u00b183.4 1386.4\u00b156.0 1429.2\u00b164.3 0.4 1286.7\u00b185.3 1429.3\u00b153.0 1472.4\u00b158.7 1316.4\u00b177.5 1436.2\u00b155.6 1472.4\u00b159.0 0.6 1346.3\u00b175.9 1488.4\u00b155.5 1505.1\u00b155.4 1388.5\u00b170.8 1502.6\u00b152.4 1515.3\u00b155.9 0.8 1373.9\u00b166.2 1550.8\u00b152.6 1556.7\u00b154.0 1440.7\u00b163.5 1560.4\u00b153.1 1570.0\u00b154.0 0.95 1265.2\u00b178.3 1542.7\u00b150.7 1556.5\u00b149.6 1315.2\u00b168.6 1570.0\u00b150.3 1577.8\u00b151.3 Avg. 1297.2 1453.3 1485.5 1330.0 1466.3 1493.7 \n\t\t \n\t \n\t Separate-RL Cohesion-RL#1 Cohesion-RL#2 Separate-RL Cohesion-RL#1 Cohesion-RL#2 0 1238.4\u00b181.6 1332.3\u00b157.0 1394.4\u00b168.5 1239.5\u00b183.9 1342.1\u00b159.7 1397.4\u00b168.6 0.2 1272.9\u00b183.7 1376.1\u00b155.8 1428.1\u00b164.1 1279.5\u00b183.4 1386.4\u00b156.0 1429.2\u00b164.3 0.4 1286.7\u00b185.3 1429.3\u00b153.0 1472.4\u00b158.7 1316.4\u00b177.5 1436.2\u00b155.6 1472.4\u00b159.0 0.6 1346.3\u00b175.9 1488.4\u00b155.5 1505.1\u00b155.4 1388.5\u00b170.8 1502.6\u00b152.4 1515.3\u00b155.9 0.8 1373.9\u00b166.2 1550.8\u00b152.6 1556.7\u00b154.0 1440.7\u00b163.5 1560.4\u00b153.1 1570.0\u00b154.0 0.95 1265.2\u00b178.3 1542.7\u00b150.7 1556.5\u00b149.6 1315.2\u00b168.6 1570.0\u00b150.3 1577.8\u00b151.3 Avg. 1297.2 1453.3 1485.5 1330.0 1466.3 1493.7"
+      "doi": "10.33196/wbl201704022201"
     },
     {
       "title": "TABLE 2 The performance of 3 online RLs vs. the warm start trajectory length T 0 \u2208 {5, 20",
-      "doi": "10.7717/peerj-cs.759/table-4",
-      "raw": "TABLE 2 The performance of 3 online RLs vs. the warm start trajectory length T 0 \u2208 {5, 20 \n\t\t 10.7717/peerj-cs.759/table-4 \n\t \n\t \n\t\t ). \u03b3 Average reward when T 0 = 5 Average reward when T 0 = 20 \n\t\t \n\t \n\t for the experiment setting (S2 \n\t TABLE 2 The performance of 3 online RLs vs. the warm start trajectory length T 0 \u2208 {5, 20}, for the experiment setting (S2). \u03b3 Average reward when T 0 = 5 Average reward when T 0 = 20"
+      "doi": "10.7717/peerj-cs.759/table-4"
     },
     {
       "title": "Separate-RL Cohesion-RL#1 Cohesion-RL#2 Separate-RL Cohesion-RL#1 Cohesion-RL#2 0 1194",
-      "doi": "10.1201/9781420027228-47",
-      "raw": "Separate-RL Cohesion-RL#1 Cohesion-RL#2 Separate-RL Cohesion-RL#1 Cohesion-RL#2 0 1194 \n\t\t 10.1201/9781420027228-47 \n\t\t 0\u00b186.8 1324.7\u00b160.0 1396.7\u00b168.5 1380.8\u00b168.7 1358.9\u00b163.6 1399.1\u00b168.0 0.2 1183.8\u00b187.8 1380.5\u00b152.0 1427.4\u00b164.5 1410.1\u00b166.8 1408.0\u00b157.8 1430.2\u00b163.6 0.4 1200.4\u00b181.1 1433.2\u00b154.2 1469.2\u00b158.2 1423.7\u00b163.9 1453.9\u00b155.4 1471.3\u00b159.3 0.6 1254.1\u00b175.7 1487.9\u00b151.2 1515.2\u00b155.0 1463.6\u00b158.1 1505.7\u00b153.8 1516.8\u00b156.1 0.8 1291.8\u00b176.8 1532.7\u00b148.6 1562.3\u00b153.8 1519.8\u00b153.9 1541.3\u00b152.4 1552.9\u00b154.0 0.95 1245.1\u00b181.5 1554.7\u00b149.4 1568.5\u00b151.0 1434.4\u00b153.3 1564.1\u00b149.2 1574.6\u00b150.0 Avg. 1228.2 1452.3 1489.9 1438.7 1472.0 1490 \n\t\t \n\t \n\t Separate-RL Cohesion-RL#1 Cohesion-RL#2 Separate-RL Cohesion-RL#1 Cohesion-RL#2 0 1194.0\u00b186.8 1324.7\u00b160.0 1396.7\u00b168.5 1380.8\u00b168.7 1358.9\u00b163.6 1399.1\u00b168.0 0.2 1183.8\u00b187.8 1380.5\u00b152.0 1427.4\u00b164.5 1410.1\u00b166.8 1408.0\u00b157.8 1430.2\u00b163.6 0.4 1200.4\u00b181.1 1433.2\u00b154.2 1469.2\u00b158.2 1423.7\u00b163.9 1453.9\u00b155.4 1471.3\u00b159.3 0.6 1254.1\u00b175.7 1487.9\u00b151.2 1515.2\u00b155.0 1463.6\u00b158.1 1505.7\u00b153.8 1516.8\u00b156.1 0.8 1291.8\u00b176.8 1532.7\u00b148.6 1562.3\u00b153.8 1519.8\u00b153.9 1541.3\u00b152.4 1552.9\u00b154.0 0.95 1245.1\u00b181.5 1554.7\u00b149.4 1568.5\u00b151.0 1434.4\u00b153.3 1564.1\u00b149.2 1574.6\u00b150.0 Avg. 1228.2 1452.3 1489.9 1438.7 1472.0 1490."
+      "doi": "10.1201/9781420027228-47"
     },
     {
-      "title": "\u03b3 < 1 is the discounted reward RL, which is first compared in the online actor-critic setting for mHealth",
-      "raw": "\u03b3 < 1 is the discounted reward RL, which is first compared in the online actor-critic setting for mHealth \n\t\t \n\t \n\t (b) 0 < The value of \u03b3 specifies different RL methods: (a) \u03b3 = 0 means the contextual bandit In each comparision, the bold value is the best, and the blue itatlic value is the 2nd best. REFERENCES \n\t The value of \u03b3 specifies different RL methods: (a) \u03b3 = 0 means the contextual bandit []; (b) 0 < \u03b3 < 1 is the discounted reward RL, which is first compared in the online actor-critic setting for mHealth. In each comparision, the bold value is the best, and the blue itatlic value is the 2nd best. REFERENCES"
+      "title": "\u03b3 < 1 is the discounted reward RL, which is first compared in the online actor-critic setting for mHealth"
     },
     {
       "title": "An actor-critic contextual bandit algorithm for personalized interventions using mobile devices",
@@ -202,16 +187,14 @@
         "A Tewari",
         "S Murphy"
       ],
-      "year": 2014,
-      "raw": "An actor-critic contextual bandit algorithm for personalized interventions using mobile devices \n\t\t \n\t\t\t H Lei \n\t\t \n\t\t \n\t\t\t A Tewari \n\t\t \n\t\t \n\t\t\t S Murphy \n\t\t \n\t \n\t \n\t\t NIPS 2014 Workshop: Personalization: Methods and Applications \n\t\t \n\t\t\t 2014 \n\t\t\t \n\t\t \n\t \n\t H. Lei, A. Tewari, and S. Murphy, \"An actor-critic contextual bandit algorithm for personalized interven- tions using mobile devices,\" in NIPS 2014 Workshop: Personalization: Methods and Applications, pp. 1 -9, 2014."
+      "year": 2014
     },
     {
       "title": "An Online Actor Critic Algorithm and a Statistical Decision Procedure for Personalizing Intervention",
       "authors": [
         "H Lei"
       ],
-      "year": 2016,
-      "raw": "An Online Actor Critic Algorithm and a Statistical Decision Procedure for Personalizing Intervention \n\t\t \n\t\t\t H Lei \n\t\t \n\t\t \n\t\t\t 2016 \n\t\t \n\t\t \n\t\t\t University of Michigan \n\t\t \n\t \n\t PhD thesis \n\t H. Lei, An Online Actor Critic Algorithm and a Statistical Decision Procedure for Personalizing Intervention. PhD thesis, University of Michigan, 2016."
+      "year": 2016
     },
     {
       "title": "A batch, off-policy, actorcritic algorithm for optimizing the average reward",
@@ -223,9 +206,7 @@
         "R Sutton",
         "K Witkiewitz"
       ],
-      "year": 2016,
-      "journal": "CoRR",
-      "raw": "A batch, off-policy, actorcritic algorithm for optimizing the average reward \n\t\t \n\t\t\t S A Murphy \n\t\t \n\t\t \n\t\t\t Y Deng \n\t\t \n\t\t \n\t\t\t E B Laber \n\t\t \n\t\t \n\t\t\t H R Maei \n\t\t \n\t\t \n\t\t\t R S Sutton \n\t\t \n\t\t \n\t\t\t K Witkiewitz \n\t\t \n\t\t abs/1607.05047 \n\t \n\t \n\t\t CoRR \n\t\t \n\t\t\t 2016 \n\t\t \n\t \n\t S. A. Murphy, Y. Deng, E. B. Laber, H. R. Maei, R. S. Sutton, and K. Witkiewitz, \"A batch, off-policy, actor- critic algorithm for optimizing the average reward,\" CoRR, vol. abs/1607.05047, 2016."
+      "year": 2016
     },
     {
       "title": "Constructing justin-time adaptive interventions",
@@ -234,9 +215,7 @@
         "A Tewari",
         "S Murphy"
       ],
-      "year": 2015,
-      "journal": "Phd Section Proposal",
-      "raw": "Constructing justin-time adaptive interventions \n\t\t \n\t\t\t P Liao \n\t\t \n\t\t \n\t\t\t A Tewari \n\t\t \n\t\t \n\t\t\t S Murphy \n\t\t \n\t \n\t \n\t\t Phd Section Proposal \n\t\t \n\t\t\t \n\t\t\t 2015 \n\t\t \n\t \n\t P. Liao, A. Tewari, and S. Murphy, \"Constructing just- in-time adaptive interventions,\" Phd Section Proposal, pp. 1-49, 2015."
+      "year": 2015
     },
     {
       "title": "Deep correlational learning for survival prediction from multimodality datay",
@@ -247,8 +226,7 @@
         "J Huang"
       ],
       "year": 2017,
-      "doi": "10.1007/978-3-319-66185-8_46",
-      "raw": "Deep correlational learning for survival prediction from multimodality datay \n\t\t \n\t\t\t J Yao \n\t\t \n\t\t \n\t\t\t X Zhu \n\t\t \n\t\t \n\t\t\t F Zhu \n\t\t \n\t\t \n\t\t\t J Huang \n\t\t \n\t\t 10.1007/978-3-319-66185-8_46 \n\t \n\t \n\t\t International Conference on Medical Image Computing and Computer Assisted Intervention (MICCAI) \n\t\t \n\t\t\t 2017 \n\t\t \n\t \n\t J. Yao, X. Zhu, F. Zhu, and J. Huang, \"Deep corre- lational learning for survival prediction from multi- modality datay,\" in International Conference on Medi- cal Image Computing and Computer Assisted Intervention (MICCAI), 2017."
+      "doi": "10.1007/978-3-319-66185-8_46"
     },
     {
       "title": "Wsisa: Making survival prediction from whole slide histopathological images",
@@ -258,8 +236,7 @@
         "F Zhu",
         "J Huang"
       ],
-      "year": 2017,
-      "raw": "Wsisa: Making survival prediction from whole slide histopathological images \n\t\t \n\t\t\t X Zhu \n\t\t \n\t\t \n\t\t\t J Yao \n\t\t \n\t\t \n\t\t\t F Zhu \n\t\t \n\t\t \n\t\t\t J Huang \n\t\t \n\t \n\t \n\t\t IEEE Conference on Computer Vision and Pattern Recognition \n\t\t \n\t\t\t 2017 \n\t\t\t \n\t\t \n\t \n\t X. Zhu, J. Yao, F. Zhu, and J. Huang, \"Wsisa: Making survival prediction from whole slide histopathological images,\" in IEEE Conference on Computer Vision and Pattern Recognition, pp. 7234 -7242, 2017."
+      "year": 2017
     },
     {
       "title": "Seq2seq fingerprint: An unsupervised deep molecular embedding for drug discovery",
@@ -269,8 +246,7 @@
         "F Zhu",
         "J Huang"
       ],
-      "year": 2017,
-      "raw": "Seq2seq fingerprint: An unsupervised deep molecular embedding for drug discovery \n\t\t \n\t\t\t Z Xu \n\t\t \n\t\t \n\t\t\t S Wang \n\t\t \n\t\t \n\t\t\t F Zhu \n\t\t \n\t\t \n\t\t\t J Huang \n\t\t \n\t \n\t \n\t\t ACM Conference on Bioinformatics, Computational Biology, and Health Informatics \n\t\t \n\t\t\t ACM-BCB \n\t\t\t 2017 \n\t\t \n\t \n\t Z. Xu, S. Wang, F. Zhu, and J. Huang, \"Seq2seq fin- gerprint: An unsupervised deep molecular embedding for drug discovery,\" in ACM Conference on Bioinformat- ics, Computational Biology, and Health Informatics (ACM- BCB), 2017."
+      "year": 2017
     },
     {
       "title": "A smartphone application to support recovery from alcoholism: a randomized clinical trial",
@@ -283,11 +259,7 @@
         "D Shah"
       ],
       "year": 2014,
-      "doi": "10.1001/jamapsychiatry.2013.4642",
-      "journal": "JAMA Psychiatry",
-      "volume": "71",
-      "issue": "5",
-      "raw": "A smartphone application to support recovery from alcoholism: a randomized clinical trial \n\t\t \n\t\t\t D Gustafson \n\t\t \n\t\t \n\t\t\t F Mctavish \n\t\t \n\t\t \n\t\t\t M Chih \n\t\t \n\t\t \n\t\t\t A Atwood \n\t\t \n\t\t \n\t\t\t R Johnson \n\t\t \n\t\t \n\t\t\t M B . \n\t\t \n\t\t \n\t\t\t D Shah \n\t\t \n\t\t 10.1001/jamapsychiatry.2013.4642 \n\t \n\t \n\t\t JAMA Psychiatry \n\t\t \n\t\t\t 71 \n\t\t\t 5 \n\t\t\t 2014 \n\t\t \n\t \n\t D. Gustafson, F. McTavish, M. Chih, A. Atwood, R. Johnson, M. B. ..., and D. Shah, \"A smartphone application to support recovery from alcoholism: a randomized clinical trial,\" JAMA Psychiatry, vol. 71, no. 5, 2014."
+      "doi": "10.1001/jamapsychiatry.2013.4642"
     },
     {
       "title": "Development and evaluation of a mobile intervention for heavy drinking and smoking among college studen",
@@ -300,11 +272,7 @@
         "M Larimer"
       ],
       "year": 2014,
-      "doi": "10.1037/a0034747",
-      "journal": "Psychology of Addictive Behaviors",
-      "volume": "28",
-      "issue": "3",
-      "raw": "Development and evaluation of a mobile intervention for heavy drinking and smoking among college studen \n\t\t \n\t\t\t K Witkiewitz \n\t\t \n\t\t \n\t\t\t S Desai \n\t\t \n\t\t \n\t\t\t S Bowen \n\t\t \n\t\t \n\t\t\t B Leigh \n\t\t \n\t\t \n\t\t\t M Kirouac \n\t\t \n\t\t \n\t\t\t M Larimer \n\t\t \n\t\t 10.1037/a0034747 \n\t \n\t \n\t\t Psychology of Addictive Behaviors \n\t\t \n\t\t\t 28 \n\t\t\t 3 \n\t\t\t 2014 \n\t\t \n\t \n\t K. Witkiewitz, S. Desai, S. Bowen, B. Leigh, M. Kirouac, and M. Larimer, \"Development and evaluation of a mobile intervention for heavy drinking and smoking among college studen,\" Psychology of Addictive Behav- iors, vol. 28, no. 3, 2014."
+      "doi": "10.1037/a0034747"
     },
     {
       "title": "Harnessing different motivational frames via mobile phones to promote daily physical activity and reduce sedentary behavior in aging adults",
@@ -317,10 +285,7 @@
         "B Matthew",
         "C Jesse"
       ],
-      "year": 2013,
-      "journal": "Plos ONE",
-      "volume": "8",
-      "raw": "Harnessing different motivational frames via mobile phones to promote daily physical activity and reduce sedentary behavior in aging adults \n\t\t \n\t\t\t K Abby \n\t\t \n\t\t \n\t\t\t H Eric \n\t\t \n\t\t \n\t\t\t G Lauren \n\t\t \n\t\t \n\t\t\t W Sandra \n\t\t \n\t\t \n\t\t\t S Jylana \n\t\t \n\t\t \n\t\t\t B Matthew \n\t\t \n\t\t \n\t\t\t \u02d9 \n\t\t \n\t\t \n\t\t\t C Jesse \n\t\t \n\t \n\t \n\t\t Plos ONE \n\t\t \n\t\t\t 8 \n\t\t\t 2013 \n\t\t \n\t \n\t K. Abby, H. Eric, G. Lauren, W. Sandra, S. Jylana, B. Matthew, \u02d9.., and C. Jesse, \"Harnessing different motivational frames via mobile phones to promote daily physical activity and reduce sedentary behavior in aging adults,\" Plos ONE, vol. 8, 2013."
+      "year": 2013
     },
     {
       "title": "Technology-enhanced maintenance of treatment gains in eating disorders: Efficacy of an intervention delivered via text messaging",
@@ -330,11 +295,7 @@
         "R Meermann",
         "H Kordy"
       ],
-      "year": 2012,
-      "journal": "Journal of Consulting and Clinical Psychology",
-      "volume": "80",
-      "issue": "4",
-      "raw": "Technology-enhanced maintenance of treatment gains in eating disorders: Efficacy of an intervention delivered via text messaging \n\t\t \n\t\t\t S Bauer \n\t\t \n\t\t \n\t\t\t E Okon \n\t\t \n\t\t \n\t\t\t R Meermann \n\t\t \n\t\t \n\t\t\t H Kordy \n\t\t \n\t \n\t \n\t\t Journal of Consulting and Clinical Psychology \n\t\t \n\t\t\t 80 \n\t\t\t 4 \n\t\t\t 2012 \n\t\t \n\t \n\t S. Bauer, E. Okon, R. Meermann, and H. Kordy, \"Technology-enhanced maintenance of treatment gains in eating disorders: Efficacy of an intervention de- livered via text messaging,\" Journal of Consulting and Clinical Psychology, vol. 80, no. 4, 2012."
+      "year": 2012
     },
     {
       "title": "Mobile interventions for severe mental illness: design and preliminary data from three approaches",
@@ -347,11 +308,7 @@
         "D Jeste"
       ],
       "year": 2010,
-      "doi": "10.1097/nmd.0b013e3181f49ea3",
-      "journal": "The Journal of Nervous and Mental Disease",
-      "volume": "198",
-      "issue": "10",
-      "raw": "Mobile interventions for severe mental illness: design and preliminary data from three approaches \n\t\t \n\t\t\t C Depp \n\t\t \n\t\t \n\t\t\t B Mausbach \n\t\t \n\t\t \n\t\t\t E Granholm \n\t\t \n\t\t \n\t\t\t V Cardenas \n\t\t \n\t\t \n\t\t\t D Ben-Zeev \n\t\t \n\t\t \n\t\t\t . . \n\t\t \n\t\t \n\t\t\t D Jeste \n\t\t \n\t\t 10.1097/nmd.0b013e3181f49ea3 \n\t \n\t \n\t\t The Journal of Nervous and Mental Disease \n\t\t \n\t\t\t 198 \n\t\t\t 10 \n\t\t\t 2010 \n\t\t \n\t \n\t C. Depp, B. Mausbach, E. Granholm, V. Cardenas, D. Ben-Zeev, ..., and D. Jeste, \"Mobile interventions for severe mental illness: design and preliminary data from three approaches,\" The Journal of Nervous and Mental Disease, vol. 198, no. 10, 2010."
+      "doi": "10.1097/nmd.0b013e3181f49ea3"
     },
     {
       "title": "Mobile technologies among people with serious mental illness: opportunities for future services",
@@ -363,11 +320,7 @@
         "R Drake"
       ],
       "year": 2013,
-      "doi": "10.1007/s10488-012-0424-x",
-      "journal": "Administration and Policy in Mental Health and Mental Health Services Research",
-      "volume": "40",
-      "issue": "4",
-      "raw": "Mobile technologies among people with serious mental illness: opportunities for future services \n\t\t \n\t\t\t D Ben-Zeev \n\t\t \n\t\t \n\t\t\t K E Davis \n\t\t \n\t\t \n\t\t\t S Kaiser \n\t\t \n\t\t \n\t\t\t I Krzsos \n\t\t \n\t\t \n\t\t\t R E Drake \n\t\t \n\t\t 10.1007/s10488-012-0424-x \n\t \n\t \n\t\t Administration and Policy in Mental Health and Mental Health Services Research \n\t\t \n\t\t\t 40 \n\t\t\t 4 \n\t\t\t 2013 \n\t\t \n\t \n\t D. Ben-Zeev, K. E. Davis, S. Kaiser, I. Krzsos, and R. E. Drake, \"Mobile technologies among people with seri- ous mental illness: opportunities for future services,\" Administration and Policy in Mental Health and Mental Health Services Research, vol. 40, no. 4, 2013."
+      "doi": "10.1007/s10488-012-0424-x"
     },
     {
       "title": "A text message-based intervention for weight loss: randomized controlled trial",
@@ -381,11 +334,7 @@
         "W Griswold",
         "G Norman"
       ],
-      "year": 2009,
-      "journal": "Journal of Medical Internet Research",
-      "volume": "11",
-      "issue": "1",
-      "raw": "A text message-based intervention for weight loss: randomized controlled trial \n\t\t \n\t\t\t K Patrick \n\t\t \n\t\t \n\t\t\t F Raab \n\t\t \n\t\t \n\t\t\t M Adams \n\t\t \n\t\t \n\t\t\t L Dillon \n\t\t \n\t\t \n\t\t\t M Zabin-Ski \n\t\t \n\t\t \n\t\t\t C Rock \n\t\t \n\t\t \n\t\t\t W Griswold \n\t\t \n\t\t \n\t\t\t G Norman \n\t\t \n\t \n\t \n\t\t Journal of Medical Internet Research \n\t\t \n\t\t\t 11 \n\t\t\t 1 \n\t\t\t 2009 \n\t\t \n\t \n\t K. Patrick, F. Raab, M. Adams, L. Dillon, M. Zabin- ski, C. Rock, W. Griswold, and G. Norman, \"A text message-based intervention for weight loss: random- ized controlled trial,\" Journal of Medical Internet Re- search, vol. 11, no. 1, 2009."
+      "year": 2009
     },
     {
       "title": "Reinforcement Learning: An Introduction",
@@ -393,8 +342,7 @@
         "R Sutton",
         "A Barto"
       ],
-      "year": 2012,
-      "raw": "Reinforcement Learning: An Introduction \n\t\t \n\t\t\t R S Sutton \n\t\t \n\t\t \n\t\t\t A G Barto \n\t\t \n\t\t \n\t\t\t 2012 \n\t\t\t MIT Press \n\t\t\t Cambridge, MA, USA \n\t\t \n\t \n\t 2nd ed. \n\t R. S. Sutton and A. G. Barto, Reinforcement Learning: An Introduction. Cambridge, MA, USA: MIT Press, 2nd ed., 2012."
+      "year": 2012
     },
     {
       "title": "A contextual-bandit approach to personalized news article recommendation",
@@ -404,8 +352,7 @@
         "J Langford",
         "R Schapire"
       ],
-      "year": 2010,
-      "raw": "A contextual-bandit approach to personalized news article recommendation \n\t\t \n\t\t\t L Li \n\t\t \n\t\t \n\t\t\t W Chu \n\t\t \n\t\t \n\t\t\t J Langford \n\t\t \n\t\t \n\t\t\t R E Schapire \n\t\t \n\t \n\t \n\t\t International Conference on World Wide Web (WWW) \n\t\t \n\t\t\t 2010 \n\t\t\t \n\t\t \n\t \n\t L. Li, W. Chu, J. Langford, and R. E. Schapire, \"A contextual-bandit approach to personalized news ar- ticle recommendation,\" in International Conference on World Wide Web (WWW), pp. 661-670, 2010."
+      "year": 2010
     },
     {
       "title": "A gang of bandits",
@@ -414,8 +361,7 @@
         "C Gentile",
         "G Zappella"
       ],
-      "year": 2013,
-      "raw": "A gang of bandits \n\t\t \n\t\t\t N Cesa-Bianchi \n\t\t \n\t\t \n\t\t\t C Gentile \n\t\t \n\t\t \n\t\t\t G Zappella \n\t\t \n\t \n\t \n\t\t NIPS \n\t\t \n\t\t\t 2013 \n\t\t\t \n\t\t \n\t \n\t N. Cesa-Bianchi, C. Gentile, and G. Zappella, \"A gang of bandits,\" in NIPS, pp. 737-745, 2013."
+      "year": 2013
     },
     {
       "title": "Online clustering of bandits",
@@ -424,8 +370,7 @@
         "S Li",
         "G Zappella"
       ],
-      "year": 2014,
-      "raw": "Online clustering of bandits \n\t\t \n\t\t\t C Gentile \n\t\t \n\t\t \n\t\t\t S Li \n\t\t \n\t\t \n\t\t\t G Zappella \n\t\t \n\t \n\t \n\t\t ICML \n\t\t \n\t\t\t 2014 \n\t\t\t \n\t\t \n\t \n\t C. Gentile, S. Li, and G. Zappella, \"Online clustering of bandits,\" in ICML, pp. 757-765, 2014."
+      "year": 2014
     },
     {
       "title": "Revealing graph bandits for maximizing local influence",
@@ -433,8 +378,7 @@
         "A Carpentier",
         "M Valko"
       ],
-      "year": 2016,
-      "raw": "Revealing graph bandits for maximizing local influence \n\t\t \n\t\t\t A Carpentier \n\t\t \n\t\t \n\t\t\t M Valko \n\t\t \n\t \n\t \n\t\t AISTATS \n\t\t \n\t\t\t 2016 \n\t\t\t \n\t\t \n\t \n\t A. Carpentier and M. Valko, \"Revealing graph bandits for maximizing local influence,\" in AISTATS, pp. 10-18, 2016."
+      "year": 2016
     },
     {
       "title": "Structured sparse method for hyperspectral unmixing",
@@ -446,11 +390,7 @@
         "C Pan"
       ],
       "year": 2014,
-      "doi": "10.1016/j.isprsjprs.2013.11.014",
-      "journal": "ISPRS Journal of Photogrammetry and Remote Sensing",
-      "volume": "88",
-      "issue": "0",
-      "raw": "Structured sparse method for hyperspectral unmixing \n\t\t \n\t\t\t F Zhu \n\t\t \n\t\t \n\t\t\t Y Wang \n\t\t \n\t\t \n\t\t\t S Xiang \n\t\t \n\t\t \n\t\t\t B Fan \n\t\t \n\t\t \n\t\t\t C Pan \n\t\t \n\t\t 10.1016/j.isprsjprs.2013.11.014 \n\t \n\t \n\t\t ISPRS Journal of Photogrammetry and Remote Sensing \n\t\t \n\t\t\t 88 \n\t\t\t 0 \n\t\t\t \n\t\t\t 2014 \n\t\t \n\t \n\t F. Zhu, Y. Wang, S. Xiang, B. Fan, and C. Pan, \"Struc- tured sparse method for hyperspectral unmixing,\" ISPRS Journal of Photogrammetry and Remote Sensing, vol. 88, no. 0, pp. 101-118, 2014."
+      "doi": "10.1016/j.isprsjprs.2013.11.014"
     },
     {
       "title": "A label propagation method using spatial-spectral consistency for hyperspectral image classification",
@@ -463,11 +403,7 @@
         "C Pan"
       ],
       "year": 2016,
-      "doi": "10.1080/01431161.2015.1125547",
-      "journal": "International Journal of Remote Sensing",
-      "volume": "37",
-      "issue": "1",
-      "raw": "A label propagation method using spatial-spectral consistency for hyperspectral image classification \n\t\t \n\t\t\t H Li \n\t\t \n\t\t \n\t\t\t Y Wang \n\t\t \n\t\t \n\t\t\t S Xiang \n\t\t \n\t\t \n\t\t\t J Duan \n\t\t \n\t\t \n\t\t\t F Zhu \n\t\t \n\t\t \n\t\t\t C Pan \n\t\t \n\t\t 10.1080/01431161.2015.1125547 \n\t \n\t \n\t\t International Journal of Remote Sensing \n\t\t \n\t\t\t 37 \n\t\t\t 1 \n\t\t\t \n\t\t\t 2016 \n\t\t \n\t \n\t H. Li, Y. Wang, S. Xiang, J. Duan, F. Zhu, and C. Pan, \"A label propagation method using spatial-spectral consis- tency for hyperspectral image classification,\" Interna- tional Journal of Remote Sensing, vol. 37, no. 1, pp. 191- 211, 2016."
+      "doi": "10.1080/01431161.2015.1125547"
     },
     {
       "title": "Prediction models for network-linked data",
@@ -476,9 +412,7 @@
         "E Levina",
         "J Zhu"
       ],
-      "year": 2016,
-      "journal": "CoRR",
-      "raw": "Prediction models for network-linked data \n\t\t \n\t\t\t T Li \n\t\t \n\t\t \n\t\t\t E Levina \n\t\t \n\t\t \n\t\t\t J Zhu \n\t\t \n\t\t abs/1602.01192 \n\t \n\t \n\t\t CoRR \n\t\t \n\t\t\t February 2016 \n\t\t \n\t \n\t T. Li, E. Levina, and J. Zhu, \"Prediction models for network-linked data,\" CoRR, vol. abs/1602.01192, February 2016."
+      "year": 2016
     },
     {
       "title": "Algorithmic survey of parametric value function approximation",
@@ -487,11 +421,7 @@
         "O Pietquin"
       ],
       "year": 2013,
-      "doi": "10.1109/tnnls.2013.2247418",
-      "journal": "IEEE Transactions on Neural Networks and Learning Systems",
-      "volume": "24",
-      "issue": "6",
-      "raw": "Algorithmic survey of parametric value function approximation \n\t\t \n\t\t\t M Geist \n\t\t \n\t\t \n\t\t\t O Pietquin \n\t\t \n\t\t 10.1109/tnnls.2013.2247418 \n\t \n\t \n\t\t IEEE Transactions on Neural Networks and Learning Systems \n\t\t \n\t\t\t 24 \n\t\t\t 6 \n\t\t\t \n\t\t\t 2013 \n\t\t \n\t \n\t M. Geist and O. Pietquin, \"Algorithmic survey of para- metric value function approximation,\" IEEE Transac- tions on Neural Networks and Learning Systems, vol. 24, no. 6, pp. 845-867, 2013."
+      "doi": "10.1109/tnnls.2013.2247418"
     },
     {
       "title": "A survey of actor-critic reinforcement learning: Standard and natural policy gradients",
@@ -502,11 +432,7 @@
         "R Babuska"
       ],
       "year": 2012,
-      "doi": "10.1109/tsmcc.2012.2218595",
-      "journal": "IEEE Trans. Systems, Man, and Cybernetics",
-      "volume": "42",
-      "issue": "6",
-      "raw": "A survey of actor-critic reinforcement learning: Standard and natural policy gradients \n\t\t \n\t\t\t I Grondman \n\t\t \n\t\t \n\t\t\t L Busoniu \n\t\t \n\t\t \n\t\t\t G A D Lopes \n\t\t \n\t\t \n\t\t\t R Babuska \n\t\t \n\t\t 10.1109/tsmcc.2012.2218595 \n\t \n\t \n\t\t IEEE Trans. Systems, Man, and Cybernetics \n\t\t \n\t\t\t 42 \n\t\t\t 6 \n\t\t\t \n\t\t\t 2012 \n\t\t \n\t \n\t I. Grondman, L. Busoniu, G. A. D. Lopes, and R. Babuska, \"A survey of actor-critic reinforcement learning: Standard and natural policy gradients,\" IEEE Trans. Systems, Man, and Cybernetics, vol. 42, no. 6, pp. 1291-1307, 2012."
+      "doi": "10.1109/tsmcc.2012.2218595"
     },
     {
       "title": "Sequential cost-sensitive decision making with reinforcement learning",
@@ -515,8 +441,7 @@
         "N Abe",
         "B Zadrozny"
       ],
-      "year": 2002,
-      "raw": "Sequential cost-sensitive decision making with reinforcement learning \n\t\t \n\t\t\t E P D Pednault \n\t\t \n\t\t \n\t\t\t N Abe \n\t\t \n\t\t \n\t\t\t B Zadrozny \n\t\t \n\t \n\t \n\t\t ACM SIGKDD Int. Conf. on Knowledge Discovery and Data Min \n\t\t \n\t\t\t 2002 \n\t\t\t \n\t\t \n\t \n\t E. P. D. Pednault, N. Abe, and B. Zadrozny, \"Sequen- tial cost-sensitive decision making with reinforcement learning,\" in ACM SIGKDD Int. Conf. on Knowledge Discovery and Data Min., pp. 259-268, 2002."
+      "year": 2002
     },
     {
       "title": "Least-squares policy iteration",
@@ -525,10 +450,7 @@
         "R Parr"
       ],
       "year": 2003,
-      "doi": "10.1007/978-0-387-30164-8_468",
-      "journal": "J. of Machine Learning Research (JLMR)",
-      "volume": "4",
-      "raw": "Least-squares policy iteration \n\t\t \n\t\t\t M G Lagoudakis \n\t\t \n\t\t \n\t\t\t R Parr \n\t\t \n\t\t 10.1007/978-0-387-30164-8_468 \n\t \n\t \n\t\t J. of Machine Learning Research (JLMR) \n\t\t \n\t\t\t 4 \n\t\t\t \n\t\t\t 2003 \n\t\t \n\t \n\t M. G. Lagoudakis and R. Parr, \"Least-squares policy iteration,\" J. of Machine Learning Research (JLMR), vol. 4, pp. 1107-1149, 2003."
+      "doi": "10.1007/978-0-387-30164-8_468"
     },
     {
       "title": "Variety influences habituation of motivated behavior for food and energy intake in children",
@@ -541,10 +463,7 @@
         "R Nadbrzuch"
       ],
       "year": 2009,
-      "doi": "10.3945/ajcn.2008.26911",
-      "journal": "The American Journal of Clinical Nutrition",
-      "volume": "89",
-      "raw": "Variety influences habituation of motivated behavior for food and energy intake in children \n\t\t \n\t\t\t L Epstein \n\t\t \n\t\t \n\t\t\t J Robinson \n\t\t \n\t\t \n\t\t\t J Temple \n\t\t \n\t\t \n\t\t\t J Roemmich \n\t\t \n\t\t \n\t\t\t A Marusewski \n\t\t \n\t\t \n\t\t\t R Nadbrzuch \n\t\t \n\t\t 10.3945/ajcn.2008.26911 \n\t \n\t \n\t\t The American Journal of Clinical Nutrition \n\t\t \n\t\t\t 89 \n\t\t\t \n\t\t\t Mar 2009 \n\t\t \n\t \n\t L. Epstein, J. Robinson, J. Temple, J. Roemmich, A. Marusewski, and R. Nadbrzuch, \"Variety influences habituation of motivated behavior for food and energy intake in children,\" The American Journal of Clinical Nutrition, vol. 89, pp. 746 -754, Mar 2009."
+      "doi": "10.3945/ajcn.2008.26911"
     },
     {
       "title": "Cross channel optimized marketing by reinforcement learning",
@@ -555,8 +474,7 @@
         "R Schroko"
       ],
       "year": 2004,
-      "doi": "10.1145/1014052.1016912",
-      "raw": "Cross channel optimized marketing by reinforcement learning \n\t\t \n\t\t\t N Abe \n\t\t \n\t\t \n\t\t\t N K Verma \n\t\t \n\t\t \n\t\t\t C Apt\u00e9 \n\t\t \n\t\t \n\t\t\t R Schroko \n\t\t \n\t\t 10.1145/1014052.1016912 \n\t \n\t \n\t\t ACM SIGKDD Int. Conf. on Knowledge Discovery and Data Min \n\t\t \n\t\t\t 2004 \n\t\t\t \n\t\t \n\t \n\t N. Abe, N. K. Verma, C. Apt\u00e9, and R. Schroko, \"Cross channel optimized marketing by reinforcement learn- ing,\" in ACM SIGKDD Int. Conf. on Knowledge Discovery and Data Min., pp. 767-772, 2004."
+      "doi": "10.1145/1014052.1016912"
     },
     {
       "title": "Optimizing debt collections using constrained reinforcement learning",
@@ -574,8 +492,7 @@
         "M Domick",
         "T Gardinier"
       ],
-      "year": 2010,
-      "raw": "Optimizing debt collections using constrained reinforcement learning \n\t\t \n\t\t\t N Abe \n\t\t \n\t\t \n\t\t\t P Melville \n\t\t \n\t\t \n\t\t\t C Pendus \n\t\t \n\t\t \n\t\t\t C K Reddy \n\t\t \n\t\t \n\t\t\t D L Jensen \n\t\t \n\t\t \n\t\t\t V P Thomas \n\t\t \n\t\t \n\t\t\t J J Bennett \n\t\t \n\t\t \n\t\t\t G F Anderson \n\t\t \n\t\t \n\t\t\t B R Cooley \n\t\t \n\t\t \n\t\t\t M Kowalczyk \n\t\t \n\t\t \n\t\t\t M Domick \n\t\t \n\t\t \n\t\t\t T Gardinier \n\t\t \n\t \n\t \n\t\t ACM SIGKDD Int. Conf. on Knowledge Discovery and Data Min \n\t\t \n\t\t\t 2010 \n\t\t\t \n\t\t \n\t \n\t N. Abe, P. Melville, C. Pendus, C. K. Reddy, D. L. Jensen, V. P. Thomas, J. J. Bennett, G. F. Anderson, B. R. Cooley, M. Kowalczyk, M. Domick, and T. Gar- dinier, \"Optimizing debt collections using constrained reinforcement learning,\" in ACM SIGKDD Int. Conf. on Knowledge Discovery and Data Min., pp. 75-84, 2010."
+      "year": 2010
     },
     {
       "title": "Regularization and feature selection in least-squares temporal difference learning",
@@ -583,8 +500,7 @@
         "J Kolter",
         "A Ng"
       ],
-      "year": 2009,
-      "raw": "Regularization and feature selection in least-squares temporal difference learning \n\t\t \n\t\t\t J Z Kolter \n\t\t \n\t\t \n\t\t\t A Y Ng \n\t\t \n\t \n\t \n\t\t International Conference on Machine Learning (ICML) \n\t\t \n\t\t\t 2009 \n\t\t\t \n\t\t \n\t \n\t J. Z. Kolter and A. Y. Ng, \"Regularization and feature selection in least-squares temporal difference learning,\" in International Conference on Machine Learning (ICML), pp. 521-528, 2009."
+      "year": 2009
     },
     {
       "title": "Privacypreserving reinforcement learning",
@@ -594,19 +510,14 @@
         "R Wright"
       ],
       "year": 2008,
-      "doi": "10.1145/1390156.1390265",
-      "raw": "Privacypreserving reinforcement learning \n\t\t \n\t\t\t J Sakuma \n\t\t \n\t\t \n\t\t\t S Kobayashi \n\t\t \n\t\t \n\t\t\t R N Wright \n\t\t \n\t\t 10.1145/1390156.1390265 \n\t \n\t \n\t\t International Conference on Machine Learning \n\t\t \n\t\t\t 2008 \n\t\t\t \n\t\t \n\t \n\t J. Sakuma, S. Kobayashi, and R. N. Wright, \"Privacy- preserving reinforcement learning,\" in International Conference on Machine Learning, pp. 864-871, 2008."
+      "doi": "10.1145/1390156.1390265"
     },
     {
       "title": "Delinquent peers revisited: Does network structure matter?",
       "authors": [
         "D Haynie"
       ],
-      "year": 2001,
-      "journal": "American journal of sociology",
-      "volume": "106",
-      "issue": "4",
-      "raw": "Delinquent peers revisited: Does network structure matter? \n\t\t \n\t\t\t D L Haynie \n\t\t \n\t \n\t \n\t\t American journal of sociology \n\t\t \n\t\t\t 106 \n\t\t\t 4 \n\t\t\t \n\t\t\t 2001 \n\t\t \n\t \n\t D. L. Haynie, \"Delinquent peers revisited: Does net- work structure matter?,\" American journal of sociology, vol. 106, no. 4, pp. 1013 -1057, 2001."
+      "year": 2001
     },
     {
       "title": "Social network influences on adolescent substance use: disentangling structural equivalence from cohesion",
@@ -614,11 +525,7 @@
         "K Fujimoto",
         "T Valente"
       ],
-      "year": 2012,
-      "journal": "Social Science & Medicine",
-      "volume": "74",
-      "issue": "12",
-      "raw": "Social network influences on adolescent substance use: disentangling structural equivalence from cohesion \n\t\t \n\t\t\t K Fujimoto \n\t\t \n\t\t \n\t\t\t T W Valente \n\t\t \n\t \n\t \n\t\t Social Science & Medicine \n\t\t \n\t\t\t 74 \n\t\t\t 12 \n\t\t\t \n\t\t\t 2012 \n\t\t \n\t \n\t K. Fujimoto and T. W. Valente, \"Social network in- fluences on adolescent substance use: disentangling structural equivalence from cohesion,\" Social Science & Medicine, vol. 74, no. 12, pp. 1952 -1960, 2012."
+      "year": 2012
     },
     {
       "title": "Semisupervised hyperspectral image classification via discriminant analysis and robust regression",
@@ -629,11 +536,7 @@
         "Y Wang",
         "C Pan"
       ],
-      "year": 2016,
-      "journal": "IEEE J. of Selected Topics in Applied Earth Observations and Remote Sensing",
-      "volume": "9",
-      "issue": "2",
-      "raw": "Semisupervised hyperspectral image classification via discriminant analysis and robust regression \n\t\t \n\t\t\t G Cheng \n\t\t \n\t\t \n\t\t\t F Zhu \n\t\t \n\t\t \n\t\t\t S Xiang \n\t\t \n\t\t \n\t\t\t Y Wang \n\t\t \n\t\t \n\t\t\t C Pan \n\t\t \n\t \n\t \n\t\t IEEE J. of Selected Topics in Applied Earth Observations and Remote Sensing \n\t\t \n\t\t\t 9 \n\t\t\t 2 \n\t\t\t \n\t\t\t 2016 \n\t\t \n\t \n\t G. Cheng, F. Zhu, S. Xiang, Y. Wang, and C. Pan, \"Semisupervised hyperspectral image classification via discriminant analysis and robust regression,\" IEEE J. of Selected Topics in Applied Earth Observations and Remote Sensing, vol. 9, no. 2, pp. 595-608, 2016."
+      "year": 2016
     },
     {
       "title": "Road centerline extraction via semisupervised segmentation and multidirection nonmaximum suppression",
@@ -643,11 +546,7 @@
         "S Xiang",
         "C Pan"
       ],
-      "year": 2016,
-      "journal": "IEEE Geoscience and Remote Sensing Letters",
-      "volume": "13",
-      "issue": "4",
-      "raw": "Road centerline extraction via semisupervised segmentation and multidirection nonmaximum suppression \n\t\t \n\t\t\t G Cheng \n\t\t \n\t\t \n\t\t\t F Zhu \n\t\t \n\t\t \n\t\t\t S Xiang \n\t\t \n\t\t \n\t\t\t C Pan \n\t\t \n\t \n\t \n\t\t IEEE Geoscience and Remote Sensing Letters \n\t\t \n\t\t\t 13 \n\t\t\t 4 \n\t\t\t \n\t\t\t 2016 \n\t\t \n\t \n\t G. Cheng, F. Zhu, S. Xiang, and C. Pan, \"Road center- line extraction via semisupervised segmentation and multidirection nonmaximum suppression,\" IEEE Geo- science and Remote Sensing Letters, vol. 13, no. 4, pp. 545- 549, 2016."
+      "year": 2016
     },
     {
       "title": "Spectral unmixing via data-guided sparsity",
@@ -660,10 +559,7 @@
         "C Pan"
       ],
       "year": 2014,
-      "doi": "10.1109/tip.2014.2363423",
-      "journal": "IEEE Transactions on Image Processing (TIP)",
-      "volume": "23",
-      "raw": "Spectral unmixing via data-guided sparsity \n\t\t \n\t\t\t F Zhu \n\t\t \n\t\t \n\t\t\t Y Wang \n\t\t \n\t\t \n\t\t\t B Fan \n\t\t \n\t\t \n\t\t\t S Xiang \n\t\t \n\t\t \n\t\t\t G Meng \n\t\t \n\t\t \n\t\t\t C Pan \n\t\t \n\t\t 10.1109/tip.2014.2363423 \n\t \n\t \n\t\t IEEE Transactions on Image Processing (TIP) \n\t\t \n\t\t\t 23 \n\t\t\t \n\t\t\t Dec 2014 \n\t\t \n\t \n\t F. Zhu, Y. Wang, B. Fan, S. Xiang, G. Meng, and C. Pan, \"Spectral unmixing via data-guided sparsity,\" IEEE Transactions on Image Processing (TIP), vol. 23, pp. 5412- 5427, Dec 2014."
+      "doi": "10.1109/tip.2014.2363423"
     },
     {
       "title": "Urban road extraction via graph cuts based probability propagation",
@@ -674,8 +570,7 @@
         "F Zhu",
         "C Pan"
       ],
-      "year": 2014,
-      "raw": "Urban road extraction via graph cuts based probability propagation \n\t\t \n\t\t\t G Cheng \n\t\t \n\t\t \n\t\t\t Y Wang \n\t\t \n\t\t \n\t\t\t Y Gong \n\t\t \n\t\t \n\t\t\t F Zhu \n\t\t \n\t\t \n\t\t\t C Pan \n\t\t \n\t \n\t \n\t\t Image Processing (ICIP), 2014 IEEE International Conference on \n\t\t \n\t\t\t IEEE \n\t\t\t 2014 \n\t\t\t \n\t\t \n\t \n\t G. Cheng, Y. Wang, Y. Gong, F. Zhu, and C. Pan, \"Urban road extraction via graph cuts based probabil- ity propagation,\" in Image Processing (ICIP), 2014 IEEE International Conference on, pp. 5072-5076, IEEE, 2014."
+      "year": 2014
     },
     {
       "title": "10,000+ times accelerated robust subset selection (ARSS)",
@@ -688,8 +583,7 @@
         "C Pan"
       ],
       "year": 2015,
-      "doi": "10.1609/aaai.v29i1.9565",
-      "raw": "10,000+ times accelerated robust subset selection (ARSS) \n\t\t \n\t\t\t F Zhu \n\t\t \n\t\t \n\t\t\t B Fan \n\t\t \n\t\t \n\t\t\t X Zhu \n\t\t \n\t\t \n\t\t\t Y Wang \n\t\t \n\t\t \n\t\t\t S Xiang \n\t\t \n\t\t \n\t\t\t C Pan \n\t\t \n\t\t 10.1609/aaai.v29i1.9565 \n\t \n\t \n\t\t Proc. Assoc. Adv. Artif. Intell. (AAAI) \n\t\t Assoc. Adv. Artif. Intell. (AAAI) \n\t\t \n\t\t\t 2015 \n\t\t\t \n\t\t \n\t \n\t F. Zhu, B. Fan, X. Zhu, Y. Wang, S. Xiang, and C. Pan, \"10,000+ times accelerated robust subset selec- tion (ARSS),\" in Proc. Assoc. Adv. Artif. Intell. (AAAI), pp. 3217-3224, 2015."
+      "doi": "10.1609/aaai.v29i1.9565"
     },
     {
       "title": "Road extraction via adaptive graph cuts with multiple features",
@@ -700,8 +594,7 @@
         "C Pan"
       ],
       "year": 2015,
-      "doi": "10.1109/icip.2015.7351549",
-      "raw": "Road extraction via adaptive graph cuts with multiple features \n\t\t \n\t\t\t G Cheng \n\t\t \n\t\t \n\t\t\t Y Wang \n\t\t \n\t\t \n\t\t\t F Zhu \n\t\t \n\t\t \n\t\t\t C Pan \n\t\t \n\t\t 10.1109/icip.2015.7351549 \n\t \n\t \n\t\t Image Processing (ICIP), IEEE International Conference on \n\t\t \n\t\t\t IEEE \n\t\t\t 2015 \n\t\t\t \n\t\t \n\t \n\t G. Cheng, Y. Wang, F. Zhu, and C. Pan, \"Road extrac- tion via adaptive graph cuts with multiple features,\" in Image Processing (ICIP), IEEE International Conference on, pp. 3962-3966, IEEE, 2015."
+      "doi": "10.1109/icip.2015.7351549"
     },
     {
       "title": "Robust hyperspectral unmixing with correntropy-based metric",
@@ -711,11 +604,7 @@
         "S Xiang",
         "F Zhu"
       ],
-      "year": 2015,
-      "journal": "IEEE Transactions on Image Processing",
-      "volume": "24",
-      "issue": "11",
-      "raw": "Robust hyperspectral unmixing with correntropy-based metric \n\t\t \n\t\t\t Y Wang \n\t\t \n\t\t \n\t\t\t C Pan \n\t\t \n\t\t \n\t\t\t S Xiang \n\t\t \n\t\t \n\t\t\t F Zhu \n\t\t \n\t \n\t \n\t\t IEEE Transactions on Image Processing \n\t\t \n\t\t\t 24 \n\t\t\t 11 \n\t\t\t \n\t\t\t 2015 \n\t\t \n\t \n\t Y. Wang, C. Pan, S. Xiang, and F. Zhu, \"Robust hy- perspectral unmixing with correntropy-based metric,\" IEEE Transactions on Image Processing, vol. 24, no. 11, pp. 4027-4040, 2015."
+      "year": 2015
     },
     {
       "title": "Learning-based fully 3d face reconstruction from a single image",
@@ -725,8 +614,7 @@
         "F Zhu",
         "C Pan"
       ],
-      "year": 2016,
-      "raw": "Learning-based fully 3d face reconstruction from a single image \n\t\t \n\t\t\t X Hu \n\t\t \n\t\t \n\t\t\t Y Wang \n\t\t \n\t\t \n\t\t\t F Zhu \n\t\t \n\t\t \n\t\t\t C Pan \n\t\t \n\t \n\t \n\t\t Acoustics, Speech and Signal Processing (ICASSP), 2016 IEEE International Conference on \n\t\t \n\t\t\t IEEE \n\t\t\t 2016 \n\t\t\t \n\t\t \n\t \n\t X. Hu, Y. Wang, F. Zhu, and C. Pan, \"Learning-based fully 3d face reconstruction from a single image,\" in Acoustics, Speech and Signal Processing (ICASSP), 2016 IEEE International Conference on, pp. 1651-1655, IEEE, 2016."
+      "year": 2016
     },
     {
       "title": "Accurate urban road centerline extraction from vhr imagery via multiscale segmentation and tensor voting",
@@ -737,10 +625,7 @@
         "Y Wang",
         "C Pan"
       ],
-      "year": 2016,
-      "journal": "Neurocomputing",
-      "volume": "205",
-      "raw": "Accurate urban road centerline extraction from vhr imagery via multiscale segmentation and tensor voting \n\t\t \n\t\t\t G Cheng \n\t\t \n\t\t \n\t\t\t F Zhu \n\t\t \n\t\t \n\t\t\t S Xiang \n\t\t \n\t\t \n\t\t\t Y Wang \n\t\t \n\t\t \n\t\t\t C Pan \n\t\t \n\t \n\t \n\t\t Neurocomputing \n\t\t \n\t\t\t 205 \n\t\t\t \n\t\t\t 2016 \n\t\t \n\t \n\t G. Cheng, F. Zhu, S. Xiang, Y. Wang, and C. Pan, \"Accurate urban road centerline extraction from vhr imagery via multiscale segmentation and tensor vot- ing,\" Neurocomputing, vol. 205, pp. 407-420, 2016."
+      "year": 2016
     },
     {
       "title": "Effective spectral unmixing via robust representation and learning-based sparsity",
@@ -752,9 +637,7 @@
         "C Pan"
       ],
       "year": 2014,
-      "doi": "10.1109/tip.2014.2363423",
-      "journal": "CoRR",
-      "raw": "Effective spectral unmixing via robust representation and learning-based sparsity \n\t\t \n\t\t\t F Zhu \n\t\t \n\t\t \n\t\t\t Y Wang \n\t\t \n\t\t \n\t\t\t B Fan \n\t\t \n\t\t \n\t\t\t G Meng \n\t\t \n\t\t \n\t\t\t C Pan \n\t\t \n\t\t 10.1109/tip.2014.2363423 \n\t\t abs/1409.0685 \n\t \n\t \n\t\t CoRR \n\t\t \n\t\t\t 2014 \n\t\t \n\t \n\t F. Zhu, Y. Wang, B. Fan, G. Meng, and C. Pan, \"Effec- tive spectral unmixing via robust representation and learning-based sparsity,\" CoRR, vol. abs/1409.0685, 2014."
+      "doi": "10.1109/tip.2014.2363423"
     },
     {
       "title": "Randomised trials for the fitbit generation",
@@ -766,29 +649,21 @@
         "S Murphy"
       ],
       "year": 2016,
-      "doi": "10.1111/j.1740-9713.2015.00863.x",
-      "journal": "Significance",
-      "volume": "12",
-      "raw": "Randomised trials for the fitbit generation \n\t\t \n\t\t\t W Dempsey \n\t\t \n\t\t \n\t\t\t P Liao \n\t\t \n\t\t \n\t\t\t P Klasnja \n\t\t \n\t\t \n\t\t\t I Nahum-Shani \n\t\t \n\t\t \n\t\t\t S A Murphy \n\t\t \n\t\t 10.1111/j.1740-9713.2015.00863.x \n\t \n\t \n\t\t Significance \n\t\t \n\t\t\t 12 \n\t\t\t \n\t\t\t Dec 2016 \n\t\t \n\t \n\t W. Dempsey, P. Liao, P. Klasnja, I. Nahum-Shani, and S. A. Murphy, \"Randomised trials for the fitbit genera- tion,\" Significance, vol. 12, pp. 20 -23, Dec 2016."
+      "doi": "10.1111/j.1740-9713.2015.00863.x"
     },
     {
       "title": "A tutorial on spectral clustering",
       "authors": [
         "U Luxburg"
       ],
-      "year": 2007,
-      "journal": "Statistics and Computing",
-      "volume": "17",
-      "issue": "4",
-      "raw": "A tutorial on spectral clustering \n\t\t \n\t\t\t U Luxburg \n\t\t \n\t \n\t \n\t\t Statistics and Computing \n\t\t \n\t\t\t 17 \n\t\t\t 4 \n\t\t\t \n\t\t\t 2007 \n\t\t \n\t \n\t U. von Luxburg, \"A tutorial on spectral clustering,\" Statistics and Computing, vol. 17, no. 4, pp. 395 -416, 2007."
+      "year": 2007
     },
     {
       "title": "Unsupervised Hyperspectral Unmixing Methods",
       "authors": [
         "F Zhu"
       ],
-      "year": 2015,
-      "raw": "Unsupervised Hyperspectral Unmixing Methods \n\t\t \n\t\t\t F Zhu \n\t\t \n\t\t \n\t\t\t 2015 \n\t\t \n\t \n\t PhD thesis \n\t F. Zhu, Unsupervised Hyperspectral Unmixing Methods. PhD thesis, 2015."
+      "year": 2015
     },
     {
       "title": "Regularized least squares temporal difference learning with nested \u2113 2 and \u2113 1 penalization",
@@ -798,8 +673,7 @@
         "M Ghavamzadeh",
         "R Munos"
       ],
-      "year": 2011,
-      "raw": "Regularized least squares temporal difference learning with nested \u2113 2 and \u2113 1 penalization \n\t\t \n\t\t\t M W Hoffman \n\t\t \n\t\t \n\t\t\t A Lazaric \n\t\t \n\t\t \n\t\t\t M Ghavamzadeh \n\t\t \n\t\t \n\t\t\t R Munos \n\t\t \n\t \n\t \n\t\t Recent Advances in Reinforcement Learning \n\t\t \n\t\t\t 2011 \n\t\t\t \n\t\t \n\t \n\t M. W. Hoffman, A. Lazaric, M. Ghavamzadeh, and R. Munos, \"Regularized least squares temporal differ- ence learning with nested \u2113 2 and \u2113 1 penalization,\" in Recent Advances in Reinforcement Learning, pp. 102-114, 2011."
+      "year": 2011
     },
     {
       "title": "The matrix cookbook",
@@ -808,8 +682,7 @@
         "M Pedersen"
       ],
       "year": 2012,
-      "doi": "10.1016/j.disc.2012.08.007",
-      "raw": "The matrix cookbook \n\t\t \n\t\t\t K B Petersen \n\t\t \n\t\t \n\t\t\t M S Pedersen \n\t\t \n\t\t 10.1016/j.disc.2012.08.007 \n\t\t \n\t\t\t 2012 \n\t\t \n\t \n\t K. B. Petersen and M. S. Pedersen, \"The matrix cook- book,\" 2012."
+      "doi": "10.1016/j.disc.2012.08.007"
     },
     {
       "title": "The kronecker product and stochastic automata networks",
@@ -818,347 +691,8 @@
         "W Stewart"
       ],
       "year": 2004,
-      "doi": "10.1016/j.cam.2003.10.010",
-      "journal": "Journal of Computational and Applied Mathematics",
-      "volume": "167",
-      "raw": "The kronecker product and stochastic automata networks \n\t\t \n\t\t\t A N Langville \n\t\t \n\t\t \n\t\t\t W J Stewart \n\t\t \n\t\t 10.1016/j.cam.2003.10.010 \n\t \n\t \n\t\t Journal of Computational and Applied Mathematics \n\t\t \n\t\t\t 167 \n\t\t\t \n\t\t\t June 2004 \n\t\t \n\t \n\t A. N. Langville and W. J. Stewart, \"The kronecker prod- uct and stochastic automata networks,\" Journal of Com- putational and Applied Mathematics, vol. 167, pp. 429- 447, June 2004."
+      "doi": "10.1016/j.cam.2003.10.010"
     }
   ],
-  "num_references": 54,
-  "figures": [
-    {
-      "caption": ". 10 :",
-      "description": "else if t \u2265 T 0 then 11:"
-    },
-    {
-      "caption": "14 :",
-      "description": "else if nAlg = 2 then 15:"
-    },
-    {
-      "description": "the policy for N users, i.e. \u03c0 \u03b8n (a | s), for {n} N n=1 ."
-    },
-    {
-      "description": "that are very different from each other; (b) a set of N v different individuals (i.e. \u03b2s) are generated for each \u03b2 basic v via the following process"
-    },
-    {
-      "description": "(b) Cohesion-RL#1 is the first version of our method. (c) Cohesion-RL#2 is the second version of our method (cf. Algorithm 1 for detail). Specially, Cohesion-RL#1 and Cohesion-RL#2 share the same actor updating. The difference between them is the different critic updating rules that they employ.The noises in the MDP are set as \u03c3 s = 0.5, \u03c3 r = 1 and \u03c3 \u03b2 = 0.05. The state has dimension p = 3 and the policy feature has m = 4 elements. We set the \u2113 2 constraint in the Separate-RL as \u03b6 a = \u03b6 c = 0.1. When the cohesion constraint in our methods are too small (10 -4 , say), we need the \u2113 2 constraint for the actor-critic updating to avoid the overfitting, with the parameters as\u03b6 1 = \u03b6 2 = \u03b6 3 = 0.1. Otherwise, we set \u03b6 1 = \u03b6 2 = \u03b6 3 \u2192 0.The feature processing for the value estimation is x (s, a) = [1, s , a, s a] \u2208 R u , where u = 2p+ 2, for all the compared methods. The feature for the policy is processed as \u03c6 (s, a) = [as , a] \u2208 R m where m = p + 1. We set K = 8 for the K-NN based network cohesion learning. If there is no special setting, the following three paremeters are set as: (a) the trajectory length in mHealth is T = 80, which indicates that the online RL learning ends at t = 80;"
-    },
-    {
-      "caption": "Fig. 1 .",
-      "description": "Fig. 1. Performance of three RL methods for experiment setting (S1). Each sub-figure shows results under one \u03b3 setting."
-    },
-    {
-      "description": "(b) Discount Factor when \u03b3 = 0.6"
-    },
-    {
-      "caption": "Fig. 2 .",
-      "description": "Fig. 2. Performance of three RL methods for experiment setting (S2). Each sub-figure shows results under one \u03b3 setting."
-    },
-    {
-      "caption": "Appendix: the proof of Theorem 1 Proof:",
-      "description": "Considering L \u2297 (\u00b5 2 , \u03b6 2 ) = (\u00b5 2 L + \u03b6 2 I N ) \u2297 I u gives the equation B = P P + \u00b5 2 L \u2297 I u + \u03b6 2 I uN .The first term B 1 = P P is obviously positive semi-definite as \u2200x, we have x P Px = Px"
-    },
-    {
-      "caption": "2 2 \u2265 0 .",
-      "description": "The graph laplacian L is positive semi-definite, which indicates that its eigenvalues are non-negative, i.e.\u03bb 1 , \u2022 \u2022 \u2022 , \u03bb N \u2265 0. The eigenvalues of I u are \u00b5 1 = \u2022 \u2022 \u2022 = \u00b5 u = 1.According to Lemma 2, we have the conclusion that the eigenvalues of L \u2297 I u are nonnegative, which indicates that it is a positive semi-definite matrix. The last term in B is an identical matrix, which is surely positive definite. The sum of two positive semidefinite matrices and a positive definite matrix results in a positive definite matrix.Since for any matrices A \u2208 R l\u00d7k and D \u2208 R m\u00d7n , the Kronecker product has the property (A \u2297 D) = (A \u2297 D ) [49] . Besides, the graph laplacian L is symmetric. We haveB = (P P + \u00b5 2 L \u2297 I u + \u03b6 2 I uN ) = B."
-    }
-  ],
-  "num_figures": 10,
-  "formulas": [
-    {
-      "text": "Q \u03c0 (s, a) = E ai\u223c\u03c0,si\u223cP \u221e i=0 \u03b3 i r i | s 0 = s, a 0 = a . (1)"
-    },
-    {
-      "text": "J (\u03b8) = s\u2208S d ref (s) a\u2208A \u03c0 \u03b8 (a | s) Q \u03c0 \u03b8 (s, a) (2)"
-    },
-    {
-      "text": "Q \u03c0 (s, a) = R (s, a) + \u03b3 s \u2208S P (s, a, s ) a \u2208A \u03c0 (a | s ) Q \u03c0 (s , a ) ."
-    },
-    {
-      "text": "q \u03c0 = r + \u03b3P\u03a0 \u03c0 q \u03c0 , (3)"
-    },
-    {
-      "text": "Q \u03c0 \u2248 Q w = w x (s, a)"
-    },
-    {
-      "text": "w = h = min h\u2208R K X h -r + \u03b3P\u03a0 \u03c0 X w 2 D , (4)"
-    },
-    {
-      "text": "D = {D n } N n=1 , where D n = {U i = (s i , a i, r i , s i ) | i = 0, \u2022 \u2022 \u2022 ,"
-    },
-    {
-      "text": "w n = h n = arg min hn Ui\u2208Dn x i h n -(r i + \u03b3y i w n ) 2 2"
-    },
-    {
-      "text": "for n \u2208 {1, \u2022 \u2022 \u2022 , N }, where x i = x (s i , a i ) is the value feature at time i and y i = a \u2208A x (s i , a ) \u03c0 \u03b8 (a | s i )"
-    },
-    {
-      "text": "X n = [x (s 1 , a 1 ) , x (s 2 , a 2 ) \u2022 \u2022 \u2022 , x (s t , a t )] \u2208 R u\u00d7t Y n = [y (s 1 ; \u03b8 n ) , \u2022 \u2022 \u2022 , y (s t ; \u03b8 n )] \u2208 R u\u00d7t (6)"
-    },
-    {
-      "text": "r n = [r 1 , r 2 , \u2022 \u2022 \u2022 , r t ] \u2208 R t ,"
-    },
-    {
-      "text": "y (s i ; \u03b8 n ) = a \u2208A x (s i , a ) \u03c0 \u03b8n (a | s i ), and \u03c0 \u03b8n (a | s) is the policy for the n-th user. Let R = [r 1 , \u2022 \u2022 \u2022 , r N ] \u2208 R t\u00d7N"
-    },
-    {
-      "text": "w n = h n = arg min hn X n h n -(r n + \u03b3Y n w n ) 2 2 + \u03b6 c h n 2 2 (7) for n \u2208 {1, \u2022 \u2022 \u2022 , N }."
-    },
-    {
-      "text": "w \u03b8n = [X n (X n -\u03b3Y n ) + \u03b6I] -1 X n r n , (8)"
-    },
-    {
-      "text": "J (\u03b8 n ) = 1 |D n | si\u2208Dn a\u2208A Q (s i , a; w \u03b8n ) \u03c0 \u03b8n (a|s i ) - \u03b6 a 2 \u03b8 n 2 2 (9) for n \u2208 {1, \u2022 \u2022 \u2022 , N }. Here \u03b8 n 2 2"
-    },
-    {
-      "text": "D (0) = D (0) n | n = 1, \u2022 \u2022 \u2022 , N , where D (0) n = {(s i,n , a i,n, r i,n )} T0 i=1"
-    },
-    {
-      "text": "v n = s 1,n , r 1,n , \u2022 \u2022 \u2022 , s T0,n , r T0,n \u2208 R pT0+T0 , (10)"
-    },
-    {
-      "text": "c ij = 1, if v i \u2208 N (v j ) or v j \u2208 N (v i ) 0, otherwise , (11)"
-    },
-    {
-      "text": "W = H = arg min H N n=1 U i \u2208Dn"
-    },
-    {
-      "text": "H = [h 1 , \u2022 \u2022 \u2022 , h N ] \u2208 R u\u00d7N and W = [w 1 , \u2022 \u2022 \u2022 , w N ] \u2208 R u\u00d7N are"
-    },
-    {
-      "text": "H = arg min H N n=1 X n h n -(r n + \u03b3Y n w n ) 2 2 + (13) \u00b5 1 N i,j=1 c ij h i -h j 2 2 + \u03b6 1 N n=1 h n 2 2 , W = arg min W N n=1 \u03a6 n w n -\u03a6 n h n 2 2 + ( 14"
-    },
-    {
-      "text": ")"
-    },
-    {
-      "text": "\u00b5 2 N i,j=1 c ij w i -w j 2 2 + \u03b6 2 N n=1 w n 2 2 ,"
-    },
-    {
-      "text": "\u03b8 1 , \u2022 \u2022 \u2022 , \u03b8 n , \u2022 \u2022 \u2022 , \u03b8 N = arg max {\u03b8n} N n=1 J (\u03b8 1 , \u2022 \u2022 \u2022 , \u03b8 N ) , (15)"
-    },
-    {
-      "text": "\u0398 = [\u03b8 1 , \u2022 \u2022 \u2022 , \u03b8 N ], Q (s i , a; w \u03b8n ) = x (s i , a)"
-    },
-    {
-      "text": "J (\u0398) = N n=1 \uf8eb \uf8ed 1 |D n | Ui\u2208Dn a\u2208A Q (s i , a; w \u03b8n ) \u03c0 \u03b8n (a|s i ) \uf8f6 \uf8f8 - \u00b5 3 2 N i,j=1 c ij \u03b8 i -\u03b8 j 2 2 - \u03b6 3 2 N n=1 \u03b8 n 2 2 . ( 16"
-    },
-    {
-      "text": ")"
-    },
-    {
-      "text": "J = N n=1 X n h n -(r n +\u03b3Y n w n ) 2 2 +\u00b5 1 Tr (HLH )+\u03b6 1 H 2 F , (17) where \u2022 2 F is the Frobenius norm of a matrix, Tr (HLH ) = N i=1 N j=1 c ij h i -h j 2 2 (18)"
-    },
-    {
-      "text": "\u0398 = [\u03b8 1 , \u2022 \u2022 \u2022 , \u03b8 N ] \u2208 R m\u00d7N for N users. 2: for n = 1, \u2022 \u2022 \u2022 , N do 3: for t = 1, \u2022 \u2022 \u2022 , T do 4:"
-    },
-    {
-      "text": "if t = T 0 then 9:"
-    },
-    {
-      "text": "if nAlg = 1 then 13:"
-    },
-    {
-      "text": "\u2202J 1 \u2202h n = 2X n X n h n -2X n r n -2\u03b3X n Y n w n . (19)"
-    },
-    {
-      "text": "= (h 1 , \u2022 \u2022 \u2022 , h N ) \u2208 R K\u00d7N , we have \u2202J 1 \u2202vec (H) = 2 N n=1 E n \u2297 (X n X n ) vec (H) -2 N n=1 E n \u2297 X n vec (R) -2\u03b3 N n=1 E n \u2297 (X n Y n ) vec (W) (20)"
-    },
-    {
-      "text": "(H) = [h 1 , \u2022 \u2022 \u2022 , h N ] \u2208 R uN is the vectorization process for a matrix; E n = diag (0, \u2022 \u2022 \u2022 , 1, \u2022 \u2022 \u2022 , 0) \u2208 R N \u00d7N"
-    },
-    {
-      "text": "F 1 = n E n \u2297 (X n X n ), F 2 = n E n \u2297 X n and F 3 = n E n \u2297 (X n Y n )."
-    },
-    {
-      "text": "\u2202J 1 \u2202vec (H) = 2F 1 vec (H) -2 [F 2 vec (R) + \u03b3F 3 vec (W)] ."
-    },
-    {
-      "text": ", i.e. J 2 = \u00b5 1 Tr (HLH ) + \u03b6 1 H 2 F , with respect to H is \u2202J 2 \u2202H = 2\u00b5 1 HL + 2\u03b6 1 H."
-    },
-    {
-      "text": "\u2202J 2 \u2202vec (H) = 2 [(\u00b5 1 L + \u03b6 1 I N ) \u2297 I u ] vec (H) (22)"
-    },
-    {
-      "text": "vec H = [F 1 + L \u2297 (\u00b5 1 , \u03b6 1 )] -1 [F 2 vec (R) + \u03b3F 3 vec (W)] , ( 23"
-    },
-    {
-      "text": ") where L \u2297 (\u00b5 1 , \u03b6 1 ) = (\u00b5 1 L + \u03b6 1 I N ) \u2297 I u \u2208 R uN \u00d7uN ."
-    },
-    {
-      "text": "O 1 = n \u03a6 n w n -\u03a6 n h n 2 2 = \u03a6 \u2297 vec (W) -\u03a6 \u2297 vec H 2 2 where \u03a6 \u2297 = N n=1 E n \u2297 \u03a6 n . To facilitate the optimiza- tion, we design {\u03a6 n } N n=1 to let \u03a6 \u2297 = F 1 +L \u2297 (\u00b5 1 , \u03b6 1 ), which leads to O 1 = \u03a6 \u2297 vec (W) -\u03a6 \u2297 vec H 2 2 = \u03a6 \u2297 vec (W) -[F 2 vec (R) + \u03b3F 3 vec (W)] = (\u03a6 \u2297 -\u03b3F 3 ) vec (W) -F 2 vec (R) 2 2 ,"
-    },
-    {
-      "text": "O 1 = Pvec (W) -F 2 vec (R) 2 2 ."
-    },
-    {
-      "text": "\u2202O 1 \u2202vec (W) = 2P Pvec (W) -2P F 2 vec (R) ."
-    },
-    {
-      "text": "vec (W * ) = [P P + L \u2297 (\u00b5 2 , \u03b6 2 )] -1 P F 2 vec (R) , ( 24"
-    },
-    {
-      "text": ")"
-    },
-    {
-      "text": "L \u2297 (\u00b5 2 , \u03b6 2 ) = (\u00b5 2 L + \u03b6 2 I N ) \u2297 I u . Theorem 1. B = P P + L \u2297 (\u00b5 2 , \u03b6 2"
-    },
-    {
-      "text": "Lemma 2. Suppose that A \u2208 R n\u00d7n and B \u2208 R m\u00d7m are square matrices. Let \u03bb 1 , \u2022 \u2022 \u2022 , \u03bb n be the eigenvalues of A and \u03bd 1 , \u2022 \u2022 \u2022 , \u03bd m be those of B."
-    },
-    {
-      "text": "\u03bb i \u03bd j , for i \u2208 {1, \u2022 \u2022 \u2022 , n} , j \u2208 {1, \u2022 \u2022 \u2022 , m} ."
-    },
-    {
-      "text": "w n = h n = arg min hn Ui\u2208Dn x i h n -(r i + \u03b3y i w n ) 2 2 , ( 25"
-    },
-    {
-      "text": ")"
-    },
-    {
-      "text": "for n \u2208 {1, \u2022 \u2022 \u2022 , N } and s.t. N i,j=1 c ij d (h i , h j ) \u2264 \u03b4 1 ."
-    },
-    {
-      "text": "vec W = [F 1 -\u03b3F 3 + L \u2297 (\u00b5 1 , \u03b6 1 )] -1 F 2 vec (R) . ( 26"
-    },
-    {
-      "text": ")"
-    },
-    {
-      "text": "\u03c0 \u03b8 (a | s) = exp[-\u03b8 \u03c6(s,a)] a exp[-\u03b8 \u03c6(s,a )]"
-    },
-    {
-      "text": "S t,1 = \u03b2 1 S t-1,1 + \u03be t,1 , S t,2 = \u03b2 2 S t-1,2 + \u03b2 3 A t-1 + \u03be t,2 , (27)"
-    },
-    {
-      "text": "S t,3 = \u03b2 4 S t-1,3 + \u03b2 5 S t-1,3 A t-1 + \u03b2 6 A t-1 + \u03be t,3 , S t,j = \u03b2 7 S t-1,j + \u03be t,j , for j = 4, . . . , p R t = \u03b2 14 \u00d7 [\u03b2 8 + A t \u00d7 (\u03b2 9 + \u03b2 10 S t,1 + \u03b2 11 S t,2 ) (28) + \u03b2 12 S t,1 -\u03b2 13 S t,3 + t ],"
-    },
-    {
-      "text": "\u03b2 basic v | v = 1, \u2022 \u2022 \u2022 , V ,"
-    },
-    {
-      "text": "\u03b2 i = \u03b2 basic v + \u03b4 i , for i \u2208 {1, 2, \u2022 \u2022 \u2022 , N v },"
-    },
-    {
-      "text": "\u03b2 basic 1 =[0."
-    }
-  ],
-  "num_formulas": 59,
-  "num_citations": 135,
-  "cited_references": [
-    "b13",
-    "b39",
-    "b41",
-    "b18",
-    "b44",
-    "b49",
-    "b14",
-    "b17",
-    "b36",
-    "b25",
-    "b9",
-    "b35",
-    "b20",
-    "b43",
-    "b21",
-    "b51",
-    "b47",
-    "b40",
-    "b12",
-    "b42",
-    "b30",
-    "b31",
-    "b52",
-    "b29",
-    "b16",
-    "b37",
-    "b46",
-    "b15",
-    "b32",
-    "b5",
-    "b19",
-    "b28",
-    "b45",
-    "b10",
-    "b38",
-    "b27",
-    "b24",
-    "b50",
-    "b6",
-    "b33",
-    "b7",
-    "b48",
-    "b11",
-    "b8",
-    "b53",
-    "b22",
-    "b34",
-    "b23",
-    "b26"
-  ],
-  "notes": [
-    "[raw_affiliation] \u2021  Department of CSE in the University of Texas at Arlington . Feiyun",
-    "[raw_affiliation] \u2021  Department of CSE in the University of Texas at Arlington . Feiyun",
-    "[raw_affiliation] Department of Statistics in the University of Michigan.",
-    "[raw_reference] reward when T = 150",
-    "for the experiment setting (S2",
-    "[raw_reference] TABLE 2 The performance of 3 online RLs vs. the warm start trajectory length T 0 \u2208 {5, 20}, for the experiment setting (S2). \u03b3 Average reward when T 0 = 5 Average reward when T 0 = 20",
-    "(b) 0 < The value of \u03b3 specifies different RL methods: (a) \u03b3 = 0 means the contextual bandit In each comparision, the bold value is the best, and the blue itatlic value is the 2nd best. REFERENCES",
-    "[raw_reference] The value of \u03b3 specifies different RL methods: (a) \u03b3 = 0 means the contextual bandit []; (b) 0 < \u03b3 < 1 is the discounted reward RL, which is first compared in the online actor-critic setting for mHealth. In each comparision, the bold value is the best, and the blue itatlic value is the 2nd best. REFERENCES",
-    "[raw_reference] H. Lei, A. Tewari, and S. Murphy, \"An actor-critic contextual bandit algorithm for personalized interven- tions using mobile devices,\" in NIPS 2014 Workshop: Personalization: Methods and Applications, pp. 1 -9, 2014.",
-    "[report_type] PhD thesis",
-    "[raw_reference] H. Lei, An Online Actor Critic Algorithm and a Statistical Decision Procedure for Personalizing Intervention. PhD thesis, University of Michigan, 2016.",
-    "[raw_reference] S. A. Murphy, Y. Deng, E. B. Laber, H. R. Maei, R. S. Sutton, and K. Witkiewitz, \"A batch, off-policy, actor- critic algorithm for optimizing the average reward,\" CoRR, vol. abs/1607.05047, 2016.",
-    "[raw_reference] P. Liao, A. Tewari, and S. Murphy, \"Constructing just- in-time adaptive interventions,\" Phd Section Proposal, pp. 1-49, 2015.",
-    "[raw_reference] J. Yao, X. Zhu, F. Zhu, and J. Huang, \"Deep corre- lational learning for survival prediction from multi- modality datay,\" in International Conference on Medi- cal Image Computing and Computer Assisted Intervention (MICCAI), 2017.",
-    "[raw_reference] X. Zhu, J. Yao, F. Zhu, and J. Huang, \"Wsisa: Making survival prediction from whole slide histopathological images,\" in IEEE Conference on Computer Vision and Pattern Recognition, pp. 7234 -7242, 2017.",
-    "[raw_reference] Z. Xu, S. Wang, F. Zhu, and J. Huang, \"Seq2seq fin- gerprint: An unsupervised deep molecular embedding for drug discovery,\" in ACM Conference on Bioinformat- ics, Computational Biology, and Health Informatics (ACM- BCB), 2017.",
-    "[raw_reference] D. Gustafson, F. McTavish, M. Chih, A. Atwood, R. Johnson, M. B. ..., and D. Shah, \"A smartphone application to support recovery from alcoholism: a randomized clinical trial,\" JAMA Psychiatry, vol. 71, no. 5, 2014.",
-    "[raw_reference] K. Witkiewitz, S. Desai, S. Bowen, B. Leigh, M. Kirouac, and M. Larimer, \"Development and evaluation of a mobile intervention for heavy drinking and smoking among college studen,\" Psychology of Addictive Behav- iors, vol. 28, no. 3, 2014.",
-    "[raw_reference] K. Abby, H. Eric, G. Lauren, W. Sandra, S. Jylana, B. Matthew, \u02d9.., and C. Jesse, \"Harnessing different motivational frames via mobile phones to promote daily physical activity and reduce sedentary behavior in aging adults,\" Plos ONE, vol. 8, 2013.",
-    "[raw_reference] S. Bauer, E. Okon, R. Meermann, and H. Kordy, \"Technology-enhanced maintenance of treatment gains in eating disorders: Efficacy of an intervention de- livered via text messaging,\" Journal of Consulting and Clinical Psychology, vol. 80, no. 4, 2012.",
-    "[raw_reference] C. Depp, B. Mausbach, E. Granholm, V. Cardenas, D. Ben-Zeev, ..., and D. Jeste, \"Mobile interventions for severe mental illness: design and preliminary data from three approaches,\" The Journal of Nervous and Mental Disease, vol. 198, no. 10, 2010.",
-    "[raw_reference] D. Ben-Zeev, K. E. Davis, S. Kaiser, I. Krzsos, and R. E. Drake, \"Mobile technologies among people with seri- ous mental illness: opportunities for future services,\" Administration and Policy in Mental Health and Mental Health Services Research, vol. 40, no. 4, 2013.",
-    "[raw_reference] K. Patrick, F. Raab, M. Adams, L. Dillon, M. Zabin- ski, C. Rock, W. Griswold, and G. Norman, \"A text message-based intervention for weight loss: random- ized controlled trial,\" Journal of Medical Internet Re- search, vol. 11, no. 1, 2009.",
-    "2nd ed.",
-    "[raw_reference] R. S. Sutton and A. G. Barto, Reinforcement Learning: An Introduction. Cambridge, MA, USA: MIT Press, 2nd ed., 2012.",
-    "[raw_reference] L. Li, W. Chu, J. Langford, and R. E. Schapire, \"A contextual-bandit approach to personalized news ar- ticle recommendation,\" in International Conference on World Wide Web (WWW), pp. 661-670, 2010.",
-    "[raw_reference] N. Cesa-Bianchi, C. Gentile, and G. Zappella, \"A gang of bandits,\" in NIPS, pp. 737-745, 2013.",
-    "[raw_reference] C. Gentile, S. Li, and G. Zappella, \"Online clustering of bandits,\" in ICML, pp. 757-765, 2014.",
-    "[raw_reference] A. Carpentier and M. Valko, \"Revealing graph bandits for maximizing local influence,\" in AISTATS, pp. 10-18, 2016.",
-    "[raw_reference] F. Zhu, Y. Wang, S. Xiang, B. Fan, and C. Pan, \"Struc- tured sparse method for hyperspectral unmixing,\" ISPRS Journal of Photogrammetry and Remote Sensing, vol. 88, no. 0, pp. 101-118, 2014.",
-    "[raw_reference] H. Li, Y. Wang, S. Xiang, J. Duan, F. Zhu, and C. Pan, \"A label propagation method using spatial-spectral consis- tency for hyperspectral image classification,\" Interna- tional Journal of Remote Sensing, vol. 37, no. 1, pp. 191- 211, 2016.",
-    "[raw_reference] T. Li, E. Levina, and J. Zhu, \"Prediction models for network-linked data,\" CoRR, vol. abs/1602.01192, February 2016.",
-    "[raw_reference] M. Geist and O. Pietquin, \"Algorithmic survey of para- metric value function approximation,\" IEEE Transac- tions on Neural Networks and Learning Systems, vol. 24, no. 6, pp. 845-867, 2013.",
-    "[raw_reference] I. Grondman, L. Busoniu, G. A. D. Lopes, and R. Babuska, \"A survey of actor-critic reinforcement learning: Standard and natural policy gradients,\" IEEE Trans. Systems, Man, and Cybernetics, vol. 42, no. 6, pp. 1291-1307, 2012.",
-    "[raw_reference] E. P. D. Pednault, N. Abe, and B. Zadrozny, \"Sequen- tial cost-sensitive decision making with reinforcement learning,\" in ACM SIGKDD Int. Conf. on Knowledge Discovery and Data Min., pp. 259-268, 2002.",
-    "[raw_reference] M. G. Lagoudakis and R. Parr, \"Least-squares policy iteration,\" J. of Machine Learning Research (JLMR), vol. 4, pp. 1107-1149, 2003.",
-    "[raw_reference] L. Epstein, J. Robinson, J. Temple, J. Roemmich, A. Marusewski, and R. Nadbrzuch, \"Variety influences habituation of motivated behavior for food and energy intake in children,\" The American Journal of Clinical Nutrition, vol. 89, pp. 746 -754, Mar 2009.",
-    "[raw_reference] N. Abe, N. K. Verma, C. Apt\u00e9, and R. Schroko, \"Cross channel optimized marketing by reinforcement learn- ing,\" in ACM SIGKDD Int. Conf. on Knowledge Discovery and Data Min., pp. 767-772, 2004.",
-    "[raw_reference] N. Abe, P. Melville, C. Pendus, C. K. Reddy, D. L. Jensen, V. P. Thomas, J. J. Bennett, G. F. Anderson, B. R. Cooley, M. Kowalczyk, M. Domick, and T. Gar- dinier, \"Optimizing debt collections using constrained reinforcement learning,\" in ACM SIGKDD Int. Conf. on Knowledge Discovery and Data Min., pp. 75-84, 2010.",
-    "[raw_reference] J. Z. Kolter and A. Y. Ng, \"Regularization and feature selection in least-squares temporal difference learning,\" in International Conference on Machine Learning (ICML), pp. 521-528, 2009.",
-    "[raw_reference] J. Sakuma, S. Kobayashi, and R. N. Wright, \"Privacy- preserving reinforcement learning,\" in International Conference on Machine Learning, pp. 864-871, 2008.",
-    "[raw_reference] D. L. Haynie, \"Delinquent peers revisited: Does net- work structure matter?,\" American journal of sociology, vol. 106, no. 4, pp. 1013 -1057, 2001.",
-    "[raw_reference] K. Fujimoto and T. W. Valente, \"Social network in- fluences on adolescent substance use: disentangling structural equivalence from cohesion,\" Social Science & Medicine, vol. 74, no. 12, pp. 1952 -1960, 2012.",
-    "[raw_reference] G. Cheng, F. Zhu, S. Xiang, Y. Wang, and C. Pan, \"Semisupervised hyperspectral image classification via discriminant analysis and robust regression,\" IEEE J. of Selected Topics in Applied Earth Observations and Remote Sensing, vol. 9, no. 2, pp. 595-608, 2016.",
-    "[raw_reference] G. Cheng, F. Zhu, S. Xiang, and C. Pan, \"Road center- line extraction via semisupervised segmentation and multidirection nonmaximum suppression,\" IEEE Geo- science and Remote Sensing Letters, vol. 13, no. 4, pp. 545- 549, 2016.",
-    "[raw_reference] F. Zhu, Y. Wang, B. Fan, S. Xiang, G. Meng, and C. Pan, \"Spectral unmixing via data-guided sparsity,\" IEEE Transactions on Image Processing (TIP), vol. 23, pp. 5412- 5427, Dec 2014.",
-    "[raw_reference] G. Cheng, Y. Wang, Y. Gong, F. Zhu, and C. Pan, \"Urban road extraction via graph cuts based probabil- ity propagation,\" in Image Processing (ICIP), 2014 IEEE International Conference on, pp. 5072-5076, IEEE, 2014.",
-    "[raw_reference] F. Zhu, B. Fan, X. Zhu, Y. Wang, S. Xiang, and C. Pan, \"10,000+ times accelerated robust subset selec- tion (ARSS),\" in Proc. Assoc. Adv. Artif. Intell. (AAAI), pp. 3217-3224, 2015.",
-    "[raw_reference] G. Cheng, Y. Wang, F. Zhu, and C. Pan, \"Road extrac- tion via adaptive graph cuts with multiple features,\" in Image Processing (ICIP), IEEE International Conference on, pp. 3962-3966, IEEE, 2015.",
-    "[raw_reference] Y. Wang, C. Pan, S. Xiang, and F. Zhu, \"Robust hy- perspectral unmixing with correntropy-based metric,\" IEEE Transactions on Image Processing, vol. 24, no. 11, pp. 4027-4040, 2015.",
-    "[raw_reference] X. Hu, Y. Wang, F. Zhu, and C. Pan, \"Learning-based fully 3d face reconstruction from a single image,\" in Acoustics, Speech and Signal Processing (ICASSP), 2016 IEEE International Conference on, pp. 1651-1655, IEEE, 2016.",
-    "[raw_reference] G. Cheng, F. Zhu, S. Xiang, Y. Wang, and C. Pan, \"Accurate urban road centerline extraction from vhr imagery via multiscale segmentation and tensor vot- ing,\" Neurocomputing, vol. 205, pp. 407-420, 2016.",
-    "[raw_reference] F. Zhu, Y. Wang, B. Fan, G. Meng, and C. Pan, \"Effec- tive spectral unmixing via robust representation and learning-based sparsity,\" CoRR, vol. abs/1409.0685, 2014.",
-    "[raw_reference] W. Dempsey, P. Liao, P. Klasnja, I. Nahum-Shani, and S. A. Murphy, \"Randomised trials for the fitbit genera- tion,\" Significance, vol. 12, pp. 20 -23, Dec 2016.",
-    "[raw_reference] U. von Luxburg, \"A tutorial on spectral clustering,\" Statistics and Computing, vol. 17, no. 4, pp. 395 -416, 2007.",
-    "[report_type] PhD thesis",
-    "[raw_reference] F. Zhu, Unsupervised Hyperspectral Unmixing Methods. PhD thesis, 2015.",
-    "[raw_reference] M. W. Hoffman, A. Lazaric, M. Ghavamzadeh, and R. Munos, \"Regularized least squares temporal differ- ence learning with nested \u2113 2 and \u2113 1 penalization,\" in Recent Advances in Reinforcement Learning, pp. 102-114, 2011.",
-    "[raw_reference] K. B. Petersen and M. S. Pedersen, \"The matrix cook- book,\" 2012.",
-    "[raw_reference] A. N. Langville and W. J. Stewart, \"The kronecker prod- uct and stochastic automata networks,\" Journal of Com- putational and Applied Mathematics, vol. 167, pp. 429- 447, June 2004."
-  ],
-  "processing_software": {
-    "GROBID": "0.8.2"
-  }
+  "num_references": 53
 }

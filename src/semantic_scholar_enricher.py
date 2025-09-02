@@ -38,13 +38,15 @@ class S2BatchEnricher:
     .
     """
 
-    def __init__(self, batch_size: int = 500) -> None:
+    def __init__(self, batch_size: int = 500, force: bool = False) -> None:
         """Initialize enricher.
 
         Args:
             batch_size: Number of papers per batch (max 500 for S2)
+            force: Force re-enrichment even if already processed
         """
         self.batch_size = min(batch_size, 500)  # S2 max is 500
+        self.force = force
         self.base_url = "https://api.semanticscholar.org/graph/v1"
 
         logger.info("Using Semantic Scholar API")
@@ -273,6 +275,14 @@ class S2BatchEnricher:
 
         return metadata
 
+    def has_s2_data(self, paper: dict) -> bool:
+        """Check if paper already has S2 enrichment."""
+        # Check for s2_enriched marker
+        if paper.get("s2_enriched"):
+            return True
+        # Check for any s2_ prefixed fields
+        return any(key.startswith("s2_") for key in paper)
+
     def process_directory(self, input_dir: Path, output_dir: Path, max_papers: int | None = None) -> None:
         """Process all papers in directory with batch queries and checkpoint recovery.
 
@@ -306,8 +316,13 @@ class S2BatchEnricher:
         papers_with_dois = {}
         papers_without_dois = []
         skipped_count = 0
+        skipped_already_enriched = 0
 
         for json_file in json_files:
+            # Skip checkpoint and report files
+            if "checkpoint" in json_file.name or "report" in json_file.name:
+                continue
+
             # Skip if already processed
             if json_file.stem in processed_papers:
                 skipped_count += 1
@@ -315,6 +330,12 @@ class S2BatchEnricher:
 
             with open(json_file, encoding="utf-8") as f:
                 paper_data = json.load(f)
+
+            # Skip if already enriched (unless force mode)
+            if not self.force and self.has_s2_data(paper_data):
+                skipped_already_enriched += 1
+                processed_papers.add(json_file.stem)
+                continue
 
             doi = paper_data.get("doi", "").strip()
             if doi:
@@ -327,6 +348,10 @@ class S2BatchEnricher:
 
         if skipped_count > 0:
             logger.info("Skipped %d already processed papers", skipped_count)
+        if skipped_already_enriched > 0:
+            logger.info("Skipped %d already enriched papers", skipped_already_enriched)
+        if self.force:
+            logger.info("Force mode: Re-enriching all papers")
 
         logger.info("Papers with DOIs to process: %d", len(papers_with_dois))
         logger.info("Papers without DOIs: %d", len(papers_without_dois))
@@ -368,6 +393,8 @@ class S2BatchEnricher:
                         paper_data["s2_influential_citations"] = s2_metadata["influential_citation_count"]
 
                     # Add enrichment metadata
+                    paper_data["s2_enriched"] = True
+                    paper_data["s2_enriched_date"] = datetime.now(UTC).isoformat()
                     paper_data["s2_enrichment"] = {
                         "timestamp": datetime.now(UTC).isoformat(),
                         "success": True,
@@ -489,11 +516,12 @@ def main() -> None:
     )
     parser.add_argument("--batch-size", type=int, default=500, help="Number of papers per batch (max 500)")
     parser.add_argument("--max-papers", type=int, help="Maximum papers to process (for testing)")
+    parser.add_argument("--force", action="store_true", help="Force re-enrichment even if already processed")
 
     args = parser.parse_args()
 
     # Create enricher
-    enricher = S2BatchEnricher(batch_size=args.batch_size)
+    enricher = S2BatchEnricher(batch_size=args.batch_size, force=args.force)
 
     # Process papers
     enricher.process_directory(

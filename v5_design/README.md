@@ -317,6 +317,39 @@ Benefits:
 
 ### Latest Updates
 
+#### Dec 3, 2024 - Logging and Display System Implementation
+
+**Professional Dashboard**: 40-line display with real-time updates
+- Reduces output from 700+ lines to exactly 40 lines
+- Shows all 8 pipeline stages simultaneously with progress bars
+- Dual logging system: clean console + detailed log files
+- Implementation: `pipeline_logger.py`, `v5_pipeline_runner_logged.py`
+- Documentation: [38_logging_display_implementation.md](38_logging_display_implementation.md)
+
+#### Dec 3, 2024 - Performance Optimizations
+
+**Checkpoint Optimization**: Balanced intervals for different API speeds
+- Fast APIs (CrossRef, S2): 500 paper checkpoints
+- Medium APIs (Unpaywall, PubMed): 200 paper checkpoints
+- Slow APIs (arXiv): 100 paper checkpoints with batch processing
+- Documentation: [26_checkpoint_performance_analysis.md](26_checkpoint_performance_analysis.md)
+
+**arXiv 100x Speedup**: Batch query implementation
+- Uses id_list parameter for up to 100 papers per request
+- Reduces processing from 45 hours to 10 minutes
+- Documentation: [27_arxiv_optimization_results.md](27_arxiv_optimization_results.md)
+
+**Incremental Processing**: Process only new papers by default
+- Skips already-enriched papers automatically
+- --force flag to override and re-process
+- Documentation: [29_incremental_processing_implementation.md](29_incremental_processing_implementation.md)
+
+**Shared Utilities Module**: Common functions centralized
+- 8 essential functions: clean_doi, batch_iterator, rate_limit_wait, etc.
+- Comprehensive test coverage
+- Implementation: `pipeline_utils.py`
+- Documentation: [32_utilities_implementation.md](32_utilities_implementation.md)
+
 #### Sep 1, 2025 - Pipeline Completeness Analysis
 
 **Comprehensive Analysis**: Industry-leading extraction results achieved

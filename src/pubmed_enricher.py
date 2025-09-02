@@ -1,558 +1,241 @@
 #!/usr/bin/env python3
-"""PubMed Enrichment for V5 Pipeline.
+"""V5 Pipeline Stage 7: PubMed Enrichment.
 
 Adds authoritative medical metadata for biomedical papers.
 
-Features:
-- MeSH terms with qualifiers and major/minor designation
-- Publication types (Clinical Trial, Review, Meta-Analysis, etc.)
-- Chemical substances and gene symbols
-- Clinical trial numbers (NCT identifiers)
-- Grant information and funding
-- Comments, corrections, and retractions
-- ~30% coverage (biomedical subset of papers)
+Usage:
+    python v5_pubmed_pipeline.py --input unpaywall_enriched_final --output pubmed_enriched_final
+    python v5_pubmed_pipeline.py --test  # Test with small dataset
+    python v5_pubmed_pipeline.py --api-key YOUR_KEY  # For higher rate limits
 """
 
 from src import config
 import json
 import time
-from defusedxml import ElementTree
-from xml.etree.ElementTree import Element
 from pathlib import Path
 from datetime import datetime, UTC
-from typing import Any
-import requests
-from requests.adapters import HTTPAdapter
-from urllib3.util.retry import Retry
-from collections import defaultdict
-import re
+import argparse
+import os
+from pubmed_enricher import PubMedEnricher
 
 
-class PubMedEnricher:
-    """Enrich papers with PubMed biomedical metadata.
+def analyze_enrichment_results(output_dir: Path) -> None:
+    """Analyze and report enrichment statistics.
 
     .
     """
-
-    def __init__(self, api_key: str | None = None):
-        """Initialize PubMed enricher.
-
-        Args:
-            api_key: Optional NCBI API key for higher rate limits (10/sec vs 3/sec)
-        """
-        self.base_url = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils"
-        self.api_key = api_key
-        self.session = self._create_session()
-        self.stats: defaultdict[str, int] = defaultdict(int)
-
-        # Rate limiting based on API key
-        self.delay = 0.1 if api_key else 0.34  # 10/sec with key, 3/sec without
-
-    def _create_session(self) -> requests.Session:
-        """Create HTTP session with retry logic.
-
-        .
-        """
-        session = requests.Session()
-        retry = Retry(total=5, backoff_factor=1, status_forcelist=[429, 500, 502, 503, 504])
-        adapter = HTTPAdapter(max_retries=retry)
-        session.mount("http://", adapter)
-        session.mount("https://", adapter)
-
-        # Set user agent
-        session.headers.update(
-            {"User-Agent": "Research Assistant v5.0 (https://github.com/research-assistant)"}
-        )
-
-        return session
-
-    def enrich_single_by_doi(self, doi: str) -> dict[str, Any] | None:
-        """Enrich a single paper by DOI.
-
-        Args:
-            doi: Paper DOI
-
-        Returns:
-            Enriched metadata or None if not found
-        """
-        # Clean DOI
-        clean_doi = self._clean_doi(doi)
-        if not clean_doi:
-            self.stats["invalid_doi"] += 1
-            return None
-
-        # First, convert DOI to PMID
-        pmid = self._doi_to_pmid(clean_doi)
-        if not pmid:
-            self.stats["not_in_pubmed"] += 1
-            return None
-
-        # Then fetch full metadata
-        return self.enrich_single_by_pmid(pmid)
-
-    def enrich_single_by_pmid(self, pmid: str) -> dict[str, Any] | None:
-        """Enrich a single paper by PMID.
-
-        Args:
-            pmid: PubMed ID
-
-        Returns:
-            Enriched metadata or None if not found
-        """
-        try:
-            # Fetch metadata from PubMed
-            params = {"db": "pubmed", "id": pmid, "retmode": "xml"}
-            if self.api_key:
-                params["api_key"] = self.api_key
-
-            response = self.session.get(f"{self.base_url}/efetch.fcgi", params=params, timeout=30)
-            response.raise_for_status()
-
-            # Parse XML response
-            root = ElementTree.fromstring(response.content)
-            article = root.find(".//PubmedArticle")
-
-            if article is None:
-                self.stats["parse_error"] += 1
-                return None
-
-            enriched = self._parse_pubmed_article(article)
-            enriched["pmid"] = pmid
-
-            self.stats["enriched"] += 1
-            return enriched
-
-        except Exception as e:
-            self.stats["error"] += 1
-            print(f"Error enriching PMID {pmid}: {e}")
-            return None
-
-    def _clean_doi(self, doi: str) -> str | None:
-        """Clean and validate a DOI (reuses logic from OpenAlex/Unpaywall).
-
-        Args:
-            doi: Raw DOI string
-
-        Returns:
-            Cleaned DOI or None if invalid
-        """
-        if not doi:
-            return None
-
-        # Remove whitespace and convert to lowercase
-        clean = doi.strip().lower()
-
-        # Handle URLs
-        if clean.startswith("http"):
-            if "doi.org/" in clean:
-                clean = clean.split("doi.org/")[-1]
-            elif "doi=" in clean:
-                match = re.search(r"doi=([^&]+)", clean)
-                if match:
-                    clean = match.group(1)
-                else:
-                    return None
-            else:
-                return None
-
-        # Remove common suffixes from extraction errors
-        clean = clean.split(".from")[0]
-        clean = clean.split("keywords")[0]
-        clean = clean.rstrip(".)•")
-
-        # Validate basic DOI format
-        if not clean.startswith("10."):
-            return None
-        if len(clean) < config.DEFAULT_TIMEOUT or len(clean) > config.MIN_CONTENT_LENGTH:
-            return None
-
-        return clean
-
-    def _doi_to_pmid(self, doi: str) -> str | None:
-        """Convert DOI to PMID using PubMed search.
-
-        Args:
-            doi: Cleaned DOI
-
-        Returns:
-            PMID or None if not found
-        """
-        try:
-            # Search PubMed for DOI
-            params = {"db": "pubmed", "term": f"{doi}[DOI]", "retmode": "json"}
-            if self.api_key:
-                params["api_key"] = self.api_key
-
-            response = self.session.get(f"{self.base_url}/esearch.fcgi", params=params, timeout=30)
-            response.raise_for_status()
-
-            data = response.json()
-            result = data.get("esearchresult", {})
-            id_list = result.get("idlist", [])
-
-            if id_list:
-                return str(id_list[0])  # Return first (should be only) match
-
-            return None
-
-        except Exception as e:
-            print(f"Error converting DOI to PMID: {e}")
-            return None
-
-    def _parse_pubmed_article(self, article: Element) -> dict[str, Any]:
-        """Parse PubMed article XML into structured metadata.
-
-        Args:
-            article: PubmedArticle XML element
-
-        Returns:
-            Parsed metadata
-        """
-        enriched: dict[str, Any] = {}
-
-        # Get MedlineCitation element
-        medline = article.find("MedlineCitation")
-        if medline is None:
-            return enriched
-
-        # Basic article info
-        article_elem = medline.find(".//Article")
-        if article_elem:
-            # Title
-            title = article_elem.findtext(".//ArticleTitle", "")
-            if title:
-                enriched["title"] = title
-
-            # Abstract
-            abstract_elem = article_elem.find(".//Abstract")
-            if abstract_elem is not None:
-                abstract_parts = []
-                for abstract_text in abstract_elem.findall(".//AbstractText"):
-                    label = abstract_text.get("Label")
-                    text = abstract_text.text or ""
-                    if label:
-                        abstract_parts.append(f"{label}: {text}")
-                    else:
-                        abstract_parts.append(text)
-                if abstract_parts:
-                    enriched["abstract"] = " ".join(abstract_parts)
-
-            # Journal info
-            journal = article_elem.find(".//Journal")
-            if journal is not None:
-                journal_title = journal.findtext(".//Title", "")
-                if journal_title:
-                    enriched["journal"] = journal_title
-
-                # Publication date
-                pub_date = journal.find(".//PubDate")
-                if pub_date is not None:
-                    year = pub_date.findtext("Year")
-                    month = pub_date.findtext("Month")
-                    day = pub_date.findtext("Day")
-                    if year:
-                        enriched["publication_year"] = int(year)
-                    if year and month:
-                        enriched["publication_date"] = f"{year}-{month}"
-                        if day:
-                            enriched["publication_date"] += f"-{day}"
-
-            # Authors
-            authors = []
-            for author in article_elem.findall(".//Author"):
-                last_name = author.findtext("LastName", "")
-                fore_name = author.findtext("ForeName", "")
-                if last_name:
-                    author_name = f"{fore_name} {last_name}".strip()
-                    authors.append(author_name)
-
-                    # Affiliations
-                    affiliation = author.findtext(".//Affiliation")
-                    if affiliation and "affiliations" not in enriched:
-                        enriched["affiliations"] = []
-                    if affiliation:
-                        enriched["affiliations"].append(affiliation)
-
-            if authors:
-                enriched["authors"] = authors
-
-            # Publication types
-            pub_types = []
-            for pub_type in article_elem.findall(".//PublicationType"):
-                pub_type_text = pub_type.text
-                if pub_type_text:
-                    pub_types.append(pub_type_text)
-            if pub_types:
-                enriched["publication_types"] = pub_types
-
-        # MeSH terms
-        mesh_terms = []
-        for mesh in medline.findall(".//MeshHeading"):
-            descriptor = mesh.findtext("DescriptorName", "")
-            descriptor_elem = mesh.find("DescriptorName")
-            is_major = (
-                descriptor_elem.get("MajorTopicYN", "N") == "Y" if descriptor_elem is not None else False
-            )
-
-            mesh_entry = {"descriptor": descriptor, "is_major": is_major}
-
-            # Qualifiers
-            qualifiers = []
-            for qualifier in mesh.findall("QualifierName"):
-                qual_name = qualifier.text
-                qual_major = qualifier.get("MajorTopicYN", "N") == "Y"
-                if qual_name:
-                    qualifiers.append({"name": qual_name, "is_major": qual_major})
-
-            if qualifiers:
-                mesh_entry["qualifiers"] = qualifiers
-
-            mesh_terms.append(mesh_entry)
-
-        if mesh_terms:
-            enriched["mesh_terms"] = mesh_terms
-
-        # Chemical list
-        chemicals = []
-        for chemical in medline.findall(".//Chemical"):
-            substance = chemical.findtext("NameOfSubstance", "")
-            registry_number = chemical.findtext("RegistryNumber", "")
-            if substance:
-                chem_entry = {"name": substance}
-                if registry_number and registry_number != "0":
-                    chem_entry["registry_number"] = registry_number
-                chemicals.append(chem_entry)
-
-        if chemicals:
-            enriched["chemicals"] = chemicals
-
-        # Keywords
-        keywords = []
-        for keyword in medline.findall(".//Keyword"):
-            kw_text = keyword.text
-            if kw_text:
-                keywords.append(kw_text)
-        if keywords:
-            enriched["keywords"] = keywords
-
-        # Grants
-        grants = []
-        for grant in medline.findall(".//Grant"):
-            grant_id = grant.findtext("GrantID", "")
-            agency = grant.findtext("Agency", "")
-            country = grant.findtext("Country", "")
-            if grant_id or agency:
-                grant_entry = {}
-                if grant_id:
-                    grant_entry["id"] = grant_id
-                if agency:
-                    grant_entry["agency"] = agency
-                if country:
-                    grant_entry["country"] = country
-                grants.append(grant_entry)
-
-        if grants:
-            enriched["grants"] = grants
-
-        # Data availability
-        data_banks = []
-        for databank in medline.findall(".//DataBank"):
-            bank_name = databank.findtext("DataBankName", "")
-            if bank_name:
-                accessions = []
-                for acc in databank.findall(".//AccessionNumber"):
-                    if acc.text:
-                        accessions.append(acc.text)
-                if accessions:
-                    data_banks.append({"name": bank_name, "accession_numbers": accessions})
-
-        if data_banks:
-            enriched["data_banks"] = data_banks
-
-        # Comments and corrections
-        comments = []
-        for comment in medline.findall(".//CommentsCorrectionsList/CommentsCorrections"):
-            ref_type = comment.get("RefType", "")
-            ref_pmid = comment.findtext("PMID", "")
-            if ref_type and ref_pmid:
-                comments.append({"type": ref_type, "pmid": ref_pmid})
-
-        if comments:
-            enriched["related_articles"] = comments
-
-        # Track statistics
-        if mesh_terms:
-            self.stats["has_mesh"] += 1
-        if chemicals:
-            self.stats["has_chemicals"] += 1
+    report_file = output_dir / "pubmed_enrichment_report.json"
+    if not report_file.exists():
+        print("No report file found")
+        return
+
+    with open(report_file) as f:
+        report = json.load(f)
+
+    print("\n" + "=" * 80)
+    print("PUBMED ENRICHMENT RESULTS")
+    print("=" * 80)
+
+    stats = report["statistics"]
+    print("\nProcessing Statistics:")
+    print(f"  Total papers: {stats['total_papers']}")
+    print(f"  Papers with DOI/PMID: {stats['papers_with_identifiers']}")
+    print(f"  Papers enriched: {stats['papers_enriched']}")
+    print(f"  Papers not in PubMed: {stats['not_in_pubmed']}")
+    print(f"  Enrichment rate: {stats['enrichment_rate']}")
+    print(f"  Processing time: {stats['processing_time_seconds']} seconds")
+
+    if "biomedical_metadata" in report:
+        bio = report["biomedical_metadata"]
+        print("\nBiomedical Metadata:")
+        print(f"  Papers with MeSH terms: {bio['mesh_terms']} ({bio['mesh_coverage']})")
+        print(f"  Papers with chemicals: {bio['chemicals']}")
+
+        pub_types = bio.get("publication_types", {})
         if pub_types:
-            for pt in pub_types:
-                if "Clinical Trial" in pt:
-                    self.stats["clinical_trials"] += 1
-                    break
-                if "Review" in pt:
-                    self.stats["reviews"] += 1
-                    break
-                if "Meta-Analysis" in pt:
-                    self.stats["meta_analyses"] += 1
-                    break
+            print("\nPublication Types:")
+            print(f"  Clinical Trials: {pub_types.get('clinical_trials', 0)}")
+            print(f"  Reviews: {pub_types.get('reviews', 0)}")
+            print(f"  Meta-Analyses: {pub_types.get('meta_analyses', 0)}")
 
-        return enriched
+    if "errors" in report:
+        errors = report["errors"]
+        if any(errors.values()):
+            print("\nError Analysis:")
+            for error_type, count in errors.items():
+                if count > 0:
+                    print(f"  - {error_type}: {count}")
 
-    def enrich_batch(
-        self, identifiers: list[dict[str, str]], batch_size: int = 20
-    ) -> dict[str, dict[str, Any]]:
-        """Enrich multiple papers by DOI or PMID.
+    # Sample detailed analysis
+    papers = list(output_dir.glob("*.json"))[: config.DEFAULT_PROCESSING_LIMIT]
 
-        Args:
-            identifiers: List of dicts with 'doi' and/or 'pmid' keys
-            batch_size: Number of PMIDs to fetch at once (max 200)
+    if papers:
+        print(f"\nSample Analysis (first {len(papers)} papers):")
 
-        Returns:
-            Dictionary mapping original identifier to enriched metadata
-        """
-        results: dict[str, dict[str, Any]] = {}
+        mesh_descriptors = []
+        chemicals = []
+        pub_types_list = []
+        grants_found = 0
 
-        # Step 1: Convert DOIs to PMIDs
-        pmid_map: dict[str, str] = {}  # Maps PMID to original identifier
-        pmids_to_fetch = []
+        for paper_file in papers:
+            if "report" in paper_file.name:
+                continue
 
-        for id_dict in identifiers:
-            original_key = id_dict.get("doi") or id_dict.get("pmid")
-            if not original_key:
-                continue  # Skip if no identifier
+            with open(paper_file) as f:
+                paper = json.load(f)
 
-            if id_dict.get("pmid"):
-                # Already have PMID
-                pmids_to_fetch.append(id_dict["pmid"])
-                pmid_map[id_dict["pmid"]] = original_key
-            elif id_dict.get("doi"):
-                # Convert DOI to PMID
-                clean_doi = self._clean_doi(id_dict["doi"])
-                if clean_doi:
-                    pmid = self._doi_to_pmid(clean_doi)
-                    if pmid:
-                        pmids_to_fetch.append(pmid)
-                        pmid_map[pmid] = original_key
-                    else:
-                        self.stats["not_in_pubmed"] += 1
-                else:
-                    self.stats["invalid_doi"] += 1
+                # MeSH terms
+                if paper.get("pubmed_mesh_terms"):
+                    for mesh in paper["pubmed_mesh_terms"]:
+                        descriptor = mesh.get("descriptor")
+                        if descriptor:
+                            mesh_descriptors.append(descriptor)
 
-            # Rate limiting for DOI lookups
-            time.sleep(self.delay)
+                # Chemicals
+                if paper.get("pubmed_chemicals"):
+                    for chem in paper["pubmed_chemicals"]:
+                        name = chem.get("name")
+                        if name:
+                            chemicals.append(name)
 
-        if not pmids_to_fetch:
-            return results
+                # Publication types
+                if paper.get("pubmed_publication_types"):
+                    pub_types_list.extend(paper["pubmed_publication_types"])
 
-        # Step 2: Fetch metadata in batches
-        for i in range(0, len(pmids_to_fetch), batch_size):
-            batch_pmids = pmids_to_fetch[i : i + batch_size]
+                # Grants
+                if paper.get("pubmed_grants"):
+                    grants_found += 1
 
-            try:
-                # Fetch batch
-                params = {"db": "pubmed", "id": ",".join(batch_pmids), "retmode": "xml"}
-                if self.api_key:
-                    params["api_key"] = self.api_key
+        if mesh_descriptors:
+            from collections import Counter
 
-                response = self.session.get(f"{self.base_url}/efetch.fcgi", params=params, timeout=60)
-                response.raise_for_status()
+            mesh_counts = Counter(mesh_descriptors)
+            print("\n  Top MeSH Terms in Sample:")
+            for term, count in mesh_counts.most_common(config.DEFAULT_MAX_RESULTS):
+                print(f"    - {term}: {count} occurrences")
 
-                # Parse XML response
-                root = ElementTree.fromstring(response.content)
+        if chemicals:
+            chem_counts = Counter(chemicals)
+            print("\n  Top Chemicals in Sample:")
+            for chem, count in chem_counts.most_common(config.DEFAULT_MAX_RESULTS):
+                print(f"    - {chem}: {count} occurrences")
 
-                # Process each article
-                for article in root.findall(".//PubmedArticle"):
-                    pmid_elem = article.find(".//PMID")
-                    if pmid_elem is not None and pmid_elem.text:
-                        pmid = pmid_elem.text
-                        if pmid in pmid_map:
-                            enriched = self._parse_pubmed_article(article)
-                            enriched["pmid"] = pmid
+        if pub_types_list:
+            type_counts = Counter(pub_types_list)
+            print("\n  Publication Types in Sample:")
+            for pub_type, count in type_counts.most_common(config.DEFAULT_MAX_RESULTS):
+                print(f"    - {pub_type}: {count}")
 
-                            original_key = pmid_map[pmid]
-                            results[original_key] = enriched
-                            self.stats["enriched"] += 1
+        if grants_found:
+            print(f"\n  Papers with grant information: {grants_found}/{len(papers)}")
 
-            except Exception as e:
-                print(f"Error fetching batch: {e}")
-                self.stats["batch_error"] += 1
-
-            # Rate limiting between batches
-            time.sleep(self.delay)
-
-        # Count failures
-        self.stats["failed"] = len(identifiers) - len(results)
-
-        return results
-
-    def get_statistics(self) -> dict[str, Any]:
-        """Get enrichment statistics.
-
-        .
-        """
-        total = self.stats["enriched"] + self.stats["failed"]
-
-        return {
-            "total_processed": total,
-            "enriched": self.stats["enriched"],
-            "failed": self.stats["failed"],
-            "enrichment_rate": f"{(self.stats['enriched'] / total * 100):.1f}%" if total else "0%",
-            "not_in_pubmed": self.stats["not_in_pubmed"],
-            "has_mesh": self.stats["has_mesh"],
-            "mesh_coverage": f"{(self.stats['has_mesh'] / self.stats['enriched'] * 100):.1f}%"
-            if self.stats["enriched"]
-            else "0%",
-            "has_chemicals": self.stats["has_chemicals"],
-            "publication_types": {
-                "clinical_trials": self.stats.get("clinical_trials", 0),
-                "reviews": self.stats.get("reviews", 0),
-                "meta_analyses": self.stats.get("meta_analyses", 0),
-            },
-            "errors": {
-                "invalid_doi": self.stats.get("invalid_doi", 0),
-                "parse_error": self.stats.get("parse_error", 0),
-                "batch_error": self.stats.get("batch_error", 0),
-                "other": self.stats.get("error", 0),
-            },
-        }
+    print("\n" + "=" * 80)
 
 
-def process_directory(input_dir: str, output_dir: str, api_key: str | None = None) -> None:
-    """Process all papers in a directory with PubMed enrichment.
+def has_pubmed_data(paper: dict) -> bool:
+    """Check if paper already has PubMed enrichment."""
+    # Check for pubmed_enriched marker
+    if paper.get("pubmed_enriched"):
+        return True
+    # Check for any pubmed_ prefixed fields
+    return any(key.startswith("pubmed_") for key in paper)
 
-    Args:
-        input_dir: Directory containing paper JSON files
-        output_dir: Directory to save enriched papers
-        api_key: Optional NCBI API key for higher rate limits
+
+def main() -> None:
+    """Run the main program.
+
+    .
     """
-    input_path = Path(input_dir)
-    output_path = Path(output_dir)
-    output_path.mkdir(parents=True, exist_ok=True)
+    parser = argparse.ArgumentParser(description="V5 Pipeline Stage 7: PubMed Enrichment")
+    parser.add_argument(
+        "--input", default="unpaywall_enriched_final", help="Input directory with Unpaywall enriched papers"
+    )
+    parser.add_argument(
+        "--output", default="pubmed_enriched_final", help="Output directory for PubMed enriched papers"
+    )
+    parser.add_argument("--api-key", help="NCBI API key for higher rate limits (10/sec vs 3/sec)")
+    parser.add_argument("--test", action="store_true", help="Test mode - use small dataset")
+    parser.add_argument("--analyze-only", action="store_true", help="Only analyze existing results")
+    parser.add_argument("--force", action="store_true", help="Force re-enrichment even if already processed")
+
+    args = parser.parse_args()
+
+    # Check for API key in environment if not provided
+    if not args.api_key:
+        args.api_key = os.environ.get("NCBI_API_KEY")
+
+    # Test mode uses small dataset
+    if args.test:
+        args.input = "unpaywall_test_output"
+        args.output = "pubmed_test_output"
+
+    output_path = Path(args.output)
+
+    # Analyze only mode
+    if args.analyze_only:
+        if not output_path.exists():
+            print(f"Output directory {output_path} does not exist")
+            return
+        analyze_enrichment_results(output_path)
+        return
+
+    # Check input directory
+    input_path = Path(args.input)
+    if not input_path.exists():
+        print(f"Input directory {input_path} does not exist")
+        print("Please run Unpaywall enrichment first (v5_unpaywall_pipeline.py)")
+        return
 
     # Initialize enricher
-    enricher = PubMedEnricher(api_key=api_key)
+    print("=" * 80)
+    print("V5 PIPELINE - STAGE 7: PUBMED ENRICHMENT")
+    print("=" * 80)
+    print(f"Input: {input_path}")
+    print(f"Output: {output_path}")
+    if args.api_key:
+        print("API Key: Provided (10 requests/sec)")
+    else:
+        print("API Key: Not provided (3 requests/sec)")
+        print("Get a free API key at: https://www.ncbi.nlm.nih.gov/account/")
+    print()
+
+    enricher = PubMedEnricher(api_key=args.api_key)
+
+    # Create output directory
+    output_path.mkdir(parents=True, exist_ok=True)
 
     # Load papers
     paper_files = list(input_path.glob("*.json"))
+    if not paper_files:
+        print("No papers found in input directory")
+        return
+
+    # Filter out report files
+    paper_files = [f for f in paper_files if "report" not in f.name]
     print(f"Found {len(paper_files)} papers to process")
 
     # Collect identifiers
     identifiers = []
     papers_by_id = {}
+    papers_without_id = []
+    skipped_already_enriched = 0
 
     for paper_file in paper_files:
-        # Skip report files
-        if "report" in paper_file.name:
-            continue
-
         with open(paper_file) as f:
             paper = json.load(f)
 
-            # Prepare identifier dict
+            # Skip if already enriched (unless force mode)
+            if not args.force and has_pubmed_data(paper):
+                skipped_already_enriched += 1
+                papers_by_id[paper_file.stem] = (paper_file.stem, paper)  # Keep for final save
+                continue
+
+            # Check for existing PMID or DOI
             id_dict = {}
             if paper.get("pmid"):
                 id_dict["pmid"] = paper["pmid"]
+            elif paper.get("pubmed_pmid"):  # From previous enrichment
+                id_dict["pmid"] = paper["pubmed_pmid"]
             elif paper.get("doi"):
                 id_dict["doi"] = paper["doi"]
 
@@ -560,18 +243,31 @@ def process_directory(input_dir: str, output_dir: str, api_key: str | None = Non
                 key = id_dict.get("doi") or id_dict.get("pmid")
                 identifiers.append(id_dict)
                 papers_by_id[key] = (paper_file.stem, paper)
+            else:
+                papers_without_id.append((paper_file.stem, paper))
 
     print(f"Found {len(identifiers)} papers with DOIs or PMIDs")
+    if skipped_already_enriched > 0:
+        print(f"Skipped (already enriched): {skipped_already_enriched}")
+    if papers_without_id:
+        print(f"Skipping {len(papers_without_id)} papers without identifiers")
+    if args.force:
+        print("Force mode: Re-enriching all papers")
 
-    # Process in batches
-    batch_size = 20
-    all_results = {}
+    if not identifiers:
+        print("No papers with identifiers to process")
+        return
+
+    # Process papers
+    print("\nProcessing papers with PubMed API...")
+    print("Note: PubMed primarily covers biomedical literature")
+    print("Expected coverage: ~30% of general research papers")
+
     start_time = time.time()
 
-    print("\nProcessing papers with PubMed API...")
-    if not api_key:
-        print("Note: No API key provided. Using slower rate limit (3 requests/sec)")
-        print("Get a free API key at: https://www.ncbi.nlm.nih.gov/account/")
+    # Process in batches
+    batch_size = config.MEDIUM_API_CHECKPOINT_INTERVAL // 2  # 100 papers (PubMed efetch can handle up to 200)
+    all_results = {}
 
     for i in range(0, len(identifiers), batch_size):
         batch = identifiers[i : i + batch_size]
@@ -580,17 +276,35 @@ def process_directory(input_dir: str, output_dir: str, api_key: str | None = Non
 
         print(f"\nProcessing batch {batch_num}/{total_batches} ({len(batch)} papers)...")
 
-        # Enrich batch
+        # Process batch
         batch_results = enricher.enrich_batch(batch, batch_size=batch_size)
         all_results.update(batch_results)
 
         # Show progress
         stats = enricher.get_statistics()
-        print(f"  Enriched: {stats['enriched']}/{stats['total_processed']}")
-        print(f"  MeSH coverage: {stats['mesh_coverage']}")
+        print(f"  Enriched: {stats['enriched']}")
+        print(f"  Not in PubMed: {stats['not_in_pubmed']}")
+        if stats["enriched"] > 0:
+            print(f"  MeSH coverage: {stats['mesh_coverage']}")
 
-    # Save enriched papers
-    print("\nSaving enriched papers...")
+        # Save checkpoint every 100 papers
+        if (i + batch_size) % config.MEDIUM_API_CHECKPOINT_INTERVAL == 0 or (i + batch_size) >= len(
+            identifiers
+        ):
+            print("  Saving checkpoint...")
+            for key, (paper_id, original_paper) in list(papers_by_id.items())[: i + batch_size]:
+                if key in all_results:
+                    enrichment = all_results[key]
+                    for field, value in enrichment.items():
+                        if value is not None:
+                            original_paper[f"pubmed_{field}"] = value
+
+                output_file = output_path / f"{paper_id}.json"
+                with open(output_file, "w") as f:
+                    json.dump(original_paper, f, indent=2)
+
+    # Save all papers
+    print("\nSaving all papers...")
     enriched_count = 0
     for key, (paper_id, original_paper) in papers_by_id.items():
         if key in all_results:
@@ -601,6 +315,10 @@ def process_directory(input_dir: str, output_dir: str, api_key: str | None = Non
                 if value is not None:
                     original_paper[f"pubmed_{field}"] = value
 
+            # Add enrichment marker
+            original_paper["pubmed_enriched"] = True
+            original_paper["pubmed_enriched_date"] = datetime.now(UTC).isoformat()
+
             enriched_count += 1
 
         # Save paper (enriched or not)
@@ -608,9 +326,15 @@ def process_directory(input_dir: str, output_dir: str, api_key: str | None = Non
         with open(output_file, "w") as f:
             json.dump(original_paper, f, indent=2)
 
+    # Also copy papers without identifiers
+    for paper_id, paper in papers_without_id:
+        output_file = output_path / f"{paper_id}.json"
+        with open(output_file, "w") as f:
+            json.dump(paper, f, indent=2)
+
     elapsed_time = time.time() - start_time
 
-    # Generate report
+    # Generate final report
     final_stats = enricher.get_statistics()
     report = {
         "timestamp": datetime.now(UTC).isoformat(),
@@ -618,11 +342,13 @@ def process_directory(input_dir: str, output_dir: str, api_key: str | None = Non
         "statistics": {
             "total_papers": len(paper_files),
             "papers_with_identifiers": len(identifiers),
+            "papers_without_identifiers": len(papers_without_id),
             "papers_enriched": final_stats["enriched"],
             "papers_failed": final_stats["failed"],
             "enrichment_rate": final_stats["enrichment_rate"],
             "not_in_pubmed": final_stats["not_in_pubmed"],
             "processing_time_seconds": round(elapsed_time, 1),
+            "avg_time_per_paper": round(elapsed_time / len(identifiers), 2) if identifiers else 0,
         },
         "biomedical_metadata": {
             "mesh_terms": final_stats["has_mesh"],
@@ -637,59 +363,24 @@ def process_directory(input_dir: str, output_dir: str, api_key: str | None = Non
     with open(report_file, "w") as f:
         json.dump(report, f, indent=2)
 
-    print("\nEnrichment complete!")
-    print(
-        f"  Papers enriched: {final_stats['enriched']}/{len(identifiers)} ({final_stats['enrichment_rate']})"
-    )
-    print(f"  MeSH term coverage: {final_stats['has_mesh']} papers ({final_stats['mesh_coverage']})")
-    print(f"  Clinical trials: {final_stats['publication_types']['clinical_trials']}")
-    print(f"  Reviews: {final_stats['publication_types']['reviews']}")
-    print(f"  Meta-analyses: {final_stats['publication_types']['meta_analyses']}")
-    print(f"  Processing time: {elapsed_time:.1f} seconds")
-    print(f"  Report saved to: {report_file}")
+    print("\n" + "=" * 80)
+    print("ENRICHMENT COMPLETE")
+    print("=" * 80)
+    print(f"Papers enriched: {final_stats['enriched']}/{len(identifiers)} ({final_stats['enrichment_rate']})")
+    print(f"Papers not in PubMed: {final_stats['not_in_pubmed']}")
+    if final_stats["enriched"] > 0:
+        print(f"MeSH term coverage: {final_stats['has_mesh']} papers ({final_stats['mesh_coverage']})")
+        print(f"Clinical trials: {final_stats['publication_types']['clinical_trials']}")
+        print(f"Reviews: {final_stats['publication_types']['reviews']}")
+        print(f"Meta-analyses: {final_stats['publication_types']['meta_analyses']}")
+    print(f"Processing time: {elapsed_time:.1f} seconds")
+    print(f"Output directory: {output_path}")
+    print(f"Report saved to: {report_file}")
+
+    # Analyze results
+    if final_stats["enriched"] > 0:
+        analyze_enrichment_results(output_path)
 
 
 if __name__ == "__main__":
-    import argparse
-
-    parser = argparse.ArgumentParser(description="Enrich papers with PubMed biomedical metadata")
-    parser.add_argument("--input", default="unpaywall_enriched_final", help="Input directory with papers")
-    parser.add_argument("--output", default="pubmed_enriched", help="Output directory")
-    parser.add_argument("--api-key", help="NCBI API key for higher rate limits (free from NCBI)")
-    parser.add_argument("--test", action="store_true", help="Test with single paper")
-
-    args = parser.parse_args()
-
-    if args.test:
-        # Test with a biomedical paper
-        enricher = PubMedEnricher(api_key=args.api_key)
-
-        # Test DOI lookup (COVID-19 paper likely in PubMed)
-        test_doi = "10.1038/s41586-020-2012-7"  # COVID-19 origin paper
-
-        print(f"Testing with DOI: {test_doi}")
-        result = enricher.enrich_single_by_doi(test_doi)
-
-        if result:
-            print("\nEnrichment successful!")
-            print(json.dumps(result, indent=2))
-
-            # Show statistics
-            stats = enricher.get_statistics()
-            print(f"\nStatistics: {json.dumps(stats, indent=2)}")
-        else:
-            print("Paper not found in PubMed")
-
-            # Try another paper
-            test_doi_2 = "10.1056/NEJMoa2001017"  # First COVID-19 clinical report
-            print(f"\nTrying another DOI: {test_doi_2}")
-            result = enricher.enrich_single_by_doi(test_doi_2)
-
-            if result:
-                print("\nEnrichment successful!")
-                print(f"Title: {result.get('title', 'N/A')[:60]}")
-                print(f"PMID: {result.get('pmid', 'N/A')}")
-                print(f"MeSH terms: {len(result.get('mesh_terms', []))}")
-                print(f"Publication types: {result.get('publication_types', [])}")
-    else:
-        process_directory(args.input, args.output, args.api_key)
+    main()

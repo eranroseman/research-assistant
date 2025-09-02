@@ -4,48 +4,37 @@
   "abstract": "Conversational Health Agents (CHAs) are interactive systems that provide healthcare services, such as assistance and diagnosis. Current CHAs, especially those utilizing Large Language Models (LLMs), primarily focus on conversation aspects. However, they offer limited agent capabilities, specifically lacking multi-step problem-solving, personalized conversations, and multimodal data analysis. Our aim is to overcome these limitations. We propose openCHA, an open-source LLM-powered framework, to empower conversational agents to generate a personalized response for users' healthcare queries. This framework enables developers to integrate external sources including data sources, knowledge bases, and analysis models, into their LLM-based solutions. openCHA includes an orchestrator to plan and execute actions for gathering information from external sources, essential for formulating responses to user inquiries. It facilitates knowledge acquisition, problemsolving capabilities, multilingual and multimodal conversations, and fosters interaction with various AI platforms. We illustrate the framework's proficiency in handling complex healthcare tasks via two demonstrations and four use cases. Moreover, we release openCHA as open source available to",
   "year": 2024,
   "date": "2024-09-26",
+  "journal": "Journal of medical Internet research",
+  "publication": "Journal of medical Internet research",
   "authors": [
     {
+      "forename": "Mahyar",
+      "surname": "Abbasian",
       "name": "Mahyar Abbasian",
-      "email": "abbasiam@uci.edu",
-      "affiliation": {
-        "organization": "University of California",
-        "institution": "University of California",
-        "address": "Irvine"
-      }
+      "affiliation": "1  University of California , Irvine \n\t\t\t\t\t\t\t\t University of California \n\t\t\t\t\t\t\t\t \n\t\t\t\t\t\t\t\t\t Irvine",
+      "email": "abbasiam@uci.edu"
     },
     {
+      "forename": "Iman",
+      "surname": "Azimi",
       "name": "Iman Azimi",
-      "affiliation": {
-        "organization": "University of California",
-        "institution": "University of California",
-        "address": "Irvine"
-      }
+      "affiliation": "1  University of California , Irvine \n\t\t\t\t\t\t\t\t University of California \n\t\t\t\t\t\t\t\t \n\t\t\t\t\t\t\t\t\t Irvine"
     },
     {
+      "forename": "Amir",
+      "surname": "Rahmani",
       "name": "Amir Rahmani",
-      "affiliation": {
-        "organization": "University of California",
-        "institution": "University of California",
-        "address": "Irvine"
-      }
+      "affiliation": "1  University of California , Irvine \n\t\t\t\t\t\t\t\t University of California \n\t\t\t\t\t\t\t\t \n\t\t\t\t\t\t\t\t\t Irvine"
     },
     {
+      "forename": "Ramesh",
+      "surname": "Jain",
       "name": "Ramesh Jain",
-      "affiliation": {
-        "organization": "University of California",
-        "institution": "University of California",
-        "address": "Irvine"
-      }
+      "affiliation": "1  University of California , Irvine \n\t\t\t\t\t\t\t\t University of California \n\t\t\t\t\t\t\t\t \n\t\t\t\t\t\t\t\t\t Irvine"
     }
   ],
   "doi": "10.1056/aioa2300138",
-  "md5": "8CF4445108D81892AA3A15B956E91851",
   "arxiv": "arXiv:2310.02374v5[cs.CL]",
-  "publication": {
-    "journal": "medRxiv",
-    "journal_inferred": true
-  },
   "sections": [
     {
       "text": "the community via GitHub \u22c4,\u22c4 ."
@@ -155,21 +144,15 @@
     },
     {
       "text": "Tree of Thought Planning second planning stage: generating the task execution code part 1.Decision: I will go with Strategy 1 as it provides the most recent and relevant information on the internet, which is crucial for improving sleep.Now, let's proceed with the detailed tool executions for Strategy 1:1.Use the \"google_search\" tool to find the top websites with tips to improve sleep.2. Once we have the top website, we can use the \"extract_text\" tool to extract the relevant information about improving sleep from the webpage."
-    },
-    {
-      "title": "APPENDIX 3 -RESPONSE GENERATOR IMPLEMENTATION",
-      "text": "We encourage readers and openCHA users to review our documentation page \u22c4 for the latest updates on openCHA.\n\nIn this appendix, we provide a detailed explanation of the Response Generator's implementation. We begin by distinguishing between the Response Generator and the Task Planner. Following this, we demonstrate how the outcomes of planning and task execution are delivered to the Response Generator. Lastly, we present the prompts employed to ensure that the Response Generator depends on the tasks' responses rather than the internal knowledge of the LLM used for generating responses.\n\nOne of the key objectives of the Agentic approach is to create a comprehensive mega prompt that allows an LLM to generate more precise answers by incorporating all necessary information. Our innovation centers on dynamically generating this mega prompt in response to user queries. The Task Planner initiates this process by determining the sequence of tasks it deems necessary to accurately address the current question.\n\nOnce planning is complete, the Orchestrator compiles the results of these tasks to create the mega prompt. The composition of this prompt is influenced by the nature of the tasks and their outputs. For instance, if a task's output_type is set to true, indicating that the result should be stored in the Datapipe for subsequent analysis task use, the Orchestrator will omit this result from the prompt. The focus in this case is on the analysis's outcome rather than intermediate results. Similarly, for tasks that produce metadata, such as an image, the metadata itself isn't passed directly to the Response Generator. Instead, descriptive information about the metadata, like details of a plot image and relevant data insights, are provided to the Response Generator, indicating that this information accompanies the image.\n\nFigure  10  illustrates the prompt provided to the Response Generator LLM. Initially, the Orchestrator formats answers derived from the task results, which we refer to as the \"thinker\" part of the prompt. The LLM is then instructed to rely exclusively on this thinker prompt, disregarding its internal knowledge. Additionally, we include guidelines to help the LLM understand specific system implementations, such as Datapipe access keys or metadata details.\n\nIn the openCHA framework, this prompt is customizable. A \"prefix\"\n\n\u22c4  https://docs.opencha.com/index.html"
-    },
-    {
-      "title": "APPENDIX 4 -SAMPLE PROMPTS",
-      "text": "In this Appendix, we demonstrate the generated prompt for a simple example involving two tasks: Internet search and webpage information extraction. The user's query, \"How to improve my sleep,\" is first directed to the Task Planner. Table  3  displays the initial planning stage where the Tree of Thought Planner is requested to develop three strategies, evaluate their pros and cons, and choose one to execute. Table  4  presents the prompt for the second planning stage, where the LLM is instructed to generate Python code that the Orchestrator can execute based on the chosen strategy, along with the necessary inputs. Table  5  and 6 provides an example of the generated code, illustrating how the LLM correctly inputs the query \"tips to improve sleep\" for the google_search task. Table  7  shows how openCHA creates a prompt to assist the Response Generator in utilizing the tasks' results to respond to the user's query effectively. Additionally, Table  8  provides an example of a prompt for a task that has multiple inputs and outputs, with the result being stored in the Data Pipe. Table  9  illustrates the process of passing the Data Pipe key between tasks. In this setup, each task returns a Data Pipe key, and within the generated code, the output from one task is appropriately passed to the next task as its input. The execute_task function manages access to the Data Pipe when a key is provided, ensuring that the results of the tasks are not directly transmitted to the LLM."
     }
   ],
   "references": [
     {
       "title": "ChatGPT: OpenAI's Conversational AI Model",
-      "year": 2024,
-      "raw": "ChatGPT: OpenAI's Conversational AI Model \n\t\t \n\t\t\t Openai \n\t\t \n\t\t \n\t\t \n\t\t\t January 2024 \n\t\t \n\t \n\t OpenAI. ChatGPT: OpenAI's Conversational AI Model; Accessed: January 2024. https://openai.com/chatgpt."
+      "authors": [
+        "Openai"
+      ],
+      "year": 2024
     },
     {
       "title": "MedAlpaca-An Open-Source Collection of Medical Conversational AI Models and Training Data",
@@ -180,8 +163,7 @@
         "P Grundmann",
         "T Oberhauser",
         "A L\u00f6ser"
-      ],
-      "raw": "MedAlpaca-An Open-Source Collection of Medical Conversational AI Models and Training Data \n\t\t \n\t\t\t T Han \n\t\t \n\t\t \n\t\t\t L C Adams \n\t\t \n\t\t \n\t\t\t J M Papaioannou \n\t\t \n\t\t \n\t\t\t P Grundmann \n\t\t \n\t\t \n\t\t\t T Oberhauser \n\t\t \n\t\t \n\t\t\t A L\u00f6ser \n\t\t \n\t\t arXiv:230408247. 2023 \n\t\t \n\t \n\t arXiv preprint \n\t Han T, Adams LC, Papaioannou JM, Grundmann P, Oberhauser T, L\u00f6ser A, et al. MedAlpaca-An Open-Source Collection of Medical Conversational AI Models and Training Data. arXiv preprint arXiv:230408247. 2023."
+      ]
     },
     {
       "title": "Towards Generalist Biomedical AI",
@@ -193,8 +175,7 @@
         "M Amin",
         "P Chang"
       ],
-      "doi": "10.1056/aioa2300138",
-      "raw": "Towards Generalist Biomedical AI \n\t\t \n\t\t\t T Tu \n\t\t \n\t\t \n\t\t\t S Azizi \n\t\t \n\t\t \n\t\t\t D Driess \n\t\t \n\t\t \n\t\t\t M Schaekermann \n\t\t \n\t\t \n\t\t\t M Amin \n\t\t \n\t\t \n\t\t\t P C Chang \n\t\t \n\t\t 10.1056/aioa2300138 \n\t\t arXiv:230714334. 2023 \n\t\t \n\t \n\t arXiv preprint \n\t Tu T, Azizi S, Driess D, Schaekermann M, Amin M, Chang PC, et al. Towards Generalist Biomedical AI. arXiv preprint arXiv:230714334. 2023."
+      "doi": "10.1056/aioa2300138"
     },
     {
       "title": "The effectiveness of artificial intelligence conversational agents in health care: systematic review",
@@ -207,12 +188,7 @@
         "G Mole"
       ],
       "year": 2020,
-      "doi": "10.2196/20346",
-      "journal": "Journal of medical Internet research",
-      "volume": "22",
-      "issue": "10",
-      "pages": "20346",
-      "raw": "The effectiveness of artificial intelligence conversational agents in health care: systematic review \n\t\t \n\t\t\t M Milne-Ives \n\t\t \n\t\t \n\t\t\t C De Cock \n\t\t \n\t\t \n\t\t\t E Lim \n\t\t \n\t\t \n\t\t\t M H Shehadeh \n\t\t \n\t\t \n\t\t\t N De Pennington \n\t\t \n\t\t \n\t\t\t G Mole \n\t\t \n\t\t 10.2196/20346 \n\t \n\t \n\t\t Journal of medical Internet research \n\t\t \n\t\t\t 22 \n\t\t\t 10 \n\t\t\t 20346 \n\t\t\t 2020 \n\t\t \n\t \n\t Milne-Ives M, de Cock C, Lim E, Shehadeh MH, de Pennington N, Mole G, et al. The effectiveness of artificial intelligence conversational agents in health care: systematic review. Journal of medical Internet research. 2020;22(10):e20346."
+      "doi": "10.2196/20346"
     },
     {
       "title": "The role of empathy in health and social care professionals",
@@ -222,11 +198,7 @@
         "A Philalithis",
         "S Koukouli"
       ],
-      "year": 2020,
-      "journal": "Healthcare",
-      "volume": "8",
-      "pages": "26",
-      "raw": "The role of empathy in health and social care professionals \n\t\t \n\t\t\t M Moudatsou \n\t\t \n\t\t \n\t\t\t A Stavropoulou \n\t\t \n\t\t \n\t\t\t A Philalithis \n\t\t \n\t\t \n\t\t\t S Koukouli \n\t\t \n\t \n\t \n\t\t Healthcare \n\t\t \n\t\t\t 8 \n\t\t\t 26 \n\t\t\t 2020 \n\t\t\t MDPI \n\t\t \n\t \n\t Moudatsou M, Stavropoulou A, Philalithis A, Koukouli S. The role of empathy in health and social care professionals. In: Healthcare. vol. 8. MDPI; 2020. p. 26."
+      "year": 2020
     },
     {
       "title": "Foundation Metrics: Quantifying Effectiveness of Healthcare Conversations powered by Generative AI",
@@ -238,8 +210,7 @@
         "Zsh Abad",
         "A Thieme"
       ],
-      "doi": "10.1038/s41746-024-01074-z",
-      "raw": "Foundation Metrics: Quantifying Effectiveness of Healthcare Conversations powered by Generative AI \n\t\t \n\t\t\t M Abbasian \n\t\t \n\t\t \n\t\t\t E Khatibi \n\t\t \n\t\t \n\t\t\t I Azimi \n\t\t \n\t\t \n\t\t\t D Oniani \n\t\t \n\t\t \n\t\t\t Zsh Abad \n\t\t \n\t\t \n\t\t\t A Thieme \n\t\t \n\t\t 10.1038/s41746-024-01074-z \n\t\t arXiv:230912444. 2023 \n\t\t \n\t \n\t arXiv preprint \n\t Abbasian M, Khatibi E, Azimi I, Oniani D, Abad ZSH, Thieme A, et al. Foundation Metrics: Quantifying Effectiveness of Healthcare Conversations powered by Generative AI. arXiv preprint arXiv:230912444. 2023."
+      "doi": "10.1038/s41746-024-01074-z"
     },
     {
       "title": "Multichannel Mobile Companions for Personalized Healthcare Opportunities and Challenges",
@@ -250,18 +221,14 @@
         "M Santos"
       ],
       "year": 2023,
-      "doi": "10.1016/j.procs.2023.03.112",
-      "journal": "Procedia Computer Science",
-      "volume": "220",
-      "raw": "Multichannel Mobile Companions for Personalized Healthcare Opportunities and Challenges \n\t\t \n\t\t\t A Moreira \n\t\t \n\t\t \n\t\t\t C Quintas \n\t\t \n\t\t \n\t\t\t T Guimar\u00e3es \n\t\t \n\t\t \n\t\t\t M F Santos \n\t\t \n\t\t 10.1016/j.procs.2023.03.112 \n\t \n\t \n\t\t Procedia Computer Science \n\t\t \n\t\t\t 220 \n\t\t\t \n\t\t\t 2023 \n\t\t \n\t \n\t Moreira A, Quintas C, Guimar\u00e3es T, Santos MF. Multichannel Mobile Companions for Personalized Healthcare Opportunities and Challenges. Procedia Computer Science. 2023;220:838-43."
+      "doi": "10.1016/j.procs.2023.03.112"
     },
     {
       "title": "How Are Consumers Using Generative AI?",
       "authors": [
         "O Moore"
       ],
-      "year": 2024,
-      "raw": "How Are Consumers Using Generative AI? \n\t\t \n\t\t\t O Moore \n\t\t \n\t\t \n\t\t \n\t\t\t January 2024 \n\t\t \n\t \n\t Moore O. How Are Consumers Using Generative AI?; Accessed: January 2024. https: //a16z.com/how-are-consumers-using-generative-ai/."
+      "year": 2024
     },
     {
       "title": "Investigating conversational agents in healthcare: Application of a technical-oriented taxonomy",
@@ -269,10 +236,7 @@
         "K Denecke",
         "R May"
       ],
-      "year": 2023,
-      "journal": "Procedia Computer Science",
-      "volume": "219",
-      "raw": "Investigating conversational agents in healthcare: Application of a technical-oriented taxonomy \n\t\t \n\t\t\t K Denecke \n\t\t \n\t\t \n\t\t\t R May \n\t\t \n\t \n\t \n\t\t Procedia Computer Science \n\t\t \n\t\t\t 219 \n\t\t\t \n\t\t\t 2023 \n\t\t \n\t \n\t Denecke K, May R. Investigating conversational agents in healthcare: Application of a technical-oriented taxonomy. Procedia Computer Science. 2023;219:1289-96."
+      "year": 2023
     },
     {
       "title": "The challenge of complexity in health care",
@@ -280,11 +244,7 @@
         "P Plsek",
         "T Greenhalgh"
       ],
-      "year": 2001,
-      "journal": "Bmj",
-      "volume": "323",
-      "issue": "7313",
-      "raw": "The challenge of complexity in health care \n\t\t \n\t\t\t P E Plsek \n\t\t \n\t\t \n\t\t\t T Greenhalgh \n\t\t \n\t \n\t \n\t\t Bmj \n\t\t \n\t\t\t 323 \n\t\t\t 7313 \n\t\t\t \n\t\t\t 2001 \n\t\t \n\t \n\t Plsek PE, Greenhalgh T. The challenge of complexity in health care. Bmj. 2001;323(7313):625-8."
+      "year": 2001
     },
     {
       "title": "Complexity and health-yesterday's traditions, tomorrow's future",
@@ -292,11 +252,7 @@
         "J Sturmberg",
         "C Martin"
       ],
-      "year": 2009,
-      "journal": "J Eval Clin Pract",
-      "volume": "15",
-      "issue": "3",
-      "raw": "Complexity and health-yesterday's traditions, tomorrow's future \n\t\t \n\t\t\t J P Sturmberg \n\t\t \n\t\t \n\t\t\t C M Martin \n\t\t \n\t \n\t \n\t\t J Eval Clin Pract \n\t\t \n\t\t\t 15 \n\t\t\t 3 \n\t\t\t \n\t\t\t 2009 \n\t\t \n\t \n\t Sturmberg JP, Martin CM. Complexity and health-yesterday's traditions, tomorrow's future. J Eval Clin Pract. 2009;15(3):543-8."
+      "year": 2009
     },
     {
       "title": "BioGPT: generative pre-trained transformer for biomedical text generation and mining",
@@ -309,12 +265,7 @@
         "H Poon"
       ],
       "year": 2022,
-      "doi": "10.1093/bib/bbac409",
-      "journal": "Briefings in Bioinformatics",
-      "volume": "23",
-      "issue": "6",
-      "pages": "409",
-      "raw": "BioGPT: generative pre-trained transformer for biomedical text generation and mining \n\t\t \n\t\t\t R Luo \n\t\t \n\t\t \n\t\t\t L Sun \n\t\t \n\t\t \n\t\t\t Y Xia \n\t\t \n\t\t \n\t\t\t T Qin \n\t\t \n\t\t \n\t\t\t S Zhang \n\t\t \n\t\t \n\t\t\t H Poon \n\t\t \n\t\t 10.1093/bib/bbac409 \n\t \n\t \n\t\t Briefings in Bioinformatics \n\t\t \n\t\t\t 23 \n\t\t\t 6 \n\t\t\t 409 \n\t\t\t 2022 \n\t\t \n\t \n\t Luo R, Sun L, Xia Y, Qin T, Zhang S, Poon H, et al. BioGPT: generative pre-trained transformer for biomedical text generation and mining. Briefings in Bioinformatics. 2022;23(6):bbac409."
+      "doi": "10.1093/bib/bbac409"
     },
     {
       "title": "ChatDoctor: A Medical Chat Model Fine-Tuned on a Large Language Model Meta-AI (LLaMA) Using Medical Domain Knowledge",
@@ -326,11 +277,7 @@
         "S Jiang",
         "Y Zhang"
       ],
-      "year": 2023,
-      "journal": "Cureus",
-      "volume": "15",
-      "issue": "6",
-      "raw": "ChatDoctor: A Medical Chat Model Fine-Tuned on a Large Language Model Meta-AI (LLaMA) Using Medical Domain Knowledge \n\t\t \n\t\t\t Y Li \n\t\t \n\t\t \n\t\t\t Z Li \n\t\t \n\t\t \n\t\t\t K Zhang \n\t\t \n\t\t \n\t\t\t R Dan \n\t\t \n\t\t \n\t\t\t S Jiang \n\t\t \n\t\t \n\t\t\t Y Zhang \n\t\t \n\t \n\t \n\t\t Cureus \n\t\t \n\t\t\t 15 \n\t\t\t 6 \n\t\t\t 2023 \n\t\t \n\t \n\t Li Y, Li Z, Zhang K, Dan R, Jiang S, Zhang Y. ChatDoctor: A Medical Chat Model Fine-Tuned on a Large Language Model Meta-AI (LLaMA) Using Medical Domain Knowledge. Cureus. 2023;15(6)."
+      "year": 2023
     },
     {
       "title": "FeelFit-Design and Evaluation of a Conversational Agent to Enhance Health Awareness",
@@ -341,8 +288,7 @@
         "A Behne",
         "F Teuteberg"
       ],
-      "year": 2019,
-      "raw": "FeelFit-Design and Evaluation of a Conversational Agent to Enhance Health Awareness \n\t\t \n\t\t\t P Meier \n\t\t \n\t\t \n\t\t\t J H Beinke \n\t\t \n\t\t \n\t\t\t C Fitte \n\t\t \n\t\t \n\t\t\t A Behne \n\t\t \n\t\t \n\t\t\t F Teuteberg \n\t\t \n\t\t \n\t\t\t 2019 \n\t\t\t ICIS \n\t\t \n\t \n\t Meier P, Beinke JH, Fitte C, Behne A, Teuteberg F. FeelFit-Design and Evaluation of a Conversational Agent to Enhance Health Awareness. In: ICIS; 2019. ."
+      "year": 2019
     },
     {
       "title": "Survey of conversational agents in health",
@@ -352,10 +298,7 @@
         "Rosa Da",
         "R Righi"
       ],
-      "year": 2019,
-      "journal": "Expert Systems with Applications",
-      "volume": "129",
-      "raw": "Survey of conversational agents in health \n\t\t \n\t\t\t Jlz Montenegro \n\t\t \n\t\t \n\t\t\t C A Da Costa \n\t\t \n\t\t \n\t\t\t Rosa Da \n\t\t \n\t\t \n\t\t\t R Righi \n\t\t \n\t \n\t \n\t\t Expert Systems with Applications \n\t\t \n\t\t\t 129 \n\t\t\t \n\t\t\t 2019 \n\t\t \n\t \n\t Montenegro JLZ, da Costa CA, da Rosa Righi R. Survey of conversational agents in health. Expert Systems with Applications. 2019;129:56-67."
+      "year": 2019
     },
     {
       "title": "Conversational agents in health care: scoping review and conceptual analysis",
@@ -367,12 +310,7 @@
         "T Joty",
         "S Theng"
       ],
-      "year": 2020,
-      "journal": "Journal of medical Internet research",
-      "volume": "22",
-      "issue": "8",
-      "pages": "17158",
-      "raw": "Conversational agents in health care: scoping review and conceptual analysis \n\t\t \n\t\t\t Tudor Car \n\t\t \n\t\t \n\t\t\t L Dhinagaran \n\t\t \n\t\t \n\t\t\t D A Kyaw \n\t\t \n\t\t \n\t\t\t B M Kowatsch \n\t\t \n\t\t \n\t\t\t T Joty \n\t\t \n\t\t \n\t\t\t S Theng \n\t\t \n\t\t \n\t\t\t Y L \n\t\t \n\t \n\t \n\t\t Journal of medical Internet research \n\t\t \n\t\t\t 22 \n\t\t\t 8 \n\t\t\t 17158 \n\t\t\t 2020 \n\t\t \n\t \n\t Tudor Car L, Dhinagaran DA, Kyaw BM, Kowatsch T, Joty S, Theng YL, et al. Conversational agents in health care: scoping review and conceptual analysis. Journal of medical Internet research. 2020;22(8):e17158."
+      "year": 2020
     },
     {
       "title": "Conversational agents in healthcare: a systematic review",
@@ -385,11 +323,7 @@
         "R Bashir"
       ],
       "year": 2018,
-      "doi": "10.1093/jamia/ocy072",
-      "journal": "Journal of the American Medical Informatics Association",
-      "volume": "25",
-      "issue": "9",
-      "raw": "Conversational agents in healthcare: a systematic review \n\t\t \n\t\t\t L Laranjo \n\t\t \n\t\t \n\t\t\t A G Dunn \n\t\t \n\t\t \n\t\t\t H L Tong \n\t\t \n\t\t \n\t\t\t A B Kocaballi \n\t\t \n\t\t \n\t\t\t J Chen \n\t\t \n\t\t \n\t\t\t R Bashir \n\t\t \n\t\t 10.1093/jamia/ocy072 \n\t \n\t \n\t\t Journal of the American Medical Informatics Association \n\t\t \n\t\t\t 25 \n\t\t\t 9 \n\t\t\t \n\t\t\t 2018 \n\t\t \n\t \n\t Laranjo L, Dunn AG, Tong HL, Kocaballi AB, Chen J, Bashir R, et al. Conversational agents in healthcare: a systematic review. Journal of the American Medical Informatics Association. 2018;25(9):1248-58."
+      "doi": "10.1093/jamia/ocy072"
     },
     {
       "title": "A survey of large language models",
@@ -400,8 +334,7 @@
         "T Tang",
         "X Wang",
         "Y Hou"
-      ],
-      "raw": "A survey of large language models \n\t\t \n\t\t\t W X Zhao \n\t\t \n\t\t \n\t\t\t K Zhou \n\t\t \n\t\t \n\t\t\t J Li \n\t\t \n\t\t \n\t\t\t T Tang \n\t\t \n\t\t \n\t\t\t X Wang \n\t\t \n\t\t \n\t\t\t Y Hou \n\t\t \n\t\t arXiv:230318223. 2023 \n\t\t \n\t \n\t arXiv preprint \n\t Zhao WX, Zhou K, Li J, Tang T, Wang X, Hou Y, et al. A survey of large language models. arXiv preprint arXiv:230318223. 2023."
+      ]
     },
     {
       "title": "Randomized Controlled Trials Evaluating AI in Clinical Practice: A Scoping Evaluation",
@@ -414,30 +347,23 @@
         "P Rajpurkar"
       ],
       "year": 2023,
-      "doi": "10.1101/2023.09.12.23295381",
-      "journal": "medRxiv",
-      "raw": "Randomized Controlled Trials Evaluating AI in Clinical Practice: A Scoping Evaluation \n\t\t \n\t\t\t R Han \n\t\t \n\t\t \n\t\t\t J N Acosta \n\t\t \n\t\t \n\t\t\t Z Shakeri \n\t\t \n\t\t \n\t\t\t J Ioannidis \n\t\t \n\t\t \n\t\t\t E Topol \n\t\t \n\t\t \n\t\t\t P Rajpurkar \n\t\t \n\t\t 10.1101/2023.09.12.23295381 \n\t \n\t \n\t\t medRxiv \n\t\t \n\t\t\t \n\t\t\t 2023 \n\t\t \n\t \n\t Han R, Acosta JN, Shakeri Z, Ioannidis J, Topol E, Rajpurkar P. Randomized Con- trolled Trials Evaluating AI in Clinical Practice: A Scoping Evaluation. medRxiv. 2023:2023-09."
+      "doi": "10.1101/2023.09.12.23295381"
     },
     {
       "title": "ChatGPT utility in healthcare education, research, and practice: systematic review on the promising perspectives and valid concerns",
       "authors": [
-        "M; Sallam"
+        "M; Sallam",
+        "Mdpi"
       ],
       "year": 2023,
-      "doi": "10.3390/healthcare11060887",
-      "journal": "Healthcare",
-      "volume": "11",
-      "issue": "6",
-      "pages": "887",
-      "raw": "ChatGPT utility in healthcare education, research, and practice: systematic review on the promising perspectives and valid concerns \n\t\t \n\t\t\t M; Sallam \n\t\t \n\t\t \n\t\t\t Mdpi \n\t\t \n\t\t 10.3390/healthcare11060887 \n\t \n\t \n\t\t Healthcare \n\t\t \n\t\t\t 11 \n\t\t\t 6 \n\t\t\t 887 \n\t\t\t 2023 \n\t\t \n\t \n\t Sallam M; MDPI. ChatGPT utility in healthcare education, research, and prac- tice: systematic review on the promising perspectives and valid concerns. Healthcare. 2023;11(6):887."
+      "doi": "10.3390/healthcare11060887"
     },
     {
       "title": "ChatGPT and the future of medical writing",
       "authors": [
         "S Biswas"
       ],
-      "year": 2023,
-      "raw": "ChatGPT and the future of medical writing \n\t\t \n\t\t\t S Biswas \n\t\t \n\t\t \n\t\t\t 2023 \n\t\t\t Radiological Society of North America \n\t\t \n\t \n\t Biswas S. ChatGPT and the future of medical writing. Radiological Society of North America; 2023."
+      "year": 2023
     },
     {
       "title": "OpenAI ChatGPT generated literature review: Digital twin in healthcare",
@@ -445,8 +371,7 @@
         "\u00d6 Ayd\u0131n",
         "E Karaarslan"
       ],
-      "year": 2022,
-      "raw": "OpenAI ChatGPT generated literature review: Digital twin in healthcare \n\t\t \n\t\t\t \u00d6 Ayd\u0131n \n\t\t \n\t\t \n\t\t\t E Karaarslan \n\t\t \n\t\t SSRN 4308687 \n\t\t \n\t\t\t 2022 \n\t\t \n\t \n\t Ayd\u0131n \u00d6, Karaarslan E. OpenAI ChatGPT generated literature review: Digital twin in healthcare. Available at SSRN 4308687. 2022."
+      "year": 2022
     },
     {
       "title": "The utility of ChatGPT for cancer treatment information",
@@ -458,9 +383,7 @@
         "G Savova",
         "R Mak"
       ],
-      "year": 2023,
-      "journal": "medRxiv",
-      "raw": "The utility of ChatGPT for cancer treatment information \n\t\t \n\t\t\t S Chen \n\t\t \n\t\t \n\t\t\t B H Kann \n\t\t \n\t\t \n\t\t\t M B Foote \n\t\t \n\t\t \n\t\t\t H J Aerts \n\t\t \n\t\t \n\t\t\t G K Savova \n\t\t \n\t\t \n\t\t\t R H Mak \n\t\t \n\t \n\t \n\t\t medRxiv \n\t\t \n\t\t\t \n\t\t\t 2023 \n\t\t \n\t \n\t Chen S, Kann BH, Foote MB, Aerts HJ, Savova GK, Mak RH, et al. The utility of ChatGPT for cancer treatment information. medRxiv. 2023:2023-03."
+      "year": 2023
     },
     {
       "title": "BioSignal Copilot: Leveraging the power of LLMs in drafting reports for biomedical signals",
@@ -471,9 +394,7 @@
         "A Nikpour",
         "O Kavehei"
       ],
-      "year": 2023,
-      "journal": "medRxiv",
-      "raw": "BioSignal Copilot: Leveraging the power of LLMs in drafting reports for biomedical signals \n\t\t \n\t\t\t C Liu \n\t\t \n\t\t \n\t\t\t Y Ma \n\t\t \n\t\t \n\t\t\t K Kothur \n\t\t \n\t\t \n\t\t\t A Nikpour \n\t\t \n\t\t \n\t\t\t O Kavehei \n\t\t \n\t \n\t \n\t\t medRxiv \n\t\t \n\t\t\t \n\t\t\t 2023 \n\t\t \n\t \n\t Liu C, Ma Y, Kothur K, Nikpour A, Kavehei O. BioSignal Copilot: Leveraging the power of LLMs in drafting reports for biomedical signals. medRxiv. 2023:2023-06."
+      "year": 2023
     },
     {
       "title": "BioBERT: a pre-trained biomedical language representation model for biomedical text mining",
@@ -485,11 +406,7 @@
         "S Kim",
         "C So"
       ],
-      "year": 2020,
-      "journal": "Bioinformatics",
-      "volume": "36",
-      "issue": "4",
-      "raw": "BioBERT: a pre-trained biomedical language representation model for biomedical text mining \n\t\t \n\t\t\t J Lee \n\t\t \n\t\t \n\t\t\t W Yoon \n\t\t \n\t\t \n\t\t\t S Kim \n\t\t \n\t\t \n\t\t\t D Kim \n\t\t \n\t\t \n\t\t\t S Kim \n\t\t \n\t\t \n\t\t\t C H So \n\t\t \n\t \n\t \n\t\t Bioinformatics \n\t\t \n\t\t\t 36 \n\t\t\t 4 \n\t\t\t \n\t\t\t 2020 \n\t\t \n\t \n\t Lee J, Yoon W, Kim S, Kim D, Kim S, So CH, et al. BioBERT: a pre-trained biomedical language representation model for biomedical text mining. Bioinformatics. 2020;36(4):1234-40."
+      "year": 2020
     },
     {
       "title": "Domain-specific language model pretraining for biomedical natural language processing",
@@ -502,11 +419,7 @@
         "X Liu"
       ],
       "year": 2021,
-      "doi": "10.1145/3458754",
-      "journal": "ACM Transactions on Computing for Healthcare (HEALTH)",
-      "volume": "3",
-      "issue": "1",
-      "raw": "Domain-specific language model pretraining for biomedical natural language processing \n\t\t \n\t\t\t Y Gu \n\t\t \n\t\t \n\t\t\t R Tinn \n\t\t \n\t\t \n\t\t\t H Cheng \n\t\t \n\t\t \n\t\t\t M Lucas \n\t\t \n\t\t \n\t\t\t N Usuyama \n\t\t \n\t\t \n\t\t\t X Liu \n\t\t \n\t\t 10.1145/3458754 \n\t \n\t \n\t\t ACM Transactions on Computing for Healthcare (HEALTH) \n\t\t \n\t\t\t 3 \n\t\t\t 1 \n\t\t\t \n\t\t\t 2021 \n\t\t \n\t \n\t Gu Y, Tinn R, Cheng H, Lucas M, Usuyama N, Liu X, et al. Domain-specific language model pretraining for biomedical natural language processing. ACM Transactions on Computing for Healthcare (HEALTH). 2021;3(1):1-23."
+      "doi": "10.1145/3458754"
     },
     {
       "title": "Thinking about gpt-3 in-context learning for biomedical ie? think again",
@@ -517,8 +430,7 @@
         "Y Chen",
         "L Li",
         "H Sun"
-      ],
-      "raw": "B J Gutierrez \n\t\t \n\t\t \n\t\t\t N Mcneal \n\t\t \n\t\t \n\t\t\t C Washington \n\t\t \n\t\t \n\t\t\t Y Chen \n\t\t \n\t\t \n\t\t\t L Li \n\t\t \n\t\t \n\t\t\t H Sun \n\t\t \n\t\t arXiv:220308410. 2022 \n\t\t Thinking about gpt-3 in-context learning for biomedical ie? think again \n\t\t \n\t \n\t arXiv preprint \n\t Gutierrez BJ, McNeal N, Washington C, Chen Y, Li L, Sun H, et al. Think- ing about gpt-3 in-context learning for biomedical ie? think again. arXiv preprint arXiv:220308410. 2022."
+      ]
     },
     {
       "title": "Gpt-3 models are poor few-shot learners in the biomedical domain",
@@ -527,8 +439,7 @@
         "K Blagec",
         "F Haberl",
         "M Samwald"
-      ],
-      "raw": "Gpt-3 models are poor few-shot learners in the biomedical domain \n\t\t \n\t\t\t M Moradi \n\t\t \n\t\t \n\t\t\t K Blagec \n\t\t \n\t\t \n\t\t\t F Haberl \n\t\t \n\t\t \n\t\t\t M Samwald \n\t\t \n\t\t arXiv:210902555. 2021 \n\t\t \n\t \n\t arXiv preprint \n\t Moradi M, Blagec K, Haberl F, Samwald M. Gpt-3 models are poor few-shot learners in the biomedical domain. arXiv preprint arXiv:210902555. 2021."
+      ]
     },
     {
       "title": "ELIXR: Towards a general purpose X-ray artificial intelligence system through alignment of large language models and radiology vision encoders",
@@ -539,8 +450,7 @@
         "M Sieniek",
         "T Kohlberger",
         "M Ma"
-      ],
-      "raw": "ELIXR: Towards a general purpose X-ray artificial intelligence system through alignment of large language models and radiology vision encoders \n\t\t \n\t\t\t S Xu \n\t\t \n\t\t \n\t\t\t L Yang \n\t\t \n\t\t \n\t\t\t C Kelly \n\t\t \n\t\t \n\t\t\t M Sieniek \n\t\t \n\t\t \n\t\t\t T Kohlberger \n\t\t \n\t\t \n\t\t\t M Ma \n\t\t \n\t\t arXiv:230801317. 2023 \n\t\t \n\t \n\t arXiv preprint \n\t Xu S, Yang L, Kelly C, Sieniek M, Kohlberger T, Ma M, et al. ELIXR: Towards a general purpose X-ray artificial intelligence system through alignment of large language models and radiology vision encoders. arXiv preprint arXiv:230801317. 2023."
+      ]
     },
     {
       "title": "Multimodal LLMs for health grounded in individual-specific data",
@@ -551,8 +461,7 @@
         "C Mclean",
         "N Furlotte"
       ],
-      "doi": "10.1007/978-3-031-47679-2_7",
-      "raw": "Multimodal LLMs for health grounded in individual-specific data \n\t\t \n\t\t\t A Belyaeva \n\t\t \n\t\t \n\t\t\t J Cosentino \n\t\t \n\t\t \n\t\t\t F Hormozdiari \n\t\t \n\t\t \n\t\t\t C Y Mclean \n\t\t \n\t\t \n\t\t\t N A Furlotte \n\t\t \n\t\t 10.1007/978-3-031-47679-2_7 \n\t\t arXiv:230709018. 2023 \n\t\t \n\t \n\t arXiv preprint \n\t Belyaeva A, Cosentino J, Hormozdiari F, McLean CY, Furlotte NA. Multimodal LLMs for health grounded in individual-specific data. arXiv preprint arXiv:230709018. 2023."
+      "doi": "10.1007/978-3-031-47679-2_7"
     },
     {
       "title": "Hallucinations in large multilingual translation models",
@@ -563,16 +472,15 @@
         "B Haddow",
         "A Birch",
         "P Colombo"
-      ],
-      "raw": "Hallucinations in large multilingual translation models \n\t\t \n\t\t\t N M Guerreiro \n\t\t \n\t\t \n\t\t\t D Alves \n\t\t \n\t\t \n\t\t\t J Waldendorf \n\t\t \n\t\t \n\t\t\t B Haddow \n\t\t \n\t\t \n\t\t\t A Birch \n\t\t \n\t\t \n\t\t\t P Colombo \n\t\t \n\t\t arXiv:230316104. 2023 \n\t\t \n\t \n\t arXiv preprint \n\t Guerreiro NM, Alves D, Waldendorf J, Haddow B, Birch A, Colombo P, et al. Hal- lucinations in large multilingual translation models. arXiv preprint arXiv:230316104. 2023."
+      ]
     },
     {
       "title": "anticipating, and imagining",
       "authors": [
-        "U Neisser"
+        "U Neisser",
+        "Perceiving"
       ],
-      "year": 1978,
-      "raw": "anticipating, and imagining \n\t\t \n\t\t\t U Neisser \n\t\t \n\t\t \n\t\t\t Perceiving \n\t\t \n\t \n\t \n\t\t Perception and Cognition: Issues in the Foundations of Psychology \n\t\t Minneapolis \n\t\t \n\t\t\t University of Minnesota Press \n\t\t\t 1978 \n\t\t \n\t \n\t Neisser U. Perceiving, anticipating, and imagining. In: Perception and Cognition: Issues in the Foundations of Psychology. University of Minnesota Press, Minneapolis; 1978. ."
+      "year": 1978
     },
     {
       "title": "Tree of thoughts: Deliberate problem solving with large language models",
@@ -583,8 +491,7 @@
         "I Shafran",
         "T Griffiths",
         "Y Cao"
-      ],
-      "raw": "Tree of thoughts: Deliberate problem solving with large language models \n\t\t \n\t\t\t S Yao \n\t\t \n\t\t \n\t\t\t D Yu \n\t\t \n\t\t \n\t\t\t J Zhao \n\t\t \n\t\t \n\t\t\t I Shafran \n\t\t \n\t\t \n\t\t\t T L Griffiths \n\t\t \n\t\t \n\t\t\t Y Cao \n\t\t \n\t\t arXiv:230510601. 2023 \n\t\t \n\t \n\t arXiv preprint \n\t Yao S, Yu D, Zhao J, Shafran I, Griffiths TL, Cao Y, et al. Tree of thoughts: De- liberate problem solving with large language models. arXiv preprint arXiv:230510601. 2023."
+      ]
     },
     {
       "title": "React: Synergizing reasoning and acting in language models",
@@ -595,8 +502,7 @@
         "N Du",
         "I Shafran",
         "K Narasimhan"
-      ],
-      "raw": "React: Synergizing reasoning and acting in language models \n\t\t \n\t\t\t S Yao \n\t\t \n\t\t \n\t\t\t J Zhao \n\t\t \n\t\t \n\t\t\t D Yu \n\t\t \n\t\t \n\t\t\t N Du \n\t\t \n\t\t \n\t\t\t I Shafran \n\t\t \n\t\t \n\t\t\t K Narasimhan \n\t\t \n\t\t arXiv:221003629. 2022 \n\t\t \n\t \n\t arXiv preprint \n\t Yao S, Zhao J, Yu D, Du N, Shafran I, Narasimhan K, et al. React: Synergizing reasoning and acting in language models. arXiv preprint arXiv:221003629. 2022."
+      ]
     },
     {
       "title": "Plan-and-solve prompting: Improving zero-shot chain-of-thought reasoning by large language models",
@@ -607,13 +513,11 @@
         "Z Hu",
         "Y Lan",
         "Rkw Lee"
-      ],
-      "raw": "Plan-and-solve prompting: Improving zero-shot chain-of-thought reasoning by large language models \n\t\t \n\t\t\t L Wang \n\t\t \n\t\t \n\t\t\t W Xu \n\t\t \n\t\t \n\t\t\t Y Lan \n\t\t \n\t\t \n\t\t\t Z Hu \n\t\t \n\t\t \n\t\t\t Y Lan \n\t\t \n\t\t \n\t\t\t Rkw Lee \n\t\t \n\t\t arXiv:230504091. 2023 \n\t\t \n\t \n\t arXiv preprint \n\t Wang L, Xu W, Lan Y, Hu Z, Lan Y, Lee RKW, et al. Plan-and-solve prompt- ing: Improving zero-shot chain-of-thought reasoning by large language models. arXiv preprint arXiv:230504091. 2023."
+      ]
     },
     {
       "title": "Google Translate",
-      "year": 2024,
-      "raw": "Google Translate \n\t\t \n\t\t \n\t\t\t January 2024 \n\t\t \n\t\t \n\t\t\t Google \n\t\t \n\t \n\t Google. Google Translate; Accessed: January 2024. https://py-googletrans. readthedocs.io/en/latest/."
+      "year": 2024
     },
     {
       "title": "LLM-Rec: Personalized Recommendation via Prompting Large Language Models",
@@ -624,8 +528,7 @@
         "Y Xia",
         "J Luo"
       ],
-      "doi": "10.18653/v1/2024.findings-naacl.39",
-      "raw": "LLM-Rec: Personalized Recommendation via Prompting Large Language Models \n\t\t \n\t\t\t H Lyu \n\t\t \n\t\t \n\t\t\t S Jiang \n\t\t \n\t\t \n\t\t\t H Zeng \n\t\t \n\t\t \n\t\t\t Y Xia \n\t\t \n\t\t \n\t\t\t J Luo \n\t\t \n\t\t 10.18653/v1/2024.findings-naacl.39 \n\t\t arXiv:230715780. 2023 \n\t\t \n\t \n\t arXiv preprint \n\t Lyu H, Jiang S, Zeng H, Xia Y, Luo J. LLM-Rec: Personalized Recommendation via Prompting Large Language Models. arXiv preprint arXiv:230715780. 2023."
+      "doi": "10.18653/v1/2024.findings-naacl.39"
     },
     {
       "title": "Optimizing prompts for text-to-image generation",
@@ -633,13 +536,14 @@
         "Y Hao",
         "Chi Dong",
         "L Wei"
-      ],
-      "raw": "Optimizing prompts for text-to-image generation \n\t\t \n\t\t\t Y Hao \n\t\t \n\t\t \n\t\t\t Chi Z Dong \n\t\t \n\t\t \n\t\t\t L Wei \n\t\t \n\t\t \n\t\t\t F \n\t\t \n\t\t arXiv:221209611. 2022 \n\t\t \n\t \n\t arXiv preprint \n\t Hao Y, Chi Z, Dong L, Wei F. Optimizing prompts for text-to-image generation. arXiv preprint arXiv:221209611. 2022."
+      ]
     },
     {
       "title": "ChatGPT: Prompt engineering instrauctions",
-      "year": 2024,
-      "raw": "ChatGPT: Prompt engineering instrauctions \n\t\t \n\t\t\t Openai \n\t\t \n\t\t \n\t\t \n\t\t\t January 2024 \n\t\t \n\t \n\t OpenAI. ChatGPT: Prompt engineering instrauctions.; Accessed: January 2024. https://platform.openai.com/docs/guides/prompt-engineering/ strategy-write-clear-instructions."
+      "authors": [
+        "Openai"
+      ],
+      "year": 2024
     },
     {
       "title": "ZotCare: a flexible, personalizable, and affordable mhealth service provider",
@@ -650,10 +554,7 @@
         "N Dutt",
         "A Rahmani"
       ],
-      "year": 2023,
-      "journal": "Frontiers in Digital Health",
-      "volume": "5",
-      "raw": "ZotCare: a flexible, personalizable, and affordable mhealth service provider \n\t\t \n\t\t\t S Labbaf \n\t\t \n\t\t \n\t\t\t M Abbasian \n\t\t \n\t\t \n\t\t\t I Azimi \n\t\t \n\t\t \n\t\t\t N Dutt \n\t\t \n\t\t \n\t\t\t A M Rahmani \n\t\t \n\t \n\t \n\t\t Frontiers in Digital Health \n\t\t \n\t\t\t 5 \n\t\t\t 2023 \n\t\t \n\t \n\t Labbaf S, Abbasian M, Azimi I, Dutt N, Rahmani AM. ZotCare: a flexible, person- alizable, and affordable mhealth service provider. Frontiers in Digital Health. 2023;5."
+      "year": 2023
     },
     {
       "title": "A Survey on Trend, Opportunities and Challenges of mHealth Apps",
@@ -661,11 +562,7 @@
         "S Jusoh"
       ],
       "year": 2017,
-      "doi": "10.3991/ijim.v11i6.7265",
-      "journal": "Int J Interact Mob Technol",
-      "volume": "11",
-      "issue": "6",
-      "raw": "A Survey on Trend, Opportunities and Challenges of mHealth Apps \n\t\t \n\t\t\t S Jusoh \n\t\t \n\t\t 10.3991/ijim.v11i6.7265 \n\t \n\t \n\t\t Int J Interact Mob Technol \n\t\t \n\t\t\t 11 \n\t\t\t 6 \n\t\t\t \n\t\t\t 2017 \n\t\t \n\t \n\t Jusoh S. A Survey on Trend, Opportunities and Challenges of mHealth Apps. Int J Interact Mob Technol. 2017;11(6):73-85."
+      "doi": "10.3991/ijim.v11i6.7265"
     },
     {
       "title": "mHealth technologies for chronic diseases and elders: a systematic review",
@@ -676,11 +573,7 @@
         "C Masella",
         "A Ganz"
       ],
-      "year": 2013,
-      "journal": "IEEE Journal on Selected Areas in Communications",
-      "volume": "31",
-      "issue": "9",
-      "raw": "mHealth technologies for chronic diseases and elders: a systematic review \n\t\t \n\t\t\t G Chiarini \n\t\t \n\t\t \n\t\t\t P Ray \n\t\t \n\t\t \n\t\t\t S Akter \n\t\t \n\t\t \n\t\t\t C Masella \n\t\t \n\t\t \n\t\t\t A Ganz \n\t\t \n\t \n\t \n\t\t IEEE Journal on Selected Areas in Communications \n\t\t \n\t\t\t 31 \n\t\t\t 9 \n\t\t\t \n\t\t\t 2013 \n\t\t \n\t \n\t Chiarini G, Ray P, Akter S, Masella C, Ganz A. mHealth technologies for chronic diseases and elders: a systematic review. IEEE Journal on Selected Areas in Commu- nications. 2013;31(9):6-18."
+      "year": 2013
     },
     {
       "title": "ZotCare: A Flexible, Personalizable, and Affordable mHealth Service Provider",
@@ -690,15 +583,14 @@
         "I Azimi",
         "N Dutt",
         "A Rahmani"
-      ],
-      "journal": "Frontiers in Digital Health",
-      "volume": "5",
-      "pages": "1253087",
-      "raw": "ZotCare: A Flexible, Personalizable, and Affordable mHealth Service Provider \n\t\t \n\t\t\t S Labbaf \n\t\t \n\t\t \n\t\t\t M Abbasian \n\t\t \n\t\t \n\t\t\t I Azimi \n\t\t \n\t\t \n\t\t\t N Dutt \n\t\t \n\t\t \n\t\t\t A Rahmani \n\t\t \n\t \n\t \n\t\t Frontiers in Digital Health \n\t\t \n\t\t\t 5 \n\t\t\t 1253087 \n\t\t \n\t \n\t Labbaf S, Abbasian M, Azimi I, Dutt N, Rahmani A. ZotCare: A Flexible, Personaliz- able, and Affordable mHealth Service Provider. Frontiers in Digital Health;5:1253087."
+      ]
     },
     {
-      "year": 2024,
-      "raw": "Ilumivu \n\t\t \n\t\t \n\t\t\t Ilumivu \n\t\t \n\t\t \n\t\t \n\t\t\t January 2024 \n\t\t \n\t \n\t ilumivu. ilumivu; Accessed: January 2024. https://ilumivu.com/."
+      "authors": [
+        "Ilumivu",
+        "Ilumivu"
+      ],
+      "year": 2024
     },
     {
       "title": "Can generalist foundation models outcompete special-purpose tuning? case study in medicine",
@@ -709,8 +601,7 @@
         "D Carignan",
         "R Edgar",
         "N Fusi"
-      ],
-      "raw": "H Nori \n\t\t \n\t\t \n\t\t\t Y T Lee \n\t\t \n\t\t \n\t\t\t S Zhang \n\t\t \n\t\t \n\t\t\t D Carignan \n\t\t \n\t\t \n\t\t\t R Edgar \n\t\t \n\t\t \n\t\t\t N Fusi \n\t\t \n\t\t arXiv:231116452. 2023 \n\t\t Can generalist foundation models outcompete special-purpose tuning? case study in medicine \n\t\t \n\t \n\t arXiv preprint \n\t Nori H, Lee YT, Zhang S, Carignan D, Edgar R, Fusi N, et al. Can generalist foundation models outcompete special-purpose tuning? case study in medicine. arXiv preprint arXiv:231116452. 2023."
+      ]
     },
     {
       "title": "Information Retrieval: searching in the 21st Century",
@@ -718,8 +609,7 @@
         "D Hiemstra"
       ],
       "year": 2009,
-      "doi": "10.1002/9780470033647.ch1",
-      "raw": "Information Retrieval: searching in the 21st Century \n\t\t \n\t\t\t D Hiemstra \n\t\t \n\t\t 10.1002/9780470033647.ch1 \n\t\t \n\t\t\t 2009 \n\t\t\t \n\t\t \n\t \n\t Information retrieval models \n\t Hiemstra D. Information retrieval models. Information Retrieval: searching in the 21st Century. 2009:1-19."
+      "doi": "10.1002/9780470033647.ch1"
     },
     {
       "title": "A comparison of text retrieval models",
@@ -727,11 +617,7 @@
         "H Turtle",
         "W Croft"
       ],
-      "year": 1992,
-      "journal": "The computer journal",
-      "volume": "35",
-      "issue": "3",
-      "raw": "A comparison of text retrieval models \n\t\t \n\t\t\t H R Turtle \n\t\t \n\t\t \n\t\t\t W B Croft \n\t\t \n\t \n\t \n\t\t The computer journal \n\t\t \n\t\t\t 35 \n\t\t\t 3 \n\t\t\t \n\t\t\t 1992 \n\t\t \n\t \n\t Turtle HR, Croft WB. A comparison of text retrieval models. The computer journal. 1992;35(3):279-90."
+      "year": 1992
     },
     {
       "title": "Can generalist foundation models outcompete specialpurpose tuning? Case study in medicine",
@@ -739,8 +625,7 @@
         "H Nori",
         "Y Lee",
         "S Zhang"
-      ],
-      "raw": "Can generalist foundation models outcompete specialpurpose tuning? Case study in medicine \n\t\t \n\t\t\t H Nori \n\t\t \n\t\t \n\t\t\t Y Lee \n\t\t \n\t\t \n\t\t\t S Zhang \n\t\t \n\t\t arXiv. 2023 \n\t\t \n\t \n\t Nori H, Lee Y, Zhang S, et al.. Can generalist foundation models outcompete special- purpose tuning? Case study in medicine. arXiv. 2023;."
+      ]
     },
     {
       "title": "As artificial intelligence goes multimodal, medical applications multiply",
@@ -748,10 +633,7 @@
         "E Topol"
       ],
       "year": 2023,
-      "doi": "10.1126/science.adk6139",
-      "journal": "Science",
-      "volume": "381",
-      "raw": "As artificial intelligence goes multimodal, medical applications multiply \n\t\t \n\t\t\t E J Topol \n\t\t \n\t\t 10.1126/science.adk6139 \n\t \n\t \n\t\t Science \n\t\t \n\t\t\t 381 \n\t\t\t 2023. 6663 \n\t\t \n\t \n\t Topol EJ. As artificial intelligence goes multimodal, medical applications multiply. Science. 2023;381(6663)."
+      "doi": "10.1126/science.adk6139"
     },
     {
       "title": "Health information needs, sources, and barriers of primary care patients to achieve patient-centered care: A literature review",
@@ -764,11 +646,7 @@
         "S Canfield"
       ],
       "year": 2016,
-      "doi": "10.1177/1460458215602939",
-      "journal": "Health informatics journal",
-      "volume": "22",
-      "issue": "4",
-      "raw": "Health information needs, sources, and barriers of primary care patients to achieve patient-centered care: A literature review \n\t\t \n\t\t\t M A Clarke \n\t\t \n\t\t \n\t\t\t J L Moore \n\t\t \n\t\t \n\t\t\t L M Steege \n\t\t \n\t\t \n\t\t\t R J Koopman \n\t\t \n\t\t \n\t\t\t J L Belden \n\t\t \n\t\t \n\t\t\t S M Canfield \n\t\t \n\t\t 10.1177/1460458215602939 \n\t \n\t \n\t\t Health informatics journal \n\t\t \n\t\t\t 22 \n\t\t\t 4 \n\t\t\t \n\t\t\t 2016 \n\t\t \n\t \n\t Clarke MA, Moore JL, Steege LM, Koopman RJ, Belden JL, Canfield SM, et al. Health information needs, sources, and barriers of primary care patients to achieve patient-centered care: A literature review. Health informatics journal. 2016;22(4):992- 1016."
+      "doi": "10.1177/1460458215602939"
     },
     {
       "title": "Folk computing",
@@ -776,11 +654,7 @@
         "R Jain"
       ],
       "year": 2003,
-      "doi": "10.1145/641205.641223",
-      "journal": "Communications of the ACM",
-      "volume": "46",
-      "issue": "4",
-      "raw": "Folk computing \n\t\t \n\t\t\t R Jain \n\t\t \n\t\t 10.1145/641205.641223 \n\t \n\t \n\t\t Communications of the ACM \n\t\t \n\t\t\t 46 \n\t\t\t 4 \n\t\t\t \n\t\t\t 2003 \n\t\t \n\t \n\t Jain R. Folk computing. Communications of the ACM. 2003;46(4):27-9."
+      "doi": "10.1145/641205.641223"
     },
     {
       "title": "Folk computing: Designing technology to support face-to-face community building",
@@ -788,8 +662,7 @@
         "R Borovoy"
       ],
       "year": 2002,
-      "doi": "10.35483/acsa.am.110.71",
-      "raw": "R D Borovoy \n\t\t \n\t\t 10.35483/acsa.am.110.71 \n\t\t Folk computing: Designing technology to support face-to-face community building \n\t\t \n\t\t\t 2002 \n\t\t \n\t\t \n\t\t\t Massachusetts Institute of Technology \n\t\t \n\t \n\t Ph.D. thesis \n\t Borovoy RD. Folk computing: Designing technology to support face-to-face commu- nity building [Ph.D. thesis]. Massachusetts Institute of Technology; 2002."
+      "doi": "10.35483/acsa.am.110.71"
     },
     {
       "title": "Physiological and Emotional Assessment of College Students Using Wearable and Mobile Devices During the 2020 Covid-19 Lockdown: An Intensive, Longitudinal Dataset",
@@ -801,13 +674,14 @@
         "M Ahmed",
         "A Yunusova"
       ],
-      "year": 2023,
-      "raw": "Physiological and Emotional Assessment of College Students Using Wearable and Mobile Devices During the 2020 Covid-19 Lockdown: An Intensive, Longitudinal Dataset \n\t\t \n\t\t\t S Labbaf \n\t\t \n\t\t \n\t\t\t M Abbasian \n\t\t \n\t\t \n\t\t\t B Nguyen \n\t\t \n\t\t \n\t\t\t M Lucero \n\t\t \n\t\t \n\t\t\t M S Ahmed \n\t\t \n\t\t \n\t\t\t A Yunusova \n\t\t \n\t\t \n\t\t\t 2023 \n\t\t\t Longitudinal Dataset \n\t\t \n\t \n\t Labbaf S, Abbasian M, Nguyen B, Lucero M, Ahmed MS, Yunusova A, et al. Phys- iological and Emotional Assessment of College Students Using Wearable and Mobile Devices During the 2020 Covid-19 Lockdown: An Intensive, Longitudinal Dataset. Longitudinal Dataset. 2023."
+      "year": 2023
     },
     {
       "title": "Samsung Gear Watch",
-      "year": 2024,
-      "raw": "Samsung Gear Watch \n\t\t \n\t\t\t Samsung \n\t\t \n\t\t \n\t\t \n\t\t\t January 2024 \n\t\t \n\t \n\t Samsung. Samsung Gear Watch; Accessed: January 2024. https://www.samsung. com/us/mobile/wearables/smartwatches/gear-sport-blue-sm-r600nzbaxar/."
+      "authors": [
+        "Samsung"
+      ],
+      "year": 2024
     },
     {
       "title": "Neu-roKit2: A Python toolbox for neurophysiological signal processing",
@@ -820,11 +694,7 @@
         "H Pham"
       ],
       "year": 2021,
-      "doi": "10.3758/s13428-020-01516-y",
-      "journal": "Behavior Research Methods",
-      "volume": "53",
-      "issue": "4",
-      "raw": "Neu-roKit2: A Python toolbox for neurophysiological signal processing \n\t\t \n\t\t\t D Makowski \n\t\t \n\t\t \n\t\t\t T Pham \n\t\t \n\t\t \n\t\t\t Z J Lau \n\t\t \n\t\t \n\t\t\t J C Brammer \n\t\t \n\t\t \n\t\t\t F Lespinasse \n\t\t \n\t\t \n\t\t\t H Pham \n\t\t \n\t\t 10.3758/s13428-020-01516-y \n\t\t \n\t \n\t \n\t\t Behavior Research Methods \n\t\t \n\t\t\t 53 \n\t\t\t 4 \n\t\t\t \n\t\t\t 2021 feb \n\t\t \n\t \n\t Makowski D, Pham T, Lau ZJ, Brammer JC, Lespinasse F, Pham H, et al. Neu- roKit2: A Python toolbox for neurophysiological signal processing. Behavior Re- search Methods. 2021 feb;53(4):1689-96. Available from: https://doi.org/10.3758% 2Fs13428-020-01516-y."
+      "doi": "10.3758/s13428-020-01516-y"
     },
     {
       "title": "An overview of heart rate variability metrics and norms",
@@ -833,10 +703,7 @@
         "J Ginsberg"
       ],
       "year": 2017,
-      "doi": "10.3389/fpubh.2017.00258",
-      "journal": "Frontiers in public health",
-      "pages": "258",
-      "raw": "An overview of heart rate variability metrics and norms \n\t\t \n\t\t\t F Shaffer \n\t\t \n\t\t \n\t\t\t J P Ginsberg \n\t\t \n\t\t 10.3389/fpubh.2017.00258 \n\t \n\t \n\t\t Frontiers in public health \n\t\t \n\t\t\t 258 \n\t\t\t 2017 \n\t\t \n\t \n\t Shaffer F, Ginsberg JP. An overview of heart rate variability metrics and norms. Frontiers in public health. 2017:258."
+      "doi": "10.3389/fpubh.2017.00258"
     },
     {
       "title": "Impact of COVID-19 Pandemic on Sleep Including HRV and Physical Activity as Mediators: A Causal ML Approach",
@@ -849,8 +716,7 @@
         "J Borelli"
       ],
       "year": 2023,
-      "doi": "10.1109/bsn58485.2023.10331423",
-      "raw": "Impact of COVID-19 Pandemic on Sleep Including HRV and Physical Activity as Mediators: A Causal ML Approach \n\t\t \n\t\t\t E Khatibi \n\t\t \n\t\t \n\t\t\t M Abbasian \n\t\t \n\t\t \n\t\t\t I Azimi \n\t\t \n\t\t \n\t\t\t S Labbaf \n\t\t \n\t\t \n\t\t\t M Feli \n\t\t \n\t\t \n\t\t\t J Borelli \n\t\t \n\t\t 10.1109/bsn58485.2023.10331423 \n\t \n\t \n\t\t IEEE 19th International Conference on Body Sensor Networks (BSN) \n\t\t \n\t\t\t IEEE \n\t\t\t 2023. 2023 \n\t\t\t \n\t\t \n\t \n\t Khatibi E, Abbasian M, Azimi I, Labbaf S, Feli M, Borelli J, et al. Impact of COVID- 19 Pandemic on Sleep Including HRV and Physical Activity as Mediators: A Causal ML Approach. In: 2023 IEEE 19th International Conference on Body Sensor Networks (BSN). IEEE; 2023. p. 1-4."
+      "doi": "10.1109/bsn58485.2023.10331423"
     },
     {
       "title": "ChatDiet: Empowering personalized nutrition-oriented food recommender chatbots through an LLMaugmented framework",
@@ -862,11 +728,7 @@
         "I Azimi",
         "R Jain"
       ],
-      "year": 2024,
-      "journal": "Smart Health",
-      "volume": "32",
-      "pages": "100465",
-      "raw": "ChatDiet: Empowering personalized nutrition-oriented food recommender chatbots through an LLMaugmented framework \n\t\t \n\t\t\t Z Yang \n\t\t \n\t\t \n\t\t\t E Khatibi \n\t\t \n\t\t \n\t\t\t N Nagesh \n\t\t \n\t\t \n\t\t\t M Abbasian \n\t\t \n\t\t \n\t\t\t I Azimi \n\t\t \n\t\t \n\t\t\t R Jain \n\t\t \n\t \n\t \n\t\t Smart Health \n\t\t \n\t\t\t 32 \n\t\t\t 100465 \n\t\t\t 2024 \n\t\t \n\t \n\t Yang Z, Khatibi E, Nagesh N, Abbasian M, Azimi I, Jain R, et al. ChatDiet: Em- powering personalized nutrition-oriented food recommender chatbots through an LLM- augmented framework. Smart Health. 2024;32:100465."
+      "year": 2024
     },
     {
       "title": "Knowledge-Infused LLM-Powered Conversational Health Agent: A Case Study for Diabetes Patients",
@@ -877,8 +739,7 @@
         "P Zhang",
         "N Nagesh",
         "I Azimi"
-      ],
-      "raw": "Knowledge-Infused LLM-Powered Conversational Health Agent: A Case Study for Diabetes Patients \n\t\t \n\t\t\t M Abbasian \n\t\t \n\t\t \n\t\t\t Z Yang \n\t\t \n\t\t \n\t\t\t E Khatibi \n\t\t \n\t\t \n\t\t\t P Zhang \n\t\t \n\t\t \n\t\t\t N Nagesh \n\t\t \n\t\t \n\t\t\t I Azimi \n\t\t \n\t\t arXiv:240210153. 2024 \n\t\t \n\t \n\t arXiv preprint \n\t Abbasian M, Yang Z, Khatibi E, Zhang P, Nagesh N, Azimi I, et al. Knowledge- Infused LLM-Powered Conversational Health Agent: A Case Study for Diabetes Pa- tients. arXiv preprint arXiv:240210153. 2024."
+      ]
     },
     {
       "title": "Building Trust in Mental Health Chatbots: Safety Metrics and LLM-Based Evaluation Tools",
@@ -889,8 +750,7 @@
         "D Bounds",
         "A Jun",
         "J Han"
-      ],
-      "raw": "Building Trust in Mental Health Chatbots: Safety Metrics and LLM-Based Evaluation Tools \n\t\t \n\t\t\t J I Park \n\t\t \n\t\t \n\t\t\t M Abbasian \n\t\t \n\t\t \n\t\t\t I Azimi \n\t\t \n\t\t \n\t\t\t D Bounds \n\t\t \n\t\t \n\t\t\t A Jun \n\t\t \n\t\t \n\t\t\t J Han \n\t\t \n\t\t arXiv:240804650. 2024 \n\t\t \n\t \n\t arXiv preprint \n\t Park JI, Abbasian M, Azimi I, Bounds D, Jun A, Han J, et al. Building Trust in Mental Health Chatbots: Safety Metrics and LLM-Based Evaluation Tools. arXiv preprint arXiv:240804650. 2024."
+      ]
     },
     {
       "title": "Empathy Through Multimodality in Conversational Interfaces",
@@ -900,8 +760,7 @@
         "M Feli",
         "A Rahmani",
         "R Jain"
-      ],
-      "raw": "Empathy Through Multimodality in Conversational Interfaces \n\t\t \n\t\t\t M Abbasian \n\t\t \n\t\t \n\t\t\t I Azimi \n\t\t \n\t\t \n\t\t\t M Feli \n\t\t \n\t\t \n\t\t\t A M Rahmani \n\t\t \n\t\t \n\t\t\t R Jain \n\t\t \n\t\t arXiv:240504777. 2024 \n\t\t \n\t \n\t arXiv preprint \n\t Abbasian M, Azimi I, Feli M, Rahmani AM, Jain R. Empathy Through Multimodality in Conversational Interfaces. arXiv preprint arXiv:240504777. 2024."
+      ]
     },
     {
       "title": "An LLM-Tool Compiler for Fused Parallel Function Calling",
@@ -911,16 +770,14 @@
         "M Fore",
         "I Anagnostopoulos",
         "D Stamoulis"
-      ],
-      "raw": "An LLM-Tool Compiler for Fused Parallel Function Calling \n\t\t \n\t\t\t S Singh \n\t\t \n\t\t \n\t\t\t A Karatzas \n\t\t \n\t\t \n\t\t\t M Fore \n\t\t \n\t\t \n\t\t\t I Anagnostopoulos \n\t\t \n\t\t \n\t\t\t D Stamoulis \n\t\t \n\t\t arXiv:240517438. 2024 \n\t\t \n\t \n\t arXiv preprint \n\t Singh S, Karatzas A, Fore M, Anagnostopoulos I, Stamoulis D. An LLM-Tool Com- piler for Fused Parallel Function Calling. arXiv preprint arXiv:240517438. 2024."
+      ]
     },
     {
       "title": "A next-generation AI assistant for your tasks",
       "authors": [
         "Claude Claude"
       ],
-      "year": 2024,
-      "raw": "A next-generation AI assistant for your tasks \n\t\t \n\t\t\t Claude Claude \n\t\t \n\t\t \n\t\t \n\t\t\t January 2024 \n\t\t \n\t \n\t no matter the scale \n\t Claude. Claude: A next-generation AI assistant for your tasks, no matter the scale; Accessed: January 2024. https://www.anthropic.com/product."
+      "year": 2024
     },
     {
       "title": "An exhaustive survey on security and privacy issues in Healthcare 4",
@@ -928,11 +785,7 @@
         "J Hathaliya",
         "S Tanwar"
       ],
-      "year": 2020,
-      "journal": "Computer Communications",
-      "volume": "153",
-      "issue": "0",
-      "raw": "An exhaustive survey on security and privacy issues in Healthcare 4 \n\t\t \n\t\t\t J J Hathaliya \n\t\t \n\t\t \n\t\t\t S Tanwar \n\t\t \n\t \n\t \n\t\t Computer Communications \n\t\t \n\t\t\t 153 \n\t\t\t 0 \n\t\t\t \n\t\t\t 2020 \n\t\t \n\t \n\t Hathaliya JJ, Tanwar S. An exhaustive survey on security and privacy issues in Healthcare 4.0. Computer Communications. 2020;153:311-35."
+      "year": 2020
     },
     {
       "title": "Privacy in the age of medical big data",
@@ -940,11 +793,7 @@
         "W Price",
         "I Cohen"
       ],
-      "year": 2019,
-      "journal": "Nature medicine",
-      "volume": "25",
-      "issue": "1",
-      "raw": "Privacy in the age of medical big data \n\t\t \n\t\t\t W N Price \n\t\t \n\t\t \n\t\t\t I G Cohen \n\t\t \n\t \n\t \n\t\t Nature medicine \n\t\t \n\t\t\t 25 \n\t\t\t 1 \n\t\t\t \n\t\t\t 2019 \n\t\t \n\t \n\t Price WN, Cohen IG. Privacy in the age of medical big data. Nature medicine. 2019;25(1):37-43."
+      "year": 2019
     },
     {
       "title": "A survey of privacy preserving data publishing using generalization and suppression",
@@ -955,12 +804,7 @@
         "W Tian"
       ],
       "year": 2014,
-      "doi": "10.12785/amis/080321",
-      "journal": "Applied Mathematics & Information Sciences",
-      "volume": "8",
-      "issue": "3",
-      "pages": "1103",
-      "raw": "A survey of privacy preserving data publishing using generalization and suppression \n\t\t \n\t\t\t Y Xu \n\t\t \n\t\t \n\t\t\t T Ma \n\t\t \n\t\t \n\t\t\t M Tang \n\t\t \n\t\t \n\t\t\t W Tian \n\t\t \n\t\t 10.12785/amis/080321 \n\t \n\t \n\t\t Applied Mathematics & Information Sciences \n\t\t \n\t\t\t 8 \n\t\t\t 3 \n\t\t\t 1103 \n\t\t\t 2014 \n\t\t \n\t \n\t Xu Y, Ma T, Tang M, Tian W. A survey of privacy preserving data publishing using generalization and suppression. Applied Mathematics & Information Sciences. 2014;8(3):1103."
+      "doi": "10.12785/amis/080321"
     },
     {
       "title": "Self-consistency improves chain of thought reasoning in language models",
@@ -970,8 +814,7 @@
         "D Schuurmans",
         "Q Le",
         "Chi Narang"
-      ],
-      "raw": "Self-consistency improves chain of thought reasoning in language models \n\t\t \n\t\t\t X Wang \n\t\t \n\t\t \n\t\t\t J Wei \n\t\t \n\t\t \n\t\t\t D Schuurmans \n\t\t \n\t\t \n\t\t\t Q Le \n\t\t \n\t\t \n\t\t\t Chi E Narang \n\t\t \n\t\t \n\t\t\t S \n\t\t \n\t\t arXiv:220311171. 2022 \n\t\t \n\t \n\t arXiv preprint \n\t Wang X, Wei J, Schuurmans D, Le Q, Chi E, Narang S, et al. Self-consistency im- proves chain of thought reasoning in language models. arXiv preprint arXiv:220311171. 2022."
+      ]
     },
     {
       "title": "Foundation metrics for evaluating effectiveness of healthcare conversations powered by generative AI",
@@ -983,257 +826,8 @@
         "Shakeri Hossein Abad",
         "Z Thieme"
       ],
-      "year": 2024,
-      "journal": "NPJ Digital Medicine",
-      "volume": "7",
-      "issue": "1",
-      "pages": "82",
-      "raw": "Foundation metrics for evaluating effectiveness of healthcare conversations powered by generative AI \n\t\t \n\t\t\t M Abbasian \n\t\t \n\t\t \n\t\t\t E Khatibi \n\t\t \n\t\t \n\t\t\t I Azimi \n\t\t \n\t\t \n\t\t\t D Oniani \n\t\t \n\t\t \n\t\t\t Shakeri Hossein Abad \n\t\t \n\t\t \n\t\t\t Z Thieme \n\t\t \n\t\t \n\t\t\t A \n\t\t \n\t \n\t \n\t\t NPJ Digital Medicine \n\t\t \n\t\t\t 7 \n\t\t\t 1 \n\t\t\t 82 \n\t\t\t 2024 \n\t\t \n\t \n\t Abbasian M, Khatibi E, Azimi I, Oniani D, Shakeri Hossein Abad Z, Thieme A, et al. Foundation metrics for evaluating effectiveness of healthcare conversations powered by generative AI. NPJ Digital Medicine. 2024;7(1):82."
+      "year": 2024
     }
   ],
-  "num_references": 68,
-  "figures": [
-    {
-      "caption": "Figure 2 :",
-      "description": "Figure 2: An overview of the proposed LLM-powered framework leveraging a service-based architecture"
-    },
-    {
-      "caption": "Demo 1 :Figure 3 :",
-      "description": "Figure 3: Overview of the implemented tasks and components and how they are used in the two demos."
-    },
-    {
-      "caption": "Figure 4 :",
-      "description": "Figure 4: Demo 1. Patient health record reporting and follow up."
-    },
-    {
-      "caption": "Figure 5 :",
-      "description": "Figure 5: Demo 2. Objective stress level estimation. The question is asked in English and Spanish."
-    },
-    {
-      "caption": "Figure 6 :",
-      "description": "Figure 6: A example screenshot indicating how openCHA improves explainability in conversations."
-    },
-    {
-      "caption": "Figure 7 :",
-      "description": "Figure 7: A sample implemented task inside openCHA framework. Each task includes prompt parameters which helps our Task Planner LLM understand what types of data are needed and how to provide them to the current task."
-    },
-    {
-      "caption": "Figure 8 :",
-      "description": "Figure 8: The first stage Tree of Thought planning prompt"
-    },
-    {
-      "caption": "Figure 9 :Figure 10 :",
-      "description": "Figure 9: The second stage Tree of Thought planning prompt"
-    },
-    {
-      "description": "search_query = \"tips to improve sleep\" search_result = self.execute_task('google_search', [search_query]) # Step 2: Use extract_text to extract the relevant information about improving sleep from the webpage. url = search_result['url'] sleep_tips_text = self.execute_task('extract_text', [url])Table 7: Response generator sample prompt. ===========Thinker: MetaData: History: ------google_search: ['tips to improve sleep'] 'url': 'https://www.mayoclinic.org/healthy-lifestyle/adult-health/indepth/sleep/art-20048379'------------extract_text: ['https://www.mayoclinic.org/healthy-lifestyle/adulthealth/in-depth/sleep/art-20048379'] Sleep tips: 6 steps to better sleep -Mayo Clinic This content does not have an English version. This content does not have an Arabic version. Skip to content Care at Mayo Clinic Patient-Centered Care About Mayo... (we cut the text to shorten the table)"
-    },
-    {
-      "description": "-returns an array of JSON objects which contains the following keys: **date (in milliseconds)**: epoch format **ppg**: is the ppg value. **hr (in beats per minute)**: is the heart rate of the patient. The result will be stored in the Data Pipe. ------------Table 9: Sample code generation when a task's result is stored in the Data Pipe. # Step 1: Get PPG data for patient 5 for the entire month of August 2020 ppg_data_result = self.execute_task('affect_ppg_get', ['par_5', '2020-08-01', '2020-08-31']) # Step 2: Analyze the HRV parameters from the obtained PPG data hrv_analysis_result = self.execute_task('affect_ppg_analysis', [ppg_data_result]) # Step 3: Estimate the stress level for patient 5 during August 2020 using the HRV analysis results stress_level_result = self.execute_task('affect_stress_analysis', [hrv_analysis_result])"
-    },
-    {
-      "type": "table",
-      "caption": "Table 1 :",
-      "description": "The strategies suggested by Tree of Thought prompting technique for the first question."
-    },
-    {
-      "type": "table",
-      "caption": "Table 2 :",
-      "description": "The strategies suggested by Tree of Thought prompting technique for the first question."
-    },
-    {
-      "type": "table",
-      "caption": "Table 4 :",
-      "description": "Tree of Thought Planning second planning stage: generating the task execution code part 1.Decision: I will go with Strategy 1 as it provides the most recent and relevant information on the internet, which is crucial for improving sleep.Now, let's proceed with the detailed tool executions for Strategy 1:1.Use the \"google_search\" tool to find the top websites with tips to improve sleep.2. Once we have the top website, we can use the \"extract_text\" tool to extract the relevant information about improving sleep from the webpage."
-    }
-  ],
-  "num_figures": 13,
-  "tables": [
-    {
-      "content": "I will proceed to directly analyze the REM sleep data of Patient 5 for August 2020, providing a precise and specific conclusion. Decision Execution: 1. Use the sleep_get tool to obtain the REM sleep data for Patient 5 in August 2020. 2. Utilize the sleep_analysis tool to analyze the REM sleep duration and efficiency for August 2020."
-    },
-    {
-      "content": "The best strategy provides both detailed PPG analysis and an estimation of the stress level, which offers a comprehensive view of the patient's health status. Execution: Decision 1. Use ppg_get tool to retrieve the PPG data for Patient 5 during August 29th, 2020. 2. Analyze the PPG data with ppg_analysis tool to obtain the heart rate. 3. Use stress_analysis to estimate the stress level based on the obtained PPG data."
-    },
-    {
-      "content": "Let's start with step 1. ========================= Tools:"
-    }
-  ],
-  "num_tables": 3,
-  "license": "\u22c4 https://github.com/Institute4FutureHealth/CHA \u22c4 https://opencha.com",
-  "license_type": "unknown",
-  "num_citations": 93,
-  "cited_references": [
-    "b3",
-    "b57",
-    "b13",
-    "b39",
-    "b65",
-    "b41",
-    "b18",
-    "b44",
-    "b49",
-    "b2",
-    "b58",
-    "b14",
-    "b17",
-    "b36",
-    "b25",
-    "b59",
-    "b9",
-    "b1",
-    "b35",
-    "b20",
-    "b60",
-    "b43",
-    "b21",
-    "b51",
-    "b47",
-    "b40",
-    "b64",
-    "b66",
-    "b12",
-    "b42",
-    "b30",
-    "b31",
-    "b54",
-    "b61",
-    "b52",
-    "b29",
-    "b16",
-    "b37",
-    "b46",
-    "b15",
-    "b23",
-    "b32",
-    "b5",
-    "b19",
-    "b28",
-    "b45",
-    "b10",
-    "b38",
-    "b27",
-    "b67",
-    "b24",
-    "b4",
-    "b55",
-    "b56",
-    "b50",
-    "b62",
-    "b33",
-    "b7",
-    "b48",
-    "b11",
-    "b8",
-    "b53",
-    "b22",
-    "b63",
-    "b34",
-    "b6",
-    "b0",
-    "b26"
-  ],
-  "notes": [
-    "[raw_affiliation] 1  University of California , Irvine",
-    "[raw_affiliation] 1  University of California , Irvine",
-    "[raw_affiliation] 1  University of California , Irvine",
-    "[raw_affiliation] 1  University of California , Irvine",
-    "translator, health data sources, and AI models. Examples of interactions include inquiries such as \"Retrieve the stress level of Patient 5 on August 29th, 2020\" and \"What is the average heart rate of Patient 5 during August 2020?\"",
-    "\u22c4 https://github.com/Institute4FutureHealth/CHA \u22c4 https://docs.opencha.com/",
-    "\u22c4 https://docs.opencha.com/index.html",
-    "[raw_reference] OpenAI. ChatGPT: OpenAI's Conversational AI Model; Accessed: January 2024. https://openai.com/chatgpt.",
-    "[report_type] arXiv preprint",
-    "[raw_reference] Han T, Adams LC, Papaioannou JM, Grundmann P, Oberhauser T, L\u00f6ser A, et al. MedAlpaca-An Open-Source Collection of Medical Conversational AI Models and Training Data. arXiv preprint arXiv:230408247. 2023.",
-    "[report_type] arXiv preprint",
-    "[raw_reference] Tu T, Azizi S, Driess D, Schaekermann M, Amin M, Chang PC, et al. Towards Generalist Biomedical AI. arXiv preprint arXiv:230714334. 2023.",
-    "[raw_reference] Milne-Ives M, de Cock C, Lim E, Shehadeh MH, de Pennington N, Mole G, et al. The effectiveness of artificial intelligence conversational agents in health care: systematic review. Journal of medical Internet research. 2020;22(10):e20346.",
-    "[raw_reference] Moudatsou M, Stavropoulou A, Philalithis A, Koukouli S. The role of empathy in health and social care professionals. In: Healthcare. vol. 8. MDPI; 2020. p. 26.",
-    "[report_type] arXiv preprint",
-    "[raw_reference] Abbasian M, Khatibi E, Azimi I, Oniani D, Abad ZSH, Thieme A, et al. Foundation Metrics: Quantifying Effectiveness of Healthcare Conversations powered by Generative AI. arXiv preprint arXiv:230912444. 2023.",
-    "[raw_reference] Moreira A, Quintas C, Guimar\u00e3es T, Santos MF. Multichannel Mobile Companions for Personalized Healthcare Opportunities and Challenges. Procedia Computer Science. 2023;220:838-43.",
-    "[raw_reference] Moore O. How Are Consumers Using Generative AI?; Accessed: January 2024. https: //a16z.com/how-are-consumers-using-generative-ai/.",
-    "[raw_reference] Denecke K, May R. Investigating conversational agents in healthcare: Application of a technical-oriented taxonomy. Procedia Computer Science. 2023;219:1289-96.",
-    "[raw_reference] Plsek PE, Greenhalgh T. The challenge of complexity in health care. Bmj. 2001;323(7313):625-8.",
-    "[raw_reference] Sturmberg JP, Martin CM. Complexity and health-yesterday's traditions, tomorrow's future. J Eval Clin Pract. 2009;15(3):543-8.",
-    "[raw_reference] Luo R, Sun L, Xia Y, Qin T, Zhang S, Poon H, et al. BioGPT: generative pre-trained transformer for biomedical text generation and mining. Briefings in Bioinformatics. 2022;23(6):bbac409.",
-    "[raw_reference] Li Y, Li Z, Zhang K, Dan R, Jiang S, Zhang Y. ChatDoctor: A Medical Chat Model Fine-Tuned on a Large Language Model Meta-AI (LLaMA) Using Medical Domain Knowledge. Cureus. 2023;15(6).",
-    "[raw_reference] Meier P, Beinke JH, Fitte C, Behne A, Teuteberg F. FeelFit-Design and Evaluation of a Conversational Agent to Enhance Health Awareness. In: ICIS; 2019. .",
-    "[raw_reference] Montenegro JLZ, da Costa CA, da Rosa Righi R. Survey of conversational agents in health. Expert Systems with Applications. 2019;129:56-67.",
-    "[raw_reference] Tudor Car L, Dhinagaran DA, Kyaw BM, Kowatsch T, Joty S, Theng YL, et al. Conversational agents in health care: scoping review and conceptual analysis. Journal of medical Internet research. 2020;22(8):e17158.",
-    "[raw_reference] Laranjo L, Dunn AG, Tong HL, Kocaballi AB, Chen J, Bashir R, et al. Conversational agents in healthcare: a systematic review. Journal of the American Medical Informatics Association. 2018;25(9):1248-58.",
-    "[report_type] arXiv preprint",
-    "[raw_reference] Zhao WX, Zhou K, Li J, Tang T, Wang X, Hou Y, et al. A survey of large language models. arXiv preprint arXiv:230318223. 2023.",
-    "[raw_reference] Han R, Acosta JN, Shakeri Z, Ioannidis J, Topol E, Rajpurkar P. Randomized Con- trolled Trials Evaluating AI in Clinical Practice: A Scoping Evaluation. medRxiv. 2023:2023-09.",
-    "[raw_reference] Sallam M; MDPI. ChatGPT utility in healthcare education, research, and prac- tice: systematic review on the promising perspectives and valid concerns. Healthcare. 2023;11(6):887.",
-    "[raw_reference] Biswas S. ChatGPT and the future of medical writing. Radiological Society of North America; 2023.",
-    "[raw_reference] Ayd\u0131n \u00d6, Karaarslan E. OpenAI ChatGPT generated literature review: Digital twin in healthcare. Available at SSRN 4308687. 2022.",
-    "[raw_reference] Chen S, Kann BH, Foote MB, Aerts HJ, Savova GK, Mak RH, et al. The utility of ChatGPT for cancer treatment information. medRxiv. 2023:2023-03.",
-    "[raw_reference] Liu C, Ma Y, Kothur K, Nikpour A, Kavehei O. BioSignal Copilot: Leveraging the power of LLMs in drafting reports for biomedical signals. medRxiv. 2023:2023-06.",
-    "[raw_reference] Lee J, Yoon W, Kim S, Kim D, Kim S, So CH, et al. BioBERT: a pre-trained biomedical language representation model for biomedical text mining. Bioinformatics. 2020;36(4):1234-40.",
-    "[raw_reference] Gu Y, Tinn R, Cheng H, Lucas M, Usuyama N, Liu X, et al. Domain-specific language model pretraining for biomedical natural language processing. ACM Transactions on Computing for Healthcare (HEALTH). 2021;3(1):1-23.",
-    "[report_type] arXiv preprint",
-    "[raw_reference] Gutierrez BJ, McNeal N, Washington C, Chen Y, Li L, Sun H, et al. Think- ing about gpt-3 in-context learning for biomedical ie? think again. arXiv preprint arXiv:220308410. 2022.",
-    "[report_type] arXiv preprint",
-    "[raw_reference] Moradi M, Blagec K, Haberl F, Samwald M. Gpt-3 models are poor few-shot learners in the biomedical domain. arXiv preprint arXiv:210902555. 2021.",
-    "[report_type] arXiv preprint",
-    "[raw_reference] Xu S, Yang L, Kelly C, Sieniek M, Kohlberger T, Ma M, et al. ELIXR: Towards a general purpose X-ray artificial intelligence system through alignment of large language models and radiology vision encoders. arXiv preprint arXiv:230801317. 2023.",
-    "[report_type] arXiv preprint",
-    "[raw_reference] Belyaeva A, Cosentino J, Hormozdiari F, McLean CY, Furlotte NA. Multimodal LLMs for health grounded in individual-specific data. arXiv preprint arXiv:230709018. 2023.",
-    "[report_type] arXiv preprint",
-    "[raw_reference] Guerreiro NM, Alves D, Waldendorf J, Haddow B, Birch A, Colombo P, et al. Hal- lucinations in large multilingual translation models. arXiv preprint arXiv:230316104. 2023.",
-    "[raw_reference] Neisser U. Perceiving, anticipating, and imagining. In: Perception and Cognition: Issues in the Foundations of Psychology. University of Minnesota Press, Minneapolis; 1978. .",
-    "[report_type] arXiv preprint",
-    "[raw_reference] Yao S, Yu D, Zhao J, Shafran I, Griffiths TL, Cao Y, et al. Tree of thoughts: De- liberate problem solving with large language models. arXiv preprint arXiv:230510601. 2023.",
-    "[report_type] arXiv preprint",
-    "[raw_reference] Yao S, Zhao J, Yu D, Du N, Shafran I, Narasimhan K, et al. React: Synergizing reasoning and acting in language models. arXiv preprint arXiv:221003629. 2022.",
-    "[report_type] arXiv preprint",
-    "[raw_reference] Wang L, Xu W, Lan Y, Hu Z, Lan Y, Lee RKW, et al. Plan-and-solve prompt- ing: Improving zero-shot chain-of-thought reasoning by large language models. arXiv preprint arXiv:230504091. 2023.",
-    "[raw_reference] Google. Google Translate; Accessed: January 2024. https://py-googletrans. readthedocs.io/en/latest/.",
-    "[report_type] arXiv preprint",
-    "[raw_reference] Lyu H, Jiang S, Zeng H, Xia Y, Luo J. LLM-Rec: Personalized Recommendation via Prompting Large Language Models. arXiv preprint arXiv:230715780. 2023.",
-    "[report_type] arXiv preprint",
-    "[raw_reference] Hao Y, Chi Z, Dong L, Wei F. Optimizing prompts for text-to-image generation. arXiv preprint arXiv:221209611. 2022.",
-    "[raw_reference] OpenAI. ChatGPT: Prompt engineering instrauctions.; Accessed: January 2024. https://platform.openai.com/docs/guides/prompt-engineering/ strategy-write-clear-instructions.",
-    "[raw_reference] Labbaf S, Abbasian M, Azimi I, Dutt N, Rahmani AM. ZotCare: a flexible, person- alizable, and affordable mhealth service provider. Frontiers in Digital Health. 2023;5.",
-    "[raw_reference] Jusoh S. A Survey on Trend, Opportunities and Challenges of mHealth Apps. Int J Interact Mob Technol. 2017;11(6):73-85.",
-    "[raw_reference] Chiarini G, Ray P, Akter S, Masella C, Ganz A. mHealth technologies for chronic diseases and elders: a systematic review. IEEE Journal on Selected Areas in Commu- nications. 2013;31(9):6-18.",
-    "[raw_reference] Labbaf S, Abbasian M, Azimi I, Dutt N, Rahmani A. ZotCare: A Flexible, Personaliz- able, and Affordable mHealth Service Provider. Frontiers in Digital Health;5:1253087.",
-    "[raw_reference] ilumivu. ilumivu; Accessed: January 2024. https://ilumivu.com/.",
-    "[report_type] arXiv preprint",
-    "[raw_reference] Nori H, Lee YT, Zhang S, Carignan D, Edgar R, Fusi N, et al. Can generalist foundation models outcompete special-purpose tuning? case study in medicine. arXiv preprint arXiv:231116452. 2023.",
-    "Information retrieval models",
-    "[raw_reference] Hiemstra D. Information retrieval models. Information Retrieval: searching in the 21st Century. 2009:1-19.",
-    "[raw_reference] Turtle HR, Croft WB. A comparison of text retrieval models. The computer journal. 1992;35(3):279-90.",
-    "[raw_reference] Nori H, Lee Y, Zhang S, et al.. Can generalist foundation models outcompete special- purpose tuning? Case study in medicine. arXiv. 2023;.",
-    "[raw_reference] Topol EJ. As artificial intelligence goes multimodal, medical applications multiply. Science. 2023;381(6663).",
-    "[raw_reference] Clarke MA, Moore JL, Steege LM, Koopman RJ, Belden JL, Canfield SM, et al. Health information needs, sources, and barriers of primary care patients to achieve patient-centered care: A literature review. Health informatics journal. 2016;22(4):992- 1016.",
-    "[raw_reference] Jain R. Folk computing. Communications of the ACM. 2003;46(4):27-9.",
-    "[report_type] Ph.D. thesis",
-    "[raw_reference] Borovoy RD. Folk computing: Designing technology to support face-to-face commu- nity building [Ph.D. thesis]. Massachusetts Institute of Technology; 2002.",
-    "[raw_reference] Labbaf S, Abbasian M, Nguyen B, Lucero M, Ahmed MS, Yunusova A, et al. Phys- iological and Emotional Assessment of College Students Using Wearable and Mobile Devices During the 2020 Covid-19 Lockdown: An Intensive, Longitudinal Dataset. Longitudinal Dataset. 2023.",
-    "[raw_reference] Samsung. Samsung Gear Watch; Accessed: January 2024. https://www.samsung. com/us/mobile/wearables/smartwatches/gear-sport-blue-sm-r600nzbaxar/.",
-    "[raw_reference] Makowski D, Pham T, Lau ZJ, Brammer JC, Lespinasse F, Pham H, et al. Neu- roKit2: A Python toolbox for neurophysiological signal processing. Behavior Re- search Methods. 2021 feb;53(4):1689-96. Available from: https://doi.org/10.3758% 2Fs13428-020-01516-y.",
-    "[raw_reference] Shaffer F, Ginsberg JP. An overview of heart rate variability metrics and norms. Frontiers in public health. 2017:258.",
-    "[raw_reference] Khatibi E, Abbasian M, Azimi I, Labbaf S, Feli M, Borelli J, et al. Impact of COVID- 19 Pandemic on Sleep Including HRV and Physical Activity as Mediators: A Causal ML Approach. In: 2023 IEEE 19th International Conference on Body Sensor Networks (BSN). IEEE; 2023. p. 1-4.",
-    "[raw_reference] Yang Z, Khatibi E, Nagesh N, Abbasian M, Azimi I, Jain R, et al. ChatDiet: Em- powering personalized nutrition-oriented food recommender chatbots through an LLM- augmented framework. Smart Health. 2024;32:100465.",
-    "[report_type] arXiv preprint",
-    "[raw_reference] Abbasian M, Yang Z, Khatibi E, Zhang P, Nagesh N, Azimi I, et al. Knowledge- Infused LLM-Powered Conversational Health Agent: A Case Study for Diabetes Pa- tients. arXiv preprint arXiv:240210153. 2024.",
-    "[report_type] arXiv preprint",
-    "[raw_reference] Park JI, Abbasian M, Azimi I, Bounds D, Jun A, Han J, et al. Building Trust in Mental Health Chatbots: Safety Metrics and LLM-Based Evaluation Tools. arXiv preprint arXiv:240804650. 2024.",
-    "[report_type] arXiv preprint",
-    "[raw_reference] Abbasian M, Azimi I, Feli M, Rahmani AM, Jain R. Empathy Through Multimodality in Conversational Interfaces. arXiv preprint arXiv:240504777. 2024.",
-    "[report_type] arXiv preprint",
-    "[raw_reference] Singh S, Karatzas A, Fore M, Anagnostopoulos I, Stamoulis D. An LLM-Tool Com- piler for Fused Parallel Function Calling. arXiv preprint arXiv:240517438. 2024.",
-    "no matter the scale",
-    "[raw_reference] Claude. Claude: A next-generation AI assistant for your tasks, no matter the scale; Accessed: January 2024. https://www.anthropic.com/product.",
-    "[raw_reference] Hathaliya JJ, Tanwar S. An exhaustive survey on security and privacy issues in Healthcare 4.0. Computer Communications. 2020;153:311-35.",
-    "[raw_reference] Price WN, Cohen IG. Privacy in the age of medical big data. Nature medicine. 2019;25(1):37-43.",
-    "[raw_reference] Xu Y, Ma T, Tang M, Tian W. A survey of privacy preserving data publishing using generalization and suppression. Applied Mathematics & Information Sciences. 2014;8(3):1103.",
-    "[report_type] arXiv preprint",
-    "[raw_reference] Wang X, Wei J, Schuurmans D, Le Q, Chi E, Narang S, et al. Self-consistency im- proves chain of thought reasoning in language models. arXiv preprint arXiv:220311171. 2022.",
-    "[raw_reference] Abbasian M, Khatibi E, Azimi I, Oniani D, Shakeri Hossein Abad Z, Thieme A, et al. Foundation metrics for evaluating effectiveness of healthcare conversations powered by generative AI. NPJ Digital Medicine. 2024;7(1):82."
-  ],
-  "processing_software": {
-    "GROBID": "0.8.2"
-  }
+  "num_references": 68
 }

@@ -369,8 +369,8 @@ def recover_all_metadata(
         processed_files.add(json_file.stem)
         checkpoint_counter += 1
 
-        # Save checkpoint every 50 files
-        if checkpoint_counter >= config.MIN_ABSTRACT_LENGTH:
+        # Save checkpoint periodically
+        if checkpoint_counter >= config.ZOTERO_CHECKPOINT_INTERVAL:
             checkpoint_data = {
                 "processed_files": list(processed_files),
                 "stats": dict(stats),

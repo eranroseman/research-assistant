@@ -391,8 +391,8 @@ class ComprehensiveTEIExtractor:
             self.processed_files.add(tei_file.stem)
             checkpoint_counter += 1
 
-            # Save checkpoint every 50 files
-            if checkpoint_counter >= config.MIN_ABSTRACT_LENGTH:
+            # Save checkpoint periodically
+            if checkpoint_counter >= config.TEI_CHECKPOINT_INTERVAL:
                 self.save_checkpoint()
                 logger.info("Checkpoint saved: %d total files processed", len(self.processed_files))
                 checkpoint_counter = 0

@@ -10,13 +10,13 @@ python src/extract_zotero_library.py
 
 # Step 2: Process with GROBID and extract to JSON
 python src/grobid_overnight_runner.py --input pdfs/ --output extraction_pipeline/01_tei_xml/
-python src/comprehensive_tei_extractor.py
+python src/tei_extractor.py  # TEI to JSON with checkpoint support
 
 # Step 3: Recover metadata from Zotero
-python src/zotero_metadata_recovery.py
+python src/zotero_recovery.py  # Uses local Zotero API, has checkpoint support
 
 # Step 4: Enrich metadata with CrossRef
-python src/crossref_batch_enrichment_checkpoint.py  # Recovers titles, finds DOIs (90% success)
+python src/crossref_enricher.py --input extraction_pipeline/03_zotero_recovery --output extraction_pipeline/04_crossref_enrichment  # Comprehensive fields + checkpoint
 
 # Step 5: Filter non-article content
 python src/filter_non_articles.py   # Remove supplements, datasets, editorials
@@ -28,9 +28,11 @@ python src/fix_malformed_dois.py    # Clean DOIs and retry (80% success)
 python src/final_cleanup_no_title.py # Creates kb_final_cleaned_*/ with 100% title coverage
 
 # Step 8: Further enrichment (optional)
-python src/s2_batch_enrichment.py
+python src/semantic_scholar_enricher.py
 python src/openalex_enricher.py
-python src/v5_unpaywall_pipeline.py
+python src/unpaywall_enricher.py
+python src/pubmed_enricher.py
+python src/arxiv_enricher.py
 ```
 
 ### Pipeline Results (Final)
@@ -48,9 +50,9 @@ python src/v5_unpaywall_pipeline.py
 | `cli.py` | `cli.py` | Knowledge Base Query | `v4/src/cli.py` |
 | `analyze_gaps.py` | Not in v5 | Gap Analysis | N/A |
 | `build_kb.py` | Not in v5 | Build Knowledge Base | N/A |
-| Various scripts | `extraction_pipeline_runner_checkpoint.py` | Main v5 pipeline | `src/` |
+| Various scripts | `pipeline_runner.py` | Main v5 pipeline | `src/` |
 
-## extraction_pipeline_runner_checkpoint.py - Main V5 Pipeline
+## pipeline_runner.py - Main V5 Pipeline (Consolidated)
 
 ### Core Operation Flags
 
@@ -77,17 +79,18 @@ python src/v5_unpaywall_pipeline.py
 sudo docker run -t --rm -p 8070:8070 lfoppiano/grobid:0.8.2-full
 
 # Run the full v5 extraction and enrichment pipeline
-python src/extraction_pipeline_runner_checkpoint.py
+python src/pipeline_runner.py
 
 # Resume from checkpoint after interruption
-python src/extraction_pipeline_runner_checkpoint.py --pipeline-dir extraction_pipeline_20250901
+python src/pipeline_runner.py --pipeline-dir extraction_pipeline_20250901
 
 # Skip certain stages
-python src/extraction_pipeline_runner_checkpoint.py --skip-stages pubmed,arxiv
+python src/pipeline_runner.py --stop-after openalex
 
 # Individual stage runners with checkpoint support
-python src/comprehensive_tei_extractor_checkpoint.py
-python src/crossref_batch_enrichment_checkpoint.py
+python src/tei_extractor.py  # TEI XML to JSON with checkpoint
+python src/zotero_recovery.py --input extraction_pipeline/02_json_extraction --output extraction_pipeline/03_zotero_recovery
+python src/crossref_enricher.py --input extraction_pipeline/03_zotero_recovery --output extraction_pipeline/04_crossref_enrichment
 ```
 
 ### Automatic Reports

@@ -508,6 +508,13 @@ LARGE_BATCH_SIZE = 500  # Large batch for API calls
 MAX_BATCH_SIZE = 1000  # Maximum batch size
 DEFAULT_PROCESSING_LIMIT = 20  # Default limit for processing papers
 
+# Checkpoint frequencies for different stages
+TEI_CHECKPOINT_INTERVAL = 50  # Save checkpoint every 50 TEI files
+ZOTERO_CHECKPOINT_INTERVAL = 100  # Save checkpoint every 100 Zotero files
+FAST_API_CHECKPOINT_INTERVAL = 500  # For CrossRef, S2, OpenAlex (fast APIs)
+MEDIUM_API_CHECKPOINT_INTERVAL = 200  # For Unpaywall, PubMed
+SLOW_API_CHECKPOINT_INTERVAL = 10  # For arXiv (rate-limited)
+
 # API response codes
 HTTP_OK = 200  # HTTP 200 OK
 HTTP_NOT_FOUND = 404  # HTTP 404 Not Found

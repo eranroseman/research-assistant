@@ -1,339 +1,203 @@
 #!/usr/bin/env python3
-"""Unpaywall Enrichment for V5 Pipeline.
+"""V5 Pipeline Stage 6: Unpaywall Enrichment.
 
 Identifies open access versions and provides direct links to free full-text PDFs.
 
-Features:
-- OA status classification (gold, green, hybrid, bronze, closed)
-- Best OA location with direct PDF links
-- Repository information (PMC, arXiv, institutional repos)
-- License information (CC-BY, CC0, etc.)
-- Evidence tracking for OA determination
-- ~52% global OA rate (higher for recent papers)
+Usage:
+    python v5_unpaywall_pipeline.py --input openalex_enriched_final --output unpaywall_enriched_final
+    python v5_unpaywall_pipeline.py --test  # Test with small dataset
 """
 
+from src import config
 import json
 import time
-from collections import defaultdict
-from datetime import datetime, UTC
 from pathlib import Path
-from typing import Any
+from datetime import datetime, UTC
+import argparse
+import sys
 
-import requests
-from requests.adapters import HTTPAdapter
-from src import config
-from urllib3.util.retry import Retry
-
-
-class UnpaywallEnricher:
-    """Enrich papers with Unpaywall open access metadata."""
-
-    def __init__(self, email: str):
-        """Initialize Unpaywall enricher.
-
-        Args:
-            email: Required email for API access
-        """
-        if not email:
-            raise ValueError("Email is required for Unpaywall API access")
-
-        self.base_url = "https://api.unpaywall.org/v2"
-        self.email = email
-        self.session = self._create_session()
-        self.stats: dict[str, int] = defaultdict(int)
-
-    def _create_session(self) -> requests.Session:
-        """Create HTTP session with retry logic."""
-        session = requests.Session()
-        retry = Retry(total=5, backoff_factor=1, status_forcelist=[429, 500, 502, 503, 504])
-        adapter = HTTPAdapter(max_retries=retry)
-        session.mount("http://", adapter)
-        session.mount("https://", adapter)
-
-        # Set user agent
-        session.headers.update({"User-Agent": f"Research Assistant v5.0 (mailto:{self.email})"})
-
-        return session
-
-    def enrich_single(self, doi: str) -> dict[str, Any] | None:
-        """Enrich a single paper by DOI.
-
-        Args:
-            doi: Paper DOI
-
-        Returns:
-            Enriched metadata or None if not found
-        """
-        try:
-            # Clean DOI (reuse logic from OpenAlex)
-            clean_doi = self._clean_doi(doi)
-            if not clean_doi:
-                self.stats["invalid_doi"] += 1
-                return None
-
-            # Query Unpaywall
-            url = f"{self.base_url}/{clean_doi}"
-            params = {"email": self.email}
-
-            response = self.session.get(url, params=params, timeout=30)
-
-            if response.status_code == config.HTTP_NOT_FOUND:
-                self.stats["not_found"] += 1
-                return None
-
-            response.raise_for_status()
-
-            data = response.json()
-            return self._process_oa_data(data)
-
-        except requests.exceptions.Timeout:
-            self.stats["timeout"] += 1
-            print(f"Timeout for {doi}")
-        except requests.exceptions.RequestException as e:
-            self.stats["error"] += 1
-            print(f"Error enriching {doi}: {e}")
-
-        return None
-
-    def _clean_doi(self, doi: str) -> str | None:
-        """Clean and validate a DOI.
-
-        Reuses logic from OpenAlex enricher for consistency.
-
-        Args:
-            doi: Raw DOI string
-
-        Returns:
-            Cleaned DOI or None if invalid
-        """
-        if not doi:
-            return None
-
-        # Remove whitespace and convert to lowercase
-        clean = doi.strip().lower()
-
-        # Handle URLs
-        if clean.startswith("http"):
-            # Extract DOI from URL
-            if "doi.org/" in clean:
-                clean = clean.split("doi.org/")[-1]
-            elif "doi=" in clean:
-                # Extract from query parameter
-                import re
-
-                match = re.search(r"doi=([^&]+)", clean)
-                if match:
-                    clean = match.group(1)
-                else:
-                    return None
-            else:
-                return None
-
-        # Remove common suffixes from extraction errors
-        clean = clean.split(".from")[0]
-        clean = clean.split("keywords")[0]
-        clean = clean.rstrip(".)•")
-
-        # Validate basic DOI format
-        if not clean.startswith("10."):
-            return None
-        if len(clean) < config.DEFAULT_TIMEOUT or len(clean) > config.MIN_CONTENT_LENGTH:
-            return None
-
-        return clean
-
-    def _process_oa_data(self, data: dict[str, Any]) -> dict[str, Any]:
-        """Process Unpaywall data into enriched metadata.
-
-        Args:
-            data: Raw Unpaywall response
-
-        Returns:
-            Processed metadata
-        """
-        enriched = {
-            "doi": data.get("doi", "").replace("https://doi.org/", ""),
-            "is_oa": data.get("is_oa", False),
-            "oa_status": data.get("oa_status"),  # gold, green, hybrid, bronze, closed
-            "has_repository_copy": data.get("has_repository_copy", False),
-            "journal_is_oa": data.get("journal_is_oa", False),
-            "journal_is_in_doaj": data.get("journal_is_in_doaj", False),
-        }
-
-        # Best OA location (highest quality/most reliable)
-        best_location = data.get("best_oa_location")
-        if best_location:
-            enriched["best_oa_location"] = {
-                "url": best_location.get("url"),
-                "url_for_pdf": best_location.get("url_for_pdf"),
-                "url_for_landing_page": best_location.get("url_for_landing_page"),
-                "evidence": best_location.get("evidence"),
-                "license": best_location.get("license"),
-                "version": best_location.get(
-                    "version"
-                ),  # publishedVersion, acceptedVersion, submittedVersion
-                "host_type": best_location.get("host_type"),  # publisher, repository
-                "is_best": True,
-            }
-
-            # Repository information
-            if best_location.get("pmh_id"):
-                enriched["best_oa_location"]["pmh_id"] = best_location["pmh_id"]
-            if best_location.get("repository_institution"):
-                enriched["best_oa_location"]["repository"] = best_location["repository_institution"]
-
-        # All OA locations (including alternatives)
-        all_locations = data.get("oa_locations", [])
-        if all_locations and len(all_locations) > 1:
-            enriched["alternative_oa_locations"] = []
-            for loc in all_locations:
-                if loc != best_location:  # Skip best location (already captured)
-                    alt_location = {
-                        "url": loc.get("url"),
-                        "url_for_pdf": loc.get("url_for_pdf"),
-                        "evidence": loc.get("evidence"),
-                        "license": loc.get("license"),
-                        "version": loc.get("version"),
-                        "host_type": loc.get("host_type"),
-                    }
-
-                    # Repository information
-                    if loc.get("pmh_id"):
-                        alt_location["pmh_id"] = loc["pmh_id"]
-                    if loc.get("repository_institution"):
-                        alt_location["repository"] = loc["repository_institution"]
-
-                    enriched["alternative_oa_locations"].append(alt_location)
-
-        # Publication info (basic metadata from Unpaywall)
-        enriched["title"] = data.get("title")
-        enriched["year"] = data.get("year")
-        enriched["journal_name"] = data.get("journal_name")
-        enriched["publisher"] = data.get("publisher")
-
-        # First and last author (useful for disambiguation)
-        z_authors = data.get("z_authors", [])
-        if z_authors:
-            if z_authors[0].get("family"):
-                enriched["first_author"] = (
-                    f"{z_authors[0].get('given', '')} {z_authors[0].get('family', '')}".strip()
-                )
-            if len(z_authors) > 1 and z_authors[-1].get("family"):
-                enriched["last_author"] = (
-                    f"{z_authors[-1].get('given', '')} {z_authors[-1].get('family', '')}".strip()
-                )
-
-        # Track OA status for statistics
-        if enriched["is_oa"]:
-            self.stats[f"oa_{enriched['oa_status']}"] += 1
-        else:
-            self.stats["closed"] += 1
-
-        return enriched
-
-    def enrich_batch(
-        self, dois: list[str], parallel: bool = True, max_workers: int = 5
-    ) -> dict[str, dict[str, Any]]:
-        """Enrich multiple papers.
-
-        Unlike OpenAlex, Unpaywall doesn't support batch queries, so we process individually with optional parallelization.
-
-        Args:
-            dois: List of DOIs
-            parallel: Whether to use parallel processing
-            max_workers: Number of parallel workers
-
-        Returns:
-            Dictionary mapping DOI to enriched metadata
-        """
-        results = {}
-
-        if parallel and len(dois) > config.DEFAULT_TIMEOUT:
-            # Use parallel processing for larger batches
-            from concurrent.futures import ThreadPoolExecutor, as_completed
-
-            with ThreadPoolExecutor(max_workers=max_workers) as executor:
-                # Submit all tasks
-                future_to_doi = {executor.submit(self.enrich_single, doi): doi for doi in dois}
-
-                # Process completed tasks
-                for future in as_completed(future_to_doi):
-                    original_doi = future_to_doi[future]
-                    try:
-                        result = future.result(timeout=30)
-                        if result:
-                            results[original_doi] = result
-                            self.stats["enriched"] += 1
-                        else:
-                            self.stats["failed"] += 1
-                    except Exception as e:
-                        print(f"Error processing {original_doi}: {e}")
-                        self.stats["failed"] += 1
-
-                    # Rate limiting between completed requests
-                    time.sleep(0.1)
-        else:
-            # Sequential processing for small batches
-            for doi in dois:
-                result = self.enrich_single(doi)
-                if result:
-                    results[doi] = result
-                    self.stats["enriched"] += 1
-                else:
-                    self.stats["failed"] += 1
-
-                # Rate limiting
-                time.sleep(0.1)
-
-        return results
-
-    def get_statistics(self) -> dict[str, Any]:
-        """Get enrichment statistics."""
-        total = self.stats["enriched"] + self.stats["failed"]
-        oa_total = sum(self.stats[k] for k in self.stats if k.startswith("oa_"))
-
-        return {
-            "total_processed": total,
-            "enriched": self.stats["enriched"],
-            "failed": self.stats["failed"],
-            "enrichment_rate": f"{(self.stats['enriched'] / total * 100):.1f}%" if total else "0%",
-            "oa_discovered": oa_total,
-            "oa_rate": f"{(oa_total / self.stats['enriched'] * 100):.1f}%"
-            if self.stats["enriched"]
-            else "0%",
-            "oa_breakdown": {
-                "gold": self.stats.get("oa_gold", 0),
-                "green": self.stats.get("oa_green", 0),
-                "hybrid": self.stats.get("oa_hybrid", 0),
-                "bronze": self.stats.get("oa_bronze", 0),
-            },
-            "errors": {
-                "not_found": self.stats.get("not_found", 0),
-                "invalid_doi": self.stats.get("invalid_doi", 0),
-                "timeout": self.stats.get("timeout", 0),
-                "other": self.stats.get("error", 0),
-            },
-        }
+sys.path.append("src")
+from config import CROSSREF_POLITE_EMAIL
+from unpaywall_enricher import UnpaywallEnricher
 
 
-def process_directory(input_dir: str, output_dir: str, email: str, parallel: bool = True) -> None:
-    """Process all papers in a directory with Unpaywall enrichment.
+def analyze_enrichment_results(output_dir: Path) -> None:
+    """Analyze and report enrichment statistics.
 
-    Args:
-        input_dir: Directory containing paper JSON files
-        output_dir: Directory to save enriched papers
-        email: Required email for API access
-        parallel: Whether to use parallel processing
+    .
     """
-    input_path = Path(input_dir)
-    output_path = Path(output_dir)
-    output_path.mkdir(parents=True, exist_ok=True)
+    report_file = output_dir / "unpaywall_enrichment_report.json"
+    if not report_file.exists():
+        print("No report file found")
+        return
+
+    with open(report_file) as f:
+        report = json.load(f)
+
+    print("\n" + "=" * 80)
+    print("UNPAYWALL ENRICHMENT RESULTS")
+    print("=" * 80)
+
+    stats = report["statistics"]
+    print("\nProcessing Statistics:")
+    print(f"  Total papers: {stats['total_papers']}")
+    print(f"  Papers with DOIs: {stats['papers_with_dois']}")
+    print(f"  Papers enriched: {stats['papers_enriched']}")
+    print(f"  Enrichment rate: {stats['enrichment_rate']}")
+    print(f"  Processing time: {stats['processing_time_seconds']} seconds")
+    print(f"  Avg time per paper: {stats.get('avg_time_per_paper', 0):.2f} seconds")
+
+    if "open_access" in report:
+        oa = report["open_access"]
+        print("\nOpen Access Discovery:")
+        print(f"  Papers with OA: {oa['papers_with_oa']} ({oa['oa_rate']})")
+        print("  OA Breakdown:")
+        for oa_type, count in oa["oa_breakdown"].items():
+            if count > 0:
+                pct = (count / oa["papers_with_oa"] * 100) if oa["papers_with_oa"] > 0 else 0
+                print(f"    - {oa_type.capitalize()}: {count} ({pct:.1f}%)")
+
+    if "errors" in report:
+        errors = report["errors"]
+        if any(errors.values()):
+            print("\nError Analysis:")
+            for error_type, count in errors.items():
+                if count > 0:
+                    print(f"  - {error_type}: {count}")
+
+    # Sample detailed analysis
+    papers = list(output_dir.glob("*.json"))[:10]
+
+    if papers:
+        print(f"\nSample Analysis (first {len(papers)} papers):")
+
+        oa_types = []
+        pdf_links = 0
+        repositories = []
+        licenses = []
+
+        for paper_file in papers:
+            if "report" in paper_file.name:
+                continue
+
+            with open(paper_file) as f:
+                paper = json.load(f)
+
+                # OA status
+                if paper.get("unpaywall_is_oa"):
+                    oa_types.append(paper.get("unpaywall_oa_status", "unknown"))
+
+                    # PDF links
+                    if paper.get("unpaywall_best_oa_location", {}).get("url_for_pdf"):
+                        pdf_links += 1
+
+                    # Repository
+                    repo = paper.get("unpaywall_best_oa_location", {}).get("repository")
+                    if repo:
+                        repositories.append(repo)
+
+                    # License
+                    paper_license = paper.get("unpaywall_best_oa_location", {}).get("license")
+                    if paper_license:
+                        licenses.append(paper_license)
+
+        if oa_types:
+            from collections import Counter
+
+            oa_counts = Counter(oa_types)
+            print("\n  OA Types in Sample:")
+            for oa_type, count in oa_counts.most_common():
+                print(f"    - {oa_type}: {count}")
+
+        print(f"\n  Direct PDF Links: {pdf_links}/{len(papers)}")
+
+        if repositories:
+            repo_counts = Counter(repositories)
+            print("\n  Top Repositories:")
+            for repo, count in repo_counts.most_common(3):
+                print(f"    - {repo}: {count}")
+
+        if licenses:
+            license_counts = Counter(licenses)
+            print("\n  License Distribution:")
+            for lic, count in license_counts.most_common():
+                print(f"    - {lic}: {count}")
+
+    print("\n" + "=" * 80)
+
+
+def main() -> None:
+    """Run the main program.
+
+    .
+    """
+    parser = argparse.ArgumentParser(description="V5 Pipeline Stage 6: Unpaywall Enrichment")
+    parser.add_argument(
+        "--input", default="openalex_enriched_final", help="Input directory with OpenAlex enriched papers"
+    )
+    parser.add_argument(
+        "--output", default="unpaywall_enriched_final", help="Output directory for Unpaywall enriched papers"
+    )
+    parser.add_argument("--email", help="Email for Unpaywall API (required)")
+    parser.add_argument("--test", action="store_true", help="Test mode - use small dataset")
+    parser.add_argument("--no-parallel", action="store_true", help="Disable parallel processing")
+    parser.add_argument("--analyze-only", action="store_true", help="Only analyze existing results")
+
+    args = parser.parse_args()
+
+    # Use config email if not provided
+    if not args.email:
+        args.email = CROSSREF_POLITE_EMAIL
+
+    # Test mode uses small dataset
+    if args.test:
+        args.input = "openalex_test_output"
+        args.output = "unpaywall_test_output"
+
+    output_path = Path(args.output)
+
+    # Analyze only mode
+    if args.analyze_only:
+        if not output_path.exists():
+            print(f"Output directory {output_path} does not exist")
+            return
+        analyze_enrichment_results(output_path)
+        return
+
+    # Check input directory
+    input_path = Path(args.input)
+    if not input_path.exists():
+        print(f"Input directory {input_path} does not exist")
+        print("Please run OpenAlex enrichment first (v5_openalex_pipeline.py)")
+        return
 
     # Initialize enricher
-    enricher = UnpaywallEnricher(email=email)
+    print("=" * 80)
+    print("V5 PIPELINE - STAGE 6: UNPAYWALL ENRICHMENT")
+    print("=" * 80)
+    print(f"Input: {input_path}")
+    print(f"Output: {output_path}")
+    print(f"Email: {args.email}")
+    print(f"Parallel processing: {'Disabled' if args.no_parallel else 'Enabled'}")
+    print()
+
+    try:
+        enricher = UnpaywallEnricher(email=args.email)
+    except ValueError as e:
+        print(f"Error: {e}")
+        return
+
+    # Create output directory
+    output_path.mkdir(parents=True, exist_ok=True)
 
     # Load papers
     paper_files = list(input_path.glob("*.json"))
+    if not paper_files:
+        print("No papers found in input directory")
+        return
+
+    # Filter out report files
+    paper_files = [f for f in paper_files if "report" not in f.name]
     print(f"Found {len(paper_files)} papers to process")
 
     # Collect papers with DOIs
@@ -342,10 +206,6 @@ def process_directory(input_dir: str, output_dir: str, email: str, parallel: boo
     papers_without_doi = []
 
     for paper_file in paper_files:
-        # Skip report files
-        if "report" in paper_file.name:
-            continue
-
         with open(paper_file) as f:
             paper = json.load(f)
             doi = paper.get("doi")
@@ -359,16 +219,23 @@ def process_directory(input_dir: str, output_dir: str, email: str, parallel: boo
     if papers_without_doi:
         print(f"Skipping {len(papers_without_doi)} papers without DOIs")
 
-    # Process all DOIs (with progress tracking)
-    all_dois = [doi for _, doi in papers_with_dois]
+    if not papers_with_dois:
+        print("No papers with DOIs to process")
+        return
+
+    # Process papers
+    print("\nProcessing papers with Unpaywall API...")
+    print("Note: Unpaywall requires individual API calls per DOI")
+    if len(papers_with_dois) > config.MIN_CONTENT_LENGTH:
+        estimated_time = len(papers_with_dois) * 0.15  # ~0.15 seconds per paper with parallelization
+        print(f"Estimated time: {estimated_time / 60:.1f} minutes")
+
     start_time = time.time()
 
-    print("\nProcessing papers with Unpaywall API...")
-    print("Note: This may take a while due to rate limiting (1 request per DOI)")
-
     # Process in chunks for better progress tracking
-    chunk_size = 50
+    chunk_size = config.MEDIUM_API_CHECKPOINT_INTERVAL  # 200 papers
     all_results = {}
+    all_dois = [doi for _, doi in papers_with_dois]
 
     for i in range(0, len(all_dois), chunk_size):
         chunk = all_dois[i : i + chunk_size]
@@ -376,16 +243,36 @@ def process_directory(input_dir: str, output_dir: str, email: str, parallel: boo
         total_chunks = (len(all_dois) + chunk_size - 1) // chunk_size
 
         print(f"\nProcessing chunk {chunk_num}/{total_chunks} ({len(chunk)} papers)...")
-        chunk_results = enricher.enrich_batch(chunk, parallel=parallel)
+
+        # Process chunk
+        chunk_results = enricher.enrich_batch(
+            chunk, parallel=not args.no_parallel, max_workers=5 if not args.test else 2
+        )
         all_results.update(chunk_results)
 
         # Show progress
         stats = enricher.get_statistics()
-        print(f"  Progress: {stats['enriched']}/{stats['total_processed']} enriched")
-        print(f"  OA discovered: {stats['oa_discovered']} ({stats['oa_rate']})")
+        print(f"  Enriched: {stats['enriched']}")
+        print(f"  OA found: {stats['oa_discovered']} ({stats['oa_rate']})")
 
-    # Save enriched papers
-    print("\nSaving enriched papers...")
+        # Save checkpoint every 100 papers
+        if (i + chunk_size) % 100 == 0 or (i + chunk_size) >= len(all_dois):
+            print("  Saving checkpoint...")
+            for paper_id, doi in papers_with_dois[: i + chunk_size]:
+                original_paper = papers_by_doi[doi].copy()
+
+                if doi in all_results:
+                    enrichment = all_results[doi]
+                    for key, value in enrichment.items():
+                        if value is not None:
+                            original_paper[f"unpaywall_{key}"] = value
+
+                output_file = output_path / f"{paper_id}.json"
+                with open(output_file, "w") as f:
+                    json.dump(original_paper, f, indent=2)
+
+    # Save remaining papers
+    print("\nSaving all enriched papers...")
     for paper_id, doi in papers_with_dois:
         original_paper = papers_by_doi[doi].copy()
 
@@ -396,6 +283,10 @@ def process_directory(input_dir: str, output_dir: str, email: str, parallel: boo
             for key, value in enrichment.items():
                 if value is not None:  # Only add non-null values
                     original_paper[f"unpaywall_{key}"] = value
+
+            # Add enrichment marker
+            original_paper["unpaywall_enriched"] = True
+            original_paper["unpaywall_enriched_date"] = datetime.now(UTC).isoformat()
 
         # Save paper (enriched or not)
         output_file = output_path / f"{paper_id}.json"
@@ -413,8 +304,8 @@ def process_directory(input_dir: str, output_dir: str, email: str, parallel: boo
 
     elapsed_time = time.time() - start_time
 
-    # Generate detailed report
-    stats = enricher.get_statistics()
+    # Generate final report
+    final_stats = enricher.get_statistics()
     report = {
         "timestamp": datetime.now(UTC).isoformat(),
         "pipeline_stage": "6_unpaywall_enrichment",
@@ -422,63 +313,38 @@ def process_directory(input_dir: str, output_dir: str, email: str, parallel: boo
             "total_papers": len(paper_files),
             "papers_with_dois": len(papers_with_dois),
             "papers_without_dois": len(papers_without_doi),
-            "papers_enriched": stats["enriched"],
-            "papers_failed": stats["failed"],
-            "enrichment_rate": stats["enrichment_rate"],
+            "papers_enriched": final_stats["enriched"],
+            "papers_failed": final_stats["failed"],
+            "enrichment_rate": final_stats["enrichment_rate"],
             "processing_time_seconds": round(elapsed_time, 1),
             "avg_time_per_paper": round(elapsed_time / len(papers_with_dois), 2) if papers_with_dois else 0,
         },
         "open_access": {
-            "papers_with_oa": stats["oa_discovered"],
-            "oa_rate": stats["oa_rate"],
-            "oa_breakdown": stats["oa_breakdown"],
+            "papers_with_oa": final_stats["oa_discovered"],
+            "oa_rate": final_stats["oa_rate"],
+            "oa_breakdown": final_stats["oa_breakdown"],
         },
-        "errors": stats["errors"],
+        "errors": final_stats["errors"],
     }
 
     report_file = output_path / "unpaywall_enrichment_report.json"
     with open(report_file, "w") as f:
         json.dump(report, f, indent=2)
 
-    print("\nEnrichment complete!")
-    print(f"  Papers enriched: {stats['enriched']}/{len(papers_with_dois)} ({stats['enrichment_rate']})")
-    print(f"  Open Access found: {stats['oa_discovered']} ({stats['oa_rate']})")
-    print("  OA breakdown:")
-    for oa_type, count in stats["oa_breakdown"].items():
-        if count > 0:
-            print(f"    - {oa_type}: {count}")
-    print(f"  Processing time: {elapsed_time:.1f} seconds")
-    print(f"  Report saved to: {report_file}")
+    print("\n" + "=" * 80)
+    print("ENRICHMENT COMPLETE")
+    print("=" * 80)
+    print(
+        f"Papers enriched: {final_stats['enriched']}/{len(papers_with_dois)} ({final_stats['enrichment_rate']})"
+    )
+    print(f"Open Access found: {final_stats['oa_discovered']} ({final_stats['oa_rate']})")
+    print(f"Processing time: {elapsed_time:.1f} seconds")
+    print(f"Output directory: {output_path}")
+    print(f"Report saved to: {report_file}")
+
+    # Analyze results
+    analyze_enrichment_results(output_path)
 
 
 if __name__ == "__main__":
-    import argparse
-
-    parser = argparse.ArgumentParser(description="Enrich papers with Unpaywall open access metadata")
-    parser.add_argument("--input", default="openalex_enriched_final", help="Input directory with papers")
-    parser.add_argument("--output", default="unpaywall_enriched", help="Output directory")
-    parser.add_argument("--email", required=True, help="Email for Unpaywall API (required)")
-    parser.add_argument("--test", action="store_true", help="Test with single paper")
-    parser.add_argument("--no-parallel", action="store_true", help="Disable parallel processing")
-
-    args = parser.parse_args()
-
-    if args.test:
-        # Test with a single DOI
-        enricher = UnpaywallEnricher(email=args.email)
-        test_doi = "10.1038/s41586-020-2649-2"  # Example Nature paper
-
-        print(f"Testing with DOI: {test_doi}")
-        result = enricher.enrich_single(test_doi)
-
-        if result:
-            print("\nEnrichment successful!")
-            print(json.dumps(result, indent=2))
-
-            # Show statistics
-            stats = enricher.get_statistics()
-            print(f"\nStatistics: {json.dumps(stats, indent=2)}")
-        else:
-            print("Enrichment failed")
-    else:
-        process_directory(args.input, args.output, args.email, parallel=not args.no_parallel)
+    main()
