@@ -9,8 +9,11 @@ This script:
 
 import json
 import shutil
-from pathlib import Path
 from datetime import datetime, UTC
+from pathlib import Path
+from typing import Any
+
+from src import config
 
 
 class NonArticleFilter:
@@ -30,14 +33,14 @@ class NonArticleFilter:
         self.output_dir.mkdir(exist_ok=True)
 
         # Categories for exclusion
-        self.excluded = {
+        self.excluded: dict[str, list[dict[str, Any]]] = {
             "supplemental_materials": [],
             "datasets": [],
             "malformed_doi": [],
             "other_non_articles": [],
         }
 
-        self.included = []
+        self.included: list[dict[str, Any]] = []
         self.stats = {"total_processed": 0, "articles_kept": 0, "non_articles_excluded": 0}
 
     def is_supplemental_material(self, doi: str) -> bool:
@@ -98,7 +101,7 @@ class NonArticleFilter:
 
         return any(pattern in doi for pattern in malformed_patterns)
 
-    def analyze_paper(self, json_file: Path) -> tuple[str, dict]:
+    def analyze_paper(self, json_file: Path) -> tuple[str, dict[str, Any]]:
         """Analyze a paper to determine if it's an article or non-article content.
 
         Returns:
@@ -158,7 +161,7 @@ class NonArticleFilter:
         # Paper is a regular article
         return "article", paper_info
 
-    def process_all(self):
+    def process_all(self) -> None:
         """Process all papers and filter out non-articles."""
         json_files = [f for f in self.input_dir.glob("*.json") if "report" not in f.name]
 
@@ -188,7 +191,7 @@ class NonArticleFilter:
         self.generate_exclusion_list()
         self.print_summary()
 
-    def generate_quality_report(self):
+    def generate_quality_report(self) -> None:
         """Generate comprehensive quality report."""
         report = {
             "timestamp": datetime.now(UTC).isoformat(),
@@ -205,7 +208,7 @@ class NonArticleFilter:
         # Generate readable report
         self.generate_readable_report(report)
 
-    def generate_readable_report(self, report: dict):
+    def generate_readable_report(self, report: dict[str, Any]) -> None:
         """Generate human-readable quality report."""
         readable_file = self.output_dir / "non_article_filter_report.md"
 
@@ -233,9 +236,17 @@ class NonArticleFilter:
                 f.write("| Paper ID | DOI | Abstract | Text | Refs |\n")
                 f.write("|----------|-----|----------|------|------|\n")
                 for paper in self.excluded["supplemental_materials"][:10]:
-                    doi_short = paper["doi"][:40] + "..." if len(paper["doi"]) > 40 else paper["doi"]
+                    doi_short = (
+                        paper["doi"][: config.TITLE_DISPLAY_LENGTH] + "..."
+                        if len(paper["doi"]) > config.TITLE_DISPLAY_LENGTH
+                        else paper["doi"]
+                    )
                     abstract = f"{paper['abstract_length']} chars" if paper["abstract_length"] > 0 else "✗"
-                    text = f"{paper['text_chars'] / 1000:.1f}K" if paper["text_chars"] > 0 else "✗"
+                    text = (
+                        f"{paper['text_chars'] / config.MIN_FULL_TEXT_LENGTH_THRESHOLD:.1f}K"
+                        if paper["text_chars"] > 0
+                        else "✗"
+                    )
                     refs = str(paper["num_references"]) if paper["num_references"] > 0 else "✗"
                     f.write(f"| {paper['paper_id']} | {doi_short} | {abstract} | {text} | {refs} |\n")
                 f.write("\n")
@@ -249,7 +260,11 @@ class NonArticleFilter:
                 for paper in self.excluded["datasets"][:10]:
                     doi = paper["doi"]
                     repo = "FigShare" if "figshare" in doi.lower() else "Other"
-                    text = f"{paper['text_chars'] / 1000:.1f}K" if paper["text_chars"] > 0 else "✗"
+                    text = (
+                        f"{paper['text_chars'] / config.MIN_FULL_TEXT_LENGTH_THRESHOLD:.1f}K"
+                        if paper["text_chars"] > 0
+                        else "✗"
+                    )
                     f.write(f"| {paper['paper_id']} | {doi[:30]}... | {repo} | {text} |\n")
                 f.write("\n")
 
@@ -272,7 +287,11 @@ class NonArticleFilter:
                 f.write("| Paper ID | Title | Type |\n")
                 f.write("|----------|-------|------|\n")
                 for paper in self.excluded["other_non_articles"][:10]:
-                    title = paper["title"][:50] + "..." if len(paper["title"]) > 50 else paper["title"]
+                    title = (
+                        paper["title"][:50] + "..."
+                        if len(paper["title"]) > config.MIN_ABSTRACT_LENGTH
+                        else paper["title"]
+                    )
                     f.write(f"| {paper['paper_id']} | {title} | Editorial/Comment |\n")
                 f.write("\n")
 
@@ -287,7 +306,7 @@ class NonArticleFilter:
             f.write("2. Consider manual review of borderline cases\n")
             f.write("3. Update Grobid extraction to filter these earlier\n")
 
-    def generate_exclusion_list(self):
+    def generate_exclusion_list(self) -> None:
         """Generate simple list of excluded paper IDs."""
         exclusion_file = self.output_dir / "excluded_non_articles.txt"
 
@@ -301,7 +320,7 @@ class NonArticleFilter:
                     for paper in papers:
                         f.write(f"{paper['paper_id']}\n")
 
-    def print_summary(self):
+    def print_summary(self) -> None:
         """Print summary to console."""
         print("\n" + "=" * 70)
         print("NON-ARTICLE FILTERING COMPLETE")
@@ -325,7 +344,7 @@ class NonArticleFilter:
         print(f"  Exclusion list: {self.output_dir}/excluded_non_articles.txt")
 
 
-def main():
+def main() -> None:
     """Main entry point."""
     import sys
 

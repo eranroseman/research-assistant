@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-"""V5 Pipeline Stage 9: arXiv Enrichment
+"""V5 Pipeline Stage 9: arXiv Enrichment.
+
 Tracks preprint versions and updates for STEM papers.
 
 Usage:
@@ -7,16 +8,20 @@ Usage:
     python v5_arxiv_pipeline.py --test  # Test with small dataset
 """
 
+from src import config
 import json
 import time
 from pathlib import Path
-from datetime import datetime
+from datetime import datetime, UTC
 import argparse
 from arxiv_enricher import ArXivEnricher
 
 
-def analyze_enrichment_results(output_dir: Path):
-    """Analyze and report enrichment statistics."""
+def analyze_enrichment_results(output_dir: Path) -> None:
+    """Analyze and report enrichment statistics.
+
+    .
+    """
     report_file = output_dir / "arxiv_enrichment_report.json"
     if not report_file.exists():
         print("No report file found")
@@ -119,7 +124,11 @@ def analyze_enrichment_results(output_dir: Path):
     print("\n" + "=" * 80)
 
 
-def main():
+def main() -> None:
+    """Run the main program.
+
+    .
+    """
     parser = argparse.ArgumentParser(description="V5 Pipeline Stage 9: arXiv Enrichment")
     parser.add_argument(
         "--input", default="pubmed_enriched_final", help="Input directory with enriched papers"
@@ -180,9 +189,9 @@ def main():
     paper_files = [f for f in paper_files if "report" not in f.name]
 
     # Limit to 20 papers in test mode for faster testing
-    if args.test and len(paper_files) > 20:
-        paper_files = paper_files[:20]
-        print("Test mode: Processing only first 20 papers")
+    if args.test and len(paper_files) > config.DEFAULT_PROCESSING_LIMIT:
+        paper_files = paper_files[: config.DEFAULT_PROCESSING_LIMIT]
+        print(f"Test mode: Processing only first {config.DEFAULT_PROCESSING_LIMIT} papers")
 
     print(f"Found {len(paper_files)} papers to process")
 
@@ -272,7 +281,7 @@ def main():
     # Generate final report
     final_stats = enricher.get_statistics()
     report = {
-        "timestamp": datetime.now().isoformat(),
+        "timestamp": datetime.now(UTC).isoformat(),
         "pipeline_stage": "9_arxiv_enrichment",
         "statistics": {
             "total_papers": len(paper_files),

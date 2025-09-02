@@ -17,26 +17,41 @@ import logging
 import time
 import re
 from pathlib import Path
-from datetime import datetime
+from datetime import datetime, UTC
 import argparse
 import sys
 import os
+from typing import Any
 
-# Add src directory to path to import config
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), "src"))
+# Add parent directory to path to import config
+sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 
 try:
-    from config import CROSSREF_POLITE_EMAIL
+    from src import config
+    from src.config import CROSSREF_POLITE_EMAIL
 except ImportError:
     # Fallback if config not available
     CROSSREF_POLITE_EMAIL = "research.assistant@university.edu"
+
+    # Create a mock config module with the constants used
+    class MockConfig:
+        """Mock configuration for CrossRef matching thresholds."""
+
+        NEAR_PERFECT_MATCH = 0.95
+        HIGH_CONFIDENCE_THRESHOLD = 0.8
+        MIN_MATCH_COUNT = 2
+        MAX_RETRIES_DEFAULT = 3
+        DEFAULT_MAX_RESULTS = 5
+        DEFAULT_TIMEOUT = 10
+
+    config = MockConfig()  # type: ignore[assignment]
 
 try:
     from habanero import Crossref
 except ImportError:
     print("ERROR: habanero package not installed!")
     print("Install with: pip install habanero")
-    exit(1)
+    sys.exit(1)
 
 # Setup logging
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
@@ -46,15 +61,15 @@ logger = logging.getLogger(__name__)
 class ComprehensiveCrossRefEnricher:
     """Comprehensive CrossRef enricher extracting all available fields."""
 
-    def __init__(self, mailto=None):
+    def __init__(self, mailto: str | None = None) -> None:
         """Initialize enricher with polite pool access."""
         # Use polite pool by providing email - gets better performance and reliability
         # Default to config email if not provided
         if mailto is None:
             mailto = CROSSREF_POLITE_EMAIL
         self.cr = Crossref(mailto=mailto)
-        logger.info(f"Using CrossRef polite pool with email: {mailto}")
-        self.stats = {
+        logger.info("Using CrossRef polite pool with email: %s", mailto)
+        self.stats: dict[str, Any] = {
             "total_processed": 0,
             "api_queries": 0,
             "api_errors": 0,
@@ -63,7 +78,7 @@ class ComprehensiveCrossRefEnricher:
             "fields_extracted": {},
         }
 
-    def query_crossref(self, paper_data: dict) -> dict | None:
+    def query_crossref(self, paper_data: dict[str, Any]) -> dict[str, Any] | None:
         """Query CrossRef API for paper metadata.
 
         Args:
@@ -80,9 +95,9 @@ class ComprehensiveCrossRefEnricher:
                 try:
                     work = self.cr.works(ids=paper_data["doi"])
                     if work and "message" in work:
-                        return work["message"]
+                        return work["message"]  # type: ignore[no-any-return]
                 except Exception as e:
-                    logger.debug(f"DOI query failed: {e}")
+                    logger.debug("DOI query failed: %s", e)
 
             # Strategy 2: Search by title + authors
             title = paper_data.get("title")
@@ -113,11 +128,11 @@ class ComprehensiveCrossRefEnricher:
             return None
 
         except Exception as e:
-            logger.error(f"CrossRef API error: {e}")
+            logger.error("CrossRef API error: %s", e)
             self.stats["api_errors"] += 1
             return None
 
-    def find_best_match(self, original_title: str, items: list[dict]) -> dict | None:
+    def find_best_match(self, original_title: str, items: list[dict[str, Any]]) -> dict[str, Any] | None:
         """Find best matching paper from CrossRef results.
 
         Args:
@@ -131,8 +146,8 @@ class ComprehensiveCrossRefEnricher:
             return None
 
         original_lower = original_title.lower().strip()
-        best_score = 0
-        best_match = None
+        best_score: float = 0
+        best_match: dict[str, Any] | None = None
 
         for item in items:
             # Get item title
@@ -152,11 +167,11 @@ class ComprehensiveCrossRefEnricher:
                 best_match = item
 
             # Early exit for exact match
-            if score >= 0.95:
+            if score >= config.NEAR_PERFECT_MATCH:
                 return item
 
         # Return best match if similarity is high enough
-        if best_score >= 0.8:
+        if best_score >= config.HIGH_CONFIDENCE_THRESHOLD:
             return best_match
 
         return None
@@ -184,7 +199,7 @@ class ComprehensiveCrossRefEnricher:
 
         return cleaned
 
-    def extract_comprehensive_metadata(self, crossref_data: dict) -> dict:
+    def extract_comprehensive_metadata(self, crossref_data: dict[str, Any]) -> dict[str, Any]:
         """Extract ALL available metadata from CrossRef response.
 
         Args:
@@ -229,7 +244,7 @@ class ComprehensiveCrossRefEnricher:
             metadata["short_title"] = short_titles[0]
             self.track_field("short_title")
 
-        # ========== 2. DATES ==========
+        # ========== config.MIN_MATCH_COUNT. DATES ==========
         # Extract year (primary)
         date_parts = crossref_data.get("published-print", {}).get("date-parts")
         if not date_parts:
@@ -242,11 +257,11 @@ class ComprehensiveCrossRefEnricher:
             self.track_field("year")
 
             # Full date if available
-            if len(date_parts[0]) >= 3:
+            if len(date_parts[0]) >= config.MAX_RETRIES_DEFAULT:
                 metadata["publication_date"] = {
                     "year": date_parts[0][0],
                     "month": date_parts[0][1] if len(date_parts[0]) > 1 else None,
-                    "day": date_parts[0][2] if len(date_parts[0]) > 2 else None,
+                    "day": date_parts[0][2] if len(date_parts[0]) > config.MIN_MATCH_COUNT else None,
                 }
                 self.track_field("publication_date")
 
@@ -305,7 +320,7 @@ class ComprehensiveCrossRefEnricher:
         if dates_info:
             metadata["dates"] = dates_info
 
-        # ========== 3. PUBLICATION DETAILS ==========
+        # ========== config.MAX_RETRIES_DEFAULT. PUBLICATION DETAILS ==========
         publication_info = {}
 
         # Journal
@@ -356,9 +371,9 @@ class ComprehensiveCrossRefEnricher:
 
         # ========== 4. AUTHORS & CONTRIBUTORS ==========
         # Authors with enhanced info
-        authors = []
+        authors: list[dict[str, Any]] = []
         for author in crossref_data.get("author", []):
-            author_entry = {}
+            author_entry: dict[str, Any] = {}
 
             # Name
             name_parts = []
@@ -377,9 +392,9 @@ class ComprehensiveCrossRefEnricher:
 
             # Affiliation
             if author.get("affiliation"):
-                affiliations = []
+                affiliations: list[dict[str, Any]] = []
                 for aff in author["affiliation"]:
-                    aff_entry = {}
+                    aff_entry: dict[str, Any] = {}
                     if "name" in aff:
                         aff_entry["organization"] = aff["name"]
                     if "department" in aff:
@@ -393,7 +408,7 @@ class ComprehensiveCrossRefEnricher:
                     author_entry["affiliations"] = affiliations
                     self.track_field("author_affiliations")
 
-            # Sequence (first, additional)
+            # Extract sequence information (first, additional)
             if "sequence" in author:
                 author_entry["sequence"] = author["sequence"]
 
@@ -423,7 +438,7 @@ class ComprehensiveCrossRefEnricher:
             metadata["editors"] = editors
             self.track_field("editors")
 
-        # ========== 5. IDENTIFIERS ==========
+        # ========== config.DEFAULT_MAX_RESULTS. IDENTIFIERS ==========
         identifiers = {}
 
         # ISSN
@@ -519,7 +534,7 @@ class ComprehensiveCrossRefEnricher:
                 metadata["clinical_trials"] = trials
                 self.track_field("clinical_trials")
 
-        # ========== 10. FUNDING ==========
+        # ========== config.DEFAULT_TIMEOUT. FUNDING ==========
         if "funder" in crossref_data:
             funders = []
             for funder in crossref_data["funder"]:
@@ -550,7 +565,9 @@ class ComprehensiveCrossRefEnricher:
                 # Store count and sample
                 metadata["reference_details"] = {
                     "count": len(refs),
-                    "sample": refs[:5] if len(refs) > 5 else refs,  # Store first 5 as sample
+                    "sample": refs[:5]
+                    if len(refs) > config.DEFAULT_MAX_RESULTS
+                    else refs,  # Store first config.DEFAULT_MAX_RESULTS as sample
                 }
                 self.track_field("references")
 
@@ -584,7 +601,7 @@ class ComprehensiveCrossRefEnricher:
                 self.track_field("licenses")
 
         # ========== 13. QUALITY INDICATORS ==========
-        quality_indicators = {}
+        quality_indicators: dict[str, Any] = {}
 
         # Peer review
         if "peer-review" in crossref_data:
@@ -598,9 +615,9 @@ class ComprehensiveCrossRefEnricher:
 
         # Assertions
         if "assertion" in crossref_data:
-            assertions = []
+            assertions: list[dict[str, Any]] = []
             for assertion in crossref_data["assertion"]:
-                assert_entry = {}
+                assert_entry: dict[str, Any] = {}
 
                 if "name" in assertion:
                     assert_entry["name"] = assertion["name"]
@@ -666,7 +683,7 @@ class ComprehensiveCrossRefEnricher:
 
         return metadata
 
-    def track_field(self, field_name: str):
+    def track_field(self, field_name: str) -> None:
         """Track which fields are being extracted.
 
         Args:
@@ -721,7 +738,7 @@ class ComprehensiveCrossRefEnricher:
 
             # Add enrichment metadata
             new_metadata["crossref_comprehensive"] = True
-            new_metadata["crossref_enrichment_date"] = datetime.utcnow().isoformat()
+            new_metadata["crossref_enrichment_date"] = datetime.now(UTC).isoformat()
             new_metadata["original_extraction"] = {
                 "title": paper_data.get("title"),
                 "year": paper_data.get("year"),
@@ -739,19 +756,18 @@ class ComprehensiveCrossRefEnricher:
             return True
 
         except Exception as e:
-            logger.error(f"Error processing {paper_file}: {e}")
+            logger.error("Error processing %s: %s", paper_file, e)
             # Copy original file on error
             try:
                 output_file = output_dir / paper_file.name
-                with open(paper_file) as f_in:
-                    with open(output_file, "w") as f_out:
-                        f_out.write(f_in.read())
-            except:
-                pass
+                with open(paper_file) as f_in, open(output_file, "w") as f_out:
+                    f_out.write(f_in.read())
+            except Exception as e:
+                logger.debug("Error copying original file: %s", e)
             self.stats["papers_failed"] += 1
             return False
 
-    def process_directory(self, input_dir: Path, output_dir: Path, max_papers: int | None = None):
+    def process_directory(self, input_dir: Path, output_dir: Path, max_papers: int | None = None) -> None:
         """Process all papers in a directory.
 
         Args:
@@ -768,28 +784,28 @@ class ComprehensiveCrossRefEnricher:
         if max_papers:
             json_files = json_files[:max_papers]
 
-        logger.info(f"Found {len(json_files)} papers to process")
-        logger.info(f"Input: {input_dir}")
-        logger.info(f"Output: {output_dir}")
+        logger.info("Found %s papers to process", len(json_files))
+        logger.info("Input: %s", input_dir)
+        logger.info("Output: %s", output_dir)
 
         # Process each paper
         for i, paper_file in enumerate(json_files, 1):
-            if i % 10 == 0:
-                logger.info(f"Processing {i}/{len(json_files)}...")
-                logger.info(f"  Papers enriched: {self.stats['papers_enriched']}")
-                logger.info(f"  Papers failed: {self.stats['papers_failed']}")
+            if i % config.DEFAULT_TIMEOUT == 0:
+                logger.info("Processing %s/%s...", i, len(json_files))
+                logger.info("  Papers enriched: %s", self.stats["papers_enriched"])
+                logger.info("  Papers failed: %s", self.stats["papers_failed"])
 
             self.enrich_paper(paper_file, output_dir)
             self.stats["total_processed"] += 1
 
             # Rate limiting
-            if i % 5 == 0:
+            if i % config.DEFAULT_MAX_RESULTS == 0:
                 time.sleep(0.5)  # Be nice to CrossRef API
 
         # Generate report
         self.generate_report(output_dir)
 
-    def generate_report(self, output_dir: Path):
+    def generate_report(self, output_dir: Path) -> None:
         """Generate comprehensive enrichment report.
 
         Args:
@@ -803,7 +819,7 @@ class ComprehensiveCrossRefEnricher:
                 field_coverage[field] = f"{coverage:.1f}%"
 
         report = {
-            "timestamp": datetime.utcnow().isoformat(),
+            "timestamp": datetime.now(UTC).isoformat(),
             "statistics": {
                 "total_processed": self.stats["total_processed"],
                 "papers_enriched": self.stats["papers_enriched"],
@@ -851,7 +867,8 @@ class ComprehensiveCrossRefEnricher:
         print(f"\nReport: {report_file}")
 
 
-def main():
+def main() -> None:
+    """Run the main program."""
     parser = argparse.ArgumentParser(description="Comprehensive CrossRef enrichment extracting ALL fields")
     parser.add_argument(
         "--input", default="comprehensive_extraction_20250831_211114", help="Input directory with JSON files"

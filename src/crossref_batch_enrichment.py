@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Batch CrossRef enrichment using filter API for faster processing.
+
 Processes multiple DOIs in single API calls (up to 100 per batch).
 """
 
@@ -8,18 +9,20 @@ import logging
 import time
 import requests
 from pathlib import Path
-from datetime import datetime
+from datetime import datetime, UTC
 import argparse
 import sys
 import os
+from typing import Any
 
 # Add src directory to path to import config
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "src"))
 
 try:
-    from config import CROSSREF_POLITE_EMAIL
+    from config import CROSSREF_POLITE_EMAIL, HTTP_OK
 except ImportError:
     CROSSREF_POLITE_EMAIL = "research.assistant@university.edu"
+    HTTP_OK = 200
 
 # Setup logging
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
@@ -29,7 +32,7 @@ logger = logging.getLogger(__name__)
 class BatchCrossRefEnricher:
     """Batch CrossRef enricher for faster processing."""
 
-    def __init__(self, mailto=None, batch_size=50):
+    def __init__(self, mailto: str | None = None, batch_size: int = 50) -> None:
         """Initialize enricher with polite pool access.
 
         Args:
@@ -43,8 +46,8 @@ class BatchCrossRefEnricher:
         self.batch_size = min(batch_size, 100)  # Cap at 100
         self.base_url = "https://api.crossref.org/works"
 
-        logger.info(f"Using CrossRef polite pool with email: {mailto}")
-        logger.info(f"Batch size: {self.batch_size} DOIs per request")
+        logger.info("Using CrossRef polite pool with email: %s", mailto)
+        logger.info("Batch size: %s DOIs per request", self.batch_size)
 
         self.stats = {
             "total_papers": 0,
@@ -58,7 +61,7 @@ class BatchCrossRefEnricher:
         self.session = requests.Session()
         self.session.headers.update({"User-Agent": f"ResearchAssistant/5.0 (mailto:{mailto})"})
 
-    def fetch_batch(self, dois: list[str]) -> dict[str, dict]:
+    def fetch_batch(self, dois: list[str]) -> dict[str, dict[str, Any]]:
         """Fetch metadata for a batch of DOIs.
 
         Args:
@@ -79,7 +82,7 @@ class BatchCrossRefEnricher:
             response = self.session.get(self.base_url, params=params, timeout=30)
             self.stats["api_calls"] += 1
 
-            if response.status_code == 200:
+            if response.status_code == HTTP_OK:
                 data = response.json()
                 results = {}
 
@@ -90,14 +93,14 @@ class BatchCrossRefEnricher:
                         results[doi] = item
 
                 return results
-            logger.warning(f"API returned status {response.status_code}")
+            logger.warning("API returned status %s", response.status_code)
             return {}
 
         except Exception as e:
-            logger.error(f"Batch query failed: {e}")
+            logger.error("Batch query failed: %s", e)
             return {}
 
-    def extract_metadata(self, crossref_data: dict) -> dict:
+    def extract_metadata(self, crossref_data: dict[str, Any]) -> dict[str, Any]:
         """Extract comprehensive metadata from CrossRef response.
 
         Args:
@@ -171,7 +174,7 @@ class BatchCrossRefEnricher:
 
         return metadata
 
-    def process_directory(self, input_dir: Path, output_dir: Path, max_papers: int | None = None):
+    def process_directory(self, input_dir: Path, output_dir: Path, max_papers: int | None = None) -> None:
         """Process all papers in directory with batch queries.
 
         Args:
@@ -187,7 +190,7 @@ class BatchCrossRefEnricher:
         if max_papers:
             json_files = json_files[:max_papers]
 
-        logger.info(f"Found {len(json_files)} papers to process")
+        logger.info("Found %s papers to process", len(json_files))
         self.stats["total_papers"] = len(json_files)
 
         # Group papers by DOI availability
@@ -207,8 +210,8 @@ class BatchCrossRefEnricher:
             else:
                 papers_without_dois.append((json_file, paper_data))
 
-        logger.info(f"Papers with DOIs: {len(papers_with_dois)}")
-        logger.info(f"Papers without DOIs: {len(papers_without_dois)}")
+        logger.info("Papers with DOIs: %s", len(papers_with_dois))
+        logger.info("Papers without DOIs: %s", len(papers_without_dois))
 
         # Process papers with DOIs in batches
         doi_list = list(papers_with_dois.keys())
@@ -218,7 +221,7 @@ class BatchCrossRefEnricher:
             batch_num = i // self.batch_size + 1
             total_batches = (len(doi_list) + self.batch_size - 1) // self.batch_size
 
-            logger.info(f"Processing batch {batch_num}/{total_batches} ({len(batch_dois)} DOIs)...")
+            logger.info("Processing batch %s/%s (%s DOIs)...", batch_num, total_batches, len(batch_dois))
 
             # Fetch batch metadata
             batch_results = self.fetch_batch(batch_dois)
@@ -239,7 +242,7 @@ class BatchCrossRefEnricher:
 
                     # Add enrichment metadata
                     paper_data["crossref_enrichment"] = {
-                        "timestamp": datetime.now().isoformat(),
+                        "timestamp": datetime.now(UTC).isoformat(),
                         "success": True,
                         "batch_processed": True,
                     }
@@ -248,7 +251,7 @@ class BatchCrossRefEnricher:
                 else:
                     # DOI not found in batch results
                     paper_data["crossref_enrichment"] = {
-                        "timestamp": datetime.now().isoformat(),
+                        "timestamp": datetime.now(UTC).isoformat(),
                         "success": False,
                         "error": "DOI not found in CrossRef",
                         "batch_processed": True,
@@ -265,10 +268,10 @@ class BatchCrossRefEnricher:
                 time.sleep(1)  # 1 second between batches
 
         # Process papers without DOIs (just copy them)
-        logger.info(f"Copying {len(papers_without_dois)} papers without DOIs...")
+        logger.info("Copying %s papers without DOIs...", len(papers_without_dois))
         for json_file, paper_data in papers_without_dois:
             paper_data["crossref_enrichment"] = {
-                "timestamp": datetime.now().isoformat(),
+                "timestamp": datetime.now(UTC).isoformat(),
                 "success": False,
                 "error": "No DOI available",
                 "batch_processed": False,
@@ -281,14 +284,14 @@ class BatchCrossRefEnricher:
         # Generate report
         self.generate_report(output_dir)
 
-    def generate_report(self, output_dir: Path):
+    def generate_report(self, output_dir: Path) -> None:
         """Generate enrichment report.
 
         Args:
             output_dir: Output directory
         """
         report = {
-            "timestamp": datetime.now().isoformat(),
+            "timestamp": datetime.now(UTC).isoformat(),
             "statistics": {
                 "total_papers": self.stats["total_papers"],
                 "papers_with_dois": self.stats["papers_with_dois"],
@@ -325,7 +328,8 @@ class BatchCrossRefEnricher:
         print(f"\nReport: {report_file}")
 
 
-def main():
+def main() -> None:
+    """Run the main program."""
     parser = argparse.ArgumentParser(description="Batch CrossRef enrichment for faster processing")
     parser.add_argument(
         "--input", default="zotero_recovered_20250901", help="Input directory with JSON files"

@@ -19,7 +19,7 @@ This directory contains the complete design documentation for Research Assistant
    - 7-file output strategy
    - Performance expectations
 
-3. **[03_post_processing.md](03_post_processing.md)** - Post-processing strategies
+3. **[03_extraction_optimizations.md](03_extraction_optimizations.md)** - Extraction optimization strategies
    - 5 critical fixes with proven impact
    - Paper classification system
    - Abstract recovery strategies
@@ -206,18 +206,18 @@ This directory contains the complete design documentation for Research Assistant
 ```bash
 # Option 1: Run complete pipeline with checkpoint support (STRONGLY RECOMMENDED)
 docker run -t --rm -p 8070:8070 lfoppiano/grobid:0.8.2-full
-python extraction_pipeline_runner_checkpoint.py
+python src/extraction_pipeline_runner_checkpoint.py
 
 # Resume after interruption (automatic)
-python extraction_pipeline_runner_checkpoint.py --pipeline-dir extraction_pipeline_20250901
+python src/extraction_pipeline_runner_checkpoint.py --pipeline-dir extraction_pipeline_20250901
 
 # Option 2: Continue from existing pipeline with checkpoint support
-python extraction_pipeline_runner_checkpoint.py \
+python src/extraction_pipeline_runner_checkpoint.py \
   --pipeline-dir extraction_pipeline_20250901 \
   --start-from crossref
 
 # Option 3: Fresh start (ignores checkpoints)
-python extraction_pipeline_runner_checkpoint.py \
+python src/extraction_pipeline_runner_checkpoint.py \
   --pipeline-dir extraction_pipeline_20250901 \
   --reset-checkpoints
 

@@ -11,12 +11,14 @@ Usage:
     python analyze_problematic_papers.py [--directory PATH]
 """
 
+from src import config
 import json
 import argparse
 from pathlib import Path
 from datetime import datetime, UTC
 from typing import Any
 from collections import defaultdict
+import sys
 
 
 class ProblematicPaperAnalyzer:
@@ -28,7 +30,7 @@ class ProblematicPaperAnalyzer:
         if not self.data_dir.exists():
             raise ValueError(f"Data directory not found: {data_dir}")
 
-        self.problems = {
+        self.problems: dict[str, list[dict[str, Any]]] = {
             "grobid_failures": [],
             "non_articles": [],
             "minimal_content": [],
@@ -37,7 +39,11 @@ class ProblematicPaperAnalyzer:
             "corrupted_data": [],
         }
 
-        self.stats = {"total_papers": 0, "problematic_papers": 0, "by_category": defaultdict(int)}
+        self.stats: dict[str, Any] = {
+            "total_papers": 0,
+            "problematic_papers": 0,
+            "by_category": defaultdict(int),
+        }
 
     def analyze_paper(self, json_file: Path) -> tuple[str, dict[str, Any]]:
         """Analyze a single paper for quality issues.
@@ -92,15 +98,71 @@ class ProblematicPaperAnalyzer:
             "section_types": [s.get("type", "unknown") for s in sections[:5] if isinstance(s, dict)],
         }
 
+        # Determine paper category based on issues
+        category = self._categorize_paper(
+            title, doi, abstract_length, total_text, num_sections, num_references, year, sections
+        )
+
+        # Add quality issues if applicable
+        if category == "quality_issues":
+            paper_info["quality_issues"] = self._identify_quality_issues(
+                title, abstract_length, total_text, num_sections, num_references, year
+            )
+
+        return category, paper_info
+
+    def _categorize_paper(
+        self,
+        title: str,
+        doi: str,
+        abstract_length: int,
+        total_text: int,
+        num_sections: int,
+        num_references: int,
+        year: str,
+        sections: list[dict[str, Any]],
+    ) -> str:
+        """Categorize paper based on various checks."""
         # Check for GROBID failures - papers that couldn't be extracted at all
         if (
             not sections
-            or (num_sections == 0 and total_text < 100)
-            or (total_text < 500 and abstract_length < 100 and not title)
+            or (num_sections == 0 and total_text < config.MIN_CONTENT_LENGTH)
+            or (
+                total_text < config.LARGE_BATCH_SIZE
+                and abstract_length < config.MIN_CONTENT_LENGTH
+                and not title
+            )
         ):
-            return "grobid_failures", paper_info
+            return "grobid_failures"
 
         # Check for non-research articles
+        if self._is_non_article(title, doi):
+            return "non_articles"
+
+        # Check for minimal content papers
+        if (
+            total_text < config.MIN_FULL_TEXT_LENGTH_THRESHOLD
+            and abstract_length < config.MIN_SECTION_TEXT_LENGTH
+        ):
+            return "minimal_content"
+
+        # Check for critical metadata issues
+        if not title and not doi:
+            return "metadata_issues"
+
+        # Check for potential quality issues
+        quality_issues = self._identify_quality_issues(
+            title, abstract_length, total_text, num_sections, num_references, year
+        )
+
+        if quality_issues:
+            return "quality_issues"
+
+        # Paper seems OK
+        return "ok"
+
+    def _is_non_article(self, title: str, doi: str) -> bool:
+        """Check if paper is a non-research article."""
         if title:
             title_lower = title.lower()
             non_article_indicators = [
@@ -122,7 +184,7 @@ class ProblematicPaperAnalyzer:
             ]
 
             if any(indicator in title_lower for indicator in non_article_indicators):
-                return "non_articles", paper_info
+                return True
 
         # Check DOI for supplementary materials or datasets
         if doi:
@@ -140,25 +202,28 @@ class ProblematicPaperAnalyzer:
                     "osf.io",
                 ]
             ):
-                return "non_articles", paper_info
+                return True
 
-        # Check for minimal content papers
-        if total_text < 1000 and abstract_length < 200:
-            return "minimal_content", paper_info
+        return False
 
-        # Check for critical metadata issues
-        if not title and not doi:
-            return "metadata_issues", paper_info
-
-        # Check for potential quality issues
+    def _identify_quality_issues(
+        self,
+        title: str,
+        abstract_length: int,
+        total_text: int,
+        num_sections: int,
+        num_references: int,
+        year: str,
+    ) -> list[str]:
+        """Identify quality issues in a paper."""
         quality_issues = []
 
         # Very short papers (likely abstracts only)
-        if total_text < 2000 and num_sections < 3:
+        if total_text < config.MAX_PREVIEW_LENGTH and num_sections < config.MAX_RETRIES_DEFAULT:
             quality_issues.append("very_short")
 
         # No abstract and no substantial text
-        if abstract_length < 50 and total_text < 3000:
+        if abstract_length < config.MIN_ABSTRACT_LENGTH and total_text < config.LARGE_COUNT:
             quality_issues.append("no_abstract_minimal_text")
 
         # No references (unusual for research papers)
@@ -170,17 +235,12 @@ class ProblematicPaperAnalyzer:
             quality_issues.append("no_year")
 
         # Suspicious title patterns
-        if title and len(title) < 10:
+        if title and len(title) < config.DEFAULT_TIMEOUT:
             quality_issues.append("very_short_title")
 
-        if quality_issues:
-            paper_info["quality_issues"] = quality_issues
-            return "quality_issues", paper_info
+        return quality_issues
 
-        # Paper seems OK
-        return "ok", paper_info
-
-    def analyze_all_papers(self):
+    def analyze_all_papers(self) -> None:
         """Analyze all papers in the data directory."""
         json_files = [
             f
@@ -211,7 +271,7 @@ class ProblematicPaperAnalyzer:
                     f"Sections: {paper_info['num_sections']}"
                 )
 
-    def generate_comprehensive_report(self):
+    def generate_comprehensive_report(self) -> tuple[Path, Path, Path]:
         """Generate comprehensive analysis report."""
         timestamp = datetime.now(UTC).strftime("%Y%m%d_%H%M%S")
 
@@ -313,7 +373,7 @@ class ProblematicPaperAnalyzer:
 
         return recommendations
 
-    def _generate_markdown_report(self, report_path: Path, json_data: dict[str, Any]):
+    def _generate_markdown_report(self, report_path: Path, json_data: dict[str, Any]) -> None:
         """Generate human-readable markdown report."""
         with open(report_path, "w") as f:
             f.write("# Problematic Papers Analysis Report\n\n")
@@ -350,7 +410,11 @@ class ProblematicPaperAnalyzer:
                     f.write("| Paper ID | Text | Sections | Abstract | Issue |\n")
                     f.write("|----------|------|----------|----------|-------|\n")
                     for paper in papers[:15]:  # Limit for readability
-                        issue = "No content" if paper["total_text_chars"] < 100 else "Minimal extraction"
+                        issue = (
+                            "No content"
+                            if paper["total_text_chars"] < config.MIN_CONTENT_LENGTH
+                            else "Minimal extraction"
+                        )
                         f.write(
                             f"| {paper['paper_id']} | {paper['total_text_chars']} | "
                             f"{paper['num_sections']} | {paper['abstract_length']} | {issue} |\n"
@@ -361,7 +425,11 @@ class ProblematicPaperAnalyzer:
                     f.write("| Paper ID | Title | DOI | Type |\n")
                     f.write("|----------|-------|-----|------|\n")
                     for paper in papers[:15]:
-                        title = paper["title"][:40] + "..." if len(paper["title"]) > 40 else paper["title"]
+                        title = (
+                            paper["title"][: config.TITLE_DISPLAY_LENGTH] + "..."
+                            if len(paper["title"]) > config.TITLE_DISPLAY_LENGTH
+                            else paper["title"]
+                        )
                         paper_type = "Editorial" if "editorial" in paper["title"].lower() else "Other"
                         f.write(
                             f"| {paper['paper_id']} | {title} | {paper['doi'][:30]}... | {paper_type} |\n"
@@ -409,7 +477,7 @@ class ProblematicPaperAnalyzer:
                 f.write(f"- **Reason**: {rec['reason']}\n")
                 if rec["action"] == "REMOVE":
                     f.write(f"- **Paper IDs**: {', '.join(rec['paper_ids'][:10])}")
-                    if len(rec["paper_ids"]) > 10:
+                    if len(rec["paper_ids"]) > config.DEFAULT_TIMEOUT:
                         f.write(f" and {len(rec['paper_ids']) - 10} more")
                 f.write("\n\n")
 
@@ -426,7 +494,7 @@ class ProblematicPaperAnalyzer:
                 f"- **Removal list**: {report_path.name.replace('analysis', 'to_remove').replace('.md', '.txt')}\n"
             )
 
-    def _generate_removal_list(self, removal_path: Path):
+    def _generate_removal_list(self, removal_path: Path) -> None:
         """Generate simple list of paper IDs to remove."""
         with open(removal_path, "w") as f:
             f.write("# Papers to Remove from Knowledge Base\n")
@@ -446,7 +514,7 @@ class ProblematicPaperAnalyzer:
 
             f.write(f"\n# Total papers to remove: {len(all_removals)}\n")
 
-    def print_summary(self):
+    def print_summary(self) -> None:
         """Print analysis summary to console."""
         print("\n" + "=" * 70)
         print("PROBLEMATIC PAPERS ANALYSIS COMPLETE")
@@ -473,7 +541,7 @@ class ProblematicPaperAnalyzer:
                 print(f"  {category.replace('_', ' ').title()}: {rec['count']} papers")
 
 
-def main():
+def main() -> int:
     """Main entry point."""
     parser = argparse.ArgumentParser(description="Analyze extraction data for problematic papers")
     parser.add_argument(
@@ -520,4 +588,4 @@ def main():
 
 
 if __name__ == "__main__":
-    exit(main())
+    sys.exit(main())

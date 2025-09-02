@@ -1,11 +1,14 @@
 #!/usr/bin/env python3
 """Explore all available fields from CrossRef API to see what we can verify."""
 
-from habanero import Crossref
 import pprint
+from typing import Any
+
+from habanero import Crossref
+from src import config
 
 
-def explore_crossref_fields(doi: str = "10.1371/journal.pone.0261785"):
+def explore_crossref_fields(doi: str = "10.1371/journal.pone.0261785") -> dict[str, Any] | None:
     """Fetch and display all available CrossRef fields for a paper."""
     cr = Crossref()
 
@@ -17,7 +20,7 @@ def explore_crossref_fields(doi: str = "10.1371/journal.pone.0261785"):
         response = cr.works(ids=doi)
 
         if response and "message" in response:
-            data = response["message"]
+            data: dict[str, Any] = response["message"]
 
             # Pretty print the entire response
             print("\nFULL CROSSREF RESPONSE:")
@@ -38,7 +41,11 @@ def explore_crossref_fields(doi: str = "10.1371/journal.pone.0261785"):
                 if field in data:
                     value = data[field]
                     if isinstance(value, list) and len(value) > 0:
-                        value = value[0] if len(str(value[0])) < 100 else f"{str(value[0])[:100]}..."
+                        value = (
+                            value[0]
+                            if len(str(value[0])) < config.MIN_CONTENT_LENGTH
+                            else f"{str(value[0])[:100]}..."
+                        )
                     print(f"  {field}: {value}")
 
             # Dates
@@ -223,10 +230,11 @@ def explore_crossref_fields(doi: str = "10.1371/journal.pone.0261785"):
 
     except Exception as e:
         print(f"Error: {e}")
-        return None
+
+    return None
 
 
-def compare_with_our_extraction():
+def compare_with_our_extraction() -> None:
     """Compare what we extract vs what's available."""
     print("\n" + "=" * 80)
     print("COMPARISON WITH OUR CURRENT EXTRACTION:")

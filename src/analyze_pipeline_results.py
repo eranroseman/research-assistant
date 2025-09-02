@@ -1,17 +1,21 @@
 #!/usr/bin/env python3
 """Analyze the complete v5 pipeline results.
+
 Compares metrics across all stages: TEI extraction, Zotero recovery, CrossRef enrichment.
 """
 
+from src import config
+
 import json
 from pathlib import Path
-from datetime import datetime
+from datetime import datetime, UTC
 from collections import defaultdict
+from typing import Any
 
 
-def load_json_files(directory):
+def load_json_files(directory: str) -> dict[str, Any]:
     """Load all JSON files from a directory."""
-    papers = {}
+    papers: dict[str, Any] = {}
     dir_path = Path(directory)
 
     if not dir_path.exists():
@@ -24,7 +28,7 @@ def load_json_files(directory):
     return papers
 
 
-def calculate_field_coverage(papers, field_name):
+def calculate_field_coverage(papers: dict[str, Any], field_name: str) -> tuple[float, int]:
     """Calculate coverage percentage for a specific field."""
     total = len(papers)
     if total == 0:
@@ -34,7 +38,7 @@ def calculate_field_coverage(papers, field_name):
     return (count / total) * 100, count
 
 
-def analyze_stage(papers, stage_name):
+def analyze_stage(papers: dict[str, Any], stage_name: str) -> dict[str, dict[str, Any]]:
     """Analyze a single stage of the pipeline."""
     print(f"\n{'=' * 60}")
     print(f"{stage_name}")
@@ -48,7 +52,7 @@ def analyze_stage(papers, stage_name):
 
     # Critical fields to track
     critical_fields = ["title", "doi", "year", "authors", "journal", "abstract"]
-    coverage = {}
+    coverage: dict[str, dict[str, Any]] = {}
 
     print("\nField Coverage:")
     for field in critical_fields:
@@ -73,7 +77,7 @@ def analyze_stage(papers, stage_name):
 
     # Missing critical metadata
     missing_multiple = 0
-    missing_details = defaultdict(list)
+    missing_details: dict[str, list[str]] = defaultdict(list)
 
     for paper_id, paper in papers.items():
         missing = []
@@ -82,7 +86,7 @@ def analyze_stage(papers, stage_name):
                 missing.append(field)
                 missing_details[field].append(paper_id)
 
-        if len(missing) >= 2:
+        if len(missing) >= config.MIN_MATCH_COUNT:
             missing_multiple += 1
 
     print(f"\nPapers missing 2+ critical fields: {missing_multiple}")
@@ -91,19 +95,23 @@ def analyze_stage(papers, stage_name):
     for field in critical_fields:
         if missing_details[field]:
             examples = missing_details[field][:3]
-            more = f" (+{len(missing_details[field]) - 3} more)" if len(missing_details[field]) > 3 else ""
+            more = (
+                f" (+{len(missing_details[field]) - config.MAX_RETRIES_DEFAULT} more)"
+                if len(missing_details[field]) > config.MAX_RETRIES_DEFAULT
+                else ""
+            )
             print(f"  Missing {field}: {', '.join(examples)}{more}")
 
     return coverage
 
 
-def compare_stages(stage_data):
+def compare_stages(stage_data: dict[str, dict[str, dict[str, Any]]]) -> None:
     """Compare improvements across stages."""
     print("\n" + "=" * 60)
     print("STAGE COMPARISON")
     print("=" * 60)
 
-    if len(stage_data) < 2:
+    if len(stage_data) < config.MIN_MATCH_COUNT:
         print("Need at least 2 stages for comparison")
         return
 
@@ -130,7 +138,7 @@ def compare_stages(stage_data):
     print("IMPROVEMENT SUMMARY")
     print("=" * 60)
 
-    if len(stages) >= 2:
+    if len(stages) >= config.MIN_MATCH_COUNT:
         for i in range(1, len(stages)):
             prev_stage = stages[i - 1]
             curr_stage = stages[i]
@@ -147,11 +155,11 @@ def compare_stages(stage_data):
                         print(f"  {field}: +{improvement} papers recovered")
 
 
-def main():
+def main() -> None:
     """Main analysis function."""
     print("V5 PIPELINE ANALYSIS")
     print("=" * 60)
-    print(f"Analysis Date: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+    print(f"Analysis Date: {datetime.now(UTC).strftime('%Y-%m-%d %H:%M:%S')}")
 
     # Stage 1: TEI Extraction
     tei_papers = load_json_files("comprehensive_extraction_20250831_225926")

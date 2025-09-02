@@ -1,9 +1,12 @@
 #!/usr/bin/env python3
-"""Post-Processing Implementation
+"""Post-Processing Implementation.
 
 Critical fixes based on empirical analysis of 1,000+ papers.
 These 5 fixes provide dramatic improvements to extraction quality.
 """
+
+from src import config
+
 
 import re
 from collections import defaultdict
@@ -87,8 +90,7 @@ def normalize_section_header(header: str) -> str:
     if not header:
         return ""
 
-    # BEFORE: "RESULTS" != "Results" != "results"
-    # AFTER: All map to "results"
+    # Normalize case: "RESULTS" != "Results" != "results" → all map to "results"
     header = header.lower().strip()
 
     # Remove numbering
@@ -96,7 +98,7 @@ def normalize_section_header(header: str) -> str:
     header = re.sub(r"^\d+\.\d+\.?\s*", "", header)  # "3.2 Results" → "results"
 
     # Remove special chars
-    header = re.sub(r"[:\-–—()]", " ", header)  # "Methods:" → "methods"
+    header = re.sub(r"[:\-\u2013\u2014()]", " ", header)  # "Methods:" → "methods"
 
     # Normalize whitespace
     header = " ".join(header.split())
@@ -122,7 +124,7 @@ def aggregate_sections(raw_sections: list[dict]) -> dict[str, str]:
     All should be aggregated into 'methods'
     """
     # Comprehensive patterns based on 1,000 paper analysis
-    SECTION_PATTERNS = {
+    section_patterns = {
         "introduction": [
             "intro",
             "background",
@@ -223,7 +225,7 @@ def aggregate_sections(raw_sections: list[dict]) -> dict[str, str]:
 
         # Check which section type this belongs to
         matched = False
-        for section_type, patterns in SECTION_PATTERNS.items():
+        for section_type, patterns in section_patterns.items():
             if any(pattern in header_normalized for pattern in patterns):
                 aggregated[section_type].append(content)
                 matched = True
@@ -244,7 +246,10 @@ def aggregate_sections(raw_sections: list[dict]) -> dict[str, str]:
 
 
 def detect_statistical_content(text: str) -> bool:
-    """Detect if text contains statistical results."""
+    """Detect if text contains statistical results.
+
+    .
+    """
     if not text:
         return False
 
@@ -255,8 +260,8 @@ def detect_statistical_content(text: str) -> bool:
         r"n\s*=\s*\d+",  # sample sizes
         r"OR\s*[=:]\s*\d+\.\d+",  # odds ratios
         r"HR\s*[=:]\s*\d+\.\d+",  # hazard ratios
-        r"β\s*=\s*[−\-]?\d+\.\d+",  # regression coefficients
-        r"r\s*=\s*[−\-]?\d+\.\d+",  # correlations
+        r"β\s*=\s*[\u2212\-]?\d+\.\d+",  # regression coefficients
+        r"r\s*=\s*[\u2212\-]?\d+\.\d+",  # correlations
         r"χ2\s*[=]\s*\d+\.\d+",  # chi-square
         r"F\(\d+,\s*\d+\)\s*=",  # F-statistics
     ]
@@ -264,13 +269,16 @@ def detect_statistical_content(text: str) -> bool:
     text_lower = text[:2000].lower()  # Check first 2000 chars
     matches = sum(1 for pattern in statistical_patterns if re.search(pattern, text_lower))
 
-    return matches >= 2  # At least 2 statistical indicators
+    return matches >= config.MIN_STATISTICAL_INDICATORS  # At least 2 statistical indicators
 
 
 def find_hidden_results(sections: dict[str, str]) -> str | None:
-    """Find results content in non-standard sections."""
+    """Find results content in non-standard sections.
+
+    .
+    """
     # Already have results? Done.
-    if "results" in sections and len(sections["results"]) > 100:
+    if "results" in sections and len(sections["results"]) > config.MIN_SECTION_CONTENT:
         return None
 
     # Check all sections for statistical content
@@ -303,7 +311,7 @@ def should_reject_paper(title: str, abstract: str, sections: dict, total_content
     - Most are table of contents, editorials, corrections
     """
     # Rejection criteria
-    if total_content < 500:
+    if total_content < config.CONTENT_COMPLETENESS_MINIMAL:
         return True, "no_content"
 
     # Non-research indicators in title
@@ -337,19 +345,19 @@ def should_reject_paper(title: str, abstract: str, sections: dict, total_content
         # High ratio of special characters indicates OCR failure
         special_char_ratio = (
             sum(1 for c in abstract[:500] if not c.isalnum() and not c.isspace()) / len(abstract[:500])
-            if len(abstract) >= 500
+            if len(abstract) >= config.CONTENT_COMPLETENESS_MINIMAL
             else 0
         )
 
-        if special_char_ratio > 0.3:
+        if special_char_ratio > config.SPECIAL_CHAR_RATIO_THRESHOLD:
             return True, "corrupted_ocr"
 
     # Papers with no identifiable sections
-    if len(sections) == 0 and total_content < 2000:
+    if len(sections) == 0 and total_content < config.CONTENT_COMPLETENESS_MODERATE:
         return True, "no_structure"
 
     # Too short to be a real paper
-    if total_content < 1000 and not abstract:
+    if total_content < config.MIN_FULL_TEXT_LENGTH_THRESHOLD and not abstract:
         return True, "insufficient_content"
 
     return False, "accept"
@@ -363,6 +371,7 @@ def should_reject_paper(title: str, abstract: str, sections: dict, total_content
 
 def extract_abstract_from_methods(sections: dict[str, str]) -> str | None:
     """For RCTs and experimental papers, first paragraph of Methods often contains abstract.
+
     Works for papers like NEJM trials that start directly with Methods.
 
     Success rate: ~50% of papers without abstracts
@@ -389,16 +398,19 @@ def extract_abstract_from_methods(sections: dict[str, str]) -> str | None:
 
     keyword_count = sum(1 for kw in abstract_keywords if kw in first_para.lower())
 
-    if keyword_count >= 2:
+    if keyword_count >= config.MIN_ABSTRACT_KEYWORDS:
         return first_para.strip()
 
     return None
 
 
 def extract_abstract_from_introduction(sections: dict[str, str]) -> str | None:
-    """Original strategy - still useful for ~17% of papers without abstracts."""
+    """Original strategy - still useful for ~17% of papers without abstracts.
+
+    .
+    """
     intro_text = sections.get("introduction", "")
-    if not intro_text or len(intro_text) < 500:
+    if not intro_text or len(intro_text) < config.MIN_INTRODUCTION_LENGTH:
         return None
 
     # Look for abstract patterns in first 2000 chars
@@ -416,7 +428,7 @@ def extract_abstract_from_introduction(sections: dict[str, str]) -> str | None:
     first_part = intro_text[:2000].lower()
     indicator_count = sum(1 for ind in abstract_indicators if ind in first_part)
 
-    if indicator_count >= 3:
+    if indicator_count >= config.MIN_ABSTRACT_INDICATORS:
         # Extract first few paragraphs
         paragraphs = intro_text.split("\n\n")
         abstract = "\n\n".join(paragraphs[:3])[:1500]
@@ -444,7 +456,7 @@ def extract_abstract_from_title_section(sections: dict[str, str], title: str) ->
         section_lower = section_name.lower()
         matching_words = sum(1 for word in title_words if word in section_lower)
 
-        if matching_words >= 2:
+        if matching_words >= config.MIN_TITLE_WORD_MATCHES:
             # Extract overview content as abstract
             first_part = content[:2000] if content else ""
             if any(
@@ -458,6 +470,7 @@ def extract_abstract_from_title_section(sections: dict[str, str], title: str) ->
 
 def synthesize_abstract_from_sections(sections: dict[str, str]) -> str | None:
     """When no clear abstract exists, synthesize from available sections.
+
     Mark as synthesized for transparency.
 
     Success rate: ~16% of papers without abstracts
@@ -486,7 +499,7 @@ def synthesize_abstract_from_sections(sections: dict[str, str]) -> str | None:
         if sentences:
             synthesized.append(sentences[0])
 
-    if len(synthesized) >= 2:
+    if len(synthesized) >= config.MIN_SYNTHESIZED_SENTENCES:
         return f"[Abstract synthesized from paper sections] {' '.join(synthesized)}"
 
     return None
@@ -499,6 +512,7 @@ def synthesize_abstract_from_sections(sections: dict[str, str]) -> str | None:
 
 def extract_raw_sections(xml_content: str) -> list[dict]:
     """Extract raw sections from Grobid TEI XML.
+
     This is a simplified version - real implementation would use XML parser.
     """
     # Placeholder - real implementation would parse XML properly
@@ -512,12 +526,15 @@ def extract_raw_sections(xml_content: str) -> list[dict]:
 
 
 def calculate_extraction_metrics(abstract: str, sections: dict[str, str]) -> dict:
-    """Calculate quality metrics for extraction."""
+    """Calculate quality metrics for extraction.
+
+    .
+    """
     return {
         "has_abstract": bool(abstract),
         "abstract_length": len(abstract) if abstract else 0,
-        "has_methods": "methods" in sections and len(sections["methods"]) > 100,
-        "has_results": "results" in sections and len(sections["results"]) > 100,
+        "has_methods": "methods" in sections and len(sections["methods"]) > config.MIN_SECTION_CONTENT,
+        "has_results": "results" in sections and len(sections["results"]) > config.MIN_SECTION_CONTENT,
         "has_discussion": "discussion" in sections,
         "has_conclusion": "conclusion" in sections,
         "total_sections": len(sections),
@@ -527,7 +544,10 @@ def calculate_extraction_metrics(abstract: str, sections: dict[str, str]) -> dic
 
 
 def calculate_extraction_quality(abstract: str, sections: dict[str, str]) -> float:
-    """Calculate extraction quality score (0-1)."""
+    """Calculate extraction quality score (0-1).
+
+    .
+    """
     score = 0.0
 
     # Abstract (30%)
@@ -537,16 +557,16 @@ def calculate_extraction_quality(abstract: str, sections: dict[str, str]) -> flo
     # Key sections (50%)
     key_sections = ["introduction", "methods", "results", "discussion"]
     for section in key_sections:
-        if section in sections and len(sections[section]) > 100:
+        if section in sections and len(sections[section]) > config.MIN_SECTION_CONTENT:
             score += 0.125  # 0.5 / 4
 
     # Content completeness (20%)
     total_content = sum(len(s) for s in sections.values())
-    if total_content > 10000:
+    if total_content > config.CONTENT_COMPLETENESS_EXCELLENT:
         score += 0.2
-    elif total_content > 5000:
+    elif total_content > config.CONTENT_COMPLETENESS_GOOD:
         score += 0.1
-    elif total_content > 2000:
+    elif total_content > config.CONTENT_COMPLETENESS_MODERATE:
         score += 0.05
 
     return min(score, 1.0)

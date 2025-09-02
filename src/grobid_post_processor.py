@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Post-processing pipeline for Grobid XML output.
+
 Separate from extraction to allow experimentation with different strategies.
 
 Key improvements from v5.0 analysis:
@@ -8,13 +9,16 @@ Key improvements from v5.0 analysis:
 3. Smart retry detection for papers needing reprocessing
 """
 
-import xml.etree.ElementTree as ET
+from src import config
+from defusedxml import ElementTree
 from pathlib import Path
 from collections import defaultdict
 import json
 import re
 import logging
 from dataclasses import dataclass, asdict
+from typing import ClassVar, Any
+from collections.abc import Callable
 import time
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
@@ -29,9 +33,9 @@ class ExtractedPaper:
     title: str
     abstract: str
     sections: dict[str, str]  # section_type -> content
-    raw_sections: list[dict]  # All raw sections for debugging
-    entities: dict[str, any]
-    metadata: dict[str, any]
+    raw_sections: list[dict[str, Any]]  # All raw sections for debugging
+    entities: dict[str, Any]
+    metadata: dict[str, Any]
     quality_metrics: dict[str, float]
     extraction_timestamp: str
     post_processing_version: str = "1.0"
@@ -41,7 +45,7 @@ class GrobidPostProcessor:
     """Post-process Grobid XML with improvements from v5.0 analysis."""
 
     # Critical fix: Case-insensitive patterns (fixes 44-49% improvement for Results!)
-    SECTION_PATTERNS = {
+    SECTION_PATTERNS: ClassVar[dict[str, list[str]]] = {
         "introduction": ["intro", "background", "overview", "motivation", "related work"],
         "methods": [
             "method",
@@ -68,11 +72,11 @@ class GrobidPostProcessor:
         "conclusion": ["conclu", "summary", "contribution", "concluding", "final"],
     }
 
-    def __init__(self, strategy: str = "v5_optimized"):
+    def __init__(self, strategy: str = "v5_optimized") -> None:
         """Initialize with specified post-processing strategy."""
         self.strategy = strategy
         self.ns = {"tei": "http://www.tei-c.org/ns/1.0"}
-        self.stats = {
+        self.stats: dict[str, Any] = {
             "papers_processed": 0,
             "abstracts_extracted": 0,
             "sections_found": defaultdict(int),
@@ -80,10 +84,10 @@ class GrobidPostProcessor:
             "papers_needing_retry": 0,
         }
 
-    def process_xml(self, xml_path: Path) -> ExtractedPaper:
+    def process_xml(self, xml_path: Path) -> ExtractedPaper | None:
         """Process a single Grobid XML file."""
         try:
-            tree = ET.parse(xml_path)
+            tree = ElementTree.parse(xml_path)
             root = tree.getroot()
 
             paper_id = xml_path.stem
@@ -126,37 +130,37 @@ class GrobidPostProcessor:
             )
 
         except Exception as e:
-            logger.error(f"Error processing {xml_path}: {e}")
+            logger.error("Error processing %s: %s", xml_path, e)
             return None
 
-    def _extract_title(self, root: ET.Element) -> str:
+    def _extract_title(self, root: Any) -> str:
         """Extract paper title."""
         title_elem = root.find(".//tei:titleStmt/tei:title", self.ns)
         return title_elem.text if title_elem is not None else ""
 
-    def _extract_abstract(self, root: ET.Element) -> str:
+    def _extract_abstract(self, root: Any) -> str:
         """Extract abstract with fallback strategies."""
         # Primary: Look for abstract element
         abstract_elem = root.find(".//tei:abstract", self.ns)
         if abstract_elem is not None:
             abstract_text = self._get_element_text(abstract_elem)
-            if abstract_text and len(abstract_text) > 100:
+            if abstract_text and len(abstract_text) > config.MIN_CONTENT_LENGTH:
                 return abstract_text
 
         # Fallback: Look for abstract in divisions
         for div in root.findall(".//tei:div", self.ns):
             head = div.find("tei:head", self.ns)
-            if head is not None and head.text:
-                if "abstract" in head.text.lower():
-                    return self._get_element_text(div)
+            if head is not None and head.text and "abstract" in head.text.lower():
+                return self._get_element_text(div)
 
         return ""
 
-    def _extract_sections_optimized(self, root: ET.Element) -> tuple[dict[str, str], list[dict]]:
-        """Extract sections with v5.0 optimizations:
+    def _extract_sections_optimized(self, root: Any) -> tuple[dict[str, str], list[dict[str, Any]]]:
+        """Extract sections with v5.0 optimizations.
+
         1. Case-insensitive matching (CRITICAL FIX)
         2. Content aggregation from multiple subsections
-        3. Expanded pattern matching
+        3. Expanded pattern matching.
         """
         sections = defaultdict(list)
         raw_sections = []
@@ -175,7 +179,9 @@ class GrobidPostProcessor:
                 {
                     "header": head.text.strip(),  # Original case
                     "header_lower": header_text,
-                    "content": content[:200] + "..." if len(content) > 200 else content,
+                    "content": content[:200] + "..."
+                    if len(content) > config.MIN_SECTION_TEXT_LENGTH
+                    else content,
                 }
             )
 
@@ -191,7 +197,7 @@ class GrobidPostProcessor:
 
         return merged_sections, raw_sections
 
-    def _extract_sections_baseline(self, root: ET.Element) -> tuple[dict[str, str], list[dict]]:
+    def _extract_sections_baseline(self, root: Any) -> tuple[dict[str, str], list[dict[str, Any]]]:
         """Baseline extraction without optimizations (for comparison)."""
         sections = {}
         raw_sections = []
@@ -206,7 +212,12 @@ class GrobidPostProcessor:
             content = self._get_element_text(div)
 
             raw_sections.append(
-                {"header": header_text, "content": content[:200] + "..." if len(content) > 200 else content}
+                {
+                    "header": header_text,
+                    "content": content[:200] + "..."
+                    if len(content) > config.MIN_SECTION_TEXT_LENGTH
+                    else content,
+                }
             )
 
             # Simple pattern matching (case-sensitive - the problem!)
@@ -218,7 +229,7 @@ class GrobidPostProcessor:
 
         return sections, raw_sections
 
-    def _extract_sections_experimental(self, root: ET.Element) -> tuple[dict[str, str], list[dict]]:
+    def _extract_sections_experimental(self, root: Any) -> tuple[dict[str, str], list[dict[str, Any]]]:
         """Experimental extraction with advanced heuristics."""
         sections = defaultdict(list)
         raw_sections = []
@@ -246,7 +257,7 @@ class GrobidPostProcessor:
                     "header": div_info["header"],
                     "header_lower": header_lower,
                     "content": div_info["content"][:200] + "..."
-                    if len(div_info["content"]) > 200
+                    if len(div_info["content"]) > config.MIN_SECTION_TEXT_LENGTH
                     else div_info["content"],
                 }
             )
@@ -276,7 +287,7 @@ class GrobidPostProcessor:
         return None
 
     def _detect_section_type_advanced(
-        self, header_lower: str, position: int, all_sections: list[dict]
+        self, header_lower: str, position: int, all_sections: list[dict[str, Any]]
     ) -> str | None:
         """Advanced section detection with context awareness."""
         # First try standard patterns
@@ -285,29 +296,29 @@ class GrobidPostProcessor:
             return section_type
 
         # Try numbered sections (e.g., "1. Introduction", "2. Methods")
-        if re.match(r"^\d+\.?\s*introduction", header_lower):
-            return "introduction"
-        if re.match(r"^\d+\.?\s*(method|approach|material)", header_lower):
-            return "methods"
-        if re.match(r"^\d+\.?\s*(result|experiment)", header_lower):
-            return "results"
-        if re.match(r"^\d+\.?\s*discussion", header_lower):
-            return "discussion"
-        if re.match(r"^\d+\.?\s*conclusion", header_lower):
-            return "conclusion"
+        numbered_patterns = {
+            r"^\d+\.?\s*introduction": "introduction",
+            r"^\d+\.?\s*(method|approach|material)": "methods",
+            r"^\d+\.?\s*(result|experiment)": "results",
+            r"^\d+\.?\s*discussion": "discussion",
+            r"^\d+\.?\s*conclusion": "conclusion",
+        }
+
+        for pattern, section_type in numbered_patterns.items():
+            if re.match(pattern, header_lower):
+                return section_type
 
         # Context-based detection
-        if position == 0 and len(header_lower) > 3:
+        if position == 0 and len(header_lower) > config.MAX_RETRIES_DEFAULT:
             # First substantial section is often introduction
             return "introduction"
-        if position == len(all_sections) - 1:
-            # Last section might be conclusion
-            if "future" in header_lower or "summary" in header_lower:
-                return "conclusion"
+        # Last section might be conclusion
+        if position == len(all_sections) - 1 and ("future" in header_lower or "summary" in header_lower):
+            return "conclusion"
 
         return None
 
-    def _get_element_text(self, element: ET.Element) -> str:
+    def _get_element_text(self, element: Any) -> str:
         """Extract all text from an element and its children."""
         texts = []
         for elem in element.iter():
@@ -317,9 +328,9 @@ class GrobidPostProcessor:
                 texts.append(elem.tail)
         return " ".join(texts).strip()
 
-    def _extract_entities(self, root: ET.Element) -> dict:
+    def _extract_entities(self, root: Any) -> dict[str, Any]:
         """Extract entities from Grobid XML."""
-        entities = {
+        entities: dict[str, Any] = {
             "sample_sizes": [],
             "p_values": [],
             "software": [],
@@ -366,15 +377,15 @@ class GrobidPostProcessor:
                 entities["software"].append(software)
 
         # Remove duplicates
-        for key in entities:
-            if isinstance(entities[key], list):
-                entities[key] = list(set(entities[key]))
+        for key, value in entities.items():
+            if isinstance(value, list):
+                entities[key] = list(set(value))
 
         return entities
 
-    def _extract_metadata(self, root: ET.Element) -> dict:
+    def _extract_metadata(self, root: Any) -> dict[str, Any]:
         """Extract paper metadata."""
-        metadata = {
+        metadata: dict[str, Any] = {
             "authors": [],
             "affiliations": [],
             "keywords": [],
@@ -404,11 +415,11 @@ class GrobidPostProcessor:
         return metadata
 
     def _calculate_quality_metrics(
-        self, abstract: str, sections: dict, entities: dict, metadata: dict
-    ) -> dict:
+        self, abstract: str, sections: dict[str, str], entities: dict[str, Any], metadata: dict[str, Any]
+    ) -> dict[str, Any]:
         """Calculate extraction quality metrics."""
         metrics = {
-            "has_abstract": len(abstract) > 100,
+            "has_abstract": len(abstract) > config.MIN_CONTENT_LENGTH,
             "abstract_length": len(abstract),
             "section_count": len(sections),
             "has_introduction": "introduction" in sections,
@@ -418,43 +429,50 @@ class GrobidPostProcessor:
             "has_conclusion": "conclusion" in sections,
             "total_content_length": sum(len(s) for s in sections.values()),
             "entity_richness": sum(len(v) for v in entities.values() if isinstance(v, list)),
-            "needs_retry": len(sections) < 4 or len(abstract) < 100,
+            "needs_retry": len(sections) < config.MIN_SECTIONS_REQUIRED
+            or len(abstract) < config.MIN_CONTENT_LENGTH,
             "extraction_completeness": self._calculate_completeness(abstract, sections),
         }
 
         return metrics
 
-    def _calculate_completeness(self, abstract: str, sections: dict) -> float:
+    def _calculate_completeness(self, abstract: str, sections: dict[str, str]) -> float:
         """Calculate extraction completeness score (0-100)."""
         score = 0
 
         # Abstract (20 points)
-        if len(abstract) > 100:
+        if len(abstract) > config.MIN_CONTENT_LENGTH:
             score += 20
-        elif len(abstract) > 50:
+        elif len(abstract) > config.MIN_ABSTRACT_LENGTH:
             score += 10
 
         # Key sections (60 points total)
         key_sections = {"introduction": 15, "methods": 20, "results": 15, "discussion": 10}
 
         for section, points in key_sections.items():
-            if section in sections and len(sections[section]) > 200:
+            if section in sections and len(sections[section]) > config.MIN_SECTION_TEXT_LENGTH:
                 score += points
 
         # Content richness (20 points)
         total_content = sum(len(s) for s in sections.values())
-        if total_content > 10000:
+        if total_content > config.VERY_LONG_TEXT_THRESHOLD:
             score += 20
-        elif total_content > 5000:
+        elif total_content > config.LONG_TEXT_THRESHOLD:
             score += 15
-        elif total_content > 2000:
+        elif total_content > config.MAX_PREVIEW_LENGTH:
             score += 10
-        elif total_content > 1000:
+        elif total_content > config.MIN_FULL_TEXT_LENGTH_THRESHOLD:
             score += 5
 
         return score
 
-    def _update_stats(self, abstract: str, sections: dict, entities: dict, quality_metrics: dict):
+    def _update_stats(
+        self,
+        abstract: str,
+        sections: dict[str, str],
+        entities: dict[str, Any],
+        quality_metrics: dict[str, Any],
+    ) -> None:
         """Update processing statistics."""
         self.stats["papers_processed"] += 1
 
@@ -471,10 +489,10 @@ class GrobidPostProcessor:
         if quality_metrics.get("needs_retry", False):
             self.stats["papers_needing_retry"] += 1
 
-    def process_directory(self, xml_dir: Path, output_dir: Path) -> dict:
+    def process_directory(self, xml_dir: Path, output_dir: Path) -> dict[str, Any]:
         """Process all XML files in a directory."""
         xml_files = list(xml_dir.glob("*.xml"))
-        logger.info(f"Processing {len(xml_files)} XML files with strategy: {self.strategy}")
+        logger.info("Processing %s XML files with strategy: %s", len(xml_files), self.strategy)
 
         output_dir.mkdir(parents=True, exist_ok=True)
         results = []
@@ -482,15 +500,17 @@ class GrobidPostProcessor:
         start_time = time.time()
 
         for i, xml_file in enumerate(xml_files, 1):
-            if i % 100 == 0:
+            if i % config.MIN_CONTENT_LENGTH == 0:
                 elapsed = time.time() - start_time
                 rate = i / elapsed
                 eta = (len(xml_files) - i) / rate if rate > 0 else 0
                 logger.info(
-                    f"Progress: {i}/{len(xml_files)} "
-                    f"({i * 100 / len(xml_files):.1f}%), "
-                    f"Rate: {rate:.1f} papers/sec, "
-                    f"ETA: {eta / 60:.1f} minutes"
+                    "Progress: %s/%s (%.1f%%), Rate: %.1f papers/sec, ETA: %.1f minutes",
+                    i,
+                    len(xml_files),
+                    i * 100 / len(xml_files),
+                    rate,
+                    eta / 60,
                 )
 
             paper = self.process_xml(xml_file)
@@ -507,7 +527,7 @@ class GrobidPostProcessor:
 
         return self.stats
 
-    def _generate_report(self, output_dir: Path, results: list[ExtractedPaper]):
+    def _generate_report(self, output_dir: Path, results: list[ExtractedPaper]) -> None:
         """Generate processing report."""
         report_lines = [
             f"# Post-Processing Report - {self.strategy}",
@@ -525,7 +545,11 @@ class GrobidPostProcessor:
 
         for section_type in ["introduction", "methods", "results", "discussion", "conclusion"]:
             count = self.stats["sections_found"].get(section_type, 0)
-            pct = count * 100 / self.stats["papers_processed"] if self.stats["papers_processed"] > 0 else 0
+            pct = (
+                count * config.MIN_CONTENT_LENGTH / self.stats["papers_processed"]
+                if self.stats["papers_processed"] > 0
+                else 0
+            )
             report_lines.append(
                 f"- {section_type.capitalize()}: {count}/{self.stats['papers_processed']} ({pct:.1f}%)"
             )
@@ -538,14 +562,18 @@ class GrobidPostProcessor:
         )
 
         for entity_type, count in self.stats["entities_extracted"].items():
-            pct = count * 100 / self.stats["papers_processed"] if self.stats["papers_processed"] > 0 else 0
+            pct = (
+                count * config.MIN_CONTENT_LENGTH / self.stats["papers_processed"]
+                if self.stats["papers_processed"] > 0
+                else 0
+            )
             report_lines.append(f"- {entity_type}: {count} papers ({pct:.1f}%)")
 
         # Quality distribution
         quality_scores = [p.quality_metrics["extraction_completeness"] for p in results]
         if quality_scores:
             avg_quality = sum(quality_scores) / len(quality_scores)
-            high_quality = sum(1 for s in quality_scores if s >= 80)
+            high_quality = sum(1 for s in quality_scores if s >= config.HIGH_QUALITY_SCORE_THRESHOLD)
             report_lines.extend(
                 [
                     "",
@@ -560,18 +588,18 @@ class GrobidPostProcessor:
         with open(report_path, "w") as f:
             f.write("\n".join(report_lines))
 
-        logger.info(f"Report saved to: {report_path}")
+        logger.info("Report saved to: %s", report_path)
 
 
-def compare_strategies(xml_dir: Path, output_dir: Path):
+def compare_strategies(xml_dir: Path, output_dir: Path) -> None:
     """Compare different post-processing strategies."""
     strategies = ["baseline", "v5_optimized", "experimental"]
     comparison_results = {}
 
     for strategy in strategies:
-        logger.info(f"\n{'=' * 60}")
-        logger.info(f"Testing strategy: {strategy}")
-        logger.info(f"{'=' * 60}")
+        logger.info("\n%s", "=" * 60)
+        logger.info("Testing strategy: %s", strategy)
+        logger.info("%s", "=" * 60)
 
         processor = GrobidPostProcessor(strategy=strategy)
         strategy_output = output_dir / strategy
@@ -591,7 +619,7 @@ def compare_strategies(xml_dir: Path, output_dir: Path):
     report_lines.append("| Metric | Baseline | V5 Optimized | Experimental |")
     report_lines.append("|--------|----------|--------------|--------------|")
 
-    metrics_to_compare = [
+    metrics_to_compare: list[tuple[str, str | Callable[[dict[str, Any]], int]]] = [
         ("Abstracts", "abstracts_extracted"),
         ("Introduction", lambda s: s["sections_found"].get("introduction", 0)),
         ("Methods", lambda s: s["sections_found"].get("methods", 0)),
@@ -604,13 +632,10 @@ def compare_strategies(xml_dir: Path, output_dir: Path):
         row = f"| {label} |"
         for strategy in strategies:
             stats = comparison_results[strategy]
-            if callable(metric):
-                value = metric(stats)
-            else:
-                value = stats.get(metric, 0)
+            value = metric(stats) if callable(metric) else stats.get(metric, 0)
 
             total = stats["papers_processed"]
-            pct = value * 100 / total if total > 0 else 0
+            pct = value * config.MIN_CONTENT_LENGTH / total if total > 0 else 0
             row += f" {value}/{total} ({pct:.1f}%) |"
         report_lines.append(row)
 
@@ -618,7 +643,7 @@ def compare_strategies(xml_dir: Path, output_dir: Path):
     with open(comparison_report, "w") as f:
         f.write("\n".join(report_lines))
 
-    logger.info(f"\nComparison report saved to: {comparison_report}")
+    logger.info("\nComparison report saved to: %s", comparison_report)
 
     # Show key improvements
     baseline_results = comparison_results["baseline"]["sections_found"].get("results", 0)
@@ -627,8 +652,8 @@ def compare_strategies(xml_dir: Path, output_dir: Path):
     if baseline_results > 0:
         improvement = (optimized_results - baseline_results) / baseline_results * 100
         logger.info(
-            f"\n🎯 Key Finding: Results section extraction improved by {improvement:.1f}% "
-            f"with v5 optimizations!"
+            "\n🎯 Key Finding: Results section extraction improved by %.1f%% with v5 optimizations!",
+            improvement,
         )
 
 

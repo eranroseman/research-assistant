@@ -7,19 +7,28 @@ saving all outputs in an organized directory structure.
 
 import sys
 import subprocess
+import shlex
 from pathlib import Path
-from datetime import datetime
+from datetime import datetime, UTC
 import argparse
+from typing import Any
 
 
-def run_command(cmd, description):
+def run_command(cmd: str | list[str], description: str) -> bool:
     """Run a command and handle output."""
     print(f"\n{'=' * 60}")
     print(f"Running: {description}")
-    print(f"Command: {cmd}")
+    if isinstance(cmd, list):
+        print(f"Command: {' '.join(cmd)}")
+    else:
+        print(f"Command: {cmd}")
     print("=" * 60)
 
-    result = subprocess.run(cmd, check=False, shell=True, capture_output=True, text=True)
+    # Convert string command to list for security
+    if isinstance(cmd, str):
+        cmd = shlex.split(cmd)
+
+    result = subprocess.run(cmd, check=False, capture_output=True, text=True)
 
     if result.returncode != 0:
         print(f"ERROR: {description} failed!")
@@ -30,7 +39,8 @@ def run_command(cmd, description):
     return True
 
 
-def main():
+def main() -> None:
+    """Run the main program."""
     parser = argparse.ArgumentParser(description="Run paper extraction pipeline")
     parser.add_argument(
         "--pipeline-dir", default=None, help="Pipeline directory (default: extraction_pipeline_YYYYMMDD)"
@@ -54,7 +64,7 @@ def main():
     if args.pipeline_dir:
         pipeline_dir = Path(args.pipeline_dir)
     else:
-        pipeline_dir = Path(f"extraction_pipeline_{datetime.now().strftime('%Y%m%d')}")
+        pipeline_dir = Path(f"extraction_pipeline_{datetime.now(UTC).strftime('%Y%m%d')}")
 
     # Create directory structure
     stages = [
@@ -76,7 +86,7 @@ def main():
     print(f"Pipeline directory: {pipeline_dir}")
 
     # Define pipeline stages
-    pipeline_stages = {
+    pipeline_stages: dict[str, dict[str, Any]] = {
         "tei_extraction": {
             "description": "TEI to JSON extraction",
             "command": f"python comprehensive_tei_extractor.py --input-dir {pipeline_dir}/01_tei_xml --output-dir {pipeline_dir}/02_json_extraction",
@@ -115,15 +125,15 @@ def main():
 
     # Run pipeline stages
     for stage_name in stages_to_run:
-        stage = pipeline_stages[stage_name]
+        stage_info: dict[str, Any] = pipeline_stages[stage_name]
 
         # Check if stage already completed
-        if stage["check"]():
-            print(f"\n✓ {stage['description']} already completed, skipping...")
+        if stage_info["check"]():
+            print(f"\n✓ {stage_info['description']} already completed, skipping...")
             continue
 
         # Run the stage
-        if not run_command(stage["command"], stage["description"]):
+        if not run_command(stage_info["command"], stage_info["description"]):
             print(f"\nPipeline stopped at {stage_name}")
             sys.exit(1)
 

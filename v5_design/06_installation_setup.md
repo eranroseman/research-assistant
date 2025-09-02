@@ -113,7 +113,8 @@ API Limits:
 
 ```bash
 # Check all requirements
-python src/check_requirements.py
+# Check Python version and dependencies
+python --version  # Should be 3.11+
 
 # Output should show:
 # ✓ Python 3.10+ found
@@ -129,7 +130,7 @@ python src/check_requirements.py
 
 ```bash
 # Check how long the build will take
-python src/build.py --estimate
+python src/extraction_pipeline_runner_checkpoint.py --estimate
 
 # Example output:
 # Found 2,221 papers in Zotero library
@@ -142,7 +143,7 @@ python src/build.py --estimate
 
 ```bash
 # For first-time setup, do a full rebuild
-python src/build.py --rebuild
+python src/extraction_pipeline_runner_checkpoint.py --rebuild
 
 # What happens:
 # 1. Auto-starts Grobid if not running
@@ -188,7 +189,7 @@ cat exports/analysis_pdf_quality.md
 cat exports/gap_analysis_*.md
 
 # Test search
-python src/kbq.py search "diabetes" --limit 5
+python v4/src/cli.py search "diabetes" --limit 5
 ```
 
 ## Troubleshooting
@@ -225,14 +226,14 @@ curl http://localhost:23119/api/collections
 # Docker Desktop → Settings → Resources → Memory: 4GB+
 
 # Or process in smaller batches
-python src/build.py --collection "Small Collection"
+python src/extraction_pipeline_runner_checkpoint.py --collection "Small Collection"
 ```
 
 #### "Build interrupted/crashed"
 
 ```bash
 # Just run again - automatically resumes from checkpoint
-python src/build.py
+python src/extraction_pipeline_runner_checkpoint.py
 
 # Checkpoint saved every 50 papers
 # No work is lost
@@ -282,20 +283,21 @@ python -c "import intel_extension_for_pytorch as ipex; print('IPEX available')"
 
 ```bash
 # Process high-priority papers first
-python src/build.py --collection "Current Project"
+python src/extraction_pipeline_runner_checkpoint.py --collection "Current Project"
 
 # Then process rest later
-python src/build.py --collection "Archive"
+python src/extraction_pipeline_runner_checkpoint.py --collection "Archive"
 ```
 
 ### Skip Gap Analysis for Speed
 
 ```bash
 # Save 15-25 minutes per build
-python src/build.py --no-gaps
+python src/extraction_pipeline_runner_checkpoint.py --no-gaps
 
 # Run gap analysis separately when needed
-python src/gaps.py
+# Gap analysis not in v5 - legacy v4 command
+# python v4/src/analyze_gaps.py
 ```
 
 ## Weekly Maintenance
@@ -304,20 +306,20 @@ python src/gaps.py
 
 ```bash
 # Every Monday morning
-python src/build.py  # Incremental update
+python src/extraction_pipeline_runner_checkpoint.py  # Incremental update
 
 # Check for new papers
-python src/kbq.py info
+python v4/src/cli.py info
 ```
 
 ### Monthly Full Rebuild
 
 ```bash
 # First Sunday of month (optional)
-python src/build.py --rebuild
+python src/extraction_pipeline_runner_checkpoint.py --rebuild
 
 # Export backup after rebuild
-python src/build.py --export kb_backup_$(date +%Y%m).json
+python src/extraction_pipeline_runner_checkpoint.py --export kb_backup_$(date +%Y%m).json
 ```
 
 ### Cleanup Old Data

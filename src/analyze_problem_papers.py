@@ -1,18 +1,25 @@
 #!/usr/bin/env python3
 """Deep dive analysis of problem papers to understand root causes."""
 
+from src import config
+
 import json
+import logging
 from pathlib import Path
 from collections import defaultdict
 import re
+from typing import Any
+
+# Set up module logger
+logger = logging.getLogger(__name__)
 
 
-def analyze_problem_paper(paper_file: Path) -> dict:
+def analyze_problem_paper(paper_file: Path) -> dict[str, Any]:
     """Analyze a single problem paper in detail."""
     with open(paper_file, encoding="utf-8") as f:
         data = json.load(f)
 
-    analysis = {
+    analysis: dict[str, Any] = {
         "paper_id": paper_file.stem,
         "file_size": paper_file.stat().st_size,
         "has_title": bool(data.get("title")),
@@ -74,7 +81,7 @@ def analyze_problem_paper(paper_file: Path) -> dict:
         analysis["likely_document_type"] = "supplementary material"
 
     # Check for very short content suggesting extraction failure
-    if analysis["text_lengths"].get("sections", 0) < 1000:
+    if analysis["text_lengths"].get("sections", 0) < config.MIN_FULL_TEXT_LENGTH_THRESHOLD:
         if analysis["text_lengths"].get("sections", 0) == 0:
             analysis["likely_document_type"] = "extraction_failure"
         else:
@@ -83,10 +90,12 @@ def analyze_problem_paper(paper_file: Path) -> dict:
     return analysis
 
 
-def find_problem_papers(pipeline_dir: Path, max_papers: int = 50) -> list:
+def find_problem_papers(
+    pipeline_dir: Path, max_papers: int = config.MIN_ABSTRACT_LENGTH
+) -> list[dict[str, Any]]:
     """Find papers with the most missing critical fields."""
     critical_fields = ["title", "doi", "year", "authors", "abstract", "sections"]
-    problem_papers = []
+    problem_papers: list[dict[str, Any]] = []
 
     # Find the last enrichment stage
     stages = ["08_pubmed_enrichment", "07_unpaywall_enrichment", "06_openalex_enrichment", "05_s2_enrichment"]
@@ -116,7 +125,9 @@ def find_problem_papers(pipeline_dir: Path, max_papers: int = 50) -> list:
                 if not data.get(field):
                     missing_fields.append(field)
 
-            if len(missing_fields) >= 2:  # Papers missing 2+ critical fields
+            if (
+                len(missing_fields) >= config.MIN_MATCH_COUNT
+            ):  # Papers missing config.MIN_MATCH_COUNT+ critical fields
                 problem_papers.append(
                     {
                         "file": json_file,
@@ -125,8 +136,8 @@ def find_problem_papers(pipeline_dir: Path, max_papers: int = 50) -> list:
                         "missing_fields": missing_fields,
                     }
                 )
-        except:
-            pass
+        except Exception as e:
+            logger.debug("Error processing %s: %s", json_file, e)
 
     # Sort by number of missing fields
     problem_papers.sort(key=lambda x: x["missing_count"], reverse=True)
@@ -134,7 +145,7 @@ def find_problem_papers(pipeline_dir: Path, max_papers: int = 50) -> list:
     return problem_papers[:max_papers]
 
 
-def main():
+def main() -> None:
     """Analyze problem papers from both pipelines."""
     pipelines = [Path("extraction_pipeline_20250901"), Path("extraction_pipeline_fixed_20250901")]
 
@@ -174,7 +185,7 @@ def main():
         print("=" * 80)
 
         worst_papers = problem_papers[:10]
-        document_types = defaultdict(int)
+        document_types: dict[str, int] = defaultdict(int)
 
         for paper_info in worst_papers:
             analysis = analyze_problem_paper(paper_info["file"])

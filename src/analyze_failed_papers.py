@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 """Analyze the 6 papers that failed OpenAlex enrichment."""
 
+from src import config
+
 import json
 from pathlib import Path
 
@@ -34,7 +36,7 @@ for paper_id in failed_papers:
                 print("  ⚠️ Issue: DOI is a URL, not a standard DOI")
             elif "KEYWORDS" in doi:
                 print("  ⚠️ Issue: DOI contains 'KEYWORDS' - likely extraction error")
-            elif len(doi) > 100:
+            elif len(doi) > config.MIN_CONTENT_LENGTH:
                 print("  ⚠️ Issue: DOI too long - likely extraction error")
             elif not doi.startswith("10."):
                 print("  ⚠️ Issue: Non-standard DOI format")

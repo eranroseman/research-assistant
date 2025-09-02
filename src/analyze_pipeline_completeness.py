@@ -1,27 +1,30 @@
 #!/usr/bin/env python3
 """Comprehensive analysis of pipeline output data completeness and failure root causes."""
 
+from src import config
+
 import json
 from pathlib import Path
 from collections import defaultdict, Counter
 import re
-from datetime import datetime
+from datetime import datetime, UTC
 from typing import Any
 
 
 class PipelineCompletenessAnalyzer:
     """Analyze pipeline results for data completeness and failure patterns."""
 
-    def __init__(self):
-        self.stats = defaultdict(lambda: defaultdict(int))
-        self.missing_fields = defaultdict(list)
-        self.failure_patterns = defaultdict(list)
-        self.field_coverage = defaultdict(int)
-        self.enrichment_tracking = defaultdict(dict)
+    def __init__(self) -> None:
+        """Initialize the analyzer with default statistics containers."""
+        self.stats: defaultdict[str, defaultdict[str, int]] = defaultdict(lambda: defaultdict(int))
+        self.missing_fields: defaultdict[str, list[str]] = defaultdict(list)
+        self.failure_patterns: defaultdict[str, list[str]] = defaultdict(list)
+        self.field_coverage: defaultdict[str, int] = defaultdict(int)
+        self.enrichment_tracking: defaultdict[str, dict[str, int]] = defaultdict(dict)
 
-    def analyze_paper(self, paper_data: dict, paper_id: str) -> dict[str, Any]:
+    def analyze_paper(self, paper_data: dict[str, Any], paper_id: str) -> dict[str, Any]:
         """Analyze a single paper for completeness."""
-        analysis = {
+        analysis: dict[str, Any] = {
             "paper_id": paper_id,
             "critical_fields": {},
             "enrichment_fields": {},
@@ -72,31 +75,30 @@ class PipelineCompletenessAnalyzer:
 
         # Check data quality issues
         # 1. Empty or very short content
-        if paper_data.get("abstract") and len(paper_data["abstract"]) < 50:
-            analysis["data_quality_issues"].append("Very short abstract (<50 chars)")
+        if paper_data.get("abstract") and len(paper_data["abstract"]) < config.MIN_ABSTRACT_LENGTH:
+            analysis["data_quality_issues"].append("Very short abstract (<config.MIN_ABSTRACT_LENGTH chars)")
 
         sections = paper_data.get("sections", [])
         if sections:
             total_text = sum(len(s.get("text", "")) for s in sections)
-            if total_text < 1000:
+            if total_text < config.MIN_FULL_TEXT_LENGTH_THRESHOLD:
                 analysis["data_quality_issues"].append(f"Very short full text ({total_text} chars)")
         else:
             analysis["data_quality_issues"].append("No sections/full text")
 
         # 2. Malformed DOI
         doi = paper_data.get("doi", "")
-        if doi:
-            if not re.match(r"^10\.\d{4,}/.+", doi):
-                analysis["data_quality_issues"].append(f"Malformed DOI: {doi}")
+        if doi and not re.match(r"^10\.\d{4,}/.+", doi):
+            analysis["data_quality_issues"].append(f"Malformed DOI: {doi}")
 
         # 3. Invalid year
         year = paper_data.get("year")
         if year:
             try:
                 year_int = int(year)
-                if year_int < 1900 or year_int > datetime.now().year + 1:
+                if year_int < config.MIN_YEAR_VALID or year_int > datetime.now(UTC).year + 1:
                     analysis["data_quality_issues"].append(f"Invalid year: {year}")
-            except:
+            except (ValueError, TypeError):
                 analysis["data_quality_issues"].append(f"Non-numeric year: {year}")
 
         # 4. Check enrichment status
@@ -121,7 +123,7 @@ class PipelineCompletenessAnalyzer:
 
         return analysis
 
-    def analyze_directory(self, directory: Path) -> tuple[dict, list]:
+    def analyze_directory(self, directory: Path) -> tuple[dict[str, Any], list[dict[str, Any]]]:
         """Analyze all papers in a directory."""
         json_files = [
             f for f in directory.glob("*.json") if "report" not in f.name and not f.name.startswith(".")
@@ -132,7 +134,7 @@ class PipelineCompletenessAnalyzer:
         print(f"Analyzing {len(json_files)} papers from {directory.name}...")
 
         for i, json_file in enumerate(json_files):
-            if (i + 1) % 500 == 0:
+            if (i + 1) % config.LARGE_BATCH_SIZE == 0:
                 print(f"  Processed {i + 1}/{len(json_files)} papers...")
 
             try:
@@ -157,7 +159,7 @@ class PipelineCompletenessAnalyzer:
 
         return self.stats, all_analyses
 
-    def generate_report(self, directory: Path, all_analyses: list[dict]) -> str:
+    def generate_report(self, directory: Path, all_analyses: list[dict[str, Any]]) -> str:
         """Generate comprehensive analysis report."""
         total_papers = len(all_analyses)
 
@@ -167,7 +169,7 @@ class PipelineCompletenessAnalyzer:
         report.append("=" * 80)
         report.append(f"Directory: {directory}")
         report.append(f"Total papers analyzed: {total_papers}")
-        report.append(f"Analysis timestamp: {datetime.now().isoformat()}")
+        report.append(f"Analysis timestamp: {datetime.now(UTC).isoformat()}")
         report.append("")
 
         # Critical fields coverage
@@ -176,7 +178,7 @@ class PipelineCompletenessAnalyzer:
         critical_fields = ["title", "doi", "year", "authors", "abstract", "sections"]
         for field in critical_fields:
             count = self.field_coverage.get(field, 0)
-            percentage = (count / total_papers * 100) if total_papers > 0 else 0
+            percentage = (count / total_papers * config.MIN_CONTENT_LENGTH) if total_papers > 0 else 0
             missing = total_papers - count
             report.append(f"{field:15s}: {count:5d}/{total_papers} ({percentage:6.2f}%) - Missing: {missing}")
         report.append("")
@@ -197,7 +199,7 @@ class PipelineCompletenessAnalyzer:
         ]
         for field in enrichment_fields:
             count = self.field_coverage.get(field, 0)
-            percentage = (count / total_papers * 100) if total_papers > 0 else 0
+            percentage = (count / total_papers * config.MIN_CONTENT_LENGTH) if total_papers > 0 else 0
             report.append(f"{field:15s}: {count:5d}/{total_papers} ({percentage:6.2f}%)")
         report.append("")
 
@@ -207,7 +209,7 @@ class PipelineCompletenessAnalyzer:
         for api, statuses in self.enrichment_tracking.items():
             report.append(f"\n{api.upper()}:")
             for status, count in statuses.items():
-                percentage = (count / total_papers * 100) if total_papers > 0 else 0
+                percentage = (count / total_papers * config.MIN_CONTENT_LENGTH) if total_papers > 0 else 0
                 report.append(f"  {status:15s}: {count:5d} ({percentage:6.2f}%)")
         report.append("")
 
@@ -217,9 +219,9 @@ class PipelineCompletenessAnalyzer:
         sorted_issues = sorted(self.failure_patterns.items(), key=lambda x: len(x[1]), reverse=True)
         for issue, papers in sorted_issues[:20]:  # Top 20 issues
             count = len(papers)
-            percentage = (count / total_papers * 100) if total_papers > 0 else 0
+            percentage = (count / total_papers * config.MIN_CONTENT_LENGTH) if total_papers > 0 else 0
             report.append(f"{issue[:50]:50s}: {count:5d} ({percentage:6.2f}%)")
-            if count <= 5:  # Show paper IDs for rare issues
+            if count <= config.DEFAULT_MAX_RESULTS:  # Show paper IDs for rare issues
                 report.append(f"  Papers: {', '.join(papers[:5])}")
         report.append("")
 
@@ -232,7 +234,7 @@ class PipelineCompletenessAnalyzer:
         )
 
         # Count by missing field combinations
-        missing_combinations = Counter()
+        missing_combinations: Counter[tuple[str, ...]] = Counter()
         for analysis in all_analyses:
             if analysis["missing_critical"]:
                 combo = tuple(sorted(analysis["missing_critical"]))
@@ -249,7 +251,7 @@ class PipelineCompletenessAnalyzer:
         report.append("-" * 40)
         problem_papers = []
         for analysis in all_analyses:
-            if len(analysis["missing_critical"]) >= 3:
+            if len(analysis["missing_critical"]) >= config.MAX_RETRIES_DEFAULT:
                 problem_papers.append(
                     {
                         "id": analysis["paper_id"],
@@ -300,7 +302,7 @@ class PipelineCompletenessAnalyzer:
         return "\n".join(report)
 
 
-def compare_pipelines():
+def compare_pipelines() -> list[tuple[str, dict[str, Any], list[dict[str, Any]]]]:
     """Compare original vs fixed pipeline results."""
     pipelines = [
         ("extraction_pipeline_20250901/07_unpaywall_enrichment", "Original (with race condition)"),

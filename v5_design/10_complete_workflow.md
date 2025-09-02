@@ -79,25 +79,25 @@ This document provides a complete, step-by-step workflow for the extraction pipe
 docker run -t --rm -p 8070:8070 lfoppiano/grobid:0.8.2-full
 
 # Run complete pipeline with checkpoint recovery
-python extraction_pipeline_runner_checkpoint.py
+python src/extraction_pipeline_runner_checkpoint.py
 
 # Resume after interruption (automatic checkpoint recovery)
-python extraction_pipeline_runner_checkpoint.py \
+python src/extraction_pipeline_runner_checkpoint.py \
   --pipeline-dir extraction_pipeline_20250901
 
 # Or continue from a specific stage
-python extraction_pipeline_runner_checkpoint.py \
+python src/extraction_pipeline_runner_checkpoint.py \
   --pipeline-dir extraction_pipeline_20250901 \
   --start-from crossref
 
 # Run specific stages only
-python extraction_pipeline_runner_checkpoint.py \
+python src/extraction_pipeline_runner_checkpoint.py \
   --pipeline-dir extraction_pipeline_20250901 \
   --start-from s2 \
   --stop-after openalex
 
 # Fresh start (ignore checkpoints)
-python extraction_pipeline_runner_checkpoint.py \
+python src/extraction_pipeline_runner_checkpoint.py \
   --pipeline-dir extraction_pipeline_20250901 \
   --reset-checkpoints
 ```
@@ -108,32 +108,33 @@ python extraction_pipeline_runner_checkpoint.py \
 mkdir -p extraction_pipeline_$(date +%Y%m%d)/{01_tei_xml,02_json_extraction,03_zotero_recovery,04_crossref_enrichment,05_s2_enrichment,06_openalex_enrichment,07_unpaywall_enrichment,08_pubmed_enrichment,09_arxiv_enrichment,10_final_output}
 
 # Stage 1: TEI to JSON extraction (with checkpoint)
-python comprehensive_tei_extractor_checkpoint.py \
+python src/comprehensive_tei_extractor_checkpoint.py \
   --output extraction_pipeline_20250901/02_json_extraction
 
 # Stage 2: Zotero recovery
-python run_full_zotero_recovery.py \
+python src/run_full_zotero_recovery.py \
   --input extraction_pipeline_20250901/02_json_extraction \
   --output extraction_pipeline_20250901/03_zotero_recovery
 
 # Stage 3: CrossRef batch enrichment (with checkpoint)
-python crossref_batch_enrichment_checkpoint.py \
+python src/crossref_batch_enrichment_checkpoint.py \
   --input extraction_pipeline_20250901/03_zotero_recovery \
   --output extraction_pipeline_20250901/04_crossref_enrichment \
   --batch-size 50
 
 # Stage 4: S2 enrichment
-python s2_batch_enrichment.py \
+python src/s2_batch_enrichment.py \
   --input extraction_pipeline_20250901/04_crossref_enrichment \
   --output extraction_pipeline_20250901/05_s2_enrichment
 
 # Stage 5: Extended API enrichments
-python v5_openalex_pipeline.py \
+python src/v5_openalex_pipeline.py \
   --input extraction_pipeline_20250901/05_s2_enrichment \
   --output extraction_pipeline_20250901/06_openalex_enrichment
 
 # Build KB
-python src/build_kb.py --input kb_final_cleaned_*/
+# V5 doesn't have build_kb.py - use extraction pipeline instead
+# python src/extraction_pipeline_runner_checkpoint.py --input kb_final_cleaned_*/
 ```
 
 ## Prerequisites Checklist
@@ -303,7 +304,7 @@ kb_final_cleaned_TIMESTAMP/
 
 ### Check Extraction Quality
 ```bash
-python analyze_grobid_extraction.py
+python src/analyze_pipeline_completeness.py
 ```
 
 ### Verify Final Statistics
@@ -350,14 +351,14 @@ curl http://localhost:8070/api/isalive
 ls extraction_pipeline_*/*/.*.checkpoint.json
 
 # Resume with checkpoint recovery (automatic)
-python extraction_pipeline_runner_checkpoint.py \
+python src/extraction_pipeline_runner_checkpoint.py \
   --pipeline-dir extraction_pipeline_20250901
 ```
 
 ### If Pipeline Stops
 ```bash
 # Resume with checkpoint recovery (automatic)
-python extraction_pipeline_runner_checkpoint.py \
+python src/extraction_pipeline_runner_checkpoint.py \
   --pipeline-dir extraction_pipeline_20250901
 
 # The pipeline will automatically:
@@ -369,7 +370,7 @@ python extraction_pipeline_runner_checkpoint.py \
 ### If Quality is Poor
 ```bash
 # Analyze what went wrong
-python analyze_grobid_extraction.py
+python src/analyze_pipeline_completeness.py
 
 # Check error logs
 ls zotero_extraction_*/errors/
@@ -403,13 +404,15 @@ After successful extraction:
 
 ```bash
 # Build the knowledge base
-python src/build_kb.py --input kb_final_cleaned_*/
+# V5 doesn't have build_kb.py - use extraction pipeline instead
+# python src/extraction_pipeline_runner_checkpoint.py --input kb_final_cleaned_*/
 
 # Test the KB
-python src/cli.py search "machine learning" --show-quality
+python v4/src/cli.py search "machine learning" --show-quality
 
 # Run gap analysis
-python src/analyze_gaps.py
+# Gap analysis not in v5 - use v4 if needed
+# python v4/src/analyze_gaps.py
 ```
 
 ## Support Resources

@@ -5,29 +5,32 @@
 ### Complete Workflow
 
 ```bash
-# Step 1: Extract PDFs with Grobid
-python v5_design/implementations/extract_zotero_library.py
+# Step 1: Extract PDFs from Zotero
+python src/extract_zotero_library.py
 
-# Step 2: Fix full text extraction (recovers 85.9M chars)
-python reprocess_tei_xml.py
+# Step 2: Process with GROBID and extract to JSON
+python src/grobid_overnight_runner.py --input pdfs/ --output extraction_pipeline/01_tei_xml/
+python src/comprehensive_tei_extractor.py
 
-# Step 3: Filter low-quality papers
-python pdf_quality_filter.py
+# Step 3: Recover metadata from Zotero
+python src/zotero_metadata_recovery.py
 
 # Step 4: Enrich metadata with CrossRef
-python crossref_enrichment.py        # Recovers titles, finds DOIs (90% success)
+python src/crossref_batch_enrichment_checkpoint.py  # Recovers titles, finds DOIs (90% success)
 
 # Step 5: Filter non-article content
-python filter_non_articles.py        # Remove supplements, datasets, editorials
+python src/filter_non_articles.py   # Remove supplements, datasets, editorials
 
 # Step 6: Fix remaining malformed DOIs
-python fix_malformed_dois.py        # Clean DOIs and retry (80% success)
+python src/fix_malformed_dois.py    # Clean DOIs and retry (80% success)
 
-# Step 7: Final cleanup - remove article without title
-python final_cleanup_no_title.py     # Creates kb_final_cleaned_*/ with 100% title coverage
+# Step 7: Final cleanup - remove articles without title
+python src/final_cleanup_no_title.py # Creates kb_final_cleaned_*/ with 100% title coverage
 
-# Step 8: Build KB from final cleaned data
-python src/build_kb.py --input kb_final_cleaned_*/
+# Step 8: Further enrichment (optional)
+python src/s2_batch_enrichment.py
+python src/openalex_enricher.py
+python src/v5_unpaywall_pipeline.py
 ```
 
 ### Pipeline Results (Final)
@@ -40,12 +43,14 @@ python src/build_kb.py --input kb_final_cleaned_*/
 
 | Old Name | New Name | Purpose | Rationale |
 |----------|----------|---------|-----------|
-| `cli.py` | `kbq.py` | Knowledge Base Query | Reflects entity-aware search |
-| `analyze_gaps.py` | `gaps.py` | Gap Analysis | Shorter, cleaner |
-| `build_kb.py` | `build.py` | Build Knowledge Base | Simplified |
-| `discover.py` | `discover.py` | External Discovery | Unchanged |
+| Old v4 Name | Current v5 Name | Purpose | Location |
+|-------------|-----------------|---------|----------|
+| `cli.py` | `cli.py` | Knowledge Base Query | `v4/src/cli.py` |
+| `analyze_gaps.py` | Not in v5 | Gap Analysis | N/A |
+| `build_kb.py` | Not in v5 | Build Knowledge Base | N/A |
+| Various scripts | `extraction_pipeline_runner_checkpoint.py` | Main v5 pipeline | `src/` |
 
-## build.py - Knowledge Base Building
+## extraction_pipeline_runner_checkpoint.py - Main V5 Pipeline
 
 ### Core Operation Flags
 
@@ -71,26 +76,18 @@ python src/build_kb.py --input kb_final_cleaned_*/
 # Prerequisites: Start Grobid locally
 sudo docker run -t --rm -p 8070:8070 lfoppiano/grobid:0.8.2-full
 
-# Default: entire library + reports + gaps
-python src/build.py
+# Run the full v5 extraction and enrichment pipeline
+python src/extraction_pipeline_runner_checkpoint.py
 
-# Process specific collection
-python src/build.py --collection "PhD Thesis"
+# Resume from checkpoint after interruption
+python src/extraction_pipeline_runner_checkpoint.py --pipeline-dir extraction_pipeline_20250901
 
-# Full rebuild with two-pass extraction
-python src/build.py --rebuild
+# Skip certain stages
+python src/extraction_pipeline_runner_checkpoint.py --skip-stages pubmed,arxiv
 
-# Quick test
-python src/build.py --demo
-
-# Skip gap analysis for faster completion
-python src/build.py --no-gaps
-
-# Check timing before starting (9.5 hours for 2,200 papers)
-python src/build.py --estimate
-
-# Specific collection without gaps
-python src/build.py --collection "ML Papers" --no-gaps
+# Individual stage runners with checkpoint support
+python src/comprehensive_tei_extractor_checkpoint.py
+python src/crossref_batch_enrichment_checkpoint.py
 ```
 
 ### Automatic Reports
@@ -109,71 +106,40 @@ After each build, these reports are generated:
    - Takes 15-25 minutes
    - Comprehensive citation analysis
 
-## kbq.py - Knowledge Base Query
+## v4 Legacy Commands (preserved in v4/ directory)
 
 ### Search Commands
 
 ```bash
-# Basic search with quality filtering
-search "diabetes treatment" [--show-quality] [--quality-min 70]
+# V4 CLI is preserved in v4/src/cli.py
+python v4/src/cli.py search "diabetes treatment"
 
-# Entity-aware search with explicit filters
-search "diabetes" \
-  --min-sample 500 \
-  --study-type RCT \
-  --software Python \
-  --year-from 2020 \
-  --has-data \
-  --max-p-value 0.05
+# V4 search capabilities
+python v4/src/cli.py search "diabetes" --limit 10
 
-# Advanced filtering
-search "machine learning" \
-  --exclude "deep learning" \
-  --include "random forest" \
-  --journal "Nature" \
-  --group-by year \
-  --export-csv results.csv
-
-# Smart search (AI-enhanced)
-smart-search "diabetes treatment" -k 30
-
-# Author search
-author "Smith J" [--exact]
+# V4 author search
+python v4/src/cli.py author "Smith J"
 ```
 
 ### Retrieval Commands
 
 ```bash
-# Get single paper
-get 0001 [--sections abstract methods results] [--add-citation]
-
-# Get multiple papers (10-20x faster)
-get-batch 0001 0002 0003 [--sections abstract]
-
-# Generate citations
-cite 0001 0002 0003
+# V4 get paper
+python v4/src/cli.py get 0001
 ```
 
 ### Batch Operations
 
 ```bash
-# Use preset configurations
-batch --preset research    # Top papers for research
-batch --preset review      # Papers for literature review
-batch --preset author-scan # Papers by specific authors
-
-# Run commands from file
-batch --file commands.txt
+# V4 batch operations
+python v4/src/cli.py batch --file commands.txt
 ```
 
 ### Analysis Commands
 
 ```bash
-# Show KB statistics
-info
-
-# Diagnose issues
-diagnose
+# V4 info command
+python v4/src/cli.py info
 ```
 
 ## discover.py - External Paper Discovery

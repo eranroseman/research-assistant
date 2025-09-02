@@ -195,7 +195,7 @@ paper_0001/
 sudo docker run -t --rm -p 8070:8070 lfoppiano/grobid:0.8.2-full
 
 # 2. Run overnight extraction
-python grobid_overnight_runner.py
+python src/grobid_overnight_runner.py
 
 # 3. Check results
 ls grobid_overnight_output/YYYYMMDD_HHMMSS/
@@ -205,7 +205,7 @@ ls grobid_overnight_output/YYYYMMDD_HHMMSS/
 
 ```bash
 # If interrupted, just run again - automatically resumes
-python grobid_overnight_runner.py
+python src/grobid_overnight_runner.py
 
 # Checkpoint saved every 50 papers
 # No work is lost during interruptions
@@ -215,10 +215,10 @@ python grobid_overnight_runner.py
 
 ```bash
 # Process specific collection
-python grobid_overnight_runner.py --input-list paper_list.txt
+python src/grobid_overnight_runner.py --input-list paper_list.txt
 
 # Limit for testing
-python grobid_overnight_runner.py --limit 10
+python src/grobid_overnight_runner.py --limit 10
 ```
 
 ## Decision Tree

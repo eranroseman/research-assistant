@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-"""OpenAlex Enrichment for V5 Pipeline
+"""OpenAlex Enrichment for V5 Pipeline.
+
 Adds topic classification, SDG mapping, and comprehensive citation networks.
 
 Features:
@@ -11,10 +12,11 @@ Features:
 - No authentication required (email for polite pool)
 """
 
+from src import config
 import json
 import time
 from pathlib import Path
-from datetime import datetime
+from datetime import datetime, UTC
 from typing import Any
 import requests
 from requests.adapters import HTTPAdapter
@@ -122,7 +124,7 @@ class OpenAlexEnricher:
         # Validate basic DOI format
         if not clean.startswith("10."):
             return None
-        if len(clean) < 10 or len(clean) > 100:
+        if len(clean) < config.DEFAULT_TIMEOUT or len(clean) > config.MIN_CONTENT_LENGTH:
             return None
 
         return clean
@@ -136,7 +138,7 @@ class OpenAlexEnricher:
         Returns:
             Dictionary mapping DOI to enriched metadata
         """
-        results = {}
+        results: dict[str, dict[str, Any]] = {}
 
         # Clean DOIs
         clean_dois = []
@@ -153,10 +155,14 @@ class OpenAlexEnricher:
 
         try:
             # Build OR filter - OpenAlex uses OR operator, not pipe
-            doi_filters = [f"doi:{doi}" for doi in clean_dois]
+            [f"doi:{doi}" for doi in clean_dois]
             doi_filter = f"doi:{'|'.join(clean_dois)}"  # doi:10.xxx|10.yyy format
 
-            params = {"filter": doi_filter, "per_page": self.batch_size, "select": self._get_select_fields()}
+            params: dict[str, Any] = {
+                "filter": doi_filter,
+                "per_page": self.batch_size,
+                "select": self._get_select_fields(),
+            }
 
             response = self.session.get(f"{self.base_url}/works", params=params, timeout=60)
             response.raise_for_status()
@@ -341,7 +347,7 @@ class OpenAlexEnricher:
         return enriched
 
 
-def process_directory(input_dir: str, output_dir: str, email: str | None = None):
+def process_directory(input_dir: str, output_dir: str, email: str | None = None) -> None:
     """Process all papers in a directory with OpenAlex enrichment.
 
     Args:
@@ -416,7 +422,7 @@ def process_directory(input_dir: str, output_dir: str, email: str | None = None)
 
     # Save report
     report = {
-        "timestamp": datetime.now().isoformat(),
+        "timestamp": datetime.now(UTC).isoformat(),
         "statistics": {
             "total_papers": len(paper_files),
             "papers_with_dois": len(papers_with_dois),

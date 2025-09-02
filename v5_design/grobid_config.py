@@ -1,9 +1,11 @@
 #!/usr/bin/env python3
-"""Grobid Maximum Extraction Configuration
+"""Grobid Maximum Extraction Configuration.
 
 This module defines the maximum extraction parameters for Grobid processing.
 Philosophy: Always extract EVERYTHING since we run Grobid rarely.
 """
+
+from src import config
 
 
 def get_maximum_extraction_params():
@@ -47,6 +49,7 @@ def get_maximum_extraction_params():
 
 def get_balanced_extraction_params():
     """DEPRECATED - We NEVER use this in practice.
+
     Kept for reference only.
 
     Processing time: ~16s/paper
@@ -66,6 +69,7 @@ def get_balanced_extraction_params():
 
 def get_minimal_extraction_params():
     """DEPRECATED - We NEVER use this in practice.
+
     Kept for reference only.
 
     Processing time: ~4s/paper
@@ -124,27 +128,33 @@ def estimate_processing_time(num_papers: int, mode: str = "maximum") -> dict:
 
 
 def get_timing_recommendation(num_papers: int) -> str:
-    """Get recommendation based on paper count."""
-    if num_papers < 100:
+    """Get recommendation based on paper count.
+
+    .
+    """
+    if num_papers < config.SMALL_PAPERS_BATCH:
         return "Run anytime - will complete in < 1 hour"
-    if num_papers < 500:
+    if num_papers < config.MEDIUM_PAPERS_BATCH:
         return "Run during lunch or meeting - will complete in 3-4 hours"
-    if num_papers < 1000:
+    if num_papers < config.LARGE_PAPERS_BATCH:
         return "Run overnight - will complete in 7-8 hours"
-    if num_papers < 2000:
+    if num_papers < config.VERY_LARGE_PAPERS_BATCH:
         return "Run overnight or weekend - will complete in 14-16 hours"
     return "Run over weekend - will take 1-2 days"
 
 
 def get_run_schedule(hours: float) -> str:
-    """Suggest when to run based on estimated time."""
+    """Suggest when to run based on estimated time.
+
+    .
+    """
     if hours < 1:
         return "Anytime"
-    if hours < 4:
+    if hours < config.PROCESSING_TIME_SHORT:
         return "Lunch break"
-    if hours < 8:
+    if hours < config.PROCESSING_TIME_MEDIUM:
         return "Overnight"
-    if hours < 16:
+    if hours < config.PROCESSING_TIME_LONG:
         return "Weekend"
     return "Long weekend"
 

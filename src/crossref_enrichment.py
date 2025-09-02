@@ -13,6 +13,7 @@ Usage:
     python crossref_enrichment.py [--input DIR] [--output DIR] [--max-papers N]
 """
 
+from src import config
 import json
 import logging
 import time
@@ -20,6 +21,7 @@ from pathlib import Path
 from datetime import datetime, UTC
 import argparse
 import sys
+from typing import Any, TypedDict
 
 # Try to import habanero (CrossRef client)
 try:
@@ -34,10 +36,31 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(
 logger = logging.getLogger(__name__)
 
 
+class StatsDict(TypedDict):
+    """Type definition for statistics tracking."""
+
+    total_processed: int
+    api_queries: int
+    dois_found: int
+    dois_already_present: int
+    years_found: int
+    years_already_present: int
+    titles_enriched: int
+    authors_enriched: int
+    journals_found: int
+    journals_already_present: int
+    api_errors: int
+    papers_needing_enrichment: list[dict[str, Any]]
+    papers_enriched: list[str]
+    papers_failed: list[str]
+
+
 class EnhancedCrossRefEnricher:
     """Enhanced CrossRef enrichment with comprehensive metadata recovery."""
 
-    def __init__(self, input_dir: str = None, output_dir: str = None, max_papers: int = None):
+    def __init__(
+        self, input_dir: str | None = None, output_dir: str | None = None, max_papers: int | None = None
+    ):
         """Initialize the enricher.
 
         Args:
@@ -67,7 +90,7 @@ class EnhancedCrossRefEnricher:
         self.cr = Crossref()
 
         # Statistics tracking
-        self.stats = {
+        self.stats: StatsDict = {
             "total_processed": 0,
             "api_queries": 0,
             "dois_found": 0,
@@ -84,7 +107,7 @@ class EnhancedCrossRefEnricher:
             "papers_failed": [],
         }
 
-    def query_crossref(self, paper_data: dict) -> dict | None:
+    def query_crossref(self, paper_data: dict[str, Any]) -> dict[str, Any] | None:
         """Query CrossRef API to find paper metadata.
 
         Tries multiple strategies:
@@ -107,9 +130,9 @@ class EnhancedCrossRefEnricher:
                 time.sleep(0.1)  # Rate limiting
                 result = self.cr.works(ids=doi)
                 if result and "message" in result:
-                    return result["message"]
+                    return dict(result["message"])  # Explicitly cast to dict
             except Exception as e:
-                logger.debug(f"DOI query failed for {doi}: {e}")
+                logger.debug("DOI query failed for %s: %s", doi, e)
 
         # Strategy 2: Search by title + authors
         title = paper_data.get("title", "").strip()
@@ -173,12 +196,12 @@ class EnhancedCrossRefEnricher:
                         return best_match
 
         except Exception as e:
-            logger.debug(f"CrossRef search failed: {e}")
+            logger.debug("CrossRef search failed: %s", e)
             self.stats["api_errors"] += 1
 
         return None
 
-    def find_best_match(self, original_title: str, items: list[dict]) -> dict | None:
+    def find_best_match(self, original_title: str, items: list[dict[str, Any]]) -> dict[str, Any] | None:
         """Find best matching paper from CrossRef results.
 
         Args:
@@ -222,12 +245,12 @@ class EnhancedCrossRefEnricher:
                     best_match = item
 
         # Return best match if similarity is high enough
-        if best_score > 0.8:
+        if best_score > config.HIGH_CONFIDENCE_THRESHOLD:
             return best_match
 
         return None
 
-    def extract_metadata(self, cr_data: dict) -> dict:
+    def extract_metadata(self, cr_data: dict[str, Any]) -> dict[str, Any]:
         """Extract all useful metadata from CrossRef response.
 
         Args:
@@ -472,7 +495,7 @@ class EnhancedCrossRefEnricher:
             return cr_data is not None
 
         except Exception as e:
-            logger.error(f"Error enriching {paper_file.name}: {e}")
+            logger.error("Error enriching %s: %s", paper_file.name, e)
             self.stats["papers_failed"].append(paper_file.name)
 
             # Copy original file on error
@@ -482,12 +505,12 @@ class EnhancedCrossRefEnricher:
                     data = json.load(f)
                 with open(output_file, "w") as f:
                     json.dump(data, f, indent=2)
-            except:
-                pass
+            except Exception as e:
+                logger.debug("Error copying original file: %s", e)
 
             return False
 
-    def run(self):
+    def run(self) -> None:
         """Run the enrichment process on all papers."""
         # Find JSON files
         json_files = sorted(self.input_dir.glob("*.json"))
@@ -499,31 +522,31 @@ class EnhancedCrossRefEnricher:
             json_files = json_files[: self.max_papers]
 
         total_files = len(json_files)
-        logger.info(f"Found {total_files} papers to process")
-        logger.info(f"Input: {self.input_dir}")
-        logger.info(f"Output: {self.output_dir}")
+        logger.info("Found %s papers to process", total_files)
+        logger.info("Input: %s", self.input_dir)
+        logger.info("Output: %s", self.output_dir)
 
         # Process each file
         for i, json_file in enumerate(json_files, 1):
-            if i % 100 == 0:
-                logger.info(f"Processing {i}/{total_files}...")
-                logger.info(f"  DOIs found: {self.stats['dois_found']}")
-                logger.info(f"  Years found: {self.stats['years_found']}")
-                logger.info(f"  Journals found: {self.stats['journals_found']}")
+            if i % config.MIN_CONTENT_LENGTH == 0:
+                logger.info("Processing %s/%s...", i, total_files)
+                logger.info("  DOIs found: %s", self.stats["dois_found"])
+                logger.info("  Years found: %s", self.stats["years_found"])
+                logger.info("  Journals found: %s", self.stats["journals_found"])
 
             self.enrich_paper(json_file)
             self.stats["total_processed"] += 1
 
             # Rate limiting
-            if i % 10 == 0:
+            if i % config.DEFAULT_TIMEOUT == 0:
                 time.sleep(0.5)  # Extra delay every 10 papers
 
         # Generate report
         self.generate_report()
 
-    def generate_report(self):
+    def generate_report(self) -> None:
         """Generate enrichment report."""
-        report = {
+        report: dict[str, Any] = {
             "timestamp": datetime.now(UTC).isoformat(),
             "input_directory": str(self.input_dir),
             "output_directory": str(self.output_dir),
@@ -629,7 +652,7 @@ class EnhancedCrossRefEnricher:
         print(f"Report: {report_path}")
 
 
-def main():
+def main() -> None:
     """Main entry point."""
     parser = argparse.ArgumentParser(description="Enhanced CrossRef enrichment for paper metadata")
     parser.add_argument("--input", help="Input directory with JSON files")
@@ -644,7 +667,7 @@ def main():
         )
         enricher.run()
     except Exception as e:
-        logger.error(f"Enrichment failed: {e}")
+        logger.error("Enrichment failed: %s", e)
         sys.exit(1)
 
 

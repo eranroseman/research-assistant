@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-"""V5 Pipeline Stage 6: Unpaywall Enrichment
+"""V5 Pipeline Stage 6: Unpaywall Enrichment.
+
 Identifies open access versions and provides direct links to free full-text PDFs.
 
 Usage:
@@ -7,10 +8,11 @@ Usage:
     python v5_unpaywall_pipeline.py --test  # Test with small dataset
 """
 
+from src import config
 import json
 import time
 from pathlib import Path
-from datetime import datetime
+from datetime import datetime, UTC
 import argparse
 import sys
 
@@ -19,8 +21,11 @@ from config import CROSSREF_POLITE_EMAIL
 from unpaywall_enricher import UnpaywallEnricher
 
 
-def analyze_enrichment_results(output_dir: Path):
-    """Analyze and report enrichment statistics."""
+def analyze_enrichment_results(output_dir: Path) -> None:
+    """Analyze and report enrichment statistics.
+
+    .
+    """
     report_file = output_dir / "unpaywall_enrichment_report.json"
     if not report_file.exists():
         print("No report file found")
@@ -92,9 +97,9 @@ def analyze_enrichment_results(output_dir: Path):
                         repositories.append(repo)
 
                     # License
-                    license = paper.get("unpaywall_best_oa_location", {}).get("license")
-                    if license:
-                        licenses.append(license)
+                    paper_license = paper.get("unpaywall_best_oa_location", {}).get("license")
+                    if paper_license:
+                        licenses.append(paper_license)
 
         if oa_types:
             from collections import Counter
@@ -115,13 +120,17 @@ def analyze_enrichment_results(output_dir: Path):
         if licenses:
             license_counts = Counter(licenses)
             print("\n  License Distribution:")
-            for license, count in license_counts.most_common():
-                print(f"    - {license}: {count}")
+            for lic, count in license_counts.most_common():
+                print(f"    - {lic}: {count}")
 
     print("\n" + "=" * 80)
 
 
-def main():
+def main() -> None:
+    """Run the main program.
+
+    .
+    """
     parser = argparse.ArgumentParser(description="V5 Pipeline Stage 6: Unpaywall Enrichment")
     parser.add_argument(
         "--input", default="openalex_enriched_final", help="Input directory with OpenAlex enriched papers"
@@ -217,7 +226,7 @@ def main():
     # Process papers
     print("\nProcessing papers with Unpaywall API...")
     print("Note: Unpaywall requires individual API calls per DOI")
-    if len(papers_with_dois) > 100:
+    if len(papers_with_dois) > config.MIN_CONTENT_LENGTH:
         estimated_time = len(papers_with_dois) * 0.15  # ~0.15 seconds per paper with parallelization
         print(f"Estimated time: {estimated_time / 60:.1f} minutes")
 
@@ -294,7 +303,7 @@ def main():
     # Generate final report
     final_stats = enricher.get_statistics()
     report = {
-        "timestamp": datetime.now().isoformat(),
+        "timestamp": datetime.now(UTC).isoformat(),
         "pipeline_stage": "6_unpaywall_enrichment",
         "statistics": {
             "total_papers": len(paper_files),

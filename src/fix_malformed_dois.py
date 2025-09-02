@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Fix malformed DOIs and retry CrossRef for papers without titles."""
 
+from src import config
 import json
 import time
 import requests
@@ -10,7 +11,8 @@ from pathlib import Path
 class DOIFixer:
     """Fix malformed DOIs and retrieve titles from CrossRef."""
 
-    def __init__(self):
+    def __init__(self) -> None:
+        """Initialize DOI fixer with CrossRef API configuration."""
         self.crossref_url = "https://api.crossref.org/works"
         self.headers = {"User-Agent": "ResearchAssistant/1.0 (mailto:research@example.com)"}
         self.delay = 0.2  # Rate limiting
@@ -59,21 +61,21 @@ class DOIFixer:
 
         return doi
 
-    def get_title_from_crossref(self, doi: str):
+    def get_title_from_crossref(self, doi: str) -> str | None:
         """Fetch title from CrossRef."""
         try:
             time.sleep(self.delay)
             url = f"{self.crossref_url}/{doi}"
             response = requests.get(url, headers=self.headers, timeout=10)
 
-            if response.status_code == 200:
+            if response.status_code == config.MIN_SECTION_TEXT_LENGTH:
                 data = response.json()
                 message = data.get("message", {})
 
                 # Get title
                 title = message.get("title", [])
                 if isinstance(title, list) and title:
-                    return title[0]
+                    return str(title[0])
                 if isinstance(title, str):
                     return title
 
@@ -83,7 +85,7 @@ class DOIFixer:
         return None
 
 
-def main():
+def main() -> None:
     """Main entry point."""
     print("=" * 70)
     print("MALFORMED DOI FIXER")
@@ -189,10 +191,10 @@ def main():
     print("=" * 70)
 
     missing_count = 0
-    for f in kb_dir.glob("*.json"):
-        if "report" in f.name:
+    for json_path in kb_dir.glob("*.json"):
+        if "report" in json_path.name:
             continue
-        with open(f) as file:
+        with open(json_path) as file:
             data = json.load(file)
             if not data.get("title", "").strip():
                 missing_count += 1

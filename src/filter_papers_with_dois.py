@@ -1,14 +1,17 @@
 #!/usr/bin/env python3
 """Filter papers to keep only those with DOIs.
+
 Removes the 28 problematic papers that lack DOIs.
 """
 
+from src import config
 import json
 from pathlib import Path
-from datetime import datetime
+from datetime import datetime, UTC
+from typing import Any
 
 
-def filter_papers_with_dois(input_dir: Path, output_dir: Path):
+def filter_papers_with_dois(input_dir: Path, output_dir: Path) -> dict[str, Any]:
     """Filter papers to keep only those with DOIs.
 
     Args:
@@ -19,7 +22,7 @@ def filter_papers_with_dois(input_dir: Path, output_dir: Path):
     output_dir.mkdir(parents=True, exist_ok=True)
 
     # Track statistics
-    stats = {
+    stats: dict[str, Any] = {
         "total_papers": 0,
         "papers_with_dois": 0,
         "papers_without_dois": 0,
@@ -66,7 +69,7 @@ def filter_papers_with_dois(input_dir: Path, output_dir: Path):
 
     # Generate report
     report = {
-        "timestamp": datetime.now().isoformat(),
+        "timestamp": datetime.now(UTC).isoformat(),
         "statistics": stats,
         "excluded_paper_ids": sorted(stats["excluded_papers"]),
     }
@@ -86,10 +89,10 @@ def filter_papers_with_dois(input_dir: Path, output_dir: Path):
     print(f"  - Missing DOI only: {stats['papers_without_dois'] - stats['papers_without_both']}")
 
     print("\nExcluded paper IDs:")
-    for paper_id in sorted(stats["excluded_papers"])[:10]:
+    for paper_id in sorted(stats["excluded_papers"])[: config.MAX_DISPLAY_EXAMPLES]:
         print(f"  {paper_id}")
-    if len(stats["excluded_papers"]) > 10:
-        print(f"  ... and {len(stats['excluded_papers']) - 10} more")
+    if len(stats["excluded_papers"]) > config.MAX_DISPLAY_EXAMPLES:
+        print(f"  ... and {len(stats['excluded_papers']) - config.MAX_DISPLAY_EXAMPLES} more")
 
     print(f"\nOutput directory: {output_dir}")
     print(f"Report: {report_file}")
@@ -97,7 +100,8 @@ def filter_papers_with_dois(input_dir: Path, output_dir: Path):
     return stats
 
 
-def main():
+def main() -> None:
+    """Run the main program."""
     import argparse
 
     parser = argparse.ArgumentParser(description="Filter papers to keep only those with DOIs")

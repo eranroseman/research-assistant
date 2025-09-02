@@ -5,16 +5,21 @@ This enhanced version uses checkpoint-enabled scripts for all stages,
 allowing seamless resume after interruptions.
 """
 
+from src import config
 import sys
 import subprocess
+import shlex
 from pathlib import Path
-from datetime import datetime
+from datetime import datetime, UTC
 import argparse
 import time
 import json
+from typing import Any
 
 
-def wait_for_stage_completion(output_dir, expected_count=None, timeout=300, stage_name=""):
+def wait_for_stage_completion(
+    output_dir: Path, expected_count: int | None = None, timeout: int = 300, stage_name: str = ""
+) -> int:
     """Wait for a stage to complete by monitoring file count stability."""
     print(f"Waiting for {stage_name} to complete...")
 
@@ -42,7 +47,9 @@ def wait_for_stage_completion(output_dir, expected_count=None, timeout=300, stag
     return stable_count
 
 
-def run_command_sync(cmd, description, output_dir, input_dir=None):
+def run_command_sync(
+    cmd: str | list[str], description: str, output_dir: Path, input_dir: Path | None = None
+) -> bool:
     """Run a command synchronously and wait for completion."""
     print(f"\n{'=' * 60}")
     print(f"Running: {description}")
@@ -58,8 +65,12 @@ def run_command_sync(cmd, description, output_dir, input_dir=None):
         )
         print(f"Input files: {input_count}")
 
+    # Convert string command to list for security
+    if isinstance(cmd, str):
+        cmd = shlex.split(cmd)
+
     # Run the command and wait for it to complete
-    result = subprocess.run(cmd, check=False, shell=True, capture_output=True, text=True)
+    result = subprocess.run(cmd, check=False, capture_output=True, text=True)
 
     if result.returncode != 0:
         print(f"ERROR: {description} failed!")
@@ -75,7 +86,7 @@ def run_command_sync(cmd, description, output_dir, input_dir=None):
         # Verify reasonable output count
         if input_count > 0:
             loss_rate = (input_count - output_count) / input_count
-            if loss_rate > 0.25:  # Alert if >25% file loss
+            if loss_rate > config.LOW_CONFIDENCE_THRESHOLD:  # Alert if >25% file loss
                 print(
                     f"⚠ Warning: Significant file loss detected ({input_count} → {output_count}, {loss_rate * 100:.1f}% loss)"
                 )
@@ -85,7 +96,7 @@ def run_command_sync(cmd, description, output_dir, input_dir=None):
     return True
 
 
-def verify_stage_completion(stage_dir, min_files=1):
+def verify_stage_completion(stage_dir: Path, min_files: int = 1) -> bool:
     """Verify a stage has completed with expected output."""
     if not stage_dir.exists():
         return False
@@ -99,7 +110,8 @@ def verify_stage_completion(stage_dir, min_files=1):
     return total_files >= min_files
 
 
-def main():
+def main() -> None:
+    """Run the main program."""
     parser = argparse.ArgumentParser(description="Run extraction pipeline with checkpoint support")
     parser.add_argument(
         "--pipeline-dir",
@@ -129,7 +141,7 @@ def main():
     if args.pipeline_dir:
         pipeline_dir = Path(args.pipeline_dir)
     else:
-        pipeline_dir = Path(f"extraction_pipeline_checkpoint_{datetime.now().strftime('%Y%m%d')}")
+        pipeline_dir = Path(f"extraction_pipeline_checkpoint_{datetime.now(UTC).strftime('%Y%m%d')}")
 
     # Create directory structure
     stages = [
@@ -158,7 +170,7 @@ def main():
     reset_flag = " --reset" if args.reset_checkpoints else ""
 
     # Define pipeline stages with checkpoint-enabled scripts
-    pipeline_stages = {
+    pipeline_stages: dict[str, dict[str, Any]] = {
         "tei_extraction": {
             "description": "TEI to JSON extraction (with checkpoint)",
             "command": f"python comprehensive_tei_extractor_checkpoint.py --input-dir {pipeline_dir}/01_tei_xml --output-dir {pipeline_dir}/02_json_extraction{reset_flag}",
@@ -222,33 +234,33 @@ def main():
 
     # Check for existing checkpoints
     for stage_name in stages_to_run:
-        stage = pipeline_stages[stage_name]
-        checkpoint_files = list(stage["output_dir"].glob(".*checkpoint*.json"))
+        stage_check_info = pipeline_stages[stage_name]
+        checkpoint_files = list(stage_check_info["output_dir"].glob(".*checkpoint*.json"))
         if checkpoint_files:
             print(f"  {stage_name}: ✓ Checkpoint exists")
         else:
             print(f"  {stage_name}: ✗ No checkpoint")
 
     # Track file counts through pipeline
-    file_counts = {}
+    file_counts: dict[str, int] = {}
 
     # Run pipeline stages
     for stage_name in stages_to_run:
-        stage = pipeline_stages[stage_name]
+        stage_info: dict[str, Any] = pipeline_stages[stage_name]
 
         # Check if stage already completed (unless forcing)
-        if not args.force and verify_stage_completion(stage["output_dir"], min_files=100):
+        if not args.force and verify_stage_completion(stage_info["output_dir"], min_files=100):
             existing_count = len(
                 [
                     f
-                    for f in stage["output_dir"].glob("*.json")
+                    for f in stage_info["output_dir"].glob("*.json")
                     if "report" not in f.name and not f.name.startswith(".")
                 ]
             )
-            print(f"\n✓ {stage['description']} already has {existing_count} files")
+            print(f"\n✓ {stage_info['description']} already has {existing_count} files")
 
             # Check for checkpoint
-            checkpoint_files = list(stage["output_dir"].glob(".*checkpoint*.json"))
+            checkpoint_files = list(stage_info["output_dir"].glob(".*checkpoint*.json"))
             if checkpoint_files:
                 print("  Checkpoint found - will resume from where it left off if re-run")
 
@@ -257,7 +269,10 @@ def main():
 
         # Run the stage synchronously
         if not run_command_sync(
-            stage["command"], stage["description"], stage["output_dir"], stage.get("input_dir")
+            stage_info["command"],
+            stage_info["description"],
+            stage_info["output_dir"],
+            stage_info.get("input_dir"),
         ):
             print(f"\nPipeline stopped at {stage_name}")
             print("Note: You can resume from this point thanks to checkpoint support!")
@@ -267,7 +282,7 @@ def main():
         output_count = len(
             [
                 f
-                for f in stage["output_dir"].glob("*.json")
+                for f in stage_info["output_dir"].glob("*.json")
                 if "report" not in f.name and not f.name.startswith(".")
             ]
         )
@@ -316,7 +331,7 @@ def main():
                     )
                     if prev_count > 0:
                         loss_rate = (prev_count - total_count) / prev_count
-                        if loss_rate > 0.05:  # >5% loss
+                        if loss_rate > config.VERY_LOW_THRESHOLD:  # >5% loss
                             status = f"⚠ {loss_rate * 100:.1f}% loss"
 
             print(f"{stage_dir.name:<30} {total_count:<10} {status}")
@@ -329,7 +344,7 @@ def main():
 
     # Save pipeline report
     report = {
-        "timestamp": datetime.now().isoformat(),
+        "timestamp": datetime.now(UTC).isoformat(),
         "pipeline_dir": str(pipeline_dir),
         "stages_run": stages_to_run,
         "file_counts": file_counts,

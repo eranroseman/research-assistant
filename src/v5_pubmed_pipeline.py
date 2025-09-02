@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-"""V5 Pipeline Stage 7: PubMed Enrichment
+"""V5 Pipeline Stage 7: PubMed Enrichment.
+
 Adds authoritative medical metadata for biomedical papers.
 
 Usage:
@@ -8,17 +9,21 @@ Usage:
     python v5_pubmed_pipeline.py --api-key YOUR_KEY  # For higher rate limits
 """
 
+from src import config
 import json
 import time
 from pathlib import Path
-from datetime import datetime
+from datetime import datetime, UTC
 import argparse
 import os
 from pubmed_enricher import PubMedEnricher
 
 
-def analyze_enrichment_results(output_dir: Path):
-    """Analyze and report enrichment statistics."""
+def analyze_enrichment_results(output_dir: Path) -> None:
+    """Analyze and report enrichment statistics.
+
+    .
+    """
     report_file = output_dir / "pubmed_enrichment_report.json"
     if not report_file.exists():
         print("No report file found")
@@ -62,7 +67,7 @@ def analyze_enrichment_results(output_dir: Path):
                     print(f"  - {error_type}: {count}")
 
     # Sample detailed analysis
-    papers = list(output_dir.glob("*.json"))[:20]
+    papers = list(output_dir.glob("*.json"))[: config.DEFAULT_PROCESSING_LIMIT]
 
     if papers:
         print(f"\nSample Analysis (first {len(papers)} papers):")
@@ -106,19 +111,19 @@ def analyze_enrichment_results(output_dir: Path):
 
             mesh_counts = Counter(mesh_descriptors)
             print("\n  Top MeSH Terms in Sample:")
-            for term, count in mesh_counts.most_common(5):
+            for term, count in mesh_counts.most_common(config.DEFAULT_MAX_RESULTS):
                 print(f"    - {term}: {count} occurrences")
 
         if chemicals:
             chem_counts = Counter(chemicals)
             print("\n  Top Chemicals in Sample:")
-            for chem, count in chem_counts.most_common(5):
+            for chem, count in chem_counts.most_common(config.DEFAULT_MAX_RESULTS):
                 print(f"    - {chem}: {count} occurrences")
 
         if pub_types_list:
             type_counts = Counter(pub_types_list)
             print("\n  Publication Types in Sample:")
-            for pub_type, count in type_counts.most_common(5):
+            for pub_type, count in type_counts.most_common(config.DEFAULT_MAX_RESULTS):
                 print(f"    - {pub_type}: {count}")
 
         if grants_found:
@@ -127,7 +132,11 @@ def analyze_enrichment_results(output_dir: Path):
     print("\n" + "=" * 80)
 
 
-def main():
+def main() -> None:
+    """Run the main program.
+
+    .
+    """
     parser = argparse.ArgumentParser(description="V5 Pipeline Stage 7: PubMed Enrichment")
     parser.add_argument(
         "--input", default="unpaywall_enriched_final", help="Input directory with Unpaywall enriched papers"
@@ -236,7 +245,7 @@ def main():
     start_time = time.time()
 
     # Process in batches
-    batch_size = 20  # PubMed efetch can handle up to 200, but smaller is safer
+    batch_size = config.DEFAULT_PROCESSING_LIMIT  # PubMed efetch can handle up to 200, but smaller is safer
     all_results = {}
 
     for i in range(0, len(identifiers), batch_size):
@@ -258,7 +267,7 @@ def main():
             print(f"  MeSH coverage: {stats['mesh_coverage']}")
 
         # Save checkpoint every 100 papers
-        if (i + batch_size) % 100 == 0 or (i + batch_size) >= len(identifiers):
+        if (i + batch_size) % config.DEFAULT_BATCH_SIZE == 0 or (i + batch_size) >= len(identifiers):
             print("  Saving checkpoint...")
             for key, (paper_id, original_paper) in list(papers_by_id.items())[: i + batch_size]:
                 if key in all_results:
@@ -301,7 +310,7 @@ def main():
     # Generate final report
     final_stats = enricher.get_statistics()
     report = {
-        "timestamp": datetime.now().isoformat(),
+        "timestamp": datetime.now(UTC).isoformat(),
         "pipeline_stage": "7_pubmed_enrichment",
         "statistics": {
             "total_papers": len(paper_files),

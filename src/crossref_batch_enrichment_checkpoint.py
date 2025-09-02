@@ -4,35 +4,34 @@
 This enhanced version adds checkpoint recovery to resume processing after interruptions.
 """
 
+from src import config
 import json
 import time
 from pathlib import Path
-from datetime import datetime
+from datetime import datetime, UTC
 import logging
 from habanero import Crossref
 from collections import defaultdict
+from typing import Any
 import argparse
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
 logger = logging.getLogger(__name__)
 
-# Email for polite pool access (better rate limits)
-CROSSREF_POLITE_EMAIL = "eran-roseman@uiowa.edu"
-
 
 class BatchCrossRefEnricher:
     """Batch process papers through CrossRef API with checkpoint support."""
 
-    def __init__(self, mailto: str = CROSSREF_POLITE_EMAIL, batch_size: int = 50):
+    def __init__(self, mailto: str = config.CROSSREF_POLITE_EMAIL, batch_size: int = 50) -> None:
         """Initialize CrossRef client with batch capabilities."""
         self.cr = Crossref(mailto=mailto)
         self.batch_size = min(batch_size, 100)  # CrossRef max is 100
-        self.stats = defaultdict(int)
-        self.checkpoint_file = None
-        self.processed_files = set()
+        self.stats: dict[str, int] = defaultdict(int)
+        self.checkpoint_file: Path | None = None
+        self.processed_files: set[str] = set()
 
-    def load_checkpoint(self, output_dir: Path) -> set:
+    def load_checkpoint(self, output_dir: Path) -> set[str]:
         """Load checkpoint to resume processing."""
         self.checkpoint_file = output_dir / ".crossref_checkpoint.json"
 
@@ -43,26 +42,26 @@ class BatchCrossRefEnricher:
                     self.processed_files = set(checkpoint_data.get("processed_files", []))
                     self.stats = defaultdict(int, checkpoint_data.get("stats", {}))
                     logger.info(
-                        f"Resuming from checkpoint: {len(self.processed_files)} files already processed"
+                        "Resuming from checkpoint: %d files already processed", len(self.processed_files)
                     )
                     return self.processed_files
             except Exception as e:
-                logger.warning(f"Could not load checkpoint: {e}")
+                logger.warning("Could not load checkpoint: %s", e)
 
         return set()
 
-    def save_checkpoint(self):
+    def save_checkpoint(self) -> None:
         """Save checkpoint after processing files."""
         if self.checkpoint_file:
             checkpoint_data = {
                 "processed_files": list(self.processed_files),
                 "stats": dict(self.stats),
-                "timestamp": datetime.now().isoformat(),
+                "timestamp": datetime.now(UTC).isoformat(),
             }
             with open(self.checkpoint_file, "w", encoding="utf-8") as f:
                 json.dump(checkpoint_data, f, indent=2)
 
-    def fetch_batch(self, dois: list[str]) -> dict:
+    def fetch_batch(self, dois: list[str]) -> dict[str, Any]:
         """Fetch metadata for a batch of DOIs."""
         try:
             # CrossRef batch query
@@ -83,18 +82,18 @@ class BatchCrossRefEnricher:
             return results
 
         except Exception as e:
-            logger.error(f"Batch API error: {e}")
+            logger.error("Batch API error: %s", e)
             self.stats["api_errors"] += 1
             return {}
 
-    def enrich_paper(self, paper_data: dict, crossref_data: dict) -> dict:
+    def enrich_paper(self, paper_data: dict[str, Any], crossref_data: dict[str, Any]) -> dict[str, Any]:
         """Enrich paper with CrossRef metadata."""
         enriched = paper_data.copy()
 
         # Add CrossRef metadata
         enriched["crossref_enrichment"] = {
             "status": "enriched",
-            "timestamp": datetime.now().isoformat(),
+            "timestamp": datetime.now(UTC).isoformat(),
         }
 
         # Title (if missing)
@@ -176,7 +175,7 @@ class BatchCrossRefEnricher:
         self.stats["papers_enriched"] += 1
         return enriched
 
-    def process_directory(self, input_dir: Path, output_dir: Path, max_papers: int | None = None):
+    def process_directory(self, input_dir: Path, output_dir: Path, max_papers: int | None = None) -> None:
         """Process all papers in directory with batch queries and checkpoint support."""
         # Create output directory
         output_dir.mkdir(parents=True, exist_ok=True)
@@ -203,9 +202,9 @@ class BatchCrossRefEnricher:
         if max_papers and len(json_files) > max_papers:
             json_files = json_files[:max_papers]
 
-        logger.info(f"Found {len(all_json_files)} total papers")
-        logger.info(f"Already processed: {len(papers_to_skip)}")
-        logger.info(f"To process: {len(json_files)}")
+        logger.info("Found %d total papers", len(all_json_files))
+        logger.info("Already processed: %d", len(papers_to_skip))
+        logger.info("To process: %d", len(json_files))
 
         if not json_files:
             logger.info("All files already processed!")
@@ -231,8 +230,8 @@ class BatchCrossRefEnricher:
             else:
                 papers_without_dois.append((json_file, paper_data))
 
-        logger.info(f"Papers with DOIs: {len(papers_with_dois)}")
-        logger.info(f"Papers without DOIs: {len(papers_without_dois)}")
+        logger.info("Papers with DOIs: %d", len(papers_with_dois))
+        logger.info("Papers without DOIs: %d", len(papers_without_dois))
 
         # Process papers with DOIs in batches
         doi_list = list(papers_with_dois.keys())
@@ -243,7 +242,7 @@ class BatchCrossRefEnricher:
             batch_num = i // self.batch_size + 1
             total_batches = (len(doi_list) + self.batch_size - 1) // self.batch_size
 
-            logger.info(f"Processing batch {batch_num}/{total_batches} ({len(batch_dois)} DOIs)...")
+            logger.info("Processing batch %d/%d (%d DOIs)...", batch_num, total_batches, len(batch_dois))
 
             # Fetch batch metadata
             batch_results = self.fetch_batch(batch_dois)
@@ -260,7 +259,7 @@ class BatchCrossRefEnricher:
                     enriched_data = paper_data.copy()
                     enriched_data["crossref_enrichment"] = {
                         "status": "not_found",
-                        "timestamp": datetime.now().isoformat(),
+                        "timestamp": datetime.now(UTC).isoformat(),
                     }
                     self.stats["not_found"] += 1
 
@@ -274,21 +273,21 @@ class BatchCrossRefEnricher:
                 checkpoint_counter += 1
 
             # Save checkpoint every 100 files
-            if checkpoint_counter >= 100:
+            if checkpoint_counter >= config.MIN_CONTENT_LENGTH:
                 self.save_checkpoint()
-                logger.info(f"Checkpoint saved: {len(self.processed_files)} files processed")
+                logger.info("Checkpoint saved: %d files processed", len(self.processed_files))
                 checkpoint_counter = 0
 
             # Rate limiting
             time.sleep(0.1)  # Be nice to CrossRef API
 
         # Process papers without DOIs (just copy them)
-        logger.info(f"Processing {len(papers_without_dois)} papers without DOIs...")
+        logger.info("Processing %d papers without DOIs...", len(papers_without_dois))
         for json_file, paper_data in papers_without_dois:
             enriched_data = paper_data.copy()
             enriched_data["crossref_enrichment"] = {
                 "status": "no_doi",
-                "timestamp": datetime.now().isoformat(),
+                "timestamp": datetime.now(UTC).isoformat(),
             }
 
             output_file = output_dir / json_file.name
@@ -304,10 +303,10 @@ class BatchCrossRefEnricher:
         # Generate report
         self.generate_report(output_dir)
 
-    def generate_report(self, output_dir: Path):
+    def generate_report(self, output_dir: Path) -> None:
         """Generate enrichment report."""
         report = {
-            "timestamp": datetime.now().isoformat(),
+            "timestamp": datetime.now(UTC).isoformat(),
             "statistics": dict(self.stats),
             "batch_size": self.batch_size,
         }
@@ -338,7 +337,8 @@ class BatchCrossRefEnricher:
         print(f"\nReport: {report_file}")
 
 
-def main():
+def main() -> None:
+    """Run the main program."""
     parser = argparse.ArgumentParser(description="Batch CrossRef enrichment with checkpoint recovery")
     parser.add_argument(
         "--input", default="zotero_recovered_20250901", help="Input directory with JSON files"
@@ -351,7 +351,7 @@ def main():
     )
     parser.add_argument("--max-papers", type=int, help="Maximum papers to process (for testing)")
     parser.add_argument(
-        "--mailto", default=CROSSREF_POLITE_EMAIL, help="Email for CrossRef polite pool access"
+        "--mailto", default=config.CROSSREF_POLITE_EMAIL, help="Email for CrossRef polite pool access"
     )
     parser.add_argument("--reset", action="store_true", help="Reset checkpoint and start fresh")
 

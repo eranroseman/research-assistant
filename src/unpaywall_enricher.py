@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-"""Unpaywall Enrichment for V5 Pipeline
+"""Unpaywall Enrichment for V5 Pipeline.
+
 Identifies open access versions and provides direct links to free full-text PDFs.
 
 Features:
@@ -13,13 +14,15 @@ Features:
 
 import json
 import time
+from collections import defaultdict
+from datetime import datetime, UTC
 from pathlib import Path
-from datetime import datetime
 from typing import Any
+
 import requests
 from requests.adapters import HTTPAdapter
+from src import config
 from urllib3.util.retry import Retry
-from collections import defaultdict
 
 
 class UnpaywallEnricher:
@@ -37,7 +40,7 @@ class UnpaywallEnricher:
         self.base_url = "https://api.unpaywall.org/v2"
         self.email = email
         self.session = self._create_session()
-        self.stats = defaultdict(int)
+        self.stats: dict[str, int] = defaultdict(int)
 
     def _create_session(self) -> requests.Session:
         """Create HTTP session with retry logic."""
@@ -74,7 +77,7 @@ class UnpaywallEnricher:
 
             response = self.session.get(url, params=params, timeout=30)
 
-            if response.status_code == 404:
+            if response.status_code == config.HTTP_NOT_FOUND:
                 self.stats["not_found"] += 1
                 return None
 
@@ -94,6 +97,7 @@ class UnpaywallEnricher:
 
     def _clean_doi(self, doi: str) -> str | None:
         """Clean and validate a DOI.
+
         Reuses logic from OpenAlex enricher for consistency.
 
         Args:
@@ -133,7 +137,7 @@ class UnpaywallEnricher:
         # Validate basic DOI format
         if not clean.startswith("10."):
             return None
-        if len(clean) < 10 or len(clean) > 100:
+        if len(clean) < config.DEFAULT_TIMEOUT or len(clean) > config.MIN_CONTENT_LENGTH:
             return None
 
         return clean
@@ -230,8 +234,9 @@ class UnpaywallEnricher:
     def enrich_batch(
         self, dois: list[str], parallel: bool = True, max_workers: int = 5
     ) -> dict[str, dict[str, Any]]:
-        """Enrich multiple papers. Unlike OpenAlex, Unpaywall doesn't support batch queries,
-        so we process individually with optional parallelization.
+        """Enrich multiple papers.
+
+        Unlike OpenAlex, Unpaywall doesn't support batch queries, so we process individually with optional parallelization.
 
         Args:
             dois: List of DOIs
@@ -243,7 +248,7 @@ class UnpaywallEnricher:
         """
         results = {}
 
-        if parallel and len(dois) > 10:
+        if parallel and len(dois) > config.DEFAULT_TIMEOUT:
             # Use parallel processing for larger batches
             from concurrent.futures import ThreadPoolExecutor, as_completed
 
@@ -311,7 +316,7 @@ class UnpaywallEnricher:
         }
 
 
-def process_directory(input_dir: str, output_dir: str, email: str, parallel: bool = True):
+def process_directory(input_dir: str, output_dir: str, email: str, parallel: bool = True) -> None:
     """Process all papers in a directory with Unpaywall enrichment.
 
     Args:
@@ -411,7 +416,7 @@ def process_directory(input_dir: str, output_dir: str, email: str, parallel: boo
     # Generate detailed report
     stats = enricher.get_statistics()
     report = {
-        "timestamp": datetime.now().isoformat(),
+        "timestamp": datetime.now(UTC).isoformat(),
         "pipeline_stage": "6_unpaywall_enrichment",
         "statistics": {
             "total_papers": len(paper_files),

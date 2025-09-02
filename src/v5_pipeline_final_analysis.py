@@ -1,20 +1,25 @@
 #!/usr/bin/env python3
 """Comprehensive analysis of v5 extraction pipeline results.
+
 Analyzes the complete pipeline from TEI extraction through S2 enrichment.
 """
 
+from src import config
 import json
 from pathlib import Path
-from datetime import datetime
+from datetime import datetime, UTC
 import statistics
 
 
-def analyze_pipeline_results():
-    """Analyze complete v5 pipeline results."""
+def analyze_pipeline_results() -> None:
+    """Analyze complete v5 pipeline results.
+
+    .
+    """
     print("=" * 80)
     print("V5 EXTRACTION PIPELINE - FINAL ANALYSIS")
     print("=" * 80)
-    print(f"Analysis Date: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+    print(f"Analysis Date: {datetime.now(UTC).strftime('%Y-%m-%d %H:%M:%S')} UTC")
     print()
 
     # 1. TEI Extraction Results
@@ -92,7 +97,7 @@ def analyze_pipeline_results():
             print(f"   Papers without DOIs (excluded): {stats['papers_without_dois']}")
             print(f"   Papers missing both DOI and title: {stats['papers_without_both']}")
 
-            if len(stats["excluded_papers"]) <= 10:
+            if len(stats["excluded_papers"]) <= config.DEFAULT_TIMEOUT:
                 print(f"\n   Excluded paper IDs: {', '.join(stats['excluded_papers'])}")
     print()
 

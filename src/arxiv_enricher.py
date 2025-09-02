@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-"""arXiv Enrichment for V5 Pipeline
+"""arXiv Enrichment for V5 Pipeline.
+
 Tracks preprint versions and updates for STEM papers.
 
 Features:
@@ -11,11 +12,13 @@ Features:
 - ~10-15% coverage (STEM-focused)
 """
 
+from src import config
 import json
 import time
-import xml.etree.ElementTree as ET
+from defusedxml import ElementTree
+from xml.etree import ElementTree as ET
 from pathlib import Path
-from datetime import datetime
+from datetime import datetime, UTC
 from typing import Any
 import requests
 from requests.adapters import HTTPAdapter
@@ -27,7 +30,7 @@ import re
 class ArXivEnricher:
     """Enrich papers with arXiv preprint metadata."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize arXiv enricher.
 
         Note: arXiv API has no authentication but requires:
@@ -36,11 +39,11 @@ class ArXivEnricher:
         """
         self.base_url = "http://export.arxiv.org/api/query"
         self.session = self._create_session()
-        self.stats = defaultdict(int)
+        self.stats: dict[str, int] = defaultdict(int)
 
         # Rate limiting - arXiv recommends 3 seconds between requests
         self.delay = 3.0
-        self.last_request_time = 0
+        self.last_request_time: float = 0.0
 
     def _create_session(self) -> requests.Session:
         """Create HTTP session with retry logic."""
@@ -57,7 +60,7 @@ class ArXivEnricher:
 
         return session
 
-    def _rate_limit(self):
+    def _rate_limit(self) -> None:
         """Enforce rate limiting between requests."""
         current_time = time.time()
         time_since_last = current_time - self.last_request_time
@@ -97,7 +100,7 @@ class ArXivEnricher:
             self._rate_limit()
 
             # Search arXiv
-            params = {
+            params: dict[str, str | int] = {
                 "search_query": query,
                 "max_results": 5,  # Get top 5 to find best match
                 "sortBy": "relevance",
@@ -105,14 +108,14 @@ class ArXivEnricher:
 
             response = self.session.get(self.base_url, params=params, timeout=30)
 
-            if response.status_code == 404:
+            if response.status_code == config.HTTP_NOT_FOUND:
                 self.stats["not_found"] += 1
                 return None
 
             response.raise_for_status()
 
             # Parse XML response
-            root = ET.fromstring(response.content)
+            root = ElementTree.fromstring(response.content)
 
             # Find entries (papers)
             entries = root.findall("{http://www.w3.org/2005/Atom}entry")
@@ -158,14 +161,14 @@ class ArXivEnricher:
             self._rate_limit()
 
             # Search by ID
-            params = {"id_list": clean_id, "max_results": 1}
+            params: dict[str, str | int] = {"id_list": clean_id, "max_results": 1}
 
             response = self.session.get(self.base_url, params=params, timeout=30)
 
             response.raise_for_status()
 
             # Parse XML response
-            root = ET.fromstring(response.content)
+            root = ElementTree.fromstring(response.content)
 
             # Find entry
             entry = root.find("{http://www.w3.org/2005/Atom}entry")
@@ -207,10 +210,10 @@ class ArXivEnricher:
         clean = re.sub(r"\s+", " ", clean)
 
         # Truncate very long titles (arXiv has limits)
-        if len(clean) > 250:
+        if len(clean) > config.SHORT_TEXT_THRESHOLD:
             clean = clean[:250]
 
-        return clean if len(clean) > 5 else None
+        return clean if len(clean) > config.DEFAULT_MAX_RESULTS else None
 
     def _clean_arxiv_id(self, arxiv_id: str) -> str | None:
         """Clean and validate arXiv ID.
@@ -279,7 +282,7 @@ class ArXivEnricher:
             Best matching entry or None
         """
         best_entry = None
-        best_score = 0
+        best_score: float = 0.0
 
         title_lower = title.lower()
         title_words = set(title_lower.split())
@@ -300,7 +303,7 @@ class ArXivEnricher:
                 title_score = 0
 
             # Boost score if authors match
-            author_boost = 0
+            author_boost: float = 0.0
             if authors:
                 entry_authors = []
                 for author_elem in entry.findall("{http://www.w3.org/2005/Atom}author"):
@@ -319,7 +322,7 @@ class ArXivEnricher:
             total_score = title_score + author_boost
 
             # Require at least 70% title match
-            if total_score > best_score and title_score >= 0.7:
+            if total_score > best_score and title_score >= config.GOOD_MATCH_THRESHOLD:
                 best_score = total_score
                 best_entry = entry
 
@@ -336,7 +339,7 @@ class ArXivEnricher:
         """
         ns = {"atom": "http://www.w3.org/2005/Atom", "arxiv": "http://arxiv.org/schemas/atom"}
 
-        enriched = {}
+        enriched: dict[str, Any] = {}
 
         # Basic metadata
         enriched["title"] = entry.findtext("atom:title", "", ns).strip()
@@ -435,8 +438,9 @@ class ArXivEnricher:
         return enriched
 
     def enrich_batch(self, papers: list[dict[str, Any]]) -> dict[str, dict[str, Any]]:
-        """Enrich multiple papers. arXiv doesn't support batch queries,
-        so we process individually with rate limiting.
+        """Enrich multiple papers.
+
+        arXiv doesn't support batch queries, so we process individually with rate limiting.
 
         Args:
             papers: List of paper dicts with 'title' and optionally 'authors'
@@ -500,7 +504,7 @@ class ArXivEnricher:
         }
 
 
-def process_directory(input_dir: str, output_dir: str, max_papers: int | None = None):
+def process_directory(input_dir: str, output_dir: str, max_papers: int | None = None) -> None:
     """Process all papers in a directory with arXiv enrichment.
 
     Args:
@@ -603,7 +607,7 @@ def process_directory(input_dir: str, output_dir: str, max_papers: int | None = 
     # Generate report
     final_stats = enricher.get_statistics()
     report = {
-        "timestamp": datetime.now().isoformat(),
+        "timestamp": datetime.now(UTC).isoformat(),
         "pipeline_stage": "9_arxiv_enrichment",
         "statistics": {
             "total_papers": len(paper_files),

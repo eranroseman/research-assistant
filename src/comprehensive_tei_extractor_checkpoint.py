@@ -4,10 +4,11 @@
 This enhanced version adds checkpoint recovery to resume processing after interruptions.
 """
 
+from src import config
 import json
-import xml.etree.ElementTree as ET
+from defusedxml import ElementTree
 from pathlib import Path
-from datetime import datetime
+from datetime import datetime, UTC
 import re
 from typing import Any
 import logging
@@ -21,13 +22,14 @@ logger = logging.getLogger(__name__)
 class ComprehensiveTEIExtractor:
     """Extract ALL information from TEI XML files with checkpoint support."""
 
-    def __init__(self):
+    def __init__(self) -> None:
+        """Initialize the TEI extractor with checkpoint recovery support."""
         self.ns = {"tei": "http://www.tei-c.org/ns/1.0"}
-        self.stats = {"total": 0, "successful": 0, "failed": 0, "fields_extracted": {}}
-        self.checkpoint_file = None
-        self.processed_files = set()
+        self.stats: dict[str, Any] = {"total": 0, "successful": 0, "failed": 0, "fields_extracted": {}}
+        self.checkpoint_file: Path | None = None
+        self.processed_files: set[str] = set()
 
-    def load_checkpoint(self, output_dir: Path) -> set:
+    def load_checkpoint(self, output_dir: Path) -> set[str]:
         """Load checkpoint to resume processing."""
         self.checkpoint_file = output_dir / ".tei_extraction_checkpoint.json"
 
@@ -38,21 +40,21 @@ class ComprehensiveTEIExtractor:
                     self.processed_files = set(checkpoint_data.get("processed_files", []))
                     self.stats = checkpoint_data.get("stats", self.stats)
                     logger.info(
-                        f"Resuming from checkpoint: {len(self.processed_files)} files already processed"
+                        "Resuming from checkpoint: %d files already processed", len(self.processed_files)
                     )
                     return self.processed_files
             except Exception as e:
-                logger.warning(f"Could not load checkpoint: {e}")
+                logger.warning("Could not load checkpoint: %s", e)
 
         return set()
 
-    def save_checkpoint(self):
+    def save_checkpoint(self) -> None:
         """Save checkpoint after processing files."""
         if self.checkpoint_file:
             checkpoint_data = {
                 "processed_files": list(self.processed_files),
                 "stats": self.stats,
-                "timestamp": datetime.now().isoformat(),
+                "timestamp": datetime.now(UTC).isoformat(),
             }
             with open(self.checkpoint_file, "w") as f:
                 json.dump(checkpoint_data, f, indent=2)
@@ -66,14 +68,14 @@ class ComprehensiveTEIExtractor:
         year_match = re.match(r"^(\d{4})", date_str)
         if year_match:
             year = int(year_match.group(1))
-            if 1900 <= year <= datetime.now().year + 1:
+            if config.MIN_YEAR_VALID <= year <= datetime.now(UTC).year + 1:
                 return year
 
         # Try finding 4-digit year anywhere
         year_match = re.search(r"\b(19\d{2}|20\d{2})\b", date_str)
         if year_match:
             year = int(year_match.group(1))
-            if 1900 <= year <= datetime.now().year + 1:
+            if config.MIN_YEAR_VALID <= year <= datetime.now(UTC).year + 1:
                 return year
 
         return None
@@ -81,10 +83,10 @@ class ComprehensiveTEIExtractor:
     def parse_tei_xml(self, tei_file: Path) -> dict[str, Any]:
         """Comprehensively parse TEI XML to extract ALL information."""
         try:
-            tree = ET.parse(tei_file)
+            tree = ElementTree.parse(tei_file)
             root = tree.getroot()
 
-            data = {"paper_id": tei_file.stem}
+            data: dict[str, Any] = {"paper_id": tei_file.stem}
 
             # ============= 1. BASIC METADATA =============
 
@@ -109,7 +111,7 @@ class ComprehensiveTEIExtractor:
                 if abstract_text:
                     data["abstract"] = abstract_text
 
-            # ============= 2. DATE/YEAR EXTRACTION =============
+            # ============= config.MIN_MATCH_COUNT. DATE/YEAR EXTRACTION =============
 
             year = None
             date_string = None
@@ -149,7 +151,7 @@ class ComprehensiveTEIExtractor:
             if date_string:
                 data["date"] = date_string
 
-            # ============= 3. JOURNAL/PUBLICATION =============
+            # ============= config.MAX_RETRIES_DEFAULT. JOURNAL/PUBLICATION =============
 
             journal = None
 
@@ -174,11 +176,11 @@ class ComprehensiveTEIExtractor:
 
             # ============= 4. AUTHORS =============
 
-            authors = []
+            authors: list[dict[str, Any]] = []
             author_elems = root.findall(".//tei:fileDesc//tei:author", self.ns)
 
             for author_elem in author_elems:
-                author_info = {}
+                author_info: dict[str, Any] = {}
 
                 # Get names
                 forename = author_elem.find(".//tei:forename", self.ns)
@@ -218,7 +220,7 @@ class ComprehensiveTEIExtractor:
             if authors:
                 data["authors"] = authors
 
-            # ============= 5. IDENTIFIERS =============
+            # ============= config.DEFAULT_MAX_RESULTS. IDENTIFIERS =============
 
             # DOI
             doi_elem = root.find(".//tei:idno[@type='DOI']", self.ns)
@@ -329,17 +331,17 @@ class ComprehensiveTEIExtractor:
 
             return data
 
-        except ET.ParseError as e:
-            logger.error(f"XML parse error in {tei_file.name}: {e}")
+        except ElementTree.ParseError as e:
+            logger.error("XML parse error in %s: %s", tei_file.name, e)
             return {"paper_id": tei_file.stem, "parse_error": str(e)}
         except Exception as e:
-            logger.error(f"Unexpected error processing {tei_file.name}: {e}")
+            logger.error("Unexpected error processing %s: %s", tei_file.name, e)
             return {"paper_id": tei_file.stem, "error": str(e)}
 
-    def process_directory(self, tei_dir: Path, output_dir: Path):
+    def process_directory(self, tei_dir: Path, output_dir: Path) -> None:
         """Process all TEI XML files in a directory with checkpoint support."""
         tei_files = list(tei_dir.glob("*.xml"))
-        logger.info(f"Found {len(tei_files)} TEI XML files")
+        logger.info("Found %d TEI XML files", len(tei_files))
 
         output_dir.mkdir(exist_ok=True, parents=True)
 
@@ -351,7 +353,7 @@ class ComprehensiveTEIExtractor:
         for tei_file in tei_files:
             output_file = output_dir / f"{tei_file.stem}.json"
             if tei_file.stem in self.processed_files or output_file.exists():
-                logger.debug(f"Skipping already processed: {tei_file.name}")
+                logger.debug("Skipping already processed: %s", tei_file.name)
                 if tei_file.stem not in self.processed_files:
                     self.processed_files.add(tei_file.stem)
             else:
@@ -362,12 +364,12 @@ class ComprehensiveTEIExtractor:
             self.print_summary()
             return
 
-        logger.info(f"Processing {len(files_to_process)} remaining files...")
+        logger.info("Processing %d remaining files...", len(files_to_process))
 
         checkpoint_counter = 0
         for i, tei_file in enumerate(files_to_process, 1):
-            if i % 100 == 0:
-                logger.info(f"Processing {i}/{len(files_to_process)}...")
+            if i % config.MIN_CONTENT_LENGTH == 0:
+                logger.info("Processing %d/%d...", i, len(files_to_process))
 
             self.stats["total"] += 1
 
@@ -376,7 +378,7 @@ class ComprehensiveTEIExtractor:
 
             if "parse_error" in data or "error" in data:
                 self.stats["failed"] += 1
-                logger.error(f"Failed: {tei_file.name}")
+                logger.error("Failed: %s", tei_file.name)
             else:
                 self.stats["successful"] += 1
 
@@ -390,9 +392,9 @@ class ComprehensiveTEIExtractor:
             checkpoint_counter += 1
 
             # Save checkpoint every 50 files
-            if checkpoint_counter >= 50:
+            if checkpoint_counter >= config.MIN_ABSTRACT_LENGTH:
                 self.save_checkpoint()
-                logger.info(f"Checkpoint saved: {len(self.processed_files)} total files processed")
+                logger.info("Checkpoint saved: %d total files processed", len(self.processed_files))
                 checkpoint_counter = 0
 
         # Final checkpoint save
@@ -401,7 +403,7 @@ class ComprehensiveTEIExtractor:
         # Print summary
         self.print_summary()
 
-    def print_summary(self):
+    def print_summary(self) -> None:
         """Print extraction summary."""
         print("\n" + "=" * 70)
         print("EXTRACTION COMPLETE")
@@ -418,7 +420,8 @@ class ComprehensiveTEIExtractor:
                 print(f"  {field}: {count} ({percentage:.1f}%)")
 
 
-def main():
+def main() -> None:
+    """Run the main program."""
     parser = argparse.ArgumentParser(description="TEI XML to JSON extraction with checkpoint recovery")
     parser.add_argument("--input-dir", default="tei_xml", help="Directory containing TEI XML files")
     parser.add_argument("--output-dir", default="json_extracted", help="Output directory for JSON files")
@@ -430,7 +433,7 @@ def main():
     output_dir = Path(args.output_dir)
 
     if not input_dir.exists():
-        logger.error(f"Input directory not found: {input_dir}")
+        logger.error("Input directory not found: %s", input_dir)
         return
 
     # Remove checkpoint if reset requested

@@ -488,6 +488,131 @@ DISCOVERY_OUTPUT_FORMAT = "markdown"  # Match gap analysis exactly
 DISCOVERY_EXPORT_PREFIX = "discovery"  # exports/discovery_YYYY_MM_DD.md
 
 # ============================================================================
+# V5 PIPELINE CONFIGURATION
+# ============================================================================
+# Constants for v5 extraction and enrichment pipeline
+
+# Data quality thresholds
+MIN_ABSTRACT_LENGTH = 50  # Minimum abstract length to be considered valid
+MIN_FULL_TEXT_LENGTH_THRESHOLD = 1000  # Minimum full text for quality papers
+MIN_YEAR_VALID = 1900  # Earliest valid publication year
+MAX_DOI_LENGTH = 100  # Maximum valid DOI length
+MIN_CONTENT_LENGTH = 100  # Generic minimum content length
+MIN_SECTION_TEXT_LENGTH = 200  # Minimum text in a section to be valid
+
+# Processing limits and batch sizes
+DEFAULT_BATCH_SIZE = 100  # Default batch processing size
+SMALL_BATCH_SIZE = 10  # Small batch for testing
+MEDIUM_BATCH_SIZE = 50  # Medium batch size
+LARGE_BATCH_SIZE = 500  # Large batch for API calls
+MAX_BATCH_SIZE = 1000  # Maximum batch size
+DEFAULT_PROCESSING_LIMIT = 20  # Default limit for processing papers
+
+# API response codes
+HTTP_OK = 200  # HTTP 200 OK
+HTTP_NOT_FOUND = 404  # HTTP 404 Not Found
+HTTP_TOO_MANY_REQUESTS = 429  # HTTP 429 Too Many Requests
+
+# Thresholds for analysis
+RARE_ISSUE_THRESHOLD = 5  # Show details if issue occurs <= 5 times
+FEW_PAPERS_THRESHOLD = 3  # Minimum papers for meaningful analysis
+MIN_PAPERS_FOR_STATISTICS = 2  # Minimum papers to calculate statistics
+QUALITY_CHECK_MIN_SECTIONS = 4  # Minimum sections for quality paper
+
+# Probability and confidence thresholds
+HIGH_CONFIDENCE_THRESHOLD = 0.8  # High confidence match
+GOOD_MATCH_THRESHOLD = 0.7  # Good fuzzy match threshold
+MEDIUM_CONFIDENCE_THRESHOLD = 0.3  # Medium confidence threshold
+LOW_CONFIDENCE_THRESHOLD = 0.25  # Low confidence threshold
+VERY_LOW_THRESHOLD = 0.05  # Very low threshold
+NEAR_PERFECT_MATCH = 0.95  # Near perfect match threshold
+
+# Text processing constants
+MAX_PREVIEW_LENGTH = 2000  # Maximum text preview length
+LONG_TEXT_THRESHOLD = 5000  # Text considered "long"
+VERY_LONG_TEXT_THRESHOLD = 10000  # Text considered "very long"
+SHORT_TEXT_THRESHOLD = 250  # Text considered "short"
+MAX_TITLE_LENGTH = 250  # Maximum title length for processing
+
+# Time and delays
+DEFAULT_DELAY_SECONDS = 3  # Default delay between API calls
+SHORT_DELAY = 0.5  # Short delay
+RATE_LIMIT_DELAY = 1.0  # Delay after rate limiting
+DEFAULT_TIMEOUT = 10  # Default API timeout in seconds
+LONG_TIMEOUT = 30  # Long timeout for complex operations
+
+# Counts and limits
+MIN_MATCH_COUNT = 2  # Minimum matches required
+DEFAULT_MAX_RESULTS = 5  # Default maximum results
+MAX_DISPLAY_ITEMS = 20  # Maximum items to display
+MIN_SIGNIFICANT_COUNT = 10  # Minimum count to be significant
+MAX_RETRIES_DEFAULT = 3  # Default max retries for operations
+
+# Special values
+MILLION = 1000000  # One million (for large numbers)
+CENTURY_2000 = 2000  # Year 2000 threshold
+LARGE_COUNT = 3000  # Large item count
+
+# Display and formatting
+TITLE_DISPLAY_LENGTH = 40  # Maximum chars for displaying titles/DOIs in tables
+MIN_SECTIONS_REQUIRED = 4  # Minimum sections for valid extraction
+HIGH_QUALITY_SCORE_THRESHOLD = 80  # Threshold for high quality papers
+MAX_DISPLAY_EXAMPLES = 10  # Maximum examples to display in lists
+SINGLE_OCCURRENCE_THRESHOLD = 2  # Threshold for single vs multiple occurrences
+
+# V5 Design directory constants (for entity extraction and quality scoring)
+MIN_SAMPLE_SIZE_THRESHOLD = 10  # Minimum reasonable sample size
+MAX_SAMPLE_SIZE_THRESHOLD = 1000000  # Maximum reasonable sample size
+MIN_DATE_MATCHES = 2  # Minimum date matches for time period extraction
+SMALL_PAPERS_BATCH = 100  # Small batch of papers
+MEDIUM_PAPERS_BATCH = 500  # Medium batch of papers
+LARGE_PAPERS_BATCH = 1000  # Large batch of papers
+VERY_LARGE_PAPERS_BATCH = 2000  # Very large batch of papers
+
+# Quality scoring thresholds for sample sizes
+SAMPLE_SIZE_EXCELLENT = 10000  # Excellent sample size
+SAMPLE_SIZE_LARGE = 1000  # Large sample size
+SAMPLE_SIZE_MEDIUM = 500  # Medium sample size
+SAMPLE_SIZE_SMALL = 100  # Small sample size
+SAMPLE_SIZE_MINIMAL = 50  # Minimal sample size
+
+# Paper age thresholds for quality scoring
+PAPER_AGE_VERY_RECENT = 2  # Papers <= 2 years old
+PAPER_AGE_RECENT = 5  # Papers <= 5 years old
+PAPER_AGE_MODERATE = 10  # Papers <= 10 years old
+PAPER_AGE_OLD = 15  # Papers <= 15 years old
+
+# Citation impact per year thresholds
+CITATIONS_PER_YEAR_EXCELLENT = 50  # Excellent citation rate
+CITATIONS_PER_YEAR_VERY_GOOD = 20  # Very good citation rate
+CITATIONS_PER_YEAR_GOOD = 10  # Good citation rate
+CITATIONS_PER_YEAR_MODERATE = 5  # Moderate citation rate
+CITATIONS_PER_YEAR_LOW = 1  # Low citation rate
+
+# Entity count thresholds
+ENTITY_COUNT_HIGH = 20  # High entity count
+ENTITY_COUNT_MODERATE = 10  # Moderate entity count
+
+# Processing time thresholds (hours)
+PROCESSING_TIME_SHORT = 4  # Short processing time (lunch break)
+PROCESSING_TIME_MEDIUM = 8  # Medium processing time (overnight)
+PROCESSING_TIME_LONG = 16  # Long processing time (weekend)
+
+# Statistical and content thresholds
+MIN_STATISTICAL_INDICATORS = 2  # Minimum statistical indicators
+MIN_ABSTRACT_KEYWORDS = 2  # Minimum keywords for abstract detection
+MIN_ABSTRACT_INDICATORS = 3  # Minimum abstract indicators
+MIN_SYNTHESIZED_SENTENCES = 2  # Minimum sentences for synthesis
+MIN_TITLE_WORD_MATCHES = 2  # Minimum title words to match
+SPECIAL_CHAR_RATIO_THRESHOLD = 0.3  # Maximum special character ratio for OCR detection
+MIN_INTRODUCTION_LENGTH = 500  # Minimum introduction length
+MIN_SECTION_CONTENT = 100  # Minimum content for valid section
+CONTENT_COMPLETENESS_EXCELLENT = 10000  # Excellent content length
+CONTENT_COMPLETENESS_GOOD = 5000  # Good content length
+CONTENT_COMPLETENESS_MODERATE = 2000  # Moderate content length
+CONTENT_COMPLETENESS_MINIMAL = 500  # Minimal content length
+
+# ============================================================================
 # GAP ANALYSIS CONFIGURATION
 # ============================================================================
 

@@ -5,11 +5,17 @@ This script addresses the critical bug where ALL papers in the KB are missing ye
 Years exist in the TEI XML but were not extracted by the original pipeline.
 """
 
+from src import config
 import json
-import xml.etree.ElementTree as ET
+import logging
+from defusedxml import ElementTree
 from pathlib import Path
-from datetime import datetime
+from datetime import datetime, UTC
 import re
+from typing import Any
+
+# Set up module logger
+logger = logging.getLogger(__name__)
 
 
 def extract_year_from_tei(tei_file: Path) -> int | None:
@@ -21,7 +27,7 @@ def extract_year_from_tei(tei_file: Path) -> int | None:
     3. Date text content with year patterns
     """
     try:
-        tree = ET.parse(tei_file)
+        tree = ElementTree.parse(tei_file)
         root = tree.getroot()
         ns = {"tei": "http://www.tei-c.org/ns/1.0"}
 
@@ -52,7 +58,7 @@ def extract_year_from_tei(tei_file: Path) -> int | None:
                 if year_match:
                     year = int(year_match.group(1))
                     # Sanity check - reasonable publication years
-                    if 1900 <= year <= datetime.now().year + 1:
+                    if config.MIN_YEAR_VALID <= year <= datetime.now(UTC).year + 1:
                         return year
 
         # Try 4: Date text content
@@ -62,7 +68,7 @@ def extract_year_from_tei(tei_file: Path) -> int | None:
                 year_match = re.search(r"\b(19\d{2}|20\d{2})\b", date_elem.text)
                 if year_match:
                     year = int(year_match.group(1))
-                    if 1900 <= year <= datetime.now().year + 1:
+                    if config.MIN_YEAR_VALID <= year <= datetime.now(UTC).year + 1:
                         return year
 
     except Exception as e:
@@ -71,7 +77,7 @@ def extract_year_from_tei(tei_file: Path) -> int | None:
     return None
 
 
-def extract_year_from_references(json_data: dict) -> int | None:
+def extract_year_from_references(json_data: dict[str, Any]) -> int | None:
     """Extract year from paper's own references as a fallback.
 
     Look for the most recent year in references that could be the paper's year.
@@ -85,10 +91,10 @@ def extract_year_from_references(json_data: dict) -> int | None:
             if ref.get("year"):
                 try:
                     year = int(ref["year"])
-                    if 1900 <= year <= datetime.now().year + 1:
+                    if config.MIN_YEAR_VALID <= year <= datetime.now(UTC).year + 1:
                         years.append(year)
-                except:
-                    pass
+                except Exception as e:
+                    logger.debug("Error parsing year from ref: %s", e)
 
             # Check raw text for years
             raw_text = ref.get("raw", "")
@@ -96,22 +102,22 @@ def extract_year_from_references(json_data: dict) -> int | None:
             for y in year_matches:
                 try:
                     year = int(y)
-                    if 1900 <= year <= datetime.now().year + 1:
+                    if config.MIN_YEAR_VALID <= year <= datetime.now(UTC).year + 1:
                         years.append(year)
-                except:
-                    pass
+                except Exception as e:
+                    logger.debug("Error parsing year from raw text: %s", e)
 
     if years:
         # Paper year is likely close to the most recent reference
         max_ref_year = max(years)
         # Papers usually cite works from their year or earlier
         # Assume paper is from max_ref_year to max_ref_year + 2
-        return min(max_ref_year + 1, datetime.now().year)
+        return min(max_ref_year + 1, datetime.now(UTC).year)
 
     return None
 
 
-def main():
+def main() -> None:
     """Fix missing years in KB."""
     # Find latest KB directory
     kb_dirs = sorted(Path(".").glob("kb_final_cleaned_*"))
@@ -132,12 +138,18 @@ def main():
         return
 
     # Create output directory
-    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    timestamp = datetime.now(UTC).strftime("%Y%m%d_%H%M%S")
     output_dir = Path(f"kb_years_fixed_{timestamp}")
     output_dir.mkdir(exist_ok=True)
 
     # Process statistics
-    stats = {"total": 0, "years_from_tei": 0, "years_from_refs": 0, "still_missing": 0, "errors": []}
+    stats: dict[str, Any] = {
+        "total": 0,
+        "years_from_tei": 0,
+        "years_from_refs": 0,
+        "still_missing": 0,
+        "errors": [],
+    }
 
     # Process each paper
     json_files = list(kb_dir.glob("*.json"))
@@ -162,14 +174,14 @@ def main():
         if current_year and current_year not in [None, "Unknown", ""]:
             try:
                 year_int = int(current_year)
-                if 1900 <= year_int <= datetime.now().year + 1:
+                if config.MIN_YEAR_VALID <= year_int <= datetime.now(UTC).year + 1:
                     # Already has valid year, copy as-is
                     output_file = output_dir / json_file.name
                     with open(output_file, "w") as f:
                         json.dump(data, f, indent=2)
                     continue
-            except:
-                pass
+            except Exception as e:
+                logger.debug("Error updating file %s: %s", json_file, e)
 
         # Try to extract year from TEI XML
         year = None

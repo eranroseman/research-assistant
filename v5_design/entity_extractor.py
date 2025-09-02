@@ -1,12 +1,15 @@
 #!/usr/bin/env python3
-"""Entity Extraction from Grobid XML
+"""Entity Extraction from Grobid XML.
 
 Extract 50+ entity types from Grobid TEI XML output.
 Based on maximum extraction parameters defined in grobid_config.py.
 """
 
+from src import config
+
+
 import re
-import xml.etree.ElementTree as ET
+from defusedxml import ElementTree
 from typing import Any
 
 
@@ -22,8 +25,8 @@ def extract_all_grobid_entities(xml_content: str) -> dict[str, Any]:
     ns = {"tei": "http://www.tei-c.org/ns/1.0"}
 
     try:
-        root = ET.fromstring(xml_content)
-    except ET.ParseError:
+        root = ElementTree.fromstring(xml_content)
+    except ElementTree.ParseError:
         return {"error": "Failed to parse XML"}
 
     entities = {}
@@ -46,7 +49,7 @@ def extract_all_grobid_entities(xml_content: str) -> dict[str, Any]:
     return entities
 
 
-def extract_metadata(root: ET.Element, ns: dict) -> dict:
+def extract_metadata(root: ElementTree.Element, ns: dict) -> dict:
     """Extract core metadata from paper."""
     metadata = {}
 
@@ -115,7 +118,7 @@ def extract_metadata(root: ET.Element, ns: dict) -> dict:
     return metadata
 
 
-def extract_methodology(root: ET.Element, ns: dict) -> dict:
+def extract_methodology(root: ElementTree.Element, ns: dict) -> dict:
     """Extract methodology-related entities."""
     methodology = {}
 
@@ -134,7 +137,7 @@ def extract_methodology(root: ET.Element, ns: dict) -> dict:
     return methodology
 
 
-def extract_sample_sizes(root: ET.Element, ns: dict) -> list[int]:
+def extract_sample_sizes(root: ElementTree.Element, ns: dict) -> list[int]:
     """Extract all sample sizes from paper."""
     sizes = []
 
@@ -157,7 +160,9 @@ def extract_sample_sizes(root: ET.Element, ns: dict) -> list[int]:
         for match in matches:
             try:
                 size = int(match)
-                if 10 <= size <= 1000000:  # Reasonable range
+                if (
+                    config.MIN_SAMPLE_SIZE_THRESHOLD <= size <= config.MAX_SAMPLE_SIZE_THRESHOLD
+                ):  # Reasonable range
                     sizes.append(size)
             except ValueError:
                 continue
@@ -166,7 +171,7 @@ def extract_sample_sizes(root: ET.Element, ns: dict) -> list[int]:
     return sorted(set(sizes), reverse=True)
 
 
-def detect_study_type(root: ET.Element, ns: dict) -> str | None:
+def detect_study_type(root: ElementTree.Element, ns: dict) -> str | None:
     """Detect the type of study."""
     text_lower = " ".join(root.itertext()).lower()
 
@@ -196,7 +201,7 @@ def detect_study_type(root: ET.Element, ns: dict) -> str | None:
     return None
 
 
-def extract_statistics(root: ET.Element, ns: dict) -> dict:
+def extract_statistics(root: ElementTree.Element, ns: dict) -> dict:
     """Extract statistical values from paper."""
     statistics = {}
 
@@ -248,7 +253,7 @@ def extract_statistics(root: ET.Element, ns: dict) -> dict:
     return statistics
 
 
-def extract_software_and_data(root: ET.Element, ns: dict) -> dict:
+def extract_software_and_data(root: ElementTree.Element, ns: dict) -> dict:
     """Extract software tools and datasets mentioned."""
     result = {}
 
@@ -340,7 +345,7 @@ def extract_software_and_data(root: ET.Element, ns: dict) -> dict:
     return result
 
 
-def extract_clinical_entities(root: ET.Element, ns: dict) -> dict:
+def extract_clinical_entities(root: ElementTree.Element, ns: dict) -> dict:
     """Extract clinical and medical entities."""
     clinical = {}
 
@@ -379,7 +384,7 @@ def extract_clinical_entities(root: ET.Element, ns: dict) -> dict:
     return clinical
 
 
-def extract_trial_ids(root: ET.Element, ns: dict) -> list[str]:
+def extract_trial_ids(root: ElementTree.Element, ns: dict) -> list[str]:
     """Extract clinical trial identifiers."""
     text = " ".join(root.itertext())
 
@@ -419,7 +424,7 @@ def extract_drug_mentions(text: str) -> list[str]:
     return list(set(drugs))
 
 
-def extract_time_periods(root: ET.Element, ns: dict) -> dict:
+def extract_time_periods(root: ElementTree.Element, ns: dict) -> dict:
     """Extract study time periods and durations."""
     text = " ".join(root.itertext())
 
@@ -443,13 +448,13 @@ def extract_time_periods(root: ET.Element, ns: dict) -> dict:
         r"(?:January|February|March|April|May|June|July|August|September|October|November|December)\s+\d{4}"
     )
     date_matches = re.findall(date_pattern, text)
-    if len(date_matches) >= 2:
+    if len(date_matches) >= config.MIN_DATE_MATCHES:
         periods["date_range"] = f"{date_matches[0]} - {date_matches[-1]}"
 
     return periods
 
 
-def extract_document_structure(root: ET.Element, ns: dict) -> dict:
+def extract_document_structure(root: ElementTree.Element, ns: dict) -> dict:
     """Extract document structure information."""
     structure = {}
 
@@ -492,7 +497,7 @@ def extract_document_structure(root: ET.Element, ns: dict) -> dict:
     return structure
 
 
-def extract_quality_indicators(root: ET.Element, ns: dict) -> dict:
+def extract_quality_indicators(root: ElementTree.Element, ns: dict) -> dict:
     """Extract indicators of paper quality and completeness."""
     indicators = {}
 

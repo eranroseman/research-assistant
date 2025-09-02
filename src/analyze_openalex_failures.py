@@ -4,17 +4,18 @@
 import json
 from pathlib import Path
 from collections import defaultdict
+from typing import Any
 
 
-def analyze_failures():
+def analyze_failures() -> None:
     """Analyze papers that failed OpenAlex enrichment."""
     input_dir = Path("s2_enriched_20250901_small")
     output_dir = Path("openalex_test_output")
 
     # Get all input papers
-    input_papers = set()
-    papers_with_dois = {}
-    papers_without_dois = []
+    input_papers: set[str] = set()
+    papers_with_dois: dict[str, dict[str, Any]] = {}
+    papers_without_dois: list[str] = []
 
     for paper_file in input_dir.glob("*.json"):
         if paper_file.name == "s2_batch_report.json":
@@ -37,8 +38,8 @@ def analyze_failures():
                 papers_without_dois.append(paper_id)
 
     # Check which papers were enriched
-    enriched_papers = set()
-    failed_papers = []
+    enriched_papers: set[str] = set()
+    failed_papers: list[tuple[str, dict[str, Any]]] = []
 
     for paper_id, info in papers_with_dois.items():
         output_file = output_dir / f"{paper_id}.json"
@@ -69,8 +70,8 @@ def analyze_failures():
         print("-" * 40)
 
         # Group by characteristics
-        by_year = defaultdict(list)
-        by_journal = defaultdict(list)
+        by_year: dict[Any, list[str]] = defaultdict(list)
+        by_journal: dict[str, list[str]] = defaultdict(list)
 
         for paper_id, info in failed_papers:
             print(f"\nPaper ID: {paper_id}")
@@ -104,7 +105,7 @@ def analyze_failures():
 
         # Check DOI patterns
         print("\nDOI Patterns:")
-        doi_prefixes = defaultdict(int)
+        doi_prefixes: dict[str, int] = defaultdict(int)
         for _, info in failed_papers:
             doi = info["doi"]
             if doi:

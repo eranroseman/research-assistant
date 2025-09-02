@@ -5,6 +5,9 @@ based on multiple factors including study design, sample size, statistical rigor
 and publication venue.
 """
 
+from src import config
+
+
 from typing import Any
 import re
 from datetime import datetime, UTC
@@ -149,15 +152,15 @@ class QualityScorer:
                 max_sample = max(max_sample, int(numbers[0]))
 
         # Scoring scale
-        if max_sample >= 10000:
+        if max_sample >= config.SAMPLE_SIZE_EXCELLENT:
             score = 1.0
-        elif max_sample >= 1000:
+        elif max_sample >= config.SAMPLE_SIZE_LARGE:
             score = 0.8
-        elif max_sample >= 500:
+        elif max_sample >= config.SAMPLE_SIZE_MEDIUM:
             score = 0.6
-        elif max_sample >= 100:
+        elif max_sample >= config.SAMPLE_SIZE_SMALL:
             score = 0.4
-        elif max_sample >= 50:
+        elif max_sample >= config.SAMPLE_SIZE_MINIMAL:
             score = 0.2
         else:
             score = 0.1
@@ -241,13 +244,13 @@ class QualityScorer:
             current_year = datetime.now(UTC).year
             age = current_year - year
 
-            if age <= 2:
+            if age <= config.PAPER_AGE_VERY_RECENT:
                 score = 1.0
-            elif age <= 5:
+            elif age <= config.PAPER_AGE_RECENT:
                 score = 0.8
-            elif age <= 10:
+            elif age <= config.PAPER_AGE_MODERATE:
                 score = 0.5
-            elif age <= 15:
+            elif age <= config.PAPER_AGE_OLD:
                 score = 0.3
             else:
                 score = 0.1
@@ -272,15 +275,15 @@ class QualityScorer:
             citations_per_year = citations
 
         # Scoring scale (citations per year)
-        if citations_per_year >= 50:
+        if citations_per_year >= config.CITATIONS_PER_YEAR_EXCELLENT:
             score = 1.0
-        elif citations_per_year >= 20:
+        elif citations_per_year >= config.CITATIONS_PER_YEAR_VERY_GOOD:
             score = 0.8
-        elif citations_per_year >= 10:
+        elif citations_per_year >= config.CITATIONS_PER_YEAR_GOOD:
             score = 0.6
-        elif citations_per_year >= 5:
+        elif citations_per_year >= config.CITATIONS_PER_YEAR_MODERATE:
             score = 0.4
-        elif citations_per_year >= 1:
+        elif citations_per_year >= config.CITATIONS_PER_YEAR_LOW:
             score = 0.2
         else:
             score = 0.1
@@ -304,9 +307,9 @@ class QualityScorer:
         entities = paper.get("entities", {})
         if entities:
             entity_count = sum(len(v) for v in entities.values() if isinstance(v, list))
-            if entity_count > 20:
+            if entity_count > config.ENTITY_COUNT_HIGH:
                 score += 2
-            elif entity_count > 10:
+            elif entity_count > config.ENTITY_COUNT_MODERATE:
                 score += 1
         max_score += 2
 
@@ -348,27 +351,25 @@ class QualityScorer:
 
     def _calculate_grade(self, score: float) -> str:
         """Convert numeric score to letter grade."""
-        if score >= 85:
-            return "A+"
-        if score >= 80:
-            return "A"
-        if score >= 75:
-            return "A-"
-        if score >= 70:
-            return "B+"
-        if score >= 65:
-            return "B"
-        if score >= 60:
-            return "B-"
-        if score >= 55:
-            return "C+"
-        if score >= 50:
-            return "C"
-        if score >= 45:
-            return "C-"
-        if score >= 40:
-            return "D"
-        return "F"
+        grade_thresholds = [
+            (85, "A+"),
+            (80, "A"),
+            (75, "A-"),
+            (70, "B+"),
+            (65, "B"),
+            (60, "B-"),
+            (55, "C+"),
+            (50, "C"),
+            (45, "C-"),
+            (40, "D"),
+            (0, "F"),
+        ]
+
+        for threshold, grade in grade_thresholds:
+            if score >= threshold:
+                return grade
+
+        return "F"  # Should never reach here, but included for safety
 
     def _identify_strengths(self, scores: dict[str, float]) -> list[str]:
         """Identify paper strengths based on scores."""

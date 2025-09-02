@@ -5,16 +5,21 @@ This script runs the complete paper extraction and enrichment pipeline,
 ensuring each stage completes before starting the next one.
 """
 
+from src import config
 import sys
 import subprocess
+import shlex
 from pathlib import Path
-from datetime import datetime
+from datetime import datetime, UTC
 import argparse
 import time
 import json
+from typing import Any
 
 
-def wait_for_stage_completion(output_dir, expected_count=None, timeout=300, stage_name=""):
+def wait_for_stage_completion(
+    output_dir: Path, expected_count: int | None = None, timeout: int = 300, stage_name: str = ""
+) -> int:
     """Wait for a stage to complete by monitoring file count stability."""
     print(f"Waiting for {stage_name} to complete...")
 
@@ -42,7 +47,9 @@ def wait_for_stage_completion(output_dir, expected_count=None, timeout=300, stag
     return stable_count
 
 
-def run_command_sync(cmd, description, output_dir, input_dir=None):
+def run_command_sync(
+    cmd: str | list[str], description: str, output_dir: Path, input_dir: Path | None = None
+) -> bool:
     """Run a command synchronously and wait for completion."""
     print(f"\n{'=' * 60}")
     print(f"Running: {description}")
@@ -56,8 +63,12 @@ def run_command_sync(cmd, description, output_dir, input_dir=None):
         input_count = len([f for f in input_dir.glob("*.json") if "report" not in f.name])
         print(f"Input files: {input_count}")
 
+    # Convert string command to list for security
+    if isinstance(cmd, str):
+        cmd = shlex.split(cmd)
+
     # Run the command and wait for it to complete
-    result = subprocess.run(cmd, check=False, shell=True, capture_output=True, text=True)
+    result = subprocess.run(cmd, check=False, capture_output=True, text=True)
 
     if result.returncode != 0:
         print(f"ERROR: {description} failed!")
@@ -73,7 +84,7 @@ def run_command_sync(cmd, description, output_dir, input_dir=None):
         # Verify reasonable output count
         if input_count > 0:
             loss_rate = (input_count - output_count) / input_count
-            if loss_rate > 0.25:  # Alert if >25% file loss
+            if loss_rate > config.LOW_CONFIDENCE_THRESHOLD:  # Alert if >25% file loss
                 print(
                     f"⚠ Warning: Significant file loss detected ({input_count} → {output_count}, {loss_rate * 100:.1f}% loss)"
                 )
@@ -83,7 +94,7 @@ def run_command_sync(cmd, description, output_dir, input_dir=None):
     return True
 
 
-def verify_stage_completion(stage_dir, min_files=1):
+def verify_stage_completion(stage_dir: Path, min_files: int = 1) -> bool:
     """Verify a stage has completed with expected output."""
     if not stage_dir.exists():
         return False
@@ -95,7 +106,8 @@ def verify_stage_completion(stage_dir, min_files=1):
     return total_files >= min_files
 
 
-def main():
+def main() -> None:
+    """Run the main program."""
     parser = argparse.ArgumentParser(description="Run paper extraction pipeline with proper synchronization")
     parser.add_argument(
         "--pipeline-dir",
@@ -122,7 +134,7 @@ def main():
     if args.pipeline_dir:
         pipeline_dir = Path(args.pipeline_dir)
     else:
-        pipeline_dir = Path(f"extraction_pipeline_fixed_{datetime.now().strftime('%Y%m%d')}")
+        pipeline_dir = Path(f"extraction_pipeline_fixed_{datetime.now(UTC).strftime('%Y%m%d')}")
 
     # Create directory structure
     stages = [
@@ -144,7 +156,7 @@ def main():
     print(f"Pipeline directory: {pipeline_dir}")
 
     # Define pipeline stages with proper input/output tracking
-    pipeline_stages = {
+    pipeline_stages: dict[str, dict[str, Any]] = {
         "tei_extraction": {
             "description": "TEI to JSON extraction",
             "command": f"python comprehensive_tei_extractor.py --input-dir {pipeline_dir}/01_tei_xml --output-dir {pipeline_dir}/02_json_extraction",
@@ -205,28 +217,35 @@ def main():
     print(f"\nStages to run: {', '.join(stages_to_run)}")
 
     # Track file counts through pipeline
-    file_counts = {}
+    file_counts: dict[str, int] = {}
 
     # Run pipeline stages
     for stage_name in stages_to_run:
-        stage = pipeline_stages[stage_name]
+        stage_info: dict[str, Any] = pipeline_stages[stage_name]
 
         # Check if stage already completed
-        if not args.force and verify_stage_completion(stage["output_dir"], min_files=100):
-            existing_count = len([f for f in stage["output_dir"].glob("*.json") if "report" not in f.name])
-            print(f"\n✓ {stage['description']} already completed with {existing_count} files, skipping...")
+        if not args.force and verify_stage_completion(stage_info["output_dir"], min_files=100):
+            existing_count = len(
+                [f for f in stage_info["output_dir"].glob("*.json") if "report" not in f.name]
+            )
+            print(
+                f"\n✓ {stage_info['description']} already completed with {existing_count} files, skipping..."
+            )
             file_counts[stage_name] = existing_count
             continue
 
         # Run the stage synchronously
         if not run_command_sync(
-            stage["command"], stage["description"], stage["output_dir"], stage.get("input_dir")
+            stage_info["command"],
+            stage_info["description"],
+            stage_info["output_dir"],
+            stage_info.get("input_dir"),
         ):
             print(f"\nPipeline stopped at {stage_name}")
             sys.exit(1)
 
         # Record output count
-        output_count = len([f for f in stage["output_dir"].glob("*.json") if "report" not in f.name])
+        output_count = len([f for f in stage_info["output_dir"].glob("*.json") if "report" not in f.name])
         file_counts[stage_name] = output_count
 
     print("\n" + "=" * 60)
@@ -258,7 +277,7 @@ def main():
                     prev_count = len([f for f in prev_dir.glob("*.json") if "report" not in f.name])
                     if prev_count > 0:
                         loss_rate = (prev_count - total_count) / prev_count
-                        if loss_rate > 0.05:  # >5% loss
+                        if loss_rate > config.VERY_LOW_THRESHOLD:  # >5% loss
                             status = f"⚠ {loss_rate * 100:.1f}% loss"
 
             print(f"{stage_dir.name:<30} {total_count:<10} {status}")
@@ -271,7 +290,7 @@ def main():
 
     # Save pipeline report
     report = {
-        "timestamp": datetime.now().isoformat(),
+        "timestamp": datetime.now(UTC).isoformat(),
         "pipeline_dir": str(pipeline_dir),
         "stages_run": stages_to_run,
         "file_counts": file_counts,

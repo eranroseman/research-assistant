@@ -1,13 +1,19 @@
 #!/usr/bin/env python3
 """Retry all 11 failed papers with extended timeout."""
 
-import requests
-import time
 import json
+import time
 from pathlib import Path
+from typing import Any
+
+import requests
+
+# Constants for file size and HTTP status
+LARGE_FILE_THRESHOLD_MB = 50
+HTTP_OK = 200
 
 failed_papers = [
-    "/home/eranr/Zotero/storage/2UJKSRJP/Abdelnour Nocera et al. - 2023 - Human-Computer Interaction – INTERACT 2023 19th IFIP TC13 International Conference, York, UK, Augus.pdf",
+    "/home/eranr/Zotero/storage/2UJKSRJP/Abdelnour Nocera et al. - 2023 - Human-Computer Interaction - INTERACT 2023 19th IFIP TC13 International Conference, York, UK, Augus.pdf",
     "/home/eranr/Zotero/storage/25K2R9P9/Baumeister and Montag - 2019 - Digital Phenotyping and Mobile Sensing New Developments in Psychoinformatics.pdf",
     "/home/eranr/Zotero/storage/GKENC8DW/Byonanebye et al. - 2021 - An interactive voice response software to improve the quality of life of people living with HIV in U.pdf",
     "/home/eranr/Zotero/storage/UTTF5S8I/Cradock et al. - 2024 - The Handbook of Health Behavior Change.pdf",
@@ -27,7 +33,7 @@ print("=" * 70)
 print("RETRYING 11 FAILED PAPERS")
 print("=" * 70)
 
-results = []
+results: list[dict[str, Any]] = []
 
 for i, pdf_path in enumerate(failed_papers, 1):
     pdf_name = Path(pdf_path).name[:60] + "..."
@@ -42,7 +48,7 @@ for i, pdf_path in enumerate(failed_papers, 1):
     print(f"  Size: {size_mb:.1f} MB")
 
     # Use simpler extraction for large files
-    if size_mb > 10:
+    if size_mb > LARGE_FILE_THRESHOLD_MB:
         print("  Using header-only extraction for large file...")
         endpoint = "/api/processHeaderDocument"
         timeout = 300
@@ -64,7 +70,7 @@ for i, pdf_path in enumerate(failed_papers, 1):
 
         elapsed = time.time() - start
 
-        if response.status_code == 200:
+        if response.status_code == HTTP_OK:
             print(f"  ✅ SUCCESS in {elapsed:.1f}s")
 
             # Save output

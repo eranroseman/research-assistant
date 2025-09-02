@@ -280,11 +280,11 @@ Based on practical experience, the following simplifications improve the pipelin
 ### Usage Example
 ```bash
 # Standard run with default settings
-python post_process.py --input extraction_pipeline_20250901/08_pubmed_enrichment
+python src/grobid_post_processor.py --input extraction_pipeline_20250901/08_pubmed_enrichment
 
 # Adjust quality threshold for different use cases
-python post_process.py --input extraction_pipeline_20250901/08_pubmed_enrichment --quality-threshold 40
+python src/grobid_post_processor.py --input extraction_pipeline_20250901/08_pubmed_enrichment --quality-threshold 40
 
 # Resume from checkpoint after interruption
-python post_process.py --input extraction_pipeline_20250901/08_pubmed_enrichment --resume
+python src/grobid_post_processor.py --input extraction_pipeline_20250901/08_pubmed_enrichment --resume
 ```

@@ -1,27 +1,30 @@
 #!/usr/bin/env python3
-"""Extract entire Zotero library with Grobid
-Uses consolidation=2 (biblio-glutton) for maximum enrichment with minimal overhead
+"""Extract entire Zotero library with Grobid.
+
+Uses consolidation=2 (biblio-glutton) for maximum enrichment with minimal overhead.
 
 Aug 2025 - Based on Azure testing showing <1s overhead for biblio-glutton
 """
 
+from src import config
 import json
 import time
 import requests
 from pathlib import Path
-from datetime import datetime
-import xml.etree.ElementTree as ET
+from datetime import datetime, UTC
+from defusedxml import ElementTree
 import sys
 import traceback
+from typing import Any
 
 
 class ZoteroGrobidExtractor:
-    """Extract all PDFs from Zotero library using Grobid with maximum extraction"""
+    """Extract all PDFs from Zotero library using Grobid with maximum extraction."""
 
     def __init__(
         self, grobid_url: str = "http://localhost:8070", output_dir: Path | None = None, max_workers: int = 1
-    ):
-        """Initialize extractor
+    ) -> None:
+        """Initialize extractor.
 
         Args:
             grobid_url: Grobid service URL
@@ -33,7 +36,7 @@ class ZoteroGrobidExtractor:
 
         # Create output directory
         if output_dir is None:
-            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            timestamp = datetime.now(UTC).strftime("%Y%m%d_%H%M%S")
             self.output_dir = Path(f"zotero_extraction_{timestamp}")
         else:
             self.output_dir = Path(output_dir)
@@ -65,7 +68,7 @@ class ZoteroGrobidExtractor:
         }
 
         # Tracking
-        self.stats = {
+        self.stats: dict[str, Any] = {
             "total_pdfs": 0,
             "processed": 0,
             "successful": 0,
@@ -79,33 +82,33 @@ class ZoteroGrobidExtractor:
         self.checkpoint_file = self.output_dir / "checkpoint.json"
         self.processed_files = self.load_checkpoint()
 
-    def load_checkpoint(self) -> set:
-        """Load checkpoint to resume interrupted processing"""
+    def load_checkpoint(self) -> set[str]:
+        """Load checkpoint to resume interrupted processing."""
         if self.checkpoint_file.exists():
             try:
                 with open(self.checkpoint_file) as f:
                     data = json.load(f)
                     print(f"Resuming from checkpoint: {len(data['processed'])} already processed")
                     return set(data["processed"])
-            except:
+            except Exception:
                 return set()
         return set()
 
-    def save_checkpoint(self):
-        """Save checkpoint for resuming"""
+    def save_checkpoint(self) -> None:
+        """Save checkpoint for resuming."""
         with open(self.checkpoint_file, "w") as f:
             json.dump(
                 {
                     "processed": list(self.processed_files),
                     "stats": self.stats,
-                    "timestamp": datetime.now().isoformat(),
+                    "timestamp": datetime.now(UTC).isoformat(),
                 },
                 f,
                 indent=2,
             )
 
     def find_zotero_pdfs(self) -> list[Path]:
-        """Find all PDFs in Zotero storage"""
+        """Find all PDFs in Zotero storage."""
         zotero_path = Path.home() / "Zotero" / "storage"
 
         if not zotero_path.exists():
@@ -125,7 +128,7 @@ class ZoteroGrobidExtractor:
         return sorted(pdf_files)
 
     def extract_single_pdf(self, pdf_path: Path) -> tuple[bool, str | None, float]:
-        """Extract single PDF with Grobid
+        """Extract single PDF with Grobid.
 
         Returns:
             (success, tei_xml, processing_time)
@@ -143,7 +146,7 @@ class ZoteroGrobidExtractor:
 
             processing_time = time.time() - start_time
 
-            if response.status_code == 200:
+            if response.status_code == config.MIN_SECTION_TEXT_LENGTH:
                 return True, response.text, processing_time
             error_msg = f"HTTP {response.status_code}"
             self.save_error(pdf_path, error_msg)
@@ -156,13 +159,13 @@ class ZoteroGrobidExtractor:
             self.save_error(pdf_path, str(e))
             return False, None, time.time() - start_time
 
-    def save_error(self, pdf_path: Path, error_msg: str):
-        """Save error information for failed extraction"""
+    def save_error(self, pdf_path: Path, error_msg: str) -> None:
+        """Save error information for failed extraction."""
         error_file = self.output_dir / "errors" / f"{pdf_path.stem}_error.txt"
         error_file.write_text(f"PDF: {pdf_path}\nError: {error_msg}\n")
 
-    def save_extraction_results(self, pdf_path: Path, tei_xml: str, proc_time: float):
-        """Save extraction results in multiple formats"""
+    def save_extraction_results(self, pdf_path: Path, tei_xml: str, proc_time: float) -> dict[str, Any]:
+        """Save extraction results in multiple formats."""
         pdf_id = pdf_path.parent.name  # Use Zotero folder name as ID
 
         # Save TEI XML
@@ -176,7 +179,7 @@ class ZoteroGrobidExtractor:
                 "pdf_path": str(pdf_path),
                 "pdf_id": pdf_id,
                 "processing_time": proc_time,
-                "extraction_date": datetime.now().isoformat(),
+                "extraction_date": datetime.now(UTC).isoformat(),
             }
 
             json_file = self.output_dir / "json" / f"{pdf_id}.json"
@@ -197,10 +200,10 @@ class ZoteroGrobidExtractor:
             print(f"  ⚠️ Failed to parse XML: {e}")
             return {}
 
-    def parse_tei_xml(self, tei_xml: str) -> dict:
-        """Parse TEI XML to extract key information"""
+    def parse_tei_xml(self, tei_xml: str) -> dict[str, Any]:
+        """Parse TEI XML to extract key information."""
         try:
-            root = ET.fromstring(tei_xml)
+            root = ElementTree.fromstring(tei_xml)
             ns = {"tei": "http://www.tei-c.org/ns/1.0"}
 
             data = {}
@@ -288,8 +291,8 @@ class ZoteroGrobidExtractor:
         except Exception as e:
             return {"parse_error": str(e)}
 
-    def process_batch(self, pdf_files: list[Path], batch_size: int = 50):
-        """Process PDFs in batches with checkpointing"""
+    def process_batch(self, pdf_files: list[Path], batch_size: int = 50) -> None:
+        """Process PDFs in batches with checkpointing."""
         total = len(pdf_files)
         self.stats["total_pdfs"] = total + len(self.processed_files)
 
@@ -346,8 +349,8 @@ class ZoteroGrobidExtractor:
         self.stats["total_time"] = time.time() - start_time
         self.print_final_summary()
 
-    def print_progress_summary(self):
-        """Print progress summary"""
+    def print_progress_summary(self) -> None:
+        """Print progress summary."""
         if self.stats["times"]:
             avg_time = sum(self.stats["times"]) / len(self.stats["times"])
             print(f"\n--- Progress: {self.stats['processed']}/{self.stats['total_pdfs']} processed")
@@ -364,8 +367,8 @@ class ZoteroGrobidExtractor:
                 est_hours = est_seconds / 3600
                 print(f"    Estimated remaining: {est_hours:.1f} hours for {remaining} papers\n")
 
-    def print_final_summary(self):
-        """Print final summary"""
+    def print_final_summary(self) -> None:
+        """Print final summary."""
         print(f"\n{'=' * 70}")
         print("EXTRACTION COMPLETE")
         print(f"{'=' * 70}")
@@ -394,12 +397,12 @@ class ZoteroGrobidExtractor:
         stats_file.write_text(json.dumps(self.stats, indent=2))
 
 
-def main():
-    """Main extraction function"""
+def main() -> None:
+    """Main extraction function."""
     # Check if Grobid is running
     try:
         response = requests.get("http://localhost:8070/api/version", timeout=5)
-        if response.status_code == 200:
+        if response.status_code == config.MIN_SECTION_TEXT_LENGTH:
             print(f"✅ Grobid is running: {response.text.strip()}")
         else:
             print("❌ Grobid is not responding properly")
@@ -426,8 +429,8 @@ def main():
     print(f"\nReady to process {len(pdf_files)} PDFs")
     print(f"Estimated time: {len(pdf_files) * 18 / 3600:.1f} hours (at ~18s/paper)")
 
-    response = input("\nProceed? (y/n): ")
-    if response.lower() != "y":
+    user_input = input("\nProceed? (y/n): ")
+    if user_input.lower() != "y":
         print("Aborted")
         return
 

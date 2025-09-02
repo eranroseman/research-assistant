@@ -1,20 +1,25 @@
 #!/usr/bin/env python3
-"""Zotero Metadata Recovery Script
+"""Zotero Metadata Recovery Script.
+
 Recovers missing metadata from local Zotero library before attempting API calls.
 This is Stage 3 in the v5 extraction pipeline.
 """
 
+from src import config
 import json
 import argparse
 from pathlib import Path
-from datetime import datetime
+from datetime import datetime, UTC
 from pyzotero import zotero
 import re
 from collections import defaultdict
+from typing import Any
 
 
 class ZoteroMetadataRecovery:
-    def __init__(self, library_id: str, library_type: str = "user", api_key: str = None):
+    """Recover missing metadata from Zotero library for incomplete papers."""
+
+    def __init__(self, library_id: str, library_type: str = "user", api_key: str | None = None):
         """Initialize Zotero connection.
 
         Args:
@@ -25,12 +30,15 @@ class ZoteroMetadataRecovery:
         self.library_id = library_id
         self.library_type = library_type
         self.api_key = api_key
-        self.zot = None
-        self.items_cache = {}
-        self.stats = defaultdict(int)
+        self.zot: Any | None = None  # pyzotero.zotero.Zotero
+        self.items_cache: dict[str, dict[str, Any]] = {}
+        self.stats: dict[str, int] = defaultdict(int)
 
-    def connect(self):
-        """Establish connection to Zotero library."""
+    def connect(self) -> bool:
+        """Establish connection to Zotero library.
+
+        .
+        """
         try:
             self.zot = zotero.Zotero(self.library_id, self.library_type, self.api_key)
             # Test connection
@@ -41,10 +49,15 @@ class ZoteroMetadataRecovery:
             print(f"✗ Failed to connect to Zotero: {e}")
             return False
 
-    def load_zotero_items(self):
-        """Load all items from Zotero library into cache."""
+    def load_zotero_items(self) -> bool:
+        """Load all items from Zotero library into cache.
+
+        .
+        """
         print("Loading Zotero library items...")
         try:
+            if not self.zot:
+                return False
             items = self.zot.everything(self.zot.items())
             print(f"Loaded {len(items)} items from Zotero")
 
@@ -74,7 +87,7 @@ class ZoteroMetadataRecovery:
             print(f"Error loading Zotero items: {e}")
             return False
 
-    def find_zotero_item(self, paper_data: dict) -> dict | None:
+    def find_zotero_item(self, paper_data: dict[str, Any]) -> dict[str, Any] | None:
         """Find matching Zotero item for a paper.
 
         Matching strategies:
@@ -120,7 +133,10 @@ class ZoteroMetadataRecovery:
         return None
 
     def extract_year(self, date_str: str) -> str | None:
-        """Extract year from various date formats."""
+        """Extract year from various date formats.
+
+        .
+        """
         if not date_str:
             return None
 
@@ -131,8 +147,11 @@ class ZoteroMetadataRecovery:
 
         return None
 
-    def format_authors(self, creators: list[dict]) -> list[dict]:
-        """Format Zotero creators into standard author format."""
+    def format_authors(self, creators: list[dict[str, Any]]) -> list[dict[str, Any]]:
+        """Format Zotero creators into standard author format.
+
+        .
+        """
         authors = []
         for creator in creators:
             if creator.get("creatorType") in ["author", "contributor"]:
@@ -143,14 +162,14 @@ class ZoteroMetadataRecovery:
                     authors.append(author)
         return authors
 
-    def recover_metadata(self, paper_data: dict) -> dict:
+    def recover_metadata(self, paper_data: dict[str, Any]) -> dict[str, Any]:
         """Recover missing metadata from Zotero.
 
         Returns:
             Dict with recovered fields and recovery stats
         """
-        recovered = {}
-        recovery_source = {}
+        recovered: dict[str, Any] = {}
+        recovery_source: dict[str, Any] = {}
 
         # Find matching Zotero item
         zotero_item = self.find_zotero_item(paper_data)
@@ -235,11 +254,14 @@ class ZoteroMetadataRecovery:
             "zotero_item_type": zotero_data.get("itemType", "unknown"),
         }
 
-    def process_paper(self, json_file: Path) -> dict:
-        """Process a single paper JSON file."""
+    def process_paper(self, json_file: Path) -> dict[str, Any] | None:
+        """Process a single paper JSON file.
+
+        .
+        """
         try:
             with open(json_file, encoding="utf-8") as f:
-                paper_data = json.load(f)
+                paper_data: dict[str, Any] = json.load(f)
 
             # Check what's missing
             missing_fields = []
@@ -269,7 +291,7 @@ class ZoteroMetadataRecovery:
                     "fields_recovered": list(recovery_result["recovered"].keys()),
                     "recovery_source": recovery_result["source"],
                     "zotero_item_type": recovery_result["zotero_item_type"],
-                    "timestamp": datetime.now().isoformat(),
+                    "timestamp": datetime.now(UTC).isoformat(),
                 }
 
                 self.stats["papers_improved"] += 1
@@ -281,8 +303,11 @@ class ZoteroMetadataRecovery:
             self.stats["errors"] += 1
             return None
 
-    def process_directory(self, input_dir: Path, output_dir: Path, max_papers: int | None = None):
-        """Process all JSON files in directory."""
+    def process_directory(self, input_dir: Path, output_dir: Path, max_papers: int | None = None) -> None:
+        """Process all JSON files in directory.
+
+        .
+        """
         output_dir.mkdir(parents=True, exist_ok=True)
 
         json_files = list(input_dir.glob("*.json"))
@@ -293,7 +318,7 @@ class ZoteroMetadataRecovery:
         print("=" * 80)
 
         for i, json_file in enumerate(json_files, 1):
-            if i % 100 == 0:
+            if i % config.MIN_CONTENT_LENGTH == 0:
                 print(f"Progress: {i}/{len(json_files)} papers processed...")
 
             # Process paper
@@ -308,8 +333,11 @@ class ZoteroMetadataRecovery:
         self.print_statistics()
         self.save_report(output_dir)
 
-    def print_statistics(self):
-        """Print recovery statistics."""
+    def print_statistics(self) -> None:
+        """Print recovery statistics.
+
+        .
+        """
         print("\n" + "=" * 80)
         print("ZOTERO RECOVERY STATISTICS")
         print("=" * 80)
@@ -335,10 +363,13 @@ class ZoteroMetadataRecovery:
             recovery_rate = (self.stats["papers_improved"] / self.stats["incomplete"]) * 100
             print(f"\nOverall recovery rate: {recovery_rate:.1f}%")
 
-    def save_report(self, output_dir: Path):
-        """Save detailed recovery report."""
+    def save_report(self, output_dir: Path) -> None:
+        """Save detailed recovery report.
+
+        .
+        """
         report = {
-            "timestamp": datetime.now().isoformat(),
+            "timestamp": datetime.now(UTC).isoformat(),
             "statistics": dict(self.stats),
             "summary": {
                 "total_processed": self.stats["complete"] + self.stats["incomplete"],
@@ -354,7 +385,11 @@ class ZoteroMetadataRecovery:
         print(f"\nReport saved to: {report_file}")
 
 
-def main():
+def main() -> None:
+    """Run the main program.
+
+    .
+    """
     parser = argparse.ArgumentParser(description="Recover missing metadata from Zotero library")
     parser.add_argument("--input", type=str, required=True, help="Input directory with JSON files")
     parser.add_argument("--output", type=str, required=True, help="Output directory for recovered files")

@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-"""V5 Pipeline Stage 5: OpenAlex Enrichment
+"""V5 Pipeline Stage 5: OpenAlex Enrichment.
+
 Adds topic classification, SDG mapping, and comprehensive metadata.
 
 Usage:
@@ -10,7 +11,7 @@ Usage:
 import json
 import time
 from pathlib import Path
-from datetime import datetime
+from datetime import datetime, UTC
 import argparse
 import sys
 
@@ -19,8 +20,11 @@ from config import CROSSREF_POLITE_EMAIL
 from openalex_enricher import OpenAlexEnricher
 
 
-def analyze_enrichment_results(output_dir: Path):
-    """Analyze and report enrichment statistics."""
+def analyze_enrichment_results(output_dir: Path) -> None:
+    """Analyze and report enrichment statistics.
+
+    .
+    """
     report_file = output_dir / "openalex_enrichment_report.json"
     if not report_file.exists():
         print("No report file found")
@@ -111,7 +115,11 @@ def analyze_enrichment_results(output_dir: Path):
     print("\n" + "=" * 80)
 
 
-def main():
+def main() -> None:
+    """Run the main program.
+
+    .
+    """
     parser = argparse.ArgumentParser(description="V5 Pipeline Stage 5: OpenAlex Enrichment")
     parser.add_argument(
         "--input", default="s2_enriched_20250901_final", help="Input directory with S2 enriched papers"
@@ -256,7 +264,7 @@ def main():
 
     # Generate report
     report = {
-        "timestamp": datetime.now().isoformat(),
+        "timestamp": datetime.now(UTC).isoformat(),
         "pipeline_stage": "5_openalex_enrichment",
         "statistics": {
             "total_papers": len(paper_files),

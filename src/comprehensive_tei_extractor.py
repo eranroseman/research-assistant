@@ -5,10 +5,11 @@ This script fixes the critical bug where important metadata (year, journal, keyw
 was not being extracted from TEI XML files.
 """
 
+from src import config
 import json
-import xml.etree.ElementTree as ET
+from defusedxml import ElementTree
 from pathlib import Path
-from datetime import datetime
+from datetime import datetime, UTC
 import re
 from typing import Any
 import logging
@@ -21,9 +22,10 @@ logger = logging.getLogger(__name__)
 class ComprehensiveTEIExtractor:
     """Extract ALL information from TEI XML files."""
 
-    def __init__(self):
+    def __init__(self) -> None:
+        """Initialize the TEI extractor with XML namespace."""
         self.ns = {"tei": "http://www.tei-c.org/ns/1.0"}
-        self.stats = {"total": 0, "successful": 0, "failed": 0, "fields_extracted": {}}
+        self.stats: dict[str, Any] = {"total": 0, "successful": 0, "failed": 0, "fields_extracted": {}}
 
     def extract_year_from_date(self, date_str: str) -> int | None:
         """Extract year from various date formats."""
@@ -34,14 +36,14 @@ class ComprehensiveTEIExtractor:
         year_match = re.match(r"^(\d{4})", date_str)
         if year_match:
             year = int(year_match.group(1))
-            if 1900 <= year <= datetime.now().year + 1:
+            if config.MIN_YEAR_VALID <= year <= datetime.now(UTC).year + 1:
                 return year
 
         # Try finding 4-digit year anywhere
         year_match = re.search(r"\b(19\d{2}|20\d{2})\b", date_str)
         if year_match:
             year = int(year_match.group(1))
-            if 1900 <= year <= datetime.now().year + 1:
+            if config.MIN_YEAR_VALID <= year <= datetime.now(UTC).year + 1:
                 return year
 
         return None
@@ -49,10 +51,10 @@ class ComprehensiveTEIExtractor:
     def parse_tei_xml(self, tei_file: Path) -> dict[str, Any]:
         """Comprehensively parse TEI XML to extract ALL information."""
         try:
-            tree = ET.parse(tei_file)
+            tree = ElementTree.parse(tei_file)
             root = tree.getroot()
 
-            data = {"paper_id": tei_file.stem}
+            data: dict[str, Any] = {"paper_id": tei_file.stem}
 
             # ============= 1. BASIC METADATA =============
 
@@ -77,7 +79,7 @@ class ComprehensiveTEIExtractor:
                 if abstract_text:
                     data["abstract"] = abstract_text
 
-            # ============= 2. DATE/YEAR EXTRACTION =============
+            # ============= config.MIN_MATCH_COUNT. DATE/YEAR EXTRACTION =============
 
             year = None
             date_string = None
@@ -112,11 +114,11 @@ class ComprehensiveTEIExtractor:
             if date_string:
                 data["date"] = date_string
 
-            # ============= 3. AUTHORS WITH AFFILIATIONS =============
+            # ============= config.MAX_RETRIES_DEFAULT. AUTHORS WITH AFFILIATIONS =============
 
-            authors = []
+            authors: list[dict[str, Any]] = []
             for author in root.findall(".//tei:fileDesc//tei:author", self.ns):
-                author_data = {}
+                author_data: dict[str, Any] = {}
 
                 # Name
                 forename = author.find(".//tei:forename", self.ns)
@@ -137,7 +139,7 @@ class ComprehensiveTEIExtractor:
                     author_data["orcid"] = orcid.text.strip()
 
                 # Affiliation
-                affiliation_data = {}
+                affiliation_data: dict[str, Any] = {}
                 affiliation = author.find(".//tei:affiliation", self.ns)
                 if affiliation is not None:
                     # Organization name
@@ -204,7 +206,7 @@ class ComprehensiveTEIExtractor:
                     id_key = id_type.lower().replace(" ", "_")
                     data[id_key] = idno.text.strip()
 
-            # ============= 5. PUBLICATION DETAILS =============
+            # ============= config.DEFAULT_MAX_RESULTS. PUBLICATION DETAILS =============
 
             publication = {}
 
@@ -273,7 +275,7 @@ class ComprehensiveTEIExtractor:
             # This handles cases where Grobid didn't extract the main article's journal
             if not publication.get("journal"):
                 # Look for the most common journal in references (likely self-citations)
-                ref_journals = {}
+                ref_journals: dict[str, int] = {}
                 for ref_bibl in root.findall(".//tei:listBibl/tei:biblStruct", self.ns):
                     ref_journal = ref_bibl.find('.//tei:monogr/tei:title[@level="j"]', self.ns)
                     if ref_journal is not None and ref_journal.text:
@@ -284,7 +286,9 @@ class ComprehensiveTEIExtractor:
                 if ref_journals and not publication.get("journal"):
                     # Use the most frequently cited journal as a hint
                     most_common = max(ref_journals.items(), key=lambda x: x[1])
-                    if most_common[1] >= 2:  # At least 2 citations to same journal
+                    if (
+                        most_common[1] >= config.MIN_MATCH_COUNT
+                    ):  # At least config.MIN_MATCH_COUNT citations to same journal
                         publication["journal"] = most_common[0]
                         publication["journal_inferred"] = True
 
@@ -311,7 +315,9 @@ class ComprehensiveTEIExtractor:
             # Also check for funding statements in text
             for funding_elem in root.findall('.//tei:div[@type="acknowledgement"]', self.ns):
                 funding_text = " ".join(funding_elem.itertext()).strip()
-                if funding_text and len(funding_text) < 1000:  # Reasonable length
+                if (
+                    funding_text and len(funding_text) < config.MIN_FULL_TEXT_LENGTH_THRESHOLD
+                ):  # Reasonable length
                     funding.append(funding_text)
 
             if funding:
@@ -433,7 +439,7 @@ class ComprehensiveTEIExtractor:
                 data["references"] = references
                 data["num_references"] = len(references)
 
-            # ============= 10. FIGURES AND TABLES =============
+            # ============= config.DEFAULT_TIMEOUT. FIGURES AND TABLES =============
 
             # Figures
             figures = []
@@ -490,7 +496,7 @@ class ComprehensiveTEIExtractor:
 
                 # Table content (simplified)
                 table_text = " ".join(table.itertext()).strip()
-                if table_text and len(table_text) < 5000:  # Reasonable size
+                if table_text and len(table_text) < config.LONG_TEXT_THRESHOLD:  # Reasonable size
                     table_data["content"] = table_text
 
                 if table_data:
@@ -560,7 +566,7 @@ class ComprehensiveTEIExtractor:
             for note in root.findall(".//tei:note", self.ns):
                 note_text = " ".join(note.itertext()).strip()
                 note_type = note.get("type")
-                if note_text and len(note_text) < 500:  # Reasonable size
+                if note_text and len(note_text) < config.LARGE_BATCH_SIZE:  # Reasonable size
                     if note_type:
                         notes.append(f"[{note_type}] {note_text}")
                     else:
@@ -611,19 +617,19 @@ class ComprehensiveTEIExtractor:
             return data
 
         except Exception as e:
-            logger.error(f"Error parsing {tei_file}: {e}")
+            logger.error("Error parsing %s: %s", tei_file, e)
             return {"paper_id": tei_file.stem, "parse_error": str(e)}
 
-    def process_directory(self, tei_dir: Path, output_dir: Path):
+    def process_directory(self, tei_dir: Path, output_dir: Path) -> None:
         """Process all TEI XML files in a directory."""
         tei_files = list(tei_dir.glob("*.xml"))
-        logger.info(f"Found {len(tei_files)} TEI XML files")
+        logger.info("Found %d TEI XML files", len(tei_files))
 
         output_dir.mkdir(exist_ok=True, parents=True)
 
         for i, tei_file in enumerate(tei_files, 1):
-            if i % 100 == 0:
-                logger.info(f"Processing {i}/{len(tei_files)}...")
+            if i % config.MIN_CONTENT_LENGTH == 0:
+                logger.info("Processing %d/%d...", i, len(tei_files))
 
             self.stats["total"] += 1
 
@@ -632,7 +638,7 @@ class ComprehensiveTEIExtractor:
 
             if "parse_error" in data:
                 self.stats["failed"] += 1
-                logger.error(f"Failed: {tei_file.name}")
+                logger.error("Failed: %s", tei_file.name)
             else:
                 self.stats["successful"] += 1
 
@@ -644,7 +650,7 @@ class ComprehensiveTEIExtractor:
         # Print summary
         self.print_summary()
 
-    def print_summary(self):
+    def print_summary(self) -> None:
         """Print extraction summary."""
         print("\n" + "=" * 70)
         print("EXTRACTION COMPLETE")
@@ -655,11 +661,15 @@ class ComprehensiveTEIExtractor:
 
         print("\nFields extracted (coverage):")
         for field, count in sorted(self.stats["fields_extracted"].items()):
-            coverage = count / self.stats["successful"] * 100 if self.stats["successful"] > 0 else 0
+            coverage = (
+                count / self.stats["successful"] * config.MIN_CONTENT_LENGTH
+                if self.stats["successful"] > 0
+                else 0
+            )
             print(f"  {field}: {count} ({coverage:.1f}%)")
 
 
-def main():
+def main() -> None:
     """Main entry point."""
     import argparse
 
@@ -678,7 +688,7 @@ def main():
     if args.output_dir:
         output_dir = Path(args.output_dir)
     else:
-        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        timestamp = datetime.now(UTC).strftime("%Y%m%d_%H%M%S")
         output_dir = Path(f"comprehensive_extraction_{timestamp}")
 
     # Process files

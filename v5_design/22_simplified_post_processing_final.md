@@ -561,7 +561,7 @@ def main():
 
 ```bash
 # First run (builds from empty)
-python post_process.py extraction_pipeline_20250901/
+python src/grobid_post_processor.py extraction_pipeline_20250901/
 # Output: Found 2000 JSON files to process
 #         Processing 2000 papers (KB contains 0 papers)
 #         Processing papers: 100%|████████████| 2000/2000 [2:47:32<00:00, 5.03s/it]
@@ -569,7 +569,7 @@ python post_process.py extraction_pipeline_20250901/
 #         ⚠ 317 papers failed (see failed_papers.jsonl)
 
 # Weekly update (incremental)
-python post_process.py extraction_pipeline_20250908/
+python src/grobid_post_processor.py extraction_pipeline_20250908/
 # Output: Found 47 JSON files to process
 #         Processing 47 papers (KB contains 1683 papers)
 #         Processing papers: 100%|████████████| 47/47 [00:04:23<00:00, 5.59s/it]
@@ -577,28 +577,28 @@ python post_process.py extraction_pipeline_20250908/
 #         ⚠ 5 papers failed (see failed_papers.jsonl)
 
 # No new papers
-python post_process.py extraction_pipeline_20250908/
+python src/grobid_post_processor.py extraction_pipeline_20250908/
 # Output: Found 47 JSON files to process
 #         No new papers to process
 
 # Test with subset
-python post_process.py extraction_pipeline_20250901/ --limit 50
+python src/grobid_post_processor.py extraction_pipeline_20250901/ --limit 50
 # Output: Found 2000 JSON files to process
 #         Processing 50 papers (KB contains 0 papers)
 #         ✓ Added 45 papers to KB
 
 # Adjust quality threshold
-python post_process.py extraction_pipeline_20250901/ --quality-threshold 40
+python src/grobid_post_processor.py extraction_pipeline_20250901/ --quality-threshold 40
 # Output: Processing with quality threshold: 40
 
 # Check cache size
-python post_process.py extraction_pipeline_20250901/ --report-cache
+python src/grobid_post_processor.py extraction_pipeline_20250901/ --report-cache
 # Output: Cache status:
 #           Size: 4.23 GB
 #           Files: 8,142
 
 # Use compression for storage-constrained systems
-python post_process.py extraction_pipeline_20250901/ --compress
+python src/grobid_post_processor.py extraction_pipeline_20250901/ --compress
 # Output: Processing with compression enabled
 #         Cache files will be 80% smaller
 ```
@@ -615,7 +615,7 @@ STAGE_VERSIONS = {
 }
 
 # Next run shows version changes and processes accordingly:
-$ python post_process.py extraction_pipeline_20250908/
+$ python src/grobid_post_processor.py extraction_pipeline_20250908/
 Stage version changes detected (will reprocess affected papers):
   quality_scoring: v1.0 → v1.1
 
@@ -633,7 +633,7 @@ STAGE_VERSIONS = {
 }
 
 # Shows version change and reprocesses when needed:
-$ python post_process.py extraction_pipeline_20250908/
+$ python src/grobid_post_processor.py extraction_pipeline_20250908/
 Stage version changes detected (will reprocess affected papers):
   embeddings: v1.0 → v2.0
 

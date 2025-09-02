@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-"""CORE Enrichment for V5 Pipeline
+"""CORE Enrichment for V5 Pipeline.
+
 Finds additional full-text sources and download statistics.
 
 Features:
@@ -11,16 +12,21 @@ Features:
 - ~10% unique full-text not found elsewhere
 """
 
+from src import config
 import json
+import logging
 import time
+import re
 from pathlib import Path
-from datetime import datetime
+from datetime import datetime, UTC
 from typing import Any
 import requests
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
 from collections import defaultdict
-import re
+
+# Set up module logger
+logger = logging.getLogger(__name__)
 
 
 class COREEnricher:
@@ -41,7 +47,7 @@ class COREEnricher:
         self.base_url = "https://api.core.ac.uk/v3"
         self.api_key = api_key
         self.session = self._create_session()
-        self.stats = defaultdict(int)
+        self.stats: dict[str, int] = defaultdict(int)
 
         # Token tracking
         self.tokens_used = 0
@@ -76,12 +82,12 @@ class COREEnricher:
 
         return session
 
-    def _track_rate_limits(self, response: requests.Response):
+    def _track_rate_limits(self, response: requests.Response) -> None:
         """Track rate limit information from response headers."""
         try:
             # Check for rate limit headers
             remaining = response.headers.get("X-RateLimitRemaining")
-            limit = response.headers.get("X-RateLimit-Limit")
+            response.headers.get("X-RateLimit-Limit")
             retry_after = response.headers.get("X-RateLimit-Retry-After")
 
             if remaining:
@@ -92,8 +98,8 @@ class COREEnricher:
             # Increment token usage
             self.tokens_used += 1
 
-        except Exception:
-            pass  # Silently ignore header parsing errors
+        except Exception as e:
+            logger.debug("Error parsing headers: %s", e)
 
     def enrich_single_by_doi(self, doi: str) -> dict[str, Any] | None:
         """Enrich a single paper by DOI.
@@ -112,7 +118,7 @@ class COREEnricher:
                 return None
 
             # Search CORE by DOI
-            params = {"q": f'doi:"{clean_doi}"', "limit": 1}
+            params: dict[str, str | int] = {"q": f'doi:"{clean_doi}"', "limit": 1}
 
             response = self.session.get(
                 f"{self.base_url}/search/works",
@@ -123,10 +129,10 @@ class COREEnricher:
             # Track token usage from headers
             self._track_rate_limits(response)
 
-            if response.status_code == 404:
+            if response.status_code == config.HTTP_NOT_FOUND:
                 self.stats["not_found"] += 1
                 return None
-            if response.status_code == 429:
+            if response.status_code == config.HTTP_TOO_MANY_REQUESTS:
                 self.stats["rate_limited"] += 1
                 print("Rate limited. Wait and retry.")
                 return None
@@ -167,7 +173,7 @@ class COREEnricher:
                 return None
 
             # Search CORE by title
-            params = {"q": f'title:"{clean_title}"', "limit": 1}
+            params: dict[str, str | int] = {"q": f'title:"{clean_title}"', "limit": 1}
 
             response = self.session.get(
                 f"{self.base_url}/search/works",
@@ -178,13 +184,10 @@ class COREEnricher:
             # Track token usage
             self._track_rate_limits(response)
 
-            if response.status_code == 404:
-                self.stats["not_found"] += 1
-                return None
-            if response.status_code == 429:
-                self.stats["rate_limited"] += 1
-                print("Rate limited. Wait and retry.")
-                return None
+            # Handle response status
+            result = self._handle_response_status(response)
+            if result is not None:
+                return result
 
             response.raise_for_status()
 
@@ -197,9 +200,8 @@ class COREEnricher:
                 if self._fuzzy_title_match(clean_title.lower(), result_title):
                     return self._process_core_work(results[0])
                 self.stats["title_mismatch"] += 1
-                return None
-            self.stats["not_found"] += 1
-            return None
+            else:
+                self.stats["not_found"] += 1
 
         except requests.exceptions.Timeout:
             self.stats["timeout"] += 1
@@ -209,6 +211,17 @@ class COREEnricher:
             print(f"Error searching by title: {e}")
 
         return None
+
+    def _handle_response_status(self, response: requests.Response) -> dict[str, Any] | None:
+        """Handle response status codes."""
+        if response.status_code == config.HTTP_NOT_FOUND:
+            self.stats["not_found"] += 1
+            return {}  # Signal to return None from calling function
+        if response.status_code == config.HTTP_TOO_MANY_REQUESTS:
+            self.stats["rate_limited"] += 1
+            print("Rate limited. Wait and retry.")
+            return {}  # Signal to return None from calling function
+        return None  # Continue processing
 
     def _clean_doi(self, doi: str) -> str | None:
         """Clean and validate a DOI (reuses logic from other enrichers).
@@ -246,7 +259,7 @@ class COREEnricher:
         # Validate basic DOI format
         if not clean.startswith("10."):
             return None
-        if len(clean) < 10 or len(clean) > 100:
+        if len(clean) < config.DEFAULT_TIMEOUT or len(clean) > config.MIN_CONTENT_LENGTH:
             return None
 
         return clean
@@ -269,10 +282,10 @@ class COREEnricher:
         clean = clean.strip()
 
         # Truncate very long titles
-        if len(clean) > 200:
+        if len(clean) > config.MIN_SECTION_TEXT_LENGTH:
             clean = clean[:200]
 
-        return clean if len(clean) > 10 else None
+        return clean if len(clean) > config.DEFAULT_TIMEOUT else None
 
     def _fuzzy_title_match(self, title1: str, title2: str, threshold: float = 0.85) -> bool:
         """Check if two titles are similar enough.
@@ -398,7 +411,7 @@ class COREEnricher:
         if links:
             enriched["links"] = []
             for link in links:
-                if link.get("url"):
+                if link.get("url") and enriched["links"] is not None:
                     enriched["links"].append({"url": link.get("url"), "type": link.get("type")})
 
         # Statistics (if available)
@@ -423,8 +436,9 @@ class COREEnricher:
     def enrich_batch(
         self, papers: list[dict[str, str]], use_title_fallback: bool = True
     ) -> dict[str, dict[str, Any]]:
-        """Enrich multiple papers. CORE doesn't support true batch queries,
-        so we process individually with rate limiting.
+        """Enrich multiple papers.
+
+        CORE doesn't support true batch queries, so we process individually with rate limiting.
 
         Args:
             papers: List of dicts with 'doi' and/or 'title' keys
@@ -497,7 +511,7 @@ def process_directory(
     api_key: str | None = None,
     use_title_fallback: bool = True,
     max_papers: int | None = None,
-):
+) -> None:
     """Process all papers in a directory with CORE enrichment.
 
     Args:
@@ -599,7 +613,7 @@ def process_directory(
     # Generate report
     final_stats = enricher.get_statistics()
     report = {
-        "timestamp": datetime.now().isoformat(),
+        "timestamp": datetime.now(UTC).isoformat(),
         "pipeline_stage": "8_core_enrichment",
         "statistics": {
             "total_papers": len(paper_files),

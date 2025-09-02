@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-"""PubMed Enrichment for V5 Pipeline
+"""PubMed Enrichment for V5 Pipeline.
+
 Adds authoritative medical metadata for biomedical papers.
 
 Features:
@@ -12,11 +13,13 @@ Features:
 - ~30% coverage (biomedical subset of papers)
 """
 
+from src import config
 import json
 import time
-import xml.etree.ElementTree as ET
+from defusedxml import ElementTree
+from xml.etree.ElementTree import Element
 from pathlib import Path
-from datetime import datetime
+from datetime import datetime, UTC
 from typing import Any
 import requests
 from requests.adapters import HTTPAdapter
@@ -26,7 +29,10 @@ import re
 
 
 class PubMedEnricher:
-    """Enrich papers with PubMed biomedical metadata."""
+    """Enrich papers with PubMed biomedical metadata.
+
+    .
+    """
 
     def __init__(self, api_key: str | None = None):
         """Initialize PubMed enricher.
@@ -37,13 +43,16 @@ class PubMedEnricher:
         self.base_url = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils"
         self.api_key = api_key
         self.session = self._create_session()
-        self.stats = defaultdict(int)
+        self.stats: defaultdict[str, int] = defaultdict(int)
 
         # Rate limiting based on API key
         self.delay = 0.1 if api_key else 0.34  # 10/sec with key, 3/sec without
 
     def _create_session(self) -> requests.Session:
-        """Create HTTP session with retry logic."""
+        """Create HTTP session with retry logic.
+
+        .
+        """
         session = requests.Session()
         retry = Retry(total=5, backoff_factor=1, status_forcelist=[429, 500, 502, 503, 504])
         adapter = HTTPAdapter(max_retries=retry)
@@ -100,7 +109,7 @@ class PubMedEnricher:
             response.raise_for_status()
 
             # Parse XML response
-            root = ET.fromstring(response.content)
+            root = ElementTree.fromstring(response.content)
             article = root.find(".//PubmedArticle")
 
             if article is None:
@@ -154,7 +163,7 @@ class PubMedEnricher:
         # Validate basic DOI format
         if not clean.startswith("10."):
             return None
-        if len(clean) < 10 or len(clean) > 100:
+        if len(clean) < config.DEFAULT_TIMEOUT or len(clean) > config.MIN_CONTENT_LENGTH:
             return None
 
         return clean
@@ -182,7 +191,7 @@ class PubMedEnricher:
             id_list = result.get("idlist", [])
 
             if id_list:
-                return id_list[0]  # Return first (should be only) match
+                return str(id_list[0])  # Return first (should be only) match
 
             return None
 
@@ -190,7 +199,7 @@ class PubMedEnricher:
             print(f"Error converting DOI to PMID: {e}")
             return None
 
-    def _parse_pubmed_article(self, article: ET.Element) -> dict[str, Any]:
+    def _parse_pubmed_article(self, article: Element) -> dict[str, Any]:
         """Parse PubMed article XML into structured metadata.
 
         Args:
@@ -199,7 +208,7 @@ class PubMedEnricher:
         Returns:
             Parsed metadata
         """
-        enriched = {}
+        enriched: dict[str, Any] = {}
 
         # Get MedlineCitation element
         medline = article.find("MedlineCitation")
@@ -280,7 +289,10 @@ class PubMedEnricher:
         mesh_terms = []
         for mesh in medline.findall(".//MeshHeading"):
             descriptor = mesh.findtext("DescriptorName", "")
-            is_major = mesh.find("DescriptorName").get("MajorTopicYN", "N") == "Y"
+            descriptor_elem = mesh.find("DescriptorName")
+            is_major = (
+                descriptor_elem.get("MajorTopicYN", "N") == "Y" if descriptor_elem is not None else False
+            )
 
             mesh_entry = {"descriptor": descriptor, "is_major": is_major}
 
@@ -399,14 +411,16 @@ class PubMedEnricher:
         Returns:
             Dictionary mapping original identifier to enriched metadata
         """
-        results = {}
+        results: dict[str, dict[str, Any]] = {}
 
         # Step 1: Convert DOIs to PMIDs
-        pmid_map = {}  # Maps PMID to original identifier
+        pmid_map: dict[str, str] = {}  # Maps PMID to original identifier
         pmids_to_fetch = []
 
         for id_dict in identifiers:
             original_key = id_dict.get("doi") or id_dict.get("pmid")
+            if not original_key:
+                continue  # Skip if no identifier
 
             if id_dict.get("pmid"):
                 # Already have PMID
@@ -445,7 +459,7 @@ class PubMedEnricher:
                 response.raise_for_status()
 
                 # Parse XML response
-                root = ET.fromstring(response.content)
+                root = ElementTree.fromstring(response.content)
 
                 # Process each article
                 for article in root.findall(".//PubmedArticle"):
@@ -473,7 +487,10 @@ class PubMedEnricher:
         return results
 
     def get_statistics(self) -> dict[str, Any]:
-        """Get enrichment statistics."""
+        """Get enrichment statistics.
+
+        .
+        """
         total = self.stats["enriched"] + self.stats["failed"]
 
         return {
@@ -501,7 +518,7 @@ class PubMedEnricher:
         }
 
 
-def process_directory(input_dir: str, output_dir: str, api_key: str | None = None):
+def process_directory(input_dir: str, output_dir: str, api_key: str | None = None) -> None:
     """Process all papers in a directory with PubMed enrichment.
 
     Args:
@@ -596,7 +613,7 @@ def process_directory(input_dir: str, output_dir: str, api_key: str | None = Non
     # Generate report
     final_stats = enricher.get_statistics()
     report = {
-        "timestamp": datetime.now().isoformat(),
+        "timestamp": datetime.now(UTC).isoformat(),
         "pipeline_stage": "7_pubmed_enrichment",
         "statistics": {
             "total_papers": len(paper_files),

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Grobid Overnight Runner - Maximum Data Extraction for Research
+"""Grobid Overnight Runner - Maximum Data Extraction for Research.
 
 Philosophy: Since Grobid runs are infrequent (overnight/weekend), we optimize for:
 1. MAXIMUM data extraction - get EVERYTHING Grobid can provide
@@ -10,13 +10,14 @@ This replaces partial extraction approaches with comprehensive data capture.
 Run this overnight/weekend when you want to process your entire paper collection.
 """
 
+from src import config
 import json
-import xml.etree.ElementTree as ET
+from defusedxml import ElementTree
 from pathlib import Path
 from typing import Any
 import requests
 import time
-from datetime import datetime
+from datetime import datetime, UTC
 import logging
 import sys
 from tqdm import tqdm
@@ -26,7 +27,7 @@ logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s - %(levelname)s - %(message)s",
     handlers=[
-        logging.FileHandler(f"grobid_overnight_{datetime.now().strftime('%Y%m%d_%H%M%S')}.log"),
+        logging.FileHandler(f"grobid_overnight_{datetime.now(UTC).strftime('%Y%m%d_%H%M%S')}.log"),
         logging.StreamHandler(),
     ],
 )
@@ -35,6 +36,7 @@ logger = logging.getLogger(__name__)
 
 class OvernightGrobidExtractor:
     """Comprehensive Grobid extraction for overnight processing.
+
     Saves 7 different files per paper for maximum post-processing flexibility.
     """
 
@@ -49,21 +51,21 @@ class OvernightGrobidExtractor:
         """
         self.grobid_url = grobid_url
         self.output_dir = Path(output_dir)
-        self.session_dir = self.output_dir / datetime.now().strftime("%Y%m%d_%H%M%S")
+        self.session_dir = self.output_dir / datetime.now(UTC).strftime("%Y%m%d_%H%M%S")
         self.session_dir.mkdir(parents=True, exist_ok=True)
 
         # Checkpoint file for recovery
         self.checkpoint_file = self.session_dir / "checkpoint.json"
-        self.processed_files = set()
+        self.processed_files: set[str] = set()
         self.load_checkpoint()
 
         # Statistics
-        self.stats = {
+        self.stats: dict[str, Any] = {
             "total_papers": 0,
             "successful": 0,
             "failed": 0,
             "total_entities": 0,
-            "start_time": datetime.now().isoformat(),
+            "start_time": datetime.now(UTC).isoformat(),
             "extraction_times": [],
         }
 
@@ -104,33 +106,35 @@ class OvernightGrobidExtractor:
         logger.info("=" * 80)
         logger.info("GROBID OVERNIGHT EXTRACTION INITIALIZED")
         logger.info("Mode: MAXIMUM EXTRACTION (7 files per paper)")
-        logger.info(f"Output: {self.session_dir}")
-        logger.info(f"Parameters: {len(self.params)} maximum extraction flags")
+        logger.info("Output: %s", self.session_dir)
+        logger.info("Parameters: %s maximum extraction flags", len(self.params))
         logger.info("=" * 80)
 
     def check_grobid_service(self) -> bool:
         """Check if Grobid service is running."""
         try:
             response = requests.get(f"{self.grobid_url}/api/isalive", timeout=5)
-            return response.status_code == 200
-        except:
+            return response.status_code == config.MIN_SECTION_TEXT_LENGTH
+        except Exception:
             return False
 
-    def load_checkpoint(self):
+    def load_checkpoint(self) -> None:
         """Load checkpoint to resume from interruption."""
         if self.checkpoint_file.exists():
             with open(self.checkpoint_file) as f:
                 checkpoint = json.load(f)
                 self.processed_files = set(checkpoint.get("processed_files", []))
-                logger.info(f"Resuming from checkpoint: {len(self.processed_files)} papers already processed")
+                logger.info(
+                    "Resuming from checkpoint: %s papers already processed", len(self.processed_files)
+                )
 
-    def save_checkpoint(self):
+    def save_checkpoint(self) -> None:
         """Save checkpoint for recovery."""
         with open(self.checkpoint_file, "w") as f:
             json.dump(
                 {
                     "processed_files": list(self.processed_files),
-                    "timestamp": datetime.now().isoformat(),
+                    "timestamp": datetime.now(UTC).isoformat(),
                     "stats": self.stats,
                 },
                 f,
@@ -139,13 +143,20 @@ class OvernightGrobidExtractor:
 
     def extract_all_entities(self, tei_xml: str) -> dict[str, Any]:
         """Extract ALL possible entities from TEI XML.
+
         This is comprehensive and captures everything Grobid provides.
         """
         try:
-            root = ET.fromstring(tei_xml)
+            root = ElementTree.fromstring(tei_xml)
             ns = {"tei": "http://www.tei-c.org/ns/1.0"}
 
-            result = {"metadata": {}, "entities": {}, "sections": {}, "coordinates": {}, "statistics": {}}
+            result: dict[str, Any] = {
+                "metadata": {},
+                "entities": {},
+                "sections": {},
+                "coordinates": {},
+                "statistics": {},
+            }
 
             # Extract metadata
             result["metadata"] = {
@@ -195,17 +206,17 @@ class OvernightGrobidExtractor:
             return result
 
         except Exception as e:
-            logger.error(f"Error parsing TEI XML: {e}")
+            logger.error("Error parsing TEI XML: %s", e)
             return {}
 
-    def _extract_text(self, element, xpath, ns):
+    def _extract_text(self, element: Any, xpath: str, ns: dict[str, str]) -> str:
         """Extract text from element."""
         el = element.find(xpath, ns)
         if el is not None:
             return " ".join(el.itertext()).strip()
         return ""
 
-    def _extract_authors(self, root, ns):
+    def _extract_authors(self, root: Any, ns: dict[str, str]) -> list[dict[str, str]]:
         """Extract all author information."""
         authors = []
         for author in root.findall(".//tei:sourceDesc//tei:author", ns):
@@ -220,35 +231,35 @@ class OvernightGrobidExtractor:
             authors.append(author_data)
         return authors
 
-    def _extract_affiliations(self, root, ns):
+    def _extract_affiliations(self, root: Any, ns: dict[str, str]) -> list[str]:
         """Extract all affiliations."""
         affiliations = []
         for aff in root.findall(".//tei:affiliation", ns):
             affiliations.append(" ".join(aff.itertext()).strip())
         return list(set(affiliations))  # Remove duplicates
 
-    def _extract_keywords(self, root, ns):
+    def _extract_keywords(self, root: Any, ns: dict[str, str]) -> list[str]:
         """Extract keywords."""
         keywords = []
         for kw in root.findall(".//tei:keywords//tei:term", ns):
             keywords.append(kw.text)
         return keywords
 
-    def _extract_all_persons(self, root, ns):
+    def _extract_all_persons(self, root: Any, ns: dict[str, str]) -> list[str]:
         """Extract all person mentions."""
         persons = []
         for person in root.findall(".//tei:persName", ns):
             persons.append(" ".join(person.itertext()).strip())
         return list(set(persons))
 
-    def _extract_all_organizations(self, root, ns):
+    def _extract_all_organizations(self, root: Any, ns: dict[str, str]) -> list[str]:
         """Extract all organization mentions."""
         orgs = []
         for org in root.findall(".//tei:orgName", ns):
             orgs.append(" ".join(org.itertext()).strip())
         return list(set(orgs))
 
-    def _extract_all_locations(self, root, ns):
+    def _extract_all_locations(self, root: Any, ns: dict[str, str]) -> list[str]:
         """Extract all location mentions."""
         locations = []
         for loc in root.findall(".//tei:placeName", ns):
@@ -257,26 +268,27 @@ class OvernightGrobidExtractor:
             locations.append(" ".join(country.itertext()).strip())
         return list(set(locations))
 
-    def _extract_all_citations(self, root, ns):
+    def _extract_all_citations(self, root: Any, ns: dict[str, str]) -> list[dict[str, Any]]:
         """Extract all citations with full metadata."""
         citations = []
         for bibl in root.findall(".//tei:listBibl//tei:biblStruct", ns):
+            authors_list: list[str] = []
+            for author in bibl.findall(".//tei:author", ns):
+                authors_list.append(" ".join(author.itertext()).strip())
+
             citation = {
                 "title": self._extract_text(bibl, ".//tei:title", ns),
-                "authors": [],
+                "authors": authors_list,
                 "year": self._extract_text(bibl, ".//tei:date", ns),
                 "doi": self._extract_text(bibl, './/tei:idno[@type="DOI"]', ns),
                 "journal": self._extract_text(bibl, ".//tei:monogr/tei:title", ns),
                 "raw_text": " ".join(bibl.itertext()).strip(),
             }
 
-            for author in bibl.findall(".//tei:author", ns):
-                citation["authors"].append(" ".join(author.itertext()).strip())
-
             citations.append(citation)
         return citations
 
-    def _extract_all_figures(self, root, ns):
+    def _extract_all_figures(self, root: Any, ns: dict[str, str]) -> list[dict[str, str]]:
         """Extract all figures with captions."""
         figures = []
         for fig in root.findall('.//tei:figure[@type="figure"]', ns):
@@ -288,7 +300,7 @@ class OvernightGrobidExtractor:
             figures.append(figure_data)
         return figures
 
-    def _extract_all_tables(self, root, ns):
+    def _extract_all_tables(self, root: Any, ns: dict[str, str]) -> list[dict[str, str]]:
         """Extract all tables with captions."""
         tables = []
         for table in root.findall('.//tei:figure[@type="table"]', ns):
@@ -301,14 +313,14 @@ class OvernightGrobidExtractor:
             tables.append(table_data)
         return tables
 
-    def _extract_all_equations(self, root, ns):
+    def _extract_all_equations(self, root: Any, ns: dict[str, str]) -> list[str]:
         """Extract all equations."""
         equations = []
         for formula in root.findall(".//tei:formula", ns):
             equations.append(" ".join(formula.itertext()).strip())
         return equations
 
-    def _extract_software_mentions(self, root, ns):
+    def _extract_software_mentions(self, root: Any, ns: dict[str, str]) -> list[str]:
         """Extract software mentions using patterns."""
         text = " ".join(root.itertext())
         import re
@@ -327,7 +339,7 @@ class OvernightGrobidExtractor:
 
         return list(software)
 
-    def _extract_dataset_mentions(self, root, ns):
+    def _extract_dataset_mentions(self, root: Any, ns: dict[str, str]) -> list[str]:
         """Extract dataset mentions."""
         text = " ".join(root.itertext())
         import re
@@ -346,7 +358,7 @@ class OvernightGrobidExtractor:
 
         return list(datasets)
 
-    def _extract_funding(self, root, ns):
+    def _extract_funding(self, root: Any, ns: dict[str, str]) -> list[str]:
         """Extract funding information."""
         funding = []
 
@@ -368,7 +380,7 @@ class OvernightGrobidExtractor:
 
         return list(set(funding))
 
-    def _extract_clinical_trials(self, root, ns):
+    def _extract_clinical_trials(self, root: Any, ns: dict[str, str]) -> list[str]:
         """Extract clinical trial identifiers."""
         text = " ".join(root.itertext())
         import re
@@ -387,12 +399,17 @@ class OvernightGrobidExtractor:
 
         return list(trials)
 
-    def _extract_statistical_values(self, root, ns):
+    def _extract_statistical_values(self, root: Any, ns: dict[str, str]) -> dict[str, list[Any]]:
         """Extract statistical values (p-values, confidence intervals, etc.)."""
         text = " ".join(root.itertext())
         import re
 
-        stats = {"p_values": [], "confidence_intervals": [], "sample_sizes": [], "effect_sizes": []}
+        stats: dict[str, list[Any]] = {
+            "p_values": [],
+            "confidence_intervals": [],
+            "sample_sizes": [],
+            "effect_sizes": [],
+        }
 
         # P-values
         p_patterns = [
@@ -417,7 +434,7 @@ class OvernightGrobidExtractor:
 
         return stats
 
-    def _extract_urls(self, root, ns):
+    def _extract_urls(self, root: Any, ns: dict[str, str]) -> list[str]:
         """Extract all URLs."""
         text = " ".join(root.itertext())
         import re
@@ -425,21 +442,21 @@ class OvernightGrobidExtractor:
         url_pattern = r'https?://[^\s<>"{}|\\^`\[\]]+'
         return list(set(re.findall(url_pattern, text)))
 
-    def _extract_emails(self, root, ns):
+    def _extract_emails(self, root: Any, ns: dict[str, str]) -> list[str]:
         """Extract all email addresses."""
         emails = []
         for email in root.findall(".//tei:email", ns):
             emails.append(email.text)
         return list(set(emails))
 
-    def _extract_orcids(self, root, ns):
+    def _extract_orcids(self, root: Any, ns: dict[str, str]) -> list[str]:
         """Extract all ORCID IDs."""
         orcids = []
         for orcid in root.findall('.//tei:idno[@type="ORCID"]', ns):
             orcids.append(orcid.text)
         return list(set(orcids))
 
-    def _extract_sections(self, body, ns):
+    def _extract_sections(self, body: Any, ns: dict[str, str]) -> list[dict[str, str]]:
         """Extract all body sections with their content."""
         sections = []
 
@@ -469,7 +486,7 @@ class OvernightGrobidExtractor:
 
         return sections
 
-    def _extract_coordinates(self, root, ns):
+    def _extract_coordinates(self, root: Any, ns: dict[str, str]) -> dict[str, str]:
         """Extract coordinate information for spatial analysis."""
         coordinates = {}
 
@@ -491,13 +508,13 @@ class OvernightGrobidExtractor:
 
         # Skip if already processed (checkpoint recovery)
         if str(pdf_path) in self.processed_files:
-            logger.info(f"Skipping {pdf_id} (already processed)")
+            logger.info("Skipping %s (already processed)", pdf_id)
             return None
 
         paper_dir = self.session_dir / pdf_id
         paper_dir.mkdir(exist_ok=True)
 
-        logger.info(f"\nProcessing: {pdf_id}")
+        logger.info("\nProcessing: %s", pdf_id)
         start_time = time.time()
 
         try:
@@ -512,8 +529,8 @@ class OvernightGrobidExtractor:
                     timeout=300,
                 )
 
-                if response.status_code != 200:
-                    logger.error(f"Grobid returned status {response.status_code}")
+                if response.status_code != config.MIN_SECTION_TEXT_LENGTH:
+                    logger.error("Grobid returned status %s", response.status_code)
                     self.stats["failed"] += 1
                     return None
 
@@ -521,7 +538,7 @@ class OvernightGrobidExtractor:
 
             # Save 1: Raw TEI XML
             (paper_dir / f"{pdf_id}_tei.xml").write_text(tei_xml, encoding="utf-8")
-            logger.info(f"  ✓ Saved TEI XML ({len(tei_xml) / 1024:.1f} KB)")
+            logger.info("  ✓ Saved TEI XML (%.1f KB)", len(tei_xml) / 1024)
 
             # Extract all entities
             extracted_data = self.extract_all_entities(tei_xml)
@@ -578,17 +595,19 @@ class OvernightGrobidExtractor:
             self.save_checkpoint()
 
             logger.info(
-                f"  ✓ Completed in {stats['extraction_time']:.1f}s - {stats['total_entities']} entities extracted"
+                "  ✓ Completed in %.1fs - %s entities extracted",
+                stats["extraction_time"],
+                stats["total_entities"],
             )
 
             return {"pdf_id": pdf_id, "success": True, "stats": stats, "output_dir": str(paper_dir)}
 
         except Exception as e:
-            logger.error(f"Failed to process {pdf_id}: {e}")
+            logger.error("Failed to process %s: %s", pdf_id, e)
             self.stats["failed"] += 1
             return None
 
-    def process_batch(self, pdf_files: list[Path], batch_size: int = 10):
+    def process_batch(self, pdf_files: list[Path], batch_size: int = 10) -> list[dict[str, Any]]:
         """Process multiple PDFs with progress tracking.
 
         Args:
@@ -597,7 +616,7 @@ class OvernightGrobidExtractor:
         """
         self.stats["total_papers"] = len(pdf_files)
 
-        logger.info(f"\nProcessing {len(pdf_files)} papers...")
+        logger.info("\nProcessing %s papers...", len(pdf_files))
         logger.info("Checkpoint recovery enabled - safe to interrupt")
 
         results = []
@@ -613,13 +632,13 @@ class OvernightGrobidExtractor:
                 # Save checkpoint every batch_size papers
                 if (i + 1) % batch_size == 0:
                     self.save_checkpoint()
-                    logger.info(f"Checkpoint saved at {i + 1} papers")
+                    logger.info("Checkpoint saved at %s papers", i + 1)
 
                 # Add delay to be nice to the Grobid server
                 time.sleep(0.5)
 
         # Final statistics
-        self.stats["end_time"] = datetime.now().isoformat()
+        self.stats["end_time"] = datetime.now(UTC).isoformat()
 
         # Save final report
         report_path = self.session_dir / "extraction_report.json"
@@ -627,23 +646,24 @@ class OvernightGrobidExtractor:
             json.dump({"stats": self.stats, "results": results}, f, indent=2)
 
         # Print summary
-        logger.info("\n" + "=" * 80)
+        logger.info("")
+        logger.info("=" * 80)
         logger.info("EXTRACTION COMPLETE")
         logger.info("=" * 80)
-        logger.info(f"Total papers: {self.stats['total_papers']}")
-        logger.info(f"Successful: {self.stats['successful']}")
-        logger.info(f"Failed: {self.stats['failed']}")
-        logger.info(f"Total entities: {self.stats['total_entities']:,}")
+        logger.info("Total papers: %s", self.stats["total_papers"])
+        logger.info("Successful: %s", self.stats["successful"])
+        logger.info("Failed: %s", self.stats["failed"])
+        logger.info("Total entities: %s", f"{self.stats['total_entities']:,}")
         if self.stats["extraction_times"]:
             avg_time = sum(self.stats["extraction_times"]) / len(self.stats["extraction_times"])
-            logger.info(f"Avg time per paper: {avg_time:.1f}s")
-        logger.info(f"Output directory: {self.session_dir}")
+            logger.info("Avg time per paper: %.1fs", avg_time)
+        logger.info("Output directory: %s", self.session_dir)
         logger.info("=" * 80)
 
         return results
 
 
-def main():
+def main() -> None:
     """Main entry point for overnight processing."""
     import argparse
 
@@ -700,7 +720,7 @@ def main():
         zotero_storage = Path.home() / "Zotero" / "storage"
         if zotero_storage.exists():
             pdf_files = list(zotero_storage.glob("*/*.pdf"))
-            logger.info(f"Using Zotero storage: {zotero_storage}")
+            logger.info("Using Zotero storage: %s", zotero_storage)
         else:
             logger.error("No input specified and Zotero storage not found")
             sys.exit(1)
@@ -713,11 +733,11 @@ def main():
     if args.limit:
         pdf_files = pdf_files[: args.limit]
 
-    logger.info(f"Found {len(pdf_files)} PDF files")
+    logger.info("Found %s PDF files", len(pdf_files))
 
     # Estimate time
     estimated_time = len(pdf_files) * 25 / 60  # ~25 seconds per paper
-    logger.info(f"Estimated time: {estimated_time:.1f} minutes ({estimated_time / 60:.1f} hours)")
+    logger.info("Estimated time: %.1f minutes (%.1f hours)", estimated_time, estimated_time / 60)
     logger.info("This is designed for overnight/weekend processing")
 
     # Confirm
@@ -727,10 +747,10 @@ def main():
         sys.exit(0)
 
     # Process papers
-    results = extractor.process_batch(pdf_files)
+    extractor.process_batch(pdf_files)
 
     logger.info("\n✓ Overnight extraction complete!")
-    logger.info(f"Results saved to: {extractor.session_dir}")
+    logger.info("Results saved to: %s", extractor.session_dir)
 
 
 if __name__ == "__main__":

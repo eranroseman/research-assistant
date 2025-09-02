@@ -79,7 +79,7 @@ Missing DOIs: Expected ~2-3 papers
 ### Usage
 ```bash
 # Extract all TEI XML files comprehensively
-python comprehensive_tei_extractor.py \
+python src/comprehensive_tei_extractor.py \
   --input-dir zotero_extraction_20250830_235521/tei_xml \
   --output-dir comprehensive_extraction_$(date +%Y%m%d_%H%M%S)
 
@@ -94,10 +94,10 @@ python comprehensive_tei_extractor.py \
 ```bash
 # Option 1: Replace original extraction
 mv zotero_extraction_*/json zotero_extraction_*/json.old
-python comprehensive_tei_extractor.py --output-dir zotero_extraction_*/json
+python src/comprehensive_tei_extractor.py --output-dir zotero_extraction_*/json
 
 # Option 2: Use new extraction directory
-python comprehensive_tei_extractor.py --output-dir comprehensive_extraction
+python src/comprehensive_tei_extractor.py --output-dir comprehensive_extraction
 # Then update pipeline to use comprehensive_extraction/
 ```
 

@@ -1,13 +1,21 @@
 #!/usr/bin/env python3
 """Attempt to recover DOIs for papers missing them using CrossRef search."""
 
+from src import config
 import json
+import logging
 import time
+from typing import Any
 from habanero import Crossref
 from difflib import SequenceMatcher
 
+# Set up module logger
+logger = logging.getLogger(__name__)
 
-def search_doi_by_title_and_authors(title, authors, year=None):
+
+def search_doi_by_title_and_authors(
+    title: str, authors: list[dict[str, Any]], year: str | None = None
+) -> tuple[str | None, dict[str, Any] | None]:
     """Search CrossRef for a paper by title and authors."""
     cr = Crossref()
 
@@ -38,7 +46,7 @@ def search_doi_by_title_and_authors(title, authors, year=None):
 
             # Find best match
             best_match = None
-            best_score = 0
+            best_score = 0.0
 
             for item in items:
                 # Get item title
@@ -76,7 +84,7 @@ def search_doi_by_title_and_authors(title, authors, year=None):
                 print(f"      Score: {score:.2f}, DOI: {item.get('DOI', 'N/A')}")
 
             # Return DOI if good match found
-            if best_match and best_score >= 0.8:
+            if best_match and best_score >= config.HIGH_CONFIDENCE_THRESHOLD:
                 doi = best_match.get("DOI")
                 print(f"  ✓ Found matching DOI: {doi} (score: {best_score:.2f})")
                 return doi, best_match
@@ -88,9 +96,10 @@ def search_doi_by_title_and_authors(title, authors, year=None):
     return None, None
 
 
-def main():
+def main() -> None:
+    """Run the main program."""
     # Papers without DOI (from previous analysis)
-    papers_no_doi = [
+    papers_no_doi: list[dict[str, Any]] = [
         {
             "id": "J822HUC7",
             "title": "An Evolving Multi-Agent Scenario Generation Framework for Simulations in Prevent",
@@ -164,8 +173,8 @@ def main():
     print("ATTEMPTING TO RECOVER DOIs FROM CROSSREF")
     print("=" * 80)
 
-    recovered = []
-    failed = []
+    recovered: list[dict[str, str]] = []
+    failed: list[str] = []
 
     for i, paper in enumerate(papers_no_doi, 1):
         if not paper["title"] or paper["title"] == "MISSING":
@@ -179,14 +188,14 @@ def main():
 
         # Load the actual paper data to get author information
         json_file = f"comprehensive_extraction_20250831_211114/{paper['id']}.json"
-        authors = []
+        authors: list[dict[str, Any]] = []
 
         try:
             with open(json_file) as f:
                 data = json.load(f)
                 authors = data.get("authors", [])
-        except:
-            pass
+        except Exception as e:
+            logger.debug("Error reading %s: %s", json_file, e)
 
         # Search for DOI
         doi, match_data = search_doi_by_title_and_authors(paper["title"], authors, paper.get("year"))

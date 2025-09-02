@@ -14,33 +14,45 @@ Usage:
     python v5_extraction_pipeline.py [--skip-extraction] [--output-dir DIR]
 """
 
+from src import config
 import json
 import subprocess
+import shlex
 import sys
 from pathlib import Path
 from datetime import datetime, UTC
 import time
 import shutil
+from typing import Any
 
 
 class V5Pipeline:
-    """Complete v5 extraction pipeline."""
+    """Complete v5 extraction pipeline.
 
-    def __init__(self, output_dir: str = None, skip_extraction: bool = False):
+    .
+    """
+
+    def __init__(self, output_dir: str | None = None, skip_extraction: bool = False):
+        """Initialize the V5 pipeline with configuration options."""
         self.timestamp = datetime.now(UTC).strftime("%Y%m%d_%H%M%S")
         self.output_dir = Path(output_dir) if output_dir else Path(f"kb_v5_{self.timestamp}")
         self.skip_extraction = skip_extraction
-        self.stats = {"start_time": time.time(), "stages_completed": [], "errors": []}
+        self.stats: dict[str, Any] = {"start_time": time.time(), "stages_completed": [], "errors": []}
 
-    def run_command(self, cmd: str, stage_name: str) -> bool:
-        """Run a command and track its success."""
+    def run_command(self, cmd: str | list[str], stage_name: str) -> bool:
+        """Run a command and track its success.
+
+        .
+        """
         print(f"\n{'=' * 70}")
         print(f"STAGE: {stage_name}")
         print(f"{'=' * 70}")
         print(f"Running: {cmd}")
 
         try:
-            result = subprocess.run(cmd, shell=True, capture_output=True, text=True, check=True)
+            # Convert string command to list for security
+            cmd_list: list[str] = shlex.split(cmd) if isinstance(cmd, str) else cmd
+            result = subprocess.run(cmd_list, capture_output=True, text=True, check=True)
             print(result.stdout)
             if result.stderr:
                 print(f"Warnings: {result.stderr}")
@@ -58,7 +70,10 @@ class V5Pipeline:
             return False
 
     def check_prerequisites(self) -> bool:
-        """Check that required scripts exist."""
+        """Check that required scripts exist.
+
+        .
+        """
         required_scripts = [
             "v5_design/implementations/extract_zotero_library.py",
             "reprocess_tei_xml.py",
@@ -74,7 +89,7 @@ class V5Pipeline:
                 import requests
 
                 response = requests.get("http://localhost:8070/api/isalive", timeout=5)
-                if response.status_code != 200:
+                if response.status_code != config.MIN_SECTION_TEXT_LENGTH:
                     print("ERROR: Grobid is not running!")
                     print("Start it with: docker run -t --rm -p 8070:8070 lfoppiano/grobid:0.8.2-full")
                     return False
@@ -96,8 +111,11 @@ class V5Pipeline:
 
         return True
 
-    def run_pipeline(self):
-        """Run the complete v5 extraction pipeline."""
+    def run_pipeline(self) -> bool:
+        """Run the complete v5 extraction pipeline.
+
+        .
+        """
         print("=" * 70)
         print("V5 EXTRACTION PIPELINE")
         print("=" * 70)
@@ -109,43 +127,53 @@ class V5Pipeline:
             print("\nFailed prerequisite checks. Exiting.")
             return False
 
-        # Stage 1: Grobid Extraction (if not skipped)
-        if not self.skip_extraction:
-            if not self.run_command(
-                "python v5_design/implementations/extract_zotero_library.py", "1. Grobid Extraction"
-            ):
-                print("\nPipeline failed at Grobid extraction.")
+        # Run pipeline stages
+        stages = [
+            ("1. Grobid Extraction", self._run_grobid_extraction),
+            (
+                "2. Full Text Recovery",
+                lambda: self.run_command("python reprocess_tei_xml.py", "2. Full Text Recovery"),
+            ),
+            (
+                "3. Quality Filtering",
+                lambda: self.run_command("python pdf_quality_filter.py", "3. Quality Filtering"),
+            ),
+            (
+                "4. CrossRef Enrichment",
+                lambda: self.run_command("python crossref_enrichment.py", "4. CrossRef Enrichment"),
+            ),
+            (
+                "5. Non-Article Filtering",
+                lambda: self.run_command("python filter_non_articles.py", "5. Non-Article Filtering"),
+            ),
+            (
+                "6. Malformed DOI Cleaning",
+                lambda: self.run_command("python fix_malformed_dois.py", "6. Malformed DOI Cleaning"),
+            ),
+            ("7. Final Output Preparation", self._prepare_final_output),
+        ]
+
+        for stage_name, stage_func in stages:
+            if not stage_func():
+                print(f"\nPipeline failed at {stage_name}.")
                 return False
-        else:
-            print("\nSkipping Grobid extraction (using existing data)")
-            self.stats["stages_completed"].append("1. Grobid Extraction (skipped)")
 
-        # Stage 2: Full Text Recovery
-        if not self.run_command("python reprocess_tei_xml.py", "2. Full Text Recovery"):
-            print("\nPipeline failed at text recovery.")
-            return False
+        # Generate final report
+        self.generate_report()
+        return True
 
-        # Stage 3: Quality Filtering
-        if not self.run_command("python pdf_quality_filter.py", "3. Quality Filtering"):
-            print("\nPipeline failed at quality filtering.")
-            return False
+    def _run_grobid_extraction(self) -> bool:
+        """Run Grobid extraction stage."""
+        if not self.skip_extraction:
+            return self.run_command(
+                "python v5_design/implementations/extract_zotero_library.py", "1. Grobid Extraction"
+            )
+        print("\nSkipping Grobid extraction (using existing data)")
+        self.stats["stages_completed"].append("1. Grobid Extraction (skipped)")
+        return True
 
-        # Stage 4: CrossRef Enrichment
-        if not self.run_command("python crossref_enrichment.py", "4. CrossRef Enrichment"):
-            print("\nPipeline failed at CrossRef enrichment.")
-            return False
-
-        # Stage 5: Non-Article Filtering
-        if not self.run_command("python filter_non_articles.py", "5. Non-Article Filtering"):
-            print("\nPipeline failed at non-article filtering.")
-            return False
-
-        # Stage 6: Malformed DOI Cleaning
-        if not self.run_command("python fix_malformed_dois.py", "6. Malformed DOI Cleaning"):
-            print("\nPipeline failed at DOI cleaning.")
-            return False
-
-        # Stage 7: Prepare Final Output
+    def _prepare_final_output(self) -> bool:
+        """Prepare final output stage."""
         print(f"\n{'=' * 70}")
         print("STAGE: 7. Final Output Preparation")
         print(f"{'=' * 70}")
@@ -167,14 +195,13 @@ class V5Pipeline:
             shutil.copytree(latest_kb, self.output_dir)
 
         self.stats["stages_completed"].append("7. Final Output Preparation")
-
-        # Generate final report
-        self.generate_report()
-
         return True
 
-    def generate_report(self):
-        """Generate a final pipeline report."""
+    def generate_report(self) -> None:
+        """Generate a final pipeline report.
+
+        .
+        """
         # Count articles
         json_files = list(self.output_dir.glob("*.json"))
         article_count = len([f for f in json_files if "report" not in f.name])
@@ -206,7 +233,7 @@ class V5Pipeline:
         seconds = int(runtime % 60)
 
         # Generate report
-        report = {
+        report: dict[str, Any] = {
             "timestamp": self.timestamp,
             "runtime": f"{hours}h {minutes}m {seconds}s",
             "runtime_seconds": runtime,
@@ -226,8 +253,8 @@ class V5Pipeline:
 
         # Save report
         report_path = self.output_dir / "pipeline_report.json"
-        with open(report_path, "w") as f:
-            json.dump(report, f, indent=2)
+        with open(report_path, "w") as report_file:
+            json.dump(report, report_file, indent=2)
 
         # Print summary
         print(f"\n{'=' * 70}")
@@ -250,8 +277,11 @@ class V5Pipeline:
         print(f"   python src/build_kb.py --input {self.output_dir}/")
 
 
-def main():
-    """Main entry point."""
+def main() -> None:
+    """Main entry point.
+
+    .
+    """
     import argparse
 
     parser = argparse.ArgumentParser(

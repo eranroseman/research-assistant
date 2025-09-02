@@ -3,11 +3,13 @@
 
 import json
 import shutil
-from pathlib import Path
 from datetime import datetime, UTC
+from pathlib import Path
+
+from src import config
 
 
-def main():
+def main() -> None:
     """Main entry point."""
     print("=" * 70)
     print("FINAL CLEANUP - REMOVE ARTICLE WITHOUT TITLE")
@@ -79,8 +81,8 @@ def main():
     quality_report_path = final_dir / "pdf_quality_report.json"
 
     if quality_report_path.exists():
-        with open(quality_report_path) as f:
-            report = json.load(f)
+        with open(quality_report_path) as report_file:
+            report = json.load(report_file)
     else:
         report = {"timestamp": timestamp, "excluded_papers": []}
 
@@ -100,7 +102,7 @@ def main():
                 "text_length": missing_info["text_length"],
                 "num_sections": missing_info["num_sections"],
                 "num_references": missing_info["num_references"],
-                "has_content": missing_info["text_length"] > 1000,
+                "has_content": missing_info["text_length"] > config.MIN_FULL_TEXT_LENGTH_THRESHOLD,
                 "abstract_preview": missing_info["abstract_preview"],
             },
             "recommendation": "Manual review required - paper has content but title could not be recovered through automated methods",
@@ -108,8 +110,8 @@ def main():
     )
 
     # Save updated report
-    with open(quality_report_path, "w") as f:
-        json.dump(report, f, indent=2)
+    with open(quality_report_path, "w") as report_file:
+        json.dump(report, report_file, indent=2)
 
     print(f"📝 Updated PDF quality report: {quality_report_path}")
 
@@ -145,25 +147,27 @@ def main():
 
     # Create summary file
     summary_path = final_dir / "extraction_summary.md"
-    with open(summary_path, "w") as f:
-        f.write("# V5 Extraction Final Results\n\n")
-        f.write(f"Generated: {timestamp}\n\n")
-        f.write("## Statistics\n\n")
-        f.write(f"- **Total articles**: {total_articles}\n")
-        f.write("- **Title coverage**: 100.0% (all articles have titles)\n")
-        f.write(f"- **DOI coverage**: {(total_articles - missing_dois) / total_articles * 100:.1f}%\n")
-        f.write(f"- **Total text extracted**: {total_text:,} characters\n")
-        f.write(f"- **Average text per article**: {total_text // total_articles:,} characters\n\n")
-        f.write("## Excluded Papers\n\n")
-        f.write("1 paper excluded due to missing title after all recovery attempts:\n")
-        f.write(f"- Paper ID: {missing_info['paper_id']}\n")
-        f.write(f"- DOI: {missing_info['doi'] or 'None'}\n")
-        f.write(f"- Has {missing_info['text_length']:,} chars of content\n")
-        f.write("- See `pdf_quality_report.json` for details\n\n")
-        f.write("## Ready for KB Build\n\n")
-        f.write("```bash\n")
-        f.write(f"python src/build_kb.py --input {final_dir}/\n")
-        f.write("```\n")
+    with open(summary_path, "w") as summary_file:
+        summary_file.write("# V5 Extraction Final Results\n\n")
+        summary_file.write(f"Generated: {timestamp}\n\n")
+        summary_file.write("## Statistics\n\n")
+        summary_file.write(f"- **Total articles**: {total_articles}\n")
+        summary_file.write("- **Title coverage**: 100.0% (all articles have titles)\n")
+        summary_file.write(
+            f"- **DOI coverage**: {(total_articles - missing_dois) / total_articles * 100:.1f}%\n"
+        )
+        summary_file.write(f"- **Total text extracted**: {total_text:,} characters\n")
+        summary_file.write(f"- **Average text per article**: {total_text // total_articles:,} characters\n\n")
+        summary_file.write("## Excluded Papers\n\n")
+        summary_file.write("1 paper excluded due to missing title after all recovery attempts:\n")
+        summary_file.write(f"- Paper ID: {missing_info['paper_id']}\n")
+        summary_file.write(f"- DOI: {missing_info['doi'] or 'None'}\n")
+        summary_file.write(f"- Has {missing_info['text_length']:,} chars of content\n")
+        summary_file.write("- See `pdf_quality_report.json` for details\n\n")
+        summary_file.write("## Ready for KB Build\n\n")
+        summary_file.write("```bash\n")
+        summary_file.write(f"python src/build_kb.py --input {final_dir}/\n")
+        summary_file.write("```\n")
 
     print(f"\n📄 Created summary: {summary_path}")
 

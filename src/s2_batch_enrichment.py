@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Semantic Scholar (S2) batch enrichment for v5 pipeline.
+
 Enriches papers with citation counts, author h-index, and additional metadata.
 Uses batch API for efficient processing (up to 500 papers per call).
 """
@@ -9,7 +10,8 @@ import logging
 import time
 import requests
 from pathlib import Path
-from datetime import datetime
+from datetime import datetime, UTC
+from typing import Any
 import argparse
 import sys
 import os
@@ -17,15 +19,26 @@ import os
 # Add src directory to path to import config
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "src"))
 
+try:
+    from config import MIN_ABSTRACT_LENGTH, HTTP_TOO_MANY_REQUESTS, HTTP_OK
+except ImportError:
+    # Fallback values if config not found
+    MIN_ABSTRACT_LENGTH = 50
+    HTTP_TOO_MANY_REQUESTS = 429
+    HTTP_OK = 200
+
 # Setup logging
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
 logger = logging.getLogger(__name__)
 
 
 class S2BatchEnricher:
-    """Semantic Scholar batch enricher for paper metadata."""
+    """Semantic Scholar batch enricher for paper metadata.
 
-    def __init__(self, batch_size=500):
+    .
+    """
+
+    def __init__(self, batch_size: int = 500) -> None:
         """Initialize enricher.
 
         Args:
@@ -35,7 +48,7 @@ class S2BatchEnricher:
         self.base_url = "https://api.semanticscholar.org/graph/v1"
 
         logger.info("Using Semantic Scholar API")
-        logger.info(f"Batch size: {self.batch_size} papers per request")
+        logger.info("Batch size: %d papers per request", self.batch_size)
 
         self.stats = {
             "total_papers": 0,
@@ -51,11 +64,14 @@ class S2BatchEnricher:
         self.session.headers.update({"User-Agent": "ResearchAssistant/5.0"})
 
         # Rate limiter - only apply AFTER getting 429 errors, not preemptively
-        self.last_request_time = 0
-        self.min_interval = 0  # Don't rate limit preemptively
+        self.last_request_time: float = 0
+        self.min_interval: float = 0  # Don't rate limit preemptively
 
-    def rate_limit(self):
-        """Enforce rate limiting."""
+    def rate_limit(self) -> None:
+        """Enforce rate limiting.
+
+        .
+        """
         now = time.time()
         time_since_last = now - self.last_request_time
 
@@ -67,7 +83,7 @@ class S2BatchEnricher:
 
     def fetch_batch(
         self, paper_ids: list[str], id_type: str = "doi", max_retries: int = 5
-    ) -> dict[str, dict]:
+    ) -> dict[str, dict[str, Any]]:
         """Fetch metadata for a batch of papers with retry logic.
 
         Args:
@@ -82,48 +98,11 @@ class S2BatchEnricher:
             return {}
 
         # Format IDs based on type
-        if id_type == "doi":
-            formatted_ids = [f"DOI:{pid}" for pid in paper_ids]
-        else:
-            formatted_ids = paper_ids
+        formatted_ids = [f"DOI:{pid}" for pid in paper_ids] if id_type == "doi" else paper_ids
 
         # Request ALL available S2 fields for comprehensive enrichment
         # Note: removed unsupported fields like authors.aliases
-        fields = ",".join(
-            [
-                "paperId",
-                "externalIds",
-                "url",
-                "title",
-                "abstract",
-                "venue",
-                "publicationVenue",
-                "year",
-                "publicationDate",
-                "journal",
-                "referenceCount",
-                "citationCount",
-                "influentialCitationCount",
-                "isOpenAccess",
-                "openAccessPdf",
-                "fieldsOfStudy",
-                "s2FieldsOfStudy",
-                "publicationTypes",
-                "citationStyles",
-                "authors",
-                "authors.authorId",
-                "authors.name",
-                "authors.url",
-                "authors.affiliations",
-                "authors.homepage",
-                "authors.paperCount",
-                "authors.citationCount",
-                "authors.hIndex",
-                "tldr",
-                "citations",
-                "references",
-            ]
-        )
+        fields = "paperId,externalIds,url,title,abstract,venue,publicationVenue,year,publicationDate,journal,referenceCount,citationCount,influentialCitationCount,isOpenAccess,openAccessPdf,fieldsOfStudy,s2FieldsOfStudy,publicationTypes,citationStyles,authors,authors.authorId,authors.name,authors.url,authors.affiliations,authors.homepage,authors.paperCount,authors.citationCount,authors.hIndex,tldr,citations,references"
 
         # Retry loop with exponential backoff
         for attempt in range(max_retries):
@@ -139,7 +118,7 @@ class S2BatchEnricher:
                 )
                 self.stats["api_calls"] += 1
 
-                if response.status_code == 200:
+                if response.status_code == HTTP_OK:
                     data = response.json()
                     results = {}
 
@@ -149,30 +128,30 @@ class S2BatchEnricher:
                             results[original_id] = data[i]
 
                     return results
-                if response.status_code == 429:
+                if response.status_code == HTTP_TOO_MANY_REQUESTS:
                     # Rate limited - exponential backoff
                     wait_time = min(2**attempt, 32)  # Max 32 seconds
-                    logger.warning(f"Rate limited (429). Waiting {wait_time} seconds...")
+                    logger.warning("Rate limited (429). Waiting %d seconds...", wait_time)
                     time.sleep(wait_time)
                     # Set minimum interval for future requests after getting 429
                     self.min_interval = 1.0
                     continue
-                logger.warning(f"API returned status {response.status_code}")
+                logger.warning("API returned status %d", response.status_code)
                 return {}
 
             except Exception as e:
-                logger.error(f"Batch query failed: {e}")
+                logger.error("Batch query failed: %s", e)
                 if attempt < max_retries - 1:
                     wait_time = min(2**attempt, 32)
-                    logger.info(f"Retrying in {wait_time} seconds...")
+                    logger.info("Retrying in %d seconds...", wait_time)
                     time.sleep(wait_time)
                     continue
                 return {}
 
-        logger.error(f"Failed after {max_retries} attempts")
+        logger.error("Failed after %d attempts", max_retries)
         return {}
 
-    def extract_metadata(self, s2_data: dict) -> dict:
+    def extract_metadata(self, s2_data: dict[str, Any]) -> dict[str, Any]:
         """Extract comprehensive metadata from S2 response.
 
         Args:
@@ -294,7 +273,7 @@ class S2BatchEnricher:
 
         return metadata
 
-    def process_directory(self, input_dir: Path, output_dir: Path, max_papers: int | None = None):
+    def process_directory(self, input_dir: Path, output_dir: Path, max_papers: int | None = None) -> None:
         """Process all papers in directory with batch queries and checkpoint recovery.
 
         Args:
@@ -313,14 +292,14 @@ class S2BatchEnricher:
             with open(checkpoint_file) as f:
                 checkpoint_data = json.load(f)
                 processed_papers = set(checkpoint_data.get("processed_papers", []))
-                logger.info(f"Resuming from checkpoint: {len(processed_papers)} papers already processed")
+                logger.info("Resuming from checkpoint: %d papers already processed", len(processed_papers))
 
         # Load all papers
         json_files = list(input_dir.glob("*.json"))
         if max_papers:
             json_files = json_files[:max_papers]
 
-        logger.info(f"Found {len(json_files)} papers to process")
+        logger.info("Found %d papers to process", len(json_files))
         self.stats["total_papers"] = len(json_files)
 
         # Group papers by DOI availability, skipping already processed ones
@@ -347,10 +326,10 @@ class S2BatchEnricher:
                 papers_without_dois.append((json_file, paper_data))
 
         if skipped_count > 0:
-            logger.info(f"Skipped {skipped_count} already processed papers")
+            logger.info("Skipped %d already processed papers", skipped_count)
 
-        logger.info(f"Papers with DOIs to process: {len(papers_with_dois)}")
-        logger.info(f"Papers without DOIs: {len(papers_without_dois)}")
+        logger.info("Papers with DOIs to process: %d", len(papers_with_dois))
+        logger.info("Papers without DOIs: %d", len(papers_without_dois))
 
         # Process papers with DOIs in batches
         doi_list = list(papers_with_dois.keys())
@@ -361,7 +340,7 @@ class S2BatchEnricher:
             batch_num = i // self.batch_size + 1
             total_batches = (len(doi_list) + self.batch_size - 1) // self.batch_size
 
-            logger.info(f"Processing batch {batch_num}/{total_batches} ({len(batch_dois)} DOIs)...")
+            logger.info("Processing batch %d/%d (%d DOIs)...", batch_num, total_batches, len(batch_dois))
 
             # Fetch batch metadata
             batch_results = self.fetch_batch(batch_dois, id_type="doi")
@@ -390,7 +369,7 @@ class S2BatchEnricher:
 
                     # Add enrichment metadata
                     paper_data["s2_enrichment"] = {
-                        "timestamp": datetime.now().isoformat(),
+                        "timestamp": datetime.now(UTC).isoformat(),
                         "success": True,
                         "new_fields_added": new_fields,
                         "s2_paper_id": s2_metadata.get("s2_paper_id", ""),
@@ -401,7 +380,7 @@ class S2BatchEnricher:
                 else:
                     # DOI not found in S2
                     paper_data["s2_enrichment"] = {
-                        "timestamp": datetime.now().isoformat(),
+                        "timestamp": datetime.now(UTC).isoformat(),
                         "success": False,
                         "error": "Paper not found in Semantic Scholar",
                     }
@@ -417,18 +396,18 @@ class S2BatchEnricher:
                 checkpoint_counter += 1
 
             # Save checkpoint every 50 papers
-            if checkpoint_counter >= 50:
+            if checkpoint_counter >= MIN_ABSTRACT_LENGTH:
                 with open(checkpoint_file, "w") as f:
                     json.dump({"processed_papers": list(processed_papers)}, f)
-                logger.info(f"Checkpoint saved: {len(processed_papers)} papers processed")
+                logger.info("Checkpoint saved: %d papers processed", len(processed_papers))
                 checkpoint_counter = 0
 
         # Process papers without DOIs (just copy them)
         if papers_without_dois:
-            logger.info(f"Copying {len(papers_without_dois)} papers without DOIs...")
+            logger.info("Copying %d papers without DOIs...", len(papers_without_dois))
             for json_file, paper_data in papers_without_dois:
                 paper_data["s2_enrichment"] = {
-                    "timestamp": datetime.now().isoformat(),
+                    "timestamp": datetime.now(UTC).isoformat(),
                     "success": False,
                     "error": "No DOI available for S2 lookup",
                 }
@@ -446,14 +425,14 @@ class S2BatchEnricher:
         # Generate report
         self.generate_report(output_dir)
 
-    def generate_report(self, output_dir: Path):
+    def generate_report(self, output_dir: Path) -> None:
         """Generate enrichment report.
 
         Args:
             output_dir: Output directory
         """
         report = {
-            "timestamp": datetime.now().isoformat(),
+            "timestamp": datetime.now(UTC).isoformat(),
             "statistics": {
                 "total_papers": self.stats["total_papers"],
                 "papers_with_dois": self.stats["papers_with_dois"],
@@ -498,7 +477,11 @@ class S2BatchEnricher:
         print(f"\nReport: {report_file}")
 
 
-def main():
+def main() -> None:
+    """Run the main program.
+
+    .
+    """
     parser = argparse.ArgumentParser(description="Semantic Scholar batch enrichment for v5 pipeline")
     parser.add_argument("--input", default="crossref_batch_20250901", help="Input directory with JSON files")
     parser.add_argument(

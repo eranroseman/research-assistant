@@ -116,7 +116,7 @@ pip install -r requirements.txt
 sudo docker run -t --rm -p 8070:8070 lfoppiano/grobid:0.8.2-full
 
 # Run extraction with two-pass strategy
-python grobid_overnight_runner.py  # ~9.5 hours for 2,200 papers
+python src/grobid_overnight_runner.py  # ~9.5 hours for 2,200 papers
 ```
 
 ### Why No Migration?

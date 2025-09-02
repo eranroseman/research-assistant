@@ -5,21 +5,25 @@ This version not only fills missing fields but also validates and optionally
 corrects existing metadata against CrossRef's authoritative data.
 """
 
+from src import config
 import json
 import logging
 import time
 from pathlib import Path
-from datetime import datetime
+from datetime import datetime, UTC
 import argparse
 from dataclasses import dataclass
 from difflib import SequenceMatcher
+import sys
+from typing import Any
+
 
 try:
     from habanero import Crossref
 except ImportError:
     print("ERROR: habanero package not installed!")
     print("Install with: pip install habanero")
-    exit(1)
+    sys.exit(1)
 
 # Setup logging
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
@@ -31,8 +35,8 @@ class ValidationResult:
     """Results from validating existing metadata."""
 
     field: str
-    original_value: any
-    crossref_value: any
+    original_value: Any
+    crossref_value: Any
     similarity: float
     action: str  # 'keep', 'update', 'flag'
     reason: str
@@ -61,7 +65,7 @@ class CrossRefEnricherWithValidation:
             "fields_updated": 0,
             "fields_added": 0,
         }
-        self.validation_log = []
+        self.validation_log: list[dict[str, Any]] = []
 
     def similarity_score(self, str1: str, str2: str) -> float:
         """Calculate similarity between two strings."""
@@ -71,7 +75,7 @@ class CrossRefEnricherWithValidation:
         str2_lower = str2.lower().strip()
         return SequenceMatcher(None, str1_lower, str2_lower).ratio()
 
-    def validate_field(self, field_name: str, original: any, crossref: any) -> ValidationResult:
+    def validate_field(self, field_name: str, original: Any, crossref: Any) -> ValidationResult:
         """Validate a single field against CrossRef data.
 
         Returns:
@@ -98,148 +102,151 @@ class CrossRefEnricherWithValidation:
                 reason="No CrossRef value available",
             )
 
-        # Field-specific validation
-        if field_name == "year":
-            # Years should match exactly
-            if str(original) == str(crossref):
-                return ValidationResult(
-                    field=field_name,
-                    original_value=original,
-                    crossref_value=crossref,
-                    similarity=1.0,
-                    action="keep",
-                    reason="Years match",
-                )
-            return ValidationResult(
-                field=field_name,
-                original_value=original,
-                crossref_value=crossref,
-                similarity=0.0,
-                action="flag",
-                reason=f"Year mismatch: {original} vs {crossref}",
-            )
+        # Field-specific validation routing
+        validators = {
+            "year": self._validate_year,
+            "doi": self._validate_doi,
+            "title": self._validate_title,
+            "journal": self._validate_journal,
+            "authors": self._validate_authors,
+        }
 
-        if field_name == "doi":
-            # DOIs should match exactly (case-insensitive)
-            orig_doi = str(original).lower().strip()
-            cr_doi = str(crossref).lower().strip()
-            if orig_doi == cr_doi:
-                return ValidationResult(
-                    field=field_name,
-                    original_value=original,
-                    crossref_value=crossref,
-                    similarity=1.0,
-                    action="keep",
-                    reason="DOIs match",
-                )
-            return ValidationResult(
-                field=field_name,
-                original_value=original,
-                crossref_value=crossref,
-                similarity=0.0,
-                action="flag",
-                reason="DOI mismatch",
-            )
+        validator = validators.get(field_name)
+        if validator:
+            return validator(field_name, original, crossref)
 
-        if field_name == "title":
-            # Titles can have minor variations
-            similarity = self.similarity_score(original, crossref)
-            if similarity >= self.update_threshold:
-                return ValidationResult(
-                    field=field_name,
-                    original_value=original,
-                    crossref_value=crossref,
-                    similarity=similarity,
-                    action="keep",
-                    reason=f"Titles similar enough ({similarity:.2%})",
-                )
-            return ValidationResult(
-                field=field_name,
-                original_value=original,
-                crossref_value=crossref,
-                similarity=similarity,
-                action="flag",
-                reason=f"Title similarity low ({similarity:.2%})",
-            )
-
-        if field_name == "journal":
-            # Journals can have abbreviations and variations
-            similarity = self.similarity_score(original, crossref)
-            if similarity >= 0.7:  # Lower threshold for journals
-                return ValidationResult(
-                    field=field_name,
-                    original_value=original,
-                    crossref_value=crossref,
-                    similarity=similarity,
-                    action="keep",
-                    reason=f"Journals match ({similarity:.2%})",
-                )
-            # Check if one is abbreviation of the other
-            if (
-                original.replace(".", "").lower() in crossref.lower()
-                or crossref.replace(".", "").lower() in original.lower()
-            ):
-                return ValidationResult(
-                    field=field_name,
-                    original_value=original,
-                    crossref_value=crossref,
-                    similarity=similarity,
-                    action="keep",
-                    reason="Journal abbreviation detected",
-                )
-            return ValidationResult(
-                field=field_name,
-                original_value=original,
-                crossref_value=crossref,
-                similarity=similarity,
-                action="flag",
-                reason=f"Journal mismatch ({similarity:.2%})",
-            )
-
-        if field_name == "authors":
-            # Compare author counts
-            orig_count = len(original) if isinstance(original, list) else 0
-            cr_count = len(crossref) if isinstance(crossref, list) else 0
-
-            if orig_count == 0:
-                return ValidationResult(
-                    field=field_name,
-                    original_value=original,
-                    crossref_value=crossref,
-                    similarity=0.0,
-                    action="update",
-                    reason="No original authors",
-                )
-
-            if abs(orig_count - cr_count) <= 2:  # Allow small differences
-                return ValidationResult(
-                    field=field_name,
-                    original_value=f"{orig_count} authors",
-                    crossref_value=f"{cr_count} authors",
-                    similarity=1.0 - abs(orig_count - cr_count) / max(orig_count, cr_count),
-                    action="keep",
-                    reason=f"Author counts similar ({orig_count} vs {cr_count})",
-                )
-            return ValidationResult(
-                field=field_name,
-                original_value=f"{orig_count} authors",
-                crossref_value=f"{cr_count} authors",
-                similarity=0.0,
-                action="flag",
-                reason=f"Author count mismatch ({orig_count} vs {cr_count})",
-            )
-
-        # Default validation
+        # Default validation for other fields
         return ValidationResult(
             field=field_name,
             original_value=original,
             crossref_value=crossref,
-            similarity=1.0,
+            similarity=0.5,
             action="keep",
-            reason="No validation rule",
+            reason="Unknown field type",
         )
 
-    def query_crossref(self, paper_data: dict) -> dict | None:
+    def _validate_year(self, field_name: str, original: Any, crossref: Any) -> ValidationResult:
+        """Validate year field."""
+        if str(original) == str(crossref):
+            return ValidationResult(
+                field=field_name,
+                original_value=original,
+                crossref_value=crossref,
+                similarity=1.0,
+                action="keep",
+                reason="Years match",
+            )
+        return ValidationResult(
+            field=field_name,
+            original_value=original,
+            crossref_value=crossref,
+            similarity=0.0,
+            action="flag",
+            reason=f"Year mismatch: {original} vs {crossref}",
+        )
+
+    def _validate_doi(self, field_name: str, original: Any, crossref: Any) -> ValidationResult:
+        """Validate DOI field."""
+        orig_doi = str(original).lower().strip()
+        cr_doi = str(crossref).lower().strip()
+        if orig_doi == cr_doi:
+            return ValidationResult(
+                field=field_name,
+                original_value=original,
+                crossref_value=crossref,
+                similarity=1.0,
+                action="keep",
+                reason="DOIs match",
+            )
+        return ValidationResult(
+            field=field_name,
+            original_value=original,
+            crossref_value=crossref,
+            similarity=0.0,
+            action="flag",
+            reason="DOI mismatch",
+        )
+
+    def _validate_title(self, field_name: str, original: Any, crossref: Any) -> ValidationResult:
+        """Validate title field."""
+        similarity = self.similarity_score(original, crossref)
+        if similarity >= self.update_threshold:
+            action = "keep"
+            reason = f"Titles similar enough ({similarity:.2%})"
+        else:
+            action = "flag"
+            reason = f"Title similarity low ({similarity:.2%})"
+
+        return ValidationResult(
+            field=field_name,
+            original_value=original,
+            crossref_value=crossref,
+            similarity=similarity,
+            action=action,
+            reason=reason,
+        )
+
+    def _validate_journal(self, field_name: str, original: Any, crossref: Any) -> ValidationResult:
+        """Validate journal field."""
+        similarity = self.similarity_score(original, crossref)
+
+        # Check various conditions for journal matching
+        if similarity >= config.GOOD_MATCH_THRESHOLD:
+            action = "keep"
+            reason = f"Journals match ({similarity:.2%})"
+        elif (
+            original.replace(".", "").lower() in crossref.lower()
+            or crossref.replace(".", "").lower() in original.lower()
+        ):
+            action = "keep"
+            reason = "Journal abbreviation detected"
+        else:
+            action = "flag"
+            reason = f"Journal mismatch ({similarity:.2%})"
+
+        return ValidationResult(
+            field=field_name,
+            original_value=original,
+            crossref_value=crossref,
+            similarity=similarity,
+            action=action,
+            reason=reason,
+        )
+
+    def _validate_authors(self, field_name: str, original: Any, crossref: Any) -> ValidationResult:
+        """Validate authors field."""
+        orig_count = len(original) if isinstance(original, list) else 0
+        cr_count = len(crossref) if isinstance(crossref, list) else 0
+
+        if orig_count == 0:
+            return ValidationResult(
+                field=field_name,
+                original_value=original,
+                crossref_value=crossref,
+                similarity=0.0,
+                action="update",
+                reason="No original authors",
+            )
+
+        similarity = 1.0 - abs(orig_count - cr_count) / max(orig_count, cr_count)
+
+        if abs(orig_count - cr_count) <= config.MIN_MATCH_COUNT:
+            action = "keep"
+            reason = f"Author counts similar ({orig_count} vs {cr_count})"
+        else:
+            action = "flag"
+            reason = f"Author count mismatch ({orig_count} vs {cr_count})"
+
+        return ValidationResult(
+            field=field_name,
+            original_value=f"{orig_count} authors",
+            crossref_value=f"{cr_count} authors",
+            similarity=similarity,
+            action=action,
+            reason=reason,
+        )
+
+    def query_crossref(self, paper_data: dict[str, Any]) -> dict[str, Any] | None:
         """Query CrossRef API for paper metadata."""
         self.stats["api_queries"] += 1
 
@@ -249,9 +256,9 @@ class CrossRefEnricherWithValidation:
                 try:
                     work = self.cr.works(ids=paper_data["doi"])
                     if work and "message" in work:
-                        return work["message"]
+                        return work["message"]  # type: ignore[no-any-return]
                 except Exception as e:
-                    logger.debug(f"DOI query failed: {e}")
+                    logger.debug("DOI query failed: %s", e)
 
             # Strategy 2: Search by title + authors
             title = paper_data.get("title")
@@ -282,17 +289,17 @@ class CrossRefEnricherWithValidation:
             return None
 
         except Exception as e:
-            logger.error(f"CrossRef API error: {e}")
+            logger.error("CrossRef API error: %s", e)
             self.stats["api_errors"] += 1
             return None
 
-    def find_best_match(self, original_title: str, items: list[dict]) -> dict | None:
+    def find_best_match(self, original_title: str, items: list[dict[str, Any]]) -> dict[str, Any] | None:
         """Find best matching paper from CrossRef results."""
         if not original_title or not items:
             return None
 
-        original_lower = original_title.lower().strip()
-        best_score = 0
+        original_title.lower().strip()
+        best_score: float = 0.0
         best_match = None
 
         for item in items:
@@ -301,7 +308,7 @@ class CrossRefEnricherWithValidation:
             if not titles:
                 continue
 
-            item_title = titles[0].lower().strip()
+            titles[0].lower().strip()
 
             # Calculate similarity
             score = self.similarity_score(original_title, titles[0])
@@ -311,16 +318,16 @@ class CrossRefEnricherWithValidation:
                 best_match = item
 
             # Early exit for exact match
-            if score >= 0.95:
+            if score >= config.NEAR_PERFECT_MATCH:
                 return item
 
         # Return best match if similarity is high enough
-        if best_score >= 0.8:
+        if best_score >= config.HIGH_CONFIDENCE_THRESHOLD:
             return best_match
 
         return None
 
-    def extract_metadata(self, crossref_data: dict) -> dict:
+    def extract_metadata(self, crossref_data: dict[str, Any]) -> dict[str, Any]:
         """Extract relevant metadata from CrossRef response."""
         metadata = {}
 
@@ -359,7 +366,7 @@ class CrossRefEnricherWithValidation:
                 if author.get("affiliation"):
                     aff = author["affiliation"][0]
                     if "name" in aff:
-                        author_entry["affiliation"] = {"organization": aff["name"]}
+                        author_entry["affiliation"] = aff["name"]
 
                 authors.append(author_entry)
 
@@ -448,7 +455,7 @@ class CrossRefEnricherWithValidation:
             # Mark as processed
             if was_modified:
                 paper_data["crossref_validated"] = True
-                paper_data["validation_timestamp"] = datetime.utcnow().isoformat()
+                paper_data["validation_timestamp"] = datetime.now(UTC).isoformat()
                 self.stats["papers_enriched"] += 1
 
             if validation_results:
@@ -462,15 +469,14 @@ class CrossRefEnricherWithValidation:
             return was_modified, validation_results
 
         except Exception as e:
-            logger.error(f"Error processing {paper_file}: {e}")
+            logger.error("Error processing %s: %s", paper_file, e)
             # Copy original file on error
             output_file = output_dir / paper_file.name
-            with open(paper_file) as f_in:
-                with open(output_file, "w") as f_out:
-                    f_out.write(f_in.read())
+            with open(paper_file) as f_in, open(output_file, "w") as f_out:
+                f_out.write(f_in.read())
             return False, []
 
-    def process_directory(self, input_dir: Path, output_dir: Path, max_papers: int | None = None):
+    def process_directory(self, input_dir: Path, output_dir: Path, max_papers: int | None = None) -> None:
         """Process all papers in a directory."""
         # Create output directory
         output_dir.mkdir(exist_ok=True, parents=True)
@@ -481,13 +487,13 @@ class CrossRefEnricherWithValidation:
         if max_papers:
             json_files = json_files[:max_papers]
 
-        logger.info(f"Found {len(json_files)} papers to process")
-        logger.info(f"Validation mode: {'ON' if self.validate_existing else 'OFF'}")
+        logger.info("Found %s papers to process", len(json_files))
+        logger.info("Validation mode: %s", "ON" if self.validate_existing else "OFF")
 
         # Process each paper
         for i, paper_file in enumerate(json_files, 1):
-            if i % 10 == 0:
-                logger.info(f"Processing {i}/{len(json_files)}...")
+            if i % 10 == 0:  # config.DEFAULT_TIMEOUT
+                logger.info("Processing %s/%s...", i, len(json_files))
 
             was_modified, validation_results = self.enrich_and_validate_paper(paper_file, output_dir)
 
@@ -506,33 +512,35 @@ class CrossRefEnricherWithValidation:
             self.stats["total_processed"] += 1
 
             # Rate limiting
-            if i % 5 == 0:
+            if i % 5 == 0:  # config.DEFAULT_MAX_RESULTS
                 time.sleep(0.5)  # Be nice to CrossRef API
 
         # Generate report
         self.generate_report(output_dir)
 
-    def generate_report(self, output_dir: Path):
+    def generate_report(self, output_dir: Path) -> None:
         """Generate enrichment and validation report."""
-        report = {
-            "timestamp": datetime.utcnow().isoformat(),
+        report: dict[str, Any] = {
+            "timestamp": datetime.now(UTC).isoformat(),
             "statistics": self.stats,
             "validation_enabled": self.validate_existing,
             "update_threshold": self.update_threshold,
             "validation_summary": {
                 "total_discrepancies": self.stats["validation_discrepancies"],
-                "papers_with_warnings": len(set(v["paper"] for v in self.validation_log)),
+                "papers_with_warnings": len({v["paper"] for v in self.validation_log}),
                 "field_distribution": {},
             },
             "sample_validations": self.validation_log[:20],  # First 20 validations
         }
 
         # Count discrepancies by field
+        field_dist: dict[str, int] = {}
         for val in self.validation_log:
             field = val["field"]
-            if field not in report["validation_summary"]["field_distribution"]:
-                report["validation_summary"]["field_distribution"][field] = 0
-            report["validation_summary"]["field_distribution"][field] += 1
+            if field not in field_dist:
+                field_dist[field] = 0
+            field_dist[field] += 1
+        report["validation_summary"]["field_distribution"] = field_dist
 
         # Save report
         report_file = output_dir / "validation_report.json"
@@ -551,7 +559,8 @@ class CrossRefEnricherWithValidation:
         print(f"\nReport: {report_file}")
 
 
-def main():
+def main() -> None:
+    """Run the main program."""
     parser = argparse.ArgumentParser(description="Enhanced CrossRef enrichment with validation")
     parser.add_argument(
         "--input", default="comprehensive_extraction_20250831_211114", help="Input directory with JSON files"

@@ -15,17 +15,20 @@ were already identified and properly excluded:
 Total papers removed: 73 problematic papers out of 2,221 original PDFs
 """
 
+from src import config
 import json
 from pathlib import Path
 from datetime import datetime, UTC
+import sys
+from typing import Any
 
 
 class ComprehensiveProblematicPapersSummary:
     """Comprehensive summary of all problematic papers from V5 pipeline."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize the summary."""
-        self.problematic_papers = {
+        self.problematic_papers: dict[str, Any] = {
             "grobid_complete_failures": {
                 "count": 11,
                 "description": "Papers that completely failed GROBID extraction",
@@ -173,7 +176,7 @@ class ComprehensiveProblematicPapersSummary:
         # 2221 input -> 2210 after GROBID -> 2170 after quality -> 2151 after non-article -> 2150 final
         total_excluded = 2221 - 2150  # 71 total papers excluded
 
-        self.pipeline_stats = {
+        self.pipeline_stats: dict[str, Any] = {
             "input_pdfs": 2221,
             "successful_extractions": 2210,
             "final_kb_articles": 2150,
@@ -181,7 +184,7 @@ class ComprehensiveProblematicPapersSummary:
             "success_rate": f"{(2150 / 2221) * 100:.1f}%",
         }
 
-    def generate_comprehensive_report(self):
+    def generate_comprehensive_report(self) -> tuple[Path, Path, Path]:
         """Generate comprehensive report of all problematic papers."""
         timestamp = datetime.now(UTC).strftime("%Y%m%d_%H%M%S")
 
@@ -223,7 +226,7 @@ class ComprehensiveProblematicPapersSummary:
 
         return json_path, md_path, removal_path
 
-    def _generate_markdown_report(self, md_path: Path, report: dict):
+    def _generate_markdown_report(self, md_path: Path, report: dict[str, Any]) -> None:
         """Generate comprehensive markdown report."""
         with open(md_path, "w") as f:
             f.write("# Comprehensive Problematic Papers Summary - V5 Pipeline\n\n")
@@ -282,7 +285,7 @@ class ComprehensiveProblematicPapersSummary:
                 if "paper_ids" in category_data:
                     f.write("**Paper IDs**: ")
                     f.write(", ".join(category_data["paper_ids"][:10]))
-                    if len(category_data["paper_ids"]) > 10:
+                    if len(category_data["paper_ids"]) > config.DEFAULT_TIMEOUT:
                         f.write(f" and {len(category_data['paper_ids']) - 10} more")
                     f.write("\n\n")
 
@@ -350,7 +353,7 @@ class ComprehensiveProblematicPapersSummary:
             f.write("3. Consider manual review for the 1 paper with content but no title\n")
             f.write("4. Maintain quality reports for transparency and auditing\n")
 
-    def _generate_removal_documentation(self, removal_path: Path, report: dict):
+    def _generate_removal_documentation(self, removal_path: Path, report: dict[str, Any]) -> None:
         """Generate documentation of papers already removed."""
         with open(removal_path, "w") as f:
             f.write("# Papers Already Removed from Knowledge Base - V5 Pipeline\n")
@@ -393,7 +396,7 @@ class ComprehensiveProblematicPapersSummary:
             f.write("# - Production ready: YES\n")
             f.write("# - Additional filtering needed: NO\n")
 
-    def print_summary(self):
+    def print_summary(self) -> None:
         """Print executive summary to console."""
         print("\n" + "=" * 70)
         print("COMPREHENSIVE PROBLEMATIC PAPERS SUMMARY - V5 PIPELINE")
@@ -424,7 +427,7 @@ class ComprehensiveProblematicPapersSummary:
         print("  Quality control: COMPREHENSIVE")
 
 
-def main():
+def main() -> int:
     """Main entry point."""
     print("=" * 70)
     print("COMPREHENSIVE PROBLEMATIC PAPERS SUMMARY")
@@ -449,6 +452,7 @@ def main():
         print("   The current knowledge base is clean and production-ready.")
         print("   All problematic papers were already systematically identified")
         print("   and removed during the comprehensive V5 extraction pipeline.")
+        return 0
 
     except Exception as e:
         import traceback
@@ -458,8 +462,6 @@ def main():
         traceback.print_exc()
         return 1
 
-    return 0
-
 
 if __name__ == "__main__":
-    exit(main())
+    sys.exit(main())
